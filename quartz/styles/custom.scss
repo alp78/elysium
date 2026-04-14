@@ -79,7 +79,7 @@ pre code {
 
 /* ── Code blocks (dark) ──────────────────────────────────────── */
 [saved-theme="dark"] pre {
-  background-color: #000000 !important;
+  background-color: #0d0f14 !important;
   border: 1px solid #29344a !important;
   border-radius: 6px !important;
   padding: 1em !important;
@@ -89,15 +89,24 @@ pre code {
 
 [saved-theme="dark"] :not(pre) > code {
   font-family: var(--codeFont) !important;
-  background-color: #1f1f22 !important;
-  color: #dddddd !important;
+  background-color: #0d0f14 !important;
+  color: #c0caf5 !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
 }
 
+[saved-theme="dark"] :not(pre) > code[data-theme*=" "] {
+  background-color: #0d0f14 !important;
+  color: #c0caf5 !important;
+}
+
+[saved-theme="dark"] :not(pre) > code[data-theme*=" "] span {
+  color: #c0caf5 !important;
+}
+
 /* ── Code blocks (light) — reduced contrast ─────────────────── */
 [saved-theme="light"] pre {
-  background-color: #000000 !important;
+  background-color: #0d0f14 !important;
   border: 1px solid #d0cdd8 !important;
   border-radius: 6px !important;
   padding: 1em !important;
@@ -110,6 +119,10 @@ pre code {
   color: #f0f0f2 !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
+}
+
+[saved-theme="light"] :not(pre) > code[data-theme*=" "] {
+  background-color: #3a3d4a !important;
 }
 
 /* Reduce gaps between code blocks and output */
@@ -195,21 +208,26 @@ table {
   border-right: none !important;
 }
 
-/* ── Code inside tables — transparent bg, subtle border ── */
+/* ── Code inside tables — keep inline pill, no border ── */
 [saved-theme="dark"] td code,
 [saved-theme="dark"] th code {
-  background: transparent !important;
-  border: 1px solid rgba(122, 162, 247, 0.25) !important;
+  background-color: #0d0f14 !important;
+  border: none !important;
   color: #c0caf5 !important;
   font-size: 12px !important;
   padding: 1px 5px !important;
   border-radius: 3px;
 }
 
+[saved-theme="dark"] td code[data-theme*=" "] span,
+[saved-theme="dark"] th code[data-theme*=" "] span {
+  color: #c0caf5 !important;
+}
+
 [saved-theme="light"] td code,
 [saved-theme="light"] th code {
-  background: transparent !important;
-  border: 1px solid rgba(90, 79, 207, 0.2) !important;
+  background-color: #3a3d4a !important;
+  border: none !important;
   color: #3b3950 !important;
   font-size: 12px !important;
   padding: 1px 5px !important;
@@ -325,15 +343,15 @@ a.tag-link:hover {
 
 /* ── Page layout — darker surround, lighter content ──────────── */
 [saved-theme="dark"] body {
-  background-color: #13131a !important;
+  background-color: #0f1017 !important;
 }
 
 [saved-theme="dark"] .page {
-  background-color: #13131a !important;
+  background-color: #0f1017 !important;
 }
 
 [saved-theme="dark"] .center > article {
-  background-color: #0f1017;
+  background-color: #13131a;
   border-radius: 8px;
   padding: 1.5em 2em !important;
 }

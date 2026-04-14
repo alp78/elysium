@@ -604,7 +604,7 @@ The lakehouse is primarily a batch analytics architecture, but it increasingly h
 - [data-mesh-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) — organizational pattern that uses lakehouse as the technical foundation
 - [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery optimization when querying BigLake tables
 - [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Parquet, ORC, Avro — the file formats underneath the table formats
-- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — reliability, observability, efficiency, security, operability
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — reliability, observability, efficiency, security, operability
 
 ## References
 

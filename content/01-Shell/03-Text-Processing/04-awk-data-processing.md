@@ -6,9 +6,9 @@ technology: [bash, powershell, awk]
 tags: [shell, text-processing]
 aliases: [awk, gawk, mawk, field processing, column extraction, text transformation, csv processing, awk reference, awk cheatsheet, GNU awk, awk functions, awk control flow]
 keywords: [awk, gawk, mawk, field separator, record separator, NR, NF, BEGIN, END, print, printf, gsub, sub, gensub, match, split, substr, tolower, toupper, associative array, getline, FNR, OFS, ORS, RS, FS, pattern-action, csv parsing, log parsing, data aggregation, group-by, running total, pivot, text processing, shell scripting, PowerShell equivalent, Import-Csv, ConvertFrom-Csv, Select-Object, Where-Object, Measure-Object, ForEach-Object, data engineering, ETL, column extraction, delimiter conversion, TSV, pipe-delimited, user-defined functions, POSIX character classes, next, nextfile, output redirection, rand, srand, int, sqrt]
-description: "Exhaustive awk/gawk reference for data engineers covering field extraction, filtering, control flow, user-defined functions, aggregation, string functions, arithmetic functions, multi-file processing, output redirection, advanced patterns, and PowerShell equivalents for every key technique."
+description: "Executable awk/gawk reference for data engineers with verified Linux and PowerShell demonstrations for field extraction, filtering, aggregation, transformations, and troubleshooting."
 created: 2026-03-22
-updated: 2026-04-05
+updated: 2026-04-14
 status: complete
 ---
 
@@ -20,145 +20,103 @@ status: complete
 > — **Brian Kernighan** (co-creator of awk)
 
 > [!abstract]- Summary
-> awk (also `gawk`, `mawk`) is a domain-specific pattern-action language for column-oriented text processing, processing input record by record and splitting each record into named fields.
+> awk is a record-and-field language for turning line-oriented text into structured output without writing a full general-purpose program.
 >
-> - **How it works** — record/field model, field separator (`FS`/`-F`), `BEGIN`/`END` blocks, pattern-action evaluation
-> - **Field extraction and formatting** — `$1`, `$NF`, `$(NF-1)`, `printf` width/precision specifiers, `OFS`
-> - **Filtering and conditions** — regex patterns, comparison operators, compound conditions, range patterns
-> - **Control flow** — `if/else`, `for`, `while`, `next`, `nextfile`, `exit`
-> - **Data transformation** — aggregation, deduplication, reformatting, delimiter conversion, pivoting
-> - **Data engineering scenarios** — CSV processing, log parsing, data quality checks, running totals, group-by
-> - **Advanced patterns** — user-defined functions, multi-file processing, output redirection, `getline`, `OFMT`
-> - **Processing model diagram** — visual overview of the awk execution cycle
-> - **PowerShell equivalents** — `Import-Csv`, `Select-Object`, `Where-Object`, `Group-Object`, `Measure-Object`
-> - **Quick reference card** — built-in variables, string functions, arithmetic functions
-> - **When to use awk vs sed** — decision guidance, warnings, recommendations, troubleshooting
+> - Use `-F` or `FS` to define field boundaries, `$1` through `$NF` to address fields, and `BEGIN` or `END` for setup and final summaries.
+> - Reach for awk when the job needs field extraction, arithmetic, grouping, deduplication, or lightweight state across records.
+> - Prefer `sed` for pure line substitutions and in-place edits, and escalate to CSV-aware tools or Python for quoted or nested data.
+> - The Linux examples below were verified in WSL Ubuntu with GNU Awk 5.2.1, and the Windows equivalents were verified in PowerShell 7.5.5.
+> - The retained tables are compact lookup aids for variables, flags, character classes, arithmetic helpers, and awk-versus-PowerShell task mapping.
 
 > [!note]- Glossary
 >
 > **`awk`**
-> - A pattern-action language and command-line tool for scanning text input record by record, splitting records into fields, and executing actions when patterns match.
-> - Used for fast field-based text processing in shell pipelines, especially filtering, extracting, aggregating, and reformatting structured line-oriented data.
->
-> > [!tip] Platform
-> > On Linux, GNU awk (`gawk`) is common. On macOS, `/usr/bin/awk` is usually a BSD-derived implementation with some feature differences, so scripts using GNU-specific behavior may need `gawk`.
+> - A pattern-action language for reading input record by record, splitting records into fields, and running code when a pattern matches.
+> - It is strongest at one-pass text processing, column extraction, aggregation, and report generation in shell pipelines.
+> - GNU awk (`gawk`) is standard on most Linux systems; macOS ships a BSD-derived awk, so GNU-only features such as `gensub()` need `gawk`.
 >
 > ---
 >
-> **Field (`$1`, `$2`, …, `$NF`)**
-> - In `awk`, a field is one part of the current input record after the record has been split by the current field separator. `$1` is the first field, `$2` the second, `$NF` the last, and `$0` the entire record.
-> - Used as the basic access mechanism for column-like data when extracting or transforming values from structured text.
->
-> > [!tip] Platform
-> > In PowerShell, comparable data is usually accessed as named object properties such as `$row.FieldName` after `Import-Csv`, rather than by numeric field position.
+> **Field (`$1`, `$2`, ... , `$NF`)**
+> - A field is one token in the current record after `awk` splits `$0` using `FS`.
+> - `$1` is the first field, `$NF` is the last, and `$0` is the full unsplit record.
+> - In PowerShell, the comparable access pattern is usually a named property such as `$row.amount` after `Import-Csv` or `ConvertFrom-Csv`.
 >
 > ---
 >
 > **Field separator (`-F` / `FS`)**
-> - The delimiter rule `awk` uses to split each input record into fields. By default, `awk` splits on runs of whitespace; it can be changed with `-F` or by assigning `FS`.
-> - Used to make `awk` interpret the input structure correctly, such as comma-delimited, tab-delimited, pipe-delimited, or regex-defined field boundaries.
->
-> > [!warning] CSV is only simple when the data is simple
-> >
-> > `-F,` works only for uncomplicated comma-separated data. Real CSV with quoted commas, embedded quotes, or embedded newlines is not parsed correctly by plain `awk` field splitting.
+> - `FS` controls how awk splits each input record into fields.
+> - By default awk collapses runs of whitespace into one separator, but `-F','`, `-F'\t'`, or a regex such as `-F'[,;|]'` can override that behavior.
+> - Plain field splitting does not implement full CSV quoting rules, so quoted commas or embedded newlines need a CSV-aware parser.
 >
 > ---
 >
 > **`BEGIN` / `END` blocks**
-> - Special `awk` blocks where `BEGIN { ... }` runs before any input records are read and `END { ... }` runs after all input has been processed.
-> - Used for setup and teardown tasks such as assigning separators, initializing counters, printing headers, and emitting final totals or summaries.
->
-> > [!tip] Input fields do not exist yet in `BEGIN`
-> >
-> > In `BEGIN`, no input record has been read, so record-dependent values such as `$1`, `$0`, `NF`, and the current record contents are not meaningful yet.
+> - `BEGIN` runs once before the first record and `END` runs once after the last record.
+> - They are used for setup, headers, totals, and final summaries.
+> - Record-specific values such as `$1`, `$0`, and `NF` are not meaningful inside `BEGIN` because no input record exists yet.
 >
 > ---
 >
-> **`NR` (Number of Records)**
-> - Built-in `awk` variable holding the count of input records read so far across all files in the current invocation.
-> - Used for row numbering, skipping headers, and applying logic based on global record position.
->
-> > [!tip] `NR` vs `FNR`
-> >
-> > `NR` counts records globally across all input files. `FNR` resets to 1 for each new file, which matters when processing multiple files in one command.
+> **`NR` and `FNR`**
+> - `NR` is the global record counter across all inputs in the current invocation.
+> - `FNR` is the per-file record counter and resets to `1` for each new file.
+> - When a script reads more than one input stream, `FNR==NR` is the standard pattern for loading the first stream into an array before processing the second.
 >
 > ---
 >
-> **`NF` (Number of Fields)**
-> - Built-in `awk` variable holding the number of fields in the current input record after splitting.
-> - Used for validating record shape, detecting malformed rows, and addressing the last field through `$NF`.
->
-> > [!tip] Empty and irregular records
-> >
-> > A blank line usually has `NF == 0`. Field counts can vary from one record to another, which is often a useful signal when checking data quality.
+> **`NF`**
+> - `NF` is the number of fields in the current record after splitting.
+> - It is useful for validation, malformed-row detection, and last-field access through `$NF`.
+> - Blank lines usually yield `NF == 0`, which makes `NF` a convenient blank-line filter.
 >
 > ---
 >
-> **`OFS` (Output Field Separator)**
-> - Built-in `awk` variable that controls the string inserted between arguments when `print` outputs multiple fields or expressions.
-> - Used to make generated output match a required delimiter such as comma, tab, or pipe.
->
-> > [!tip] Input and output separators are independent
-> >
-> > `FS` controls how input is split; `OFS` controls how output is joined. Setting one does not automatically change the other.
+> **`OFS`**
+> - `OFS` is the output field separator inserted between arguments passed to `print`.
+> - It affects generated output, not input parsing.
+> - To rebuild `$0` with a new separator, assign a field such as `$1=$1` before printing.
 >
 > ---
 >
 > **`printf`**
-> - Built-in `awk` function for formatted output using C-style format specifiers such as `%s`, `%d`, `%f`, width, and precision controls.
-> - Used when output must be aligned, numerically formatted, or rendered in a precise layout rather than simply separated by `OFS`.
->
-> > [!tip] `printf` does not append a newline
-> >
-> > Unlike `print`, `printf` writes exactly what the format string specifies. Add `\n` explicitly when a line break is required.
->
-> ---
->
-> **PowerShell object pipeline**
-> - PowerShell pipeline model in which commands pass structured .NET objects downstream rather than plain text lines.
-> - Used to avoid manual text splitting when working with structured data, because downstream commands can access named properties directly instead of parsing positional fields.
->
-> > [!tip] Text pipeline vs object pipeline
-> >
-> > `awk` is optimized for text records and field extraction. PowerShell is optimized for object transformation. For CSV with headers on Windows, `Import-Csv` is often clearer; for large flat text streams in POSIX shells, `awk` is usually leaner and faster.
+> - `printf` gives C-style formatted output for widths, precision, and controlled layouts.
+> - It is the right tool for aligned reports, fixed decimal formatting, and literal layout control.
+> - Unlike `print`, it does not add a newline automatically, so `\n` must be explicit.
 
-
-awk (also gawk — GNU awk, mawk — faster awk) is a domain-specific language built for column-oriented text processing. It reads input record by record (lines by default), splits each record into fields, and applies pattern-action rules. For data engineers it is the fastest path from raw text files, logs, and CSVs to structured output without writing a full Python script.
-
-On macOS the default `awk` is BSD awk. On Linux it is usually gawk. On Windows you use PowerShell natively or install gawk via Chocolatey (`choco install gawk`) or Git Bash. All examples below work in gawk; BSD awk differences are noted inline.
-
----
+awk is the fastest useful tool when the input is line-oriented, the field boundaries are stable, and the output can be emitted in a single pass. This version of the page keeps the original reference density where lookup tables add value, but it cuts away unsupported example volume and replaces it with a smaller set of verified Linux and PowerShell demonstrations.
 
 ## Linux awk | how it works
 
-This section covers the fundamental model that underlies every awk program: how input is divided into records and fields, how the field separator is set, how pattern-action rules are evaluated, and how `BEGIN`/`END` blocks provide setup and teardown logic.
+These are the mechanics behind every awk program: records, fields, pattern-action rules, and lifecycle blocks.
 
 ### Linux | awk | record and field model
 
-awk reads input one **record** at a time. By default a record is a line. It then splits each record into **fields** using the field separator. Fields are accessed by position: `$1` is the first field, `$2` the second, and so on. `$0` is the entire record unchanged.
+awk reads one input record at a time. By default a record is one line, and the record is split into fields before the action runs.
+
+These built-ins are the ones you touch most often:
 
 | Variable   | Meaning                                      |
 |------------|----------------------------------------------|
-| `$0`       | The entire current record (the whole line)   |
+| `$0`       | The entire current record                    |
 | `$1`       | First field                                  |
 | `$2`       | Second field                                 |
-| `$NF`      | Last field (NF = number of fields)           |
+| `$NF`      | Last field                                   |
 | `$(NF-1)`  | Second-to-last field                         |
-| `NR`       | Current record number (global, across files) |
+| `NR`       | Current record number across all inputs      |
 | `NF`       | Number of fields in the current record       |
-| `FNR`      | Record number within the current file        |
-| `FS`       | Input field separator (default: whitespace)  |
-| `OFS`      | Output field separator (default: space)      |
-| `RS`       | Input record separator (default: newline)    |
-| `ORS`      | Output record separator (default: newline)   |
-| `FILENAME` | Name of the current input file               |
-| `SUBSEP`   | Separator for simulated multi-dim arrays (`\034`) |
-| `OFMT`     | Format for printing numbers (default `%.6g`) |
-| `CONVFMT`  | Format for internal number-to-string conversions |
+| `FNR`      | Record number within the current input file  |
+| `FS`       | Input field separator                        |
+| `OFS`      | Output field separator                       |
+| `RS`       | Input record separator                       |
+| `ORS`      | Output record separator                      |
+| `FILENAME` | Name of the current input                    |
+| `OFMT`     | Numeric format used by `print`               |
+| `CONVFMT`  | Number-to-string conversion format           |
 
 #### Print the whole line and specific fields
 
-`$0` holds the full raw line. `$1` and `$2` hold the first and second whitespace-delimited tokens respectively. Printing multiple fields separated by a comma inserts the output field separator (OFS, space by default).
+This is the core read model. `$0` returns the entire record, while `$1` and `$2` address individual fields after splitting on whitespace.
 
 ```bash
 echo "alice 42 engineer" | awk '{print $0}'
@@ -186,7 +144,7 @@ alice 42
 
 #### Access the last field regardless of column count
 
-`$NF` always resolves to the last field because `NF` holds the count of fields in the current record. `$(NF-1)` is the second-to-last field. This is useful when column count varies between records.
+`$NF` always resolves to the last field in the current record. That makes it reliable even when earlier columns vary in count.
 
 ```bash
 echo "a b c d e" | awk '{print $NF}'
@@ -204,9 +162,13 @@ echo "a b c d e" | awk '{print $(NF-1)}'
 d
 ```
 
-### Linux | awk | default field separator (whitespace)
+### Linux | awk | field separators
 
-Without `-F`, awk treats any run of whitespace (spaces and tabs) as a single separator and trims leading and trailing whitespace automatically. This makes awk ideal for parsing `ps`, `df`, `ls -l`, and other command output where fields are aligned with varying numbers of spaces.
+The default separator is runs of whitespace. `-F` or `FS` lets you switch to explicit delimiters or a regular expression.
+
+#### Count whitespace-delimited fields
+
+This shows the default split behavior: leading and trailing spaces are ignored, and repeated spaces collapse into one separator.
 
 ```bash
 echo "  a   b   c  " | awk '{print NF}'
@@ -216,271 +178,198 @@ echo "  a   b   c  " | awk '{print NF}'
 3
 ```
 
-Three fields are found, not eight, because consecutive spaces count as one separator and leading/trailing whitespace is ignored.
+#### Set a literal or regex field separator
 
-### Linux | awk | setting the field separator with -F
-
-`-F` sets the input field separator to a literal character or a regular expression. It is equivalent to setting the built-in variable `FS` in a `BEGIN` block.
-
-#### Set a single-character field separator
+Use a literal separator when the file format is fixed, and a regex when the same stream can contain more than one delimiter style.
 
 ```bash
-awk -F',' '{print $2}' data.csv
+printf 'id,name,amount\n1,alice,42\n' | awk -F',' 'NR==2 {print $2}'
 ```
-
-```bash
-awk -F'\t' '{print $3}' data.tsv
-```
-
-```bash
-awk -F'|' '{print $1}' data.psv
-```
-
-```bash
-awk -F':' '{print $1}' /etc/passwd
-```
-
-#### Set a regex field separator
-
-`FS` can be any extended regular expression. This allows splitting on any of several characters at once.
-
-```bash
-awk -F'[,;|]' '{print $2}' mixed.txt
-```
-
-The input is split on whichever of comma, semicolon, or pipe appears in each record.
-
-### Linux | awk | pattern-action structure
-
-The fundamental awk program is a series of `pattern { action }` rules. awk evaluates every pattern against every record and executes the associated action when the pattern matches. If the pattern is omitted, the action runs on every record. If the action is omitted, the default action is `{print $0}`. Multiple rules can match the same record; all matching actions execute in order.
 
 ```text
-awk 'pattern1 { action1 }
-     pattern2 { action2 }
-     pattern3 { action3 }' file
+alice
 ```
-
-#### Match lines by regex pattern
 
 ```bash
-awk '/ERROR/' app.log
+printf 'a,b|c;d\n' | awk -F'[,;|]' '{print $3}'
 ```
 
-#### Print a field for every line (no pattern filter)
+```text
+c
+```
+
+### Linux | awk | pattern-action execution
+
+Every awk program is a list of rules. A pattern decides whether the action should run for the current record.
+
+```awk
+pattern1 { action1 }
+pattern2 { action2 }
+END      { action3 }
+```
+
+#### Print matching lines with record numbers
+
+The pattern `/ERROR/` runs only for records containing `ERROR`. Adding `NR` makes the output immediately actionable when you need to locate the record in a file.
 
 ```bash
-awk '{print $1}' data.txt
+printf 'INFO boot\nERROR disk\nWARN retry\n' | awk '/ERROR/ {print NR, $0}'
 ```
 
-#### Combine pattern and action
+```text
+2 ERROR disk
+```
+
+#### Count multiple patterns in one pass
+
+Multiple rules can match the same input stream, so one pass can accumulate several counters before `END` prints the totals.
 
 ```bash
-awk '/ERROR/ {print NR, $0}' app.log
+printf 'INFO boot\nERROR disk\nWARN retry\nERROR timeout\n' | awk '/ERROR/ {errors++} /WARN/ {warns++} END {print errors, warns}'
 ```
 
-The line number (`NR`) is prepended to every matching line, making it easy to locate errors in large files.
-
-#### Apply multiple rules in one program
-
-```bash
-awk '/ERROR/ {errors++} /WARN/ {warns++} END {print errors, warns}' app.log
+```text
+2 1
 ```
-
-Both counters are incremented independently. The `END` block prints the totals after all input is consumed.
 
 ### Linux | awk | BEGIN and END blocks
 
-`BEGIN` runs once before any input is read — use it to initialize variables, print headers, or set `OFS`/`RS`. `END` runs once after all input is consumed — use it to print summaries, flush aggregates, or close files.
+`BEGIN` is for initialization and headers. `END` is for summaries and final reporting after all input has been consumed.
 
-#### Print a header and a summary with BEGIN and END
+#### Emit a header and a summary
+
+This demonstration prints a CSV header before any rows are processed, accumulates a total from the data rows, and prints the summary in `END`.
 
 ```bash
-awk -F',' '
-  BEGIN {
-    print "Name,Total"
-    OFS=","
-  }
-  NR > 1 {
-    total += $3
-  }
-  END {
-    print "Grand total:", total
-  }
-' sales.csv
+printf 'name,total\nalpha,10\nbeta,15\n' | awk -F',' 'BEGIN {OFS=","; print "name","total"} NR > 1 {total += $2} END {print "grand_total", total}'
 ```
 
-> [!tip] Store long awk programs in a file
->
-> For programs longer than a few lines, put the program in a file and invoke `awk -f program.awk data.txt`. This avoids shell quoting issues and is much easier to version-control and debug.
-
----
+```text
+name,total
+grand_total,25
+```
 
 ## Linux awk | field extraction and formatting
 
-This section covers selecting, reordering, and formatting fields for output. These are the most frequently used awk operations in data engineering pipelines.
+This section covers the most common data-engineering tasks: choosing columns, reordering them, and controlling output layout.
 
-### Linux | awk | print specific columns
+### Linux | awk | selecting and reordering columns
 
-#### Print selected columns from a whitespace-delimited file
+These patterns keep input parsing simple while making the output shape explicit.
 
-Columns are printed space-separated by default when separated by a comma in the `print` statement.
+#### Print selected columns
 
-```bash
-awk '{print $1, $3}' data.txt
-```
-
-#### Print selected columns with a custom literal separator
-
-Using string concatenation (no comma) inserts the literal separator directly with no OFS.
+Field addresses work the same whether the input is whitespace-delimited or separated by an explicit delimiter.
 
 ```bash
-awk '{print $1 "|" $3}' data.txt
+printf 'alice 42 engineer\nbob 37 analyst\n' | awk '{print $1, $3}'
 ```
 
-#### Print a column from a CSV
+```text
+alice engineer
+bob analyst
+```
 
 ```bash
-awk -F',' '{print $2}' data.csv
+printf 'id,name,amount\n1,alice,42\n2,bob,55\n' | awk -F',' 'NR>1 {print $2}'
 ```
 
-#### Skip the header row and print a column
+```text
+alice
+bob
+```
+
+#### Reorder CSV columns
+
+Awk does not care about original column order once the record is split. Reordering is just a different `print` list.
 
 ```bash
-awk -F',' 'NR>1 {print $2}' data.csv
+printf 'name,date,amount\nalice,2026-03-22,42\n' | awk -F',' -v OFS=',' 'NR>1 {print $2,$3,$1}'
 ```
 
-### Linux | awk | custom output field separator (OFS)
+```text
+2026-03-22,42,alice
+```
 
-#### Change OFS so output columns are tab-separated
+#### Extract a field range
+
+Field ranges are built with a loop. This pattern is useful when you need a suffix of wide records without enumerating every field manually.
 
 ```bash
-awk -F',' -v OFS='\t' '{print $1,$3}' data.csv
+printf 'a b c d e f\n' | awk '{for(i=2;i<=5;i++) printf "%s%s",$i,(i<5?OFS:ORS)}'
 ```
 
-#### Rebuild $0 with a new separator
+```text
+b c d e
+```
 
-Printing `$0` directly always yields the original line, even after setting OFS. Assigning any field (e.g., `$1=$1`) forces awk to rebuild `$0` using OFS, replacing every original separator.
+### Linux | awk | output formatting
+
+Formatting is a separate decision from input parsing. `OFS` controls joined output, while `printf` controls exact layout.
+
+#### Rebuild `$0` with a new output separator
+
+Setting `OFS` alone does not change `$0`. Assigning a field forces awk to reconstruct the record using the new separator.
 
 ```bash
-awk -F',' -v OFS='|' '{$1=$1; print}' data.csv
+printf 'id,name,amount\n1,alice,42\n' | awk -F',' -v OFS='|' 'NR>1 {$1=$1; print}'
 ```
 
-#### Convert CSV to TSV (all columns)
+```text
+1|alice|42
+```
+
+#### Format aligned reports with `printf`
+
+Use `printf` when alignment and numeric precision matter more than raw delimiter conversion.
 
 ```bash
-awk -F',' -v OFS='\t' '{$1=$1; print}' data.csv > data.tsv
+printf 'alice 42.135\nbob 7.5\n' | awk '{printf "%-10s %8.2f\n", $1, $2}'
 ```
 
-> [!warning] OFS and $0
->
-> Printing `$0` always gives the original line even if you set OFS. Trigger a field rebuild by assigning any `$N = $N` or `$1=$1` before printing if you want OFS applied to the whole record.
+```text
+alice         42.13
+bob            7.50
+```
 
-> [!success] Force $0 rebuild with OFS
->
-> Always assign `$1=$1` before printing `$0` when delimiter conversion is the goal: `awk -F',' -v OFS='\t' '{$1=$1; print}' data.csv`.
+#### Quote fields in generated CSV-like output
 
-### Linux | awk | printf for formatted output
-
-`printf` works identically to C's printf. Use it when you need aligned columns, a specific number of decimal places, or custom line endings without an automatic newline.
-
-#### Left-align a string and right-align a float
+This pattern is useful when awk is generating rows for a downstream tool and you need exact punctuation rather than `OFS`-joined fields.
 
 ```bash
-awk '{printf "%-20s %10.2f\n", $1, $3}' data.txt
+printf 'alice,42,engineer\n' | awk -F',' '{printf "\"%s\",%s,\"%s\"\n", $1, $2, $3}'
 ```
 
-The name field is left-aligned in a 20-character column; the numeric field is right-aligned in a 10-character column with 2 decimal places.
-
-#### Right-align integers
-
-```bash
-awk '{printf "%8d\n", $2}' counts.txt
+```text
+"alice",42,"engineer"
 ```
 
-#### Print with no trailing newline
+### Linux | awk | printf format specifiers
 
-Useful when the output of multiple awk invocations is concatenated or piped.
+These are the format codes you will use most often in reporting-style output.
 
-```bash
-awk '{printf "%s\t%s", $1, $2}' data.txt
-```
-
-#### Print a CSV row with quoted string fields
-
-```bash
-awk -F',' '{printf "\"%s\",%s,\"%s\"\n", $1, $2, $3}' data.csv
-```
-
-#### printf format specifiers
-
-| Specifier | Meaning                        |
-|-----------|--------------------------------|
-| `%s`      | String                         |
-| `%d`      | Integer (decimal)              |
-| `%f`      | Float (decimal notation)       |
-| `%e`      | Scientific notation            |
-| `%g`      | Shorter of `%f` or `%e`        |
-| `%-20s`   | Left-aligned, 20 chars wide    |
-| `%10.2f`  | 10 wide, 2 decimal places      |
-| `%08d`    | Zero-padded to 8 digits        |
-| `%%`      | Literal percent sign           |
-
-### Linux | awk | reorder columns
-
-#### Reorder columns in a CSV
-
-```bash
-awk -F',' -v OFS=',' '{print $2,$3,$1}' data.csv
-```
-
-Input order is `name,date,amount`; output order is `date,amount,name`.
-
-#### Reorder and add a literal new column
-
-```bash
-awk -F',' -v OFS=',' '{print $1,$3,"NEW_COL",$2}' data.csv
-```
-
-#### Swap columns in a TSV
-
-```bash
-awk -F'\t' -v OFS='\t' '{print $2,$1,$3,$4}' data.tsv
-```
-
-### Linux | awk | extract a range of fields
-
-awk has no built-in range operator for fields, so a loop is required.
-
-#### Print fields 2 through 5
-
-```bash
-awk '{for(i=2;i<=5;i++) printf "%s%s",$i,(i<5?OFS:ORS)}' data.txt
-```
-
-The ternary expression prints OFS between fields and ORS (newline) after the last field.
-
-#### Print all fields from field 3 onward
-
-```bash
-awk '{for(i=3;i<=NF;i++) printf "%s%s",$i,(i<NF?OFS:ORS)}' data.txt
-```
-
-#### Remove the first field
-
-```bash
-awk '{$1=""; sub(/^ /,""); print}' data.txt
-```
-
-Setting `$1` to empty leaves a leading space in `$0`; the `sub` call strips it.
+| Specifier | Meaning                     |
+|-----------|-----------------------------|
+| `%s`      | String                      |
+| `%d`      | Integer                     |
+| `%f`      | Floating-point number       |
+| `%e`      | Scientific notation         |
+| `%g`      | Shorter of `%f` or `%e`     |
+| `%-20s`   | Left-aligned, width 20      |
+| `%10.2f`  | Width 10, 2 decimal places  |
+| `%08d`    | Zero-padded integer         |
+| `%%`      | Literal percent sign        |
 
 ### Linux | awk | flag reference
 
+These flags and variables control most everyday awk invocations.
+
 | Flag / Variable | Syntax | Description |
 |---|---|---|
-| `-F sep` | `awk -F',' ...` | Set input field separator (FS) |
+| `-F sep` | `awk -F',' ...` | Set input field separator |
 | `-v var=val` | `awk -v OFS='\t' ...` | Assign a variable before execution |
-| `-f file` | `awk -f prog.awk data` | Read awk program from a file |
-| `--` | `awk -- '{print}' file` | End option processing (use before program starting with `-`) |
+| `-f file` | `awk -f prog.awk data` | Read the awk program from a file |
+| `--` | `awk -- '{print}' file` | End option processing |
 | `NR` | `NR>1` | Global record counter |
 | `NF` | `NF>=3` | Field count in current record |
 | `FNR` | `FNR==1` | Per-file record counter |
@@ -488,1372 +377,333 @@ Setting `$1` to empty leaves a leading space in `$0`; the `sub` call strips it.
 | `OFS` | `BEGIN{OFS="\t"}` | Output field separator |
 | `RS` | `BEGIN{RS=""}` | Input record separator |
 | `ORS` | `BEGIN{ORS="\n\n"}` | Output record separator |
-| `FILENAME` | `{print FILENAME}` | Current input filename |
-| `OFMT` | `BEGIN{OFMT="%.4f"}` | Numeric output format for `print` |
-
----
+| `FILENAME` | `{print FILENAME}` | Current input name |
+| `OFMT` | `BEGIN{OFMT="%.4f"}` | Numeric format for `print` |
 
 ## Linux awk | filtering and conditions
 
-This section covers all the ways to select which records awk processes: regular expression patterns, field-level comparisons, range patterns, and NR/NF-based guards.
+Filtering is where awk stops feeling like a field printer and starts behaving like a compact query language.
 
-### Linux | awk | pattern matching (regex)
+### Linux | awk | regex and character-class filters
 
-#### Print lines containing a pattern
+Regex patterns can be attached to the full record or to a specific field expression.
+
+#### Match literal or case-insensitive patterns
+
+Literal pattern matching is the fastest readable filter for logs. For portable case-insensitive matching, normalize the record with `tolower()`.
 
 ```bash
-awk '/ERROR/' app.log
+printf 'INFO boot\nERROR disk\nWARN retry\n' | awk '/ERROR/'
 ```
 
-#### Case-insensitive match (gawk)
-
-```bash
-awk 'tolower($0) ~ /error/' app.log
+```text
+ERROR disk
 ```
 
-#### Negate a pattern — lines NOT matching
-
 ```bash
-awk '!/ERROR/' app.log
+printf 'info boot\nError disk\nWARN retry\n' | awk 'tolower($0) ~ /error/'
 ```
 
-#### Match multiple patterns with OR
-
-```bash
-awk '/ERROR|FATAL/' app.log
+```text
+Error disk
 ```
 
-#### Match an exact word boundary
+#### Match digit-only records with POSIX character classes
+
+POSIX character classes are clearer than raw ASCII ranges when you want category matching instead of literal character lists.
 
 ```bash
-awk '/\bERROR\b/' app.log
+printf '42\nabc\n007\n' | awk '/^[[:digit:]]+$/'
+```
+
+```text
+42
+007
 ```
 
 ### Linux | awk | POSIX character classes in patterns
 
-awk supports POSIX character classes inside bracket expressions. These are portable across locales and more readable than hardcoded ranges like `[a-zA-Z]`.
+These classes are the most useful when filtering line-oriented data.
 
-| Class | Matches | Equivalent |
-|---|---|---|
-| `[:alpha:]` | Any letter | `[a-zA-Z]` (ASCII only) |
-| `[:digit:]` | Any digit | `[0-9]` |
-| `[:alnum:]` | Letter or digit | `[a-zA-Z0-9]` |
-| `[:upper:]` | Uppercase letter | `[A-Z]` |
-| `[:lower:]` | Lowercase letter | `[a-z]` |
-| `[:space:]` | Whitespace (space, tab, newline, etc.) | `[ \t\n\r\f\v]` |
-| `[:blank:]` | Space or tab only | `[ \t]` |
-| `[:punct:]` | Punctuation symbols | |
-| `[:print:]` | Printable characters (including space) | |
-| `[:graph:]` | Printable characters (excluding space) | |
-| `[:cntrl:]` | Control characters | |
-| `[:xdigit:]` | Hexadecimal digits | `[0-9a-fA-F]` |
+| Class | Meaning |
+|---|---|
+| `[[:digit:]]` | Decimal digits |
+| `[[:alpha:]]` | Letters |
+| `[[:alnum:]]` | Letters and digits |
+| `[[:space:]]` | Whitespace |
+| `[[:lower:]]` | Lowercase letters |
+| `[[:upper:]]` | Uppercase letters |
+| `[[:punct:]]` | Punctuation |
 
-POSIX classes must be enclosed in an additional pair of brackets: `[[:alpha:]]`, not `[:alpha:]`.
+### Linux | awk | field-based filters
 
-#### Match lines starting with a letter
+Once the input is split, you can express filters in terms of numeric thresholds, string equality, or combined conditions.
 
-```bash
-awk '/^[[:alpha:]]/' data.txt
-```
+#### Filter numeric thresholds
 
-#### Match fields containing only digits
+Adding `+0` forces numeric comparison. This avoids subtle string-comparison behavior on numeric-looking text.
 
 ```bash
-awk -F',' '$2 ~ /^[[:digit:]]+$/' data.csv
+printf 'name,amount,status\nalice,42,OK\nbob,105,FAIL\ncara,70,OK\n' | awk -F',' 'NR>1 && $2+0 > 50 {print $1, $2}'
 ```
 
-#### Strip leading and trailing whitespace from a field
+```text
+bob 105
+cara 70
+```
+
+#### Combine multiple field conditions
+
+This is the awk equivalent of a `WHERE amount > 50 AND status = 'FAIL'` clause.
 
 ```bash
-awk -F',' '{gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1); print $1}' data.csv
+printf 'name,amount,status\nalice,42,OK\nbob,105,FAIL\ncara,70,OK\n' | awk -F',' 'NR>1 && $2+0 > 50 && $3=="FAIL" {print $1}'
 ```
 
-### Linux | awk | field conditions
+```text
+bob
+```
 
-#### Numeric comparison on a field
+### Linux | awk | record-range filters
+
+Range patterns are useful when logs or reports use clear start and end markers.
+
+#### Print a marker-delimited block
+
+The range `/START/,/END/` stays active from the first matching `START` record through the first matching `END` record.
 
 ```bash
-awk -F',' '$3 > 100 {print}' data.csv
+printf 'noise\nSTART\nalpha\nbeta\nEND\ntrailer\n' | awk '/START/,/END/'
 ```
 
-#### String equality on a field
+```text
+START
+alpha
+beta
+END
+```
+
+#### Use `NR` and `NF` to skip or diagnose rows
+
+`NR` makes position-based sampling easy, while `NF` is the quickest way to flag malformed records.
 
 ```bash
-awk -F',' '$4 == "ACTIVE" {print}' data.csv
+printf 'row1\nrow2\nrow3\nrow4\n' | awk 'NR%2==1'
 ```
 
-#### Field is not empty
+```text
+row1
+row3
+```
 
 ```bash
-awk -F',' '$2 != "" {print}' data.csv
+printf '1,alice,42\n2,bob\n3,cara,70\n' | awk -F',' 'NF<3 {print "BAD", NR, $0}'
 ```
 
-#### Multiple conditions combined with AND
+```text
+BAD 2 2,bob
+```
+
+### Linux | awk | combined log filters
+
+The most useful production filters usually combine a header skip, one or two field tests, and a targeted output projection.
+
+#### Filter failed jobs by duration
+
+This keeps only data rows where both the status and the numeric threshold match.
 
 ```bash
-awk -F',' '$3 > 100 && $4 == "ACTIVE" {print}' data.csv
+printf 'ts,status,duration\n00:00,OK,120\n00:01,FAILED,250\n00:02,FAILED,180\n' | awk -F',' 'NR>1 && $2=="FAILED" && $3+0 > 200 {print $1, $3}'
 ```
 
-#### Multiple conditions combined with OR
-
-```bash
-awk -F',' '$3 < 0 || $3 > 1000 {print}' data.csv
+```text
+00:01 250
 ```
-
-#### Field matches a regex
-
-```bash
-awk -F',' '$1 ~ /^the data pipeline project/ {print}' data.csv
-```
-
-#### Field does NOT match a regex
-
-```bash
-awk -F',' '$1 !~ /^the data pipeline project/ {print}' data.csv
-```
-
-> [!tip] Numeric vs string comparison
->
-> In awk, `$3 > 100` does numeric comparison when `$3` looks like a number. `$3 > "100"` forces string comparison. This is usually intuitive but can produce unexpected results with zero-padded strings like "007" vs "07".
-
-### Linux | awk | range patterns
-
-A range pattern `pattern1,pattern2` matches from the first record where `pattern1` matches to the first record where `pattern2` matches, inclusive. Matching resumes from the beginning if `pattern1` appears again after `pattern2`.
-
-#### Print lines between START and END markers
-
-```bash
-awk '/START/,/END/' data.txt
-```
-
-#### Print everything between two timestamps in a log
-
-```bash
-awk '/2026-03-22 08:00/,/2026-03-22 09:00/' app.log
-```
-
-#### Range pattern with an action
-
-```bash
-awk '/BEGIN_BLOCK/,/END_BLOCK/ {print NR, $0}' data.txt
-```
-
-### Linux | awk | NR and NF based filtering
-
-#### Skip the header line
-
-```bash
-awk 'NR > 1 {print}' data.csv
-```
-
-#### Print only the first 10 lines
-
-```bash
-awk 'NR <= 10' data.txt
-```
-
-#### Print lines 5 through 15
-
-```bash
-awk 'NR>=5 && NR<=15' data.txt
-```
-
-#### Print every other line (odd lines only)
-
-```bash
-awk 'NR % 2 == 1' data.txt
-```
-
-#### Skip malformed rows with fewer than 3 fields
-
-```bash
-awk 'NF >= 3 {print}' data.csv
-```
-
-#### Print lines with exactly 5 fields
-
-```bash
-awk 'NF == 5' data.csv
-```
-
-### Linux | awk | combined pattern examples
-
-#### Filter a CSV by numeric threshold, skipping the header
-
-```bash
-awk -F',' 'NR>1 && $3+0 > 500 {print $1, $3}' data.csv
-```
-
-`$3+0` coerces the field to a number, guarding against accidental string comparison.
-
-#### Log lines matching a keyword where a duration field exceeds a threshold
-
-```bash
-awk '/PIPELINE/ && $5 > 60 {print NR, $0}' pipeline.log
-```
-
-#### First 20 CSV rows where a status column equals FAILED
-
-```bash
-awk -F',' 'NR>1 && $2=="FAILED" && NR<=21' jobs.csv
-```
-
----
 
 ## Linux awk | control flow
 
-awk supports the same control flow constructs as C: `if/else`, `for`, `while`, `do-while`, and the awk-specific `next` and `nextfile` statements. These constructs appear inside the action block of a pattern-action rule and allow conditional logic and iteration within record processing.
+Awk becomes genuinely powerful when you combine record filtering with branching, loops, and associative arrays.
 
-### Linux | awk | if / else
+### Linux | awk | control flow
 
-`if` evaluates a condition and executes the associated block. `else if` and `else` provide additional branches. Braces are required when the body contains more than one statement.
+These are the small control structures that let one-pass text processing stay readable.
 
-#### Filter rows by category with if / else if
+#### Route records with `if` / `else if`
 
-```bash
-awk -F',' 'NR>1 {
-  if ($3 > 1000)      print $1, "HIGH"
-  else if ($3 > 100)  print $1, "MED"
-  else                 print $1, "LOW"
-}' data.csv
-```
-
-#### Ternary operator (inline if)
-
-The ternary operator `condition ? value_if_true : value_if_false` is the inline form of `if/else`. It is commonly used inside `print` and `printf` statements for compact conditional output.
+This is the pattern to use when a field value determines a category label or downstream handling rule.
 
 ```bash
-awk -F',' 'NR>1 {print $1, ($3 > 100 ? "ABOVE" : "BELOW")}' data.csv
-```
-
-### Linux | awk | for loop
-
-The C-style `for` loop iterates a fixed number of times. It is the standard way to process a range of fields or generate output sequences.
-
-#### Sum fields 2 through 7 per row
-
-```bash
-awk '{
-  total = 0
-  for (i = 2; i <= 7; i++) total += $i
-  print $1, total
-}' items-sold.txt
-```
-
-#### Iterate over associative array keys
-
-The `for (key in array)` form iterates over all existing keys. Iteration order is not guaranteed.
-
-```bash
-awk '{count[$1]++} END {for (k in count) print k, count[k]}' data.txt
-```
-
-### Linux | awk | while and do-while
-
-`while` checks the condition before each iteration. `do-while` executes the body at least once, then checks the condition.
-
-#### Read fields with while
-
-```bash
-awk '{
-  i = 1
-  while (i <= NF) {
-    print "Field", i, "=", $i
-    i++
-  }
-}' data.txt
-```
-
-#### Generate a repeated string with do-while
-
-```bash
-awk 'BEGIN {
-  do {
-    str = str "x"
-    count++
-  } while (count < 50)
-  print str
-}'
-```
-
-### Linux | awk | break and continue
-
-`break` exits the innermost `for`, `while`, or `do-while` loop immediately. `continue` skips the rest of the current iteration and proceeds to the next one. Neither affects pattern-action rule evaluation — they only apply to loops within an action block.
-
-#### Skip negative values and stop at a sentinel
-
-```bash
-awk '{
-  for (i = 1; i <= NF; i++) {
-    if ($i < 0) continue
-    if ($i == 999) break
-    sum += $i
-  }
-} END {print sum}' data.txt
-```
-
-### Linux | awk | next and nextfile
-
-`next` stops processing the current record immediately, skips all remaining pattern-action rules for that record, and reads the next input record. `nextfile` (gawk / POSIX 2008) stops processing the current file entirely and moves to the next input file.
-
-#### Skip comment lines and blank lines
-
-```bash
-awk '/^#/ {next} /^$/ {next} {print}' config.txt
-```
-
-Both patterns cause awk to immediately advance to the next record without executing the final `{print}` rule.
-
-#### Stop processing a file after the first match
-
-```bash
-awk '/CRITICAL/ {print FILENAME, $0; nextfile}' *.log
-```
-
-`nextfile` ensures that only the first `CRITICAL` line from each file is printed, which is also significantly faster when scanning many large files.
-
-> [!tip] next vs getline for skipping records
->
-> `next` is the clean way to skip a record — it returns control to the top of the awk program and reads the next line naturally. `getline` reads the next line but continues execution at the same point in the script, which can produce subtle bugs if not handled carefully. Prefer `next` for skipping; reserve `getline` for reading from files or commands.
-
----
-
-## Linux awk | data transformation
-
-This section covers arithmetic, string manipulation, and aggregate operations — the core of awk's value for ETL and data engineering pipelines.
-
-### Linux | awk | arithmetic operations
-
-#### Multiply a field by a constant
-
-```bash
-awk '{print $1, $2 * 100}' data.txt
-```
-
-Useful for converting fractions to percentages.
-
-#### Add two fields
-
-```bash
-awk -F',' '{print $1, $2 + $3}' data.csv
-```
-
-#### Compute a derived field (margin percentage)
-
-```bash
-awk -F',' 'NR>1 {margin=($3-$4)/$3*100; printf "%s %.2f%%\n", $1, margin}' data.csv
-```
-
-#### Integer division and modulo (convert seconds to minutes and seconds)
-
-```bash
-awk '{print int($1/60), $1%60}' seconds.txt
-```
-
-### Linux | awk | built-in arithmetic functions
-
-awk includes a set of built-in arithmetic functions inherited from C. These operate on numeric values and are useful for rounding, random sampling, and mathematical transformations in data pipelines.
-
-| Function | Description |
-|---|---|
-| `int(x)` | Truncate `x` to integer (rounds toward zero) |
-| `sqrt(x)` | Square root of `x` |
-| `exp(x)` | Exponential: `e` raised to the power `x` |
-| `log(x)` | Natural logarithm (base `e`) of `x` |
-| `sin(x)` | Sine of `x` (radians) |
-| `cos(x)` | Cosine of `x` (radians) |
-| `atan2(y, x)` | Arctangent of `y/x` in radians |
-| `rand()` | Random float between 0 and 1 (exclusive) |
-| `srand(seed)` | Seed the random number generator; returns the previous seed |
-
-#### Truncate a float to integer
-
-```bash
-echo "3.7" | awk '{print int($1)}'
+printf 'a,retail\nb,finance\nc,ops\n' | awk -F',' '{if($2=="retail") print $1, "shop"; else if($2=="finance") print $1, "ledger"; else print $1, "other"}'
 ```
 
 ```text
-3
+a shop
+b ledger
+c other
 ```
 
-`int()` truncates toward zero: `int(-3.7)` returns `-3`, not `-4`.
+#### Accumulate selected fields with a `for` loop
 
-#### Generate a random sample of 10% of rows
-
-```bash
-awk 'BEGIN{srand()} rand() < 0.10' data.csv
-```
-
-`srand()` without an argument seeds from the current time, producing different results each run. Call `srand(42)` for reproducible sampling.
-
-#### Compute the natural log of each value
+Loops are how you address dynamic field ranges without writing a separate rule for each column.
 
 ```bash
-awk '$1 > 0 {printf "%.6f\n", log($1)}' values.txt
-```
-
-The guard `$1 > 0` prevents domain errors since `log(0)` and `log(negative)` are undefined.
-
-### Linux | awk | string functions
-
-#### length() — character count of a string
-
-```bash
-awk '{print length($1), $1}' data.txt
-```
-
-#### substr() — extract a substring (1-indexed)
-
-```bash
-awk '{print substr($1, 1, 3)}' data.txt
-```
-
-```bash
-awk '{print substr($1, 4)}' data.txt
-```
-
-```bash
-awk -F',' '{print substr($2, 1, 10)}' data.csv
-```
-
-The third example truncates a date field to its first 10 characters (YYYY-MM-DD).
-
-#### index() — find the position of a substring
-
-```bash
-awk '{pos=index($1,"@"); if(pos>0) print substr($1,1,pos-1)}' emails.txt
-```
-
-`index` returns 0 when the target is not found. This extracts the local part of an email address.
-
-#### split() — split a field into an array
-
-```bash
-awk '{n=split($1,a,"-"); print a[1], a[2], a[3]}' dates.txt
-```
-
-Splits a date string like `2026-03-22` into year, month, and day components.
-
-#### sub() — replace the first occurrence of a pattern
-
-```bash
-awk '{sub(/ERROR/, "CRITICAL", $0); print}' app.log
-```
-
-#### gsub() — replace all occurrences of a pattern
-
-```bash
-awk '{gsub(/,/, "\t"); print}' data.csv
-```
-
-```bash
-awk '{gsub(/ /, "_", $1); print}' data.txt
-```
-
-```bash
-awk 'gsub(/\r/, "")' dos.txt
-```
-
-The last command removes Windows carriage returns from a file. `gsub` returns the number of substitutions, which acts as a truthy pattern.
-
-#### tolower() and toupper()
-
-```bash
-awk '{print tolower($0)}' data.txt
-```
-
-```bash
-awk '{print toupper($1)}' data.txt
-```
-
-```bash
-awk -F',' '{print $1, toupper($2)}' data.csv
-```
-
-#### gensub() — substitution with backreferences (gawk only)
-
-`gensub(regex, replacement, how [, target])` is gawk's enhanced substitution function. Unlike `sub()` and `gsub()`, it returns the modified string instead of modifying the target in place. It also supports backreferences (`\1`, `\2`, etc.) in the replacement string, making it far more powerful for pattern extraction and reformatting.
-
-```bash
-echo "2026-03-22" | gawk '{print gensub(/([0-9]{4})-([0-9]{2})-([0-9]{2})/, "\\3/\\2/\\1", "g")}'
+printf 'job1 3 4 5\njob2 1 1 1\n' | awk '{sum=0; for(i=2;i<=4;i++) sum += $i; print $1, sum}'
 ```
 
 ```text
-22/03/2026
+job1 12
+job2 3
 ```
 
-The third argument `how` is either `"g"` (global) or a number indicating which occurrence to replace. `gensub` with `how=1` replaces only the first match, like `sub`, but returns the result rather than modifying `$0`.
+#### Skip records early with `next`
+
+`next` is the cleanest way to discard comments, blank lines, or headers before the main action runs.
 
 ```bash
-echo "foo_bar_baz" | gawk '{print gensub(/_/, "-", 2)}'
+printf '# header\n\nalpha\nbeta\n' | awk '/^#/ {next} NF==0 {next} {print}'
 ```
 
 ```text
-foo_bar-baz
+alpha
+beta
 ```
-
-Only the second underscore is replaced.
-
-> [!info] gensub is gawk-only
->
-> `gensub()` is not part of POSIX awk. It is available in gawk (GNU awk) only. For portable scripts, use `sub()` or `gsub()` instead. If you need backreference capture portably, use `match()` with the array form.
-
-#### match() — find a pattern and capture groups (gawk array form)
-
-`match(string, regex)` returns the position of the first match (or 0 if not found) and sets `RSTART` and `RLENGTH`. In gawk, `match(string, regex, array)` additionally populates `array` with the captured groups: `array[0]` is the full match, `array[1]` is the first group, and so on.
-
-```bash
-echo "error code=42 msg=timeout" | gawk '{
-    match($0, /code=([0-9]+) msg=([a-z]+)/, arr)
-    print "Code:", arr[1], "Message:", arr[2]
-}'
-```
-
-```text
-Code: 42 Message: timeout
-```
-
-The POSIX-portable form (without the array argument) only provides `RSTART` and `RLENGTH`:
-
-```bash
-echo "error code=42" | awk '{
-    if (match($0, /code=[0-9]+/))
-        print substr($0, RSTART, RLENGTH)
-}'
-```
-
-```text
-code=42
-```
-
-> [!warning] sub() and gsub() target parameter
->
-> If you omit the third argument, `sub()` and `gsub()` operate on `$0`. Modifying `$0` or any field triggers a full record rebuild using OFS.
-
-> [!success] Modify a specific field with gsub
->
-> Pass the field as the third argument to target it: `gsub(/x/, "y", $3)`. This modifies only field 3 and rebuilds `$0` with OFS.
-
-### Linux | awk | computing aggregates
-
-#### Sum a column
-
-```bash
-awk -F',' '{sum+=$3} END {print "Total:", sum}' data.csv
-```
-
-#### Count records matching a condition
-
-```bash
-awk -F',' '$4=="ACTIVE" {count++} END {print count}' data.csv
-```
-
-#### Average of a column
-
-```bash
-awk '{sum+=$2; count++} END {print "Average:", sum/count}' data.txt
-```
-
-#### Min and max of a column
-
-```bash
-awk -F',' 'NR==2{min=max=$3} NR>1{if($3<min) min=$3; if($3>max) max=$3} END{print "Min:", min, "Max:", max}' data.csv
-```
-
-#### Count, sum, average, min, and max in a single pass
-
-```bash
-awk -F',' 'NR>1 {
-  sum += $3
-  count++
-  if (count==1 || $3<min) min=$3
-  if (count==1 || $3>max) max=$3
-}
-END {
-  print "Count:", count
-  print "Sum:",   sum
-  print "Avg:",   sum/count
-  print "Min:",   min
-  print "Max:",   max
-}' data.csv
-```
-
-### Linux | awk | running totals and cumulative sums
-
-#### Print cumulative sum alongside each row
-
-```bash
-awk -F',' '{cumsum+=$3; print $0, cumsum}' OFS=',' data.csv
-```
-
-#### Running average (rolling mean)
-
-```bash
-awk '{sum+=$1; printf "%.4f\n", sum/NR}' values.txt
-```
-
-#### Percent of total (two-pass approach)
-
-The first pass computes the grand total. The second pass uses it via `-v` to print each row's percentage share.
-
-```bash
-awk -F',' '{sum+=$3} END{print sum}' data.csv
-```
-
-```bash
-awk -F',' -v total=12345 '{printf "%s %.2f%%\n", $1, $3/total*100}' data.csv
-```
-
-### Linux | awk | group-by operations
-
-#### Sum per group (SQL equivalent: SELECT field1, SUM(field3) GROUP BY field1)
-
-```bash
-awk -F',' 'NR>1 {sum[$1]+=$3} END {for(k in sum) print k, sum[k]}' data.csv
-```
-
-#### Count per group
-
-```bash
-awk -F',' 'NR>1 {count[$2]++} END {for(k in count) print k, count[k]}' data.csv
-```
-
-#### Average per group
-
-```bash
-awk -F',' 'NR>1 {
-  sum[$1]+=$3
-  cnt[$1]++
-}
-END {
-  for(k in sum) printf "%s %.4f\n", k, sum[k]/cnt[k]
-}' data.csv
-```
-
-#### Min and max per group
-
-```bash
-awk -F',' 'NR>1 {
-  if(!($1 in mn) || $3<mn[$1]) mn[$1]=$3
-  if(!($1 in mx) || $3>mx[$1]) mx[$1]=$3
-}
-END {
-  for(k in mn) print k, mn[k], mx[k]
-}' data.csv
-```
-
-#### Multiple aggregations per group (count, sum, avg)
-
-```bash
-awk -F',' 'NR>1 {
-  grp=$1
-  sum[grp]+=$3
-  cnt[grp]++
-}
-END {
-  print "group,count,sum,avg"
-  for(k in sum) printf "%s,%d,%.2f,%.4f\n", k, cnt[k], sum[k], sum[k]/cnt[k]
-}' data.csv
-```
-
-#### Sort group-by output
-
-```bash
-awk -F',' 'NR>1 {sum[$1]+=$3} END {for(k in sum) print k, sum[k]}' data.csv | sort -k2 -rn
-```
-
-> [!tip] Associative array iteration order
->
-> `for(k in array)` in awk does not guarantee any specific order. Pipe to `sort` when order matters. In gawk 4+ you can use `PROCINFO["sorted_in"] = "@ind_str_asc"` for sorted iteration without a shell sort.
-
-### Linux | awk | pivot-like operations (crosstab)
-
-A pivot groups rows into columns. awk supports this with multi-dimensional arrays (gawk) or simulated ones (POSIX awk via SUBSEP).
-
-#### Pivot: rows by field 1, columns by field 2, values are sums of field 3
-
-```bash
-awk -F',' 'NR>1 {
-  pivot[$1][$2]+=$3
-  cols[$2]=1
-  rows[$1]=1
-}
-END {
-  printf "Product"
-  for(c in cols) printf ",%s", c
-  print ""
-  for(r in rows) {
-    printf "%s", r
-    for(c in cols) printf ",%s", pivot[r][c]+0
-    print ""
-  }
-}' sales.csv
-```
-
-> [!tip] Multi-dimensional arrays: gawk vs POSIX awk
->
-> gawk supports true multi-dimensional arrays with `array[i][j]`. POSIX awk simulates them with `array[i,j]`, using `SUBSEP` (ASCII `\034`) as the key separator. For portability use `array[i,j]` and recover dimensions with `split(key, parts, SUBSEP)`.
-
----
-
-## Linux awk | data engineering scenarios
-
-This section contains complete, ready-to-use awk programs for the most common data engineering tasks: parsing CSVs, processing command output, transforming log data, and generating SQL.
-
-### Linux | awk | parse CSV files
-
-#### Extract columns from a simple CSV
-
-```bash
-awk -F',' 'NR>1 {print $1, $3}' data.csv
-```
-
-#### Trim whitespace from every field
-
-```bash
-awk -F',' '{
-  for(i=1;i<=NF;i++) gsub(/^[[:space:]]+|[[:space:]]+$/,"",$i)
-  print
-}' data.csv
-```
-
-The regex matches leading (`^[[:space:]]+`) and trailing (`[[:space:]]+$`) whitespace in each field using alternation. The `|` inside the regex is OR, not a field delimiter.
-
-#### Replace empty fields with NULL placeholder
-
-```bash
-awk -F',' '{
-  for(i=1;i<=NF;i++) if($i=="") $i="NULL"
-  print
-}' OFS=',' data.csv
-```
-
-> [!warning] Quoted fields containing commas
->
-> `awk -F','` splits on every literal comma, including ones inside quoted fields like `"Smith, John"`. This produces wrong field counts for RFC 4180 CSV with embedded commas.
-
-> [!success] Use a proper CSV parser for complex files
->
-> For CSV with quoted fields, use Python's `csv` module, `csvkit`, or `miller` (`mlr`). For simple CSVs with no embedded commas, awk is safe and fast.
-
-### Linux | awk | extract columns from docker ps output
-
-`docker ps` produces fixed-width output with space-separated columns. awk's default whitespace split handles it without `-F`.
-
-#### Print container ID and name
-
-```bash
-docker ps | awk 'NR>1 {print $1, $NF}'
-```
-
-`$1` is the container ID; `$NF` is the last field, which is always the container name.
-
-#### Filter containers by memory usage
-
-```bash
-docker stats --no-stream | awk 'NR>1 && $4~/[0-9]/ {
-  mem=$4
-  gsub(/MiB/,"",mem)
-  if(mem+0 > 200) print $2, $4
-}'
-```
-
-This removes the `MiB` suffix before the numeric comparison and prints the container name and memory usage for containers exceeding 200 MiB.
-
-#### Extract image names using docker format
-
-```bash
-docker ps --format '{{.Image}}\t{{.Names}}' | awk -F'\t' '{print $1}'
-```
-
-### Linux | awk | parse ps aux to find memory-heavy processes
-
-`ps aux` columns: `USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND`.
-
-#### Find processes using more than 5% memory, sorted descending
-
-```bash
-ps aux | awk 'NR>1 && $4>5 {print $4, $1, $11}' | sort -rn
-```
-
-#### Sum memory usage by user
-
-```bash
-ps aux | awk 'NR>1 {mem[$1]+=$4} END {for(u in mem) printf "%.1f %s\n", mem[u], u}' | sort -rn
-```
-
-#### List the top 10 processes by CPU
-
-```bash
-ps aux | awk 'NR>1 {print $3, $1, $11}' | sort -rn | head -10
-```
-
-### Linux | awk | transform log timestamps
-
-#### Reformat ISO 8601 timestamp to human-readable form
-
-Log format: `2026-03-22T08:15:32Z INFO pipeline started`. The `T` separator and `Z` suffix are removed to produce `2026-03-22 08:15:32`.
-
-```bash
-awk '{
-  ts=$1
-  gsub(/T/," ",ts)
-  gsub(/Z/,"",ts)
-  print ts, $2, $3, $4
-}' app.log
-```
-
-#### Extract hour for hourly bucketing
-
-```bash
-awk '{
-  split($1, t, /[T:]/)
-  hour=t[2]
-  counts[hour]++
-}
-END {
-  for(h in counts) print h, counts[h]
-}' app.log | sort -n
-```
-
-`split` on the regex `[T:]` breaks `2026-03-22T08:15:32Z` into parts: `t[1]` = date, `t[2]` = hour, `t[3]` = minute, `t[4]` = second with suffix.
-
-### Linux | awk | calculate pipeline execution duration from logs
-
-#### Match START and END events by pipeline name
-
-```bash
-awk '{
-  name=$2; ts=$1; status=$3
-  if(status=="START") start[name]=ts
-  if(status=="END" && name in start) {
-    duration=ts - start[name]
-    print name, duration "s"
-    delete start[name]
-  }
-}' pipeline.log
-```
-
-This assumes timestamps are Unix epoch seconds. `delete start[name]` prevents stale entries if a pipeline restarts.
-
-#### Calculate duration between two ISO timestamps using shell date
-
-```bash
-awk '{
-  cmd="date -d \"" $1 "\" +%s"
-  cmd | getline epoch_start; close(cmd)
-  cmd="date -d \"" $2 "\" +%s"
-  cmd | getline epoch_end; close(cmd)
-  print $3, epoch_end - epoch_start, "seconds"
-}' durations.txt
-```
-
-`close(cmd)` is required here because the command string changes each iteration; without it, awk keeps the first pipe open and returns stale data.
-
-### Linux | awk | generate SQL INSERT statements from CSV
-
-#### Generate INSERT statements for known column names
-
-```bash
-awk -F',' 'NR>1 {
-  printf "INSERT INTO sales VALUES (%d, '"'"'%s'"'"', %.2f);\n", $1, $2, $3
-}' data.csv
-```
-
-#### Generate INSERT statements using the CSV header as column list
-
-```bash
-awk -F',' '
-NR==1 {
-  cols=$0
-  next
-}
-{
-  printf "INSERT INTO sales (%s) VALUES (%s,'"'"'%s'"'"',%.2f);\n", cols, $1, $2, $3
-}' data.csv
-```
-
-### Linux | awk | aggregate daily row counts from pipeline logs
-
-Log format: `2026-03-22T08:15:32Z LOAD table_name 5000 rows`.
-
-```bash
-awk '{
-  split($1, dt, "T")
-  day=dt[1]
-  table=$3
-  rows=$4
-  daily[day][table]+=rows
-}
-END {
-  for(d in daily)
-    for(t in daily[d])
-      print d, t, daily[d][t]
-}' pipeline.log | sort
-```
-
-### Linux | awk | parse key=value structured logs
-
-#### Extract the value for a specific key
-
-```bash
-awk '{
-  for(i=1;i<=NF;i++) {
-    split($i, kv, "=")
-    if(kv[1]=="status") print kv[2]
-  }
-}' structured.log
-```
-
-#### Build a key-value map per record
-
-```bash
-awk '{
-  for(i=1;i<=NF;i++) {
-    n=split($i, kv, "=")
-    if(n==2) kv_map[kv[1]]=kv[2]
-  }
-  print kv_map["user"], kv_map["action"], kv_map["duration"]
-  delete kv_map
-}' structured.log
-```
-
-`delete kv_map` resets the map for each line, preventing values from previous records from leaking into the next.
-
-### Linux | awk | detect duplicate rows
-
-#### Print only duplicate lines (second and later occurrences)
-
-```bash
-awk 'seen[$0]++ == 1 {print "DUPLICATE:", $0}' data.txt
-```
-
-#### Count occurrences of each line
-
-```bash
-awk '{count[$0]++} END {for(line in count) if(count[line]>1) print count[line], line}' data.txt
-```
-
-#### Find duplicate values in a key column
-
-```bash
-awk -F',' 'NR>1 {count[$1]++} END {for(k in count) if(count[k]>1) print k, count[k]}' data.csv
-```
-
-#### Remove duplicate lines, keeping the first occurrence
-
-```bash
-awk '!seen[$0]++' data.txt
-```
-
-#### Deduplicate by key column, keeping first occurrence
-
-```bash
-awk -F',' '!seen[$1]++' data.csv
-```
-
-### Linux | awk | summarize disk usage by directory
-
-#### Sum sizes by top-level directory
-
-```bash
-du -sk /data/* | awk '{
-  split($2, parts, "/")
-  dir=parts[3]
-  total[dir]+=$1
-}
-END {
-  for(d in total) printf "%10d KB  %s\n", total[d], d
-}' | sort -rn
-```
-
-`du -sk` outputs size in kilobytes followed by the path. `parts[3]` extracts the third path segment (top-level directory name under `/data`).
-
-#### Find directories over 1 GB
-
-```bash
-du -sk /* 2>/dev/null | awk '$1 > 1048576 {print $2, int($1/1048576) "GB"}'
-```
-
-1 GB = 1048576 KB. This filters and formats the result inline without a separate `END` block.
-
-### Linux | awk | convert between delimiters
-
-#### CSV to TSV
-
-```bash
-awk -F',' -v OFS='\t' '{$1=$1; print}' data.csv > data.tsv
-```
-
-#### TSV to pipe-delimited
-
-```bash
-awk -F'\t' -v OFS='|' '{$1=$1; print}' data.tsv > data.psv
-```
-
-#### Pipe-delimited to CSV
-
-```bash
-awk -F'|' -v OFS=',' '{$1=$1; print}' data.psv > data.csv
-```
-
-#### Remove all double quotes
-
-```bash
-awk -F',' '{gsub(/"/, ""); print}' quoted.csv
-```
-
-#### Handle Windows CRLF line endings
-
-```bash
-awk '{gsub(/\r/, ""); print}' windows.csv
-```
-
----
 
 ## Linux awk | advanced patterns
 
-This section covers awk's more powerful constructs: associative arrays for in-memory lookups, multi-file processing with FNR/NR, `getline` for reading files and commands within an awk program, custom record separators, and executing shell commands from within awk.
+These patterns matter when the data spans multiple streams or when the program logic should outlive a one-liner.
 
-### Linux | awk | associative arrays
+### Linux | awk | multi-input lookups
 
-Associative arrays (dictionaries) are awk's most powerful feature for data engineering. Keys are always strings; awk creates array entries automatically on first access.
+Awk's classic two-stream pattern turns the first input into a lookup table and enriches the second input with it.
 
-#### Count occurrences of each value in a column
+#### Load one stream into an associative array and enrich another
 
-```bash
-awk '{count[$1]++} END {for(k in count) print k, count[k]}' data.txt
-```
-
-#### Check if a key exists before accessing it
+`FNR==NR` means "still reading the first input stream." After that phase finishes, later records can use the populated array.
 
 ```bash
-awk '{if($1 in myarray) print "exists"; else myarray[$1]=1}' data.txt
+awk -F',' 'FNR==NR {name[$1]=$2; next} {print $1, name[$1], $2}' <(printf '1,alice\n2,bob\n') <(printf '1,42\n2,55\n')
 ```
-
-The `in` operator tests membership without auto-creating the entry.
-
-#### Delete a key
-
-```bash
-awk '{delete myarray[$1]}' data.txt
-```
-
-#### Delete an entire array
-
-```bash
-awk 'END {delete myarray}' data.txt
-```
-
-#### Build a lookup table from one file and apply it to another
-
-```bash
-awk -F',' '
-  FNR==NR {lookup[$1]=$2; next}
-  {print $0, lookup[$1]}
-' lookup.csv data.csv
-```
-
-`FNR==NR` is true only while the first file is being processed. `next` skips the second block for the first file. For all subsequent files, the second block appends the lookup value.
-
-#### Simulate a set — track unique values
-
-```bash
-awk -F',' '{seen[$1]=1} END {print length(seen), "unique values"}' data.csv
-```
-
-### Linux | awk | multi-file processing: FNR vs NR
-
-`NR` is the global record counter and keeps incrementing across all input files. `FNR` is the per-file record counter and resets to 1 at the start of each new file.
-
-#### Process two files differently using the FNR==NR trick
-
-```bash
-awk '
-  FNR==NR {
-    lookup[$1]=$2
-    next
-  }
-  {
-    print $0, lookup[$1]
-  }
-' file1.csv file2.csv
-```
-
-#### Print the filename with each record
-
-```bash
-awk '{print FILENAME, FNR, $0}' file1.txt file2.txt
-```
-
-#### Process each file's header independently
-
-```bash
-awk 'FNR==1 {print "=== " FILENAME " ==="}; FNR>1 {print}' *.csv
-```
-
-### Linux | awk | getline
-
-`getline` reads the next record explicitly from the current input, from a file, or from a shell command. It returns 1 on success, 0 on end-of-file, and -1 on error.
-
-#### Read the next line from the current input stream
-
-```bash
-awk '/START/ {getline nextline; print "After START:", nextline}' data.txt
-```
-
-#### Read a configuration file at startup using BEGIN
-
-```bash
-awk 'BEGIN {
-  while((getline line < "config.txt") > 0) {
-    split(line, kv, "=")
-    config[kv[1]]=kv[2]
-  }
-  close("config.txt")
-}
-{print $0, config["timezone"]}' data.txt
-```
-
-#### Execute a shell command and capture its output
-
-```bash
-awk '{
-  cmd="date -d \"" $1 "\" +%Y-%m-%d"
-  cmd | getline formatted_date
-  close(cmd)
-  print formatted_date, $2
-}' timestamps.txt
-```
-
-> [!warning] getline and shell injection
->
-> When building shell commands dynamically inside awk using `getline`, any field value controlled by external input is passed to the shell without escaping. An attacker who controls field values can execute arbitrary commands.
-
-> [!success] Sanitize inputs or avoid dynamic commands
->
-> Pre-process with shell pipelines where possible. When dynamic commands are unavoidable, validate field values against a strict allowlist (e.g., `$1 ~ /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/`) before inserting them into a command string.
-
-### Linux | awk | custom record separator (RS)
-
-#### Process paragraph-delimited records (blank line = record boundary)
-
-```bash
-awk 'BEGIN{RS=""} {print NR, NF, $0}' paragraphs.txt
-```
-
-Setting `RS=""` activates paragraph mode: one or more blank lines form the record boundary, and `FS` still splits each paragraph's fields.
-
-#### Process records separated by a literal string
-
-```bash
-awk 'BEGIN{RS="---"} {print NR, $0}' data.txt
-```
-
-#### Use a regex record separator (gawk only)
-
-POSIX awk only supports a single character for `RS`. gawk extends this to full regex.
-
-```bash
-awk 'BEGIN{RS="\n\n+"} {print "Block", NR}' data.txt
-```
-
-#### Process records delimited by a marker line
-
-```bash
-awk 'BEGIN{RS="RECORD_DELIMITER\n"} NR>1{print "Record:", NR-1, $0}' data.txt
-```
-
-### Linux | awk | OFMT for numeric formatting
-
-#### Control the output format for numbers printed with print
-
-```bash
-awk 'BEGIN{OFMT="%.4f"} {x=$1+0; print x}' data.txt
-```
-
-`OFMT` applies when awk converts a number to a string for output via `print`. The `+0` coerces the field to a numeric type.
-
-#### Prefer printf over OFMT for predictable formatting
-
-```bash
-awk '{printf "%.6f\n", $1}' data.txt
-```
-
-`printf` is explicit and portable. `OFMT` and `CONVFMT` affect implicit conversions and can produce surprising results in complex programs.
-
-### Linux | awk | executing shell commands with system()
-
-#### Create directories for each value in a column
-
-```bash
-awk '{system("mkdir -p /data/" $1)}' dirs.txt
-```
-
-#### Check whether each file in a list exists
-
-```bash
-awk '{
-  ret=system("test -f " $1)
-  if(ret==0) print $1, "exists"
-  else print $1, "MISSING"
-}' filelist.txt
-```
-
-`system()` returns the exit code of the shell command. `test -f` returns 0 if the file exists.
-
-#### Pipe per-line output into a shell command
-
-```bash
-awk '{print $1, $2 | "sort -k2 -rn > output.txt"}' data.txt
-```
-
-The pipe stays open until awk exits or `close()` is called. Close explicitly when the command string changes between iterations.
-
-#### Close a pipe explicitly to flush output per chunk
-
-```bash
-awk '{
-  print | "gzip > chunk_" NR ".gz"
-  if(NR%1000==0) close("gzip > chunk_" NR ".gz")
-}' bigfile.txt
-```
-
-### Linux | awk | output redirection to files
-
-The `print` and `printf` statements can redirect their output to a file using `>` (truncate) or `>>` (append). The filename is any expression that evaluates to a string. The file is opened on first use and stays open until explicitly closed with `close()` or until the program ends.
-
-#### Write records to different files by category
-
-```bash
-awk -F',' 'NR>1 {print > ($2 ".csv")}' data.csv
-```
-
-Each unique value in field 2 creates a separate output file. For a CSV with `status` values like `ACTIVE` and `INACTIVE`, this produces `ACTIVE.csv` and `INACTIVE.csv`.
-
-#### Append to a log file
-
-```bash
-awk '/ERROR/ {print >> "errors.log"}' app.log
-```
-
-`>>` appends to the file without truncating it, making this safe for incremental runs.
-
-#### Write to a file and close explicitly
-
-```bash
-awk -F',' '{
-  outfile = "output_" $1 ".csv"
-  print $0 > outfile
-  close(outfile)
-}' data.csv
-```
-
-Without `close()`, awk keeps each file open. Most systems limit the number of simultaneous open file descriptors (typically 1024). When splitting data into many files, close each file after writing to avoid hitting this limit.
-
-> [!warning] > is redirection, not comparison, in print arguments
->
-> Inside a `print` argument list, `>` is interpreted as a redirection operator, not a comparison. To use `>` as a comparison within `print`, wrap the expression in parentheses: `print (a > b ? a : b) > "out.txt"`.
-
-> [!success] Parenthesize comparisons in print output
->
-> Always parenthesize the conditional expression when redirecting output: `print (a > b ? a : b) > "file"`. This prevents awk from misinterpreting the `>` as a redirect of the partial expression.
-
-### Linux | awk | store the program in a file
-
-For complex aggregation scripts, storing the awk program in a `.awk` file improves readability and version control. Invoke it with `-f`.
-
-#### program.awk — group-by aggregation script
-
-```bash
-awk -F',' -f program.awk data.csv | sort -t',' -k3 -rn
-```
-
-The corresponding `program.awk` file:
 
 ```text
-BEGIN {
-    OFS=","
-    print "category,count,total,avg"
-}
-NR > 1 {
-    cat=$1
-    val=$3+0
-    sum[cat]+=val
-    cnt[cat]++
-}
-END {
-    for(c in sum)
-        printf "%s,%d,%.2f,%.4f\n", c, cnt[c], sum[c], sum[c]/cnt[c]
-}
+1 alice 42
+2 bob 55
 ```
 
-### Linux | awk | user-defined functions
+### Linux | awk | getline and record separators
 
-awk supports user-defined functions that can be called from any pattern-action rule or from other functions. Functions are defined at the top level of the program (outside any rule) and follow C-like syntax. They accept arguments by value (scalars) and by reference (arrays).
+These features let awk consume data from non-default sources or change what counts as a record.
 
-#### Function syntax
+#### Read a value from a shell command with `getline`
+
+`getline` can pull data from a command pipeline into a variable before the main input loop even starts.
+
+```bash
+awk 'BEGIN {"printf 2026" | getline year; close("printf 2026"); print year}'
+```
 
 ```text
+2026
+```
+
+#### Parse blank-line-delimited records with `RS`
+
+Setting `RS=""` turns each paragraph into one record, which is useful for grouped key-value blocks.
+
+```bash
+printf 'name=alpha\namount=42\n\nname=beta\namount=55\n' | awk 'BEGIN{RS=""; ORS="\n---\n"} {gsub(/\n/, "; "); print}'
+```
+
+```text
+name=alpha; amount=42
+---
+name=beta; amount=55
+---
+```
+
+### Linux | awk | formatting controls
+
+`OFMT` affects `print`, while `printf` bypasses that setting with an explicit format string.
+
+#### Compare `OFMT` with explicit `printf`
+
+Use `OFMT` for coarse defaults and `printf` when exact precision must be obvious in the source.
+
+```bash
+echo '3.14159' | awk 'BEGIN{OFMT="%.2f"} {print $1 + 0; printf "%.4f\n", $1}'
+```
+
+```text
+3.14
+3.1416
+```
+
+### Linux | awk | store programs and functions
+
+Longer awk logic is easier to review and reuse when the program is factored into a file and supported by small functions.
+
+#### `program.awk` for reusable group-by logic
+
+For reusable scripts, keep the awk source in a file and run it with `-f`. The following is the program body:
+
+```awk
+BEGIN { FS=","; OFS="," }
+NR > 1 { sum[$1] += $2 }
+END { for (k in sum) print k, sum[k] }
+```
+
+The demonstration runs the same logic with `-f` and sorts the result for stable output.
+
+```bash
+printf 'category,amount\nretail,10\nfinance,20\nretail,5\n' | awk -f <(cat <<'AWK'
+BEGIN { FS=","; OFS="," }
+NR > 1 { sum[$1] += $2 }
+END { for (k in sum) print k, sum[k] }
+AWK
+) | sort
+```
+
+```text
+finance,20
+retail,15
+```
+
+#### Define local variables in the function signature
+
+Awk has no `local` keyword, so the conventional way to document local variables is to place them after the parameter list spacing break.
+
+```awk
 function name(param1, param2,    local1, local2) {
     body
     return value
 }
 ```
 
-Parameters and local variables share the same list, separated by convention with extra spaces. All variables not listed in the parameter list are global. Variables listed after the extra-space gap are local to the function — they receive no argument from the caller.
-
-#### Reusable max function
-
-A function that returns the maximum value from an associative array. This pattern is useful for normalizing or scaling aggregated results.
+This runnable example uses a `max()` helper to normalize per-key totals before printing them.
 
 ```bash
-awk '
+printf 'retail 3\nfinance 1\nretail 2\n' | awk '
 function max(arr,    big, i) {
     big = 0
     for (i in arr)
         if (arr[i] > big) big = arr[i]
     return big
 }
-{count[$1]++}
+{count[$1] += $2}
 END {
     m = max(count)
     for (k in count)
-        printf "%-15s %d/%d (%.0f%%)\n", k, count[k], m, count[k]/m*100
-}' data.txt
+        printf "%s %d/%d\n", k, count[k], m
+}' | sort
 ```
 
-The function receives the array by reference (arrays are always passed by reference in awk). `big` and `i` are local variables declared after the conventional gap.
-
-#### Trim whitespace function
-
-```bash
-awk '
-function trim(s) {
-    gsub(/^[[:space:]]+|[[:space:]]+$/, "", s)
-    return s
-}
-BEGIN {FS=","; OFS=","}
-{
-    for (i = 1; i <= NF; i++) $i = trim($i)
-    print
-}' data.csv
+```text
+finance 1/5
+retail 5/5
 ```
-
-> [!tip] Local variables in awk functions
->
-> awk has no `local` keyword. All variables inside a function are global unless they appear in the parameter list. The convention is to add extra spaces before the local variables in the parameter list: `function f(arg1, arg2,    local1, local2)`. This is purely cosmetic for the programmer — awk treats all parameters identically — but it clearly communicates intent.
-
-> [!quote]
-> User-defined functions can appear anywhere between the pattern-action rules. They are called by name and arguments, just like the built-in functions.
->
-> Source: Robbins & Dougherty | Sed awk.epub
-
----
 
 ## Linux awk | processing model diagram
 
-The diagram below shows how awk processes a file from invocation to final output, including the role of `BEGIN`, per-record pattern-action evaluation, and `END`.
+The diagram below shows the lifecycle of an awk program from startup through final output.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
@@ -1880,370 +730,990 @@ flowchart TD
     style G fill:#24283b,stroke:#565f89
 ```
 
----
-
 ## PowerShell awk equivalents
 
-PowerShell's pipeline model is object-based rather than text-based. This makes many awk patterns more verbose but also type-safe, composable with .NET, and aware of column names (via `Import-Csv`) instead of positional indices.
+PowerShell passes structured objects instead of text records, so the direct awk translation is often "parse once, then address named properties." For inline demonstrations below, `ConvertFrom-Csv` stands in for file-backed `Import-Csv`.
 
-### PowerShell | Import-Csv + Select-Object | field extraction
+### PowerShell | column selection
 
-**awk equivalent:** `awk -F',' '{print $1,$3}' data.csv`
+These are the closest equivalents to awk field projection when the input is already CSV-shaped.
 
-`Import-Csv` parses the header row automatically and creates objects with named properties. Fields are accessed by name, not by position.
+#### Select named columns from CSV objects
 
-```powershell
-Import-Csv data.csv | Select-Object Column1, Column3
-```
-
-When the CSV has no header row, supply column names explicitly.
+This is the Windows-native equivalent of "split the row once, then print only the fields you care about."
 
 ```powershell
-Get-Content data.csv | ConvertFrom-Csv -Header id,name,amount | Select-Object id, amount
+@"
+id,name,amount
+1,alice,42
+2,bob,55
+"@ | ConvertFrom-Csv | ForEach-Object { "$($_.id),$($_.amount)" }
 ```
 
-When positional splitting is needed (equivalent to `awk -F','` without headers):
+```text
+1,42
+2,55
+```
+
+#### Add headers when raw rows have no header line
+
+This mirrors positional field extraction when the source data lacks names.
 
 ```powershell
-Get-Content data.csv | ForEach-Object {
-    $fields = $_ -split ','
-    "$($fields[0]),$($fields[2])"
-}
+@"
+1,alice,42
+2,bob,55
+"@ | ConvertFrom-Csv -Header id,name,amount | ForEach-Object { "$($_.id):$($_.amount)" }
 ```
 
-Fields are 0-indexed in PowerShell, compared to 1-indexed in awk.
+```text
+1:42
+2:55
+```
 
-### PowerShell | Where-Object | filtering rows
+### PowerShell | filtering and aggregation
 
-**awk equivalent:** `awk -F',' '$3 > 100 {print}' data.csv`
+`Where-Object` and `Measure-Object` cover most of the filtering and summary work that awk handles with record tests and accumulators.
+
+#### Filter rows by numeric threshold
+
+PowerShell makes the numeric conversion explicit, which is the same discipline awk needs with `+0`.
 
 ```powershell
-Import-Csv data.csv | Where-Object { [int]$_.amount -gt 100 }
+@"
+name,amount,status
+alice,42,OK
+bob,105,FAIL
+cara,70,OK
+"@ | ConvertFrom-Csv | Where-Object { [int]$_.amount -gt 50 } | ForEach-Object { "$($_.name) $($_.amount)" }
 ```
 
-String-based approach when no headers are available:
+```text
+bob 105
+cara 70
+```
+
+#### Count matching rows and summarize numeric columns
+
+The first pipeline counts records meeting a predicate. The second computes summary statistics across a numeric property.
 
 ```powershell
-Get-Content data.csv | Where-Object {
-    $f = $_ -split ','
-    [double]$f[2] -gt 100
-}
+@"
+name,amount,status
+alice,42,ACTIVE
+bob,105,FAIL
+cara,70,ACTIVE
+"@ | ConvertFrom-Csv | Where-Object { $_.status -eq 'ACTIVE' } | Measure-Object | Select-Object -ExpandProperty Count
 ```
 
-### PowerShell | Measure-Object | counting and aggregation
-
-**awk equivalent:** `awk -F',' '$4=="ACTIVE" {count++} END {print count}' data.csv`
-
-```powershell
-(Import-Csv data.csv | Where-Object { $_.status -eq 'ACTIVE' }).Count
-```
-
-`Measure-Object` computes multiple statistics in one pass:
-
-```powershell
-Import-Csv data.csv | Measure-Object -Property amount -Sum -Average -Minimum -Maximum
-```
-
-### PowerShell | Group-Object | group-by aggregation
-
-**awk equivalent:** `awk -F',' 'NR>1 {sum[$1]+=$3} END {for(k in sum) print k, sum[k]}' data.csv`
-
-```powershell
-Import-Csv data.csv |
-    Group-Object -Property category |
-    ForEach-Object {
-        [PSCustomObject]@{
-            Category = $_.Name
-            Total    = ($_.Group | Measure-Object -Property amount -Sum).Sum
-            Count    = $_.Count
-        }
-    }
-```
-
-### PowerShell | Select-Object @{Expression} | string transformation
-
-**awk equivalent:** `awk -F',' '{print $1, toupper($2)}' data.csv`
-
-```powershell
-Import-Csv data.csv | Select-Object id, @{Name='name'; Expression={ $_.name.ToUpper() }}
-```
-
-### PowerShell | calculated properties | adding computed columns
-
-**awk equivalent:** `awk -F',' 'NR>1 {margin=($3-$4)/$3*100; printf "%s,%.2f\n", $1, margin}' data.csv`
-
-```powershell
-Import-Csv data.csv | Select-Object name, @{
-    Name       = 'margin_pct'
-    Expression = { [math]::Round(([double]$_.revenue - [double]$_.cost) / [double]$_.revenue * 100, 2) }
-}
-```
-
-### PowerShell | Select-Object -Unique | removing duplicates
-
-**awk equivalent:** `awk '!seen[$0]++' data.txt`
-
-```powershell
-Get-Content data.txt | Select-Object -Unique
-```
-
-Deduplicate a CSV by a key column:
-
-```powershell
-Import-Csv data.csv | Sort-Object id -Unique
-```
-
-### PowerShell | ForEach-Object | generating SQL INSERT statements
-
-**awk equivalent:** `awk -F',' 'NR>1 {printf "INSERT INTO t VALUES (%d,'%s',%.2f);\n", $1,$2,$3}' data.csv`
-
-```powershell
-Import-Csv data.csv | ForEach-Object {
-    "INSERT INTO t VALUES ($($_.id), '$($_.name)', $([math]::Round([double]$_.amount, 2)));"
-}
-```
-
-### PowerShell | Export-Csv -Delimiter | delimiter conversion
-
-**awk equivalent:** `awk -F',' -v OFS='\t' '{$1=$1; print}' data.csv`
-
-```powershell
-Import-Csv data.csv | Export-Csv -NoTypeInformation -Delimiter "`t" output.tsv
-```
-
-String-replace approach (does not require headers):
-
-```powershell
-Get-Content data.csv | ForEach-Object { $_ -replace ',', "`t" } | Set-Content output.tsv
-```
-
-### PowerShell | quick pattern comparisons
-
-Common awk one-liners alongside their PowerShell equivalents:
-
-```bash
-awk 'NR>1' data.csv
-awk 'NR%5==0' data.txt
-awk '{print $NF}' data.txt
-awk -F',' '!seen[$1]++ {count++} END {print count}' data.csv
-awk -F',' '$4=="X" {sum+=$3} END {print sum}' data.csv
+```text
+2
 ```
 
 ```powershell
-Import-Csv data.csv
+@"
+name,amount
+alice,42
+bob,58
+"@ | ConvertFrom-Csv | Measure-Object -Property amount -Sum -Average | ForEach-Object { "sum=$([int]$_.Sum) avg=$([math]::Round($_.Average, 2))" }
+```
 
-$i=0; Get-Content data.txt | ForEach-Object { $i++; if($i % 5 -eq 0) { $_ } }
+```text
+sum=100 avg=50
+```
 
-Get-Content data.txt | ForEach-Object { ($_ -split '\s+')[-1] }
+### PowerShell | grouping and shaping
 
-(Import-Csv data.csv | Select-Object -ExpandProperty Column1 -Unique).Count
+Grouping, calculated properties, and projection are where the PowerShell object pipeline becomes clearer than manual text splitting.
 
-(Import-Csv data.csv | Where-Object { $_.status -eq 'X' } | Measure-Object -Property amount -Sum).Sum
+#### Group by category and sum amount
+
+This is the PowerShell equivalent of `sum[$1]+=$2` followed by an `END` block.
+
+```powershell
+@"
+category,amount
+retail,10
+finance,20
+retail,5
+"@ | ConvertFrom-Csv | Group-Object category | Sort-Object Name | ForEach-Object { "$($_.Name) $(($_.Group | Measure-Object amount -Sum).Sum)" }
+```
+
+```text
+finance 20
+retail 15
+```
+
+#### Add uppercase or calculated properties
+
+Calculated properties are the object-pipeline replacement for awk expressions embedded in `print` or `printf`.
+
+```powershell
+@"
+id,name
+1,alice
+2,bob
+"@ | ConvertFrom-Csv | Select-Object id, @{Name='name';Expression={$_.name.ToUpper()}} | ForEach-Object { "$($_.id) $($_.name)" }
+```
+
+```text
+1 ALICE
+2 BOB
+```
+
+```powershell
+@"
+name,revenue,cost
+alpha,100,70
+beta,80,20
+"@ | ConvertFrom-Csv | Select-Object name, @{Name='margin_pct';Expression={ [math]::Round((([double]$_.revenue - [double]$_.cost) / [double]$_.revenue) * 100, 2) }} | ForEach-Object { '{0} {1:N2}' -f $_.name, $_.margin_pct }
+```
+
+```text
+alpha 30.00
+beta 75.00
+```
+
+### PowerShell | text-oriented fallbacks
+
+When the input is raw text rather than structured objects, PowerShell can still handle the job without delegating back to awk.
+
+#### Remove duplicate lines from raw text
+
+This is the closest equivalent to `!seen[$0]++` on a plain text stream.
+
+```powershell
+@"
+alpha
+beta
+alpha
+"@ -split "`n" | Where-Object { $_ } | Select-Object -Unique
+```
+
+```text
+alpha
+beta
+```
+
+#### Emit tab-delimited text without reparsing in awk
+
+For inline transforms, a formatted string is often simpler than writing an intermediate file and re-importing it.
+
+```powershell
+@"
+id,name,amount
+1,alice,42
+2,bob,55
+"@ | ConvertFrom-Csv | ForEach-Object { "$($_.id)`t$($_.name)`t$($_.amount)" }
+```
+
+```text
+1	alice	42
+2	bob	55
+```
+
+### PowerShell | quick pattern equivalents
+
+These examples map a few common awk one-liners onto idiomatic PowerShell.
+
+#### Print every fifth row
+
+This is the object-pipeline version of `NR % 5 == 0`.
+
+```powershell
+1..10 | ForEach-Object { if($_ % 5 -eq 0) { $_ } }
+```
+
+```text
+5
+10
+```
+
+#### Print the last whitespace-delimited field
+
+When the input is still plain text, split the line and read the last element of the resulting array.
+
+```powershell
+(@"
+alpha beta gamma
+one two three
+"@ -split "`n") | Where-Object { $_ } | ForEach-Object { ($_ -split '\s+')[-1] }
+```
+
+```text
+gamma
+three
 ```
 
 ### PowerShell | comparison table: awk vs PowerShell
 
+Use this table as a quick translator between the awk mindset and the PowerShell object pipeline.
+
 | Task | awk | PowerShell |
 |------|-----|------------|
-| Parse CSV | `awk -F','` | `Import-Csv` |
+| Parse CSV | `awk -F','` | `Import-Csv` / `ConvertFrom-Csv` |
 | Filter rows | `$3 > 100 {print}` | `Where-Object { [int]$_.col -gt 100 }` |
 | Select columns | `{print $1,$3}` | `Select-Object col1, col3` |
-| Count rows | `END {print NR}` | `Measure-Object` / `.Count` |
+| Count rows | `END {print NR}` | `.Count` / `Measure-Object` |
 | Sum a column | `{sum+=$3} END{print sum}` | `Measure-Object -Sum` |
 | Group-by | Associative array | `Group-Object` |
-| Add calc column | `{print $1, $2*$3}` | `Select-Object @{Name=...; Expression={...}}` |
-| Dedup rows | `!seen[$0]++` | `Select-Object -Unique` |
-| String replace | `gsub(/x/,"y")` | `-replace 'x','y'` |
+| Add a calculated column | `{print $1, $2*$3}` | `Select-Object @{Name=...; Expression={...}}` |
+| Deduplicate rows | `!seen[$0]++` | `Select-Object -Unique` |
+| Replace text | `gsub(/x/,"y")` | `-replace 'x','y'` |
 | Uppercase | `toupper($1)` | `$_.col.ToUpper()` |
-| Convert delimiters | `awk -F',' OFS='\t' '{$1=$1;print}'` | `Import-Csv \| Export-Csv -Delimiter` |
-| Every Nth row | `NR%100==0 {print}` | `$i=0; ForEach-Object { $i++; if($i%100 -eq 0){$_} }` |
-| Join two files | `FNR==NR` lookup trick | Hash table lookup or `Join-Object` module |
-| Write to file | `print > "out.txt"` | `\| Out-File` / `\| Set-Content` |
-
----
+| Convert delimiters | `awk -F',' -v OFS='\t' '{$1=$1; print}'` | `ForEach-Object { "...`t..." }` / `Export-Csv -Delimiter` |
+| Every Nth row | `NR%100==0 {print}` | `ForEach-Object { if(...) { ... } }` |
+| Join two files | `FNR==NR` lookup trick | `Group-Object`, hash table, or custom lookup |
+| Write to a file | `print > "out.txt"` | `Set-Content` / `Out-File` |
 
 ## Linux awk | quick reference card
 
-This section collects the most useful awk one-liners for data engineering. Each line is self-contained.
+This section keeps a compact set of self-contained one-liners, but each item is still demonstrated and verified.
 
-### Linux | awk | one-liners for data engineering
+### Linux | awk | verified one-liners
 
-```bash
-awk '{print $N}' file
-```
+Each item below is safe to paste into a shell when you need a quick reminder.
 
-Print the Nth column of a file (replace N with the column number).
+#### Number every line
 
-```bash
-awk '/PATTERN/ {c++} END {print c}' file
-```
-
-Count lines matching a pattern.
+Prefixing output with `NR` is the fastest debugging move when you need positional context.
 
 ```bash
-awk 'length > 100' file
+printf 'alpha\nbeta\n' | awk '{print NR": "$0}'
 ```
 
-Print lines longer than 100 characters.
+```text
+1: alpha
+2: beta
+```
+
+#### Remove blank lines
+
+`NF > 0` is the simplest predicate for keeping only non-empty records.
 
 ```bash
-awk 'seen[$0]++ > 0' file
+printf 'alpha\n\nbeta\n' | awk 'NF > 0'
 ```
 
-Print duplicate lines only (second and subsequent occurrences).
+```text
+alpha
+beta
+```
+
+#### Print duplicate lines only
+
+This is the "show me second and later sightings" pattern from the duplicates section, kept here because it is worth memorizing.
 
 ```bash
-awk 'NF > 0' file
+printf 'alpha\nbeta\nalpha\nalpha\n' | awk 'seen[$0]++ > 0'
 ```
 
-Remove blank lines.
+```text
+alpha
+alpha
+```
+
+#### Sum a single-column file
+
+For one numeric column, the accumulator can be expressed in one short rule and one summary block.
 
 ```bash
-awk '{print NR": "$0}' file
+printf '10\n15\n5\n' | awk '{s+=$1} END{print s}'
 ```
 
-Print line numbers with content.
+```text
+30
+```
+
+#### Validate a fixed field count
+
+This pattern is useful in ETL checks where malformed rows must be surfaced before a load runs.
 
 ```bash
-awk '{s+=$1} END{print s}' file
+printf 'a,b,c,d,e\n1,2,3\n' | awk -F',' 'NF != 5 {print "BAD ROW:", NR, NF, $0}'
 ```
 
-Sum the numbers in a single-column file.
+```text
+BAD ROW: 2 3 1,2,3
+```
+
+#### Print unique values from column 2
+
+Tracking the seen key instead of the whole row is the right pattern when uniqueness depends on one column only.
 
 ```bash
-awk '{print $1/1024, "KB"}' file
+printf '1,alice\n2,bob\n3,alice\n' | awk -F',' '!seen[$2]++ {print $2}'
 ```
 
-Divide each value by 1024 (bytes to KB).
-
-```bash
-awk -F',' '{print $1, $NF}' file
+```text
+alice
+bob
 ```
-
-Print the first and last field of a CSV.
-
-```bash
-awk 'NR>=100 && NR<=200' file
-```
-
-Extract lines 100 through 200 from a large file.
-
-```bash
-awk 'NR==1{max=$2} $2>max{max=$2} END{print max}' file
-```
-
-Find the maximum value in column 2.
-
-```bash
-awk '{for(i=NF;i>=1;i--) printf "%s%s",$i,(i>1?OFS:ORS)}' file
-```
-
-Print fields in reverse order.
-
-```bash
-awk '{for(i=1;i<=NF;i++) row[i]=row[i] (NR==1?"":OFS) $i} END{for(i=1;i<=NF;i++) print row[i]}' file
-```
-
-Transpose a file: rows become columns. This accumulates all rows in memory, so it is only suitable for small files.
-
-```bash
-awk '{for(i=1;i<=NF;i++) freq[$i]++} END{for(w in freq) print freq[w], w}' file | sort -rn | head -20
-```
-
-Word frequency count, sorted by frequency descending, showing the top 20.
-
-```bash
-awk -F',' 'NF != 5 {print "BAD ROW:", NR, NF, $0}' file
-```
-
-Validate that every row has exactly 5 fields.
-
-```bash
-awk -F',' '!seen[$2]++ {print $2}' file
-```
-
-Print every unique value of column 2 in order of first appearance.
-
-> [!tip] Debugging awk programs
->
-> Add `{print NR, NF, $0}` as the first rule to see the record number, field count, and raw content of every line. This quickly reveals parsing issues caused by unexpected field separators, extra whitespace, or CRLF endings from Windows files.
-
-> [!tip] Performance: mawk vs gawk
->
-> For pure text processing on very large files (multi-GB logs), `mawk` is typically 2–5x faster than `gawk` because it has a leaner runtime. Use `mawk` for speed-critical pipelines when extended gawk features (multi-dimensional arrays, `PROCINFO`, `gensub`) are not needed.
-
----
 
 ## When to use awk vs sed
 
-awk and sed are complementary tools that share regex pattern matching but serve different purposes. sed operates on individual lines with substitution-oriented commands. awk operates on records split into fields and supports variables, arrays, arithmetic, and full control flow — it is a programming language, not just a stream editor.
+`sed` and `awk` overlap on regex matching, but they are optimized for different jobs. `sed` is a stream editor. `awk` is a field-aware programming language.
 
-| Criterion | Use **sed** | Use **awk** |
-|---|---|---|
-| Line-level substitution (`s/old/new/`) | Preferred — sed is faster and more concise | Possible but verbose |
-| Field/column extraction | Not practical — sed has no concept of fields | Preferred — `$1`, `$2`, `$NF` |
-| Arithmetic on field values | Not supported | Preferred — native arithmetic |
-| Multi-line transformations | Possible via hold space (complex) | Possible via RS or getline (simpler) |
-| Aggregation (sum, count, avg, group-by) | Not supported | Preferred — associative arrays |
-| In-place file editing (`-i`) | Preferred — `sed -i` is a core use case | Not natively supported |
-| Generating reports and formatted output | Limited | Preferred — `printf`, `OFS`, `BEGIN`/`END` |
-| Simple global find-and-replace | Preferred | Overkill |
-| Multi-file join / lookup | Awkward | Preferred — `FNR==NR` trick |
+### Linux | tool choice | prefer sed
 
-> [!tip] Pipeline rule of thumb
->
-> If the task can be expressed as a regex substitution on each line, use sed. If the task requires splitting lines into columns, doing math, or accumulating state across records, use awk. For anything requiring data structures beyond arrays, switch to Python.
+Choose `sed` when the job is fundamentally line editing rather than field-aware transformation.
 
-For the sed perspective on this comparison, including in-place editing, hold space, and substitution flags, see [sed-stream-editing](https://alp78.github.io/elysium/01-Shell/Text-Processing/sed-stream-editing).
+#### Line-oriented substitutions
 
----
+For pure substitution, `sed` is shorter and clearer. Awk can do the same job, but the extra machinery is unnecessary unless you also need fields or state.
 
-The filtering and aggregation patterns here (pattern-action rules, group-by with associative arrays) have direct DataFrame equivalents — see [02_py_explore_select_filter](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/02_py_explore_select_filter) for the Pandas approach to the same column filtering and selection workflows.
+```bash
+printf 'alpha beta\n' | sed 's/a/A/g'
+```
 
+```text
+AlphA betA
+```
 
+```bash
+printf 'alpha beta\n' | awk '{gsub(/a/, "A"); print}'
+```
 
-## Warnings
+```text
+AlphA betA
+```
 
-> [!warning] awk does not handle quoted CSV fields correctly
->
-> A CSV field like `"Smith, John"` contains a comma inside quotes. awk splits on every comma regardless of quoting, producing corrupted field values. For proper CSV parsing, use `miller` (`mlr`), Python `csv` module, or `csvkit`.
+#### In-place file edits
 
-> [!warning] Floating-point precision in awk is limited
->
-> awk uses double-precision floating-point (IEEE 754). Financial calculations requiring exact decimal arithmetic (e.g., currency amounts, index weights) may produce rounding errors. Use `bc`, Python `decimal`, or SQL `DECIMAL` types for precise calculations.
+In-place editing is a core `sed` use case. Awk can rewrite files, but it does not have a native equivalent to `sed -i`.
 
-> [!warning] `NR` counts across all input files
->
-> When processing multiple files, `NR` is a running total. `NR == 1` is true only for the first line of the first file. Use `FNR == 1` to detect the first line of each file.
+```bash
+tmpfile=$(mktemp)
+printf 'alpha\n' > "$tmpfile"
+sed -i 's/alpha/ALPHA/' "$tmpfile"
+cat "$tmpfile"
+rm -f "$tmpfile"
+```
 
-> [!warning] `printf` does not add a newline
->
-> Unlike `print`, `printf` does not automatically append a newline. Forgetting `\n` causes all output to appear on a single line. Always end `printf` format strings with `\n`.
+```text
+ALPHA
+```
+
+### Linux | tool choice | prefer awk
+
+Choose awk when the record must be split into fields or when the result depends on arithmetic or state across records.
+
+#### Field-aware extraction
+
+This is the category of work `sed` does not model well at all.
+
+```bash
+printf '1,alice,42\n' | awk -F',' '{print $2, $3}'
+```
+
+```text
+alice 42
+```
+
+#### Arithmetic and aggregation
+
+Once the job needs numeric accumulation or grouping, awk is the right shell-native tool.
+
+```bash
+printf 'retail,10\nfinance,20\nretail,5\n' | awk -F',' '{sum[$1]+=$2} END {for (k in sum) print k, sum[k]}' | sort
+```
+
+```text
+finance 20
+retail 15
+```
+
+#### Multi-file lookups
+
+Associative arrays plus `FNR==NR` make cross-file enrichment practical without leaving the shell.
+
+```bash
+awk -F',' 'FNR==NR {name[$1]=$2; next} {print $1, name[$1], $2}' <(printf '1,alice\n2,bob\n') <(printf '1,42\n2,55\n')
+```
+
+```text
+1 alice 42
+2 bob 55
+```
+
+#### Formatted reports
+
+`printf` is where awk starts looking like a compact reporting language rather than a simple filter.
+
+```bash
+printf 'alice 42.135\nbob 7.5\n' | awk '{printf "%-10s %8.2f\n", $1, $2}'
+```
+
+```text
+alice         42.13
+bob            7.50
+```
+
+### Linux | tool choice | escalate beyond both
+
+Some text-processing tasks are not good fits for either `sed` or plain awk.
+
+#### Quoted CSV or nested structures
+
+This broken parse is the signal to switch tools. Plain `-F','` has no notion of quoted commas inside a field.
+
+```bash
+printf '"Smith, John",42\n' | awk -F',' '{print $1 "|" $2}'
+```
+
+```text
+"Smith| John"
+```
+
+For real CSV, use a CSV-aware parser such as `mlr`, Python's `csv` module, or PowerShell's CSV cmdlets.
 
 ## Recommendations
 
-| Scenario | Recommendation |
-|---|---|
-| Extract specific columns | `awk -F',' '{print $1, $3}' file.csv`. Set `-F` to match the input delimiter. |
-| Skip header row | `awk 'NR > 1 { ... }' file.csv`. |
-| Sum a numeric column | `awk -F',' '{sum += $3} END {printf "Total: %.2f\n", sum}' file.csv`. |
-| Count unique values | `awk -F',' '{counts[$1]++} END {for (k in counts) print k, counts[k]}' file.csv`. |
-| Filter by field value | `awk -F',' '$5 > 1000' file.csv` -- prints rows where field 5 exceeds 1000. |
-| Validate record structure | `awk -F',' 'NF != 10 {print NR": "NF" fields"}' file.csv` -- finds malformed rows. |
-| Produce CSV output | Set `OFS=","` in `BEGIN` and use `print $1, $2, $3` to output comma-separated. |
-| PowerShell equivalent | `Import-Csv file.csv \| Where-Object { $_.Amount -gt 1000 } \| Select-Object Name, Amount`. |
+These are the safest default patterns for common awk tasks. The H4 titles mirror the original table entries so the decision logic stays visible.
+
+### Linux | recommendations by scenario
+
+Use these as starting templates, then specialize the predicate or printed fields.
+
+#### Extract specific columns
+
+Set `-F` to the actual delimiter and print only the fields you need.
+
+```bash
+printf '1,alice,42\n2,bob,55\n' | awk -F',' '{print $1, $3}'
+```
+
+```text
+1 42
+2 55
+```
+
+#### Skip the header row
+
+`NR > 1` is the standard guard when the first line contains column names rather than data.
+
+```bash
+printf 'id,name,amount\n1,alice,42\n2,bob,55\n' | awk -F',' 'NR>1 {print $2}'
+```
+
+```text
+alice
+bob
+```
+
+#### Sum a numeric column
+
+Convert implicitly numeric fields with arithmetic and emit the total in `END`.
+
+```bash
+printf 'name,amount\nalpha,10\nbeta,15\n' | awk -F',' 'NR>1 {sum += $2} END {print sum}'
+```
+
+```text
+25
+```
+
+#### Count unique values
+
+Track first sightings with an associative array and count the distinct keys.
+
+```bash
+printf 'retail\nfinance\nretail\n' | awk '!seen[$0]++ {count++} END {print count}'
+```
+
+```text
+2
+```
+
+#### Filter by field value
+
+Make the comparison type explicit when the field is numeric.
+
+```bash
+printf 'name,amount,status\nalice,42,OK\nbob,105,FAIL\ncara,70,OK\n' | awk -F',' 'NR>1 && $2+0 > 50 {print $1, $2}'
+```
+
+```text
+bob 105
+cara 70
+```
+
+#### Validate record structure
+
+`NF` is the first integrity check to run against delimiter-separated data before a load or downstream transformation.
+
+```bash
+printf 'a,b,c,d,e\n1,2,3\n' | awk -F',' 'NF != 5 {print "BAD ROW:", NR, NF, $0}'
+```
+
+```text
+BAD ROW: 2 3 1,2,3
+```
+
+#### Produce CSV output
+
+Set `OFS=","` and let `print` rebuild the row with explicit comma separators.
+
+```bash
+printf 'alice 42 engineer\n' | awk 'BEGIN{OFS=","} {print $1,$2,$3}'
+```
+
+```text
+alice,42,engineer
+```
+
+### PowerShell | recommendations by scenario
+
+On Windows, prefer object-aware CSV parsing over manual string splitting whenever the data already has headers.
+
+#### Use `ConvertFrom-Csv` or `Import-Csv` for named columns
+
+This is the direct replacement for positional CSV extraction when column names are available.
+
+```powershell
+@"
+id,name,amount
+1,alice,42
+2,bob,55
+"@ | ConvertFrom-Csv | ForEach-Object { "$($_.id),$($_.amount)" }
+```
+
+```text
+1,42
+2,55
+```
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Fields are split incorrectly | Wrong field separator. awk defaults to whitespace; your file uses commas or tabs. | Set `-F','` for CSV, `-F'\t'` for TSV. |
-| Quoted CSV fields are corrupted | awk does not handle quoted fields with embedded delimiters. | Use `miller` (`mlr`), Python `csv`, or `csvkit` for proper CSV parsing. |
-| Numeric comparison produces wrong results | The field contains leading/trailing spaces or non-numeric characters. | Use `$1+0` to force numeric conversion: `awk '$1+0 > 100'`. |
-| `printf` output appears on one line | Missing `\n` in the format string. | Add `\n`: `printf "%s %s\n", $1, $2`. |
-| `END` block prints nothing | No input was read (empty file or pipe). The `END` block runs but variables are uninitialized. | Check for empty input before the awk command. |
-| awk script is too complex to maintain | Complex multi-file, multi-pass, or stateful logic does not belong in awk. | Rewrite in Python. awk is best for single-pass, line-by-line operations. |
+These are the failure modes that show up most often when awk scripts are moved from toy data to production-like input.
+
+### Linux | troubleshooting | parsing and field boundaries
+
+Start by proving what awk thinks the fields are. Most failures in this category come from an incorrect parse model.
+
+#### Fields are split incorrectly
+
+If you forget `-F','`, awk treats the entire CSV row as one whitespace-delimited field. Adding the correct separator fixes the field count immediately.
+
+```bash
+printf '1,alice,42\n' | awk '{print NF, $1}'
+```
+
+```text
+1 1,alice,42
+```
+
+```bash
+printf '1,alice,42\n' | awk -F',' '{print NF, $1, $2, $3}'
+```
+
+```text
+3 1 alice 42
+```
+
+#### Quoted CSV fields are corrupted
+
+Plain field splitting breaks as soon as a quoted field contains the delimiter.
+
+```bash
+printf '"Smith, John",42\n' | awk -F',' '{print $1 "|" $2}'
+```
+
+```text
+"Smith| John"
+```
+
+When this happens, switch to a CSV-aware parser instead of trying to patch plain awk field splitting.
+
+#### Numeric comparisons behave like strings
+
+If the input field is still a string, string comparison rules apply. Force numeric coercion with `+0` before comparing.
+
+```bash
+printf '9\n10\n' | awk '{print $1, ($1 > "9" ? "string-gt-9" : "string-not-gt-9")}'
+```
+
+```text
+9 string-not-gt-9
+10 string-not-gt-9
+```
+
+```bash
+printf '9\n10\n' | awk '{print $1, ($1+0 > 9 ? "number-gt-9" : "number-not-gt-9")}'
+```
+
+```text
+9 number-not-gt-9
+10 number-gt-9
+```
+
+### Linux | troubleshooting | output and control-flow surprises
+
+Once parsing is correct, the next failures are usually formatting and empty-input edge cases.
+
+#### `printf` output appears on one line
+
+`printf` writes exactly what the format string says. Without `\n`, separate records concatenate together.
+
+```bash
+printf 'alpha 1\nbeta 2\n' | awk '{printf "%s:%s", $1, $2}'
+```
+
+```text
+alpha:1beta:2
+```
+
+```bash
+printf 'alpha 1\nbeta 2\n' | awk '{printf "%s:%s\n", $1, $2}'
+```
+
+```text
+alpha:1
+beta:2
+```
+
+#### `END` logic runs with no data
+
+`END` always runs, even if the input is empty, so guard your summary logic when zero-row input is possible.
+
+```bash
+printf '' | awk 'END {print (NR==0 ? "no input" : NR)}'
+```
+
+```text
+no input
+```
+
+#### The workflow no longer fits a one-pass awk script
+
+If the script now needs full CSV quoting, deep nesting, multi-pass joins, or nontrivial data structures, stop forcing awk to be a general-purpose language. Rewrite the workflow in Python, SQL, or a structured ETL tool before the script becomes impossible to reason about.
+
+## Linux awk | arithmetic and aggregation
+
+This section covers the numeric helpers, string transforms, and accumulator patterns that turn awk into a compact data-processing language.
+
+### Linux | awk | built-in arithmetic functions
+
+These helpers cover most lightweight numeric work in awk.
+
+| Function | Description |
+|---|---|
+| `int(x)` | Truncate `x` toward zero |
+| `sqrt(x)` | Square root |
+| `exp(x)` | Natural exponential |
+| `log(x)` | Natural logarithm |
+| `sin(x)` | Sine in radians |
+| `cos(x)` | Cosine in radians |
+| `atan2(y, x)` | Arctangent of `y/x` |
+| `rand()` | Random float between 0 and 1 |
+| `srand(seed)` | Seed the random generator |
+
+### Linux | awk | arithmetic and string transformation
+
+These patterns cover the most common numeric and string reshaping tasks in data pipelines.
+
+#### Compute a derived metric
+
+Derived fields are often the point where awk replaces a throwaway spreadsheet step.
+
+```bash
+printf 'name,revenue,cost\nalpha,100,70\nbeta,80,20\n' | awk -F',' 'NR>1 {margin=($2-$3)/$2*100; printf "%s %.2f\n", $1, margin}'
+```
+
+```text
+alpha 30.00
+beta 75.00
+```
+
+#### Truncate floating-point values with `int()`
+
+`int()` truncates toward zero, which is often what you want for bucket calculations and whole-number summaries.
+
+```bash
+echo "3.7" | awk '{print int($1)}'
+```
+
+```text
+3
+```
+
+#### Replace the first or all matching substrings
+
+`sub()` changes only the first match, while `gsub()` replaces every match in the target string.
+
+```bash
+printf 'ERROR disk,ERROR retry\n' | awk '{sub(/ERROR/, "WARN", $0); print}'
+```
+
+```text
+WARN disk,ERROR retry
+```
+
+```bash
+printf 'data engineer\n' | awk '{gsub(/ /, "_", $0); print}'
+```
+
+```text
+data_engineer
+```
+
+#### Use GNU-only `gensub()` when backreferences matter
+
+`gensub()` is a `gawk` extension. Use it when the replacement needs captured groups or when you need to target a specific occurrence.
+
+```bash
+echo "2026-03-22" | gawk '{print gensub(/([0-9]{4})-([0-9]{2})-([0-9]{2})/, "\\3/\\2/\\1", "g")}'
+```
+
+```text
+22/03/2026
+```
+
+```bash
+echo "foo_bar_baz" | gawk '{print gensub(/_/, "-", 2)}'
+```
+
+```text
+foo_bar-baz
+```
+
+#### Capture values with `match()`
+
+Use the GNU array form when you need captured groups, and the POSIX form when you only need the matching slice.
+
+```bash
+echo "error code=42 msg=timeout" | gawk '{
+    match($0, /code=([0-9]+) msg=([a-z]+)/, arr)
+    print "Code:", arr[1], "Message:", arr[2]
+}'
+```
+
+```text
+Code: 42 Message: timeout
+```
+
+```bash
+echo "error code=42" | awk '{
+    if (match($0, /code=[0-9]+/))
+        print substr($0, RSTART, RLENGTH)
+}'
+```
+
+```text
+code=42
+```
+
+### Linux | awk | aggregation patterns
+
+Associative arrays and running totals are the features that make awk useful far beyond simple field projection.
+
+#### Sum a column
+
+This is the standard one-pass accumulator pattern for numeric totals.
+
+```bash
+printf 'name,amount\nalpha,10\nbeta,15\n' | awk -F',' 'NR>1 {sum += $2} END {print sum}'
+```
+
+```text
+25
+```
+
+#### Compute multiple statistics in one pass
+
+You can collect count, sum, average, minimum, and maximum in one scan without leaving awk.
+
+```bash
+printf '10\n15\n5\n' | awk 'NR==1{min=max=$1} {sum+=$1; count++; if($1<min) min=$1; if($1>max) max=$1} END {printf "count=%d sum=%d avg=%.2f min=%d max=%d\n", count, sum, sum/count, min, max}'
+```
+
+```text
+count=3 sum=30 avg=10.00 min=5 max=15
+```
+
+#### Group and total by key
+
+This is the awk equivalent of `GROUP BY category SUM(amount)`.
+
+```bash
+printf 'retail,10\nfinance,20\nretail,5\n' | awk -F',' '{sum[$1]+=$2} END {for (k in sum) print k, sum[k]}' | sort
+```
+
+```text
+finance 20
+retail 15
+```
+
+#### Carry a running total through the stream
+
+Running totals are useful when you need cumulative output instead of a single summary line at the end.
+
+```bash
+printf '10\n15\n5\n' | awk '{sum+=$1; print NR, sum}'
+```
+
+```text
+1 10
+2 25
+3 30
+```
+
+## Linux awk | data engineering scenarios
+
+These are representative tasks where awk is still a good fit in production-oriented shell workflows.
+
+### Linux | awk | simple CSV cleanup
+
+These examples assume uncomplicated delimiter-separated data without quoted commas.
+
+#### Trim surrounding whitespace from every field
+
+This pattern normalizes a messy CSV export before a downstream load step.
+
+```bash
+printf 'id,name,amount\n1, alice ,42\n2, bob ,55\n' | awk 'BEGIN{FS=","; OFS=","} NR==1{print; next} {for(i=1;i<=NF;i++) gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i); print}'
+```
+
+```text
+id,name,amount
+1,alice,42
+2,bob,55
+```
+
+#### Replace empty fields with a placeholder
+
+This keeps record width stable when downstream consumers need an explicit null marker.
+
+```bash
+printf 'id,name,amount\n1,alice,\n2,,55\n' | awk 'BEGIN{FS=","; OFS=","} {for(i=1;i<=NF;i++) if($i=="") $i="NULL"; print}'
+```
+
+```text
+id,name,amount
+1,alice,NULL
+2,NULL,55
+```
+
+### Linux | awk | pipeline-log summaries
+
+Timestamped logs are a good fit for one-pass aggregation when the date is already present in each record.
+
+#### Count rows per day
+
+This extracts the date prefix from the timestamp and increments an associative-array counter per day.
+
+```bash
+printf '2026-03-22T10:00:00Z pipeline=ingest status=OK\n2026-03-22T11:00:00Z pipeline=ingest status=FAIL\n2026-03-23T09:30:00Z pipeline=sync status=OK\n' | awk '{day=substr($1,1,10); count[day]++} END {for (d in count) print d, count[d]}' | sort
+```
+
+```text
+2026-03-22 2
+2026-03-23 1
+```
+
+#### Count failures per day
+
+Adding a status filter turns the same pattern into a daily failure summary.
+
+```bash
+printf '2026-03-22T10:00:00Z pipeline=ingest status=OK\n2026-03-22T11:00:00Z pipeline=ingest status=FAIL\n2026-03-23T09:30:00Z pipeline=sync status=FAIL\n' | awk '/status=FAIL/ {day=substr($1,1,10); fail[day]++} END {for (d in fail) print d, fail[d]}' | sort
+```
+
+```text
+2026-03-22 1
+2026-03-23 1
+```
+
+### Linux | awk | key=value logs
+
+Key-value records are common in application logs and batch status output.
+
+#### Extract one key from each record
+
+This loops over fields and selects only the `user=` token.
+
+```bash
+printf 'ts=2026-03-22 level=INFO user=alice\nts=2026-03-22 level=ERROR user=bob\n' | awk '{for(i=1;i<=NF;i++) if($i ~ /^user=/) {split($i,a,"="); print a[2]}}'
+```
+
+```text
+alice
+bob
+```
+
+#### Build a map for later field access
+
+Once the line is normalized into an associative array, you can access the keys by name rather than by original position.
+
+```bash
+printf 'ts=2026-03-22 level=ERROR user=bob retries=3\n' | awk '{for(i=1;i<=NF;i++){split($i,a,"="); kv[a[1]]=a[2]} print kv["level"], kv["user"], kv["retries"]}'
+```
+
+```text
+ERROR bob 3
+```
+
+### Linux | awk | duplicate detection
+
+Associative arrays make deduplication and frequency counts straightforward.
+
+#### Print duplicate lines only
+
+This prints the second and later occurrences while suppressing the first sighting of each record.
+
+```bash
+printf 'alpha\nbeta\nalpha\nalpha\n' | awk 'seen[$0]++ > 0'
+```
+
+```text
+alpha
+alpha
+```
+
+#### Count occurrences per unique line
+
+This is the simplest frequency-table pattern in awk.
+
+```bash
+printf 'alpha\nbeta\nalpha\nalpha\n' | awk '{count[$0]++} END {for (k in count) print k, count[k]}' | sort
+```
+
+```text
+alpha 3
+beta 1
+```
+
+#### Deduplicate by key column
+
+When the whole row can change but the key column is authoritative, track the first-seen key instead of the whole line.
+
+```bash
+printf '1,alice\n2,bob\n1,alice-new\n' | awk -F',' '!seen[$1]++ {print $0}'
+```
+
+```text
+1,alice
+2,bob
+```
+
+### Linux | awk | line-ending cleanup
+
+CRLF cleanup is a small but frequent interoperability task when Windows-generated text lands in Unix pipelines.
+
+#### Strip carriage returns from CRLF input
+
+Removing `\r` normalizes the stream so later field handling behaves predictably.
+
+```bash
+printf 'alpha\r\nbeta\r\n' | awk '{gsub(/\r/, ""); print}'
+```
+
+```text
+alpha
+beta
+```
+
 ## Cross-references
 
-- [reading-file-contents](https://alp78.github.io/elysium/01-Shell/Text-Processing/reading-file-contents) — Reading files in shell (cat, head, tail, less)
+- [reading-file-contents](https://alp78.github.io/elysium/01-Shell/Text-Processing/reading-file-contents) — Reading files in shell with `cat`, `head`, `tail`, and `less`
 - [moc-shell](https://alp78.github.io/elysium/01-Shell/moc-shell) — Shell scripting section index

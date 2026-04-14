@@ -250,4 +250,4 @@ This isolates the slow I/O (bulk load) from the fast atomic swap.
 - [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — The bronze/silver/gold pattern relies on idempotent transforms at each layer
 - [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) — T-SQL MERGE statement for upsert operations
 - [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — Silver layer cleaning and deduplication patterns
-- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — Idempotency is the foundation of Pillar 1 (Reliability)
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — Idempotency is the foundation of Pillar 1 (Reliability)

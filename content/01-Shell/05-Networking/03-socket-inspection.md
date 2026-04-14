@@ -8,114 +8,96 @@ aliases: [ss, netstat, socket inspection, TCP state, LISTEN, ESTABLISHED, TIME-W
 keywords: [ss, netstat, socket inspection, TCP state, LISTEN, ESTAB, TIME-WAIT, ephemeral ports, loopback, 0.0.0.0, 127.0.0.1, connection refused, connection timed out, connection count, Get-NetTCPConnection, SQL Server ports, 1433, 1434, DAC, connection pool, Recv-Q]
 description: "Reading socket state with ss (socket statistics) to diagnose network connectivity issues. Covers listening vs established connections, loopback vs all-interface binding, ephemeral ports, TIME-WAIT connections, and the 'connection refused vs timed out' distinction."
 created: 2026-03-22
-updated: 2026-04-03
+updated: 2026-04-14
 status: complete
 ---
 
 # Socket Inspection
 
-> [!quote]
+> [!quote] Socket Programming Discipline
+>
 > "The devil is in the details, and everything in socket programming is a detail."
 >
 > — **W. Richard Stevens**, *UNIX Network Programming*
 
 > [!abstract]- Summary
-> Reading the socket table is the fastest way to determine whether a connectivity failure is a service problem, a bind-address misconfiguration, or a firewall issue — before touching logs.
 >
-> - **Linux socket inspection tools** — `ss -tlnp` for listeners, `ss -tnp` for established connections; flag reference and bind-address semantics
-> - **PowerShell socket inspection tools** — `Get-NetTCPConnection` equivalents for Listen, Established, TimeWait, and CloseWait states
-> - **When to use socket inspection tools** — port conflict diagnosis, service verification, connection monitoring, firewall debugging
-> - **When not to use socket inspection tools** — application-level pool metrics and network path tracing are out of scope
-> - **Warnings** — `netstat` deprecation, loopback-only bind addresses, TIME_WAIT port exhaustion
-> - **Recommendations** — scenario-to-command quick reference for common diagnostic tasks
-> - **Troubleshooting** — symptom/cause/fix table for the four most common socket-related failures
+> Socket tables answer three questions quickly: is anything listening, who is connected, and does the failure point to the service or the network path.
+>
+> - `ss` and `Get-NetTCPConnection` show listeners, established sessions, queue depth, and Transmission Control Protocol (TCP) state.
+> - Bind address tells you whether a service is localhost-only, interface-specific, or reachable remotely.
+> - `Connection refused` points to no matching listener or the wrong bind address; `connection timed out` points to routing or firewall loss.
+> - `TIME_WAIT` and `CLOSE_WAIT` distinguish normal connection churn from application cleanup problems.
 
 > [!note]- Glossary
 >
 > **Socket**
-> - A network communication endpoint defined by protocol plus addressing information. In practice, a TCP or UDP socket is identified by protocol, local IP address, and local port; for an active connection, the remote IP address and remote port are also part of the full socket tuple.
-> - Distinguishes the abstract idea of "a port is open" from the actual endpoint the OS tracks and applications use for communication.
 >
-> > [!info] Socket vs port
-> >
-> > A port is just a number such as `1433`. A socket is the bound or connected endpoint that uses that port, such as `TCP 10.132.0.2:1433`. Tools like `ss` inspect sockets, not bare port numbers.
+> - A network communication endpoint. For TCP or User Datagram Protocol (UDP), the kernel tracks the protocol, local IP address, and local port; active sessions also include the remote address and remote port.
+> - Distinguishes the abstract statement "port `1433` is open" from the actual endpoint that an application owns and the OS manages.
+> - A port is only the numeric component. `TCP 10.132.0.2:1433` is the socket that uses that port.
 >
 > ---
 >
 > **`ss`**
-> - Modern Linux utility for inspecting socket state. It reads socket information from kernel networking interfaces and is the standard replacement for the older `netstat` tool.
-> - Used to verify which services are listening, which connections are active, which TCP states are accumulating, and which processes own those sockets.
 >
-> > [!info] Why `netstat` is deprecated
-> >
-> > `netstat` belongs to the older `net-tools` package and is often absent on modern Linux systems. `ss` is part of `iproute2`, which is the standard networking toolset on current distributions.
+> - Modern Linux utility for inspecting socket state. It reads from kernel networking interfaces and is the standard replacement for the older `netstat` tool.
+> - Used to confirm listeners, inspect active sessions, review queue depth, and identify which process owns a socket.
+> - `netstat` belongs to the older `net-tools` package and is often absent on current Linux distributions. `ss` ships with `iproute2`, which is the default networking toolset on modern systems.
 >
 > ---
 >
 > **LISTEN state**
-> - TCP state indicating a server socket has been bound to a local address and port and is waiting for incoming connection attempts.
-> - Confirms that a service is ready to accept new TCP sessions, while also showing whether it is bound only to localhost or to broader network interfaces.
 >
-> > [!info] Bind address semantics
-> >
-> > In `ss -tlnp`, the local address appears as `<IP>:<port>`. `127.0.0.1` means local-only access. `0.0.0.0` means all IPv4 interfaces. `[::]` means all IPv6 interfaces and may also cover IPv4 on dual-stack systems, depending on OS configuration.
+> - TCP state that indicates a server socket has bound to a local address and port and is waiting for incoming connections.
+> - Confirms that a service is ready to accept new sessions, while also showing whether it is bound only to loopback or to broader network interfaces.
+> - In `ss -tlnp`, the local address appears as `<IP>:<port>`. `127.0.0.1` means local-only access. `0.0.0.0` means all IPv4 interfaces. `[::]` means all IPv6 interfaces and can also cover IPv4 on dual-stack systems, depending on OS configuration.
 >
 > ---
 >
 > **ESTABLISHED state**
-> - TCP state indicating that the three-way handshake has completed and the connection is fully open for data transfer between two endpoints.
-> - Used to confirm real client-server sessions are active and to count concurrent connections rather than just checking whether a service is listening.
 >
-> > [!info] Ephemeral ports
-> >
-> > The client side usually uses a temporary high-numbered source port chosen by the OS. In `ss`, multiple `ESTAB` rows from the same remote IP but different remote ports usually indicate multiple simultaneous client sessions.
+> - TCP state that indicates the three-way handshake has completed and the connection is fully open for data transfer.
+> - Used to confirm that real client-server sessions exist and to count concurrent connections instead of only checking whether a service is listening.
+> - The client side usually uses a temporary high-numbered ephemeral port chosen by the OS. Multiple `ESTAB` rows from the same remote IP with different remote ports usually mean multiple simultaneous sessions.
 >
 > ---
 >
 > **TIME_WAIT state**
-> - TCP state retained for a short period after connection closure so delayed packets from the old session cannot be mistaken for a new one. On many Linux systems this lasts roughly 60 seconds, though the exact behavior is OS-dependent.
-> - Helps diagnose workloads that create and tear down large numbers of short-lived connections, which can consume ephemeral ports and indicate missing connection pooling.
 >
-> > [!info] TIME_WAIT is usually not a bug by itself
-> >
-> > A small or moderate number of `TIME_WAIT` sockets is normal. It becomes operationally important when the count grows very large relative to the available ephemeral port range or the expected connection pattern.
+> - TCP state retained briefly after a connection closes so delayed packets from the old session cannot be mistaken for a new one.
+> - Helps diagnose workloads that create and tear down large numbers of short-lived sessions, which can consume ephemeral ports and signal missing connection pooling.
+> - The delay is tied to the maximum segment lifetime (MSL). A small number of `TIME_WAIT` sockets is normal; a large number matters when it grows relative to the host's ephemeral port range.
 >
 > ---
 >
 > **CLOSE_WAIT state**
-> - TCP state indicating the remote peer has closed its side of the connection, but the local application has not yet closed its own socket.
-> - Strong signal of an application-side cleanup problem, because these sockets persist until the local process explicitly closes them.
 >
-> > [!info] CLOSE_WAIT vs TIME_WAIT
-> >
-> > `TIME_WAIT` is a normal post-close kernel state. `CLOSE_WAIT` usually means the application received the close notification but failed to release the socket promptly.
+> - TCP state that indicates the remote peer has closed its side of the connection, but the local application has not yet closed its own socket.
+> - Strong sign of an application-side cleanup problem, because these sockets remain until the local process explicitly closes them.
+> - `TIME_WAIT` is a normal post-close kernel state. `CLOSE_WAIT` usually means the application received the close notification and did not release the socket promptly.
 >
 > ---
 >
 > **Recv-Q**
-> - Receive-queue value shown by `ss`. For listening sockets, it represents completed connections waiting to be accepted by the application. For established sockets, it represents bytes received by the kernel but not yet read by the process.
-> - Helps distinguish network reachability from application slowness: a growing `Recv-Q` often means the application is not accepting or reading data fast enough.
 >
-> > [!info] Send-Q for LISTEN sockets
-> >
-> > For a listening socket, `Send-Q` represents the configured backlog limit: the maximum number of pending connections the kernel can queue before new attempts are refused or dropped. It is influenced by the application's `listen()` call and kernel limits such as `net.core.somaxconn`.
+> - Receive-queue value shown by `ss`. For listening sockets, it is the number of completed connections waiting to be accepted by the application. For established sockets, it is the number of bytes received by the kernel but not yet read by the process.
+> - Helps distinguish network reachability from application slowness. A growing `Recv-Q` often means the application is not accepting or reading data fast enough.
+> - For a listening socket, `Send-Q` represents the configured backlog limit: the maximum number of pending connections the kernel can queue before new attempts are refused or dropped.
 >
 > ---
 >
 > **`Get-NetTCPConnection`**
-> - PowerShell cmdlet on Windows that returns TCP connection objects with properties such as `LocalAddress`, `LocalPort`, `RemoteAddress`, `RemotePort`, `State`, and `OwningProcess`.
-> - Windows-native way to inspect TCP listener and connection state in an object-oriented form, similar in purpose to `ss -t` on Linux.
 >
-> > [!info] Resolving OwningProcess to a name
-> >
-> > `OwningProcess` is a PID, not a process name. Use `Get-Process -Id <PID>` to map it to a running process when permissions and process visibility allow it.
+> - PowerShell cmdlet on Windows that returns TCP connection objects with properties such as `LocalAddress`, `LocalPort`, `RemoteAddress`, `RemotePort`, `State`, and `OwningProcess`.
+> - Windows-native way to inspect TCP listener and connection state in object form, similar in purpose to `ss -t` on Linux.
+> - `OwningProcess` is a PID, not a process name. Use `Get-Process -Id <PID>` when you need the executable name and the process is still visible in the current session.
 
-
-The most underused debugging skill in data engineering is reading socket state. When a pipeline fails with "connection refused" or "connection timed out," the answer is almost always visible in the socket table — if you know how to read it. `ss` (socket statistics) is the modern replacement for `netstat` on Linux. On Windows, `Get-NetTCPConnection` provides equivalent visibility into TCP socket state.
+Reading socket state is one of the fastest ways to separate a service problem from a network-path problem. `ss` is the modern Linux replacement for `netstat`, and `Get-NetTCPConnection` provides the same visibility on Windows in object form.
 
 ## Linux socket inspection tools
 
-`ss` reads directly from kernel data structures (netlink) instead of parsing `/proc/net` files, making it faster on systems with thousands of connections. The tool surfaces three essential views: what the system is listening on, what is actively connected, and how connections are distributed across clients.
+`ss` reads directly from kernel networking interfaces instead of parsing the older `net-tools` output. The Linux sections below focus on TCP listeners, active sessions, and failure signals you can confirm from the terminal.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
@@ -126,63 +108,67 @@ flowchart TD
     C --> E[Check ss -tlnp<br>Is service listening?<br>Is it bound to right interface?]
     D --> F[Check firewall rules<br>Check routing<br>Check if server is up]
     E --> G[Service not running → start it<br>Wrong bind address → reconfigure]
-    F --> H[GCP firewall rule missing<br>ufw / iptables blocking<br>Server unreachable]
+    F --> H[Google Cloud Platform firewall rule missing<br>ufw / iptables blocking<br>Server unreachable]
 ```
 
-### Linux | ss | listing listening TCP sockets
+### Linux | `ss` | inspect listeners
 
-`ss -tlnp` is the first command to run when a service is suspected to be down or misconfigured. It shows exactly which process is listening on which port and interface — without needing to parse log files.
+Listener output answers the first question in most incidents: is anything bound to the port, and if so, on which address?
 
-The `-t` flag restricts output to TCP sockets. `-l` limits to listening (server-side) sockets. `-n` forces numeric output, avoiding slow reverse DNS lookups on service names. `-p` adds the owning process name, which requires root to see processes owned by other users.
+#### List listening TCP sockets
+
+Start here when a client cannot connect or when a service may be bound to the wrong address. On a Linux host, `ss -tlnp` gives a read-only listener inventory with bind addresses and any visible owning processes, which makes it the fastest way to separate listener absence from a bad bind.
+
+*List Linux TCP listeners with bind addresses and visible owning processes.*
 
 ```bash
-ss -tlnp
+ss -tlnp | sed -n '1,6p'
 ```
 
 ```text
-State   Recv-Q  Send-Q   Local Address:Port     Peer Address:Port  Process
-LISTEN  0       128      0.0.0.0:22              0.0.0.0:*         users:(("sshd",pid=1234,fd=3))
-LISTEN  0       128      0.0.0.0:1433            0.0.0.0:*         users:(("sqlservr",pid=5678,fd=5))
-LISTEN  0       128      127.0.0.1:1434          0.0.0.0:*
-LISTEN  0       128      127.0.0.1:1431          0.0.0.0:*
-LISTEN  0       4096     127.0.0.1:5000          0.0.0.0:*
+State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+LISTEN 0      1000   10.255.255.254:53  0.0.0.0:*
+LISTEN 0      4096   127.0.0.53%lo:53   0.0.0.0:*
+LISTEN 0      4096   127.0.0.54:53      0.0.0.0:*
+LISTEN 0      5      0.0.0.0:18080      0.0.0.0:*         users:(("python3",pid=32037,fd=3))
+LISTEN 0      4096   *:1434             *:*
 ```
 
 #### Interpret the output columns
 
-The output columns provide a complete picture of socket state. Understanding each field is essential for diagnosing connectivity issues accurately.
+The columns below are short enough to keep as a lookup table because they define fixed fields rather than scenario-specific guidance.
 
 | Column | Meaning |
 |--------|---------|
-| **State** | `LISTEN` = waiting for connections. `ESTAB` = active connection. `TIME-WAIT` = closing, waiting for delayed packets. `CLOSE-WAIT` = remote side closed, local app hasn't closed yet. |
-| **Recv-Q** | For LISTEN: number of completed connections waiting to be accepted by the application. If consistently above 0, the application is not calling `accept()` fast enough. |
-| **Send-Q** | For LISTEN: the configured backlog size — the maximum number of pending connections the kernel will queue before dropping new SYN packets. |
-| **Local Address:Port** | The IP and port the socket is bound to. This determines who can reach the service. |
-| **Peer Address:Port** | For LISTEN sockets, always `0.0.0.0:*` (accepting from anyone). For ESTAB, the remote client's IP and ephemeral port. |
-| **Process** | The program that owns this socket. Requires `sudo` to see processes owned by other users. |
+| **State** | `LISTEN` = waiting for connections. `ESTAB` = active connection. `TIME-WAIT` = closing, waiting for delayed packets. `CLOSE-WAIT` = remote side closed, local app has not closed yet. |
+| **Recv-Q** | For `LISTEN`, completed connections waiting for the application to call `accept()`. If it stays above `0`, the application is not accepting fast enough. |
+| **Send-Q** | For `LISTEN`, the configured backlog size: the maximum number of pending connections the kernel will queue before it starts refusing or dropping new attempts. |
+| **Local Address:Port** | The IP address and port the socket is bound to. This determines who can reach the service. |
+| **Peer Address:Port** | For `LISTEN`, usually `0.0.0.0:*` or `*:*`. For `ESTAB`, the remote client's address and ephemeral port. |
+| **Process** | The program that owns the socket. `sudo` is required to see processes owned by other users. |
 
-#### Understand bind address semantics
+#### Read bind addresses correctly
 
-The local address prefix — `0.0.0.0`, `127.0.0.1`, a specific IP, or `[::]` — is the single most diagnostic field in `ss` output. It determines which network interfaces accept connections.
+The local address prefix is often the single most diagnostic field in `ss` output.
 
-- `0.0.0.0:1433` — listening on all IPv4 interfaces. Any machine on the network can connect. This is the expected bind address for SQL Server, SSH, and web servers in production.
-- `127.0.0.1:5000` — loopback only. Only processes on the same machine can connect. External machines receive "connection refused" regardless of firewall rules.
-- `[::]:22` — all IPv6 interfaces. On Linux with IPv4-mapped IPv6 enabled, this handles both IPv4 and IPv6 connections.
-- `[::1]:1434` — IPv6 loopback only, equivalent to `127.0.0.1` for IPv6 clients.
-- `127.0.0.53%lo:53` — loopback bound to the `lo` interface. Used by `systemd-resolved` for local DNS resolution.
-- `10.0.0.3:1433` — bound to a specific interface IP. Only connections arriving on that interface are accepted.
+- `0.0.0.0:1433` listens on all IPv4 interfaces. Any host that can route to the machine can attempt a connection.
+- `127.0.0.1:5000` is loopback only. Processes on the same machine can connect, but remote hosts cannot.
+- `[::]:22` listens on all IPv6 interfaces and can also accept IPv4 connections on dual-stack systems, depending on `sysctl` settings.
+- `[::1]:1434` is IPv6 loopback only.
+- `127.0.0.53%lo:53` is loopback-bound to the `lo` interface, which is common for `systemd-resolved`.
+- `10.0.0.3:1433` listens only on one interface. Traffic arriving on other interfaces is not accepted.
 
 #### Common services and their default ports
 
-Knowing the expected bind address for common services makes it immediately obvious when a service is misconfigured.
+Knowing the usual bind address for common services makes misconfiguration obvious when the listener table disagrees with your expectation.
 
 | Port | Service | Typical Bind Address | Notes |
 |------|---------|---------------------|-------|
-| 22 | SSH (sshd) | `0.0.0.0` | All interfaces; required for IAP and direct SSH |
+| 22 | SSH (sshd) | `0.0.0.0` | All interfaces; required for Identity-Aware Proxy (IAP) and direct SSH |
 | 53 | DNS (systemd-resolved) | `127.0.0.53` | Loopback only; handles local resolution |
 | 1433 | SQL Server engine | `0.0.0.0` | All interfaces; accepts DB connections |
 | 1434 | SQL Server Browser | `127.0.0.1` | Loopback; named instance discovery; can be disabled on default instances |
-| 1431 | SQL Server DAC | `127.0.0.1` | Loopback only; emergency admin access bypassing normal resource limits |
+| 1431 | SQL Server Dedicated Administrator Connection (DAC) | `127.0.0.1` | Loopback only; emergency admin access bypassing normal resource limits |
 | 5432 | PostgreSQL | `0.0.0.0` or `127.0.0.1` | Controlled by `pg_hba.conf` and `listen_addresses` |
 | 5000 | Datadog Agent intake | `127.0.0.1` | Loopback; collects metrics from local processes |
 | 5001 | Datadog Agent IPC | `127.0.0.1` | Loopback; internal agent communication |
@@ -190,7 +176,9 @@ Knowing the expected bind address for common services makes it immediately obvio
 | 8080 | Airflow webserver | `0.0.0.0` | All interfaces; typically behind a reverse proxy |
 | 8126 | Datadog APM | `127.0.0.1` | Loopback; receives distributed traces from local apps |
 
-The SQL Server DAC (port 1431) deserves special attention: it provides an emergency connection that bypasses normal connection limits and resource governor settings. It is always localhost-only by design. Connect to it with `sqlcmd -S admin:localhost -U sa` when the server is so overloaded that normal connections are rejected.
+The SQL Server Dedicated Administrator Connection (DAC) on port `1431` deserves special attention. It is always loopback-only by design, and it exists so you can still connect when normal sessions are exhausted or heavily throttled.
+
+#### Review frequently used `ss` flags
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
@@ -198,7 +186,7 @@ The SQL Server DAC (port 1431) deserves special attention: it provides an emerge
 | `-u` | `ss -u` | Show UDP sockets only |
 | `-x` | `ss -x` | Show Unix domain sockets |
 | `-l` | `ss -l` | Show listening sockets only |
-| `-n` | `ss -n` | Numeric output — skip service name resolution |
+| `-n` | `ss -n` | Numeric output; skip service-name and reverse-DNS lookup |
 | `-p` | `ss -p` | Show owning process (requires root for other users) |
 | `-a` | `ss -a` | Show all sockets (listening and established) |
 | `-e` | `ss -e` | Show extended socket information (timer, inode, uid) |
@@ -206,178 +194,419 @@ The SQL Server DAC (port 1431) deserves special attention: it provides an emerge
 | `-4` | `ss -4` | IPv4 only |
 | `-6` | `ss -6` | IPv6 only |
 
-### Linux | ss | viewing established connections
+### Linux | `ss` | inspect active sessions
 
-Without the `-l` flag, `ss` shows established (active) connections instead of listening sockets. This view answers "who is currently connected to my services" and is the first step when diagnosing connection pool behavior or identifying unexpected clients.
+Established-session output answers a different question: who is connected right now, and what state is the connection churn in?
+
+#### Show established TCP sessions
+
+Use this after the listener check has confirmed the service exists and the next question is whether real clients are attached. Filtering to one known local port keeps the result on the server side of the conversation and shows the peer ephemeral ports that identify individual sessions.
+
+*Show established server-side TCP sessions for one listener port.*
 
 ```bash
-ss -tnp
+ss -tnp state established '( sport = :45432 )'
 ```
 
 ```text
-State   Recv-Q  Send-Q   Local Address:Port     Peer Address:Port  Process
-ESTAB   0       0        10.0.0.3:1433          10.0.0.24:56434
-ESTAB   0       0        10.0.0.3:1433          10.0.0.24:26733
-ESTAB   0       0        10.0.0.3:22            35.235.240.5:44122
+Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+0      0      127.0.0.1:45432   127.0.0.1:38258 users:(("nc",pid=33228,fd=4))
 ```
 
-#### Interpret peer addresses and ephemeral ports
+The peer port `38258` is the client's ephemeral port. On a real service, repeated rows with the same remote IP and different remote ports usually mean multiple concurrent sessions from that host.
 
-Reading the peer address column reveals which clients hold active connections and how many sessions each holds.
+#### Count active sessions on a local port
 
-- `10.0.0.24:56434 → 10.0.0.3:1433` — an IAP proxy internal IP connected to SQL Server. The high ephemeral port (56434) identifies the client side of the connection.
-- Two connections from `10.0.0.24` with different ephemeral ports (56434, 26733) — two SQL Server sessions from the same IAP proxy. This is typical for SSMS with two query windows open, or one application with two concurrent sessions.
-- `35.235.240.5:44122 → 10.0.0.3:22` — SSH connection from a Google IAP IP (the `35.235.240.0/20` range). This is the interactive SSH session established via `gcloud compute ssh`.
+When the listener port is already known and you only need concurrency, reduce the established-session view to a count. This read-only Linux check answers how many live sessions are attached right now without forcing you to scan every row.
 
-When a client connects, the OS selects a random high port in the ephemeral range (typically 32768–60999 on Linux) as the client-side port. The server sees this as the peer port. Each connection gets a unique ephemeral port, which is why multiple connections from the same client to the same server port show different peer port numbers.
-
-### Linux | ss | filtering and counting connections
-
-These commands isolate connection counts and distributions for a specific port — essential during incident response and load testing.
-
-#### Count active connections to a port
-
-Piping `ss` output through `wc -l` gives an instant count of active connections to a specific port, without needing a database query or application-level metrics.
+*Count established sessions attached to one local listener port.*
 
 ```bash
-ss -tn | grep :1433 | wc -l
+ss -H -tn state established '( sport = :45432 )' | wc -l
 ```
 
 ```text
-12
+1
 ```
 
-#### Count connections per remote IP
+#### Count sessions by remote IP address
 
-This pipeline identifies which clients hold the most connections. A single IP holding an outsized share of connections typically indicates a connection pool leak or a runaway batch process.
+Use this when a raw session list is too noisy and you need to know which client or proxy dominates the workload. The pipeline collapses established sessions by peer address so the busiest source stands out immediately.
+
+*Group established Linux sessions by remote IP address and rank them by count.*
 
 ```bash
-ss -tn | grep :1433 | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -rn
+ss -H -tn state established '( sport = :45432 )' | sed -E 's/.* +([^ ]+)$/\1/' | cut -d: -f1 | sort | uniq -c | sort -rn
 ```
 
 ```text
-      8 10.0.0.24
-      3 10.0.0.51
-      1 10.0.0.99
+      1 127.0.0.1
 ```
 
-#### Detect TIME-WAIT accumulation
+#### Check `TIME_WAIT` accumulation
 
-TIME-WAIT is a normal TCP state: after a connection closes, the OS holds the socket in TIME-WAIT for 2× MSL (typically 60 seconds on Linux) to absorb delayed packets. A small number is expected. A large accumulation — hundreds or thousands — indicates that connections are being opened and closed rapidly without pooling.
+Run this when reconnect churn, ephemeral-port pressure, or unusually frequent short-lived sessions are more likely than a missing listener. The state filter isolates post-close sockets so you can judge whether connection turnover, not reachability, is the dominant symptom.
+
+*List Linux `TIME_WAIT` sockets tied to one destination port.*
 
 ```bash
-ss -tn state time-wait | grep :1433
+ss -tn state time-wait '( dport = :45434 )'
 ```
 
 ```text
-TIME-WAIT  0  0  10.0.0.3:1433  10.0.0.24:41233
-TIME-WAIT  0  0  10.0.0.3:1433  10.0.0.24:41890
-TIME-WAIT  0  0  10.0.0.3:1433  10.0.0.51:38712
+Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+0      0      127.0.0.1:36756   127.0.0.1:45434
+0      0      127.0.0.1:36750   127.0.0.1:45434
+0      0      127.0.0.1:36752   127.0.0.1:45434
 ```
 
-> [!warning] Excessive TIME-WAIT connections
->
-> When ephemeral ports (32768–60999) fill up with TIME-WAIT sockets, new connections fail with "Cannot assign requested address." This happens when a pipeline opens and closes database connections without pooling — each short query consumes an ephemeral port that stays reserved for up to 60 seconds.
+Connection pooling is the primary fix. If pooling is already in place and the system is still healthy otherwise, `net.ipv4.tcp_tw_reuse=1` can help outgoing client sockets, but it does not change the server side of `TIME_WAIT`.
 
-> [!success] Fix TIME-WAIT accumulation
->
-> The primary fix is connection pooling in the application — reuse connections rather than creating a new one per query. If pooling is already in place, enable TCP TIME-WAIT reuse at the kernel level: `sudo sysctl -w net.ipv4.tcp_tw_reuse=1`. Persist across reboots by adding `net.ipv4.tcp_tw_reuse=1` to `/etc/sysctl.conf`. Note: `tcp_tw_reuse` applies to outgoing connections only (client side); it does not affect the server's TIME-WAIT sockets.
+#### Summarize TCP state on the host
 
-#### View a connection state summary
+Use a host-wide state summary when it is still unclear whether the problem is isolated to one service or reflects broader TCP churn on the machine. `ss -s` is a read-only baseline that collapses active, closed, and post-close states into a single snapshot.
 
-`ss -s` prints aggregate counts by socket type and TCP state. It does not filter by port, making it a quick system-wide health snapshot.
+*Print a host-wide summary of current Linux TCP state counts.*
 
 ```bash
 ss -s
 ```
 
 ```text
-Total: 247
-TCP:   38 (estab 12, closed 4, orphaned 0, timewait 6)
+Total: 329
+TCP:   71 (estab 0, closed 66, orphaned 0, timewait 9)
 
 Transport Total     IP        IPv6
 RAW       0         0         0
-UDP       8         4         4
-TCP       34        20        14
-INET      42        24        18
+UDP       5         4         1
+TCP       5         4         1
+INET      10        8         2
 FRAG      0         0         0
 ```
 
-#### Monitor connection count in real time
+#### Poll a connection count once per second
 
-`watch` re-runs a command on a fixed interval and refreshes the terminal in place. Combined with `ss`, it provides a live counter useful during load tests, deployments, and incident investigation.
+During a short verification window, sample the same established-session expression repeatedly so you can see whether concurrency is stable, rising, or dropping. The bounded loop is easier to capture in documentation than `watch`, but it serves the same operational purpose.
+
+*Sample the Linux established-session count for one listener once per second.*
 
 ```bash
-watch -n 1 'ss -tn | grep :1433 | wc -l'
+for i in 1 2 3; do
+  ss -H -tn state established '( sport = :45432 )' | wc -l
+  sleep 1
+done
 ```
 
 ```text
-Every 1.0s: ss -tn | grep :1433 | wc -l
-
-14
+1
+1
+1
 ```
+
+#### Review frequently used filters
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
 | `-t` | `ss -t` | TCP sockets only |
 | `-n` | `ss -n` | Numeric output |
 | `-p` | `ss -p` | Show process info |
-| `state <name>` | `ss state time-wait` | Filter by TCP state (established, time-wait, close-wait, etc.) |
+| `state <name>` | `ss state time-wait` | Filter by TCP state (`established`, `time-wait`, `close-wait`, and so on) |
 | `src <addr>` | `ss src 10.0.0.3` | Filter by local address |
 | `dst <addr>` | `ss dst 10.0.0.24` | Filter by peer address |
 | `sport = :1433` | `ss sport = :1433` | Filter by local port |
 | `dport = :1433` | `ss dport = :1433` | Filter by destination port |
 
-### Linux | ss | diagnosing connection refused vs connection timed out
+### Linux | `nc` and `ss` | separate refused from timed out
 
-These two errors look similar in application logs but have completely different causes at the network layer. Distinguishing them immediately narrows the investigation scope.
+The error string tells you where to investigate next, but only if you distinguish it correctly. `Connection refused` means the target host responded with a TCP reset (RST). `Connection timed out` means the initial synchronize (SYN) never produced a synchronize-acknowledgment (SYN-ACK) before the timeout expired.
 
-**Connection refused** means the packet reached the server, the kernel processed it, and sent back a TCP RST (reset) because nothing is listening on that port — or the process is listening on a different interface. The failure is instant.
+#### Confirm a refused connection
 
-**Connection timed out** means the packet never reached its destination, or the response never arrived. The kernel sent a SYN, received no SYN-ACK, and eventually gave up after retransmitting. This takes seconds (matching your configured socket timeout). Causes: firewall rules dropping packets, incorrect routing, or the server being unreachable.
+Use this when the client fails immediately and you need to prove the target answered with a reset rather than going silent on the network. The command is safe against an unused local port and demonstrates the failure mode that points back to listener state or bind address.
 
-#### Distinguish the error type quickly
-
-`nc -zv` attempts a TCP connection and reports the result. The `-w 3` timeout flag ensures the command exits in 3 seconds rather than waiting for the default kernel retransmit timeout (up to 2 minutes).
+*Attempt a TCP connection to an unused local port and confirm the refusal path.*
 
 ```bash
-nc -zv -w 3 10.0.0.3 1433
+nc -zv -w 2 127.0.0.1 45435
 ```
 
 ```text
-# Connection refused (instant — kernel RST):
-nc: connect to 10.0.0.3 port 1433 (tcp) failed: Connection refused
-
-# Connection timed out (takes 3 seconds — no response):
-nc: connect to 10.0.0.3 port 1433 (tcp) failed: Connection timed out
+nc: connect to 127.0.0.1 port 45435 (tcp) failed: Connection refused
 ```
 
-> [!warning] Misreading the error type delays diagnosis
->
-> Treating "connection timed out" as a service issue (and restarting the service) when the actual cause is a firewall rule wastes time and may cause unnecessary downtime.
+If you get an immediate refusal in production, check the listener table on the server before you touch firewall rules.
 
-> [!success] Correct diagnostic path
->
-> - **Refused**: Run `ss -tlnp` on the server. If nothing is listening on that port, the service is down or bound to the wrong interface. If it is listening on `127.0.0.1` instead of `0.0.0.0`, reconfigure the service's bind address.
-> - **Timed out**: Check GCP firewall rules (`gcloud compute firewall-rules list`), `ufw status`, or `iptables -L`. The problem is at the network/firewall layer, not the application layer.
+#### Confirm a timed-out connection
+
+Use this when the client hangs before failing and the real question is whether packets are being dropped or never reaching the target. The short timeout keeps the test bounded while demonstrating the slower failure mode associated with routing, filtering, or host reachability loss.
+
+*Attempt a TCP connection to an unroutable target and confirm the timeout path.*
+
+```bash
+nc -zv -w 2 10.255.255.1 45435
+```
+
+```text
+nc: connect to 10.255.255.1 port 45435 (tcp) timed out: Operation now in progress
+```
+
+When the timeout case appears, investigate routing, security groups, `ufw`, `iptables`, or whether the remote host is reachable at all.
+
+#### Review frequently used `nc` flags
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
-| `-z` | `nc -z host port` | Scan mode — connect and disconnect without sending data |
-| `-v` | `nc -v host port` | Verbose — print connection result |
+| `-z` | `nc -z host port` | Scan mode; connect and disconnect without sending data |
+| `-v` | `nc -v host port` | Verbose; print the connection result |
 | `-w` | `nc -w 3 host port` | Timeout in seconds before giving up |
 | `-u` | `nc -u host port` | UDP mode instead of TCP |
 
 ## PowerShell socket inspection tools
 
-`Get-NetTCPConnection` is the native PowerShell cmdlet for reading TCP socket state on Windows. It covers the same diagnostic ground as `ss` on Linux: listing listening ports, reading established connections, counting per-client connections, and inspecting TCP state distribution. The output is a collection of objects, making it composable with `Where-Object`, `Group-Object`, and `Sort-Object` in ways that `ss` text output requires `awk`/`grep` to achieve.
+`Get-NetTCPConnection` returns objects instead of plain text, so you can filter by `LocalPort`, `RemotePort`, `State`, or `OwningProcess` without reparsing terminal output.
 
-### PowerShell | Get-NetTCPConnection | listing listening TCP sockets
+The Windows examples below use current host state so the result shapes reflect real listener and session objects rather than fabricated rows.
 
-`Get-NetTCPConnection -State Listen` returns all TCP sockets in the LISTEN state. The `-State` parameter accepts any standard TCP state name. Adding a computed property resolves the owning process ID to a human-readable name.
+### PowerShell | `Get-NetTCPConnection` | inspect listeners
+
+Listener objects answer the same first question as `ss -tlnp`: is anything listening, and on which address?
+
+#### List listening TCP sockets
+
+Start with listener inventory when a Windows client cannot connect or when the service may be bound only to loopback. `Get-NetTCPConnection` exposes the local address, port, and owning PID in object form, which makes it easy to distinguish a missing listener from a valid listener on the wrong interface.
+
+*List Windows TCP listeners with local addresses, ports, and owning processes.*
 
 ```powershell
 Get-NetTCPConnection -State Listen | Sort-Object LocalPort |
+    Select-Object -First 8 LocalAddress, LocalPort, OwningProcess,
+    @{N='Process';E={(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName}} |
+    Format-Table -AutoSize
+```
+
+```text
+LocalAddress  LocalPort  OwningProcess  Process
+------------  ---------  -------------  -------
+0.0.0.0             135          2032   svchost
+::                  135          2032   svchost
+172.25.64.1         139             4   System
+192.168.0.118       139             4   System
+::                  445             4   System
+127.0.0.1          1042         22768   asus_framework
+127.0.0.1          1043         22768   asus_framework
+0.0.0.0            1236          5172   AsusUpdateCheck
+```
+
+#### Read bind addresses on Windows
+
+The address meanings match Linux: `0.0.0.0` is all IPv4 interfaces, `::` is all IPv6 interfaces, and `127.0.0.1` is loopback only. `OwningProcess` is only a PID, so a second lookup through `Get-Process` is still required when you need a name.
+
+### PowerShell | `Get-NetTCPConnection` | inspect active sessions
+
+On Windows, the same object model works for outbound and inbound sessions. The examples below use currently active HTTPS sessions because they were already present on the host and did not require fabricating a mock server.
+
+#### Show established HTTPS sessions
+
+Use this when you need a live example of established Windows sessions or when the host already carries stable HTTPS traffic that can stand in for a real service. The command stays read-only and shows the local ephemeral ports that identify concurrent outbound sessions.
+
+*Show established Windows TCP sessions filtered to remote port `443`.*
+
+```powershell
+Get-NetTCPConnection -RemotePort 443 -State Established |
+    Select-Object -First 8 LocalAddress, LocalPort, RemoteAddress, RemotePort |
+    Format-Table -AutoSize
+```
+
+```text
+LocalAddress                           LocalPort  RemoteAddress                       RemotePort
+------------                           ---------  -------------                       ----------
+2a02:8308:112:7c00:bdf6:e398:4195:8d76     63942  2a03:2880:f03d:b:face:b00c:0:8e          443
+2a02:8308:112:7c00:bdf6:e398:4195:8d76     61990  2603:1020:705:8::402                     443
+2a02:8308:112:7c00:bdf6:e398:4195:8d76     61806  2a03:2880:f23d:c1:face:b00c:0:32c2       443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7      60412  2a06:98c1:310b::ac40:9bd1                443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7      60406  2a06:98c1:3100::6812:202f                443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7      58695  2a06:98c1:3100::6812:202f                443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7      58189  2620:1ec:48:1::44                        443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7      57082  2a06:98c1:3100::6812:202f                443
+```
+
+Repeated remote addresses with different local ephemeral ports indicate multiple concurrent client sessions to the same service endpoint.
+
+#### Count sessions by remote address
+
+When the connection table is too noisy, aggregate by remote address so the busiest peer becomes obvious. This preserves PowerShell objects until the final display step, which makes the grouping safer than reparsing formatted text.
+
+*Group established Windows sessions by remote address and rank them by count.*
+
+```powershell
+Get-NetTCPConnection -RemotePort 443 -State Established |
+    Group-Object RemoteAddress | Sort-Object Count -Descending |
+    Select-Object -First 8 Count, Name | Format-Table -AutoSize
+```
+
+```text
+Count  Name
+-----  ----
+    4  2a06:98c1:3100::6812:202f
+    4  2a06:98c1:310b::ac40:9bd1
+    3  2a03:2880:f03d:b:face:b00c:0:8e
+    2  2a03:2880:f03d:12:face:b00c:0:2
+    2  34.128.128.0
+    1  13.107.5.93
+    1  2600:9000:207f:5200:1c:aabc:1300:93a1
+    1  2603:1020:705:8::402
+```
+
+#### Summarize TCP states for a workload
+
+Use a state distribution when you need to decide whether the workload is mostly healthy established traffic, post-close churn, or sockets that the application has not released. Grouping by `State` gives the fastest Windows-side baseline before you dive into individual rows.
+
+*Summarize Windows TCP connections by state for one workload.*
+
+```powershell
+Get-NetTCPConnection -RemotePort 443 | Group-Object State |
+    Select-Object Count, Name | Sort-Object Count -Descending |
+    Format-Table -AutoSize
+```
+
+```text
+Count  Name
+-----  ----
+   20  Established
+   17  CloseWait
+    7  TimeWait
+```
+
+`CloseWait` in this view means the application process, not the network, still owns the socket. `TimeWait` is normal after closure; only the scale and rate of growth make it operationally important.
+
+#### Poll a connection count once per second
+
+During a short monitoring window, repeat the same established-session count so a trend is visible without opening an external tool. The bounded loop keeps the note reproducible while still showing how to watch the metric live.
+
+*Sample the Windows established-session count once per second.*
+
+```powershell
+1..3 | ForEach-Object {
+    (Get-NetTCPConnection -RemotePort 443 -State Established -ErrorAction SilentlyContinue).Count
+    Start-Sleep -Seconds 1
+}
+```
+
+```text
+24
+24
+24
+```
+
+#### Review frequently used parameters
+
+| Parameter | Syntax | Description |
+|-----------|--------|-------------|
+| `-State` | `-State Listen` | Filter by TCP state (`Listen`, `Established`, `TimeWait`, `CloseWait`, and so on) |
+| `-LocalPort` | `-LocalPort 1433` | Filter by local port number |
+| `-LocalAddress` | `-LocalAddress 127.0.0.1` | Filter by local IP address |
+| `-RemoteAddress` | `-RemoteAddress 10.0.0.24` | Filter by remote IP address |
+| `-RemotePort` | `-RemotePort 56434` | Filter by remote port number |
+| `-OwningProcess` | `-OwningProcess 5678` | Filter by owning process ID |
+
+## Recommendations
+
+Use this section when the diagnostic question is already clear and you need the shortest command that answers it with minimal surrounding noise.
+
+### Linux | `ss` | quick service checks
+
+These Linux shortcuts answer common first-pass questions with the shortest reliable `ss` expression.
+
+#### Find what listens on a port
+
+When one port is already suspected, narrow the listener table to that port instead of scanning the full inventory. This Linux check resolves the bind address and owning process quickly, which is the fastest confirmation after a service-specific failure report.
+
+*Filter Linux listeners to one local port and show the owning process.*
+
+```bash
+ss -tlnp | grep :18080
+```
+
+```text
+LISTEN 0      5      0.0.0.0:18080      0.0.0.0:*    users:(("python3",pid=32037,fd=3))
+```
+
+#### List all listening services
+
+Start broad when the failing port is unknown or when you need the current listener inventory before narrowing the search. A short slice of the full listener table makes wildcard, loopback, and interface-specific binds visible in one pass.
+
+*Show the first rows of the Linux listener table.*
+
+```bash
+ss -tlnp | sed -n '1,6p'
+```
+
+```text
+State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+LISTEN 0      1000   10.255.255.254:53  0.0.0.0:*
+LISTEN 0      4096   127.0.0.53%lo:53   0.0.0.0:*
+LISTEN 0      4096   127.0.0.54:53      0.0.0.0:*
+LISTEN 0      5      0.0.0.0:18080      0.0.0.0:*         users:(("python3",pid=32037,fd=3))
+LISTEN 0      4096   *:1434             *:*
+```
+
+#### Count connections to a service
+
+Use this when the service port is known and the immediate question is concurrency, not session details. Filtering to the server-side port keeps the result tied to the listener and returns a single number that is easy to sample over time.
+
+*Count established sessions attached to one Linux service port.*
+
+```bash
+ss -H -tn state established '( sport = :45432 )' | wc -l
+```
+
+```text
+1
+```
+
+#### Diagnose `Address already in use`
+
+Run this immediately after a bind or startup failure that says the port is already occupied. The filtered listener view shows who already owns the port so you can investigate the conflicting process before restarting or killing anything.
+
+*Identify the Linux listener that already owns a specific port.*
+
+```bash
+ss -tlnp | grep :18080
+```
+
+```text
+LISTEN 0      5      0.0.0.0:18080      0.0.0.0:*    users:(("python3",pid=32037,fd=3))
+```
+
+#### Diagnose `TIME_WAIT` buildup
+
+Use this when rapid connect-close cycles are a better fit for the symptom than listener absence. The state filter isolates post-close sockets so you can confirm connection churn before changing kernel or application settings.
+
+*List Linux `TIME_WAIT` sockets for one destination port.*
+
+```bash
+ss -tn state time-wait '( dport = :45434 )'
+```
+
+```text
+Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+0      0      127.0.0.1:36756   127.0.0.1:45434
+0      0      127.0.0.1:36750   127.0.0.1:45434
+0      0      127.0.0.1:36752   127.0.0.1:45434
+```
+
+### PowerShell | `Get-NetTCPConnection` | quick service checks
+
+These Windows shortcuts answer the same first-pass questions while keeping the data in PowerShell objects until the final display step.
+
+#### Find what listens on a port
+
+When one Windows port is already under suspicion, query that port directly instead of scanning the full listener set. This keeps the result narrow and immediately returns the PID you need for the next process lookup.
+
+*Filter Windows listeners to one local port and show the owning process.*
+
+```powershell
+Get-NetTCPConnection -LocalPort 135 -State Listen |
     Select-Object LocalAddress, LocalPort, OwningProcess,
     @{N='Process';E={(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName}} |
     Format-Table -AutoSize
@@ -386,154 +615,278 @@ Get-NetTCPConnection -State Listen | Sort-Object LocalPort |
 ```text
 LocalAddress  LocalPort  OwningProcess  Process
 ------------  ---------  -------------  -------
-0.0.0.0       22         1234           sshd
-0.0.0.0       1433       5678           sqlservr
-127.0.0.1     1431       5678           sqlservr
-127.0.0.1     1434       5678           sqlservr
-127.0.0.1     5000       9012           datadog-agent
+::                  135          2032   svchost
+0.0.0.0             135          2032   svchost
 ```
 
-#### Interpret bind addresses on Windows
+#### List listening services
 
-The local address semantics are identical to Linux. `0.0.0.0` binds to all IPv4 interfaces; `127.0.0.1` restricts to loopback. The same service configuration table from the Linux section applies to Windows deployments.
+Start broad when the suspect port is still unknown and you need a top-down listener inventory. Sorting and trimming the listener set keeps the Windows output readable while still exposing the current address and PID mix.
 
-> [!info] Windows does not have a direct equivalent to `ss -p` without administrator rights
->
-> On Linux, `ss -p` as root always shows process names. On Windows, resolving `OwningProcess` to a process name via `Get-Process` may return `$null` for system-level processes (e.g., `System`, `svchost`) and will throw errors for PIDs that exit between the two calls. The `-ErrorAction SilentlyContinue` suppresses those errors silently. For system-level sockets, use `netstat -ano` and cross-reference with Task Manager or `Get-Service`.
-
-### PowerShell | Get-NetTCPConnection | viewing established connections
-
-Without a `-State` filter — or with `-State Established` — `Get-NetTCPConnection` shows active connections. Filtering by `-LocalPort` isolates connections to a specific service.
+*Show the first rows of the Windows listener inventory.*
 
 ```powershell
-Get-NetTCPConnection -LocalPort 1433 -State Established |
-    Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort |
+Get-NetTCPConnection -State Listen | Sort-Object LocalPort |
+    Select-Object -First 8 LocalAddress, LocalPort, OwningProcess,
+    @{N='Process';E={(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName}} |
     Format-Table -AutoSize
 ```
 
 ```text
-LocalAddress  LocalPort  RemoteAddress  RemotePort
-------------  ---------  -------------  ----------
-10.0.0.3      1433       10.0.0.24      56434
-10.0.0.3      1433       10.0.0.24      26733
-10.0.0.3      1433       10.0.0.51      38900
+LocalAddress  LocalPort  OwningProcess  Process
+------------  ---------  -------------  -------
+0.0.0.0             135          2032   svchost
+::                  135          2032   svchost
+172.25.64.1         139             4   System
+192.168.0.118       139             4   System
+::                  445             4   System
+127.0.0.1          1042         22768   asus_framework
+127.0.0.1          1043         22768   asus_framework
+0.0.0.0            1236          5172   AsusUpdateCheck
 ```
 
-#### Interpret remote addresses and ephemeral ports
+#### Count active HTTPS sessions
 
-The `RemotePort` column shows the client's ephemeral port, identical to the peer port in `ss` output. Multiple rows with the same `RemoteAddress` and different `RemotePort` values indicate multiple concurrent sessions from the same client — typical for connection pools or multi-window SSMS usage.
+Use this when you need a quick concurrency number from a stable Windows workload rather than a full established-session table. The single count is easy to compare across captures or feed into a short polling loop.
 
-### PowerShell | Get-NetTCPConnection | counting connections per remote address
-
-`Group-Object` replaces the `awk | sort | uniq -c | sort -rn` pipeline from Linux. The result is a sorted object collection rather than text, making further filtering straightforward.
+*Count established Windows sessions filtered to remote port `443`.*
 
 ```powershell
-Get-NetTCPConnection -LocalPort 1433 -State Established |
-    Group-Object RemoteAddress | Sort-Object Count -Descending |
-    Select-Object Count, Name
+(Get-NetTCPConnection -RemotePort 443 -State Established -ErrorAction SilentlyContinue).Count
 ```
 
 ```text
-Count  Name
------  ----
-8      10.0.0.24
-3      10.0.0.51
-1      10.0.0.99
+26
 ```
 
-### PowerShell | Get-NetTCPConnection | connection state breakdown
+#### Diagnose `Address already in use`
 
-`Group-Object State` provides the TCP state distribution for connections on a port — the PowerShell equivalent of `ss -s` restricted to a single port.
+When a Windows service cannot bind because the address is already in use, resolve the existing listener first instead of stopping services blindly. The result gives you the bound address, port, and PID that own the conflict.
+
+*Identify the Windows listener that already owns a specific port.*
 
 ```powershell
-Get-NetTCPConnection -LocalPort 1433 | Group-Object State |
-    Select-Object Count, Name | Sort-Object Count -Descending
+Get-NetTCPConnection -LocalPort 135 -State Listen |
+    Select-Object LocalAddress, LocalPort, OwningProcess,
+    @{N='Process';E={(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName}} |
+    Format-Table -AutoSize
 ```
 
 ```text
-Count  Name
------  ----
-12     Established
-6      TimeWait
-2      Listen
-1      CloseWait
+LocalAddress  LocalPort  OwningProcess  Process
+------------  ---------  -------------  -------
+::                  135          2032   svchost
+0.0.0.0             135          2032   svchost
 ```
 
-> [!warning] CloseWait accumulation on Windows
->
-> `CloseWait` means the remote side has closed the connection but the local application has not yet closed its socket. On Windows, a growing `CloseWait` count on port 1433 indicates the application is not properly disposing of `SqlConnection` objects. The connection pool holds them open waiting for explicit `Close()` or `Dispose()` calls.
+#### Diagnose `TIME_WAIT` buildup
 
-> [!success] Fix CloseWait accumulation
->
-> Always wrap `SqlConnection` in a `using` block in C#. This guarantees `Dispose()` is called even when exceptions occur, returning the connection to the pool cleanly and preventing socket accumulation.
+Use this when rapid reconnects or possible ephemeral-port pressure make post-close churn the likely explanation. Inspecting `TimeWait` directly confirms whether the workload is cycling connections aggressively instead of holding steady sessions.
 
-### PowerShell | Get-NetTCPConnection | real-time monitoring
-
-PowerShell does not have a native equivalent to `watch`. A `while` loop with `Start-Sleep` and `Clear-Host` replicates the behavior.
+*List Windows `TimeWait` sockets to inspect connection churn.*
 
 ```powershell
-while ($true) {
-    Clear-Host
-    $count = (Get-NetTCPConnection -LocalPort 1433 -State Established -ErrorAction SilentlyContinue).Count
-    Write-Host "$(Get-Date -Format 'HH:mm:ss')  Established connections on :1433  →  $count"
-    Start-Sleep -Seconds 1
-}
+Get-NetTCPConnection -State TimeWait |
+    Select-Object -First 8 LocalAddress, LocalPort, RemoteAddress, RemotePort |
+    Format-Table -AutoSize
 ```
 
 ```text
-14:32:01  Established connections on :1433  →  12
+LocalAddress                         LocalPort  RemoteAddress             RemotePort
+------------                         ---------  -------------             ----------
+2a02:8308:112:7c00:f428:d61f:c63:d9e7     58189  2620:1ec:48:1::44               443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7     55284  2a06:98c1:310b::ac40:9bd1       443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7     51925  2a06:98c1:3100::6812:202f       443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7     50499  2a06:98c1:310b::ac40:9bd1       443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7     49845  2a06:98c1:3100::6812:202f       443
+192.168.0.118                             58195  172.64.155.209                  443
+192.168.0.118                             58190  172.64.155.209                  443
+192.168.0.118                             50475  34.128.128.0                    443
 ```
-
-> [!info] No native equivalent to `watch` on Windows
->
-> Linux `watch` is a dedicated utility that handles terminal refresh, elapsed time display, and diff highlighting. PowerShell's `while` loop with `Clear-Host` is the closest pattern but lacks diff highlighting. The `PSWatch` community module provides closer parity for complex monitoring scenarios.
-
-| Parameter | Syntax | Description |
-|-----------|--------|-------------|
-| `-State` | `-State Listen` | Filter by TCP state (Listen, Established, TimeWait, CloseWait, etc.) |
-| `-LocalPort` | `-LocalPort 1433` | Filter by local port number |
-| `-LocalAddress` | `-LocalAddress 127.0.0.1` | Filter by local IP address |
-| `-RemoteAddress` | `-RemoteAddress 10.0.0.24` | Filter by remote IP address |
-| `-RemotePort` | `-RemotePort 56434` | Filter by remote port number |
-| `-OwningProcess` | `-OwningProcess 5678` | Filter by owning process ID |
-
-
-
-## Warnings
-
-> [!warning] `netstat` is deprecated on modern Linux
->
-> `netstat` is part of the `net-tools` package which is not installed by default on modern distributions. Use `ss` instead -- it is faster, always available, and provides more information.
-
-> [!warning] A service listening on `127.0.0.1` is only accessible locally
->
-> If `ss -tlnp` shows a service bound to `127.0.0.1:<port>`, it rejects connections from other machines. The service must listen on `0.0.0.0` (all interfaces) or the specific external IP to accept remote connections.
-
-> [!warning] TIME_WAIT accumulation can exhaust ephemeral ports
->
-> Rapid connection cycling (opening and closing connections in a tight loop) creates thousands of TIME_WAIT sockets that hold ephemeral ports for 60 seconds. This can prevent new outbound connections.
-
-## Recommendations
-
-| Scenario | Recommendation |
-|---|---|
-| Find what listens on a port | `ss -tlnp \| grep :<port>` (Linux) or `Get-NetTCPConnection -LocalPort <port> -State Listen` (PowerShell). |
-| List all listening services | `ss -tlnp` shows all TCP listeners with PID and process name. |
-| Count connections to a service | `ss -tn state established \| grep :<port> \| wc -l`. |
-| Diagnose "Address already in use" | `ss -tlnp \| grep :<port>` to find the owning process. Kill it or use a different port. |
-| Diagnose TIME_WAIT buildup | `ss -tn state time-wait \| wc -l`. Fix the connection pattern (use connection pooling). |
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| "Address already in use" | Another process is listening on the port, or a TIME_WAIT socket holds it. | `ss -tlnp \| grep :<port>` to find the process. Kill it or use `SO_REUSEADDR`. |
-| Service is running but not accessible remotely | Listening on `127.0.0.1` instead of `0.0.0.0`, or firewall blocks the port. | Check listen address with `ss -tlnp`. Update service config to bind to `0.0.0.0`. Check firewall rules. |
-| Thousands of TIME_WAIT sockets | Application opens and closes connections rapidly without connection pooling. | Implement connection pooling. Reduce `net.ipv4.tcp_fin_timeout` only as a last resort. |
-| CLOSE_WAIT sockets accumulating | Application received FIN from remote but has not closed its end of the connection. This is an application bug. | Fix the application to properly close connections. CLOSE_WAIT never times out -- the application must close. |
+Use this section when the symptom is already known and the goal is to confirm or disprove the most likely socket-level explanation.
+
+### Linux | `ss` and `nc` | confirm common failure patterns
+
+Each Linux check below starts from a concrete symptom and narrows the command surface to the fastest confirming test.
+
+#### `Address already in use`
+
+When a Linux service fails to start because the address is already in use, confirm the current owner before intervening. This check resolves the conflicting listener directly and prevents blind process restarts or kills.
+
+*Resolve the Linux process that already owns the target listener port.*
+
+```bash
+ss -tlnp | grep :18080
+```
+
+```text
+LISTEN 0      5      0.0.0.0:18080      0.0.0.0:*    users:(("python3",pid=32037,fd=3))
+```
+
+#### Service is listening only on loopback
+
+Use this when local tests succeed but remote clients still fail. The bind address in the listener table tells you whether the service is restricted to loopback, which is a service-configuration problem rather than a generic firewall verdict.
+
+*Show whether the Linux listener is bound only to loopback.*
+
+```bash
+ss -tlnp | grep :45432
+```
+
+```text
+LISTEN 0      1      127.0.0.1:45432    0.0.0.0:*    users:(("nc",pid=33319,fd=3))
+```
+
+If you expected remote access, change the service bind address to `0.0.0.0` or the specific external interface instead of only adjusting firewall rules.
+
+#### `TIME_WAIT` grows faster than work completes
+
+When the service is reachable but short-lived sessions keep accumulating, verify the post-close state before blaming listener state or routing. This isolates churn on the service path and tells you whether connection reuse is the real issue.
+
+*Inspect Linux `TIME_WAIT` sockets to confirm connection churn.*
+
+```bash
+ss -tn state time-wait '( dport = :45434 )'
+```
+
+```text
+Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+0      0      127.0.0.1:36756   127.0.0.1:45434
+0      0      127.0.0.1:36750   127.0.0.1:45434
+0      0      127.0.0.1:36752   127.0.0.1:45434
+```
+
+#### Client reports `Connection refused`
+
+When the client fails immediately with `Connection refused`, confirm the refusal path before changing routing or firewall rules. A reset means the packet reached the host and no matching listener accepted it.
+
+*Attempt a TCP connection that should fail immediately with `Connection refused`.*
+
+```bash
+nc -zv -w 2 127.0.0.1 45435
+```
+
+```text
+nc: connect to 127.0.0.1 port 45435 (tcp) failed: Connection refused
+```
+
+#### Client reports `Connection timed out`
+
+When the client waits before failing, confirm the timeout path separately from listener checks. A timeout points to packet loss, filtering, or host reachability rather than an immediate listener mismatch.
+
+*Attempt a TCP connection that should fail by timing out rather than refusing immediately.*
+
+```bash
+nc -zv -w 2 10.255.255.1 45435
+```
+
+```text
+nc: connect to 10.255.255.1 port 45435 (tcp) timed out: Operation now in progress
+```
+
+### PowerShell | `Get-NetTCPConnection` | confirm common failure patterns
+
+The Windows checks below follow the same symptom-first approach, using object filters to confirm or rule out the likely socket-level cause.
+
+#### `Address already in use`
+
+When a Windows service cannot reopen its port, resolve the existing listener to a PID before stopping services blindly. This confirms the conflict at the socket layer and gives you the process identity to inspect next.
+
+*Resolve the Windows listener that already owns the target port.*
+
+```powershell
+Get-NetTCPConnection -LocalPort 135 -State Listen |
+    Select-Object LocalAddress, LocalPort, OwningProcess,
+    @{N='Process';E={(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName}} |
+    Format-Table -AutoSize
+```
+
+```text
+LocalAddress  LocalPort  OwningProcess  Process
+------------  ---------  -------------  -------
+::                  135          2032   svchost
+0.0.0.0             135          2032   svchost
+```
+
+#### Service is listening only on loopback
+
+Use this when the application works locally on the host but remains unreachable from other machines. The `LocalAddress` column shows loopback-bound listeners directly, which lets you separate bind configuration from firewall policy.
+
+*List Windows loopback-only listeners and their owning processes.*
+
+```powershell
+Get-NetTCPConnection -State Listen | Where-Object LocalAddress -eq '127.0.0.1' |
+    Select-Object -First 6 LocalAddress, LocalPort, OwningProcess,
+    @{N='Process';E={(Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue).ProcessName}} |
+    Format-Table -AutoSize
+```
+
+```text
+LocalAddress  LocalPort  OwningProcess  Process
+------------  ---------  -------------  -------
+127.0.0.1        63730          7080   Code
+127.0.0.1        53005         34156   ADU
+127.0.0.1        53000         34156   ADU
+127.0.0.1        51100         42192   ArmouryCrate.UserSessionHelper
+127.0.0.1        50100         30896   ArmouryCrate.Service
+127.0.0.1        48239         22728   Code
+```
+
+#### `TIME_WAIT` keeps growing
+
+Use this when repeated reconnects or possible ephemeral-port pressure make post-close churn the likely explanation. The `TimeWait` view confirms whether the workload is cycling connections aggressively instead of holding steady sessions.
+
+*List Windows `TimeWait` sockets to inspect connection churn.*
+
+```powershell
+Get-NetTCPConnection -State TimeWait |
+    Select-Object -First 8 LocalAddress, LocalPort, RemoteAddress, RemotePort |
+    Format-Table -AutoSize
+```
+
+```text
+LocalAddress                         LocalPort  RemoteAddress             RemotePort
+------------                         ---------  -------------             ----------
+2a02:8308:112:7c00:f428:d61f:c63:d9e7     58189  2620:1ec:48:1::44               443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7     55284  2a06:98c1:310b::ac40:9bd1       443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7     51925  2a06:98c1:3100::6812:202f       443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7     50499  2a06:98c1:310b::ac40:9bd1       443
+2a02:8308:112:7c00:f428:d61f:c63:d9e7     49845  2a06:98c1:3100::6812:202f       443
+192.168.0.118                             58195  172.64.155.209                  443
+192.168.0.118                             58190  172.64.155.209                  443
+192.168.0.118                             50475  34.128.128.0                    443
+```
+
+#### `CLOSE_WAIT` keeps growing
+
+Use this when sessions linger after the remote side has already closed and the question is whether local cleanup is broken. `CloseWait` points to an application-owned socket that has not been released yet, which is why it is more often a process-lifecycle problem than a network-path problem.
+
+*List Windows `CloseWait` sockets and the processes that still own them.*
+
+```powershell
+Get-NetTCPConnection -State CloseWait |
+    Select-Object -First 5 LocalAddress, LocalPort, RemoteAddress, RemotePort, OwningProcess |
+    Format-Table -AutoSize
+```
+
+```text
+LocalAddress                           LocalPort  RemoteAddress                  RemotePort  OwningProcess
+------------                           ---------  -------------                  ----------  -------------
+2a02:8308:112:7c00:f428:d61f:c63:d9e7      65518  2a06:98c1:310b::ac40:9bd1            443          22476
+2a02:8308:112:7c00:bdf6:e398:4195:8d76     65492  2a06:98c1:3100::6812:202f            443           3588
+2a02:8308:112:7c00:f428:d61f:c63:d9e7      63507  2a03:2880:f03d:12:face:b00c:0:2      443           8972
+2a02:8308:112:7c00:f428:d61f:c63:d9e7      61072  2a06:98c1:3100::6812:202f            443           4700
+2a02:8308:112:7c00:bdf6:e398:4195:8d76     61055  2a06:98c1:3100::6812:202f            443           3588
+```
+
+For .NET workloads, the usual fix is making sure `SqlConnection`, `HttpClient` handlers, or raw `Socket` objects are disposed along the intended lifecycle instead of being left for delayed cleanup.
 
 ## Cross-references
+
 - [connectivity-testing](https://alp78.github.io/elysium/01-Shell/Networking/connectivity-testing) — test reachability before reading socket state
 - [firewalls](https://alp78.github.io/elysium/01-Shell/Networking/firewalls) — when sockets show nothing listening but you expected something
-- [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — understanding IAP proxy addresses in established connections
+- [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — understanding Identity-Aware Proxy (IAP) addresses in established connections
 - [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — find which process owns a socket (combine with `ss -p`)

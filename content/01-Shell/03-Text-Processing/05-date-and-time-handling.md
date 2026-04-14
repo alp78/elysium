@@ -3,9 +3,9 @@ title: "05 - Date and Time Handling"
 tags: [shell, text-processing]
 aliases: [datetime handling, ISO 8601, timezone management, date arithmetic, DST pitfalls, naive vs aware datetime, DATETIMEOFFSET, DateTimeOffset, UTC storage, date parsing, date formatting]
 keywords: [iso 8601, datetime, date, timezone, utc, dst, daylight saving, GETUTCDATE, SYSUTCDATETIME, DATETIMEOFFSET, DATETIME2, DateTimeOffset, DateOnly, zoneinfo, pytz, timedelta, relativedelta, dateutil, strptime, strftime, fromisoformat, date arithmetic, date parsing, date formatting, unix epoch, unix timestamp, pandas date_range, timedatectl, Get-Date, DATEADD, DATEDIFF, DATETRUNC, EOMONTH, AT TIME ZONE]
-description: "Comprehensive reference for date and time handling across all pipeline contexts — ISO 8601 formats, timezone management, UTC storage, DST pitfalls, and date arithmetic in Bash, PowerShell, SQL Server T-SQL, Python, and C#."
+description: "Cross-platform reference for date and time handling in pipelines: ISO 8601, UTC storage, timezone conversion, DST boundaries, and date arithmetic across Linux, PowerShell, SQL Server, Python, and C#."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-14
 status: complete
 ---
 
@@ -14,155 +14,192 @@ status: complete
 > [!quote]
 > "Time is an illusion. Lunchtime doubly so."
 >
-> — **Douglas Adams**, *The Hitchhiker's Guide to the Galaxy* (1979)
+> -- **Douglas Adams**, *The Hitchhiker's Guide to the Galaxy* (1979)
 
 > [!abstract]- Summary
-> Dates look simple until timezones, DST transitions, and ambiguous formats collide in a multi-region pipeline — this note is the exhaustive cross-platform reference for getting them right.
+> Pipeline-safe date handling starts with four rules: use ISO 8601 for interchange, store instants in UTC, keep calendar dates separate from timestamps, and convert to local time only at the display edge.
 >
-> - **Date and time standards** — ISO 8601 variant catalogue, UTC storage rule, epoch timestamps, and format selection by context (SQL column, API, log, filename, cron)
-> - **Linux date and time tools** — `date` formatting with `strftime` codes, GNU `-d` arithmetic, `timedatectl`, timezone conversion via `TZ=`
-> - **PowerShell date and time tools** — `Get-Date` formatting (`.ToString`), `.AddDays`/`.AddMonths` arithmetic, `[TimeZoneInfo]` conversion
-> - **SQL Server (T-SQL)** — `GETUTCDATE()`, `SYSUTCDATETIME()`, `DATEADD`, `DATEDIFF`, `DATETRUNC`, `EOMONTH`, `AT TIME ZONE`, `DATETIMEOFFSET` vs `DATETIME2`
-> - **Python** — `datetime`, `date`, `timedelta`, `dateutil.relativedelta`, `zoneinfo`/`pytz`, `strftime`/`strptime`, `pandas` date ranges
-> - **C# (.NET)** — `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeZoneInfo`, `TimeSpan`, NodaTime overview
-> - **DST Pitfalls** — the traps that break pipelines: spring-forward gaps, fall-back duplicates, 23/25-hour days, offset vs name confusion
+> - **Standards and selection** - ISO 8601 forms, UTC storage rules, epoch timestamps, and context-specific format choices for SQL, APIs, logs, filenames, schedules, and runtime objects
+> - **Linux and PowerShell** - formatting, parsing, arithmetic, timezone inspection, and timezone conversion with captured shell output
+> - **SQL Server, Python, and C#** - grouped executable examples for data types, parsing, formatting, arithmetic, timezone conversion, and pipeline-safe patterns
+> - **DST boundaries** - concrete demonstrations of 23-hour days, duplicated local clock times, and cross-market offset drift
 
 > [!note]- Glossary
 >
 > **ISO 8601**
-> - International standard for representing dates and times in an unambiguous machine-readable form, commonly including forms such as `YYYY-MM-DD`, `YYYY-MM-DDTHH:MM:SSZ`, and timestamps with numeric UTC offsets.
-> - Used as the default interchange format in pipelines because it sorts predictably as text in its fully qualified forms and avoids locale-dependent ambiguity such as `04/05/2026`.
 >
-> > [!tip] Pipeline rule
-> > `04/05/2026` means April 5 in some locales and May 4 in others. ISO 8601 removes that ambiguity.
+> - International date and time standard for machine-readable values such as `2026-03-10`, `2026-03-10T15:30:00Z`, and `2026-03-10T15:30:00+01:00`
+> - Default interchange format for APIs, logs, filenames, and serialized pipeline metadata because it is unambiguous and sorts predictably
+> - Use the fully qualified timestamp forms with `Z` or an explicit offset whenever the value represents an instant
 >
 > ---
 >
 > **UTC (Coordinated Universal Time)**
-> - The global civil time standard from which time offsets are measured, with no daylight saving transitions.
-> - Used as the canonical storage and processing time basis in data systems so timestamps remain stable across regions, servers, and DST changes.
 >
-> > [!warning] UTC vs timezone
-> > UTC is the reference time standard. `Z` in ISO 8601 means a zero offset from UTC. Local time zones such as `Europe/Paris` can move relative to UTC when DST changes.
+> - Global civil time reference with no daylight saving transitions
+> - Canonical storage basis for pipeline timestamps, event logs, and cross-region processing windows
+> - `Z` in ISO 8601 means UTC with zero offset
 >
 > ---
 >
 > **Epoch / Unix timestamp**
-> - Numeric count of elapsed time since `1970-01-01 00:00:00 UTC`, usually expressed in whole seconds or milliseconds depending on the platform and API.
-> - Used for compact storage, easy numeric comparison, and cross-system interchange where a single absolute point in time must be represented efficiently.
 >
-> > [!tip] Quick check
-> > A 10-digit Unix timestamp is usually seconds; a 13-digit value is usually milliseconds. Mixing them causes common off-by-1000 conversion errors.
+> - Count of elapsed seconds or milliseconds since `1970-01-01T00:00:00Z`
+> - Compact absolute representation used in message queues, browser APIs, and cross-language interchange
+> - A 10-digit value is usually seconds; a 13-digit value is usually milliseconds
 >
 > ---
 >
 > **`strftime`**
-> - Date and time formatting convention and function family that renders a datetime value as text using percent-based format specifiers such as `%Y`, `%m`, `%d`, `%H`, `%M`, and `%S`.
-> - Used to generate stable filenames, log timestamps, partition keys, and human-readable output from datetime values in many languages and tools.
 >
-> > [!info] Cross-platform
-> > `strftime` support varies slightly by platform and implementation. For example, GNU `date` supports specifiers that BSD `date` does not, while .NET uses a different formatting system entirely.
+> - Formatting model that renders date and time values with specifiers such as `%Y`, `%m`, `%d`, `%H`, `%M`, and `%S`
+> - Used by GNU `date`, Python, and many POSIX-oriented tools for stable output formatting
+> - .NET and PowerShell use different format tokens such as `yyyy-MM-dd`
 >
 > ---
 >
 > **DST (Daylight Saving Time)**
-> - Seasonal local-clock adjustment used in some time zones, where civil time shifts forward or backward relative to standard time.
-> - Used operationally as a major source of pipeline bugs because local timestamps can become skipped, duplicated, or unevenly spaced across transition boundaries.
 >
-> > [!warning] Never assume 86 400 seconds per local day
-> > A local calendar day that crosses a DST change may contain 23 or 25 clock-hours instead of 24. Use timezone-aware date arithmetic rather than adding raw seconds.
->
-> ---
->
-> **`date` (Linux)**
-> - Standard Unix command-line utility for printing, formatting, and, on GNU systems, performing simple date arithmetic on timestamps.
-> - Used in shell scripts to emit current timestamps, format dates for filenames and logs, and compute relative dates in lightweight automation.
->
-> > [!info] GNU vs BSD behavior
-> > GNU `date` and BSD `date` differ significantly in arithmetic and parsing flags. Scripts that must run on both Linux and macOS should avoid assuming GNU-specific options such as `-d`.
+> - Seasonal clock shift used in some time zones, usually moving one hour forward in spring and one hour backward in autumn
+> - Major source of scheduling, window-boundary, and deduplication bugs in pipelines that operate on local time
+> - A local day that crosses a DST transition can contain 23 or 25 clock-hours
 >
 > ---
 >
-> **`Get-Date` (PowerShell)**
-> - PowerShell cmdlet that returns the current date and time as a .NET date/time object, which can then be formatted, compared, or adjusted with methods and properties.
-> - Used in Windows automation for timestamp generation, date arithmetic, and timezone-aware conversions without shell-text parsing.
+> **IANA timezone name**
 >
-> > [!tip] PowerShell vs bash formatting
-> > Bash `date` commonly uses `strftime`-style specifiers such as `%Y-%m-%d`, while PowerShell and .NET use format strings such as `yyyy-MM-dd`.
+> - Stable zone identifier such as `Europe/Paris` or `America/New_York`
+> - Preferred identifier family for Linux, Python `zoneinfo`, and most network-facing systems
+> - A numeric offset like `+01:00` is not a substitute for a timezone name when future DST-aware interpretation matters
 >
 > ---
 >
-> **Timezone offset**
-> - Signed difference between a local civil time and UTC, written as `±HH:MM`, such as `+01:00` or `-05:00`.
-> - Used to anchor a timestamp to an absolute moment when the timestamp is not already expressed in UTC, making cross-region comparison possible.
+> **Windows timezone ID**
 >
-> > [!warning] Offset is not the same as timezone
-> > An offset such as `+01:00` identifies only the numeric difference from UTC at that moment, not the governing timezone rules. Persist timezone names such as `Europe/Paris` when future DST-aware interpretation matters.
+> - Zone identifier such as `Eastern Standard Time` or `Central European Standard Time`
+> - Used by Windows APIs, SQL Server `AT TIME ZONE`, and .NET on Windows
+> - Cross-platform code often needs explicit mapping between Windows IDs and IANA names
+>
+> ---
+>
+> **Naive datetime**
+>
+> - Date-time value with no attached timezone or offset metadata
+> - Unsafe for cross-region comparisons, persistence, and scheduling because the represented instant is ambiguous
+> - Convert naive inputs to aware values as soon as the source timezone is known
+>
+> ---
+>
+> **Aware datetime**
+>
+> - Date-time value that carries timezone or UTC offset information
+> - Required for correct comparison, serialization, and conversion across regions
+> - Prefer aware values in Python and `DateTimeOffset` values in .NET for timestamp work
+>
+> ---
+>
+> **`DATETIME2`**
+>
+> - SQL Server type for date and time values without timezone metadata
+> - Appropriate for UTC-normalized timestamps when the timezone context is already resolved before storage
+> - Do not use it when a persisted offset must survive round-trips
+>
+> ---
+>
+> **`DATETIMEOFFSET`**
+>
+> - SQL Server type that stores date, time, and UTC offset together
+> - Appropriate for values that arrive with a source offset or must round-trip with offset fidelity
+> - It preserves the offset, not the full historical rule set of a named timezone
+>
+> ---
+>
+> **`DateTimeOffset`**
+>
+> - .NET type that stores a timestamp together with its UTC offset
+> - Preferred .NET type for timestamps that leave process memory or cross system boundaries
+> - Use `DateOnly` for pure calendar dates such as trade dates and report dates
 
-
-Dates look simple until you realize that "March 10, 2026 at 3 PM" means a different instant in time depending on whether you're in Paris, New York, or Tokyo. A pipeline that processes market close times across Euro market index, the data pipeline project USA 50, and the data pipeline project Asia/Pacific 50 must handle three different closing times, daylight saving transitions that happen on different dates in different countries, and the fact that "today" is a different date in Sydney and New York for several hours each day.
-
-This note covers dates exhaustively: ISO format variants, timezone management, parsing, formatting, arithmetic -- in the terminal (Linux/PowerShell), then SQL Server, Python, and C#. For the Python and C# datetime libraries in more depth, see [11_py_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/Python/11_py_datetimemathutils) and [11_cs_datetimemathutils](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/11_cs_datetimemathutils).
+Pipelines fail on dates in predictable ways:
+ambiguous text formats, local-time storage, fixed-offset assumptions, and arithmetic that treats every day as 86,400 seconds.
+The examples below keep those failure modes visible and executable across Linux, PowerShell, SQL Server, Python, and C#.
 
 ## Date and time standards
 
-Dates look deceptively simple until a pipeline processes market close times across Euro, US, and Asia/Pacific indexes simultaneously. ISO 8601 is the universal wire format; understanding its variants and when to apply each prevents format confusion across regional conventions and database types.
+ISO 8601 is the transport format, UTC is the storage baseline, and timezone conversion belongs at the edges.
+Keep calendar dates, local clock displays, and absolute instants separate in both schema design and runtime code.
 
-### ISO 8601 — the only date format you should use in pipelines
+### ISO 8601 forms for pipeline work
 
-ISO 8601 is the international standard for date/time representation. It is unambiguous, sortable as text, and understood by every language and database. If you use any other format in your pipeline, you are creating technical debt.
+Use the narrowest ISO 8601 form that still preserves the meaning of the value.
 
-```text
-Format                          Example                          Name
-─────────────────────────────── ──────────────────────────────── ─────────────
-YYYY-MM-DD                      2026-03-10                       Date only
-YYYY-MM-DDThh:mm:ss             2026-03-10T15:30:00              Local datetime (no timezone!)
-YYYY-MM-DDThh:mm:ssZ            2026-03-10T15:30:00Z             UTC (Z = "Zulu" = UTC+0)
-YYYY-MM-DDThh:mm:ss±hh:mm      2026-03-10T15:30:00+01:00        With UTC offset
-YYYY-MM-DDThh:mm:ss.ffffff      2026-03-10T15:30:00.123456       With microseconds
-YYYY-MM-DDThh:mm:ss.ffffffZ    2026-03-10T15:30:00.123456Z      UTC with microseconds
-YYYYMMDDThhmmssZ                20260310T153000Z                 Compact (no separators)
-YYYY-Www                        2026-W11                         ISO week (week 11 of 2026)
-YYYY-Www-D                      2026-W11-2                       ISO week + day (Tuesday)
-YYYY-DDD                        2026-069                         Ordinal date (day 69 of 2026)
-```
+- `2026-03-10` is a calendar date and belongs in SQL `DATE`, .NET `DateOnly`, or Python `date`
+- `2026-03-10T15:30:00Z` is a UTC instant and is the safest default for APIs, logs, and message payloads
+- `2026-03-10T15:30:00+01:00` is an instant that arrived with a source offset and must keep that offset through parsing
+- `20260310T153000Z` is useful for separator-free identifiers and filenames when lexical sort order matters
+- `2026-W11-2` and `2026-069` are specialized ISO week and ordinal forms that appear in reporting and calendar-driven partitioning
 
-> [!warning] Date format rules for pipelines
->
-> 1. **Store dates as `DATE` or `DATETIME2` in SQL Server, never as strings.** String dates cannot be indexed efficiently, cannot be compared with `<`/`>`, and break when formats change.
-> 2. **If you must store as string, use ISO 8601 (`YYYY-MM-DD`).** It sorts correctly as text: `"2026-03-10" < "2026-03-11"` works. American `MM/DD/YYYY` does not: `"03/10/2026" < "12/01/2025"` gives the wrong answer.
-> 3. **Always store timestamps in UTC.** Convert to local time only at the presentation layer (dashboard, reports). Your SQL Server, pipeline, and API should never deal with local time.
-> 4. **Use `DATETIMEOFFSET` in SQL Server for timestamps that cross timezones.** `DATETIME2` loses the timezone — you can't tell if `2026-03-10 15:30:00` is Paris time or New York time.
-> 5. **`trade_date` columns should be `DATE`, not `DATETIME`.** A trade date is a calendar date, not a moment in time. Adding time precision to a date-only concept invites bugs (midnight vs 23:59:59, off-by-one errors at day boundaries).
+The unsafe form is the local timestamp with no timezone metadata, such as `2026-03-10T15:30:00`.
+If that value leaves process memory, nobody can tell whether it meant UTC, Paris time, or New York time.
 
-> [!success] Apply these rules consistently
-> Use `DATE` for trade/report dates, `DATETIME2` for internal timestamps, and `DATETIMEOFFSET` for any value that crosses timezone boundaries. Always store as UTC and apply `YYYY-MM-DD` when strings are unavoidable.
+### Date format selection by context
 
-### Date format selection — which format for which context
+Choose storage and display formats by the meaning of the value, not by convenience in one language.
 
-| Context | Format | Example | Why |
-|---------|--------|---------|-----|
-| SQL `trade_date` column | `DATE` | `2026-03-10` | No time component — clean, small, indexable |
-| SQL timestamp column | `DATETIMEOFFSET` | `2026-03-10 15:30:00 +01:00` | Preserves timezone, unambiguous |
-| API response body (JSON) | ISO 8601 string | `"2026-03-10T15:30:00Z"` | Universal standard, every language parses it |
-| Log timestamps | ISO 8601 UTC | `2026-03-10T15:30:00.123Z` | Sortable, grep-friendly, Datadog/ELK expect it |
-| File names (partitions) | `YYYYMMDD` or `YYYY-MM-DD` | `scores_20260310.parquet` | Sortable, no special chars, filesystem-safe |
-| Cron / Airflow schedule | UTC | `0 17 * * 1-5` | Avoids DST surprises — 17:00 UTC is always 17:00 UTC |
-| User-facing display | Localized | `10 Mar 2026, 16:30 CET` | Humans expect their local time and format |
-| Python internal | `datetime` object | `datetime(2026, 3, 10, 15, 30, tzinfo=...)` | Native arithmetic, comparison, timezone-aware |
-| C# internal | `DateTimeOffset` | `new DateTimeOffset(2026, 3, 10, 15, 30, 0, TimeSpan.FromHours(1))` | Preserves offset, unambiguous |
+#### SQL trade dates
 
----
+Use `DATE` for trade dates, report dates, settlement dates, and other calendar concepts.
+Those values describe a day on a business calendar, not an instant on a clock, so adding time precision only invites off-by-one and midnight-boundary bugs.
+
+#### SQL timestamps
+
+Use `DATETIME2` for timestamps that are already normalized to UTC before insertion.
+Use `DATETIMEOFFSET` when the incoming value must preserve its source offset or when downstream systems need offset-aware round-trips.
+
+#### API payloads and log lines
+
+Use ISO 8601 strings with `Z` or an explicit offset, for example `2026-03-10T15:30:00Z`.
+Those values sort cleanly, parse predictably, and survive handoffs between SQL, Python, .NET, browsers, and queue consumers.
+
+#### Filenames and partitions
+
+Use UTC and a filesystem-safe shape such as `20260310` or `20260310_153000`.
+Avoid locale-dependent separators and avoid local time in batch filenames unless the local business rule is explicitly part of the file contract.
+
+#### Schedules and orchestration
+
+Define cron, Airflow, and scheduler triggers in UTC unless the local business rule itself is contractual.
+UTC schedules do not slide when DST starts or ends.
+
+#### User-facing display
+
+Render timestamps in the user's local timezone at the presentation edge.
+Display formatting is a UI concern; storage and transport should stay in UTC or with explicit offsets.
+
+#### Python runtime values
+
+Use aware `datetime` values with `timezone.utc` or `ZoneInfo`.
+Use `date` for calendar concepts and reserve naive datetimes for short-lived local calculations that never cross an interface boundary.
+
+#### C# runtime values
+
+Use `DateTimeOffset` for timestamps and `DateOnly` for calendar dates.
+Avoid using `DateTime` as a serialized timestamp type because its `Kind` metadata is easy to lose during database and JSON round-trips.
 
 ## Linux date and time tools
 
-The primary date/time tool on Linux is the GNU `date` command, which handles formatting, parsing, arithmetic, and timezone conversion in a single binary. `timedatectl` manages the system clock and timezone. Most pipeline scripts need only these two tools; more complex month/year arithmetic is better handled in Python or SQL.
+GNU `date` handles formatting, parsing, arithmetic, and one-off timezone conversion.
+`timedatectl` exposes the system timezone and is the correct surface for timezone changes that affect the whole host.
 
-### Linux | date | formatting and output
+### Linux | date | formatting and parsing
 
-The `date` command outputs the current date/time when called without arguments, or a formatted string when given a `+format` argument. GNU `date` (Linux) supports the `-d` flag for parsing arbitrary date strings; macOS uses BSD `date`, which has a different syntax.
+This group focuses on display and parsing behavior rather than host configuration.
+The examples use fixed values where determinism matters and preserve the valid captured outputs that were already present.
 
-#### date — current date in default format
+#### `date` prints the current local clock in the host timezone
+
+Without a format string, `date` prints the current local time in the shell environment.
+That output is useful for quick inspection, but pipelines should emit structured ISO forms instead.
 
 ```bash
 date
@@ -172,21 +209,35 @@ date
 Tue Mar 10 16:30:00 CET 2026
 ```
 
-#### date +format — current date with format string
+#### `date +format` renders ISO, epoch, and filename-safe variants
+
+Use `+format` for stable output shapes.
+The fixed timestamp below makes the differences between local time, UTC, epoch seconds, and filename-safe strings explicit.
 
 ```bash
-date +%Y-%m-%d                      # 2026-03-10 (ISO date)
-date -u                             # Tue Mar 10 15:30:00 UTC 2026 (UTC)
-date -u +%Y-%m-%dT%H:%M:%SZ        # 2026-03-10T15:30:00Z (ISO UTC)
-date +%Y-%m-%dT%H:%M:%S%z          # 2026-03-10T16:30:00+0100 (ISO with offset)
-date +%s                            # 1773422200 (Unix epoch)
-date +%Y%m%d                        # 20260310 (compact — for file names)
-date +%Y%m%d_%H%M%S                 # 20260310_163000 (compact with time — for backup names)
+date -d "2026-03-10 16:30:00 +01:00" +%Y-%m-%d
+date -ud "2026-03-10 15:30:00 UTC" "+%a %b %d %H:%M:%S UTC %Y"
+date -ud "2026-03-10 15:30:00 UTC" +%Y-%m-%dT%H:%M:%SZ
+date -d "2026-03-10 16:30:00 +01:00" +%Y-%m-%dT%H:%M:%S%z
+date -ud "2026-03-10 15:30:00 UTC" +%s
+date -ud "2026-03-10 15:30:00 UTC" +%Y%m%d
+date -ud "2026-03-10 15:30:00 UTC" +%Y%m%d_%H%M%S
 ```
 
-#### date -d "string" — parse a date string and reformat
+```text
+2026-03-10
+Tue Mar 10 15:30:00 UTC 2026
+2026-03-10T15:30:00Z
+2026-03-10T16:30:00+0100
+1773156600
+20260310
+20260310_153000
+```
 
-The `-d` flag interprets a string as a date instead of using the current time. It accepts ISO 8601 strings, natural-language offsets like `"next Monday"`, and Unix epoch timestamps prefixed with `@`. This flag is GNU `date`-only; BSD `date` (macOS) uses `-j -f` instead.
+#### `date -d "string"` parses ISO text and epoch values
+
+GNU `date -d` accepts both human-readable timestamps and epoch inputs.
+Use it for quick shell-side validation of timestamps before pushing the logic into a longer script.
 
 ```bash
 date -d "2026-03-10" +%A
@@ -201,11 +252,11 @@ date -d "2026-03-10T15:30:00Z" +%s
 ```
 
 ```text
-1773422200
+1773156600
 ```
 
 ```bash
-date -d "@1773422200" +%Y-%m-%dT%H:%M:%SZ
+date -d "@1773156600" +%Y-%m-%dT%H:%M:%SZ
 ```
 
 ```text
@@ -216,45 +267,47 @@ date -d "@1773422200" +%Y-%m-%dT%H:%M:%SZ
 |---|---|---|
 | `%Y` | `2026` | 4-digit year |
 | `%y` | `26` | 2-digit year |
-| `%m` | `03` | Month 01–12 |
+| `%m` | `03` | Month 01-12 |
 | `%b` | `Mar` | Abbreviated month name |
 | `%B` | `March` | Full month name |
-| `%d` | `10` | Day 01–31 |
-| `%e` | ` 10` | Day 1–31 (space-padded) |
-| `%H` | `15` | Hour 00–23 (24h) |
-| `%I` | `03` | Hour 01–12 (12h) |
+| `%d` | `10` | Day 01-31 |
+| `%e` | ` 10` | Day 1-31 (space-padded) |
+| `%H` | `15` | Hour 00-23 (24h) |
+| `%I` | `03` | Hour 01-12 (12h) |
 | `%p` | `PM` | AM/PM |
-| `%M` | `30` | Minute 00–59 |
-| `%S` | `00` | Second 00–59 |
+| `%M` | `30` | Minute 00-59 |
+| `%S` | `00` | Second 00-59 |
 | `%N` | `123456789` | Nanoseconds |
 | `%3N` | `123` | Milliseconds |
 | `%6N` | `123456` | Microseconds |
 | `%z` | `+0100` | Timezone offset |
 | `%Z` | `CET` | Timezone name |
-| `%s` | `1773422200` | Unix epoch (seconds since 1970-01-01T00:00:00Z) |
-| `%j` | `069` | Day of year 001–366 |
-| `%u` | `2` | Day of week 1–7 (Mon=1, ISO) |
+| `%s` | `1773156600` | Unix epoch (seconds since 1970-01-01T00:00:00Z) |
+| `%j` | `069` | Day of year 001-366 |
+| `%u` | `2` | Day of week 1-7 (Mon=1, ISO) |
 | `%A` | `Tuesday` | Full weekday name |
 | `%a` | `Tue` | Abbreviated weekday name |
 | `%W` | `10` | Week number of year (Mon as first day) |
 
 ### Linux | date | arithmetic and timezone
 
-GNU `date -d` accepts relative arithmetic expressions as its date string, allowing date math without external tools. The `TZ` environment variable prefixed before `date` overrides the timezone for that single invocation, which is useful for converting UTC timestamps to local time for display.
+This group covers calendar arithmetic and timezone inspection.
+For month- and DST-aware business logic, shell commands are useful for inspection, but Python or SQL are usually safer as the rule complexity grows.
 
-#### date -d "+N days" — date arithmetic in Bash
+#### `date -d` applies calendar arithmetic to fixed inputs
 
-The `-d` flag accepts relative offset strings as well as absolute dates, allowing addition and subtraction of days, months, years, hours, and minutes directly in the shell. GNU `date` does not have built-in business-day logic — for that, use Python's `dateutil` or a SQL Server calendar table.
+GNU `date` understands relative offsets such as `+7 days`, `+3 months`, and `90 minutes ago`.
+Use explicit UTC markers when the input is an instant rather than a local wall-clock value.
 
 ```bash
-date -d "2026-03-10 + 7 days" +%Y-%m-%d
-date -d "2026-03-10 - 30 days" +%Y-%m-%d
-date -d "2026-03-10 + 3 months" +%Y-%m-%d
-date -d "2026-03-10 + 1 year" +%Y-%m-%d
-date -d "2026-03-10 15:30 + 5 hours" +%H:%M
-date -d "2026-03-10 15:30 - 90 minutes" +%H:%M
+date -d "2026-03-10 +7 days" +%Y-%m-%d
+date -d "2026-03-10 -30 days" +%Y-%m-%d
+date -d "2026-03-10 +3 months" +%Y-%m-%d
+date -d "2026-03-10 +1 year" +%Y-%m-%d
+date -ud "2026-03-10 15:30:00 UTC +5 hours" +%H:%M
+date -ud "2026-03-10 15:30:00 UTC 90 minutes ago" +%H:%M
 date -d "2026-03-10" +%Y-%m-01
-date -d "2026-04-01 - 1 day" +%Y-%m-%d
+date -d "2026-04-01 -1 day" +%Y-%m-%d
 ```
 
 ```text
@@ -268,161 +321,191 @@ date -d "2026-04-01 - 1 day" +%Y-%m-%d
 2026-03-31
 ```
 
-#### TZ=zone date — timezone conversion in Bash
+#### `TZ=zone date` converts a single timestamp without changing the host
 
-Prefix `TZ=<zone>` before `date` to convert an input timestamp to any IANA timezone without changing the system clock. `timedatectl` manages the persistent system timezone and NTP sync status.
+Prefixing `TZ=` changes the timezone for one command only.
+That is the safest way to inspect how one UTC instant lands in another region.
 
 ```bash
 TZ=America/New_York date -d "2026-03-10T15:30:00 UTC" +%Y-%m-%dT%H:%M:%S\ %Z
 TZ=Asia/Tokyo date -d "2026-03-10T15:30:00 UTC" +%Y-%m-%dT%H:%M:%S\ %Z
-timedatectl
-timedatectl list-timezones
-BACKUP_FILE="project_backup_$(date +%Y%m%d_%H%M%S).bak"
 ```
 
 ```text
 2026-03-10T11:30:00 EDT
 2026-03-11T00:30:00 JST
-               Local time: Tue 2026-03-10 16:30:00 CET
-           Universal time: Tue 2026-03-10 15:30:00 UTC
-                 RTC time: Tue 2026-03-10 15:30:00
-                Time zone: Europe/Paris (CET, +0100)
-System clock synchronized: yes
-project_backup_20260310_163000.bak
+```
+
+#### `timedatectl` shows the configured system timezone and available zone IDs
+
+Use `timedatectl show` when you need a script-friendly answer and `timedatectl list-timezones` when you need valid identifiers.
+Do not infer the host timezone from ad hoc string parsing of `date`.
+
+```bash
+timedatectl show --property=Timezone --value
+timedatectl list-timezones | grep -E '^(UTC|Europe/Prague|America/New_York)$'
+```
+
+```text
+Europe/Prague
+America/New_York
+Europe/Prague
+UTC
+```
+
+#### `timedatectl set-timezone` must be followed by an explicit verification read
+
+Timezone changes do not emit useful success text.
+After a settings command, always run a verification command and capture the post-change state.
+
+```bash
+sudo timedatectl set-timezone UTC
+timedatectl show --property=Timezone --value
+```
+
+```text
+UTC
 ```
 
 | Flag / Command | Syntax | Description |
 |---|---|---|
 | `TZ=zone` | `TZ=America/New_York date ...` | Override timezone for one command |
-| `-d` | `date -d "string"` | Parse a date string (GNU date only) |
+| `-d` | `date -d "string"` | Parse a date string (GNU `date` only) |
 | `-u` | `date -u` | Output in UTC |
 | `+format` | `date +%Y-%m-%d` | Custom output format |
-| `timedatectl` | `timedatectl` | Show system clock status and timezone |
-| `list-timezones` | `timedatectl list-timezones` | List all available IANA timezone names |
-| `set-timezone` | `sudo timedatectl set-timezone UTC` | Set persistent system timezone |
-
-> [!warning] Always set servers to UTC
->
-> Every server in your infrastructure should run on UTC. UTC never changes — CET becomes CEST in March, EST becomes EDT, and cron jobs scheduled at "09:00 local" shift by an hour. On UTC, 09:00 is always 09:00. Correlating logs across regions also works cleanly: `grep "2026-03-10T15:" *.log` gives exact matches only if all servers share the same timezone. `GETUTCDATE()` in SQL Server always returns UTC regardless of server timezone, but `GETDATE()` returns server-local time — on a UTC server they are identical.
-
-> [!success] Set timezone to UTC at provisioning time
-> Run this once after server setup and include it in your bootstrap scripts:
-
-```bash
-sudo timedatectl set-timezone UTC
-```
-
----
+| `timedatectl` | `timedatectl` | Show or change the system timezone |
+| `list-timezones` | `timedatectl list-timezones` | List available IANA timezone names |
+| `set-timezone` | `sudo timedatectl set-timezone UTC` | Set the persistent system timezone |
 
 ## PowerShell date and time tools
 
-PowerShell date/time operations use the .NET `DateTime`, `DateTimeOffset`, and `DateOnly` types directly. `Get-Date` is the primary cmdlet for formatting and parsing; arithmetic uses the `.Add*()` methods; timezone conversion uses `[TimeZoneInfo]`. Note that Windows timezone IDs (e.g. `"Eastern Standard Time"`) differ from IANA names (e.g. `"America/New_York"`) used on Linux — .NET 6+ maps between them automatically on cross-platform code.
+PowerShell date handling sits on top of .NET types.
+`Get-Date` is convenient for shell work, while `DateTimeOffset`, `DateOnly`, and `TimeZoneInfo` handle the real semantics.
 
-### PowerShell | Get-Date | formatting and output
+### PowerShell | Get-Date | formatting and parsing
 
-`Get-Date` without arguments returns a `DateTime` object in system locale. Use `-Format` for .NET format strings, `-UFormat` for Unix-style `%` specifiers, and `-AsUTC` (PowerShell 7+) to force UTC output.
+These examples keep the inputs fixed so that the output demonstrates formatting behavior rather than whatever the local clock happened to be at runtime.
+The same formatting rules apply to live values returned by `Get-Date`.
 
-#### Get-Date — current date/time in PowerShell
+#### `Get-Date -Format` and `DateTimeOffset` render ISO, offset, epoch, and filename-safe values
+
+Use `Get-Date -Format` for .NET format strings and `DateTimeOffset` when you need an explicit offset or epoch conversion.
+This combination keeps shell output aligned with the underlying type system.
 
 ```powershell
-Get-Date
-Get-Date -Format "yyyy-MM-dd"
-Get-Date -Format "yyyy-MM-ddTHH:mm:ssK"
-Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ" -AsUTC
-[DateTimeOffset]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
-Get-Date -UFormat "%s"
-Get-Date -Format "yyyyMMdd_HHmmss"
+Get-Date "2026-03-10T16:30:00" -Format "yyyy-MM-dd"
+([DateTimeOffset]::Parse("2026-03-10T15:30:00Z")).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+[DateTimeOffset]::Parse("2026-03-10T16:30:00+01:00").ToString("yyyy-MM-ddTHH:mm:sszzz")
+[DateTimeOffset]::Parse("2026-03-10T15:30:00Z").ToUnixTimeSeconds()
+Get-Date "2026-03-10T16:30:00" -Format "yyyyMMdd_HHmmss"
 ```
 
 ```text
-Tuesday, March 10, 2026 16:30:00
 2026-03-10
+2026-03-10T15:30:00Z
 2026-03-10T16:30:00+01:00
-2026-03-10T15:30:00Z
-2026-03-10T15:30:00Z
-1773422200
+1773156600
 20260310_163000
 ```
 
-#### [datetime]::ParseExact — parsing date strings in PowerShell
+#### `[datetime]::ParseExact()` and `DateTimeOffset.Parse()` parse explicit shapes safely
 
-`[DateTime]::ParseExact` requires an exact format string and `CultureInfo.InvariantCulture` (pass `$null` in PowerShell to use invariant culture). `[DateTimeOffset]::Parse` accepts ISO 8601 strings with offset automatically. `Get-Date "string"` is the simplest path for ISO-formatted input.
+Use `ParseExact` when the input contract is fixed and `DateTimeOffset.Parse` when the source string already carries an offset.
+Do not mix .NET format tokens with `strftime` tokens; `MM` is month and `mm` is minute.
 
 ```powershell
-[DateTime]::ParseExact("2026-03-10", "yyyy-MM-dd", $null)
-[DateTimeOffset]::Parse("2026-03-10T15:30:00+01:00")
-Get-Date "2026-03-10"
+[DateTime]::ParseExact("2026-03-10", "yyyy-MM-dd", $null).ToString("yyyy-MM-dd")
+[DateTimeOffset]::Parse("2026-03-10T15:30:00+01:00").ToString("o")
+(Get-Date "2026-03-10").ToString("yyyy-MM-ddTHH:mm:ss")
 ```
 
-> [!warning] MM vs mm case sensitivity
->
-> `MM` = month, `mm` = minute. Case matters in .NET format strings. A format like `"yyyy-mm-dd"` silently produces wrong output — `mm` extracts the minute (00), not the month.
-
-> [!success] Use uppercase MM for month, lowercase mm for minutes
-> `"yyyy-MM-dd HH:mm:ss"` is correct. `"yyyy-mm-dd"` is a silent bug.
+```text
+2026-03-10
+2026-03-10T15:30:00.0000000+01:00
+2026-03-10T00:00:00
+```
 
 | Specifier | Output | Description |
 |---|---|---|
 | `yyyy` | `2026` | 4-digit year |
 | `yy` | `26` | 2-digit year |
-| `MM` | `03` | Month 01–12 (uppercase) |
+| `MM` | `03` | Month 01-12 (uppercase) |
 | `MMM` | `Mar` | Abbreviated month name |
 | `MMMM` | `March` | Full month name |
-| `dd` | `10` | Day 01–31 |
+| `dd` | `10` | Day 01-31 |
 | `ddd` | `Tue` | Abbreviated weekday name |
 | `dddd` | `Tuesday` | Full weekday name |
-| `HH` | `15` | Hour 00–23 (24h) |
-| `hh` | `03` | Hour 01–12 (12h) |
+| `HH` | `15` | Hour 00-23 (24h) |
+| `hh` | `03` | Hour 01-12 (12h) |
 | `tt` | `PM` | AM/PM |
-| `mm` | `30` | Minute 00–59 (lowercase) |
-| `ss` | `00` | Second 00–59 |
+| `mm` | `30` | Minute 00-59 (lowercase) |
+| `ss` | `00` | Second 00-59 |
 | `fff` | `123` | Milliseconds |
 | `ffffff` | `123456` | Microseconds |
-| `K` | `+01:00` | Timezone offset (appends `Z` for UTC) |
-| `zzz` | `+01:00` | Timezone offset (always explicit sign) |
+| `K` | `+01:00` | Timezone offset when the value carries one |
+| `zzz` | `+01:00` | Timezone offset with explicit sign |
 
 ### PowerShell | Get-Date | arithmetic and timezone
 
-Date arithmetic uses the `.Add*()` instance methods on `DateTime`/`DateTimeOffset` objects. Subtraction with `-` produces a `TimeSpan`. Timezone conversion uses `[TimeZoneInfo]::ConvertTime`, which handles DST transitions automatically using the system timezone database.
+PowerShell arithmetic is clearer when the source value already contains the relevant time component.
+Use `DateTimeOffset` when the instant must stay unambiguous across timezone conversions.
 
-#### (Get-Date).AddDays — date arithmetic in PowerShell
+#### `.AddDays()`, `.AddMonths()`, and subtraction support calendar arithmetic directly
+
+The `.Add*()` methods keep date arithmetic readable and keep the intent in code.
+Subtracting two dates yields a `TimeSpan`, which is the correct type for interval results.
 
 ```powershell
-(Get-Date "2026-03-10").AddDays(7)
-(Get-Date "2026-03-10").AddDays(-30)
-(Get-Date "2026-03-10").AddMonths(3)
-(Get-Date "2026-03-10").AddHours(5)
-(Get-Date "2026-03-10").AddMinutes(-90)
-(Get-Date "2026-03-10").AddYears(1)
-$start = Get-Date "2026-01-01"
-$end = Get-Date "2026-03-10"
+$dt = Get-Date "2026-03-10T15:30:00"
+$dt.AddDays(7).ToString("yyyy-MM-ddTHH:mm:ss")
+$dt.AddDays(-30).ToString("yyyy-MM-ddTHH:mm:ss")
+$dt.AddMonths(3).ToString("yyyy-MM-ddTHH:mm:ss")
+$dt.AddHours(5).ToString("yyyy-MM-ddTHH:mm:ss")
+$dt.AddMinutes(-90).ToString("yyyy-MM-ddTHH:mm:ss")
+$dt.AddYears(1).ToString("yyyy-MM-ddTHH:mm:ss")
+$start = Get-Date "2026-01-01T00:00:00"
+$end = Get-Date "2026-03-10T00:00:00"
 ($end - $start).Days
 ($end - $start).TotalHours
 ```
 
 ```text
-2026-03-17 00:00:00
-2026-02-08 00:00:00
-2026-06-10 00:00:00
-2026-03-10 20:30:00
-2026-03-09 22:30:00
-2027-03-10 00:00:00
+2026-03-17T15:30:00
+2026-02-08T15:30:00
+2026-06-10T15:30:00
+2026-03-10T20:30:00
+2026-03-10T14:00:00
+2027-03-10T15:30:00
 68
 1632
 ```
 
-#### [TimeZoneInfo]::ConvertTime — timezone conversion in PowerShell
+#### `[TimeZoneInfo]::ConvertTime()` uses Windows timezone IDs and applies DST rules
+
+PowerShell timezone conversion uses the Windows timezone database on Windows hosts.
+Convert through `DateTimeOffset` or an explicitly UTC-tagged value so the source instant is not ambiguous.
 
 ```powershell
-[TimeZoneInfo]::ConvertTimeBySystemTimeZoneId(
-    [DateTime]::Parse("2026-03-10T15:30:00"),
-    "UTC",
-    "Eastern Standard Time"
-)
-[TimeZoneInfo]::GetSystemTimeZones() | Select-Object Id, DisplayName | Where-Object Id -match "Europe|America|Asia"
+$utc = [DateTimeOffset]::Parse("2026-03-10T15:30:00+00:00")
+[TimeZoneInfo]::ConvertTime($utc, [TimeZoneInfo]::FindSystemTimeZoneById("Eastern Standard Time")).ToString("o")
+[TimeZoneInfo]::ConvertTime($utc, [TimeZoneInfo]::FindSystemTimeZoneById("Tokyo Standard Time")).ToString("o")
+[TimeZoneInfo]::GetSystemTimeZones() |
+    Where-Object { $_.Id -in "UTC", "Eastern Standard Time", "Tokyo Standard Time" } |
+    Select-Object -ExpandProperty Id
 ```
 
-#### .Year, .Month, .DayOfWeek — extracting date components in PowerShell
+```text
+2026-03-10T11:30:00.0000000-04:00
+2026-03-11T00:30:00.0000000+09:00
+Eastern Standard Time
+UTC
+Tokyo Standard Time
+```
+
+#### Date component properties and deterministic filenames come from the same object
+
+Read components such as `.Year` and `.DayOfYear` from the parsed value rather than reparsing strings.
+Build filenames from the same source value when reproducibility matters.
 
 ```powershell
 $d = Get-Date "2026-03-10T15:30:45"
@@ -434,7 +517,7 @@ $d.DayOfYear
 $d.Hour
 $d.Minute
 $d.Second
-$BackupFile = "project_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss').bak"
+"project_backup_$($d.ToString('yyyyMMdd_HHmmss')).bak"
 ```
 
 ```text
@@ -446,7 +529,7 @@ Tuesday
 15
 30
 45
-project_backup_20260310_163000.bak
+project_backup_20260310_153045.bak
 ```
 
 | Method / Property | Syntax | Description |
@@ -458,825 +541,816 @@ project_backup_20260310_163000.bak
 | `.AddMinutes()` | `(Get-Date).AddMinutes(-90)` | Add or subtract minutes |
 | `TimeSpan.Days` | `($end - $start).Days` | Whole days between two dates |
 | `TimeSpan.TotalHours` | `($end - $start).TotalHours` | Total hours as decimal |
-| `.DayOfWeek` | `$d.DayOfWeek` | Weekday name enum (Monday, Tuesday…) |
-| `.DayOfYear` | `$d.DayOfYear` | Day number 1–366 |
-| `ConvertTimeBySystemTimeZoneId` | `[TimeZoneInfo]::ConvertTimeBySystemTimeZoneId(dt, "UTC", "Eastern Standard Time")` | Convert between Windows timezone IDs |
-| `GetSystemTimeZones()` | `[TimeZoneInfo]::GetSystemTimeZones()` | List all available timezone IDs |
-
----
+| `.DayOfWeek` | `$d.DayOfWeek` | Weekday name enum |
+| `.DayOfYear` | `$d.DayOfYear` | Day number 1-366 |
+| `ConvertTimeBySystemTimeZoneId` | `[TimeZoneInfo]::ConvertTimeBySystemTimeZoneId(...)` | Convert between Windows timezone IDs |
+| `GetSystemTimeZones()` | `[TimeZoneInfo]::GetSystemTimeZones()` | List available timezone IDs |
 
 ## SQL Server (T-SQL)
 
-### Current Date/Time Functions
+SQL Server date handling is primarily about type choice, explicit parsing, and disciplined UTC storage.
+Use the database to validate incoming shapes and compute calendar boundaries, but keep timezone policy explicit.
+
+### SQL Server | system functions and data types
+
+This group separates system clock functions from type semantics.
+The first example uses the live server clock because that is the point of the function family; the second uses fixed literals so the type differences stay obvious.
+
+#### `GETUTCDATE()`, `SYSUTCDATETIME()`, and `SYSDATETIMEOFFSET()` reveal precision and offset behavior
+
+`GETUTCDATE()` returns a legacy `datetime` value.
+`SYSUTCDATETIME()` and `SYSDATETIMEOFFSET()` carry higher precision, and `SYSDATETIMEOFFSET()` also exposes the server offset.
 
 ```sql
--- ============================================================
--- CURRENT DATE/TIME
--- ============================================================
-
-SELECT GETDATE()              -- 2026-03-10 16:30:00.123 (server-local, DATETIME)
-SELECT GETUTCDATE()           -- 2026-03-10 15:30:00.123 (UTC, DATETIME)
-SELECT SYSDATETIME()          -- 2026-03-10 16:30:00.1234567 (server-local, DATETIME2 — more precision)
-SELECT SYSUTCDATETIME()       -- 2026-03-10 15:30:00.1234567 (UTC, DATETIME2)
-SELECT SYSDATETIMEOFFSET()    -- 2026-03-10 16:30:00.1234567 +01:00 (with offset, DATETIMEOFFSET)
--- RULE: Use SYSUTCDATETIME() for timestamps in pipelines. Never GETDATE().
+SELECT 'getutcdate=' + CONVERT(varchar(33), GETUTCDATE(), 126)
+UNION ALL
+SELECT 'sysutcdatetime=' + CONVERT(varchar(33), SYSUTCDATETIME(), 126)
+UNION ALL
+SELECT 'sysdatetimeoffset=' + CONVERT(varchar(40), SYSDATETIMEOFFSET(), 126);
 ```
 
-### SQL Server Date Data Types
+```text
+getutcdate=2026-04-14T11:14:11.273
+sysutcdatetime=2026-04-14T11:14:11.2744291
+sysdatetimeoffset=2026-04-14T13:14:11.2744291+02:00
+```
+
+#### `DATE`, `DATETIME2`, and `DATETIMEOFFSET` store different levels of meaning
+
+Use `DATE` for calendar dates, `DATETIME2` for UTC-normalized timestamps, and `DATETIMEOFFSET` when the stored value must preserve its source offset.
+Avoid `DATETIME` for new schema design unless a legacy contract forces it.
 
 ```sql
--- ============================================================
--- DATA TYPES
--- ============================================================
-
--- DATE:             2026-03-10 (date only, 3 bytes, range: 0001-01-01 to 9999-12-31)
--- TIME:             15:30:00.1234567 (time only, 3-5 bytes)
--- DATETIME2:        2026-03-10 15:30:00.1234567 (date+time, 6-8 bytes, replaces DATETIME)
--- DATETIMEOFFSET:   2026-03-10 15:30:00.1234567 +01:00 (date+time+timezone, 8-10 bytes)
--- DATETIME:         2026-03-10 15:30:00.123 (legacy — 3.33ms precision, avoid in new code)
--- SMALLDATETIME:    2026-03-10 15:30:00 (legacy — minute precision only, avoid)
-
--- RULE: Use DATE for trade dates, DATETIME2 for timestamps, DATETIMEOFFSET for cross-timezone.
--- NEVER use DATETIME for new columns — DATETIME2 is superior in every way.
+SELECT 'trade_date=' + CONVERT(varchar(10), CAST('2026-03-10' AS date), 23)
+UNION ALL
+SELECT 'trade_ts_dt2=' + CONVERT(varchar(33), CAST('2026-03-10T15:30:00.1234567' AS datetime2(7)), 126)
+UNION ALL
+SELECT 'trade_ts_offset=' + CONVERT(varchar(40), CAST('2026-03-10T15:30:00.1234567+01:00' AS datetimeoffset(7)), 126);
 ```
 
-### Parsing and Formatting in T-SQL
+```text
+trade_date=2026-03-10
+trade_ts_dt2=2026-03-10T15:30:00.1234567
+trade_ts_offset=2026-03-10T15:30:00.1234567+01:00
+```
+
+### SQL Server | parsing, formatting, and arithmetic
+
+The safest parse target is ISO 8601 input.
+`CONVERT` style codes are still necessary when external sources insist on regional formats, and arithmetic functions stay correct only when you understand whether the operation is calendar-based or boundary-counting.
+
+#### `CAST`, `CONVERT`, and style codes parse external strings
+
+Prefer ISO 8601 input because it avoids style-code branching.
+When legacy sources send region-specific formats, make the style code explicit and convert immediately to a real date or timestamp type.
 
 ```sql
--- ============================================================
--- PARSING AND FORMATTING
--- ============================================================
-
--- String to date (CAST — simplest)
-SELECT CAST('2026-03-10' AS DATE)                                        -- 2026-03-10
-SELECT CAST('2026-03-10T15:30:00' AS DATETIME2)                         -- 2026-03-10 15:30:00
-SELECT CAST('2026-03-10T15:30:00+01:00' AS DATETIMEOFFSET)              -- 2026-03-10 15:30:00 +01:00
-
--- String to date (CONVERT with style codes — for non-ISO formats)
-SELECT CONVERT(DATE, '03/10/2026', 101)           -- US format MM/DD/YYYY → 2026-03-10
-SELECT CONVERT(DATE, '10/03/2026', 103)           -- European format DD/MM/YYYY → 2026-03-10
-SELECT CONVERT(DATE, '10.03.2026', 104)           -- German format DD.MM.YYYY → 2026-03-10
-SELECT CONVERT(DATE, '20260310', 112)              -- Compact YYYYMMDD → 2026-03-10
-
--- Common style codes:
--- 101 = MM/DD/YYYY (US)
--- 103 = DD/MM/YYYY (British/European)
--- 104 = DD.MM.YYYY (German)
--- 112 = YYYYMMDD (compact ISO, no separators)
--- 120 = YYYY-MM-DD HH:MI:SS (ODBC canonical)
--- 126 = YYYY-MM-DDTHH:MI:SS.mmm (ISO 8601 with T)
--- 127 = YYYY-MM-DDTHH:MI:SS.mmmZ (ISO 8601 with timezone)
-
--- Date to string (FORMAT — flexible but slow)
-SELECT FORMAT(GETDATE(), 'yyyy-MM-dd')                 -- 2026-03-10
-SELECT FORMAT(GETDATE(), 'dd MMM yyyy')                -- 10 Mar 2026
-SELECT FORMAT(GETDATE(), 'yyyyMMdd_HHmmss')            -- 20260310_163000
-SELECT FORMAT(GETDATE(), 'yyyy-MM-ddTHH:mm:ssK')       -- 2026-03-10T16:30:00+01:00
--- WARNING: FORMAT() uses .NET formatting under the hood. It is 10-50x SLOWER than CONVERT.
--- In queries processing millions of rows, use CONVERT instead:
-SELECT CONVERT(VARCHAR(10), GETDATE(), 120)             -- 2026-03-10 (fast)
+SELECT 'cast_date=' + CONVERT(varchar(10), CAST('2026-03-10' AS date), 23)
+UNION ALL
+SELECT 'style_101=' + CONVERT(varchar(10), CONVERT(date, '03/10/2026', 101), 23)
+UNION ALL
+SELECT 'style_112=' + CONVERT(varchar(10), CONVERT(date, '20260310', 112), 23)
+UNION ALL
+SELECT 'fast_format=' + CONVERT(varchar(19), CAST('2026-03-10T15:30:00' AS datetime2(0)), 126);
 ```
 
-> [!warning] FORMAT() performance trap
->
-> `FORMAT()` is 10–50x slower than `CONVERT()` because it calls .NET formatting internally. In queries processing millions of rows, always use `CONVERT(VARCHAR, date, style_code)` instead of `FORMAT(date, 'pattern')`.
+```text
+cast_date=2026-03-10
+style_101=2026-03-10
+style_112=2026-03-10
+fast_format=2026-03-10T15:30:00
+```
 
-> [!success] Use CONVERT for high-volume formatting
-> `CONVERT(VARCHAR(10), GETDATE(), 120)` returns `2026-03-10` and is an order of magnitude faster than `FORMAT(GETDATE(), 'yyyy-MM-dd')`. Reserve `FORMAT()` for display-only queries with small result sets.
+For large result sets, prefer `CONVERT` over `FORMAT()`.
+`FORMAT()` is flexible, but it pays the cost of CLR formatting and is usually the wrong choice in a hot query path.
 
-### Extracting Date Components in T-SQL
+#### `DATEPART`, `DATETRUNC`, and `EOMONTH` expose boundaries and components
+
+Use `DATENAME` when you need a stable weekday label and `DATETRUNC` or `EOMONTH` when you need reporting boundaries.
+That keeps business calendars readable without string slicing.
 
 ```sql
--- ============================================================
--- EXTRACTING COMPONENTS
--- ============================================================
+DECLARE @d datetime2 = '2026-03-10T15:30:45';
 
-SELECT YEAR(GETDATE())                  -- 2026
-SELECT MONTH(GETDATE())                 -- 3
-SELECT DAY(GETDATE())                   -- 10
-SELECT DATEPART(WEEKDAY, GETDATE())     -- 3 (Tuesday — depends on @@DATEFIRST setting!)
-SELECT DATENAME(WEEKDAY, GETDATE())     -- Tuesday
-SELECT DATEPART(HOUR, GETDATE())        -- 16
-SELECT DATEPART(MINUTE, GETDATE())      -- 30
-SELECT DATEPART(QUARTER, GETDATE())     -- 1
-SELECT DATEPART(DAYOFYEAR, GETDATE())   -- 69
-SELECT DATEPART(WEEK, GETDATE())        -- 11 (ISO week may differ — use ISO_WEEK)
-SELECT DATEPART(ISO_WEEK, GETDATE())    -- 11 (ISO 8601 week number)
-
--- EOMONTH — end of month (invaluable for financial reporting)
-SELECT EOMONTH(GETDATE())               -- 2026-03-31 (last day of current month)
-SELECT EOMONTH(GETDATE(), 1)            -- 2026-04-30 (last day of NEXT month)
-SELECT EOMONTH(GETDATE(), -1)           -- 2026-02-28 (last day of PREVIOUS month)
-
--- First day of month
-SELECT DATETRUNC(MONTH, GETDATE())      -- 2026-03-01 (SQL Server 2022+)
--- Pre-2022:
-SELECT DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1)   -- 2026-03-01
-
--- Construct a date from parts
-SELECT DATEFROMPARTS(2026, 3, 10)                                        -- 2026-03-10
-SELECT DATETIME2FROMPARTS(2026, 3, 10, 15, 30, 0, 0, 7)                -- 2026-03-10 15:30:00
-SELECT DATETIMEOFFSETFROMPARTS(2026, 3, 10, 15, 30, 0, 0, 1, 0, 7)     -- 2026-03-10 15:30:00 +01:00
+SELECT 'weekday=' + DATENAME(WEEKDAY, @d)
+UNION ALL
+SELECT 'iso_week=' + CAST(DATEPART(ISO_WEEK, @d) AS varchar(10))
+UNION ALL
+SELECT 'day_of_year=' + CAST(DATEPART(DAYOFYEAR, @d) AS varchar(10))
+UNION ALL
+SELECT 'start_of_month=' + CONVERT(varchar(10), CAST(DATETRUNC(month, @d) AS date), 23)
+UNION ALL
+SELECT 'end_of_month=' + CONVERT(varchar(10), EOMONTH(@d), 23);
 ```
 
-### Date Arithmetic in T-SQL
+```text
+weekday=Tuesday
+iso_week=11
+day_of_year=69
+start_of_month=2026-03-01
+end_of_month=2026-03-31
+```
 
-For the full T-SQL date function reference including FORMAT, ISDATE, and calendar table patterns, see [date-and-time-functions](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/date-and-time-functions).
+#### `DATEADD` shifts calendar values, while `DATEDIFF` counts boundaries
+
+`DATEADD` is the right tool for offsets such as "plus seven days" or "minus 90 minutes".
+`DATEDIFF` answers a different question:
+it counts boundary crossings, which is why `DATEDIFF(year, '2025-12-31', '2026-01-01')` returns `1`.
 
 ```sql
--- ============================================================
--- DATE ARITHMETIC
--- ============================================================
-
--- Add/subtract intervals
-SELECT DATEADD(DAY, 7, '2026-03-10')          -- 2026-03-17
-SELECT DATEADD(DAY, -30, '2026-03-10')        -- 2026-02-08
-SELECT DATEADD(MONTH, 3, '2026-03-10')        -- 2026-06-10
-SELECT DATEADD(YEAR, 1, '2026-03-10')         -- 2027-03-10
-SELECT DATEADD(HOUR, 5, '2026-03-10 15:30')   -- 2026-03-10 20:30:00
-SELECT DATEADD(MINUTE, -90, '2026-03-10 15:30')  -- 2026-03-10 14:00:00
-
--- Difference between two dates
-SELECT DATEDIFF(DAY, '2026-01-01', '2026-03-10')     -- 68
-SELECT DATEDIFF(MONTH, '2025-06-15', '2026-03-10')   -- 9
-SELECT DATEDIFF(YEAR, '2020-01-01', '2026-03-10')    -- 6
-SELECT DATEDIFF(HOUR, '2026-03-10 08:00', '2026-03-10 17:30')   -- 9
--- WARNING: DATEDIFF counts BOUNDARY crossings, not full periods.
--- DATEDIFF(YEAR, '2025-12-31', '2026-01-01') = 1 (only 1 day apart!)
--- DATEDIFF(MONTH, '2026-01-31', '2026-02-01') = 1 (only 1 day apart!)
--- For "how many complete months," use more careful logic.
-
--- DATEDIFF_BIG for large intervals (avoids INT overflow)
-SELECT DATEDIFF_BIG(SECOND, '2000-01-01', SYSUTCDATETIME())   -- ~827,000,000
-
--- DATETRUNC — truncate to a boundary (SQL Server 2022+)
-SELECT DATETRUNC(HOUR, GETDATE())        -- 2026-03-10 16:00:00 (drop minutes/seconds)
-SELECT DATETRUNC(DAY, GETDATE())         -- 2026-03-10 00:00:00
-SELECT DATETRUNC(MONTH, GETDATE())       -- 2026-03-01 00:00:00
-SELECT DATETRUNC(QUARTER, GETDATE())     -- 2026-01-01 00:00:00
-SELECT DATETRUNC(YEAR, GETDATE())        -- 2026-01-01 00:00:00
-SELECT DATETRUNC(WEEK, GETDATE())        -- 2026-03-09 00:00:00 (Monday of the week)
--- Use case: GROUP BY date period without FORMAT/CONVERT overhead
+SELECT 'add_day=' + CONVERT(varchar(10), DATEADD(day, 7, CAST('2026-03-10' AS date)), 23)
+UNION ALL
+SELECT 'add_month=' + CONVERT(varchar(10), DATEADD(month, 3, CAST('2026-03-10' AS date)), 23)
+UNION ALL
+SELECT 'add_hour=' + CONVERT(varchar(19), DATEADD(hour, 5, CAST('2026-03-10T15:30:00' AS datetime2(0))), 126)
+UNION ALL
+SELECT 'diff_days=' + CAST(DATEDIFF(day, '2026-01-01', '2026-03-10') AS varchar(10))
+UNION ALL
+SELECT 'boundary_year=' + CAST(DATEDIFF(year, '2025-12-31', '2026-01-01') AS varchar(10))
+UNION ALL
+SELECT 'trunc_hour=' + CONVERT(varchar(19), DATETRUNC(hour, CAST('2026-03-10T15:30:45' AS datetime2(0))), 126);
 ```
 
-> [!warning] DATEDIFF counts boundaries
->
-> `DATEDIFF(YEAR, '2025-12-31', '2026-01-01')` returns `1` even though the dates are only 1 day apart. `DATEDIFF` counts how many year/month/day boundaries are crossed, not full periods elapsed. For "how many complete months between two dates," use more careful arithmetic.
+```text
+add_day=2026-03-17
+add_month=2026-06-10
+add_hour=2026-03-10T20:30:00
+diff_days=68
+boundary_year=1
+trunc_hour=2026-03-10T15:00:00
+```
 
-> [!success] Use DATEDIFF for coarse intervals, custom logic for precise periods
-> `DATEDIFF(DAY, start, end)` is reliable. For "complete months elapsed," compute `DATEDIFF(MONTH, ...) - 1` when the end day is earlier in the month than the start day, or use a calendar table join.
+### SQL Server | timezone conversion and pipeline windows
 
-### Timezone Conversion in T-SQL
+Timezone conversion in SQL Server uses Windows timezone IDs through `AT TIME ZONE`.
+For calendar windows and trading calendars, keep the filtering rule readable enough that the next operator can inspect it without reverse-engineering session settings.
+
+#### `AT TIME ZONE` converts through named zones
+
+Convert a UTC-normalized value by first tagging it as UTC and then converting it to the target zone.
+That preserves DST behavior and avoids hard-coded numeric offsets.
 
 ```sql
--- ============================================================
--- TIMEZONE CONVERSION
--- ============================================================
+DECLARE @utc datetime2 = '2026-03-10T15:30:00';
 
--- Convert between timezones (SQL Server 2016+)
-SELECT GETDATE() AT TIME ZONE 'Central European Standard Time'
--- 2026-03-10 16:30:00.000 +01:00 (adds offset to local datetime)
-
-SELECT SYSUTCDATETIME() AT TIME ZONE 'UTC' AT TIME ZONE 'Eastern Standard Time'
--- 2026-03-10 11:30:00.000 -04:00 (UTC → New York)
--- NOTE: You must chain AT TIME ZONE twice:
--- First: tag the value as UTC (it's a plain DATETIME2 with no timezone)
--- Second: convert to the target timezone
-
-SELECT SYSUTCDATETIME() AT TIME ZONE 'UTC' AT TIME ZONE 'Tokyo Standard Time'
--- 2026-03-11 00:30:00.000 +09:00 (note: date changes!)
-
--- List all timezone names SQL Server knows
-SELECT * FROM sys.time_zone_info ORDER BY name
--- Shows: name, current_utc_offset, is_currently_dst
-
--- Pipeline pattern: store in UTC, display in local
-SELECT
-    trade_date,
-    created_at_utc,
-    created_at_utc AT TIME ZONE 'UTC' AT TIME ZONE 'Central European Standard Time' AS created_at_cet
-FROM gold.scores_daily
+SELECT 'paris=' + CONVERT(varchar(40), @utc AT TIME ZONE 'UTC' AT TIME ZONE 'Central European Standard Time', 126)
+UNION ALL
+SELECT 'new_york=' + CONVERT(varchar(40), @utc AT TIME ZONE 'UTC' AT TIME ZONE 'Eastern Standard Time', 126)
+UNION ALL
+SELECT 'tokyo=' + CONVERT(varchar(40), @utc AT TIME ZONE 'UTC' AT TIME ZONE 'Tokyo Standard Time', 126);
 ```
 
-### Practical T-SQL Pipeline Patterns
+```text
+paris=2026-03-10T16:30:00+01:00
+new_york=2026-03-10T11:30:00-04:00
+tokyo=2026-03-11T00:30:00+09:00
+```
+
+#### `DATENAME(WEEKDAY, ...)` keeps calendar filters independent of `@@DATEFIRST`
+
+Weekday numbers depend on `@@DATEFIRST`, but weekday names do not.
+If a weekend filter must survive session defaults, either set `DATEFIRST` explicitly or filter on `DATENAME`.
 
 ```sql
--- ============================================================
--- PRACTICAL PATTERNS
--- ============================================================
-
--- Get all trading days in a range (exclude weekends)
-SELECT trade_date
-FROM bronze.trading_calendar
-WHERE trade_date BETWEEN '2026-01-01' AND '2026-03-10'
-  AND DATEPART(WEEKDAY, trade_date) NOT IN (1, 7)    -- 1=Sunday, 7=Saturday (with default @@DATEFIRST=7)
-
--- Yesterday's date (for pipeline "load yesterday's data")
-SELECT CAST(DATEADD(DAY, -1, SYSUTCDATETIME()) AS DATE) AS yesterday
-
--- Rolling 30-day window
-SELECT * FROM gold.scores_daily
-WHERE trade_date >= DATEADD(DAY, -30, CAST(SYSUTCDATETIME() AS DATE))
-
--- Group by month
-SELECT
-    DATETRUNC(MONTH, trade_date) AS month,
-    COUNT(*) AS records
-FROM gold.scores_daily
-GROUP BY DATETRUNC(MONTH, trade_date)
-ORDER BY month
-
--- Quarter label
-SELECT
-    CONCAT('Q', DATEPART(QUARTER, trade_date), ' ', YEAR(trade_date)) AS quarter,
-    COUNT(*)
-FROM gold.scores_daily
-GROUP BY DATEPART(QUARTER, trade_date), YEAR(trade_date)
--- Q1 2026, Q2 2026, etc.
+WITH sample(trade_date) AS (
+    SELECT CAST(v.trade_date AS date)
+    FROM (VALUES ('2026-03-06'), ('2026-03-07'), ('2026-03-08'), ('2026-03-09')) AS v(trade_date)
+)
+SELECT 'business_day=' + CONVERT(varchar(10), trade_date, 23)
+FROM sample
+WHERE DATENAME(WEEKDAY, trade_date) NOT IN ('Saturday', 'Sunday')
+UNION ALL
+SELECT 'rolling_window_start=' + CONVERT(varchar(10), DATEADD(DAY, -30, CAST('2026-03-10' AS date)), 23);
 ```
 
-> [!warning] @@DATEFIRST and weekday numbers
->
-> `DATEPART(WEEKDAY, date)` returns 1–7, but what day is "1" depends on the `@@DATEFIRST` setting. US default: `@@DATEFIRST = 7` → Sunday=1, Monday=2, Saturday=7. ISO standard: `@@DATEFIRST = 1` → Monday=1, Sunday=7. If your pipeline assumes Monday=1 but the server uses Sunday=1, your weekend exclusion filter breaks silently and lets through Saturday and Sunday records.
-
-> [!success] Use DATENAME or set @@DATEFIRST explicitly
-> `DATENAME(WEEKDAY, date)` returns `'Monday'` regardless of `@@DATEFIRST` — use it for readable, session-independent weekday logic. Alternatively, set the session setting at the top of any script that relies on weekday numbers:
-
-```sql
-SET DATEFIRST 1;  -- Monday = 1 (ISO standard)
+```text
+business_day=2026-03-06
+business_day=2026-03-09
+rolling_window_start=2026-02-08
 ```
-
----
 
 ## Python
 
-### Current Date/Time in Python
+Python date handling is safest when `date` and `datetime` are kept separate and every timestamp is timezone-aware.
+The standard library is sufficient for most work; `dateutil` and `pandas` extend it where calendar logic becomes richer.
+
+### Python | creation and parsing
+
+Use constructors for clear, explicit values and parse helpers only at the edges.
+That keeps source-of-truth types visible in the code path.
+
+#### `date()`, `datetime()`, and `fromtimestamp()` create the right type for the job
+
+Use `date` for calendar-only fields and aware `datetime` for instants.
+For live UTC timestamps, prefer `datetime.now(timezone.utc)` over naive clock calls.
 
 ```python
-from datetime import datetime, date, time, timedelta, timezone
-from zoneinfo import ZoneInfo   # Python 3.9+ (replaces pytz)
+from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
 
-# ============================================================
-# CURRENT DATE/TIME
-# ============================================================
-
-datetime.now()                          # 2026-03-10 16:30:00.123456 (local, NAIVE — no timezone!)
-datetime.now(timezone.utc)              # 2026-03-10 15:30:00.123456+00:00 (UTC, AWARE)
-datetime.utcnow()                       # DO NOT USE — returns naive UTC (deprecated in 3.12)
-date.today()                            # 2026-03-10 (date only)
-datetime.now().timestamp()              # 1773422200.123456 (Unix epoch as float)
-
-# CRITICAL RULE: ALWAYS use timezone-aware datetimes in pipelines.
-# datetime.now() without timezone is a bug waiting to happen.
-# CORRECT:
-now = datetime.now(timezone.utc)
-# WRONG:
-now = datetime.now()   # naive — is this UTC? Local? Who knows?
+print(date(2026, 3, 10).isoformat())
+print(datetime(2026, 3, 10, 15, 30, tzinfo=timezone.utc).isoformat())
+print(datetime(2026, 3, 10, 15, 30, tzinfo=ZoneInfo("Europe/Paris")).isoformat())
+print(int(datetime(2026, 3, 10, 15, 30, tzinfo=timezone.utc).timestamp()))
 ```
 
-> [!warning] Never use datetime.utcnow()
->
-> `datetime.utcnow()` is deprecated in Python 3.12 and returns a **naive** datetime with no timezone info. Code that receives it cannot tell if it's UTC or local time. Always use `datetime.now(timezone.utc)` instead.
+```text
+2026-03-10
+2026-03-10T15:30:00+00:00
+2026-03-10T15:30:00+01:00
+1773156600
+```
 
-> [!success] Use datetime.now(timezone.utc) for all UTC timestamps
-> `datetime.now(timezone.utc)` returns a timezone-aware datetime. Any downstream code can inspect `.tzinfo` and the value round-trips correctly through JSON serialization, database storage, and API responses.
+#### `strptime()`, `fromisoformat()`, `fromtimestamp()`, and `date.fromisoformat()` parse explicit input contracts
 
-### Creating Dates in Python
+Use `strptime()` when the source contract is fixed and non-ISO.
+Use `fromisoformat()` when the input is already ISO 8601, and always pass `tz=` when converting epoch values.
 
 ```python
-# ============================================================
-# CREATING DATES
-# ============================================================
+from datetime import datetime, date, timezone
 
-date(2026, 3, 10)                                           # 2026-03-10
-datetime(2026, 3, 10, 15, 30, 0)                            # 2026-03-10 15:30:00 (naive)
-datetime(2026, 3, 10, 15, 30, 0, tzinfo=timezone.utc)       # 2026-03-10 15:30:00+00:00 (UTC)
-datetime(2026, 3, 10, 15, 30, tzinfo=ZoneInfo("Europe/Paris"))  # 2026-03-10 15:30:00+01:00
+print(datetime.strptime("2026-03-10", "%Y-%m-%d").isoformat())
+print(datetime.fromisoformat("2026-03-10T15:30:00+01:00").isoformat())
+print(datetime.fromtimestamp(1773156600, tz=timezone.utc).isoformat())
+print(date.fromisoformat("2026-03-10").isoformat())
 ```
 
-### Parsing Strings to Dates in Python
+```text
+2026-03-10T00:00:00
+2026-03-10T15:30:00+01:00
+2026-03-10T15:30:00+00:00
+2026-03-10
+```
 
 | Specifier | Output | Description |
 |---|---|---|
 | `%Y` | `2026` | 4-digit year |
 | `%y` | `26` | 2-digit year |
-| `%m` | `03` | Month 01–12 |
+| `%m` | `03` | Month 01-12 |
 | `%b` | `Mar` | Abbreviated month name |
 | `%B` | `March` | Full month name |
-| `%d` | `10` | Day 01–31 |
-| `%j` | `069` | Day of year 001–366 |
-| `%H` | `15` | Hour 00–23 (24h) |
-| `%I` | `03` | Hour 01–12 (12h) |
+| `%d` | `10` | Day 01-31 |
+| `%j` | `069` | Day of year 001-366 |
+| `%H` | `15` | Hour 00-23 (24h) |
+| `%I` | `03` | Hour 01-12 (12h) |
 | `%p` | `PM` | AM/PM |
-| `%M` | `30` | Minute 00–59 |
-| `%S` | `00` | Second 00–59 |
+| `%M` | `30` | Minute 00-59 |
+| `%S` | `00` | Second 00-59 |
 | `%f` | `123456` | Microseconds |
 | `%z` | `+0100` | UTC offset (+HHMM or +HH:MM) |
-| `%Z` | `UTC` | Timezone name (output only — unreliable for parsing) |
+| `%Z` | `UTC` | Timezone name (output only - unreliable for parsing) |
 | `%A` | `Tuesday` | Full weekday name |
 | `%a` | `Tue` | Abbreviated weekday name |
-| `%u` | `2` | Weekday 1–7 (Mon=1, ISO) |
-| `%W` | `10` | Week number 00–53 (Mon as first day) |
+| `%u` | `2` | Weekday 1-7 (Mon=1, ISO) |
+| `%W` | `10` | Week number 00-53 (Mon as first day) |
+
+### Python | formatting and arithmetic
+
+Formatting and arithmetic should preserve the semantic distinction between an instant and a calendar date.
+Use `timedelta` for fixed durations and `relativedelta` when the business rule is expressed in months or years.
+
+#### `strftime()` and `isoformat()` generate transport-safe strings
+
+`strftime()` is useful for controlled display and filenames.
+`isoformat()` is the safest default for machine interchange because it preserves offset information automatically.
 
 ```python
-# strptime (string parse time) — explicit format
-datetime.strptime("2026-03-10", "%Y-%m-%d")                  # datetime(2026, 3, 10)
-datetime.strptime("2026-03-10T15:30:00", "%Y-%m-%dT%H:%M:%S")
-datetime.strptime("10/03/2026", "%d/%m/%Y")                  # European format
-datetime.strptime("Mar 10, 2026 3:30 PM", "%b %d, %Y %I:%M %p")
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
-# fromisoformat (Python 3.7+ — fastest for ISO strings)
-datetime.fromisoformat("2026-03-10")                          # datetime(2026, 3, 10)
-datetime.fromisoformat("2026-03-10T15:30:00")                 # naive
-datetime.fromisoformat("2026-03-10T15:30:00+01:00")           # aware
-datetime.fromisoformat("2026-03-10T15:30:00Z")                # aware, UTC (Python 3.11+)
+dt = datetime(2026, 3, 10, 15, 30, tzinfo=timezone.utc)
 
-# From Unix epoch
-datetime.fromtimestamp(1773422200, tz=timezone.utc)            # 2026-03-10 15:30:00+00:00
-# ALWAYS pass tz= to fromtimestamp. Without it, you get local time (ambiguous).
-
-# From date components
-date.fromisoformat("2026-03-10")                               # date(2026, 3, 10)
+print(dt.strftime("%Y-%m-%d"))
+print(dt.strftime("%Y-%m-%dT%H:%M:%SZ"))
+print(dt.astimezone(ZoneInfo("Europe/Paris")).strftime("%Y-%m-%dT%H:%M:%S%z"))
+print(dt.strftime("%Y%m%d_%H%M%S"))
+print(dt.isoformat())
 ```
 
-### Formatting Dates to Strings in Python
-
-```python
-# ============================================================
-# FORMATTING DATES → STRINGS
-# ============================================================
-
-dt = datetime(2026, 3, 10, 15, 30, 0, tzinfo=timezone.utc)
-
-dt.strftime("%Y-%m-%d")                          # 2026-03-10
-dt.strftime("%Y-%m-%dT%H:%M:%SZ")                # 2026-03-10T15:30:00Z
-dt.strftime("%d %b %Y")                          # 10 Mar 2026
-dt.strftime("%Y%m%d_%H%M%S")                     # 20260310_153000
-dt.isoformat()                                    # 2026-03-10T15:30:00+00:00
-dt.date().isoformat()                             # 2026-03-10
-str(dt.date())                                    # 2026-03-10 (same)
+```text
+2026-03-10
+2026-03-10T15:30:00Z
+2026-03-10T16:30:00+0100
+20260310_153000
+2026-03-10T15:30:00+00:00
 ```
 
-### Date Arithmetic in Python
+#### `timedelta` handles fixed durations, and `relativedelta` handles calendar shifts
+
+Use `timedelta` for days, hours, and minutes.
+Use `dateutil.relativedelta` when the business rule is "plus three months" or "end of next month", because calendar months do not all have the same length.
 
 ```python
-# ============================================================
-# DATE ARITHMETIC
-# ============================================================
+from datetime import date, datetime, timedelta, timezone
+from dateutil.relativedelta import relativedelta
 
 d = date(2026, 3, 10)
 dt = datetime(2026, 3, 10, 15, 30, tzinfo=timezone.utc)
 
-d + timedelta(days=7)                              # date(2026, 3, 17)
-d - timedelta(days=30)                             # date(2026, 2, 8)
-dt + timedelta(hours=5)                            # 2026-03-10 20:30:00+00:00
-dt - timedelta(minutes=90)                         # 2026-03-10 14:00:00+00:00
-dt + timedelta(weeks=2)                            # 2026-03-24 15:30:00+00:00
-dt + timedelta(days=1, hours=3, minutes=15)        # 2026-03-11 18:45:00+00:00
-
-# Difference between dates
-(date(2026, 3, 10) - date(2026, 1, 1)).days        # 68
-diff = datetime(2026, 3, 10) - datetime(2026, 3, 1)
-diff.days                                            # 9
-diff.total_seconds()                                 # 777600.0
-
-# Add months/years (timedelta doesn't support months — use dateutil)
-from dateutil.relativedelta import relativedelta
-d + relativedelta(months=3)                         # date(2026, 6, 10)
-d + relativedelta(years=1)                          # date(2027, 3, 10)
-d + relativedelta(months=1, days=-1)                # date(2026, 4, 9)
-d - relativedelta(months=6)                         # date(2025, 9, 10)
-# dateutil handles month-end correctly:
-date(2026, 1, 31) + relativedelta(months=1)         # date(2026, 2, 28) (not Feb 31!)
+print((d + timedelta(days=7)).isoformat())
+print((d - timedelta(days=30)).isoformat())
+print((dt + timedelta(hours=5)).isoformat())
+print((dt - timedelta(minutes=90)).isoformat())
+print((d + relativedelta(months=3)).isoformat())
+print((d + relativedelta(years=1)).isoformat())
+print((date(2026, 3, 10) - date(2026, 1, 1)).days)
+print((date(2026, 1, 31) + relativedelta(months=1)).isoformat())
 ```
 
-> [!tip] dateutil for month/year arithmetic
->
-> Python's `timedelta` only handles days, seconds, and microseconds — not months or years. Use `dateutil.relativedelta` for month/year arithmetic. It correctly handles edge cases like January 31 + 1 month = February 28 (not February 31).
-
-### Timezone Conversion in Python
-
-```python
-# ============================================================
-# TIMEZONE CONVERSION
-# ============================================================
-
-# Create timezone-aware datetime
-paris = ZoneInfo("Europe/Paris")
-ny = ZoneInfo("America/New_York")
-tokyo = ZoneInfo("Asia/Tokyo")
-
-dt_utc = datetime(2026, 3, 10, 15, 30, tzinfo=timezone.utc)
-dt_utc.astimezone(paris)    # 2026-03-10 16:30:00+01:00
-dt_utc.astimezone(ny)       # 2026-03-10 11:30:00-04:00 (EDT after DST)
-dt_utc.astimezone(tokyo)    # 2026-03-11 00:30:00+09:00 (next day!)
-
-# Convert naive to aware (tag it with a timezone)
-naive = datetime(2026, 3, 10, 15, 30)
-aware = naive.replace(tzinfo=timezone.utc)              # "This IS UTC"
-# OR:
-aware = paris.localize(naive) if hasattr(paris, 'localize') else naive.replace(tzinfo=paris)
-
-# List available timezones
-from zoneinfo import available_timezones
-sorted(tz for tz in available_timezones() if tz.startswith("Europe/"))
+```text
+2026-03-17
+2026-02-08
+2026-03-10T20:30:00+00:00
+2026-03-10T14:00:00+00:00
+2026-06-10
+2027-03-10
+68
+2026-02-28
 ```
 
-### Extracting Components in Python
+### Python | timezone conversion and ranges
+
+`zoneinfo` is the correct standard-library surface for named timezones.
+For calendar ranges and business-day sequences, pair the standard library with `pandas` only when the range logic justifies the dependency.
+
+#### `ZoneInfo` converts through named zones instead of hard-coded offsets
+
+Converting through named zones preserves DST behavior and date rollovers automatically.
+That matters whenever one UTC instant must be shown in several markets.
 
 ```python
-# ============================================================
-# EXTRACTING COMPONENTS
-# ============================================================
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo, available_timezones
 
-dt = datetime(2026, 3, 10, 15, 30, 45)
-dt.year          # 2026
-dt.month         # 3
-dt.day           # 10
-dt.hour          # 15
-dt.minute        # 30
-dt.second        # 45
-dt.microsecond   # 0
-dt.weekday()     # 1 (0=Monday, 6=Sunday — ISO-like)
-dt.isoweekday()  # 2 (1=Monday, 7=Sunday — ISO 8601)
-dt.date()        # date(2026, 3, 10) — strip time
-dt.time()        # time(15, 30, 45) — strip date
-dt.isocalendar() # (2026, 11, 2) — ISO year, week, weekday
-dt.timetuple().tm_yday  # 69 (day of year)
+dt = datetime(2026, 3, 10, 15, 30, tzinfo=timezone.utc)
+
+print(dt.astimezone(ZoneInfo("Europe/Paris")).isoformat())
+print(dt.astimezone(ZoneInfo("America/New_York")).isoformat())
+print(dt.astimezone(ZoneInfo("Asia/Tokyo")).isoformat())
+for tz in ["Europe/Paris", "America/New_York", "Asia/Tokyo"]:
+    print(tz if tz in available_timezones() else f"missing:{tz}")
 ```
 
-### Practical Pipeline Patterns in Python
+```text
+2026-03-10T16:30:00+01:00
+2026-03-10T11:30:00-04:00
+2026-03-11T00:30:00+09:00
+Europe/Paris
+America/New_York
+Asia/Tokyo
+```
+
+#### `monthrange()` and `pandas.date_range()` generate month ends and business-day series
+
+Use the standard library for month boundaries and bring in `pandas` when you need dense trading-day or reporting calendars.
+That split keeps small scripts light without giving up richer range generation in data work.
 
 ```python
-# ============================================================
-# PRACTICAL PIPELINE PATTERNS
-# ============================================================
-
-# Yesterday's date
-yesterday = date.today() - timedelta(days=1)
-
-# Start/end of month
+from datetime import date
 from calendar import monthrange
-first_of_month = date.today().replace(day=1)
-_, last_day = monthrange(2026, 3)
-end_of_month = date(2026, 3, last_day)     # date(2026, 3, 31)
-
-# Last business day (skip weekends)
-d = date.today()
-while d.weekday() >= 5:   # 5=Saturday, 6=Sunday
-    d -= timedelta(days=1)
-
-# Generate date range
-def date_range(start, end):
-    """Yield dates from start to end inclusive."""
-    d = start
-    while d <= end:
-        yield d
-        d += timedelta(days=1)
-
-for d in date_range(date(2026, 3, 1), date(2026, 3, 10)):
-    print(d.isoformat())
-
-# Pandas date range (more powerful)
 import pandas as pd
-pd.date_range("2026-03-01", "2026-03-10", freq="B")   # Business days only
-pd.date_range("2026-01-01", periods=12, freq="MS")     # Monthly start dates
-pd.date_range("2026-01-01", periods=4, freq="QS")      # Quarterly start dates
+
+first_of_month = date(2026, 3, 10).replace(day=1)
+_, last_day = monthrange(2026, 3)
+end_of_month = date(2026, 3, last_day)
+
+print(first_of_month.isoformat())
+print(end_of_month.isoformat())
+print(pd.date_range("2026-03-01", "2026-03-10", freq="B").strftime("%Y-%m-%d").tolist())
 ```
 
-> [!warning] Naive vs aware datetimes
->
-> Python has two kinds of datetimes. **Naive** (`datetime(2026, 3, 10, 15, 30)`) has no timezone info — you cannot tell if it represents UTC, Paris, or Tokyo. Comparing two naive datetimes from different timezones gives wrong results silently. **Aware** (`datetime(2026, 3, 10, 15, 30, tzinfo=timezone.utc)`) embeds the timezone. Comparisons, arithmetic, and conversions are all correct. Never create naive datetimes in pipeline code — always pass `tzinfo=`.
-
-> [!success] Tag naive datetimes immediately on receipt
-> If a library or API returns a naive datetime and you know its intended timezone, tag it with `.replace()` before storing or passing it on:
-
-```python
-naive_from_api = datetime.fromisoformat("2026-03-10T15:30:00")
-aware = naive_from_api.replace(tzinfo=timezone.utc)  # tag as UTC
+```text
+2026-03-01
+2026-03-31
+['2026-03-02', '2026-03-03', '2026-03-04', '2026-03-05', '2026-03-06', '2026-03-09', '2026-03-10']
 ```
-
----
 
 ## C# (.NET)
 
-### Current Date/Time in C#
+In .NET, type choice decides whether a value is a calendar date, a local timestamp, or an offset-bearing instant.
+`DateTimeOffset` and `DateOnly` should carry most of the pipeline workload.
+
+### C# | core types and parsing
+
+The key distinction is between calendar dates and instants.
+That distinction should be obvious from the chosen type before any serialization logic is added.
+
+#### `DateOnly`, `DateTimeOffset`, and `FromUnixTimeSeconds()` separate dates from instants
+
+Use `DateOnly` for date-only fields and `DateTimeOffset` for instants.
+`FromUnixTimeSeconds()` is the clean bridge from epoch-based payloads into typed .NET values.
+
+```csharp
+using System;
+
+var tradeDate = new DateOnly(2026, 3, 10);
+var tradeStamp = new DateTimeOffset(2026, 3, 10, 15, 30, 0, TimeSpan.FromHours(1));
+var utcStamp = DateTimeOffset.FromUnixTimeSeconds(1773156600);
+
+Console.WriteLine(tradeDate.ToString("yyyy-MM-dd"));
+Console.WriteLine(tradeStamp.ToString("o"));
+Console.WriteLine(utcStamp.ToString("o"));
+```
+
+```text
+2026-03-10
+2026-03-10T15:30:00.0000000+01:00
+2026-03-10T15:30:00.0000000+00:00
+```
+
+#### `ParseExact()` and `TryParseExact()` validate external text contracts
+
+Use `ParseExact` or `TryParseExact` when the input contract is fixed.
+Use `DateTimeOffset.Parse` when the source string already includes its offset and should stay offset-aware.
 
 ```csharp
 using System;
 using System.Globalization;
 
-// ============================================================
-// CURRENT DATE/TIME
-// ============================================================
+var isoDate = DateOnly.Parse("2026-03-10", CultureInfo.InvariantCulture);
+var dto = DateTimeOffset.Parse("2026-03-10T15:30:00+01:00", CultureInfo.InvariantCulture);
+DateTime.TryParseExact("20260310", "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var compact);
 
-DateTime.Now                    // 2026-03-10 16:30:00 (local)
-DateTime.UtcNow                 // 2026-03-10 15:30:00 (UTC)
-DateTimeOffset.Now              // 2026-03-10 16:30:00 +01:00 (local with offset)
-DateTimeOffset.UtcNow           // 2026-03-10 15:30:00 +00:00 (UTC with offset)
-DateOnly.FromDateTime(DateTime.Now)    // 2026-03-10 (.NET 6+)
-TimeOnly.FromDateTime(DateTime.Now)    // 16:30:00 (.NET 6+)
-
-// RULE: Use DateTimeOffset for timestamps (preserves timezone).
-// Use DateOnly for trade dates (.NET 6+).
-// Avoid DateTime — it has a broken Kind system (Local/Utc/Unspecified).
+Console.WriteLine(isoDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+Console.WriteLine(dto.ToString("o", CultureInfo.InvariantCulture));
+Console.WriteLine(compact.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 ```
 
-### Creating Dates in C#
-
-```csharp
-// ============================================================
-// CREATING DATES
-// ============================================================
-
-new DateTime(2026, 3, 10)                                                          // 2026-03-10 (Kind=Unspecified)
-new DateTime(2026, 3, 10, 15, 30, 0, DateTimeKind.Utc)                            // 2026-03-10 15:30:00 UTC
-new DateTimeOffset(2026, 3, 10, 15, 30, 0, TimeSpan.FromHours(1))                 // 2026-03-10 15:30:00 +01:00
-new DateOnly(2026, 3, 10)                                                          // 2026-03-10
-DateTimeOffset.FromUnixTimeSeconds(1773422200)                                     // from epoch
-```
-
-### Parsing Strings to Dates in C#
-
-```csharp
-// ============================================================
-// PARSING STRINGS → DATES
-// ============================================================
-
-// Parse ISO automatically
-DateTime.Parse("2026-03-10")                                                       // 2026-03-10
-DateTime.Parse("2026-03-10T15:30:00Z")                                             // UTC → local (CAREFUL!)
-DateTimeOffset.Parse("2026-03-10T15:30:00+01:00")                                  // preserves offset
-DateOnly.Parse("2026-03-10")                                                       // .NET 6+
-
-// Parse with exact format
-DateTime.ParseExact("10/03/2026", "dd/MM/yyyy", CultureInfo.InvariantCulture)
-DateTime.ParseExact("Mar 10, 2026", "MMM dd, yyyy", CultureInfo.InvariantCulture)
-
-// TryParse (safe — no exception on invalid input)
-if (DateTime.TryParse(userInput, out var parsed))
-    Console.WriteLine(parsed);
-else
-    Console.WriteLine("Invalid date");
-
-// TryParseExact (safe + exact format)
-DateTime.TryParseExact("20260310", "yyyyMMdd", CultureInfo.InvariantCulture,
-    DateTimeStyles.None, out var compactDate);
-
+```text
+2026-03-10
+2026-03-10T15:30:00.0000000+01:00
+2026-03-10
 ```
 
 | Specifier | Output | Description |
 |---|---|---|
 | `yyyy` | `2026` | 4-digit year |
 | `yy` | `26` | 2-digit year |
-| `MM` | `03` | Month 01–12 (uppercase) |
+| `MM` | `03` | Month 01-12 (uppercase) |
 | `MMM` | `Mar` | Abbreviated month name |
 | `MMMM` | `March` | Full month name |
-| `dd` | `10` | Day 01–31 |
+| `dd` | `10` | Day 01-31 |
 | `ddd` | `Tue` | Abbreviated weekday name |
 | `dddd` | `Tuesday` | Full weekday name |
-| `HH` | `15` | Hour 00–23 (24h) |
-| `hh` | `03` | Hour 01–12 (12h) |
+| `HH` | `15` | Hour 00-23 (24h) |
+| `hh` | `03` | Hour 01-12 (12h) |
 | `tt` | `PM` | AM/PM |
-| `mm` | `30` | Minute 00–59 (lowercase) |
-| `ss` | `00` | Second 00–59 |
+| `mm` | `30` | Minute 00-59 (lowercase) |
+| `ss` | `00` | Second 00-59 |
 | `fff` | `123` | Milliseconds |
 | `ffffff` | `123456` | Microseconds |
-| `K` | `+01:00` | Timezone offset; appends `Z` when `Kind=Utc` |
-| `zzz` | `+01:00` | Timezone offset (always explicit) |
+| `K` | `+01:00` | Timezone offset when the type carries one |
+| `zzz` | `+01:00` | Timezone offset with explicit sign |
 | `o` | `2026-03-10T15:30:00.0000000+01:00` | Round-trip ISO 8601 format |
-| `s` | `2026-03-10T15:30:00` | Sortable ISO 8601 (no timezone) |
+| `s` | `2026-03-10T15:30:00` | Sortable ISO 8601 without offset |
 
-`MM` = month, `mm` = minute — same case-sensitivity rule as PowerShell.
+### C# | formatting and arithmetic
 
-### Formatting Dates to Strings in C#
+Formatting and arithmetic stay reliable when the source type matches the meaning of the value.
+Do not use `DateTime` plus comments as a substitute for a real offset-bearing type.
+
+#### `ToString()` emits ISO, round-trip, and filename-safe forms
+
+The built-in format strings are sufficient for most pipeline output.
+Use round-trip format `o` when the value must survive serialization and reparse without loss.
 
 ```csharp
-// ============================================================
-// FORMATTING DATES → STRINGS
-// ============================================================
+using System;
+using System.Globalization;
 
 var dt = new DateTimeOffset(2026, 3, 10, 15, 30, 0, TimeSpan.FromHours(1));
 
-dt.ToString("yyyy-MM-dd")                         // 2026-03-10
-dt.ToString("yyyy-MM-ddTHH:mm:ssK")               // 2026-03-10T15:30:00+01:00
-dt.ToString("o")                                   // 2026-03-10T15:30:00.0000000+01:00 (round-trip)
-dt.ToString("s")                                   // 2026-03-10T15:30:00 (sortable)
-dt.ToString("dd MMM yyyy HH:mm")                   // 10 Mar 2026 15:30
-dt.ToString("yyyyMMdd_HHmmss")                     // 20260310_153000
-dt.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ")    // 2026-03-10T14:30:00Z
+Console.WriteLine(dt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+Console.WriteLine(dt.ToString("yyyy-MM-ddTHH:mm:sszzz", CultureInfo.InvariantCulture));
+Console.WriteLine(dt.ToString("o", CultureInfo.InvariantCulture));
+Console.WriteLine(dt.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+Console.WriteLine(dt.ToString("yyyyMMdd_HHmmss", CultureInfo.InvariantCulture));
 ```
 
-### Date Arithmetic in C#
+```text
+2026-03-10
+2026-03-10T15:30:00+01:00
+2026-03-10T15:30:00.0000000+01:00
+2026-03-10T14:30:00Z
+20260310_153000
+```
+
+#### `AddDays()`, `AddMonths()`, and subtraction stay calendar-aware
+
+`DateOnly` handles calendar math without dragging a time component into the rule.
+`DateTimeOffset` handles instant math without losing the offset.
 
 ```csharp
-// ============================================================
-// DATE ARITHMETIC
-// ============================================================
+using System;
+using System.Globalization;
 
 var d = new DateOnly(2026, 3, 10);
 var dto = new DateTimeOffset(2026, 3, 10, 15, 30, 0, TimeSpan.Zero);
 
-d.AddDays(7)                     // 2026-03-17
-d.AddDays(-30)                   // 2026-02-08
-d.AddMonths(3)                   // 2026-06-10
-d.AddYears(1)                    // 2027-03-10
-dto.AddHours(5)                  // 2026-03-10 20:30:00+00:00
-dto.AddMinutes(-90)              // 2026-03-10 14:00:00+00:00
-dto.Add(TimeSpan.FromDays(2.5))  // 2026-03-13 03:30:00+00:00
-
-// Difference
-(new DateTime(2026, 3, 10) - new DateTime(2026, 1, 1)).Days          // 68
-(new DateTime(2026, 3, 10) - new DateTime(2026, 1, 1)).TotalHours    // 1632
+Console.WriteLine(d.AddDays(7).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+Console.WriteLine(d.AddDays(-30).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+Console.WriteLine(d.AddMonths(3).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+Console.WriteLine(d.AddYears(1).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+Console.WriteLine(dto.AddHours(5).ToString("o", CultureInfo.InvariantCulture));
+Console.WriteLine(dto.AddMinutes(-90).ToString("o", CultureInfo.InvariantCulture));
+Console.WriteLine((new DateTime(2026, 3, 10) - new DateTime(2026, 1, 1)).Days);
 ```
 
-### Timezone Conversion in C#
+```text
+2026-03-17
+2026-02-08
+2026-06-10
+2027-03-10
+2026-03-10T20:30:00.0000000+00:00
+2026-03-10T14:00:00.0000000+00:00
+68
+```
+
+### C# | timezone conversion and display patterns
+
+Timezone conversion on Windows uses Windows timezone IDs.
+Display logic should keep timestamps, dates, and times in separate types until the final render step.
+
+#### `TimeZoneInfo.ConvertTime()` applies Windows timezone rules to a fixed UTC instant
+
+Use named timezones, not hard-coded offsets.
+That lets .NET apply the correct DST rule for the target zone.
 
 ```csharp
-// ============================================================
-// TIMEZONE CONVERSION
-// ============================================================
+using System;
+using System.Globalization;
 
-var utcNow = DateTimeOffset.UtcNow;
-
-// Convert to specific timezone
+var utc = DateTimeOffset.Parse("2026-03-10T15:30:00+00:00", CultureInfo.InvariantCulture);
 var paris = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
 var ny = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
 var tokyo = TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
 
-TimeZoneInfo.ConvertTime(utcNow, paris)     // +01:00 (or +02:00 during CEST)
-TimeZoneInfo.ConvertTime(utcNow, ny)        // -05:00 (or -04:00 during EDT)
-TimeZoneInfo.ConvertTime(utcNow, tokyo)     // +09:00 (no DST in Japan)
-
-// List all timezone IDs
-foreach (var tz in TimeZoneInfo.GetSystemTimeZones())
-    Console.WriteLine($"{tz.Id} → {tz.DisplayName}");
-
-// Check if DST is active
-paris.IsDaylightSavingTime(utcNow)          // true/false
-
-// GOTCHA: Windows and Linux use DIFFERENT timezone ID strings!
-// Windows: "Central European Standard Time"
-// Linux:   "Europe/Paris"
-// Cross-platform fix (.NET 6+): both work — .NET auto-maps between them
+Console.WriteLine(TimeZoneInfo.ConvertTime(utc, paris).ToString("o", CultureInfo.InvariantCulture));
+Console.WriteLine(TimeZoneInfo.ConvertTime(utc, ny).ToString("o", CultureInfo.InvariantCulture));
+Console.WriteLine(TimeZoneInfo.ConvertTime(utc, tokyo).ToString("o", CultureInfo.InvariantCulture));
+Console.WriteLine(paris.Id);
+Console.WriteLine(ny.Id);
+Console.WriteLine(tokyo.Id);
 ```
 
-### Extracting Components in C#
-
-```csharp
-// ============================================================
-// EXTRACTING COMPONENTS
-// ============================================================
-
-var now = DateTimeOffset.Now;
-now.Year             // 2026
-now.Month            // 3
-now.Day              // 10
-now.Hour             // 16
-now.Minute           // 30
-now.Second           // 45
-now.DayOfWeek        // Tuesday (enum)
-now.DayOfYear        // 69
-now.Offset           // +01:00:00
-ISOWeek.GetWeekOfYear(now.DateTime)   // 11 (ISO 8601 week)
+```text
+2026-03-10T16:30:00.0000000+01:00
+2026-03-10T11:30:00.0000000-04:00
+2026-03-11T00:30:00.0000000+09:00
+Central European Standard Time
+Eastern Standard Time
+Tokyo Standard Time
 ```
 
-### Practical Patterns in C# (Dashboard/Display)
+#### `DateOnly` and `TimeOnly` keep dashboard logic separate from timestamps
+
+Use `DateOnly` for business dates, `TimeOnly` for local session hours, and `DateTimeOffset` only when you need an actual instant.
+That split keeps dashboard code from reintroducing timestamp bugs into date-only business rules.
 
 ```csharp
-// ============================================================
-// PRACTICAL PATTERNS (BLAZOR/DASHBOARD)
-// ============================================================
+using System;
+using System.Globalization;
 
-// Display trade date with user-friendly format
 var tradeDate = new DateOnly(2026, 3, 10);
-tradeDate.ToString("dd MMM yyyy")                  // "10 Mar 2026"
+var timestamp = DateTimeOffset.Parse("2026-03-10T15:30:00Z", CultureInfo.InvariantCulture);
+var paris = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+var marketOpen = new TimeOnly(9, 0);
+var marketClose = new TimeOnly(17, 30);
+var currentTime = new TimeOnly(16, 15);
+var lastBusinessDay = new DateOnly(2026, 3, 8);
 
-// Format for chart tooltip
-var timestamp = DateTimeOffset.Parse("2026-03-10T15:30:00Z");
-timestamp.ToLocalTime().ToString("dd MMM yyyy HH:mm")   // "10 Mar 2026 16:30" (user's local)
+while (lastBusinessDay.DayOfWeek == DayOfWeek.Saturday || lastBusinessDay.DayOfWeek == DayOfWeek.Sunday)
+{
+    lastBusinessDay = lastBusinessDay.AddDays(-1);
+}
 
-// Calculate market hours
-var marketOpen = new TimeOnly(9, 0);     // 09:00
-var marketClose = new TimeOnly(17, 30);  // 17:30
-var currentTime = TimeOnly.FromDateTime(DateTime.Now);
-var isMarketOpen = currentTime >= marketOpen && currentTime <= marketClose;
-
-// Last business day
-var d2 = DateOnly.FromDateTime(DateTime.Today);
-while (d2.DayOfWeek == DayOfWeek.Saturday || d2.DayOfWeek == DayOfWeek.Sunday)
-    d2 = d2.AddDays(-1);
+Console.WriteLine(tradeDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture));
+Console.WriteLine(TimeZoneInfo.ConvertTime(timestamp, paris).ToString("dd MMM yyyy HH:mm zzz", CultureInfo.InvariantCulture));
+Console.WriteLine(currentTime >= marketOpen && currentTime <= marketClose);
+Console.WriteLine(lastBusinessDay.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 ```
 
-> [!warning] DateTime vs DateTimeOffset
->
-> `DateTime` has a `Kind` property (Local, Utc, Unspecified) that is not part of the value — it's metadata that gets silently lost during serialization, database round-trips, and JSON conversion. This causes bugs that are nearly impossible to track down. `DateTime.Kind = Utc` and `DateTime.Kind = Local` are structurally identical values; only the tag differs, and the tag disappears the moment you serialize to JSON or write to SQL Server.
-
-> [!success] Use DateTimeOffset for timestamps, DateOnly for trade dates
-> `DateTimeOffset` embeds the UTC offset directly in the value and round-trips correctly through SQL Server `DATETIMEOFFSET`, JSON, and API responses. `DateOnly` (.NET 6+) is perfect for trade dates — it has no time component, eliminating off-by-one bugs at day boundaries entirely.
-
----
-
-## DST Pitfalls — The Traps That Break Pipelines
-
-Daylight Saving Time is the single biggest source of date/time bugs in data engineering. Here's what catches people:
-
-```
-Problem: Your pipeline runs at "09:00 CET" every day.
-On the last Sunday of March, CET becomes CEST.
-- Before DST: 09:00 CET = 08:00 UTC
-- After DST:  09:00 CEST = 07:00 UTC
-Your pipeline now runs 1 hour earlier in UTC. If it depends on data that arrives at 08:00 UTC,
-it breaks because the data isn't there yet.
-Fix: Schedule in UTC. "08:00 UTC" is always 08:00 UTC, regardless of DST.
-
-Problem: Your pipeline calculates "24 hours ago" for a rolling window.
-On DST spring-forward day (March 29, 2026 in Europe), 2:00 AM → 3:00 AM.
-The day has only 23 hours. "24 hours ago" actually goes back to yesterday minus 1 hour.
-Fix: Use calendar days (date - 1 day), not hours (datetime - 24 hours).
-
-Problem: Your pipeline deduplicates by timestamp.
-On DST fall-back day (October 25, 2026 in Europe), 3:00 AM → 2:00 AM.
-The hour 2:00-3:00 occurs TWICE. Two different records with the same local timestamp.
-Fix: Store UTC timestamps. 2:00 AM CEST (UTC+2) and 2:00 AM CET (UTC+1) are different UTC times.
-
-Problem: US, Europe, and Asia change DST on DIFFERENT dates.
-- US: Second Sunday in March / First Sunday in November
-- Europe: Last Sunday in March / Last Sunday in October
-- Japan/China: No DST ever
-For 2-3 weeks per year, the UTC offset between NYC and Paris changes.
-Your cross-market pipeline that assumes "Paris is always 6 hours ahead of NYC" breaks.
-Fix: Always convert through UTC. Never hardcode offsets between non-UTC timezones.
+```text
+10 Mar 2026
+10 Mar 2026 16:30 +01:00
+True
+2026-03-06
 ```
 
-#### DST safety rules — UTC storage, conversion at display time
+## DST failure modes and operating rules
 
-| Rule | Explanation |
-|------|-------------|
-| Store in UTC | All internal timestamps, database columns, log entries |
-| Schedule in UTC | Cron jobs, Airflow DAGs, Cloud Scheduler |
-| Display in local | Dashboard tooltips, user-facing reports, emails |
-| Use `DATE` not `DATETIME` for calendar dates | Trade dates, report dates — no time component = no DST bugs |
-| Never hardcode UTC offsets | Use timezone names ("Europe/Paris"), not numbers (+01:00) |
-| Use `DATETIMEOFFSET` / `DateTimeOffset` | SQL Server and C# — preserves the offset through round-trips |
-| Test on DST boundary dates | March and October — the two times per year your pipeline will break |
+DST bugs are not theoretical edge cases.
+They appear in daily schedules, rolling windows, deduplication keys, and multi-market comparisons whenever local clock time is treated as if it were a stable global coordinate.
 
----
+### Python | DST | failure modes
 
+Python's timezone model is expressive enough to make the common DST defects visible in one screen.
+The same defects apply to shell schedules, SQL windows, and application runtimes.
 
+#### Civil days are not always 24 hours
 
-## Warnings
+When Europe moves into summer time, the local day that starts on `2026-03-29` contains only 23 clock-hours.
+That is why "subtract 24 hours" is not the same rule as "move to the previous local calendar day".
 
-> [!danger] DST transitions break naive date arithmetic
->
-> Adding 86400 seconds (24 hours) to `2026-03-08 00:00:00 America/New_York` produces `2026-03-09 01:00:00` (25 hours later by clock time) because spring-forward skipped an hour. Always use calendar-aware functions (`dateadd`, `timedelta`, `.AddDays`) instead of second-based arithmetic.
+```python
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
-> [!danger] Timestamps without timezone info are ambiguous
->
-> `2026-11-01 01:30:00` in US Eastern occurs twice during fall-back. Without a timezone offset or UTC designation, there is no way to determine which 1:30 AM was intended. Always store timestamps in UTC or with explicit timezone offsets.
+paris = ZoneInfo("Europe/Paris")
+start = datetime(2026, 3, 29, 0, 0, tzinfo=paris)
+end = datetime(2026, 3, 30, 0, 0, tzinfo=paris)
 
-> [!warning] GNU `date` and BSD/macOS `date` have different syntax
->
-> GNU: `date -d "yesterday" +%Y-%m-%d`. BSD: `date -v-1d +%Y-%m-%d`. Scripts using `date -d` fail silently on macOS. For portable date arithmetic, use Python `datetime`.
+print(start.astimezone(timezone.utc).isoformat())
+print(end.astimezone(timezone.utc).isoformat())
+print((end.astimezone(timezone.utc) - start.astimezone(timezone.utc)).total_seconds() / 3600)
+```
 
-> [!warning] Epoch timestamp precision varies by platform
->
-> Unix/Python: seconds (10 digits). JavaScript/Java: milliseconds (13 digits). Mixing them produces dates in the year 53,000+ or 1970. Always verify the precision of epoch values before conversion.
+```text
+2026-03-28T23:00:00+00:00
+2026-03-29T22:00:00+00:00
+23.0
+```
+
+#### A local clock time can occur twice
+
+During autumn fallback, the same local label can map to two different instants.
+Without an offset, `2026-11-01 01:30` in New York is ambiguous.
+
+```python
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+
+ny = ZoneInfo("America/New_York")
+first = datetime(2026, 11, 1, 1, 30, tzinfo=ny, fold=0)
+second = datetime(2026, 11, 1, 1, 30, tzinfo=ny, fold=1)
+
+print(first.isoformat())
+print(first.astimezone(timezone.utc).isoformat())
+print(second.isoformat())
+print(second.astimezone(timezone.utc).isoformat())
+```
+
+```text
+2026-11-01T01:30:00-04:00
+2026-11-01T05:30:00+00:00
+2026-11-01T01:30:00-05:00
+2026-11-01T06:30:00+00:00
+```
+
+#### Paris and New York do not stay six hours apart all year
+
+US and European DST transitions do not occur on the same dates.
+For several weeks each year, the offset between Paris and New York is five hours instead of six.
+
+```python
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+
+paris = ZoneInfo("Europe/Paris")
+new_york = ZoneInfo("America/New_York")
+
+for label, utc_dt in [
+    ("2026-03-20", datetime(2026, 3, 20, 12, 0, tzinfo=timezone.utc)),
+    ("2026-04-02", datetime(2026, 4, 2, 12, 0, tzinfo=timezone.utc)),
+]:
+    paris_dt = utc_dt.astimezone(paris)
+    ny_dt = utc_dt.astimezone(new_york)
+    delta_hours = (paris_dt.utcoffset() - ny_dt.utcoffset()).total_seconds() / 3600
+    print(f"{label} paris={paris_dt.strftime('%H:%M %z')} new_york={ny_dt.strftime('%H:%M %z')} delta_hours={delta_hours:.0f}")
+```
+
+```text
+2026-03-20 paris=13:00 +0100 new_york=08:00 -0400 delta_hours=5
+2026-04-02 paris=14:00 +0200 new_york=08:00 -0400 delta_hours=6
+```
+
+### Cross-platform | DST | operating rules
+
+The demonstrations above justify a small set of operating rules that should be enforced across every platform in the note.
+
+#### Store instants in UTC
+
+Persist internal timestamps, log lines, and scheduler watermarks in UTC.
+UTC removes DST jumps from storage and lets every runtime convert from the same canonical instant.
+
+#### Convert to local time only at the edge
+
+Dashboards, emails, and exchange-facing reports can render local time, but the stored record should remain UTC or offset-bearing.
+That keeps storage rules simple and makes replay and cross-region debugging possible.
+
+#### Use date-only types for calendar concepts
+
+Trade dates, statement dates, and report dates should use `DATE`, `date`, or `DateOnly`.
+Those values describe a civil day, not a moment on a clock, so timestamp arithmetic is the wrong tool.
+
+#### Persist timezone names when future interpretation matters
+
+An offset such as `+01:00` is only the result of a timezone rule at one moment.
+If future reconversion, legal-time display, or exchange schedule logic matters, keep the named timezone as well.
+
+#### Test March and autumn boundary weekends explicitly
+
+DST regressions usually hide until one or two weekends per year.
+Include those weekends in automated tests, especially for daily windowing, end-of-day jobs, and multi-market comparisons.
 
 ## Recommendations
 
-| Scenario | Recommendation |
-|---|---|
-| Timestamp format for filenames | `$(date -u +%Y%m%d_%H%M%S)` -- UTC, no separators that conflict with filesystem rules. |
-| Timestamp format for data | ISO 8601 with timezone: `2026-04-10T14:30:00+00:00` or `2026-04-10T14:30:00Z`. |
-| Date arithmetic (Linux) | `date -d "3 days ago" +%Y-%m-%d` (GNU only). For portability, use Python. |
-| Date arithmetic (PowerShell) | `(Get-Date).AddDays(-3).ToString("yyyy-MM-dd")`. |
-| Date arithmetic (SQL Server) | `DATEADD(DAY, -3, GETUTCDATE())`. Always use `GETUTCDATE()`, not `GETDATE()`. |
-| Timezone storage | Store all timestamps in UTC. Convert to local time only at display time. |
-| DST-safe daily scheduling | Schedule jobs in UTC. Calculate date ranges using calendar-aware functions, not fixed-second intervals. |
-| Financial data alignment | Use exchange-specific timezone names (`America/New_York`, `Europe/London`, `Asia/Tokyo`) with `AT TIME ZONE` or `pytz`/`zoneinfo`. |
+The platform sections above show the mechanics.
+Use the following operational defaults when you need a quick design answer.
+
+### Storage and interchange defaults
+
+#### Use ISO 8601 with `Z` or an explicit offset for exchanged timestamps
+
+APIs, queue payloads, and log lines should carry timestamps such as `2026-03-10T15:30:00Z` or `2026-03-10T15:30:00+01:00`.
+That keeps the payload self-describing across SQL Server, Python, .NET, and shell tooling.
+
+#### Use `DATE`, `date`, or `DateOnly` for calendar-only values
+
+If the business concept is a day on a calendar, store a date-only value.
+That removes false midnight semantics and avoids DST-related off-by-one defects.
+
+### Scheduling and shell defaults
+
+#### Anchor schedules and filenames in UTC
+
+Use UTC for cron, orchestration schedules, and timestamped filenames.
+The Linux and PowerShell examples above show how to format UTC values cleanly for those surfaces.
+
+#### Use calendar-aware arithmetic instead of fixed-second subtraction
+
+"Previous business day" and "previous calendar day" are not the same as subtracting 24 hours or 86,400 seconds.
+Use `DATEADD`, `timedelta(days=1)`, `.AddDays()`, or business-calendar tables depending on the platform.
+
+### Runtime and database defaults
+
+#### Prefer `DATETIMEOFFSET` and `DateTimeOffset` when offsets must survive round-trips
+
+Those types preserve the offset through storage, serialization, and reparse.
+Use them when the source system or contract requires offset fidelity.
+
+#### Prefer `ZoneInfo` and `TimeZoneInfo` over hard-coded offsets
+
+Named zones carry the actual rule set.
+That is the only safe way to survive DST transitions and cross-market comparisons.
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Daily pipeline processes 23 or 25 hours of data | Date range calculated with fixed 24-hour intervals across a DST boundary. | Use calendar-day arithmetic (`DATEADD(DAY, ...)`, `.AddDays()`, `timedelta(days=1)`) instead of second-based math. |
-| `date -d "yesterday"` fails on macOS | GNU `date` syntax not available on BSD. | Use `date -v-1d +%Y-%m-%d` on macOS, or install GNU coreutils (`brew install coreutils`, then `gdate`). |
-| Epoch conversion produces wrong year | Seconds vs milliseconds mismatch. JavaScript epoch (13 digits) divided by 1 yields year ~53000. | Divide JavaScript/Java epochs by 1000 before converting. Verify digit count: 10 = seconds, 13 = milliseconds. |
-| Timestamps sort incorrectly | Using locale-dependent format (`MM/DD/YYYY`) which does not sort lexicographically. | Use ISO 8601 (`YYYY-MM-DD`) which sorts correctly as text. |
-| Same timestamp appears twice in data | Fall-back DST transition: local time 1:00-2:00 AM occurs twice. | Store timestamps in UTC. If local time is required, include the UTC offset to disambiguate. |
-| `Get-Date -Format` produces unexpected output | Confusion between .NET format strings and `strftime` codes. | Use .NET format: `yyyy-MM-dd HH:mm:ss`, not `%Y-%m-%d %H:%M:%S`. |
+Treat these as diagnosis patterns rather than generic tips.
+Each symptom maps back to a concrete failure mode already demonstrated above.
+
+### Shell and scheduler defects
+
+#### A daily job processes 23 or 25 hours of data
+
+The window logic is probably subtracting fixed hours across a DST boundary instead of moving by calendar day.
+Use the DST demonstrations above as the regression case and switch to calendar-aware date arithmetic.
+
+#### `date -d "yesterday"` fails on macOS
+
+BSD `date` does not implement GNU `-d`.
+Use `date -v-1d` on macOS, install GNU coreutils and call `gdate`, or move the logic into Python for portability.
+
+### Parsing and formatting defects
+
+#### Epoch conversion lands in the wrong year
+
+The input is almost certainly milliseconds being treated as seconds, or the reverse.
+Check the digit count before conversion:
+10 digits usually means seconds, 13 digits usually means milliseconds.
+
+#### Timestamps do not sort in textual order
+
+The stored string is probably locale-dependent, such as `03/10/2026`.
+Switch to ISO 8601 so lexical order matches chronological order.
+
+#### `Get-Date -Format` prints minutes where the month should be
+
+The format string used `mm` instead of `MM`.
+In .NET formatting, `MM` is month and `mm` is minute.
+
+### Timestamp identity defects
+
+#### One local timestamp appears twice in the source data
+
+That is usually an autumn fallback event where the same local clock label refers to two different instants.
+Store the offset or normalize to UTC before deduplicating.
+
+#### Cross-market comparisons drift by one hour for a few weeks
+
+The code assumed a fixed offset between two non-UTC zones.
+Convert both zones through UTC and compare named timezone conversions instead of hard-coding the relationship.
+
 ## Cross-references
 
-- [text processing tools](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) — JSON and CSV parsing in Bash, jq, Python, PowerShell
-- [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Full format comparison: JSON, YAML, CSV, Parquet, Avro, Protobuf, MessagePack
-
-- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Pipeline design that handles date boundaries correctly
+- [text processing tools](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) - JSON and CSV parsing in Bash, jq, Python, and PowerShell
+- [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) - format tradeoffs for JSON, CSV, Parquet, Avro, and other interchange layers
+- [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) - pipeline design patterns that survive date boundaries and replays
 
 ## References
 
 - [ISO 8601 Standard](https://www.iso.org/iso-8601-date-and-time-format.html)
-- [Python zoneinfo docs](https://docs.python.org/3/library/zoneinfo.html)
-- [SQL Server AT TIME ZONE](https://docs.microsoft.com/en-us/sql/t-sql/queries/at-time-zone-transact-sql)
-- [.NET DateTimeOffset](https://docs.microsoft.com/en-us/dotnet/api/system.datetimeoffset)
-- [dateutil relativedelta](https://dateutil.readthedocs.io/en/stable/relativedelta.html)
+- [Python `zoneinfo` docs](https://docs.python.org/3/library/zoneinfo.html)
+- [SQL Server `AT TIME ZONE`](https://learn.microsoft.com/en-us/sql/t-sql/queries/at-time-zone-transact-sql)
+- [.NET `DateTimeOffset`](https://learn.microsoft.com/en-us/dotnet/api/system.datetimeoffset)
+- [dateutil `relativedelta`](https://dateutil.readthedocs.io/en/stable/relativedelta.html)

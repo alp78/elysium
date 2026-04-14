@@ -825,4 +825,4 @@ Before declaring a warehouse schema production-ready, verify:
 - [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Parquet and columnar storage formats underpinning cloud DWH storage
 - [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — Silver-layer cleaning patterns that feed warehouse staging
 - [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — Gold-layer aggregation patterns for analytical consumption
-- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — Architectural principles every DWH design should satisfy
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — Architectural principles every DWH design should satisfy

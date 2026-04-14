@@ -8,134 +8,109 @@ aliases: [rsync, scp, gcloud scp, gsutil, gcloud storage, bcp, sqlcmd export, fi
 keywords: [rsync, scp, gcloud compute scp, gsutil, gcloud storage, bcp, sqlcmd, file transfer, data movement, trailing slash, resume transfer, delta transfer, parallel transfer, bandwidth limit, checksum, GCS upload, GCS sync, SQL Server export, CSV export, bulk copy, parallel bcp, bwlimit, rsync exclude, dry run, robocopy, Robocopy MIR, Robocopy exit codes, Invoke-Sqlcmd, Export-Csv, IPG, inter-packet gap]
 description: "Complete guide to data transfer tools for data engineering: rsync and Robocopy for local/remote transfers, scp for quick copies, gcloud compute scp for GCE VMs, gsutil and gcloud storage for GCS, bcp for SQL Server bulk export/import, and sqlcmd/Invoke-Sqlcmd for query-based export."
 created: 2026-03-22
-updated: 2026-04-01
+updated: 2026-04-14
 status: complete
 ---
 
 # Data Transfer
 
-> [!quote]
+> [!quote] Transfer still obeys physics
+>
 > "Never underestimate the bandwidth of a station wagon full of tapes hurtling down the highway."
 >
 > — **Andrew S. Tanenbaum**, *Computer Networks* (1981)
 
 > [!abstract]- Summary
 >
-> Complete reference for shell-based data transfer tools used in data engineering: local and remote file sync, GCS bucket operations, and SQL Server bulk export and import.
+> Reference for choosing local sync, SSH copy, GCS copy, and SQL export tools in shell-heavy data workflows.
 >
-> **Linux file transfer tools**
-> - `rsync`: delta transfer, resume (`-P`), mirror (`--delete`), bandwidth cap (`--bwlimit`), checksum verification (`-c`), SSH push/pull, IAP tunnel relay
-> - `scp`: SSH-based one-off file copies; no resume, no delta transfer; use rsync for anything larger than a single file
->
-> **PowerShell file transfer tools**
-> - `Robocopy`: robust directory replication with mirror (`/MIR`), restartable mode (`/Z`), multi-threaded copy (`/MT:n`), and inter-packet gap throttle (`/IPG`)
-> - Exit codes 0–7 are success; 8+ are errors — scripts must check `$LASTEXITCODE -ge 8`, not `-ne 0`
->
-> **GCP transfer tools (Linux and PowerShell)**
-> - `gcloud compute scp`: wraps scp with automatic IAP tunneling and OS Login key management for GCE VMs
-> - `gsutil`: legacy Python-based GCS CLI; supports parallel upload (`-m`), delta sync (`rsync`), and composite upload
-> - `gcloud storage`: modern Go-based GCS CLI; resumable uploads by default, 20–94% faster than gsutil; preferred for new scripts
->
-> **SQL Server data transfer**
-> - `bcp`: highest-throughput bulk export (`out`, `queryout`) and import (`in`); bypasses the query engine; character mode (`-c`) required for readable CSV
-> - `sqlcmd` / `Invoke-Sqlcmd`: query-based export; `sqlcmd` produces a dashes separator line on row 2 that must be stripped; `Invoke-Sqlcmd | Export-Csv` avoids it entirely
->
-> **Operations and safety**
-> - Warnings: `rsync --delete` and `Robocopy /MIR` permanently remove destination-only files — always dry-run first; `gsutil rsync -d` deletes GCS objects with no recycle bin; `bcp` silently truncates data on column length mismatch and returns exit code 0 on row rejection
-> - Recommendations: use `rsync -avP` for any file over 1 GB; prefer `gcloud storage` over `gsutil` for new scripts; always verify bcp import row counts against source
-> - Troubleshooting: 5 symptoms covered (rsync full-file transfer, nested directory creation, bcp binary output, sqlcmd dashes line, gcloud scp zone error)
+> - Use `cp` or `Copy-Item` for one-shot local files.
+> - Use `rsync` or `Robocopy` when directory state must converge, resume cleanly, or be previewed before deletion.
+> - Use `scp` only for small SSH copies, and switch to `gcloud compute scp` or `gcloud storage` when Google Cloud resource context matters.
+> - Use `bcp` for high-throughput SQL Server bulk movement, and use `sqlcmd` or `Invoke-Sqlcmd` when query-shaped exports matter more than raw load speed.
+> - Treat `--delete`, `/MIR`, and cloud-side destructive sync flags as maintenance operations that require a dry run or explicit resource validation first.
 
 > [!note]- Glossary
 >
 > **`rsync`**
-> - Command-line file synchronization tool for Unix-like systems that can copy files locally or over a remote shell, comparing source and destination to avoid unnecessary transfer work.
-> - Used for reliable directory synchronization, incremental copy, metadata preservation, resumable transfers, dry runs, and controlled mirroring.
 >
-> > [!warning] Trailing slash on source changes what is copied
-> > `rsync src/ dst/` copies the contents of `src` into `dst`. `rsync src dst/` copies the directory itself, creating `dst/src/`. When combined with `--delete`, this distinction can cause destructive mistakes, so dry-run with `-n` first.
+> - Unix-family file synchronization tool that copies data locally or over a remote shell while comparing source and destination state.
+> - Used when directory contents must converge over time, metadata must be preserved, or interrupted copies must resume cleanly.
+> - A trailing slash on the source changes the copy scope, and that distinction becomes dangerous when `--delete` is involved.
 >
 > ---
 >
 > **Delta transfer**
-> - Transfer strategy in which a synchronization tool sends only the changed portions of a file when both sides already have a related version, rather than always retransmitting the entire file.
-> - Used to reduce bandwidth and elapsed transfer time for large files that change incrementally between runs.
 >
-> > [!tip] Delta transfer impact on large incrementally changing files
-> > When both source and destination already contain comparable versions of a large file, delta transfer can reduce network usage dramatically. This benefit depends on the tool, the protocol, and whether the destination already has a matching baseline file.
+> - Transfer strategy in which a synchronization tool sends only changed portions of a file instead of retransmitting the whole file.
+> - Used to reduce bandwidth and elapsed time when both sides already contain related file versions.
+> - The benefit depends on the protocol, the tool, and whether the destination already has a valid baseline file.
 >
 > ---
 >
 > **`scp`**
-> - Secure copy utility that transfers files over SSH using SSH authentication and encryption.
-> - Used for straightforward one-off file copy between systems when advanced synchronization features such as delta transfer, dry-run comparison, or directory mirroring are not required.
 >
-> > [!warning] `scp -P` vs `-p` confusion
-> > In `scp`, uppercase `-P` sets the remote port, while lowercase `-p` preserves modification times and modes. This differs from `ssh`, where lowercase `-p` sets the port.
+> - SSH-based file copy client for moving files between a local machine and a remote host.
+> - Used for quick one-off remote copies when you do not need dry runs, delta transfer, or resumability.
+> - Uppercase `-P` sets the port and lowercase `-p` preserves timestamps and modes, which is the opposite of `ssh`.
 >
 > ---
 >
 > **`gcloud compute scp`**
-> - Google Cloud CLI command that wraps SSH-based file copy to Compute Engine instances and can integrate with Google-managed SSH access flows.
-> - Used to copy files to or from GCE VMs without manually assembling the full SSH configuration, especially in environments using OS Login or IAP-based access.
 >
-> > [!warning] Permission errors on `gcloud compute scp`
-> > The SSH login identity may not have write permission to privileged directories. A common safe pattern is copying to a user-writable path such as `/tmp` first, then moving the file with elevated privileges after login.
+> - Google Cloud CLI wrapper around SSH copy for Compute Engine instances.
+> - Used when the destination is a GCE VM and you want the CLI to handle project, zone, SSH key, and IAP-related details.
+> - Copy into a user-writable directory such as `/tmp` first when the final destination requires elevated privileges on the VM.
 >
 > ---
 >
 > **`gsutil`**
-> - Legacy but still widely used Google Cloud Storage CLI, implemented in Python, for copying, listing, syncing, and managing objects in GCS.
-> - Used for bucket and object operations, including recursive copy, parallel transfer, and storage-to-storage synchronization workflows in existing scripts and operational tooling.
 >
-> > [!danger] `gsutil rsync -d` deletes destination objects
-> > The `-d` option removes destination objects that are not present at the source. Use `-n` first to preview actions before allowing deletions.
+> - Legacy Python-based Google Cloud Storage CLI for object copy, listing, and synchronization.
+> - Used heavily in existing scripts that already rely on `gsutil cp` or `gsutil rsync`.
+> - `gsutil rsync -d` deletes destination-only objects, so preview destructive syncs with `-n` first.
 >
 > ---
 >
 > **`gcloud storage`**
-> - Newer Google Cloud Storage command group in the `gcloud` CLI intended as the strategic replacement for many `gsutil` workflows.
-> - Used for modern GCS copy and sync operations in new scripts, with active development and tighter integration into the main Google Cloud CLI.
 >
-> > [!tip] `gsutil` vs `gcloud storage`
-> > Both remain useful, but `gcloud storage` is generally the better default for new automation unless a specific existing workflow depends on `gsutil` behavior.
+> - Modern Cloud Storage command group inside the main `gcloud` CLI.
+> - Used for new GCS automation where you want one actively developed CLI surface instead of a separate legacy tool.
+> - It is the better default for new scripts, but it still needs a real bucket path and valid Google Cloud access before any transfer can begin.
 >
 > ---
 >
-> **`bcp` (Bulk Copy Program)**
-> - SQL Server command-line utility for high-throughput bulk export and import between SQL Server tables or queries and flat files.
-> - Used when speed matters more than convenience, especially for bulk data movement, staging loads, and large table export or import workflows.
+> **`bcp`**
 >
-> > [!danger] Always validate `bcp` results explicitly
-> > A successful process exit does not by itself guarantee that all rows loaded exactly as intended. Check row counts, inspect any error file specified with `-e`, and validate field lengths and formats before trusting the load.
+> - SQL Server bulk-copy client for moving table or query data between SQL Server and flat files.
+> - Used when throughput matters more than convenience, especially for large exports, staging loads, and repeatable bulk data movement.
+> - A successful process exit is not enough to trust the result; row counts and any `-e` error file still need explicit validation.
 >
 > ---
 >
 > **`sqlcmd` / `Invoke-Sqlcmd`**
-> - SQL Server client tools for executing T-SQL from scripts: `sqlcmd` is the traditional command-line client, while `Invoke-Sqlcmd` is the PowerShell cmdlet form.
-> - Used to run queries non-interactively, export query results, automate administrative tasks, and integrate SQL execution into shell or PowerShell workflows.
 >
-> > [!tip] Structured PowerShell export is often cleaner
-> > `Invoke-Sqlcmd` returns objects that can be piped into `Export-Csv`, which is often more reliable for CSV generation than post-processing text output from `sqlcmd`.
+> - SQL Server scripting clients for running T-SQL non-interactively from shell or PowerShell.
+> - Used when you need query-driven exports, administrative automation, or object-based PowerShell output before handing the result to `Export-Csv`.
+> - `sqlcmd` emits text-oriented output that may need cleanup, whereas `Invoke-Sqlcmd` returns objects but still depends on the `SqlServer` module and a reachable server.
 >
 > ---
 >
-> **`Robocopy`** **(Robust File Copy)**
-> - Windows command-line utility for copying and mirroring directory trees with retry logic, restartable behavior, and rich operational switches.
-> - Used as the standard Windows-native tool for large directory replication, resumable transfers, and scripted copy jobs.
+> **`Robocopy`**
 >
-> > [!warning] Robocopy exit codes do not follow the usual Unix success rule
-> > Exit codes below 8 often indicate success, partial success, or informational conditions rather than failure. Treat only 8 and above as real errors in most automation.
+> - Windows-native file copy utility for large directory trees, mirroring, retry control, restartable behavior, and logging.
+> - Used when PowerShell workflows need durable directory replication rather than a simple file copy.
+> - Exit codes below 8 are not failures by default, and `/MIR` removes destination-only content unless you preview with `/L` first.
 >
 > ---
 >
 > **Bandwidth limiting**
-> - Transfer control mechanism that intentionally caps throughput so a copy or sync job does not consume the full available link capacity.
-> - Used to protect shared networks and production traffic during business hours while still allowing large transfers to proceed in the background.
 >
-> > [!warning] Different tools use different units and throttling models
-> > `rsync`, `scp`, and `Robocopy` do not express bandwidth control in the same way or with the same units. Always confirm the exact semantics before assuming two tools are using equivalent limits.
+> - Deliberate control over transfer throughput so a job does not saturate a shared link.
+> - Used to protect production traffic or office-hour network capacity during long-running copies.
+> - `rsync`, `scp`, and `Robocopy` express this control differently, so do not assume their flags use the same units or behavior.
 
-Copying a file on a single machine is trivial. Copying 50 GB of pipeline output from a Compute Engine VM to your workstation, synchronizing a directory tree between two servers, or uploading a database backup to Cloud Storage — that is where the tool choice and flags determine whether the transfer takes 5 minutes or 5 hours, and whether a network interruption means starting over or resuming cleanly.
+Copying one file on one machine is trivial. Moving a directory tree between environments, mirroring a landing zone without deleting the wrong target, or exporting a SQL dataset before uploading it to object storage is where tool choice and flag discipline matter.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -182,1108 +157,1278 @@ flowchart TD
 
 ## Linux file transfer tools
 
-`rsync` is the primary file transfer tool in data engineering for Linux. It transfers only the differences between source and destination (delta transfer), supports compression, preserves all metadata, and resumes interrupted transfers automatically.
+### Linux | choosing `cp` or `rsync` | local copies with explicit intent
 
-### Linux | rsync | delta transfer and directory synchronization
+Use `cp` when the job is a one-shot file copy and there is no need to reconcile two directory trees. Move to `rsync` as soon as you need archive semantics, previewable deletion, filtering, or repeatability.
 
-`rsync` is the most important file transfer tool in data engineering. It transfers only the changed bytes within files (delta algorithm), supports compression, preserves all metadata, and resumes interrupted transfers automatically. If you learn one transfer tool, learn rsync.
+#### Copy a single file when no reconciliation is needed
 
-#### Local copies with archive mode
+`cp` is the right tool for a direct file copy on one machine. The verbose flag is enough to prove what moved without adding a separate verification command.
 
-> [!info] rsync -a archive mode
->
-> Equivalent to `-rlptgoD`:
-> - `-r` — recursive (descend into directories)
-> - `-l` — copy symlinks as symlinks
-> - `-p` — preserve permissions
-> - `-t` — preserve modification times (critical for change detection pipelines)
-> - `-g` / `-o` — preserve group/owner
-> - `-D` — preserve device and special files
->
-> Add `-v` for verbose output, `-z` for compression during transfer (skip for local copies or already-compressed files), `--progress` for per-file progress.
-
-> [!warning] Trailing slash matters
->
-> - `rsync source_dir/ dest_dir/` → copies **contents** of `source_dir` into `dest_dir`
-> - `rsync source_dir dest_dir/` → copies `source_dir` **itself** into `dest_dir` (creates `dest_dir/source_dir/`)
-
-> [!success] Use trailing slash on source, dry-run if unsure
->
-> Always put a trailing slash on the source path to copy contents. Run with `-n` first if you are unsure.
+*Copy one local file into the destination directory and print the created path.*
 
 ```bash
-rsync -avzh --progress source_dir/ dest_dir/
+mkdir -p /tmp/vault-transfer-demo-linux/cp-dest
+printf 'single\n' | tee /tmp/vault-transfer-demo-linux/single.txt >/dev/null
+cp -v /tmp/vault-transfer-demo-linux/single.txt /tmp/vault-transfer-demo-linux/cp-dest/
 ```
 
-#### Show aggregated transfer progress
+```text
+'/tmp/vault-transfer-demo-linux/single.txt' -> '/tmp/vault-transfer-demo-linux/cp-dest/single.txt'
+```
 
-`--progress` prints per-file progress, which is noisy with thousands of small files. `--info=progress2` shows one aggregated progress bar with total bytes, percentage, speed, and ETA — cleaner for large directory syncs.
+#### Synchronize a directory when state must converge
+
+`rsync -av` is the safer default once a directory tree has to be copied repeatedly. The archive flag preserves timestamps and permissions while the trailing slash keeps the copy scoped to the directory contents rather than nesting the source directory under the destination.
+
+*Synchronize the source tree into the destination with archive semantics and show the transferred paths.*
 
 ```bash
-rsync -avzh --info=progress2 source_dir/ dest_dir/
+rm -rf /tmp/vault-transfer-demo-linux
+mkdir -p /tmp/vault-transfer-demo-linux/src/project /tmp/vault-transfer-demo-linux/dest
+printf 'alpha\n' > /tmp/vault-transfer-demo-linux/src/project/report.csv
+printf 'notes\n' > /tmp/vault-transfer-demo-linux/src/project/notes.txt
+printf 'one\n' > /tmp/vault-transfer-demo-linux/src/extra.log
+rsync -av /tmp/vault-transfer-demo-linux/src/ /tmp/vault-transfer-demo-linux/dest/
 ```
 
-#### Resume interrupted transfers
+```text
+sending incremental file list
+extra.log
+project/
+project/notes.txt
+project/report.csv
 
-`-P` combines `--partial` and `--progress`. Without `--partial`, a partially transferred file is deleted on interruption — you start over. With `--partial`, the incomplete file is kept and rsync resumes from where it stopped. Essential for files over 1 GB on unreliable connections.
+sent 318 bytes  received 85 bytes  806.00 bytes/sec
+total size is 16  speedup is 0.04
+```
+
+#### Preview deletions before a mirror run
+
+`rsync --delete` is valuable only when you are certain the destination should exactly match the source. Dry-run it first so the output shows what would be removed before anything destructive happens.
+
+*Dry-run a deletion-capable `rsync` mirror to reveal which destination files would be removed.*
 
 ```bash
-rsync -avzP source_dir/ dest_dir/
+mkdir -p /tmp/vault-transfer-demo-linux/dest
+printf 'stale\n' | tee /tmp/vault-transfer-demo-linux/dest/obsolete.txt >/dev/null
+rsync -avzn --delete /tmp/vault-transfer-demo-linux/src/ /tmp/vault-transfer-demo-linux/dest/
 ```
 
-#### Preview changes with dry-run
+```text
+sending incremental file list
+deleting obsolete.txt
+./
 
-`-n` (or `--dry-run`) shows every file that would be transferred or deleted without actually doing anything. Always dry-run before `--delete` operations.
+sent 161 bytes  received 32 bytes  386.00 bytes/sec
+total size is 16  speedup is 0.08 (DRY RUN)
+```
+
+### Linux | `rsync` | selective and path-safe synchronization
+
+Once the basic sync path works, `rsync` becomes the tool for precise transfer scopes. The next two captures show the two failure-prevention habits that matter most: filter deliberately and dry-run the source path when you are uncertain about trailing slashes.
+
+#### Limit the transfer set with include and exclude rules
+
+When only one file type belongs downstream, lead with `--include` rules and end with `--exclude='*'`. That prevents mixed staging directories from leaking support files into the transfer.
+
+*Synchronize only matching parquet files while excluding every other payload.*
 
 ```bash
-rsync -avzn source_dir/ dest_dir/
+mkdir -p /tmp/vault-transfer-demo-linux/filter-src/sub /tmp/vault-transfer-demo-linux/filter-dest
+printf 'id,value\n1,10\n' > /tmp/vault-transfer-demo-linux/filter-src/sub/part-000.parquet
+printf 'skip\n' > /tmp/vault-transfer-demo-linux/filter-src/sub/readme.txt
+rsync -av --include='*.parquet' --include='*/' --exclude='*' /tmp/vault-transfer-demo-linux/filter-src/ /tmp/vault-transfer-demo-linux/filter-dest/
 ```
 
-#### Mirror mode — dry-run first
+```text
+sending incremental file list
+sub/
+sub/part-000.parquet
 
-`--delete` removes files from the destination that no longer exist in the source. Always preview the mirror before executing to confirm the source path is correct.
+sent 177 bytes  received 39 bytes  432.00 bytes/sec
+total size is 14  speedup is 0.06
+```
 
-> [!danger] --delete is destructive
->
-> If your source path is wrong (e.g., an empty directory), `--delete` wipes **everything** in the destination. Always dry-run first.
+#### Dry-run a source path without the trailing slash
 
-> [!success] Always dry-run with -n before running --delete
->
-> Confirm the file list looks correct before executing the live mirror.
+If you omit the trailing slash on the source, `rsync` plans to create a nested `src/` directory at the destination. A dry run makes that mistake visible before you mutate the target tree.
+
+*Dry-run `rsync` without a trailing slash so the extra directory level is visible before the live copy.*
 
 ```bash
-rsync -avzn --delete source_dir/ dest_dir/
+rm -rf /tmp/vault-transfer-demo-linux/nested
+mkdir -p /tmp/vault-transfer-demo-linux/nested
+rsync -avn /tmp/vault-transfer-demo-linux/src /tmp/vault-transfer-demo-linux/nested/
 ```
 
-#### Mirror mode — execute
+```text
+sending incremental file list
+src/
+src/extra.log
+src/project/
+src/project/notes.txt
+src/project/report.csv
 
-After confirming the dry-run output, run the live mirror without `-n`.
-
-```bash
-rsync -avz --delete source_dir/ dest_dir/
+sent 188 bytes  received 33 bytes  442.00 bytes/sec
+total size is 16  speedup is 0.07 (DRY RUN)
 ```
 
-#### Exclude files by pattern
+Use these flags when the baseline examples need tighter control.
 
-`--exclude` accepts glob patterns evaluated against relative file paths. Multiple `--exclude` flags can be chained. For many exclusions, use `--exclude-from` with a file listing one pattern per line. Includes are evaluated before excludes — order matters.
-
-```bash
-rsync -avz --exclude='*.log' --exclude='__pycache__/' source_dir/ dest_dir/
-```
-
-#### Exclude files using an exclude list
-
-Pass a plain text file with one exclusion pattern per line. This keeps the command clean and the exclusion list version-controlled.
-
-```bash
-rsync -avz --exclude-from='rsync-excludes.txt' source_dir/ dest_dir/
-```
-
-#### Include only matching file types
-
-To transfer only files matching a pattern, combine `--include` for the target pattern and directories (required for recursion) with a final `--exclude='*'` to block everything else. Include rules must appear before the exclude catch-all.
-
-```bash
-rsync -avz --include='*.parquet' --include='*/' --exclude='*' source_dir/ dest_dir/
-```
-
-#### Throttle bandwidth during business hours
-
-`--bwlimit` caps transfer speed in KB/s. Prevents saturating a shared network link during working hours. Set it in your cron job or pipeline step when running during business hours.
-
-```bash
-rsync -avz --bwlimit=50000 source_dir/ dest_dir/
-```
-
-#### Checksum comparison for detecting bit-rot
-
-By default rsync compares mtime and file size to decide what to transfer. `-c` forces full checksum comparison — slower but catches silent corruption where the file size did not change. Use for critical data like database backups.
-
-```bash
-rsync -avc source_dir/ dest_dir/
-```
-
-#### Trailing slash behavior
-
-The trailing slash on the source path changes what gets copied. This is the single most common rsync mistake. Always use a trailing slash on the source to copy contents into the destination directory.
-
-```bash
-rsync -avz /data/bronze/ /backup/bronze/
-```
-
-```bash
-rsync -avz /data/bronze /backup/bronze/
-```
-
-> [!warning] rsync trailing slash gotcha
->
-> `rsync -avz /data/bronze/ /backup/bronze/` copies the **contents** of `bronze/` into `/backup/bronze/`. `rsync -avz /data/bronze /backup/bronze/` copies the **directory itself** — creating `/backup/bronze/bronze/`. If you are ever unsure, use `-n` (dry run) first.
-
-> [!success] Use trailing slash on source, dry-run if unsure
->
-> The first form (trailing slash on source) is almost always what you want. Dry-run with `-n` to confirm before a live run.
-
-#### Transfer files over SSH — push
-
-rsync uses SSH by default for remote transfers. The remote path syntax is `user@host:/path`. Use `-e` to customize the SSH command for specific keys or non-standard ports.
-
-```bash
-rsync -avzP /data/exports/ user@remote-server:/data/imports/
-```
-
-#### Transfer files over SSH — pull
-
-Pull transfers from a remote source to local destination using the same SSH syntax in reverse.
-
-```bash
-rsync -avzP user@remote-server:/data/exports/ /local/data/
-```
-
-#### Custom SSH key or non-standard port
-
-`-e` specifies the remote shell command. Wrap SSH options in quotes to pass them through to the SSH client.
-
-Use a custom identity file when authenticating to a GCE VM or a server where your default key is not provisioned:
-
-```bash
-rsync -avzP -e "ssh -i ~/.ssh/gcp_key" /data/exports/ user@10.132.0.2:/data/imports/
-```
-
-Use a non-standard port when the remote SSH daemon is not on port 22:
-
-```bash
-rsync -avzP -e "ssh -p 2222" /data/ user@server:/data/
-```
-
-#### Transfer through IAP tunnel
-
-Open an IAP tunnel to port 22 on the VM, then point rsync at the local tunnel endpoint. The tunnel runs in the background. For simpler one-off transfers, use `gcloud compute scp` instead. For IAP tunnel details, see [iap-tunneling](https://alp78.github.io/elysium/01-Shell/05-Networking/05-iap-tunneling).
-
-Start the tunnel in the background:
-
-```bash
-gcloud compute start-iap-tunnel data-pipeline-sql 22 \
-    --local-host-port=127.0.0.1:2222 --zone=europe-west1-b &
-```
-
-Then rsync through the local tunnel port:
-
-```bash
-rsync -avzP -e "ssh -p 2222" /data/exports/ user@127.0.0.1:/data/imports/
-```
-
-| Flag | Syntax | Description |
+| Flag | Syntax | Purpose |
 |---|---|---|
-| `-a` | `rsync -a <src> <dest>` | Archive mode: equivalent to `-rlptgoD` (recursive, symlinks, permissions, timestamps, group, owner, devices) |
-| `--bwlimit` | `rsync --bwlimit=50000 <src> <dest>` | Cap transfer speed in KB/s |
-| `-c` | `rsync -c <src> <dest>` | Force checksum comparison instead of mtime+size |
-| `-C` | `rsync -C <src> <dest>` | Auto-ignore CVS-style files (`.git`, `*.pyc`, etc.) |
-| `--checksum-choice` | `rsync --checksum-choice=sha256 <src> <dest>` | Choose checksum algorithm (rsync 3.2+: md4, md5, sha1, sha256) |
-| `--delete` | `rsync --delete <src> <dest>` | Delete files in destination not present in source |
-| `-e` | `rsync -e "ssh -i key" <src> <dest>` | Specify remote shell command (custom SSH options) |
-| `--exclude` | `rsync --exclude='*.log' <src> <dest>` | Exclude files matching glob pattern |
-| `--exclude-from` | `rsync --exclude-from=file <src> <dest>` | Read exclusion patterns from a file (one per line) |
-| `-h` | `rsync -h <src> <dest>` | Human-readable output (sizes in KB/MB/GB) |
-| `--include` | `rsync --include='*.parquet' <src> <dest>` | Include files matching pattern (evaluated before exclude) |
-| `--info=progress2` | `rsync --info=progress2 <src> <dest>` | Show single aggregated progress bar instead of per-file output |
-| `-n` | `rsync -n <src> <dest>` | Dry run — show what would be transferred without doing it |
-| `-P` | `rsync -P <src> <dest>` | Combines `--partial` (keep incomplete files) + `--progress` |
-| `--partial` | `rsync --partial <src> <dest>` | Keep partially transferred files on interruption |
-| `--progress` | `rsync --progress <src> <dest>` | Show per-file progress during transfer |
-| `-r` | `rsync -r <src> <dest>` | Recursive (descend into directories) |
-| `-v` | `rsync -v <src> <dest>` | Verbose — list files as they are transferred |
-| `-z` | `rsync -z <src> <dest>` | Compress data during transfer (SSH-level compression) |
-| `--zstd` | `rsync --zstd <src> <dest>` | Use zstd compression during transfer (rsync 3.2+, faster than -z) |
+| `-a` | `rsync -a src/ dst/` | Preserve recursion, symlinks, permissions, and timestamps. |
+| `-n` | `rsync -n src/ dst/` | Show the plan without copying or deleting anything. |
+| `-P` | `rsync -P src/ dst/` | Keep partial files and show transfer progress. |
+| `--delete` | `rsync --delete src/ dst/` | Remove destination-only files during reconciliation. |
+| `--exclude` | `rsync --exclude='*.log' src/ dst/` | Drop matching paths from the transfer set. |
+| `--include` | `rsync --include='*.parquet' src/ dst/` | Permit specific paths before the final catch-all exclude. |
+| `--bwlimit` | `rsync --bwlimit=50000 src/ dst/` | Cap throughput in KB/s on shared links. |
+| `-c` | `rsync -c src/ dst/` | Compare checksums instead of relying only on size and mtime. |
 
-### rsync vs cp — when to use which
+### Linux | `scp` | quick remote copy over SSH
 
-Use `cp` for single small files where simplicity matters. Use rsync when you need metadata preservation, progress tracking, resume on failure, or directory synchronization.
+`scp` is best kept narrow: one file, one host, one immediate copy. If the target is unreachable or the job must resume, stop and switch to a better transport instead of forcing `scp` into a workflow it does not fit.
 
-> [!tip] rsync vs cp decision matrix
->
-> | Scenario | Use | Why |
-> |----------|-----|-----|
-> | Copy a single small file | `cp` | Simpler, faster startup |
-> | Copy a directory locally | `rsync -av` | Preserves metadata, shows progress, resumable |
-> | Copy large files (>1 GB) | `rsync -avP` | Resume on failure, progress tracking |
-> | Sync directories (keep in sync) | `rsync -av --delete` | Delta transfer, only copies changes |
-> | Copy to/from remote servers | `rsync -avzP` | Compression, resume, SSH built-in |
-> | Copy inside Docker build | `COPY` directive | Docker layer caching |
+#### Inspect the local OpenSSH client
+
+The OpenSSH build in WSL prints usage text when invoked without arguments. That is still enough to confirm the client exists and to inspect the important switches before you connect to a real host.
+
+*Print the local OpenSSH `scp` usage header before testing connectivity.*
+
+```bash
+scp 2>&1 | sed -n '1,4p'
+```
+
+```text
+usage: scp [-346ABCOpqRrsTv] [-c cipher] [-D sftp_server_path] [-F ssh_config]
+           [-i identity_file] [-J destination] [-l limit] [-o ssh_option]
+           [-P port] [-S program] [-X sftp_option] source ... target
+```
+
+#### Expect an immediate failure when no SSH service is reachable
+
+This capture targets `127.0.0.1` deliberately so the failure happens locally and predictably. The error proves the transport failed before any copy semantics mattered.
+
+*Attempt an SSH copy to a local endpoint with no listener so the transport failure appears immediately.*
+
+```bash
+printf 'demo\n' | tee /tmp/vault-transfer-demo-linux/scp-demo.txt >/dev/null
+scp -v -o ConnectTimeout=3 /tmp/vault-transfer-demo-linux/scp-demo.txt demo@127.0.0.1:/tmp/scp-demo.txt 2>&1 | sed -n '1,12p'
+```
+
+```text
+Executing: program /usr/bin/ssh host 127.0.0.1, user demo, command sftp
+OpenSSH_9.6p1 Ubuntu-3ubuntu13.15, OpenSSL 3.0.13 30 Jan 2024
+debug1: Reading configuration data /etc/ssh/ssh_config
+debug1: /etc/ssh/ssh_config line 19: include /etc/ssh/ssh_config.d/*.conf matched no files
+debug1: /etc/ssh/ssh_config line 21: Applying options for *
+debug1: Connecting to 127.0.0.1 [127.0.0.1] port 22.
+debug1: connect to address 127.0.0.1 port 22: Connection refused
+ssh: connect to host 127.0.0.1 port 22: Connection refused
+scp: Connection closed
+```
+
+Keep this lookup table nearby when you need the exact `scp` flag semantics.
+
+| Flag | Syntax | Purpose |
+|---|---|---|
+| `-P` | `scp -P 2222 src user@host:/dst` | Set the remote SSH port. |
+| `-p` | `scp -p src user@host:/dst` | Preserve modification times and modes. |
+| `-i` | `scp -i ~/.ssh/key src user@host:/dst` | Use a specific identity file. |
+| `-r` | `scp -r dir user@host:/dst` | Copy a directory recursively. |
+| `-l` | `scp -l 50000 src user@host:/dst` | Throttle bandwidth in Kbit/s. |
+| `-C` | `scp -C src user@host:/dst` | Enable SSH-level compression. |
+| `-o` | `scp -o ConnectTimeout=3 src user@host:/dst` | Pass raw SSH options through to the client. |
 
 ## PowerShell file transfer tools
 
-`Robocopy` (Robust File Copy) is Windows' built-in directory replication tool and the closest equivalent to rsync. It supports mirroring, restartable copies, logging, multi-threaded transfers, and detailed exit codes.
+### PowerShell | `Robocopy` | directory replication
 
-### PowerShell | Robocopy | robust directory replication
+`Robocopy` is the Windows tool for durable directory work. The important differences from Unix tooling are its success-oriented exit codes and its ability to preview or restart long directory jobs without switching to a different command family.
 
-`Robocopy` supports mirroring, restartable copies, logging, multi-threaded transfers, and detailed exit codes. Unlike rsync, Robocopy does not perform delta transfers within files — it copies entire changed files — but it does detect which files have changed and only transfers those.
+#### Copy a tree and preserve empty subdirectories
 
-> [!warning] Robocopy has no delta transfer
->
-> rsync transfers only the changed **bytes** within a file (delta algorithm). Robocopy transfers the **entire file** if any change is detected. For a 10 GB database backup where 100 MB changed, rsync sends ~100 MB while Robocopy sends 10 GB. For large files that change incrementally, rsync is significantly more efficient.
+`/E` is the baseline flag when the destination should reproduce the source tree, including empty directories. The captured exit code is `1`, which is still a successful copy in Robocopy terms.
 
-> [!success] Use rsync via WSL for byte-level delta transfer on Windows
->
-> Install rsync on Windows via WSL or MSYS2 if delta transfer is critical for large incrementally-changing files.
-
-#### Recursive copy
-
-`/E` copies all subdirectories, including empty ones — equivalent to `rsync -a`. `/S` copies subdirectories but skips empty ones. Always prefer `/E` for full directory replication.
+*Replicate a directory tree with `Robocopy /E` and show the copied files plus the success exit code.*
 
 ```powershell
-Robocopy C:\data\exports D:\backup\exports /E
+$base = Join-Path $env:TEMP 'vault-transfer-demo-ps'
+$src = Join-Path $base 'src-clean'
+$dst = Join-Path $base 'dst-clean'
+Remove-Item -LiteralPath $src,$dst -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path (Join-Path $src 'sub') -Force | Out-Null
+New-Item -ItemType Directory -Path $dst -Force | Out-Null
+'one' | Set-Content -Path (Join-Path $src 'sub\file1.txt')
+'two' | Set-Content -Path (Join-Path $src 'root.txt')
+'ROBOCOPY_RECURSIVE_CLEAN'
+Robocopy $src $dst /E /R:1 /W:1
+"LASTEXITCODE=$LASTEXITCODE"
 ```
 
-#### Mirror mode — preview first
+```text
+ROBOCOPY_RECURSIVE_CLEAN
 
-Preview the mirror operation with `/L` before executing. This is the Robocopy equivalent of `rsync -n`.
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows
+-------------------------------------------------------------------------------
 
-> [!danger] /MIR is destructive
->
-> `/MIR` (mirror) combines `/E` + `/PURGE` — it copies all files recursively **and deletes** files in the destination that don't exist in the source. Same risk as `rsync --delete`: a wrong source path wipes the destination.
+  Started : Tuesday, April 14, 2026 11:20:01
+   Source : C:\Users\aperi\AppData\Local\Temp\vault-transfer-demo-ps\src-clean\
+     Dest : C:\Users\aperi\AppData\Local\Temp\vault-transfer-demo-ps\dst-clean\
 
-> [!success] Always preview with /L first
->
-> Run with `/L` to verify the file list before executing the live mirror.
+  Options : *.* /S /E /DCOPY:DA /COPY:DAT /R:1 /W:1
+
+	    New File  		       5	root.txt
+	  New Dir          1	C:\Users\aperi\AppData\Local\Temp\vault-transfer-demo-ps\src-clean\sub\
+	    New File  		       5	file1.txt
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+   Files :         2         2         0         0         0         0
+LASTEXITCODE=1
+```
+
+#### Preview `/MIR` before allowing deletions
+
+`/MIR` is the Robocopy equivalent of `rsync --delete`. Pair it with `/L` first so the job reports what it would purge without touching the destination.
+
+*Preview a `Robocopy /MIR` run so destination-only files appear before any deletion is allowed.*
 
 ```powershell
-Robocopy C:\data\exports D:\backup\exports /MIR /L
+$base = Join-Path $env:TEMP 'vault-transfer-demo-ps'
+$src = Join-Path $base 'src'
+$dst = Join-Path $base 'dst'
+Remove-Item -LiteralPath $src,$dst -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path (Join-Path $src 'sub') -Force | Out-Null
+New-Item -ItemType Directory -Path $dst -Force | Out-Null
+'one' | Set-Content -Path (Join-Path $src 'sub\file1.txt')
+'two' | Set-Content -Path (Join-Path $src 'root.txt')
+'stale' | Set-Content -Path (Join-Path $dst 'orphan.txt')
+'ROBOCOPY_MIRROR_PREVIEW'
+Robocopy $src $dst /MIR /L /R:1 /W:1
+"LASTEXITCODE=$LASTEXITCODE"
 ```
 
-#### Mirror mode — execute
+```text
+ROBOCOPY_MIRROR_PREVIEW
 
-After confirming the `/L` preview output, run the live mirror without the list flag.
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows
+-------------------------------------------------------------------------------
+
+  Started : Tuesday, April 14, 2026 11:12:35
+   Source : C:\Users\aperi\AppData\Local\Temp\vault-transfer-demo-ps\src\
+     Dest : C:\Users\aperi\AppData\Local\Temp\vault-transfer-demo-ps\dst\
+
+  Options : *.* /L /S /E /DCOPY:DA /COPY:DAT /PURGE /MIR /R:1 /W:1
+
+	  *EXTRA File 		       7	orphan.txt
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+   Files :         2         0         2         0         0         1
+LASTEXITCODE=2
+```
+
+#### Use restartable mode for interruption-prone links
+
+`/Z` keeps Robocopy in restartable mode so an interrupted job can resume instead of restarting the whole file. The live run below stays local, but the option line confirms the mode that would be used on a real network copy.
+
+*Run `Robocopy` in restartable mode and surface the copied file plus the resulting exit code.*
 
 ```powershell
-Robocopy C:\data\exports D:\backup\exports /MIR
+$base = Join-Path $env:TEMP 'vault-transfer-demo-ps'
+$src = Join-Path $base 'src3'
+$dst = Join-Path $base 'dst3'
+Remove-Item -LiteralPath $src,$dst -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path (Join-Path $src 'sub') -Force | Out-Null
+New-Item -ItemType Directory -Path $dst -Force | Out-Null
+Set-Content -Path (Join-Path $src 'sub\large.txt') -Value ('x' * 5000)
+'ROBOCOPY_RESTARTABLE_ONLY'
+Robocopy $src $dst /E /Z /R:1 /W:1
+"LASTEXITCODE=$LASTEXITCODE"
 ```
 
-#### Restartable mode
+```text
+ROBOCOPY_RESTARTABLE_ONLY
 
-`/Z` enables restartable mode — if a copy is interrupted, Robocopy resumes from where it stopped on the next run. `/ZB` falls back to backup mode if restartable mode fails (useful for files locked by other processes). Add `/ETA` for estimated time of arrival per file.
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows
+-------------------------------------------------------------------------------
+
+  Started : Tuesday, April 14, 2026 11:16:31
+   Source : C:\Users\aperi\AppData\Local\Temp\vault-transfer-demo-ps\src3\
+     Dest : C:\Users\aperi\AppData\Local\Temp\vault-transfer-demo-ps\dst3\
+
+  Options : *.* /S /E /DCOPY:DA /COPY:DAT /Z /R:1 /W:1
+
+	    New File  		    5002	large.txt
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+   Files :         1         1         0         0         0         0
+LASTEXITCODE=1
+```
+
+#### Do not combine `/IPG` with `/MT`
+
+Bandwidth throttling and multithreaded copy are separate operational choices in Robocopy. The command below fails immediately because `/IPG` and `/MT` are mutually exclusive.
+
+*Invoke `Robocopy` with `/IPG` and `/MT` together to surface the local parameter-validation failure.*
 
 ```powershell
-Robocopy C:\data\exports D:\backup\exports /E /Z /ETA
+$base = Join-Path $env:TEMP 'vault-transfer-demo-ps'
+$src = Join-Path $base 'src2'
+$dst = Join-Path $base 'dst2'
+Remove-Item -LiteralPath $src,$dst -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path (Join-Path $src 'sub') -Force | Out-Null
+New-Item -ItemType Directory -Path $dst -Force | Out-Null
+Set-Content -Path (Join-Path $src 'sub\large.txt') -Value ('x' * 5000)
+'ROBOCOPY_RESTARTABLE'
+Robocopy $src $dst /E /Z /IPG:10 /MT:4 /R:1 /W:1
+"LASTEXITCODE=$LASTEXITCODE"
 ```
 
-#### Exclude directories and files
+```text
+ROBOCOPY_RESTARTABLE
 
-`/XD` excludes directories by name or path. `/XF` excludes files by name or wildcard. Unlike rsync's unified `--exclude`, Robocopy separates directory and file exclusions.
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows
+-------------------------------------------------------------------------------
 
-Exclude directories:
+The /IPG option cannot be used with the /MT option.
+The /LFSM option cannot be used with the /MT or /EFSRAW options.
+Warning: Failed to query volume space; /LFSM will not monitor for low free space.
+       Simple Usage :: ROBOCOPY source destination /MIR
 
-```powershell
-Robocopy C:\data\exports D:\backup\exports /E /XD __pycache__ .git node_modules
+****  /MIR can DELETE files as well as copy them !
+LASTEXITCODE=16
 ```
 
-Exclude file patterns:
+Use this table for the switches you reach for most often in PowerShell copy jobs.
 
-```powershell
-Robocopy C:\data\exports D:\backup\exports /E /XF *.log *.tmp
-```
-
-Combined directory and file exclusions:
-
-```powershell
-Robocopy C:\data\exports D:\backup\exports /E /XD __pycache__ /XF *.log
-```
-
-#### Log output to file
-
-`/LOG:file` overwrites the log file each run. `/LOG+:file` appends. Add `/NP` to suppress per-file progress percentages in the log — cleaner for automated parsing.
-
-```powershell
-Robocopy C:\data\exports D:\backup\exports /E /LOG:C:\logs\robocopy.log /NP
-```
-
-#### Throttle bandwidth with inter-packet gap
-
-`/IPG:n` inserts a gap of `n` milliseconds between each 64 KB packet. This is cruder than rsync's `--bwlimit` (which specifies KB/s directly), but it does reduce network saturation. `/IPG:20` roughly limits throughput to ~3 MB/s.
-
-```powershell
-Robocopy C:\data\exports D:\backup\exports /E /IPG:20
-```
-
-#### Multi-threaded copy
-
-`/MT:n` uses `n` threads for parallel file copies (default 8, max 128). This has no rsync equivalent — rsync is single-threaded. For thousands of small files, `/MT:16` can be 5-10x faster than single-threaded copy. Cannot be combined with `/IPG`.
-
-```powershell
-Robocopy C:\data\exports D:\backup\exports /E /MT:16
-```
-
-| Flag/Switch | Syntax | Description |
+| Switch | Syntax | Purpose |
 |---|---|---|
-| `/COPY:<flags>` | `/COPY:DAT` | Specify copy attributes: D=Data, A=Attributes, T=Timestamps, S=Security, O=Owner, U=Auditing |
-| `/DCOPY:T` | `/DCOPY:T` | Copy directory timestamps |
-| `/E` | `Robocopy src dest /E` | Copy all subdirectories including empty ones |
-| `/ETA` | `Robocopy src dest /ETA` | Show estimated time of arrival for copied files |
-| `/IPG:<n>` | `Robocopy src dest /IPG:20` | Inter-packet gap in milliseconds (crude bandwidth throttle) |
-| `/L` | `Robocopy src dest /L` | List only — dry run without copying |
-| `/LOG:<file>` | `Robocopy src dest /LOG:file.log` | Output log to file (overwrites) |
-| `/LOG+:<file>` | `Robocopy src dest /LOG+:file.log` | Append to log file |
-| `/MIR` | `Robocopy src dest /MIR` | Mirror: equivalent to `/E /PURGE` (copies all, deletes extras) |
-| `/MOV` | `Robocopy src dest /MOV` | Move files (delete from source after copy) |
-| `/MOVE` | `Robocopy src dest /MOVE` | Move files and directories |
-| `/MT:<n>` | `Robocopy src dest /MT:16` | Multi-threaded copy using n threads (default 8, max 128) |
-| `/NP` | `Robocopy src dest /NP` | No progress — suppress percentage in output |
-| `/PURGE` | `Robocopy src dest /PURGE` | Delete destination files not in source |
-| `/R:<n>` | `Robocopy src dest /R:3` | Number of retries on failed copies (default 1000000) |
-| `/S` | `Robocopy src dest /S` | Copy subdirectories (skip empty ones) |
-| `/W:<n>` | `Robocopy src dest /W:30` | Wait time in seconds between retries |
-| `/XD` | `Robocopy src dest /XD dir1 dir2` | Exclude directories by name or path |
-| `/XF` | `Robocopy src dest /XF *.log *.tmp` | Exclude files by name or wildcard |
-| `/Z` | `Robocopy src dest /Z` | Restartable mode — resume interrupted copies |
-| `/ZB` | `Robocopy src dest /ZB` | Try restartable mode; fall back to backup mode if access denied |
+| `/E` | `Robocopy src dst /E` | Copy all subdirectories, including empty ones. |
+| `/MIR` | `Robocopy src dst /MIR` | Mirror the tree and delete destination extras. |
+| `/L` | `Robocopy src dst /L` | Preview the operation without copying or deleting. |
+| `/Z` | `Robocopy src dst /Z` | Use restartable mode for interrupted copies. |
+| `/IPG:n` | `Robocopy src dst /IPG:20` | Insert an inter-packet gap as a crude throttle. |
+| `/MT:n` | `Robocopy src dst /MT:16` | Use multiple threads for faster local or LAN copies. |
+| `/R:n` | `Robocopy src dst /R:3` | Limit retry attempts on failed copies. |
+| `/W:n` | `Robocopy src dst /W:5` | Limit wait time between retries. |
+| `/LOG:file` | `Robocopy src dst /LOG:copy.log` | Write a durable log file for later review. |
 
-### Robocopy trailing slash — no equivalent gotcha
+Robocopy exit codes are lookup data, not Unix-style success or failure states.
 
-Robocopy does not have the rsync trailing-slash problem. Understanding this difference prevents confusion when switching between platforms.
+| Exit code range | Meaning | Automation action |
+|---|---|---|
+| `0` | Nothing copied and no differences detected. | Treat as success. |
+| `1` to `7` | Files copied, extras detected, or other non-fatal states. | Treat as success and inspect the summary if needed. |
+| `8` or higher | At least one real failure occurred. | Treat as failure. |
 
-> [!tip] Robocopy does not have the rsync trailing-slash gotcha
->
-> Robocopy always copies the **contents** of the source directory into the destination directory. There is no trailing-slash behavior difference:
->
-> ```powershell
-> Robocopy C:\data\bronze D:\backup\bronze /E    # copies CONTENTS of bronze into D:\backup\bronze
-> Robocopy C:\data\bronze\ D:\backup\bronze\ /E  # identical result
-> ```
->
-> This eliminates the most common rsync mistake. However, if you want to copy the source directory **itself** (creating `D:\backup\bronze\bronze\`), you must include the directory name in the destination path explicitly.
+### PowerShell | `scp` | quick remote copy over OpenSSH
 
-### Robocopy exit codes — unlike Unix, 0 is not the only success code
+PowerShell can call the same OpenSSH `scp` client that Linux uses. The useful distinction is not syntax but operational context: on Windows you usually prefer `Robocopy` for directory work and reserve `scp` for small SSH-bound copies.
 
-Robocopy uses a bitmask exit code scheme that differs from Unix conventions. Scripts that check for exit code 0 alone will incorrectly treat successful copies as failures.
+#### Inspect the local OpenSSH client
 
-> [!warning] Robocopy exit codes differ from Unix conventions
->
-> Unix tools return 0 for success and non-zero for failure. Robocopy uses a **bitmask** where codes 0-7 indicate success/information and 8+ indicate errors:
->
-> | Code | Meaning |
-> |------|---------|
-> | 0 | No files copied, no errors, source and dest are in sync |
-> | 1 | Files copied successfully |
-> | 2 | Extra files or directories detected in destination |
-> | 3 | Files copied + extra files detected |
-> | 4 | Mismatched files or directories detected |
-> | 5 | Files copied + mismatches detected |
-> | 6 | Extra files + mismatches |
-> | 7 | Files copied + extras + mismatches |
-> | 8+ | **Errors occurred** — copy failures, insufficient permissions, etc. |
->
-> Scripts that check `$LASTEXITCODE -ne 0` will incorrectly treat successful copies as failures. Always check `$LASTEXITCODE -ge 8`:
+The Windows OpenSSH build also prints usage text when invoked without arguments, which is enough to confirm the client is available.
+
+*Print the Windows OpenSSH `scp` usage header before testing any remote copy path.*
 
 ```powershell
-Robocopy C:\data\exports D:\backup\exports /E /MIR
-if ($LASTEXITCODE -ge 8) {
-    Write-Error "Robocopy failed with exit code $LASTEXITCODE"
-    exit 1
+$PSStyle.OutputRendering = 'PlainText'
+$ansi = [char]27 + '\[[0-9;]*m'
+scp 2>&1 | ForEach-Object { $_.ToString() -replace $ansi, '' } | Select-Object -First 4
+```
+
+```text
+usage: scp [-346ABCOpqRrsTv] [-c cipher] [-D sftp_server_path] [-F ssh_config]
+           [-i identity_file] [-J destination] [-l limit] [-o ssh_option]
+           [-P port] [-S program] [-X sftp_option] source ... target
+```
+
+#### Connection refusal is a transport problem, not a copy problem
+
+This call points at `127.0.0.1` intentionally. The refusal happens before any file-transfer logic can succeed, which is the correct signal to switch from path debugging to host or service debugging.
+
+*Attempt an SSH copy to a closed local endpoint so the refusal is isolated from file-selection logic.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+$ansi = [char]27 + '\[[0-9;]*m'
+$demo = Join-Path $env:TEMP 'scp-demo.txt'
+'demo' | Set-Content -Path $demo
+scp -v -o ConnectTimeout=3 $demo demo@127.0.0.1:/tmp/scp-demo.txt 2>&1 |
+    ForEach-Object { $_.ToString() -replace $ansi, '' } |
+    Select-Object -Last 6
+```
+
+```text
+debug1: identity file C:\\Users\\aperi/.ssh/id_xmss-cert type -1
+debug1: identity file C:\\Users\\aperi/.ssh/id_dsa type -1
+debug1: identity file C:\\Users\\aperi/.ssh/id_dsa-cert type -1
+debug1: kex_exchange_identification: write: Connection refused
+banner exchange: Connection to UNKNOWN port -1: Connection refused
+C:\WINDOWS\System32\OpenSSH\scp.exe: Connection closed
+```
+
+## GCP transfer tools
+
+The worker environment contains the Google Cloud CLIs, so the page can show real local client behavior. The live GCP transfer examples below stop at explicit blocker boundaries because this isolated run has no approved demo project, VM, or bucket to mutate.
+
+### Linux | `gcloud compute scp` | transfers to Compute Engine
+
+`gcloud compute scp` is the right wrapper when the destination is a Compute Engine VM. It handles the Google Cloud metadata that raw `scp` does not know about, but it still needs a selected account, project, and instance.
+
+#### Confirm the CLI installation before you target a VM
+
+The version check proves the local CLI surface exists before you spend time debugging project or zone errors.
+
+*Print the installed `gcloud` version block before attempting any Compute Engine copy.*
+
+```bash
+gcloud version | sed -n '1,4p'
+```
+
+```text
+Google Cloud SDK 563.0.0
+alpha 2026.03.27
+beta 2026.03.27
+bq 2.1.31
+```
+
+#### Stop when there is no active account or project context
+
+This dry run uses a fake project and a local file. The command never reaches a VM because the CLI stops earlier and reports the missing authenticated account explicitly.
+
+*Run `gcloud compute scp --dry-run` with fake project context so the pre-transfer blocker is explicit.*
+
+```bash
+printf 'demo\n' | tee /tmp/vault-transfer-demo-linux/gcloud-scp.txt >/dev/null
+CLOUDSDK_CORE_DISABLE_PROMPTS=1 gcloud compute scp /tmp/vault-transfer-demo-linux/gcloud-scp.txt demo-vm:/tmp/gcloud-scp.txt --zone=europe-west1-b --project=demo-does-not-exist-123456 --dry-run 2>&1 | sed -n '1,12p'
+```
+
+```text
+ERROR: (gcloud.compute.scp) You do not currently have an active account selected.
+Please run:
+
+  $ gcloud auth login
+
+to obtain new credentials.
+
+If you have already logged in with a different account, run:
+
+  $ gcloud config set account ACCOUNT
+
+to select an already authenticated account to use.
+```
+
+These are the switches most likely to matter once the project and VM actually exist.
+
+| Flag | Syntax | Purpose |
+|---|---|---|
+| `--zone` | `--zone=europe-west1-b` | Select the VM zone when it is not already configured. |
+| `--project` | `--project=my-project` | Override the active Google Cloud project. |
+| `--recurse` | `--recurse` | Copy a directory tree instead of a single file. |
+| `--tunnel-through-iap` | `--tunnel-through-iap` | Route the copy through Identity-Aware Proxy. |
+| `--internal-ip` | `--internal-ip` | Use the VM's internal address when that route is valid. |
+| `--ssh-key-file` | `--ssh-key-file=~/.ssh/key` | Force a specific SSH identity file. |
+
+### Linux | `gsutil` | legacy Cloud Storage workflows
+
+`gsutil` remains common in older scripts and operations playbooks. Its CLI is available locally here, but safe demonstration stops at fake bucket paths because this run has no approved Cloud Storage target.
+
+#### Inspect the installed `gsutil` client
+
+`gsutil version -l` is a quick preflight that proves the client, Python runtime, and WSL environment are wired correctly.
+
+*Print the installed `gsutil` version details before testing any bucket operation.*
+
+```bash
+gsutil version -l | sed -n '1,6p'
+```
+
+```text
+gsutil version: 5.36
+checksum: d2b58d0fd013f0b3ec07e8a797aa6208 (OK)
+boto version: 2.49.0
+python version: 3.12.3 (main, Mar  3 2026, 12:15:18) [GCC 13.3.0]
+OS: Linux 6.6.87.2-microsoft-standard-WSL2
+multiprocessing available: True
+```
+
+#### Require a real bucket before you attempt a transfer
+
+The copy path is not the first problem to solve if the bucket does not exist. The CLI fails early with a direct 404 so you can correct the resource definition before you script around it.
+
+*List a non-existent bucket so the Cloud Storage resource-definition failure is explicit.*
+
+```bash
+gsutil ls gs://demo-does-not-exist-123456 2>&1 | sed -n '1,10p'
+```
+
+```text
+BucketNotFoundException: 404 gs://demo-does-not-exist-123456 bucket does not exist.
+```
+
+Use this lookup table when you need the legacy `gsutil` syntax on an existing codebase.
+
+| Command or flag | Syntax | Purpose |
+|---|---|---|
+| `cp` | `gsutil cp file gs://bucket/path` | Copy one or more objects to or from GCS. |
+| `-m` | `gsutil -m cp -r dir gs://bucket/path` | Parallelize a recursive copy. |
+| `rsync -r` | `gsutil rsync -r dir gs://bucket/path` | Synchronize only new or changed files. |
+| `-n` | `gsutil rsync -n dir gs://bucket/path` | Preview the sync plan without mutating the bucket. |
+| `-d` | `gsutil rsync -d dir gs://bucket/path` | Delete destination-only objects during sync. |
+| `-z` | `gsutil cp -z csv,json file gs://bucket/path` | Gzip selected text file types on upload. |
+
+### PowerShell | `gcloud storage` | modern Cloud Storage workflows
+
+`gcloud storage` is the cleaner default for new automation because it keeps Cloud Storage operations inside the main Google Cloud CLI. The local help surface is runnable here even though the worker has no real bucket to write to.
+
+#### Confirm the command group is installed
+
+The help text proves the command group exists before you spend time debugging permissions or path spelling.
+
+*Print the active `gcloud storage` help header before using the command group in automation.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+gcloud storage --help 2>&1 | Select-Object -First 8
+```
+
+```text
+NAME
+    gcloud storage - create and manage Cloud Storage buckets and objects
+
+SYNOPSIS
+    gcloud storage GROUP | COMMAND [GCLOUD_WIDE_FLAG ...]
+
+DESCRIPTION
+    The gcloud storage command group lets you create and manage Cloud Storage
+```
+
+#### Treat a 404 as a resource-definition problem first
+
+This command fails on a deliberately fake bucket. That is still useful because it proves the CLI can run locally and shows the exact blocker you need to clear before attempting a live upload or sync.
+
+*List a non-existent bucket with `gcloud storage` so the 404 appears before any transfer logic runs.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+gcloud storage ls gs://demo-does-not-exist-123456 2>&1 | Select-Object -First 10
+```
+
+```text
+ERROR: (gcloud.storage.ls) gs://demo-does-not-exist-123456 not found: 404.
+```
+
+### `gcloud storage` vs `gsutil` | choose the active CLI on purpose
+
+Both CLIs remain useful, but they solve different operational problems in a mature estate. Keep `gsutil` where legacy scripts already depend on it, and prefer `gcloud storage` for new work so the command surface stays inside one actively maintained CLI.
+
+| Question | `gsutil` | `gcloud storage` |
+|---|---|---|
+| Best fit | Existing operational scripts and entrenched runbooks | New automation and new operator workflows |
+| Runtime model | Separate legacy CLI implemented in Python | Command group inside the main `gcloud` CLI |
+| Common sync command | `gsutil rsync -r src gs://bucket/path` | `gcloud storage rsync src gs://bucket/path --recursive` |
+| Operational risk to watch | `rsync -d` deletes destination-only objects | Resource names and auth still must be valid before any copy starts |
+
+## SQL Server data transfer
+
+This worker environment exposes the SQL Server client tools on Windows, so the live SQL captures below use PowerShell rather than WSL. They show real client presence first and then stop at explicit connection blockers because no local SQL Server instance was available to export from safely.
+
+### PowerShell | `bcp` | bulk copy between SQL Server and files
+
+`bcp` is the fastest path between SQL Server and flat files when you need raw throughput. It is also unforgiving: the client can be present and healthy locally while every real export or import still blocks on server reachability and schema correctness.
+
+#### Verify that the bulk-copy client is installed
+
+`bcp -v` is the fastest preflight when you need to confirm the client is on the Windows host before you build the export command.
+
+*Print the installed `bcp` client version before building an export or import command.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+bcp -v 2>&1
+```
+
+```text
+BCP - Bulk Copy Program for Microsoft SQL Server.
+Copyright (C) Microsoft Corporation. All Rights Reserved.
+Version: 17.0.1000.7
+```
+
+#### Export and import stay blocked until a server answers
+
+This call points at `127.0.0.1,1435` intentionally so the blocker is explicit and local. The failure happens before any file is written, which is the right signal to fix connectivity before you reason about delimiters or row counts.
+
+*Attempt a query export to an unreachable SQL Server endpoint so the connection blocker is explicit.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+bcp "SELECT 1 AS value" queryout NUL -S tcp:127.0.0.1,1435 -U sa -P badpass -d master -c -t "," -l 2 2>&1 |
+    Select-Object -First 8
+```
+
+```text
+SQLState = 08001, NativeError = 258
+Error = [Microsoft][ODBC Driver 18 for SQL Server]TCP Provider: The wait operation timed out.
+
+SQLState = 08001, NativeError = 258
+Error = [Microsoft][ODBC Driver 18 for SQL Server]A network-related or instance-specific error has occurred while establishing a connection to tcp:127.0.0.1,1435. Server is not found or not accessible. Check if instance name is correct and if SQL Server is configured to allow remote connections. For more information see SQL Server Books Online.
+SQLState = S1T00, NativeError = 0
+Error = [Microsoft][ODBC Driver 18 for SQL Server]Login timeout expired
+```
+
+Use these flags when you are writing the real bulk-copy command against a reachable SQL Server instance.
+
+| Flag or mode | Syntax | Purpose |
+|---|---|---|
+| `queryout` | `bcp "SELECT ..." queryout file.csv ...` | Export a query result to a file. |
+| `out` | `bcp db.schema.table out file.csv ...` | Export an entire table faster than `queryout`. |
+| `in` | `bcp db.schema.table in file.csv ...` | Import a flat file into SQL Server. |
+| `-c` | `-c` | Use character mode for readable text output. |
+| `-t ","` | `-t ","` | Set the field delimiter explicitly. |
+| `-r "\n"` | `-r "\n"` | Set the row terminator explicitly. |
+| `-F 2` | `-F 2` | Skip the header row on import. |
+| `-b 10000` | `-b 10000` | Batch commits during import. |
+| `-e errors.log` | `-e errors.log` | Capture rejected rows in a separate file. |
+
+### PowerShell | `sqlcmd` | query-oriented exports
+
+`sqlcmd` is the lighter-weight option when you want query-driven output instead of the highest-throughput bulk client. It remains a text client, so the first job is always to prove the connection works before you start shaping delimiters and headers.
+
+#### Inspect the client syntax before writing the query
+
+The help text confirms the installed client version and the connection flags available on this host.
+
+*Print the `sqlcmd` help header and its core connection switches before writing the export query.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+sqlcmd -? 2>&1 | Select-Object -First 8
+```
+
+```text
+Microsoft (R) SQL Server Command Line Tool
+Version 17.0.1000.7 NT
+Copyright (C) 2025 Microsoft Corporation. All rights reserved.
+
+usage: Sqlcmd            [-U login id]          [-P password]
+  [-S server]            [-H hostname]          [-E trusted connection]
+  [-N[s|m|o] Encrypt Connection]
+  [-C Trust Server Certificate]
+```
+
+#### Timeout errors mean the connection failed before the query ran
+
+The login timeout below is a transport-level blocker. Until the server responds, changing `-s`, `-W`, or `-h` does nothing useful.
+
+*Attempt a `sqlcmd` query against an unreachable endpoint so the transport failure is isolated from query logic.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+sqlcmd -S tcp:127.0.0.1,1435 -l 2 -Q "SELECT 1" 2>&1 | Select-Object -First 8
+```
+
+```text
+Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : TCP Provider: The wait operation timed out.
+.
+Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : Login timeout expired.
+Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : A network-related or instance-specific error has occurred while establishing a connection to tcp:127.0.0.1,1435. Server is not found or not accessible. Check if instance name is correct and if SQL Server is configured to allow remote connections. For more information see SQL Server Books Online..
+```
+
+These are the `sqlcmd` switches that matter most for export-oriented usage.
+
+| Flag | Syntax | Purpose |
+|---|---|---|
+| `-Q` | `-Q "SELECT ..."` | Run a query and exit immediately. |
+| `-o file.csv` | `-o file.csv` | Write output to a file. |
+| `-s ","` | `-s ","` | Set the column separator. |
+| `-W` | `-W` | Trim trailing spaces from text output. |
+| `-h -1` | `-h -1` | Suppress repeating headers. |
+| `-l 2` | `-l 2` | Keep connection timeout short during diagnostics. |
+| `-C` | `-C` | Trust the server certificate when encryption is enabled. |
+
+### PowerShell | `Invoke-Sqlcmd` | object-based exports
+
+`Invoke-Sqlcmd` is the PowerShell-native path when you want objects that can flow directly to `Export-Csv`. The prerequisite is a working `SqlServer` module on the host, and the second prerequisite is still a reachable SQL Server instance.
+
+#### Confirm the `SqlServer` module is available
+
+The module was installed in this attempt so the note could capture real local client evidence rather than stopping at a missing-command blocker.
+
+*Resolve the local `Invoke-Sqlcmd` command and print the installed module version.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+Get-Command Invoke-Sqlcmd | Format-Table -HideTableHeaders Name,Version,Source
+```
+
+```text
+Invoke-Sqlcmd 22.4.5.1 SqlServer
+```
+
+#### The cmdlet still requires a reachable SQL Server instance
+
+Once the module exists, the next blocker is exactly what it should be: the server endpoint itself. The catch block below preserves the raw connection error instead of fabricating a fake result set.
+
+*Attempt an `Invoke-Sqlcmd` query against an unreachable endpoint and print the resulting exception text.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+try {
+    Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Query "SELECT 1" -TrustServerCertificate -ConnectionTimeout 2 -ErrorAction Stop
+} catch {
+    $_.Exception.Message
 }
-Write-Host "Robocopy completed (exit code $LASTEXITCODE)"
 ```
 
-### Robocopy vs rsync — feature comparison
-
-The two tools cover the same use cases on their respective platforms but differ significantly in delta transfer capability and multi-threading support.
-
-> [!abstract] Robocopy vs rsync comparison
->
-> | Feature | rsync | Robocopy |
-> |---------|-------|----------|
-> | Delta transfer (byte-level) | Yes — only changed bytes | No — copies entire changed files |
-> | Mirror mode | `--delete` | `/MIR` |
-> | Resume interrupted transfers | `-P` (partial + progress) | `/Z` (restartable mode) |
-> | Exclude patterns | `--exclude` (unified glob) | `/XD` + `/XF` (separate dir/file) |
-> | Bandwidth limit | `--bwlimit=KB/s` (precise) | `/IPG:ms` (crude inter-packet gap) |
-> | Multi-threaded | No (single-threaded) | `/MT:n` (up to 128 threads) |
-> | Dry-run | `-n` | `/L` |
-> | Compression during transfer | `-z` (built-in) | No — compress files beforehand |
-> | Trailing-slash gotcha | Yes — source path behavior changes | No — always copies contents |
-> | Checksum comparison | `-c` | No built-in equivalent |
-> | Exit codes | 0 = success | 0-7 = success, 8+ = error |
-> | Remote transfers over SSH | Built-in | No — use scp or mapped drives |
-> | Platform | Linux, macOS, WSL | Windows only |
-
-### PowerShell | scp | remote file copy via OpenSSH
-
-Windows 10 and later ships with OpenSSH built-in — `scp` works natively from PowerShell with identical syntax to Linux. The same flags, the same remote path format, and the same SSH authentication all apply.
-
-#### Push and pull files over SSH
-
-`scp` is included with Windows 10+ OpenSSH. Same syntax as Linux — use forward slashes or `.\` relative paths. All flags (`-P`, `-p`, `-i`, `-r`, `-l`) work identically.
-
-```powershell
-scp .\local_file.py user@remote-server:/tmp/
+```text
+A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - No connection could be made because the target machine actively refused it.)
 ```
-
-```powershell
-scp user@remote-server:/tmp/output.csv .\local\
-```
-
-```powershell
-scp -r -i ~/.ssh/gcp_key .\local_dir\ user@10.132.0.2:/tmp/
-```
-
-#### Port, preserve, and identity key
-
-The uppercase/lowercase port vs preserve gotcha is identical on Windows. `-P 2222` sets the port, `-p` preserves timestamps.
-
-> [!warning] Same -P vs -p confusion applies on Windows
->
-> The uppercase/lowercase port vs preserve gotcha is identical on Windows. `-P 2222` sets the port, `-p` preserves timestamps.
-
-> [!success] Rule: uppercase -P for Port on both Linux and Windows
->
-> Uppercase `-P` is always port number. Lowercase `-p` is always preserve timestamps. This is the same on both platforms.
-
-```powershell
-scp -P 2222 .\file.txt user@server:/tmp/
-```
-
-```powershell
-scp -rp .\local_dir\ user@server:/tmp/
-```
-
-```powershell
-scp -i $env:USERPROFILE\.ssh\gcp_key .\file.txt user@10.132.0.2:/tmp/
-```
-
-## Linux / PowerShell — scp remote copy
-
-`scp` (secure copy) is simpler than rsync but lacks delta transfer, resume, and progress for directories. Use it for quick one-off file transfers. For anything repeated or large, use rsync.
-
-### Linux | scp | quick remote file copy
-
-`scp` copies files through SSH. Same authentication as `ssh` (keys, agent, passwords). Use for quick one-off file transfers. For anything large or repeated, prefer `rsync`.
-
-#### Push and pull files over SSH
-
-`scp` copies files through SSH. The same authentication applies as the `ssh` command itself — keys, agent forwarding, and passwords all work.
-
-```bash
-scp local_file.py user@remote-server:/tmp/
-```
-
-```bash
-scp user@remote-server:/tmp/output.csv ./local/
-```
-
-> [!warning] scp -r limitations
->
-> `scp -r` does NOT preserve symlinks, hardlinks, or special files. It also does NOT resume on interruption — starts from byte 0. For directories, always prefer `rsync -avzP`.
-
-> [!success] Use rsync -avzP for directories instead
->
-> For any directory transfer where you need resume, symlink preservation, or metadata fidelity, use rsync.
-
-```bash
-scp -r local_dir/ user@remote-server:/tmp/
-```
-
-#### Port, preserve, and identity key
-
-`-P` (uppercase) sets the port number. `-p` (lowercase) preserves modification times and permissions. This is the opposite of `ssh` which uses lowercase `-p` for port — a common source of mistakes.
-
-> [!warning] scp -P vs -p confusion
->
-> `-P` (uppercase) = port number. `-p` (lowercase) = preserve timestamps. This is the opposite of `ssh` which uses lowercase `-p` for port. Mixing them up is one of the most common scp mistakes.
-
-> [!success] Rule: uppercase -P for Port (mirrors scp flag, opposite of ssh)
->
-> On `scp`: uppercase `-P` = port. On `ssh`: lowercase `-p` = port. When in doubt, check with `scp --help`.
-
-```bash
-scp -P 2222 file.txt user@server:/tmp/
-```
-
-```bash
-scp -rp local_dir/ user@server:/tmp/
-```
-
-```bash
-scp -i ~/.ssh/gcp_key file.txt user@10.132.0.2:/tmp/
-```
-
-#### Bandwidth limit
-
-`scp -l` uses **Kbit/s**, not KB/s. 50000 Kbit/s is approximately 6.1 MB/s. `rsync --bwlimit` uses KB/s. Confusing the units produces transfers 8x faster or slower than intended.
-
-> [!warning] scp -l uses Kbit/s not KB/s
->
-> `scp -l` uses **Kbit/s**, not KB/s. 50000 Kbit/s = ~6.1 MB/s. `rsync --bwlimit` uses KB/s. Confusing the units produces transfers 8x faster or slower than intended.
-
-> [!success] Use rsync --bwlimit in KB/s for precise bandwidth control
->
-> `rsync --bwlimit=6000` limits to ~6 MB/s and uses KB/s units — no unit conversion needed.
-
-```bash
-scp -l 50000 large_file.tar.gz user@server:/tmp/
-```
-
-#### Remote-to-remote relay
-
-Copying between two remote hosts relays data through your local machine (server1 → you → server2). For direct server-to-server transfer, SSH into server1 and run `scp` from there.
-
-```bash
-scp user@server1:/data/file.csv user@server2:/data/file.csv
-```
-
-| Flag | Syntax | Description |
-|---|---|---|
-| `-C` | `scp -C <src> <dest>` | Enable SSH-level compression during transfer |
-| `-F` | `scp -F ~/.ssh/config <src> <dest>` | Use specified SSH config file |
-| `-i` | `scp -i ~/.ssh/key <src> <dest>` | Identity file (private key) for authentication |
-| `-l` | `scp -l 50000 <src> <dest>` | Bandwidth limit in **Kbit/s** (not KB/s) |
-| `-o` | `scp -o StrictHostKeyChecking=no <src> <dest>` | Pass SSH option directly |
-| `-P` | `scp -P 2222 <src> <dest>` | Remote host port (uppercase; opposite of ssh's `-p`) |
-| `-p` | `scp -p <src> <dest>` | Preserve modification times and permissions |
-| `-q` | `scp -q <src> <dest>` | Quiet mode — suppress progress and warnings |
-| `-r` | `scp -r <src> <dest>` | Recursive copy (does NOT preserve symlinks or resume) |
-| `-v` | `scp -v <src> <dest>` | Verbose — print SSH debug messages |
-
-## Linux / PowerShell — GCP transfer tools
-
-GCP provides several purpose-built tools for moving data to and from Compute Engine VMs and Cloud Storage. These commands work identically on both bash and PowerShell — the only difference is line continuation (`\` in bash, backtick `` ` `` in PowerShell).
-
-### Linux / PowerShell | gcloud compute scp | file transfer to GCE VMs
-
-`gcloud compute scp` wraps scp with automatic IAP tunneling, OS Login authentication, and zone resolution. It is the simplest way to move files to and from GCE VMs. For additional SSH and file transfer patterns on GCE, including OS Login and metadata SSH keys, see [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/Compute/vm-ssh-and-file-transfer).
-
-#### Push files to a GCE VM (bash)
-
-`gcloud compute scp` uses the VM instance name rather than an IP address. `--tunnel-through-iap` routes through Identity-Aware Proxy — no public IP required. gcloud handles SSH key management automatically.
-
-```bash
-gcloud compute scp local_file.py data-pipeline-sql:/tmp/ \
-    --zone=europe-west1-b --tunnel-through-iap
-```
-
-#### Pull files from a GCE VM (bash)
-
-Pull a file from the VM by placing the remote path first and the local destination second.
-
-```bash
-gcloud compute scp data-pipeline-sql:/var/opt/mssql/backups/data-pipeline.bak ./backups/ \
-    --zone=europe-west1-b --tunnel-through-iap
-```
-
-#### Copy directories recursively (bash)
-
-`--recurse` copies directories recursively. Add `--compress` for text or CSV files — SSH-level compression helps on slow connections but wastes CPU on already-compressed formats such as Parquet or gzip.
-
-```bash
-gcloud compute scp --recurse ./dags/ data-pipeline-airflow:/tmp/dags/ \
-    --zone=europe-west1-b --tunnel-through-iap
-```
-
-> [!warning] Permission errors on gcloud scp
->
-> `gcloud compute scp` logs in as your OS Login username, which may not have write access to the target directory:
-> ```bash
-> # Fails: /opt/airflow/dags/ is owned by UID 50000
-> gcloud compute scp dag.py data-pipeline-airflow:/opt/airflow/dags/ --zone=europe-west1-b --tunnel-through-iap
-> # ERROR: Permission denied
->
-> # Fix: scp to /tmp/, then SSH in and sudo mv
-> gcloud compute scp dag.py data-pipeline-airflow:/tmp/ --zone=europe-west1-b --tunnel-through-iap
-> gcloud compute ssh data-pipeline-airflow --zone=europe-west1-b --tunnel-through-iap \
->     --command="sudo cp /tmp/dag.py /opt/airflow/dags/ && sudo chown 50000:0 /opt/airflow/dags/dag.py"
-> ```
-
-#### Push and pull files (PowerShell)
-
-Same as the bash version. gcloud handles IAP tunneling and SSH key management automatically. Use backtick for line continuation instead of backslash.
-
-```powershell
-gcloud compute scp .\file.py data-pipeline-sql:/tmp/ `
-    --zone=europe-west1-b --tunnel-through-iap
-```
-
-```powershell
-gcloud compute scp data-pipeline-sql:/var/opt/mssql/backups/data-pipeline.bak .\backups\ `
-    --zone=europe-west1-b --tunnel-through-iap
-```
-
-#### Copy directories recursively (PowerShell)
-
-Same `--recurse` flag. Use `.\` prefix for local paths (PowerShell convention).
-
-```powershell
-gcloud compute scp --recurse .\local_dir\ data-pipeline-sql:/tmp/ `
-    --zone=europe-west1-b --tunnel-through-iap
-```
-
-| Flag | Syntax | Description |
-|---|---|---|
-| `--compress` | `--compress` | Enable SSH-level compression (helps for text/CSV, skip for pre-compressed files) |
-| `--internal-ip` | `--internal-ip` | Connect to VM's internal IP (for VMs on the same VPC, no IAP needed) |
-| `--project` | `--project=my-project` | Override the active gcloud project |
-| `--recurse` | `--recurse` | Recursively copy directories |
-| `--ssh-key-file` | `--ssh-key-file=~/.ssh/key` | Path to SSH private key file |
-| `--strict-host-key-checking` | `--strict-host-key-checking=no` | Disable host key verification (useful for ephemeral VMs) |
-| `--tunnel-through-iap` | `--tunnel-through-iap` | Route through Identity-Aware Proxy — no public IP required |
-| `--zone` | `--zone=europe-west1-b` | VM zone (required if not set in gcloud config) |
-
-### Linux / PowerShell | gsutil | Cloud Storage CLI
-
-Google Cloud Storage is the backbone for data lake storage, pipeline staging, and database backups. `gsutil` is the legacy Python-based CLI for moving data in and out of GCS. For the full range of GCS object operations including parallel composite uploads and signed URLs, see [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations).
-
-#### Upload a single file
-
-`gsutil cp` follows Unix `cp` semantics. `gs://bucket/path` is the GCS URI. Add `-m` for multithreaded parallel transfers — significantly faster for many small files.
-
-```bash
-gsutil cp local_file.csv gs://data-pipeline-data-lake/bronze/
-```
-
-#### Download a file from GCS
-
-Download a file from GCS to a local path by reversing the source and destination.
-
-```bash
-gsutil cp gs://data-pipeline-data-lake/gold/scores.parquet ./local/
-```
-
-#### Parallel recursive directory upload
-
-`-m` enables multithreaded transfers. `-r` recurses into subdirectories. Use this for uploading a full output directory after a pipeline run.
-
-```bash
-gsutil -m cp -r ./output/ gs://data-pipeline-data-lake/bronze/pipeline_run/
-```
-
-#### Parallel composite upload for large files
-
-For files over 150 MB, parallel composite upload splits the file into chunks and uploads them simultaneously — 5-10x faster on high-bandwidth connections.
-
-```bash
-gsutil -o GSUtil:parallel_composite_upload_threshold=150M \
-    cp large_file.parquet gs://data-pipeline-data-lake/silver/
-```
-
-#### Delta sync to Cloud Storage
-
-`gsutil rsync` transfers only new or changed files — the cloud equivalent of `rsync`. Without `-d`, it never deletes remote files and is safe by default.
-
-```bash
-gsutil -m rsync -r ./local_data/ gs://data-pipeline-data-lake/bronze/
-```
-
-> [!danger] gsutil rsync -d is destructive
->
-> `gsutil rsync -d` deletes remote files not present locally. Same risk as `rsync --delete` — a wrong source path or empty directory wipes the destination. Always dry-run first with `-n`.
-
-> [!success] Dry-run before using -d
->
-> Always confirm what would be deleted with a dry-run before executing a destructive sync.
-
-```bash
-gsutil -m rsync -r -d -n ./local_data/ gs://data-pipeline-data-lake/bronze/
-```
-
-#### Server-side copy between GCS buckets
-
-Copying between GCS buckets happens entirely inside Google's network — no data flows through your machine. No egress charges for same-region copies. Speed is independent of file size.
-
-```bash
-gsutil -m cp -r gs://source-bucket/data/ gs://dest-bucket/data/
-```
-
-Server-side move (copy and delete source):
-
-```bash
-gsutil mv gs://bucket/old_path/ gs://bucket/new_path/
-```
-
-| Command/Flag | Syntax | Description |
-|---|---|---|
-| `cp` | `gsutil cp <src> <dest>` | Copy files to/from GCS |
-| `-d` | `gsutil rsync -d <src> <dest>` | Delete destination files not in source (destructive) |
-| `-m` | `gsutil -m cp -r <src> <dest>` | Multithreaded parallel transfer |
-| `-n` | `gsutil rsync -n <src> <dest>` | Dry run — show what would be changed |
-| `-o` | `gsutil -o GSUtil:key=val cp ...` | Set configuration option inline |
-| `-r` | `gsutil cp -r <src> <dest>` | Recursive copy |
-| `rsync` | `gsutil rsync -r <src> <dest>` | Sync: transfer only new or changed files |
-| `-z` | `gsutil cp -z html,csv <src> <dest>` | Gzip-encode files with specified extensions on upload |
-| `-Z` | `gsutil cp -Z <src> <dest>` | Gzip-encode all uploaded files |
-
-### Linux / PowerShell | gcloud storage | modern Cloud Storage CLI
-
-`gcloud storage` is the Go-based replacement for Python-based `gsutil`. It offers the same semantics with 20-94% faster execution and resumable uploads enabled by default. Prefer it for new scripts.
-
-#### Upload and download files
-
-Upload a single file to GCS or download a file to local:
-
-```bash
-gcloud storage cp local_file.csv gs://data-pipeline-data-lake/bronze/
-```
-
-```bash
-gcloud storage cp gs://data-pipeline-data-lake/gold/scores.parquet ./local/
-```
-
-Recursive upload of a directory:
-
-```bash
-gcloud storage cp -r ./output/ gs://data-pipeline-data-lake/bronze/
-```
-
-PowerShell — use backtick for line continuation and `.\` for local paths:
-
-```powershell
-gcloud storage cp .\local_file.csv gs://data-pipeline-data-lake/bronze/
-```
-
-```powershell
-gcloud storage cp -r .\output\ gs://data-pipeline-data-lake/bronze/
-```
-
-Parallel composite upload for large files (PowerShell):
-
-```powershell
-gsutil -o GSUtil:parallel_composite_upload_threshold=150M `
-    cp .\large_file.parquet gs://data-pipeline-data-lake/silver/
-```
-
-gsutil upload and recursive upload (PowerShell):
-
-```powershell
-gsutil cp .\local_file.csv gs://data-pipeline-data-lake/bronze/
-```
-
-```powershell
-gsutil -m cp -r .\output\ gs://data-pipeline-data-lake/bronze/pipeline_run/
-```
-
-#### Sync a directory to Cloud Storage
-
-`gcloud storage rsync` transfers only new or changed files with the same semantics as `gsutil rsync`.
-
-```bash
-gcloud storage rsync ./local_data/ gs://data-pipeline-data-lake/bronze/ --recursive
-```
-
-PowerShell:
-
-```powershell
-gcloud storage rsync .\local_data\ gs://data-pipeline-data-lake/bronze/ --recursive
-```
-
-### gsutil vs gcloud storage — choosing between legacy and modern CLI
-
-For new scripts and pipelines, prefer `gcloud storage`. For existing scripts, `gsutil` continues to work and there is no urgency to migrate.
-
-> [!tip] gsutil vs gcloud storage
->
-> `gsutil` is the legacy tool (Python-based, slower). `gcloud storage` is the modern replacement (Go-based, faster, same flags). Both work, but prefer `gcloud storage` for new scripts:
->
-> | Feature | gsutil | gcloud storage |
-> |---------|--------|----------------|
-> | Speed | Baseline | 20-94% faster |
-> | Resumable uploads | Manual config | Default |
-> | Parallel transfers | `-m` flag | Built-in |
-> | Syntax | `gsutil cp` | `gcloud storage cp` |
-> | Status | Maintenance | Active development |
-
-## Linux / PowerShell — SQL Server data transfer
-
-`bcp` (bulk copy program) transfers data between SQL Server and flat files at maximum throughput. It bypasses the query engine and writes directly to and from the storage layer. For loading millions of rows, bcp is 10-50x faster than INSERT statements. In a medallion architecture, bcp imports typically feed the [bronze layer](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) before transformation begins.
-
-### Linux / PowerShell | bcp | SQL Server bulk copy
-
-`bcp` (bulk copy program) is the highest-throughput path between SQL Server and flat files. It bypasses the query engine and writes directly to or from the storage layer. The three core directions are `queryout` (export query result), `out` (export full table — faster than queryout), and `in` (import from file).
-
-Key flags: `-S` server,port | `-U` username | `-P` password | `-d` database | `-c` character mode (text) | `-n` native mode (binary, fastest for SQL→SQL) | `-t ","` field terminator | `-r "<br>"` row terminator | `-F 2` skip header row | `-b 10000` batch size | `-e errors.log` rejected row log.
-
-#### Export a query result to CSV
-
-`queryout` exports the result of a SQL query to a flat file. Use `-c` for character (text) mode with comma delimiter and newline row terminator.
-
-```bash
-bcp "SELECT * FROM gold.scores_daily" queryout scores.csv \
-    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline \
-    -c -t "," -r "<br>"
-```
-
-#### Export a full table
-
-`out` exports the entire table without query parsing — faster than `queryout` for full-table exports. Use TSV (`-t "\t"`) when data contains commas to avoid quoting issues.
-
-> [!tip] TSV for comma-containing data
->
-> Use TSV (`-t "\t"`) instead of CSV when data contains commas. `out` exports the entire table without query parsing — faster than `queryout` for full-table exports.
-
-```bash
-bcp data-pipeline.gold.scores_daily out scores.tsv \
-    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
-    -c -t "\t" -r "<br>"
-```
-
-#### Import CSV into a SQL Server table
-
-`-F 2` skips the header row (starts from row 2). `-b 10000` sets the batch size — smaller batches use less transaction log space but require more commits. `-e errors.log` captures rejected rows with their line numbers and error details.
-
-```bash
-bcp data-pipeline.bronze.staging_data in data.csv \
-    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
-    -c -t "," -r "<br>" -F 2 -b 10000 -e errors.log
-```
-
-> [!danger] bcp silently truncates data
->
-> If a CSV field contains 500 characters but the target column is `VARCHAR(255)`, bcp **truncates the data without error or warning**. The import reports success, row counts match, but data is silently damaged. Always verify max field lengths before import:
-> ```sql
-> SELECT MAX(LEN(column_name)) FROM staging_table
-> ```
-
-> [!success] Pre-check max field lengths before import
->
-> Run `SELECT MAX(LEN(column_name))` on the staging data before bcp import to catch truncation before it damages production tables.
-
-> [!warning] bcp exit code 0 is misleading
->
-> bcp returns exit code 0 even when rows are rejected. Always check the `-e` error log file AND compare row counts: `wc -l data.csv` vs `SELECT COUNT(*) FROM table`.
-
-> [!success] Check error log and compare row counts
->
-> Never trust the bcp exit code alone. Always inspect the `-e` error log and compare source and destination row counts after every import.
-
-#### Native binary format for SQL-to-SQL transfers
-
-`-n` uses binary format — preserves exact data types with no text conversion. 2-5x faster than character mode. Cannot be opened in text editors. Use for SQL Server to SQL Server transfers only.
-
-```bash
-bcp data-pipeline.gold.scores_daily out scores.bcp \
-    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -n
-```
-
-#### Generate column mapping files
-
-`format nul` generates a format file without transferring data. Edit the `.fmt` file to skip columns, reorder mappings, or handle schema differences. Then use `-f staging_format.fmt` on the actual import.
-
-```bash
-bcp data-pipeline.bronze.staging_data format nul \
-    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" \
-    -c -t "," -f staging_format.fmt
-```
-
-#### Parallel split and load
-
-Split the source by a partition key and run multiple `bcp` processes in background. Each process loads independently — 3x throughput on multi-core systems. Use `wait` to block until all complete.
-
-```bash
-bcp "SELECT * FROM gold.scores_daily WHERE index_key = 'index_europe'" queryout chunk1.csv \
-    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline -c -t "," -r "<br>" &
-bcp "SELECT * FROM gold.scores_daily WHERE index_key = 'index_usa'" queryout chunk2.csv \
-    -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline -c -t "," -r "<br>" &
-wait
-```
-
-#### Verify row counts after import
-
-Always verify row count after bcp import — never trust the exit code alone.
-
-```powershell
-Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
-    -Username "sa" -Password $env:SA_PASSWORD -TrustServerCertificate `
-    -Query "SELECT COUNT(*) AS loaded_rows FROM bronze.staging_data"
-```
-
-| Flag | Syntax | Description |
-|---|---|---|
-| `in` | `bcp table in file.csv ...` | Import data from file into SQL Server table |
-| `out` | `bcp table out file.csv ...` | Export full table to file (faster than queryout) |
-| `queryout` | `bcp "SELECT ..." queryout file.csv ...` | Export query result to file |
-| `format nul` | `bcp table format nul ...` | Generate format file without transferring data |
-| `-b <n>` | `-b 10000` | Batch size — number of rows per transaction |
-| `-c` | `-c` | Character mode — text format (UTF-8 compatible) |
-| `-d <db>` | `-d data-pipeline` | Database name |
-| `-e <file>` | `-e errors.log` | Error log file for rejected rows |
-| `-F <n>` | `-F 2` | First row to import (2 = skip header row) |
-| `-f <file>` | `-f format.fmt` | Use column mapping format file |
-| `-n` | `-n` | Native binary format — fastest, SQL Server to SQL Server only |
-| `-P <pass>` | `-P $SA_PASSWORD` | Password |
-| `-q` | `-q` | Quoted identifiers — required for table names with special characters |
-| `-r <term>` | `-r "<br>"` | Row terminator |
-| `-S <server>` | `-S 127.0.0.1,1435` | Server and port |
-| `-t <term>` | `-t ","` | Field terminator |
-| `-T` | `-T` | Trusted connection (Windows Authentication) |
-| `-U <user>` | `-U sa` | Username |
-
-### Linux | sqlcmd | query-based export
-
-For smaller exports or custom query results, `sqlcmd` outputs directly to file. It is simpler than bcp for ad hoc queries but produces a dashes separator line on row 2 that must be stripped before parsing the CSV.
-
-#### Query-based CSV export
-
-`-Q` executes the query and exits. `SET NOCOUNT ON` suppresses the `(N rows affected)` message that pollutes CSV output. `-s ","` sets the column separator. `-W` removes trailing spaces from columns. `-o` writes to file.
-
-```bash
-sqlcmd -S 127.0.0.1,1435 -U sa -P "$SA_PASSWORD" -d data-pipeline \
-    -Q "SET NOCOUNT ON; SELECT * FROM gold.scores_daily" \
-    -s "," -W -o scores.csv
-```
-
-> [!warning] sqlcmd dashes separator line
->
-> Every sqlcmd CSV export contains a line of `---` dashes on row 2. This breaks CSV parsers. Remove it with `sed -i '2d' scores.csv` after export. Adding `-k1` removes control characters but does NOT remove the dashes line.
-
-```bash
-sed -i '2d' scores.csv
-```
-
-| Flag | Syntax | Description |
-|---|---|---|
-| `-d <db>` | `-d data-pipeline` | Database to connect to |
-| `-h <n>` | `-h -1` | Header row interval (-1 = print once, 0 = no headers) |
-| `-k` | `-k1` | Remove control characters from output |
-| `-o <file>` | `-o output.csv` | Write output to file |
-| `-P <pass>` | `-P $SA_PASSWORD` | Password |
-| `-q <query>` | `-q "SELECT ..."` | Execute query and remain in interactive mode |
-| `-Q <query>` | `-Q "SELECT ..."` | Execute query and exit |
-| `-s <sep>` | `-s ","` | Column separator character |
-| `-S <server>` | `-S 127.0.0.1,1435` | Server and port |
-| `-U <user>` | `-U sa` | Username |
-| `-W` | `-W` | Remove trailing spaces from columns |
-| `-w <n>` | `-w 999` | Set column width to avoid line wrapping |
-
-### PowerShell | Invoke-Sqlcmd | query-based CSV export
-
-`Invoke-Sqlcmd` is the PowerShell-native alternative to `sqlcmd`. It returns PowerShell objects that pipe cleanly into `Export-Csv` — no post-processing needed and no dashes separator line.
-
-#### Export query results with Export-Csv
-
-`Invoke-Sqlcmd` returns PowerShell objects. Piping to `Export-Csv` produces a clean CSV file with proper quoting, escaping, and headers — unlike `sqlcmd` which embeds a `---` dashes line on row 2.
-
-```powershell
-Invoke-Sqlcmd -ServerInstance "127.0.0.1,1435" -Database "data-pipeline" `
-    -Username "sa" -Password $env:SA_PASSWORD -TrustServerCertificate `
-    -Query "SELECT * FROM gold.scores_daily" |
-    Export-Csv -Path .\scores.csv -NoTypeInformation
-```
-
-`Export-Csv` handles quoting, escaping, and headers properly. `-NoTypeInformation` suppresses the `#TYPE` line that PowerShell adds by default.
-
-> [!warning] sqlcmd dashes line — use Invoke-Sqlcmd to avoid it
->
-> On Linux, you must `sed -i '2d' scores.csv` to remove the dashes separator. On PowerShell, skip `sqlcmd` entirely and use `Invoke-Sqlcmd | Export-Csv` instead — it produces a clean CSV file with proper quoting and no dashes line.
 
 ## Transfer strategy and best practices
 
-Choosing the right tool prevents both wasted bandwidth and hours of debugging failed or incomplete transfers. The matrix below maps common scenarios to the appropriate tool.
+This section turns the earlier tool reference into an operator-facing decision flow. Each subsection demonstrates the selection rule with a live command so the strategy is tied to observable behavior rather than advisory prose alone.
 
-### Transfer decision matrix — choosing the right tool by scenario
+### Linux | local and SSH transfer choices | choose copy and sync semantics deliberately
 
-Match the scenario to the tool before writing the transfer command. The wrong tool for large files or repeated transfers can add significant latency to pipelines.
+The Linux transfer surface is simple only when the job is simple. The decision boundary is whether the copy is a one-shot local action, a repeatable directory reconciliation, or a remote transfer that now depends on SSH transport health.
 
-| Scenario | Linux Tool | PowerShell Tool | Command Pattern |
-|----------|-----------|----------------|-----------------|
-| Single file, local → local | `cp` | `Copy-Item` | `cp file dest/` / `Copy-Item file dest\` |
-| Directory, local → local | `rsync -avh` | `Robocopy /E` | `rsync -avh src/ dest/` / `Robocopy src dest /E` |
-| Large files, local → local | `rsync -avhP` | `Robocopy /E /Z` | Resume on failure |
-| Mirror directory (destructive) | `rsync --delete` | `Robocopy /MIR` | Delete extras in destination |
-| Any file, local → GCE VM | `gcloud scp` | `gcloud scp` | `gcloud compute scp file vm:/path --tunnel-through-iap` |
-| Directory, local → GCE VM | `gcloud scp` | `gcloud scp` | `gcloud compute scp --recurse dir/ vm:/path` |
-| Large directory, local ↔ VM | `rsync` + IAP | `gcloud scp --recurse` | rsync via IAP tunnel / gcloud recurse |
-| Any file, local → GCS | `gcloud storage` | `gcloud storage` | `gcloud storage cp file gs://bucket/path` |
-| Directory, local → GCS | `gcloud storage` | `gcloud storage` | `gcloud storage cp -r dir/ gs://bucket/path` |
-| Sync directory → GCS | `gsutil rsync` | `gsutil rsync` | `gsutil -m rsync -r dir/ gs://bucket/path` |
-| GCS → GCS (same region) | `gsutil cp` | `gsutil cp` | `gsutil -m cp -r gs://src/ gs://dest/` (server-side, free) |
-| SQL table → CSV file | `bcp` | `bcp` | `bcp table out file.csv -c -t ","` |
-| CSV file → SQL table | `bcp` | `bcp` | `bcp table in file.csv -c -t "," -F 2 -b 10000` |
-| SQL query → CSV file | `sqlcmd` | `Invoke-Sqlcmd` | `sqlcmd -Q "..." -o file.csv` / `Invoke-Sqlcmd \| Export-Csv` |
-| VM → VM (no local relay) | SSH + rsync | SSH + scp | SSH into source, transfer directly to dest |
-| Database backup → GCS | `bcp` + `gsutil` | `bcp` + `gsutil` | Export with bcp, then `gsutil cp backup.bak gs://bucket/` |
+#### Use `cp` for one-shot local files with no reconciliation
 
-Once data lands in GCS, you can load it directly into BigQuery with `bq load` — see [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) for format options and schema autodetection. For recurring transfers, schedule rsync or gsutil jobs with cron — see [linux-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/linux-scheduling) for crontab patterns.
+Use `cp` when the task is one file, one destination, and no destination cleanup. The command below proves the point directly: the tool emits one copied path and stops, which is exactly the behavior you want for a narrow local file move.
 
-### Compression trade-offs — when to use -z during transfers
+*Copy one local file into a destination directory and emit the copied path.*
 
-Whether to compress during transfer depends on the data type. Compressing already-compressed files wastes CPU with no bandwidth gain.
+```bash
+rm -rf /tmp/vault-transfer-strategy
+mkdir -p /tmp/vault-transfer-strategy/src /tmp/vault-transfer-strategy/dest
+cat <<'EOF' > /tmp/vault-transfer-strategy/src/file.txt
+payload
+EOF
+cp -v /tmp/vault-transfer-strategy/src/file.txt /tmp/vault-transfer-strategy/dest/
+```
 
-> [!tip] Compression trade-offs
->
-> Not all data benefits from transfer compression:
->
-> | Data Type | Compress? | Why |
-> |-----------|-----------|-----|
-> | CSV, JSON, XML | Yes (`-z`) | Text compresses 5-10x — massive bandwidth savings |
-> | Parquet, ORC | No | Already compressed internally — double compression wastes CPU |
-> | .tar.gz, .zip | No | Already compressed — rsync -z adds CPU overhead with zero benefit |
-> | SQL backups (.bak) | Depends | Use `WITH COMPRESSION` in the BACKUP command instead — done server-side |
-> | Docker images (.tar) | Yes | Layers contain uncompressed filesystem data |
->
-> When in doubt, test: `rsync -avz` vs `rsync -av` on a representative sample. If the compressed transfer isn't significantly faster, drop the `-z`.
+```text
+'/tmp/vault-transfer-strategy/src/file.txt' -> '/tmp/vault-transfer-strategy/dest/file.txt'
+```
 
-### Resumability — why resume support matters more than raw speed
+#### Move to `rsync` as soon as directory state must converge
 
-For transfers over 1 GB, the ability to resume after failure is more valuable than raw speed. A fast tool that must restart from zero is slower than a moderate tool that resumes.
+`rsync` becomes the correct tool when the job is no longer “copy this file” but “make this destination match the current source state.” A deletion-capable dry run shows the convergence plan up front, which is why `rsync` is the safer operational default for repeatable directory work.
 
-> [!tip] Resume support over raw speed
->
-> For transfers over 1 GB, the ability to resume after failure is more valuable than raw speed. Here's why:
->
-> A 50 GB file at 100 MB/s takes ~8 minutes. If the network drops at 90% completion:
-> - **scp**: starts over from byte 0. Another 8 minutes.
-> - **rsync -P**: resumes from byte 45 GB. About 50 seconds to finish.
-> - **Robocopy /Z**: resumes from last completed chunk. Similar to rsync for whole-file restarts.
-> - **gcloud storage cp**: resumable by default. Re-run the same command.
-> - **bcp**: no resume. Must re-export from scratch.
->
-> Rule: for any transfer over 1 GB, use a tool with resume support (rsync, Robocopy /Z, gcloud storage, or gsutil).
+*Dry-run a deletion-capable `rsync` mirror to show the exact convergence plan before any files are removed.*
 
+```bash
+rm -rf /tmp/vault-transfer-strategy
+mkdir -p /tmp/vault-transfer-strategy/src /tmp/vault-transfer-strategy/dest
+printf 'fresh\n' > /tmp/vault-transfer-strategy/src/current.txt
+printf 'stale\n' > /tmp/vault-transfer-strategy/dest/obsolete.txt
+rsync -avzn --delete /tmp/vault-transfer-strategy/src/ /tmp/vault-transfer-strategy/dest/
+```
 
+```text
+sending incremental file list
+deleting obsolete.txt
+current.txt
+
+sent 82 bytes  received 31 bytes  226.00 bytes/sec
+total size is 6  speedup is 0.05 (DRY RUN)
+```
+
+#### Keep `scp` for simple SSH copies, not resumable transfer jobs
+
+`scp` is appropriate only after the SSH transport already works and the copy does not need preview, resume, or directory reconciliation semantics. The failure below demonstrates why `scp` is not the tool that tells you how to repair a large transfer plan; it tells you only that the SSH path itself is unavailable.
+
+*Attempt an `scp` transfer to a closed SSH port to show the transport failure surface.*
+
+```bash
+printf 'probe\n' > /tmp/vault-transfer-scp.txt
+scp -P 65000 /tmp/vault-transfer-scp.txt 127.0.0.1:/tmp/vault-transfer-scp-copy.txt 2>&1 | sed -n '1,4p'
+```
+
+```text
+ssh: connect to host 127.0.0.1 port 65000: Connection refused
+scp: Connection closed
+```
+
+### PowerShell | local and Windows-native transfer choices | prefer durable semantics once trees or retries matter
+
+Windows transfer workflows should make the same distinction as Linux: use the trivial tool for trivial work and switch immediately to the durable tool once retries, previews, or tree-wide reconciliation enter the picture.
+
+#### Use `Copy-Item` for one-shot local files
+
+`Copy-Item` is sufficient when the transfer is local, singular, and non-destructive. Emitting the copied object with `-PassThru` gives immediate verification without implying tree mirroring or delete semantics.
+
+*Copy one local file and emit the created destination object for verification.*
+
+```powershell
+$root = Join-Path $env:TEMP 'vault-transfer-strategy-ps'
+Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path (Join-Path $root 'src'), (Join-Path $root 'dest') | Out-Null
+'payload' | Set-Content -Path (Join-Path $root 'src\file.txt')
+Copy-Item -Path (Join-Path $root 'src\file.txt') -Destination (Join-Path $root 'dest') -PassThru |
+    ForEach-Object { "{0}`t{1}" -f $_.Name, $_.Length }
+```
+
+```text
+file.txt	9
+```
+
+#### Use `Robocopy /MIR /L` when the directory must converge before you go live
+
+`Robocopy` is the Windows equivalent of a deliberate reconciliation tool, not a prettier `Copy-Item`. The `/L` preview is what turns `/MIR` into an auditable maintenance operation instead of a blind destructive copy.
+
+*Preview a `Robocopy /MIR` run so the extra and new files are visible before any deletion occurs.*
+
+```powershell
+$root = Join-Path $env:TEMP 'vault-transfer-strategy-ps'
+Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path (Join-Path $root 'src'), (Join-Path $root 'dest') | Out-Null
+'fresh' | Set-Content -Path (Join-Path $root 'src\current.txt')
+'stale' | Set-Content -Path (Join-Path $root 'dest\obsolete.txt')
+robocopy (Join-Path $root 'src') (Join-Path $root 'dest') /MIR /L /NJH /NJS /NDL
+```
+
+```text
+	  *EXTRA File 		       7	C:\Users\aperi\AppData\Local\Temp\vault-transfer-strategy-ps\dest\obsolete.txt
+	    New File  		       7	C:\Users\aperi\AppData\Local\Temp\vault-transfer-strategy-ps\src\current.txt
+```
+
+### PowerShell | SQL export handoff choices | materialize a trustworthy file before any downstream copy
+
+Database extraction and file transfer are separate stages. The transport tool is not the place to discover that the export mode, delimiter choice, or reject-row handling was underspecified.
+
+#### Inspect `bcp` export modes and text-format flags before designing the handoff file
+
+The `bcp` help surface is the fastest way to confirm that the planned transfer includes an explicit export mode and explicit text-shaping flags. That matters because a cloud upload cannot repair a poorly specified extraction command after the file is already written.
+
+*Print the `bcp` syntax header so export modes and text-format switches are visible before scripting the handoff.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+bcp -? 2>&1 | Select-Object -First 12
+```
+
+```text
+usage: C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\180\Tools\Binn\bcp.exe {dbtable | query} {in | out | queryout | format} datafile
+  [-m maxerrors]            [-f formatfile]          [-e errfile]
+  [-F firstrow]             [-L lastrow]             [-b batchsize]
+  [-n native type]          [-c character type]      [-w wide character type]
+  [-N keep non-text native] [-V file format version] [-q quoted identifier]
+  [-C code page specifier]  [-t field terminator]    [-r row terminator]
+  [-i inputfile]            [-o outfile]             [-a packetsize]
+  [-S server name]          [-U username]            [-P password or tokenfile]
+  [-T trusted connection]   [-v version]             [-R regional enable]
+  [-k keep null values]     [-E keep identity values][-G Microsoft Entra ID Authentication]
+  [-h "load hints"]         [-x generate xml format file]
+  [-d database name]        [-K application intent]  [-l login timeout]
+```
+
+### PowerShell / Linux | cloud transfer choices | validate resource context before you move bytes
+
+Cloud transfer tools add project, bucket, zone, and identity context on top of plain file movement. The correct strategic move is to validate the resource context first, because a missing VM or bucket invalidates every later flag choice.
+The live captures below use the Windows host, but the `gcloud` subcommands and failure semantics are the same in Bash once the local path syntax is adjusted.
+
+#### Validate the Compute Engine target before treating the copy as an SSH problem
+
+`gcloud compute scp` is the correct transfer surface for GCE because it validates Google Cloud metadata before the SSH session starts. The dry run below fails on the instance lookup itself, which is exactly the blocker you want to isolate before any remote file copy begins.
+
+*Run `gcloud compute scp --dry-run` against a non-existent instance so the pre-transfer resource failure is explicit.*
+
+```powershell
+gcloud compute scp --dry-run "$env:TEMP\vault-transfer-strategy-ps\src\file.txt" demo-instance:/tmp/file.txt --zone=europe-west1-b 2>&1 |
+    Select-Object -First 8
+```
+
+```text
+ERROR: (gcloud.compute.scp) Could not fetch resource:
+ - The resource 'projects/bq-wh-nb/zones/europe-west1-b/instances/demo-instance' was not found
+```
+
+#### Validate the bucket path before treating Cloud Storage as a transfer-speed problem
+
+A missing or misspelled bucket is a resource-definition problem, not a throughput or retry problem. The point of this check is to stop immediately when the namespace itself is wrong.
+
+*List a non-existent bucket so the Cloud Storage 404 is visible before any transfer logic runs.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+gcloud storage ls gs://demo-does-not-exist-123456 2>&1 | Select-Object -First 8
+```
+
+```text
+ERROR: (gcloud.storage.ls) gs://demo-does-not-exist-123456 not found: 404.
+```
+
+#### Decide whether compression belongs in the transfer path
+
+Transfer-time compression is a CPU tradeoff, not an automatic optimization. Use it when the payload is text-heavy or lightly compressed, and avoid it when the file format already stores compressed blocks or the platform can compress earlier in the pipeline.
+
+Use this table when deciding whether transfer-time compression is worth the CPU cost.
+
+| Data type | Compress during transfer? | Why |
+|---|---|---|
+| CSV, JSON, XML | Usually yes | Text compresses well and can reduce network time sharply. |
+| Parquet, ORC | Usually no | The files are already internally compressed. |
+| `.tar.gz`, `.zip` | No | Recompressing an archive wastes CPU with little gain. |
+| SQL backups (`.bak`) | Depends | Prefer server-side backup compression when the platform supports it. |
 
 ## Warnings
 
-> [!danger] `rsync --delete` removes destination-only files permanently
+Warnings are useful only when they are attached to the exact command shape that creates the risk. These subsections keep the hazard, the safe pattern, and a live demonstration adjacent so the warning remains operational rather than decorative.
+
+### Linux | `rsync` and `scp` | destructive and transport boundaries
+
+Linux transfer warnings usually fall into two categories: a path-selection mistake that changes what will be copied or deleted, and a transport-selection mistake that treats `scp` as more reliable than it is.
+
+#### `rsync --delete` removes destination-only files
+
+Deletion-capable reconciliation is legitimate maintenance work, but it is not an ordinary copy. The output below is the real signal to look for before a live run: if `deleting ...` appears during the preview, the command is about to remove destination state.
+
+> [!warning] Deletion changes destination state
 >
-> `rsync --delete src/ dst/` removes any file in `dst/` that does not exist in `src/`. Combined with a wrong trailing slash, this can wipe an entire destination directory. Always dry-run first: `rsync -avn --delete src/ dst/`.
+> `rsync --delete` does not merely copy new files. It also removes files that exist only at the destination, so a wrong source path or filter set can erase valid downstream data.
 
-> [!danger] `Robocopy /MIR` deletes files not in the source
+> [!success] Preview the reconciliation first
 >
-> `/MIR` (mirror) is the Robocopy equivalent of `rsync --delete`. It removes destination files not present in the source. Always preview with `/L` before using `/MIR`.
+> Start with `rsync -avzn --delete ...`, inspect every `deleting` line, and only then rerun without `-n` after the scope is unquestionably correct.
 
-> [!warning] `gsutil rsync` with delete flag removes cloud objects permanently
+*Dry-run a deletion-capable mirror and inspect the destination file that would be removed.*
+
+```bash
+rm -rf /tmp/vault-transfer-strategy
+mkdir -p /tmp/vault-transfer-strategy/src /tmp/vault-transfer-strategy/dest
+printf 'fresh\n' > /tmp/vault-transfer-strategy/src/current.txt
+printf 'stale\n' > /tmp/vault-transfer-strategy/dest/obsolete.txt
+rsync -avzn --delete /tmp/vault-transfer-strategy/src/ /tmp/vault-transfer-strategy/dest/
+```
+
+```text
+sending incremental file list
+deleting obsolete.txt
+current.txt
+
+sent 82 bytes  received 31 bytes  226.00 bytes/sec
+total size is 6  speedup is 0.05 (DRY RUN)
+```
+
+#### Omitting the trailing slash changes the copy scope
+
+The absence of a trailing slash is a scope error, not a style preference. The dry run below makes the risk visible: `src/` becomes a nested directory at the destination instead of contributing only its contents.
+
+> [!warning] The source directory itself may be copied
 >
-> `gsutil rsync -d` deletes destination-only objects in GCS. There is no GCS trash or recycle bin. Always preview with `gsutil rsync -n` (dry-run) first.
+> `rsync src dst/` and `rsync src/ dst/` are different operations. The first nests `src` under the destination, which becomes dangerous when that path later participates in reconciliation or cleanup.
 
-> [!warning] `bcp` default format is native binary, not CSV
+> [!success] Dry-run the exact source path you intend to use
 >
-> Without `-c` (character mode) and `-t` (field terminator), bcp produces a binary format that is not human-readable and not portable across SQL Server versions. Always specify `-c -t "," -r "<br>"` for CSV output.
+> Keep the trailing slash when you mean “copy the contents,” and validate the plan with `-n` whenever the source path looks ambiguous.
 
-> [!warning] Large transfers can starve production network traffic
+*Dry-run `rsync` without the trailing slash so the nested directory becomes visible before the live copy.*
+
+```bash
+rm -rf /tmp/vault-transfer-troubleshoot
+mkdir -p /tmp/vault-transfer-troubleshoot/src /tmp/vault-transfer-troubleshoot/nested
+printf 'a\n' > /tmp/vault-transfer-troubleshoot/src/current.txt
+rsync -avn /tmp/vault-transfer-troubleshoot/src /tmp/vault-transfer-troubleshoot/nested/
+```
+
+```text
+sending incremental file list
+src/
+src/current.txt
+
+sent 100 bytes  received 23 bytes  246.00 bytes/sec
+total size is 2  speedup is 0.02 (DRY RUN)
+```
+
+### PowerShell | `Robocopy` and `bcp` | deletion and format boundaries
+
+Windows-side warnings are usually about two different failure classes: a directory mirror that can remove real files and a SQL export that can silently produce the wrong shape unless its text parameters are explicit.
+
+#### `/MIR` is a reconciliation command, not a harmless copy switch
+
+`Robocopy /MIR` is the Windows mirror analog of `rsync --delete`. The preview is the first control surface you should trust, because it tells you which destination-only files will be treated as extras.
+
+> [!warning] `/MIR` can delete valid destination data
 >
-> Use `rsync --bwlimit=10000` (KB/s) or `Robocopy /IPG:10` (inter-packet gap in ms) to cap bandwidth during business hours on shared networks.
+> `/MIR` adds purge semantics. If the destination contains files that should remain, a live mirror run will remove them unless you stop at the preview stage first.
 
-## Recommendations
+> [!success] Use `/L` until the file list is accepted
+>
+> Pair `/MIR` with `/L` on the first pass, inspect `*EXTRA File` lines carefully, and remove `/L` only when the destination is truly meant to converge to the source.
 
-| Scenario | Recommendation |
-|---|---|
-| Large file transfer (local/remote) | `rsync -ahz --progress` for resumable, compressed transfer with progress display. |
-| Directory sync with deletion | `rsync -avn --delete src/ dst/` to preview, then remove `-n` to execute. |
-| GCS upload (single file) | `gcloud storage cp file.csv gs://bucket/path/`. |
-| GCS upload (many files) | `gcloud storage cp -m *.csv gs://bucket/path/` for parallel upload. |
-| GCS sync (incremental) | `gsutil rsync -r local/ gs://bucket/path/` for delta-only transfer. Dry-run with `-n` first. |
-| SQL Server bulk export | `bcp "SELECT * FROM table" queryout data.csv -c -t "," -S server -U user -P pass`. |
-| SQL Server query export | `sqlcmd -S server -Q "SELECT ..." -o output.csv -s "," -W -h -1`. |
-| Windows directory mirror | `Robocopy src dst /MIR /MT:8 /R:3 /W:5 /LOG:robocopy.log`. Preview with `/L` first. |
-| Bandwidth-limited transfer | `rsync --bwlimit=10000` (10 MB/s) for shared network links. |
+*Preview a `Robocopy /MIR` run so the extra and new files are visible before any deletion occurs.*
+
+```powershell
+$root = Join-Path $env:TEMP 'vault-transfer-strategy-ps'
+Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path (Join-Path $root 'src'), (Join-Path $root 'dest') | Out-Null
+'fresh' | Set-Content -Path (Join-Path $root 'src\current.txt')
+'stale' | Set-Content -Path (Join-Path $root 'dest\obsolete.txt')
+robocopy (Join-Path $root 'src') (Join-Path $root 'dest') /MIR /L /NJH /NJS /NDL
+```
+
+```text
+	  *EXTRA File 		       7	C:\Users\aperi\AppData\Local\Temp\vault-transfer-strategy-ps\dest\obsolete.txt
+	    New File  		       7	C:\Users\aperi\AppData\Local\Temp\vault-transfer-strategy-ps\src\current.txt
+```
+
+#### `Robocopy` rejects `/IPG` together with `/MT`
+
+This is a configuration boundary, not a path or permission issue. The local failure below proves that the job never started because the flag set itself is invalid.
+
+> [!warning] Throttling and multithreading cannot be combined this way
+>
+> `/IPG` slows the sender, while `/MT` requests multithreaded copy. Robocopy rejects that combination before it copies anything, so retrying the same command is wasted effort.
+
+> [!success] Choose either throughput or throttling first
+>
+> Use `/MT:n` when the link can absorb the parallelism, or use `/IPG:n` when you need deliberate pacing. Do not combine them in one job definition.
+
+*Invoke `Robocopy` with `/IPG` and `/MT` together to surface the local parameter-validation failure.*
+
+```powershell
+robocopy $env:TEMP $env:TEMP /Z /IPG:10 /MT:4 /NJH /NJS
+```
+
+```text
+The /IPG option cannot be used with the /MT option.
+The /LFSM option cannot be used with the /MT or /EFSRAW options.
+Warning: Failed to query volume space; /LFSM will not monitor for low free space.
+       Simple Usage :: ROBOCOPY source destination /MIR
+
+****  /MIR can DELETE files as well as copy them !
+```
+
+#### `bcp` needs explicit text-shaping and reject-row controls for portable exports
+
+The `bcp` syntax block is the fastest proof that a portable text export is not implicit. The command surface itself tells you that delimiter, row terminator, and error-file behavior must be specified deliberately.
+
+> [!warning] Default assumptions can produce the wrong export shape
+>
+> If a downstream process expects a CSV-like artifact, leaving delimiter and reject-row behavior implicit can produce a file that is technically written but operationally wrong.
+
+> [!success] Set text mode, separators, and reject handling explicitly
+>
+> Use `-c`, `-t`, and `-r` for portable text exports, and add `-e` so rejected rows are captured outside the main output file instead of disappearing into operator guesswork.
+
+*Print the `bcp` syntax header so export modes and text-format switches are visible before scripting the handoff.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+bcp -? 2>&1 | Select-Object -First 12
+```
+
+```text
+usage: C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\180\Tools\Binn\bcp.exe {dbtable | query} {in | out | queryout | format} datafile
+  [-m maxerrors]            [-f formatfile]          [-e errfile]
+  [-F firstrow]             [-L lastrow]             [-b batchsize]
+  [-n native type]          [-c character type]      [-w wide character type]
+  [-N keep non-text native] [-V file format version] [-q quoted identifier]
+  [-C code page specifier]  [-t field terminator]    [-r row terminator]
+  [-i inputfile]            [-o outfile]             [-a packetsize]
+  [-S server name]          [-U username]            [-P password or tokenfile]
+  [-T trusted connection]   [-v version]             [-R regional enable]
+  [-k keep null values]     [-E keep identity values][-G Microsoft Entra ID Authentication]
+  [-h "load hints"]         [-x generate xml format file]
+  [-d database name]        [-K application intent]  [-l login timeout]
+```
+
+### PowerShell / Linux | cloud CLI warnings | validate resource names before any destructive sync
+
+Cloud transfer warnings are about namespace truth first. A fake or wrong bucket path makes every later copy or sync flag irrelevant until the resource definition is corrected.
+The examples below run from PowerShell, but the risk model is cross-platform because `gcloud` validates the same resource names and permissions in Bash.
+
+#### A Cloud Storage 404 is a naming blocker before it is a transfer blocker
+
+The live 404 below is the correct early stop. It tells you the bucket path itself is wrong, which means there is nothing useful to optimize, parallelize, or delete yet.
+
+> [!warning] A destructive cloud sync is unsafe on an unvalidated target
+>
+> If the bucket or prefix is wrong, adding sync or delete behavior only increases risk. The first job is to prove the target exists and is the intended namespace.
+
+> [!success] Validate the bucket path before the real copy or sync
+>
+> Run a read-only check such as `gcloud storage ls gs://bucket/...` first, then add the mutating copy or synchronization command only after the path resolves correctly.
+
+*List a non-existent bucket so the Cloud Storage 404 is visible before any transfer logic runs.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+gcloud storage ls gs://demo-does-not-exist-123456 2>&1 | Select-Object -First 8
+```
+
+```text
+ERROR: (gcloud.storage.ls) gs://demo-does-not-exist-123456 not found: 404.
+```
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| rsync transferred the entire file instead of just the delta | Source or destination is on a different filesystem type, or `--whole-file` was specified. Over SSH, rsync uses delta by default. | Verify both sides support rsync protocol. Use `--checksum` to force content-based comparison. |
-| rsync created a nested directory (`dst/src/` instead of `dst/`) | Missing trailing slash on the source path. `rsync src dst/` copies the directory itself; `rsync src/ dst/` copies its contents. | Add trailing slash to source: `rsync -a src/ dst/`. |
-| `bcp` output contains binary characters | Default format is native binary. | Add `-c` flag for character mode. Specify `-t ","` for CSV field delimiter. |
-| `sqlcmd` output has extra header lines and dashes | Default output includes column headers and separator lines. | Use `-h -1` to suppress headers. Use `-W` to trim trailing spaces. Use `-s ","` for CSV delimiter. |
-| `gcloud compute scp` fails with "Could not fetch resource" | Wrong zone specified, or the VM name is incorrect. | Verify VM name and zone with `gcloud compute instances list`. Add `--zone=<zone>`. |
-| Transfer saturates the network during business hours | No bandwidth limit was applied. | Add `rsync --bwlimit=10000` or `Robocopy /IPG:10` to cap throughput. |
-| `Robocopy /MIR` deleted files it should not have | `/MIR` deletes destination-only files. The source path may have been wrong. | Always preview with `Robocopy src dst /MIR /L` before executing. |
+Troubleshooting should separate transport failures, path-shape mistakes, and client-readiness issues. These subsections keep each diagnostic surface close to the command that exposes it most clearly.
+
+### Linux | `rsync` and `scp` | diagnose path and transport failures separately
+
+Linux transfer failures are easiest to fix when you first decide whether the problem is path shape or transport availability. `rsync` exposes path shape clearly; `scp` exposes SSH transport clearly.
+
+#### `rsync` created `dst/src` instead of syncing into `dst`
+
+When `rsync` nests the source directory under the destination, the usual cause is the missing trailing slash on the source path. The dry run below proves the problem directly because `src/` appears as the top-level item to be copied.
+
+*Dry-run `rsync` without the trailing slash so the nested directory becomes visible before the live copy.*
+
+```bash
+rm -rf /tmp/vault-transfer-troubleshoot
+mkdir -p /tmp/vault-transfer-troubleshoot/src /tmp/vault-transfer-troubleshoot/nested
+printf 'a\n' > /tmp/vault-transfer-troubleshoot/src/current.txt
+rsync -avn /tmp/vault-transfer-troubleshoot/src /tmp/vault-transfer-troubleshoot/nested/
+```
+
+```text
+sending incremental file list
+src/
+src/current.txt
+
+sent 100 bytes  received 23 bytes  246.00 bytes/sec
+total size is 2  speedup is 0.02 (DRY RUN)
+```
+
+#### `scp` failed with connection refused
+
+Connection refusal means the SSH transport itself never became available. Until the listener answers, neither source-path changes nor destination-path corrections matter.
+
+*Attempt an `scp` transfer to a closed SSH port so the refusal is isolated from file-selection logic.*
+
+```bash
+printf 'probe\n' > /tmp/vault-transfer-scp.txt
+scp -P 65000 /tmp/vault-transfer-scp.txt 127.0.0.1:/tmp/vault-transfer-scp-copy.txt 2>&1 | sed -n '1,4p'
+```
+
+```text
+ssh: connect to host 127.0.0.1 port 65000: Connection refused
+scp: Connection closed
+```
+
+#### `scp` or remote `rsync` failed before file transfer began
+
+Non-interactive SSH copy commands expect a clean protocol stream. If the remote shell prints banners, `echo` output, or prompt logic during login, the copy can fail before any file data moves even though authentication itself succeeded.
+
+> [!failure] Startup output can corrupt the transfer stream
+>
+> `scp` and remote `rsync` treat unexpected shell output as protocol data. A banner, diagnostic `echo`, or chatty prompt script can therefore trigger errors such as `protocol error: bad mode` or `protocol version mismatch` before payload negotiation starts.
+
+> [!success] Keep non-interactive shells silent
+>
+> Guard startup output so it runs only for interactive shells, or write diagnostics to a log file instead of stdout and stderr. On Bash hosts, `case "$-" in *i*) ... esac` is a safe pattern for interactive-only output.
+
+### PowerShell | `Robocopy` | distinguish invalid flags from path or permission failures
+
+`Robocopy` errors are most useful when you first decide whether the job started at all. An immediate parameter failure is a command-definition problem, not a filesystem or access problem.
+
+#### `Robocopy` returned `16` before copying anything
+
+Exit code `16` is a real failure, but the output below shows what kind: the command never started because the flag set was invalid. Remove either `/IPG` or `/MT` and rerun the job before you investigate paths or permissions.
+
+*Invoke `Robocopy` with `/IPG` and `/MT` together to surface the local parameter-validation failure.*
+
+```powershell
+robocopy $env:TEMP $env:TEMP /Z /IPG:10 /MT:4 /NJH /NJS
+```
+
+```text
+The /IPG option cannot be used with the /MT option.
+The /LFSM option cannot be used with the /MT or /EFSRAW options.
+Warning: Failed to query volume space; /LFSM will not monitor for low free space.
+       Simple Usage :: ROBOCOPY source destination /MIR
+
+****  /MIR can DELETE files as well as copy them !
+```
+
+### PowerShell / Linux | Google Cloud CLI | distinguish context failures from copy failures
+
+Cloud CLI troubleshooting starts with resource and account context, because those checks happen before the transfer engine can even attempt the copy.
+The live captures below use PowerShell syntax, but the diagnostic sequence is the same in Bash because the CLI performs the same project, zone, and bucket validation first.
+
+#### `gcloud compute scp` could not fetch the VM resource
+
+This failure occurs before any SSH session starts. The correct next step is to validate the project, zone, and instance identity rather than inspecting the local file path.
+
+*Run `gcloud compute scp --dry-run` against a non-existent instance so the pre-transfer resource failure is explicit.*
+
+```powershell
+gcloud compute scp --dry-run "$env:TEMP\vault-transfer-strategy-ps\src\file.txt" demo-instance:/tmp/file.txt --zone=europe-west1-b 2>&1 |
+    Select-Object -First 8
+```
+
+```text
+ERROR: (gcloud.compute.scp) Could not fetch resource:
+ - The resource 'projects/bq-wh-nb/zones/europe-west1-b/instances/demo-instance' was not found
+```
+
+#### `gcloud storage` returned `404`
+
+The `404` here is a namespace-resolution blocker. Fix the bucket or prefix definition first; throughput, retries, and sync flags are irrelevant until the target exists.
+
+*List a non-existent bucket so the Cloud Storage 404 is visible before any transfer logic runs.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+gcloud storage ls gs://demo-does-not-exist-123456 2>&1 | Select-Object -First 8
+```
+
+```text
+ERROR: (gcloud.storage.ls) gs://demo-does-not-exist-123456 not found: 404.
+```
+
+### PowerShell | SQL clients | separate local client readiness from server reachability
+
+SQL transfer troubleshooting should first answer two questions: is the client present locally, and is the server reachable? Mixing those checks leads directly to wasted time on delimiter or query details before the connection path even exists.
+
+#### `sqlcmd` timed out before the export began
+
+This output proves the transport failed before the query ran. Until the endpoint answers, changing separators, headers, or output file names is noise.
+
+*Attempt a `sqlcmd` query against an unreachable endpoint so the transport failure is isolated from query logic.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+sqlcmd -S tcp:127.0.0.1,1435 -l 2 -Q "SELECT 1" 2>&1 | Select-Object -First 8
+```
+
+```text
+Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : TCP Provider: The wait operation timed out.
+.
+Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : Login timeout expired.
+Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : A network-related or instance-specific error has occurred while establishing a connection to tcp:127.0.0.1,1435. Server is not found or not accessible. Check if instance name is correct and if SQL Server is configured to allow remote connections. For more information see SQL Server Books Online..
+```
+
+#### `Invoke-Sqlcmd` still failed after the module loaded
+
+Once the `SqlServer` module is installed, the remaining blocker is server reachability. The command below is valuable because it preserves the raw exception instead of hiding the fact that the failure is still network or instance related.
+
+*Attempt an `Invoke-Sqlcmd` query against an unreachable endpoint and print the resulting exception text.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+try {
+    Invoke-Sqlcmd -ServerInstance '127.0.0.1,1435' -Query 'SELECT 1' -TrustServerCertificate -ConnectionTimeout 2 -ErrorAction Stop
+} catch {
+    $_.Exception.Message
+}
+```
+
+```text
+A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - No connection could be made because the target machine actively refused it.)
+```
 
 ## Cross-references
+
 - [data-flow-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology and tool selection framework
 - [iap-tunneling](https://alp78.github.io/elysium/01-Shell/05-Networking/05-iap-tunneling) — opening IAP tunnels for rsync and scp to GCE VMs
 - [compression](https://alp78.github.io/elysium/01-Shell/02-File-Operations/04-compression) — compress data before or during transfer

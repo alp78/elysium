@@ -219,7 +219,7 @@ stateDiagram-v2
     Available --> Enabled: gcloud services enable SERVICE
     Enabled --> Disabled: gcloud services disable SERVICE
     Disabled --> Enabled: gcloud services enable SERVICE
-    Enabled --> Enabled: disable without --force\nwhen dependents exist fails
+    Enabled --> Enabled: disable without --force<br/>when dependents exist fails
 
     note right of Available
       Visible in --available

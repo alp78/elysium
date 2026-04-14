@@ -32,6 +32,8 @@ mindmap
 
 > [!abstract]- [[01-stoxx-index-pipeline]]
 
+> [!abstract]- [[02-stoxx-index-pipeline-source-files]]
+
 > [!abstract]- [[03-cloud-run-jobs-vs-services]]
 
 > [!abstract]- [[02-pubsub-messaging]]

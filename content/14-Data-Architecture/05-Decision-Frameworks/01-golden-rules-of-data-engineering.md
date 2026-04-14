@@ -598,7 +598,7 @@ The best test of automation is onboarding. When a new team member joins:
 If any of these require tribal knowledge — "oh, you need to manually create that table first" or "you have to set that environment variable that isn't documented anywhere" — you have automation gaps.
 
 > [!tip] The Bus Factor Automation Test
-> If the person who built the pipeline is unavailable (vacation, sick, departed), can the rest of the team operate, debug, and deploy changes to the pipeline? If not, the automation is incomplete. See also: [Operability (Pillar 5)](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering).
+> If the person who built the pipeline is unavailable (vacation, sick, departed), can the rest of the team operate, debug, and deploy changes to the pipeline? If not, the automation is incomplete. See also: [Operability (Pillar 5)](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering).
 
 ### Decision Test
 
@@ -619,7 +619,7 @@ If you cannot see it, you cannot fix it. If you cannot measure it, you cannot im
 2. **When did it start?** (Metrics)
 3. **Where did time go?** (Traces)
 
-These are the three pillars of observability, and they apply to data engineering just as much as they apply to web services. See [Observability (Pillar 2)](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering). [DataOps](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices) codifies these rules into repeatable team practices — CI/CD for data, automated testing, and monitoring-as-code.
+These are the three pillars of observability, and they apply to data engineering just as much as they apply to web services. See [Observability (Pillar 2)](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering). [DataOps](https://alp78.github.io/elysium/15-DataOps/dataops-principles-and-practices) codifies these rules into repeatable team practices — CI/CD for data, automated testing, and monitoring-as-code.
 
 ### The Minimum Observability Bar
 
@@ -756,7 +756,7 @@ The golden rules do not eliminate trade-offs. They give you a framework for navi
 
 ## Related Notes
 
-- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — The structural framework (reliability, observability, efficiency, security, operability) that these rules reinforce
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — The structural framework (reliability, observability, efficiency, security, operability) that these rules reinforce
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — The practical implementation of Rule 3's emphasis on safe re-execution
 - [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — The architectural pattern that embodies Rule 5's raw data preservation
 - [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) — The metadata layer that supports Rule 10's observability requirements

@@ -18,7 +18,7 @@ mindmap
     (scenario guide)
 ```
 
-> [!abstract]- [[01-five-pillars-of-data-engineering]]
+> [!abstract]- [[04-five-pillars-of-data-engineering]]
 >
 > Reliability, observability, efficiency, security, operability. The five concerns that separate junior from senior engineering thinking.
 

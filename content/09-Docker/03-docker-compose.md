@@ -213,11 +213,11 @@ status: complete
   'fontSize': '14px'
 }}}%%
 flowchart LR
-  A[Windows host\nC:\\Users\\aperi\\DEV\\ESG] --> B[docker-compose.yml]
+  A[Windows host<br/>C:\\Users\\aperi\\DEV\\ESG] --> B[docker-compose.yml]
   B --> C[stoxx-db]
   B --> D[stoxx-pipeline]
   B --> E[stoxx-dashboard]
-  F[stoxx-airflow VM\nbq-wh-nb] --> G[systemd\nstoxx-airflow.service]
+  F[stoxx-airflow VM<br/>bq-wh-nb] --> G[systemd<br/>stoxx-airflow.service]
   G --> H[/home/alexper_recovery_gmail_com/app/docker-compose.yaml]
   H --> I[airflow-apiserver]
   H --> J[airflow-scheduler]
@@ -225,7 +225,7 @@ flowchart LR
   H --> L[airflow-dag-processor]
   H --> M[airflow-triggerer]
   H --> N[postgres + redis]
-  J --> O[Cloud Run jobs\nstage-fetch, bronze-load,\ntransforms, serving]
+  J --> O[Cloud Run jobs<br/>stage-fetch, bronze-load,<br/>transforms, serving]
   K --> O
 ```
 

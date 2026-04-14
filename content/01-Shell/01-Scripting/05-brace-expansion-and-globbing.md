@@ -6,138 +6,125 @@ technology: [bash, powershell]
 tags: [shell, scripting]
 aliases: [brace expansion, globbing, extglob, globstar, failglob, shopt]
 keywords: [brace expansion, globbing, extglob, globstar, failglob, shopt, wildcard, pattern matching, bash expansion, file patterns, recursive glob, exclude patterns]
-description: "Brace expansion and globbing in Bash for generating multiple arguments from patterns, recursive file matching, and excluding file types. Includes shopt settings for production shells."
+description: "Brace expansion and globbing in Bash, plus PowerShell equivalents with arrays, Get-ChildItem, and verification-focused safety patterns."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-14
 status: complete
 ---
 
 # Brace Expansion and Globbing
 
-> [!quote]
+> [!quote] Expansion order in Bash
 > "The order of expansions is: brace expansion, tilde expansion, parameter and variable expansion, command substitution, arithmetic expansion, word splitting, and filename expansion."
 >
-> — **Bash Reference Manual**, GNU
+> - **Bash Reference Manual**, GNU
 
 > [!abstract]- Summary
 >
-> Covers bash brace expansion and shell globbing (filename expansion), including `shopt` options for extended, recursive, and safe globbing, plus PowerShell equivalents via `Get-ChildItem` and explicit iteration.
+> Covers Bash brace expansion, Bash globbing, and PowerShell file-matching equivalents.
 >
-> **Brace expansion (bash)**
-> - `{a,b,c}` comma lists and `{n..m}` / `{n..m..step}` ranges generate multiple arguments before any filesystem access.
-> - Nested brace expressions (`{a,{b,c}}`) and shared prefix/suffix strings are supported.
-> - Common uses: `mkdir -p` directory trees, zero-padded sequences, quick file backups with `{,.bak}`.
->
-> **Shell globbing and `shopt` options**
-> - Standard wildcards: `*` (any string), `?` (one char), `[set]` / `[range]` (character class), available without any `shopt` setting.
-> - `extglob`: enables `?(pat)`, `*(pat)`, `+(pat)`, `@(pat)`, `!(pat)` — required for glob negation.
-> - `globstar`: makes `**` traverse directory levels recursively (`**/*.py`).
-> - `failglob`: raises a shell error when a pattern matches no files, preventing silent literal-string pass-through.
-> - `nocaseglob`: case-insensitive matching; `cdspell`: typo correction in `cd` (commonly grouped).
->
-> **PowerShell equivalents**
-> - No native brace expansion; use array literals `"a","b","c"` with `ForEach-Object` or `for` loops.
-> - `Get-ChildItem` with `-Filter` (OS-level, single pattern), `-Include` / `-Exclude` (multi-pattern, PowerShell engine), `-Recurse`, `-Depth`, `-File`, `-Directory`.
-> - `-Filter` is fastest; `-Include` requires `-Recurse` or trailing `\*` in `-Path` to match file names.
->
-> **Operations and safety**
-> - Use: generating directory trees, bulk extension-based operations, quick backups, numeric batch identifiers, excluding file types with `extglob`.
-> - Avoid: filenames with spaces (quote variables), very large trees (`ARG_MAX` limit — use `find` or `fd`), cross-platform `#!/bin/sh` scripts (brace expansion is bash-only), complex multi-criterion filters.
-> - Always add `shopt -s extglob globstar failglob` after `set -euo pipefail` in production scripts.
-> - Always preview recursive deletes with `-WhatIf` before piping `Get-ChildItem` to `Remove-Item`.
-> - Troubleshoot: unmatched globs pass literals → enable `failglob`; `**` not recursive → enable `globstar`; `!(pat)` errors → enable `extglob`; `-Include` returns nothing → add `-Recurse`.
+> - Brace expansion is textual, runs before globbing, and is useful for deterministic trees, numeric sequences, and shared suffixes.
+> - Standard wildcards work without `shopt`; `extglob`, `globstar`, `failglob`, `dotglob`, and `nocaseglob` change matching behavior and must be enabled explicitly.
+> - PowerShell does not expand braces in the shell. Arrays, loops, and string formatting replace that role, while `Get-ChildItem` applies filtering inside the cmdlet.
+> - Silent operations need explicit verification, recursive deletes need previews, and no-match cases should fail loudly in scripts instead of passing literal patterns downstream.
 
 > [!note]- Glossary
 >
 > **Brace expansion**
-> - A purely textual shell operation that replaces `{a,b,c}` or `{n..m}` with multiple words before any other expansion phase runs; no filesystem access occurs.
-> - Used to generate directory trees, versioned copies, and numeric sequences from compact expressions without loops.
 >
-> > [!warning] Runs before globbing — order matters
-> >
-> > Brace expansion is the first expansion in the pipeline. It does not check the filesystem, so `{*.csv,*.parquet}` does not glob — it produces two literal strings. Globbing happens later.
+> - A textual Bash expansion that turns forms such as `{a,b,c}` and `{1..5}` into multiple words before tilde expansion, parameter expansion, word splitting, and filename expansion.
+> - Useful when the target names are already known, such as directory trees, backup suffixes, or numeric batch identifiers.
+> - Because it runs before globbing, `{*.csv,*.parquet}` produces two literal words that are globbed later rather than one combined filesystem query.
 >
 > ---
 >
-> **Globbing (filename expansion)**
-> - The final phase of shell expansion: wildcard patterns (`*`, `?`, `[...]`, `**`) are replaced with the sorted list of matching filenames that exist on disk.
-> - Used to target sets of files by extension, name pattern, or directory depth without writing explicit loops.
+> **Globbing**
 >
-> > [!warning] Dotfiles excluded by default
-> >
-> > Standard glob patterns do not match hidden files (names starting with `.`) unless `dotglob` is enabled. This is a common source of missed files in backup or cleanup scripts.
+> - Bash filename expansion that replaces wildcard patterns such as `*`, `?`, `[set]`, and `**` with matching pathnames from the filesystem.
+> - Happens after word splitting, so quoted variables do not glob unless you deliberately re-evaluate them.
+> - Standard globs do not match dotfiles unless `dotglob` is enabled or the pattern itself starts with `.`.
+>
+> ---
+>
+> **`dotglob`**
+>
+> - A `shopt` option that lets wildcard patterns such as `*` and `*.csv` match filenames that begin with `.`.
+> - Useful for backups and cleanup tasks that must include hidden files.
+> - It does not make `.` or `..` match, and it changes every glob in the current shell until you unset it.
 >
 > ---
 >
 > **`extglob`**
-> - A `shopt` option that enables five extended pattern operators: `?(pat)`, `*(pat)`, `+(pat)`, `@(pat)`, `!(pat)` — quantified and negated glob matching unavailable in standard globbing.
-> - The `!(pattern)` form is the only native bash mechanism to exclude files from a glob match.
 >
-> > [!danger] `!` without `extglob` triggers history expansion
-> >
-> > Running `rm !(important.txt)` without `shopt -s extglob` causes bash to interpret `!` as a history expansion operator, leading to unexpected command substitution or errors.
+> - A `shopt` option that enables the five extended glob operators `?(pat)`, `*(pat)`, `+(pat)`, `@(pat)`, and `!(pat)`.
+> - Required for quantified and negated pattern matching that standard globs cannot express.
+> - Without it, `!(pattern)` is not parsed as an extglob. In interactive shells, `!` can also participate in history expansion, so the failure mode can look different from non-interactive scripts.
+>
+> ---
+>
+> **History expansion**
+>
+> - The interactive Bash feature that treats `!` as a history reference prefix, such as `!!` for the previous command.
+> - Controlled by the `histexpand` shell option (`set -H` / `set +H`).
+> - It is separate from globbing, but it matters because `!(pattern)` collides syntactically with history expansion when `extglob` is missing in an interactive shell.
 >
 > ---
 >
 > **`globstar`**
-> - A `shopt` option that makes `**` match zero or more directory levels, enabling recursive file traversal without `find`.
-> - `**/*.py` with `globstar` enabled expands to every `.py` file at any depth in the directory tree.
 >
-> > [!warning] `**` without `globstar` is just a double wildcard
-> >
-> > Without `globstar`, `**` is treated as two consecutive `*` characters and matches only within a single directory level. No error is raised — the pattern silently behaves differently than expected.
+> - A `shopt` option that makes `**` match zero or more directory levels.
+> - Useful when a simple recursive wildcard such as `**/*.sql` is enough and you do not need `find`.
+> - Without it, `**` behaves like ordinary `*` path components, so `**/*.py` stops at a much shallower depth than most people expect.
 >
 > ---
 >
 > **`failglob`**
-> - A `shopt` option that makes the shell report a fatal error when a glob pattern matches no files, instead of passing the literal pattern string to the command.
-> - Prevents `rm *.csv` in an empty directory from silently passing the string `*.csv` to `rm`.
 >
-> > [!danger] Default behavior silently passes unmatched globs
-> >
-> > Without `failglob`, an unmatched glob like `*.csv` becomes a literal argument. If a file named `*.csv` exists it is deleted without warning; if not and `set -e` is active, `rm` exits non-zero and terminates the script at an unexpected point.
+> - A `shopt` option that turns an unmatched glob into a shell error instead of passing the literal pattern to the command.
+> - Useful in scripts where silent no-match behavior is dangerous.
+> - Pair it with `set -euo pipefail` so bad matches stop the script before a destructive command sees the wrong argument list.
 >
 > ---
 >
 > **`nocaseglob`**
-> - A `shopt` option that makes glob patterns case-insensitive: `*.CSV` also matches `data.csv` and `Data.Csv`.
-> - Useful when processing files originating from Windows systems or mixed-case filesystems.
 >
-> > [!warning] Avoid globally when case matters
-> >
-> > Enabling `nocaseglob` in `.bashrc` affects all glob operations in the session. If any script depends on case-sensitive matching, enable and disable it locally around the specific operation.
+> - A `shopt` option that makes Bash glob matching case-insensitive.
+> - Useful for interactive work against mixed-case files copied from Windows or object stores.
+> - Because it changes every glob in the shell, keep it scoped or interactive unless you explicitly want that behavior in a script.
+>
+> ---
+>
+> **`cdspell`**
+>
+> - A `shopt` option that lets interactive `cd` correct minor spelling mistakes in directory names.
+> - It affects `cd`, not general wildcard expansion and not arbitrary command arguments.
+> - Treat it as an interactive convenience, not as part of a script's matching semantics.
 >
 > ---
 >
 > **`shopt`**
-> - The bash built-in command for enabling (`-s`) or disabling (`-u`) optional shell behaviors. `-p` prints all options; `-q` tests silently for use in conditionals.
-> - All extended globbing features (`extglob`, `globstar`, `failglob`, `nocaseglob`) require explicit `shopt -s` activation — they are off by default.
 >
-> > [!info] `shopt` vs `set` — different option sets
-> >
-> > `shopt` controls bash-specific behaviors. `set` (e.g., `set -euo pipefail`) controls POSIX shell options. They are not interchangeable and cover different feature sets.
+> - The Bash built-in for enabling (`-s`), disabling (`-u`), printing (`-p`), and querying (`-q`) optional Bash behaviors.
+> - Most advanced globbing behaviors live here rather than under `set`.
+> - `shopt` controls Bash-specific features, while `set` controls shell options such as `-e`, `-u`, and `-o pipefail`.
 >
 > ---
 >
 > **`Get-ChildItem`**
-> - The PowerShell cmdlet for listing files and directories, equivalent to bash globbing. Accepts `-Filter`, `-Include`, `-Exclude`, `-Recurse`, `-Depth`, `-File`, `-Directory`, and `-Name`.
-> - `-Filter` uses the OS-level filter (fastest, single pattern); `-Include` / `-Exclude` use PowerShell's wildcard engine and accept multiple comma-separated patterns.
 >
-> > [!warning] `-Include` without `-Recurse` returns nothing
-> >
-> > `Get-ChildItem -Path . -Include *.py` returns nothing because `-Include` applies to children of `-Path`, not to `-Path` itself. Add `-Recurse` or change `-Path .` to `-Path .\*`.
+> - The PowerShell cmdlet that enumerates files and directories and can filter them with provider/native filtering (`-Filter`) or PowerShell wildcard filtering (`-Include`, `-Exclude`).
+> - Unlike Bash globbing, the shell does not expand the pattern before the cmdlet runs; the cmdlet decides what to enumerate and return.
+> - `-Filter` accepts one provider pattern and is usually the fastest option. `-Include` and `-Exclude` accept wildcard lists, but matching depends on the child paths that the cmdlet actually enumerates.
 >
 > ---
 >
 > **`ARG_MAX`**
-> - The operating system limit on the total size of arguments passed to an external command. When a glob expands to thousands of paths, the combined argument list can exceed this limit.
-> - On very large directory trees, replace `**/*.ext` glob expansion with `find` or `fd` to avoid hitting this ceiling.
 >
-> > [!warning] `globstar` on large trees can hit `ARG_MAX`
-> >
-> > `**/*.py` on a tree with tens of thousands of files (e.g., inside `node_modules` or `.git`) can produce an argument list too large for the shell to pass to the command, resulting in a "Argument list too long" error.
+> - The operating system limit on the total size of arguments passed to a process.
+> - Large recursive globs can hit this limit even when the pattern itself is simple.
+> - When a tree is large or you need multiple predicates, prefer `find`, `fd`, or cmdlet-side filtering instead of expanding every path in the shell.
 
-Brace expansion and shell globbing let you generate multiple arguments from compact patterns, match files by name across directory trees, and write commands that would otherwise require loops — all in a single expression. Enabling the right `shopt` options unlocks recursive globbing and prevents dangerous silent failures.
+Brace expansion and globbing solve different problems. Brace expansion manufactures words before the shell looks at the filesystem. Globbing resolves wildcard patterns against the filesystem after earlier expansions have already finished. PowerShell reaches similar outcomes, but it does so with explicit iteration and cmdlet-side filtering instead of shell-level brace and filename expansion.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
@@ -152,58 +139,78 @@ flowchart TD
     H --> I["Command executed<br>with final arguments"]
 ```
 
-
 ## Linux brace expansion tools
 
-Brace expansion is a purely textual operation performed before any other shell expansion. The shell replaces a brace expression with a comma-separated or range-based list of words, then passes that list as individual arguments to the command. No files need to exist — brace expansion works on any string.
+Brace expansion is pure text generation. The shell never checks whether a file already exists while it expands the braces, so these patterns are best when the names are known ahead of time.
 
 ### Linux | brace expansion | commands
 
-Brace expansion accepts two forms: comma-separated lists `{a,b,c}` and sequence ranges `{start..end}` (with an optional step `{start..end..step}`). Expressions can be nested and combined with prefix and suffix strings.
+Use these forms when you need compact, deterministic argument generation rather than filesystem discovery. Treat each H4 as a standalone snippet in a disposable working directory.
 
 #### Create a nested directory tree in one command
 
-The `mkdir -p` flag creates intermediate directories that do not yet exist. Combining it with nested brace expansion generates the full Cartesian product of the two sets.
+`mkdir -p` is silent on success, so the second command verifies the exact tree that brace expansion generated.
 
 ```bash
 mkdir -p data/{bronze,silver,gold}/{raw,staging,final}
 ```
 
-```text
-(no output — directories created silently)
+```bash
+find data -type d | sort
 ```
 
-This creates nine directories: `data/bronze/raw`, `data/bronze/staging`, `data/bronze/final`, `data/silver/raw`, `data/silver/staging`, `data/silver/final`, `data/gold/raw`, `data/gold/staging`, `data/gold/final`.
+```text
+data
+data/bronze
+data/bronze/final
+data/bronze/raw
+data/bronze/staging
+data/gold
+data/gold/final
+data/gold/raw
+data/gold/staging
+data/silver
+data/silver/final
+data/silver/raw
+data/silver/staging
+```
 
 #### Generate a numeric sequence of filenames
 
-The `{001..100}` range pads numbers with leading zeros when the first value is zero-padded. The shell expands this before `echo` or any command receives the argument list.
+Zero padding is preserved when the range starts with a zero-padded value. `echo` receives the already-expanded filenames as separate arguments.
 
 ```bash
-echo file{001..100}.parquet
+echo file{001..012}.parquet
 ```
 
 ```text
-file001.parquet file002.parquet file003.parquet ... file100.parquet
+file001.parquet file002.parquet file003.parquet file004.parquet file005.parquet file006.parquet file007.parquet file008.parquet file009.parquet file010.parquet file011.parquet file012.parquet
 ```
 
 #### Back up a file before editing
 
-A comma with an empty right or left side exploits the fact that an empty string is a valid expansion member. The original filename becomes a prefix shared by both expansions.
+`cp` is also silent on success, so create the source file first, then verify that the backup exists after the copy.
+
+```bash
+printf 'key: value\n' > config.yaml
+```
 
 ```bash
 cp config.yaml{,.bak}
 ```
 
-```text
-(no output — config.yaml.bak created silently)
+```bash
+find . -maxdepth 1 -type f -printf '%P\n' | sort
 ```
 
-This expands to `cp config.yaml config.yaml.bak`, producing a backup copy in one expression without retyping the filename.
+```text
+config.yaml
+config.yaml.bak
+```
 
 #### Generate a stepped numeric range
 
-The optional third component `{start..end..step}` controls the increment between values. This is useful for generating batch identifiers or partition keys.
+The optional third term is the step. This is useful for partitions, checkpoints, or fixed-size batches.
 
 ```bash
 echo partition_{0..100..10}
@@ -213,212 +220,368 @@ echo partition_{0..100..10}
 partition_0 partition_10 partition_20 partition_30 partition_40 partition_50 partition_60 partition_70 partition_80 partition_90 partition_100
 ```
 
-#### Create versioned copies of a file
+#### Create versioned copies from one source file
 
-Brace expansion can reference the same prefix with different suffixes in a single `cp` call, useful for creating versioned snapshots.
+Brace expansion can generate the destination names, but a single `cp model.pkl{,.v1,.v2,.backup}` call is not valid because `cp` accepts only one non-directory destination. A loop keeps the source fixed while using brace expansion to enumerate the targets.
 
 ```bash
-cp model.pkl{,.v1,.v2,.backup}
+: > model.pkl
+```
+
+```bash
+for target in model.pkl{.v1,.v2,.backup}; do cp model.pkl "$target"; done
+```
+
+```bash
+find . -maxdepth 1 -type f -name 'model.pkl*' -printf '%P\n' | sort
 ```
 
 ```text
-(no output — model.pkl.v1, model.pkl.v2, model.pkl.backup created silently)
+model.pkl
+model.pkl.backup
+model.pkl.v1
+model.pkl.v2
 ```
 
-| Flag / Syntax | Example | Description |
+Use this lookup table as a quick reference after the verified examples.
+
+| Syntax | Example | Meaning |
 |---|---|---|
-| `{a,b,c}` | `echo {foo,bar,baz}` | Comma-separated list — expands to three separate words |
-| `{n..m}` | `echo {1..5}` | Integer sequence from n to m inclusive |
-| `{n..m..s}` | `echo {0..20..5}` | Stepped sequence — increments by s |
-| `{00n..00m}` | `echo {001..010}` | Zero-padded sequence — preserves leading zeros |
-| `{a..z}` | `echo {a..z}` | Alphabetic range — lowercase or uppercase |
-| `prefix{a,b}suffix` | `echo file{A,B}.csv` | Shared prefix and suffix applied to each member |
-| `{a,{b,c}}` | `echo {x,{y,z}}` | Nested expansion — produces `x y z` |
+| `{a,b,c}` | `echo {foo,bar,baz}` | Comma-separated list of words |
+| `{n..m}` | `echo {1..5}` | Inclusive integer range |
+| `{n..m..s}` | `echo {0..20..5}` | Inclusive stepped range |
+| `{001..010}` | `echo {001..010}` | Zero-padded range |
+| `{a..z}` | `echo {a..z}` | Alphabetic range |
+| `prefix{a,b}suffix` | `echo file{A,B}.csv` | Shared prefix and suffix |
+| `{a,{b,c}}` | `echo {x,{y,z}}` | Nested brace expansion |
 
 ## Linux globbing tools
 
-Standard globbing performs filename expansion: the shell replaces a pattern containing wildcard characters with the sorted list of matching filenames in the filesystem. Extended globbing (`extglob`) adds negation and quantifier patterns. `globstar` enables recursive traversal with `**`. `failglob` converts a no-match result from a silent pass-through into a fatal error.
+Standard wildcards work without any `shopt` option. `extglob`, `globstar`, `failglob`, `dotglob`, and `nocaseglob` change how matching works, so they need deliberate enablement.
 
 ### Linux | shopt | globbing options
 
-The `shopt` built-in enables or disables optional shell behaviors. The globbing-related options must be set in `.bashrc` (for interactive sessions) or at the top of each script that relies on them.
+These options change shell behavior. When the enabling command is silent, verify it explicitly before relying on the option. Treat each H4 as a standalone snippet in a disposable working directory.
 
 #### Enable extended globbing patterns
 
-`extglob` activates five pattern operators that are unavailable in standard globbing. These allow matching files that satisfy a pattern zero or more times, exactly once, or never.
+`extglob` turns on the quantified and negated operators that standard globbing does not have.
 
 ```bash
 shopt -s extglob
 ```
 
-```text
-(no output — option enabled silently)
+```bash
+shopt extglob
 ```
 
-Once enabled, the operators are:
+```text
+extglob        	on
+```
+
+These operators are now available:
 
 | Operator | Meaning |
 |---|---|
-| `?(pattern)` | Match zero or one occurrence of pattern |
-| `*(pattern)` | Match zero or more occurrences of pattern |
-| `+(pattern)` | Match one or more occurrences of pattern |
-| `@(pattern)` | Match exactly one occurrence of pattern |
-| `!(pattern)` | Match anything that does NOT match pattern |
+| `?(pattern)` | Zero or one match |
+| `*(pattern)` | Zero or more matches |
+| `+(pattern)` | One or more matches |
+| `@(pattern)` | Exactly one match |
+| `!(pattern)` | Anything that does not match |
 
 #### List all files excluding specific extensions
 
-The `!(glob|glob)` operator is the practical workaround for the absence of a native `--exclude` flag in `ls`.
+This example stages a disposable directory, enables `extglob`, and prints the expansion so you can inspect the match set before sending it to another command.
 
 ```bash
+mkdir extglob-demo && cd extglob-demo
+: > config.yaml
+: > main.py
+: > requirements.txt
+: > schema.sql
+: > debug.log
+: > cache.tmp
 shopt -s extglob
-ls !(*.log|*.tmp)
+```
+
+```bash
+printf '%s\n' !(*.log|*.tmp) | sort
 ```
 
 ```text
-config.yaml  main.py  requirements.txt  schema.sql
+config.yaml
+main.py
+requirements.txt
+schema.sql
 ```
 
 #### Delete all files except one
 
-The `!(pattern)` form also works with `rm`. Enabling `extglob` first is mandatory — without it, the `!` is interpreted as a history expansion character.
+For destructive patterns, preview the expansion first in a disposable directory. Once the preview looks correct, run the delete and verify the result explicitly.
 
 ```bash
+mkdir delete-demo && cd delete-demo
+: > important.txt
+: > draft.txt
+: > notes.md
+: > scratch.tmp
 shopt -s extglob
-rm !(important.txt)
+```
+
+```bash
+printf '%s\n' !(important.txt) | sort
 ```
 
 ```text
-(no output — all files except important.txt removed silently)
+draft.txt
+notes.md
+scratch.tmp
 ```
 
-> [!warning] Forgetting extglob before using `!(pattern)`
->
-> Running `rm !(important.txt)` without first enabling `extglob` causes the shell to interpret `!` as a history expansion operator. The command either errors out or expands unexpectedly.
+```bash
+rm !(important.txt)
+```
 
-> [!success] Always enable extglob explicitly before negation patterns
->
-> ```bash
-> shopt -s extglob
-> rm !(important.txt)
-> ```
->
-> Add `shopt -s extglob` to `.bashrc` to make it permanent for interactive shells.
+```bash
+find . -maxdepth 1 -type f -printf '%P\n' | sort
+```
 
-#### Enable recursive double-star glob
+```text
+important.txt
+```
 
-`globstar` makes `**` match zero or more directory levels, enabling recursive file searches without `find`.
+#### Enable recursive double-star globbing
+
+`globstar` changes `**` from an ordinary path wildcard into a recursive directory traversal operator.
 
 ```bash
 shopt -s globstar
 ```
 
+```bash
+shopt globstar
+```
+
 ```text
-(no output — option enabled silently)
+globstar       	on
 ```
 
 #### Recursively match files by extension
 
-With `globstar` enabled, `**/*.py` expands to every `.py` file in the current tree at any depth. Without it, `**` is treated as a literal two-character pattern.
+This example uses `printf` instead of `ls` so the expansion result is exact and not reformatted into columns.
 
 ```bash
+mkdir -p tree/etl/utils tree/models tree/tests
+: > tree/etl/pipeline.py
+: > tree/etl/utils/helpers.py
+: > tree/models/train.py
+: > tree/tests/test_pipeline.py
+: > tree/models/train.sql
+cd tree
 shopt -s globstar
-ls **/*.py
+```
+
+```bash
+printf '%s\n' **/*.py
 ```
 
 ```text
-etl/pipeline.py  etl/utils/helpers.py  models/train.py  tests/test_pipeline.py
+etl/pipeline.py
+etl/utils/helpers.py
+models/train.py
+tests/test_pipeline.py
 ```
 
 #### Count lines across all SQL files recursively
 
-`wc -l` accepts multiple filenames and reports a total. Feeding it a `**/*.sql` glob is more efficient than a `find | xargs` pipeline for simple counts.
+`wc -l` is a good fit when a recursive glob already yields the exact files you want. If the tree is huge or you need extra predicates, move to `find` instead of expanding everything in the shell.
 
 ```bash
+mkdir -p sql-demo/queries sql-demo/schema
+printf 'select 1;\nselect 2;\n' > sql-demo/queries/daily_agg.sql
+printf 'create table t1;\ncreate table t2;\ncreate table t3;\n' > sql-demo/queries/index_weights.sql
+printf 'begin;\n' > sql-demo/schema/init.sql
+cd sql-demo
 shopt -s globstar
+```
+
+```bash
 wc -l **/*.sql
 ```
 
 ```text
-  142 queries/daily_agg.sql
-   89 queries/index_weights.sql
-   34 schema/init.sql
-  265 total
+ 2 queries/daily_agg.sql
+ 3 queries/index_weights.sql
+ 1 schema/init.sql
+ 6 total
 ```
 
-#### Enable failglob to prevent dangerous no-match pass-through
+#### Enable failglob to stop no-match pass-through
 
-By default, a glob pattern that matches nothing is passed through to the command unchanged as a literal string. `failglob` converts this silent pass-through into a shell error.
+`failglob` is silent when enabled, so verify the state before depending on it in a script header.
 
 ```bash
 shopt -s failglob
+```
+
+```bash
+shopt failglob
 ```
 
 ```text
-(no output — option enabled silently)
+failglob       	on
 ```
 
-> [!danger] rm with an unmatched glob — silent data loss risk
->
-> Without `failglob`, running `rm *.csv` in a directory that contains no CSV files passes the literal string `*.csv` to `rm`. If a file named `*.csv` happens to exist, it is deleted without warning. If none exists, `rm` prints "No such file or directory" — but in scripts using `set -e`, this terminates the entire script at an unexpected point.
+Use this lookup table as a reference for `shopt` itself.
 
-> [!success] Enable failglob in all production scripts
->
-> ```bash
-> shopt -s failglob
-> rm *.csv   # raises a shell error immediately if no .csv files exist
-> ```
->
-> Pair with `set -euo pipefail` at the top of every script for full error coverage.
-
-#### Persistent shopt settings for .bashrc
-
-These four options are safe to enable permanently in an interactive shell. Add them to `~/.bashrc` to avoid setting them in every script.
-
-```bash
-shopt -s extglob
-shopt -s globstar
-shopt -s failglob
-shopt -s nocaseglob
-shopt -s cdspell
-```
-
-`nocaseglob` makes glob patterns case-insensitive, which is useful on filesystems with mixed-case filenames. `cdspell` auto-corrects minor typos in `cd` arguments and is unrelated to globbing but commonly grouped here.
-
-| Flag | Syntax | Description |
+| Flag | Syntax | Meaning |
 |---|---|---|
-| `-s` | `shopt -s <option>` | Enable (set) the named shell option |
-| `-u` | `shopt -u <option>` | Disable (unset) the named shell option |
-| `-p` | `shopt -p` | Print all options with their current on/off state |
-| `-q` | `shopt -q <option>` | Exit silently with 0 (enabled) or 1 (disabled) — for use in conditionals |
+| `-s` | `shopt -s <option>` | Enable an option |
+| `-u` | `shopt -u <option>` | Disable an option |
+| `-p` | `shopt -p` | Print shell options as reusable commands |
+| `-q` | `shopt -q <option>` | Return success if enabled, failure if disabled |
 
 ### Linux | globbing | standard wildcard patterns
 
-Standard glob wildcards are available without any `shopt` setting. They expand against the current filesystem during filename expansion (the last phase of shell expansion).
+The table at the end is a compact reminder. The H4 entries here show what the wildcard actually expands to.
 
-| Pattern | Matches | Example |
+#### Match any string with `*`
+
+`*` matches zero or more characters inside one path component.
+
+```bash
+mkdir wildcard-star && cd wildcard-star
+: > data.csv
+: > sales_2025.csv
+: > report.txt
+```
+
+```bash
+printf '%s\n' *.csv | sort
+```
+
+```text
+data.csv
+sales_2025.csv
+```
+
+#### Match exactly one character with `?`
+
+`?` matches one character, so `file10.txt` is excluded because it needs two characters after `file`.
+
+```bash
+mkdir wildcard-question && cd wildcard-question
+: > file1.txt
+: > file2.txt
+: > fileA.txt
+: > file10.txt
+```
+
+```bash
+printf '%s\n' file?.txt | sort
+```
+
+```text
+file1.txt
+file2.txt
+fileA.txt
+```
+
+#### Match sets and ranges with `[]`
+
+Character classes can name explicit sets such as `[abc]` or ranges such as `[0-9]`. This example uses a numeric range.
+
+```bash
+mkdir wildcard-range && cd wildcard-range
+: > log1.txt
+: > log2.txt
+: > logA.txt
+```
+
+```bash
+printf '%s\n' log[0-9].txt | sort
+```
+
+```text
+log1.txt
+log2.txt
+```
+
+#### Exclude starting characters with `[!...]`
+
+`[!set]` negates a single character position. Here it excludes files whose first character is a digit.
+
+```bash
+mkdir wildcard-negated && cd wildcard-negated
+: > alpha.csv
+: > beta.csv
+: > 1-summary.csv
+```
+
+```bash
+printf '%s\n' [!0-9]*.csv | sort
+```
+
+```text
+alpha.csv
+beta.csv
+```
+
+#### Include dotfiles with `dotglob`
+
+By default, `*` skips hidden files. Enabling `dotglob` changes that behavior for the current shell.
+
+```bash
+mkdir dotglob-demo && cd dotglob-demo
+: > .env
+: > .gitignore
+: > report.csv
+printf 'default\n'
+printf '%s\n' * | sort
+shopt -s dotglob
+printf 'enabled\n'
+printf '%s\n' * | sort
+printf 'state\n'
+shopt dotglob
+```
+
+```text
+default
+report.csv
+enabled
+.env
+.gitignore
+report.csv
+state
+dotglob        	on
+```
+
+Use this lookup table as a quick reminder after the runnable examples.
+
+| Pattern | Meaning | Example |
 |---|---|---|
-| `*` | Any string of zero or more characters (within one path component) | `*.csv` matches `data.csv`, `sales_2025.csv` |
-| `?` | Exactly one character | `file?.txt` matches `file1.txt`, `fileA.txt` |
-| `[abc]` | One character from the set | `[abc].sh` matches `a.sh`, `b.sh`, `c.sh` |
-| `[a-z]` | One character in the range | `log[0-9].txt` matches `log1.txt` through `log9.txt` |
-| `[!abc]` | One character NOT in the set | `[!0-9]*.csv` — first char is not a digit |
-| `**` | Any path including directory separators (requires `globstar`) | `**/*.py` matches all `.py` at any depth |
+| `*` | Zero or more characters in one path component | `*.csv` |
+| `?` | Exactly one character | `file?.txt` |
+| `[abc]` | One character from an explicit set | `[abc].sh` |
+| `[a-z]` | One character from a range | `log[0-9].txt` |
+| `[!abc]` | One character not in a set | `[!0-9]*.csv` |
+| `**` | Zero or more directories when `globstar` is on | `**/*.py` |
 
 ## PowerShell brace expansion tools
 
-PowerShell has no native brace expansion syntax. The equivalent patterns use arrays, the `ForEach-Object` cmdlet, or string formatting. The behavior is functionally identical — multiple arguments are generated and passed to a command — but the syntax is verbose compared to Bash.
+PowerShell does not perform brace expansion in the shell. The equivalent result is explicit iteration with arrays, ranges, loops, and string formatting.
 
-### PowerShell | arrays and ForEach-Object | directory generation
+### PowerShell | arrays and loops | argument generation
 
-PowerShell's approach to generating sets of arguments is to define arrays and iterate over their Cartesian product explicitly. `New-Item` with `-Force` is the counterpart to `mkdir -p`.
+These examples generate the same kinds of path sets as Bash brace expansion, but the shell is not rewriting the command line beforehand. Treat each H4 as a standalone snippet in a disposable working directory.
 
 #### Create a nested directory tree using nested loops
 
-Two arrays define the tier names and subfolder names. The outer `ForEach-Object` iterates over tiers; the inner loop references the outer variable via `$tier`.
+`New-Item` is silent only because the pipeline sends its objects to `Out-Null`, so verify the resulting tree explicitly.
 
 ```powershell
-$tiers = "bronze","silver","gold"
-$zones = "raw","staging","final"
+$tiers = 'bronze','silver','gold'
+$zones = 'raw','staging','final'
 foreach ($tier in $tiers) {
     foreach ($zone in $zones) {
         New-Item -ItemType Directory -Path "data/$tier/$zone" -Force | Out-Null
@@ -426,209 +589,446 @@ foreach ($tier in $tiers) {
 }
 ```
 
-```text
-(no output — Out-Null suppresses New-Item's verbose directory object output)
+```powershell
+Get-ChildItem -Path data -Directory -Recurse |
+    Sort-Object FullName |
+    ForEach-Object { $_.FullName.Substring($PWD.Path.Length + 1) }
 ```
 
-#### Generate a numeric sequence of filenames
+```text
+data\bronze
+data\bronze\final
+data\bronze\raw
+data\bronze\staging
+data\gold
+data\gold\final
+data\gold\raw
+data\gold\staging
+data\silver
+data\silver\final
+data\silver\raw
+data\silver\staging
+```
 
-PowerShell's range operator `..` generates integer sequences. String formatting with `-f` applies zero-padding.
+#### Generate zero-padded filenames
+
+Use the range operator for the integers, then format them into fixed-width strings.
 
 ```powershell
-1..100 | ForEach-Object { "file{0:D3}.parquet" -f $_ }
+1..12 | ForEach-Object { 'file{0:D3}.parquet' -f $_ }
 ```
 
 ```text
 file001.parquet
 file002.parquet
 file003.parquet
-...
-file100.parquet
+file004.parquet
+file005.parquet
+file006.parquet
+file007.parquet
+file008.parquet
+file009.parquet
+file010.parquet
+file011.parquet
+file012.parquet
 ```
 
 #### Back up a file before editing
 
-PowerShell uses `Copy-Item` with an explicit destination string. There is no single-expression equivalent to Bash's `cp file{,.bak}` — the destination must be written in full.
+There is no brace shorthand here. Create or select the source, copy it, and then verify the result directly.
+
+```powershell
+Set-Content -Path config.yaml -Value 'key: value'
+```
 
 ```powershell
 Copy-Item config.yaml config.yaml.bak
 ```
 
-```text
-(no output — file copied silently)
+```powershell
+Get-ChildItem -Path config.yaml* |
+    Sort-Object Name |
+    Select-Object -ExpandProperty Name
 ```
 
-> [!info] No brace expansion in PowerShell
->
-> PowerShell does not perform brace expansion at the shell level. Any Bash one-liner using `{a,b,c}` must be rewritten as an explicit array iteration or a set of discrete commands.
+```text
+config.yaml
+config.yaml.bak
+```
 
-| Syntax | PowerShell equivalent | Description |
+Use this lookup table as a translation aid between Bash intent and PowerShell syntax.
+
+| Bash form | PowerShell equivalent | Meaning |
 |---|---|---|
-| `{a,b,c}` list | `"a","b","c" \| ForEach-Object { ... }` | Iterate over a literal array |
-| `{n..m}` range | `n..m \| ForEach-Object { ... }` | Integer range using the `..` range operator |
-| `{n..m..s}` step | `for ($i=n; $i -le m; $i+=s) { ... }` | Stepped range using a `for` loop |
-| zero-padded range | `1..100 \| ForEach-Object { "{0:D3}" -f $_ }` | Format with `-f` operator and `D3` (3-digit zero-pad) |
-| prefix+suffix | `"a","b","c" \| ForEach-Object { "file_$_.csv" }` | String interpolation inside the loop body |
+| `{a,b,c}` | `'a','b','c' \| ForEach-Object { ... }` | Enumerate a literal set |
+| `{n..m}` | `n..m \| ForEach-Object { ... }` | Enumerate a numeric range |
+| `{n..m..s}` | `for ($i=n; $i -le m; $i+=s) { ... }` | Enumerate a stepped range |
+| `{001..010}` | `1..10 \| ForEach-Object { '{0:D3}' -f $_ }` | Zero-pad during formatting |
+| `prefix{a,b}suffix` | `'a','b' \| ForEach-Object { "file$_.csv" }` | Add a shared prefix and suffix |
 
 ## PowerShell globbing tools
 
-PowerShell's `Get-ChildItem` provides recursive and filtered file listing as a built-in cmdlet. Unlike Bash globbing (which is a shell-level expansion), PowerShell filtering happens inside the cmdlet. The `-Filter` parameter uses the filesystem's native filter (fast, but limited to a single pattern). `-Include` and `-Exclude` use PowerShell's own wildcard engine and support multiple patterns.
+`Get-ChildItem` performs enumeration and filtering inside the cmdlet. `-Filter` is the provider/native filter and accepts one pattern. `-Include` and `-Exclude` use PowerShell wildcard semantics and work against the child items that the cmdlet actually enumerates.
 
 ### PowerShell | Get-ChildItem | recursive file matching
 
-`Get-ChildItem` with `-Recurse` traverses the full directory tree and returns `FileInfo` and `DirectoryInfo` objects. Results can be piped to `Remove-Item`, `Copy-Item`, `ForEach-Object`, or any other cmdlet.
+When the cmdlet is silent or returns objects you suppress, add an explicit verification command so the note proves what happened. Treat each H4 as a standalone snippet in a disposable working directory.
 
 #### Recursively list all files of a given type
 
-`-Filter` is the fastest option for a single extension because it delegates pattern matching to the OS. `-Recurse` descends into all subdirectories.
+For a single wildcard, `-Filter` is the cleanest and usually fastest choice.
 
 ```powershell
-Get-ChildItem -Path . -Filter *.py -Recurse
+New-Item -ItemType Directory -Path 'tree/etl','tree/models' -Force | Out-Null
+Set-Content -Path 'tree/etl/pipeline.py' -Value 'print(1)'
+Set-Content -Path 'tree/etl/utils.py' -Value 'print(2)'
+Set-Content -Path 'tree/models/train.py' -Value 'print(3)'
+Set-Content -Path 'tree/models/train.sql' -Value 'select 1;'
+Set-Location tree
+```
+
+```powershell
+Get-ChildItem -Path . -Filter *.py -Recurse -File |
+    Sort-Object FullName |
+    ForEach-Object { $_.FullName.Substring($PWD.Path.Length + 1) }
 ```
 
 ```text
-    Directory: C:\project\etl
-
-Mode                 LastWriteTime         Length Name
-----                 -------------         ------  ----
--a---          2026-03-20    14:32           4821 pipeline.py
--a---          2026-03-20    14:33           1204 utils.py
-
-    Directory: C:\project\models
-
--a---          2026-03-21    09:11           8903 train.py
+etl\pipeline.py
+etl\utils.py
+models\train.py
 ```
 
 #### Recursively list files matching multiple extensions
 
-`-Include` accepts a comma-separated array of patterns and applies all of them. `-Path` must end with `\*` or use `-Recurse` to ensure `Include` patterns are evaluated against file names rather than directory names.
+For multiple patterns, switch to `-Include` and make sure the path points at children by using `.\*` or `-Recurse`.
 
 ```powershell
-Get-ChildItem -Path . -Include *.py,*.sql -Recurse
+New-Item -ItemType Directory -Path 'tree/etl','tree/models' -Force | Out-Null
+Set-Content -Path 'tree/etl/pipeline.py' -Value 'print(1)'
+Set-Content -Path 'tree/etl/utils.py' -Value 'print(2)'
+Set-Content -Path 'tree/models/train.py' -Value 'print(3)'
+Set-Content -Path 'tree/models/train.sql' -Value 'select 1;'
+Set-Location tree
+```
+
+```powershell
+Get-ChildItem -Path .\* -Include *.py,*.sql -Recurse -File |
+    Sort-Object FullName |
+    ForEach-Object { $_.FullName.Substring($PWD.Path.Length + 1) }
 ```
 
 ```text
-    Directory: C:\project\etl
-
-Mode                 LastWriteTime         Length Name
-----                 -------------         ------  ----
--a---          2026-03-20    14:32           4821 pipeline.py
--a---          2026-03-19    11:05           2340 schema.sql
+etl\pipeline.py
+etl\utils.py
+models\train.py
+models\train.sql
 ```
 
 #### Exclude specific extensions from a directory listing
 
-`-Exclude` removes matching filenames from the result set. Like `-Include`, it accepts multiple comma-separated patterns.
+`-Exclude` uses the same wildcard engine as `-Include`. Point the path at the child items you want filtered.
 
 ```powershell
-Get-ChildItem -Path . -Exclude *.log,*.tmp
+Set-Content -Path config.yaml -Value 'key: value'
+Set-Content -Path pipeline.py -Value 'print(1)'
+Set-Content -Path requirements.txt -Value 'requests'
+Set-Content -Path debug.log -Value 'log'
+Set-Content -Path cache.tmp -Value 'tmp'
+```
+
+```powershell
+Get-ChildItem -Path .\* -File -Exclude *.log,*.tmp |
+    Sort-Object Name |
+    Select-Object -ExpandProperty Name
 ```
 
 ```text
-    Directory: C:\project
-
-Mode                 LastWriteTime         Length Name
-----                 -------------         ------  ----
--a---          2026-03-22    10:00           1024 config.yaml
--a---          2026-03-22    10:01           4821 pipeline.py
--a---          2026-03-22    10:02            512 requirements.txt
+config.yaml
+pipeline.py
+requirements.txt
 ```
 
-#### Delete all files except one
+#### Preview and then delete all files except one
 
-PowerShell has no `!(pattern)` negation operator. The equivalent pattern pipes `Get-ChildItem` into `Where-Object` to filter out the protected file, then pipes to `Remove-Item`.
+PowerShell has no `!(pattern)` operator. Build the keep rule with `Where-Object`, preview the delete with `-WhatIf`, and only then run the real removal. The captured preview output includes the temporary root used during execution.
 
 ```powershell
-Get-ChildItem -Path . -File | Where-Object { $_.Name -ne "important.txt" } | Remove-Item
+New-Item -ItemType Directory -Path delete-demo -Force | Out-Null
+Set-Content -Path 'delete-demo/important.txt' -Value 'keep'
+Set-Content -Path 'delete-demo/draft.txt' -Value 'remove'
+Set-Content -Path 'delete-demo/notes.md' -Value 'remove'
+Set-Location delete-demo
+```
+
+```powershell
+Get-ChildItem -Path . -File |
+    Where-Object { $_.Name -ne 'important.txt' } |
+    Remove-Item -WhatIf
 ```
 
 ```text
-(no output — files removed silently)
+What if: Performing the operation "Remove File" on target "C:\Users\aperi\AppData\Local\Temp\brace-glob-ps-02fe4964-c038-4f67-a6dd-f028a7f9e750\delete-demo\draft.txt".
+What if: Performing the operation "Remove File" on target "C:\Users\aperi\AppData\Local\Temp\brace-glob-ps-02fe4964-c038-4f67-a6dd-f028a7f9e750\delete-demo\notes.md".
 ```
 
-> [!warning] Get-ChildItem -Recurse piped to Remove-Item
->
-> Piping a recursive `Get-ChildItem` directly to `Remove-Item` without `-WhatIf` first will delete files across the entire tree without confirmation.
+```powershell
+Get-ChildItem -Path . -File |
+    Where-Object { $_.Name -ne 'important.txt' } |
+    Remove-Item
+```
 
-> [!success] Use -WhatIf to preview before deleting recursively
->
-> ```powershell
-> Get-ChildItem -Path . -Filter *.tmp -Recurse | Remove-Item -WhatIf
-> ```
->
-> Remove `-WhatIf` only after verifying the output matches the intended target set.
+```powershell
+Get-ChildItem -Path . -File |
+    Sort-Object Name |
+    Select-Object -ExpandProperty Name
+```
+
+```text
+important.txt
+```
 
 #### Count lines across all SQL files recursively
 
-PowerShell has no `wc -l` equivalent, but `Get-Content` reads file lines and `.Count` returns the line count per file.
+PowerShell returns objects rather than a `wc`-style total, so build the output you want explicitly.
 
 ```powershell
-Get-ChildItem -Path . -Filter *.sql -Recurse | ForEach-Object {
-    $lines = (Get-Content $_.FullName).Count
-    "$lines`t$($_.FullName)"
-}
+New-Item -ItemType Directory -Path 'sql/queries','sql/schema' -Force | Out-Null
+Set-Content -Path 'sql/queries/daily_agg.sql' -Value @('select 1;','select 2;')
+Set-Content -Path 'sql/queries/index_weights.sql' -Value @('create table t1;','create table t2;','create table t3;')
+Set-Content -Path 'sql/schema/init.sql' -Value @('begin;')
+```
+
+```powershell
+$total = 0
+Get-ChildItem -Path sql -Filter *.sql -Recurse -File |
+    Sort-Object FullName |
+    ForEach-Object {
+        $count = (Get-Content $_.FullName).Count
+        $total += $count
+        "{0}`t{1}" -f $count, $_.FullName.Substring($PWD.Path.Length + 1)
+    }
+"total`t$total"
 ```
 
 ```text
-142     C:\project\queries\daily_agg.sql
-89      C:\project\queries\index_weights.sql
-34      C:\project\schema\init.sql
+2	sql\queries\daily_agg.sql
+3	sql\queries\index_weights.sql
+1	sql\schema\init.sql
+total	6
 ```
 
-| Flag | Syntax | Description |
+Use this table as a quick reference for the cmdlet parameters after the runnable examples.
+
+| Parameter | Meaning | Notes |
 |---|---|---|
-| `-Path` | `-Path <dir>` | Root directory to search (default: current directory) |
-| `-Filter` | `-Filter *.py` | Single-pattern OS-level filter — fastest option |
-| `-Include` | `-Include *.py,*.sql` | One or more patterns to include — evaluated by PowerShell, not the OS |
-| `-Exclude` | `-Exclude *.log,*.tmp` | One or more patterns to exclude from results |
-| `-Recurse` | `-Recurse` | Descend into all subdirectories |
-| `-File` | `-File` | Return only files (no directories) |
-| `-Directory` | `-Directory` | Return only directories (no files) |
-| `-Depth` | `-Depth 2` | Limit recursion to N levels deep (PowerShell 5.0+) |
-| `-Name` | `-Name` | Return names as strings instead of FileInfo objects |
+| `-Path` | Root item or wildcard path to enumerate | Use `.\*` when `-Include` or `-Exclude` should match child names |
+| `-Filter` | Provider/native single-pattern filter | Usually the fastest option for one wildcard |
+| `-Include` | PowerShell wildcard include list | Often paired with `-Recurse` or `.\*` |
+| `-Exclude` | PowerShell wildcard exclude list | Applies to enumerated child items |
+| `-Recurse` | Descend into subdirectories | Combine with `-File` or `-Directory` when you need only one type |
+| `-File` | Return only files | Avoids directory objects in later pipeline stages |
+| `-Directory` | Return only directories | Useful for tree verification |
+| `-Depth` | Limit recursion depth | Available in Windows PowerShell 5+ and PowerShell 7+ |
+| `-Name` | Return names instead of full objects | Useful for quick verification |
 
+## Recommended patterns
 
+The original recommendation matrix is more useful as executable platform-specific guidance. The Linux items that are already demonstrated above stay in their feature sections; the entries here cover the defaults and distinctions that benefit from explicit verification.
 
-## Warnings
+### Linux | recommended patterns | safer defaults
 
-> [!danger] Unmatched globs pass literal strings without `failglob`
->
-> Without `failglob`, `rm *.csv` in a directory with no CSV files passes the literal string `*.csv` to `rm`. If a file literally named `*.csv` exists, it is deleted. Enable `shopt -s failglob` in all production scripts.
+#### Enable `extglob`, `globstar`, and `failglob` in scripts that depend on them
 
-> [!warning] `extglob` must be enabled before using `!(pattern)`
->
-> Without `shopt -s extglob`, the `!` in `rm !(important.txt)` is interpreted as history expansion, not negation. The command either errors or expands to an unintended history entry.
+These three options change script behavior materially. Enable them immediately after `set -euo pipefail` in Bash scripts that use negated patterns, recursive `**`, or strict no-match handling.
 
-> [!warning] Recursive globs can be slow on large trees
->
-> `**/*.py` with `globstar` performs a full recursive directory traversal. On trees with millions of files (e.g., `node_modules`, `.git`), this can take minutes and consume significant memory. Use `find` with `-prune` for selective traversal.
+```bash
+shopt -s extglob globstar failglob
+```
 
-> [!warning] PowerShell `-Include` requires `-Recurse` or trailing wildcard
->
-> `Get-ChildItem -Path . -Include *.py` returns nothing because `-Include` applies to the children of `-Path`, not to `-Path` itself. Add `-Recurse` or use `-Path .\*` to make `-Include` effective.
+```bash
+shopt extglob globstar failglob
+```
 
-## Recommendations
+```text
+extglob        	on
+globstar       	on
+failglob       	on
+```
 
-| Scenario | Recommendation |
-|---|---|
-| Production script header | Add `shopt -s extglob globstar failglob` after `set -euo pipefail` for full glob safety. |
-| Interactive `.bashrc` | Enable `extglob`, `globstar`, `failglob`, `nocaseglob`, and `cdspell` permanently. |
-| Bulk file operations | Prefer `**/*.ext` with `globstar` for simple recursive matches. Use `find` for complex filters (size, date, permissions). |
-| Creating directory structures | Use brace expansion with `mkdir -p` for deterministic, repeatable directory creation. |
-| PowerShell file matching | Use `-Filter` for single-pattern matches (fastest). Use `-Include` with `-Recurse` for multi-pattern matches. Always preview with `-WhatIf` before piping to `Remove-Item`. |
+#### Keep `nocaseglob` and `cdspell` in interactive startup files
+
+These are interactive conveniences, not core script defaults. `nocaseglob` widens every match in the shell, and `cdspell` only affects interactive `cd` corrections.
+
+```bash
+cat > /tmp/bashrc.demo <<'EOF'
+shopt -s nocaseglob
+shopt -s cdspell
+EOF
+bash --noprofile --norc -lc 'source /tmp/bashrc.demo; shopt nocaseglob cdspell'
+```
+
+```text
+nocaseglob     	on
+cdspell        	on
+```
+
+### PowerShell | recommended patterns | file matching
+
+#### Prefer `-Filter` for one wildcard and `-Include` for multiple wildcards
+
+`-Filter` is the provider/native filter and is the default choice when one pattern is enough. Use `-Include` when you truly need a wildcard list, and make sure the path enumerates children instead of the directory object itself.
+
+```powershell
+New-Item -ItemType Directory -Path 'tree/etl','tree/models' -Force | Out-Null
+Set-Content -Path 'tree/etl/pipeline.py' -Value 'print(1)'
+Set-Content -Path 'tree/etl/utils.py' -Value 'print(2)'
+Set-Content -Path 'tree/models/train.py' -Value 'print(3)'
+Set-Content -Path 'tree/models/train.sql' -Value 'select 1;'
+Set-Location tree
+```
+
+```powershell
+Get-ChildItem -Path . -Filter *.py -Recurse -File |
+    Sort-Object FullName |
+    ForEach-Object { $_.FullName.Substring($PWD.Path.Length + 1) }
+```
+
+```text
+etl\pipeline.py
+etl\utils.py
+models\train.py
+```
+
+```powershell
+Get-ChildItem -Path .\* -Include *.py,*.sql -Recurse -File |
+    Sort-Object FullName |
+    ForEach-Object { $_.FullName.Substring($PWD.Path.Length + 1) }
+```
+
+```text
+etl\pipeline.py
+etl\utils.py
+models\train.py
+models\train.sql
+```
+
+#### Preview recursive deletes with `-WhatIf`
+
+`Remove-Item` is silent on success and destructive on failure. A preview is the only safe way to confirm the target set before the delete runs. The captured preview output includes the temporary root used during execution.
+
+```powershell
+New-Item -ItemType Directory -Path delete-demo -Force | Out-Null
+Set-Content -Path 'delete-demo/important.txt' -Value 'keep'
+Set-Content -Path 'delete-demo/draft.txt' -Value 'remove'
+Set-Content -Path 'delete-demo/notes.md' -Value 'remove'
+Set-Location delete-demo
+Get-ChildItem -Path . -File |
+    Where-Object { $_.Name -ne 'important.txt' } |
+    Remove-Item -WhatIf
+```
+
+```text
+What if: Performing the operation "Remove File" on target "C:\Users\aperi\AppData\Local\Temp\brace-glob-ps-02fe4964-c038-4f67-a6dd-f028a7f9e750\delete-demo\draft.txt".
+What if: Performing the operation "Remove File" on target "C:\Users\aperi\AppData\Local\Temp\brace-glob-ps-02fe4964-c038-4f67-a6dd-f028a7f9e750\delete-demo\notes.md".
+```
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Glob pattern is passed as a literal string to the command | No files match the pattern and `failglob` is not enabled. | Enable `shopt -s failglob` or check for file existence before the glob operation. |
-| `**/*.py` only matches files in the current directory | `globstar` is not enabled. Without it, `**` is treated as a literal `*` followed by `*`. | Run `shopt -s globstar` before using `**`. |
-| `!(pattern)` causes a history expansion error | `extglob` is not enabled. `!` is being interpreted as a history operator. | Run `shopt -s extglob` before using negation patterns. |
-| Brace expansion does not work in `#!/bin/sh` scripts | Brace expansion is a bash extension, not part of the POSIX shell standard. | Change the shebang to `#!/usr/bin/env bash` or rewrite the expression using a loop. |
-| PowerShell `Get-ChildItem -Include` returns nothing | `-Include` requires `-Recurse` or a trailing wildcard in `-Path` to apply correctly. | Add `-Recurse` or change `-Path .` to `-Path .\*`. ||.*`.
+Each troubleshooting item below replaces the old matrix with a concrete symptom, a runnable proof, and the correction.
+
+### Linux | troubleshooting | common failures
+
+#### Unmatched globs should fail early in scripts
+
+If a script must stop when a pattern matches nothing, enable `failglob` before the command runs. The output below is the explicit error you want to see instead of a literal `*.csv` argument flowing downstream.
+
+```bash
+mkdir failglob-demo && cd failglob-demo
+bash --noprofile --norc -c 'shopt -s failglob; printf "%s\n" *.csv' 2>&1
+```
+
+```text
+bash: line 1: no match: *.csv
+```
+
+#### `**/*.py` stops short until `globstar` is enabled
+
+Without `globstar`, `**` is parsed as ordinary wildcard path components. The pattern below reaches only one nested level instead of the full tree.
+
+```bash
+mkdir -p noglobstar-demo/a noglobstar-demo/b/c
+cd noglobstar-demo
+: > root.py
+: > a/one.py
+: > b/c/two.py
+bash --noprofile --norc -c 'printf "%s\n" **/*.py'
+```
+
+```text
+a/one.py
+```
+
+#### `!(pattern)` is a syntax error until `extglob` is enabled
+
+In non-interactive Bash, missing `extglob` produces a parse error. In interactive Bash, `!` can also collide with history expansion when `histexpand` is on, which is why the exact message can differ.
+
+```bash
+rm -rf /tmp/extglob-demo && mkdir /tmp/extglob-demo
+cd /tmp/extglob-demo
+touch important.txt scratch.tmp
+bash --noprofile --norc -c 'printf "%s\n" !(important.txt)' 2>&1
+```
+
+```text
+bash: -c: line 1: syntax error near unexpected token `('
+bash: -c: line 1: `printf "%s\n" !(important.txt)'
+```
+
+#### Brace expansion stays literal under `/bin/sh`
+
+Brace expansion is a Bash extension, not a POSIX shell feature. If the shebang is `#!/bin/sh`, the text stays untouched.
+
+```bash
+sh -c 'echo file{1..3}.txt'
+```
+
+```text
+file{1..3}.txt
+```
+
+### PowerShell | troubleshooting | common failures
+
+#### `Get-ChildItem -Include` returns nothing without `-Recurse` or `.\*`
+
+`-Include` filters the child items that `Get-ChildItem` enumerates. A bare `-Path .` targets the directory object itself, so the first command returns nothing. Point the path at children with `.\*` or recurse through the tree.
+
+```powershell
+New-Item -ItemType Directory -Path include-demo -Force | Out-Null
+Set-Content -Path 'include-demo/app.py' -Value 'print(1)'
+Set-Location include-demo
+```
+
+```powershell
+$plain = Get-ChildItem -Path . -Include *.py | Select-Object -ExpandProperty Name
+if (-not $plain) { '(no results)' }
+```
+
+```text
+(no results)
+```
+
+```powershell
+Get-ChildItem -Path .\* -Include *.py | Select-Object -ExpandProperty Name
+```
+
+```text
+app.py
+```
 
 ## Cross-references
-- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) — `set -euo pipefail` pairs with `failglob` for safe scripts
-- [file-manipulation](https://alp78.github.io/elysium/01-Shell/02-File-Operations/02-file-manipulation) — `mkdir -p` with brace expansion for directory trees
-- [finding-files](https://alp78.github.io/elysium/01-Shell/02-File-Operations/03-finding-files) — `find` and `fd` for more complex file searches
-- [io-redirection](https://alp78.github.io/elysium/01-Shell/01-Scripting/03-io-redirection) — combining globs with redirection patterns
+
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) - `set -euo pipefail` pairs with `failglob` for safer Bash scripts
+- [file-manipulation](https://alp78.github.io/elysium/01-Shell/02-File-Operations/02-file-manipulation) - `mkdir -p` and copy patterns that pair well with brace expansion
+- [finding-files](https://alp78.github.io/elysium/01-Shell/02-File-Operations/03-finding-files) - `find` and `fd` when glob expansion is too broad or too large
+- [io-redirection](https://alp78.github.io/elysium/01-Shell/01-Scripting/03-io-redirection) - redirecting generated filenames and glob matches safely

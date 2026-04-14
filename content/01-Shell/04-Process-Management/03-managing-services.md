@@ -8,7 +8,7 @@ aliases: [systemctl, journalctl, service management, systemd, daemon, OOM kill, 
 keywords: [systemctl, journalctl, systemd, service, daemon, start service, stop service, restart service, enable on boot, service logs, OOM killer, out of memory, service status, mssql-server, datadog-agent, airflow, service failed, Set-Service, Start-Service]
 description: "Managing Linux systemd services and Windows services for production data engineering infrastructure. Covers start/stop/restart/enable, reading service logs with journalctl, diagnosing OOM kills, and the PowerShell equivalents."
 created: 2026-03-22
-updated: 2026-04-03
+updated: 2026-04-14
 status: complete
 ---
 
@@ -28,98 +28,71 @@ status: complete
 > - **When to use service management tools** — restarting after config changes, diagnosing failures, enabling boot persistence, blocking dangerous services
 > - **When not to use service management tools** — application-level reloads, container orchestration, one-shot scheduled scripts
 > - **Warnings** — connection interruption on database restarts, `start` vs `enable` independence, `sc` alias trap in PowerShell, `daemon-reload` requirement after unit file edits
-> - **Recommendations** — per-scenario command reference table
-> - **Troubleshooting** — symptom → cause → fix table for the most common service failures
+> - **Recommendations** — scenario-based command guide for Linux and Windows service operations
+> - **Troubleshooting** — symptom-based diagnostic guidance for the most common service failures
 
 > [!note]- Glossary
 >
 > **Service / Daemon**
 > - A long-running background process managed by the operating system's service manager rather than launched manually for one interactive session.
 > - Used to run infrastructure components continuously, such as databases, web servers, schedulers, and agents, typically across reboots and user logouts.
->
-> > [!info] Services vs one-shot commands
-> >
-> > A service is registered with a service manager and can usually be started, stopped, restarted, and monitored as a managed unit. A one-shot command runs once and exits, even if it runs for a long time.
+> - A service is registered with a service manager and can be started, stopped, restarted, and monitored as a managed unit; a one-shot command runs once and exits.
 >
 > ---
 >
 > **`systemctl`**
 > - Primary command-line tool for managing `systemd` units on modern Linux systems, including starting, stopping, restarting, reloading, enabling, disabling, masking, and inspecting services.
 > - Used as the operational interface for controlling service lifecycle and checking whether a service is running now and configured to start at boot.
->
-> > [!warning] `start` and `enable` are independent
-> >
-> > `start` affects the current runtime state; `enable` affects boot-time behavior. Use `systemctl enable --now <service>` when you need both.
+> - `start` affects the current runtime state, while `enable` affects boot-time behavior; use `systemctl enable --now <service>` when you need both.
 >
 > ---
 >
 > **`journalctl`**
 > - Command-line viewer for the `systemd` journal, which stores structured logs for services, the kernel, and other system components.
 > - Used to inspect service startup failures, crash loops, restart events, and recent logs without needing separate flat log files.
->
-> > [!tip] Always filter by unit
-> >
-> > `journalctl` without filters can be overwhelming. `journalctl -u <service> -f` is the usual way to follow logs for one service only.
+> - Filter by unit whenever possible; `journalctl -u <service> -f` is the usual way to watch one service without the rest of the journal obscuring the signal.
 >
 > ---
 >
 > **Unit file**
 > - A `systemd` configuration file that defines how a unit such as a service, timer, or socket should be started, ordered, stopped, and supervised.
 > - Used to declare service behavior, including the executable, restart policy, dependencies, environment, and startup conditions.
->
-> > [!warning] Edit overrides, not package defaults
-> >
-> > Vendor unit files usually live under `/usr/lib/systemd/system/` or `/lib/systemd/system/`, depending on the distribution. Do not edit them directly; create overrides under `/etc/systemd/system/` or use `systemctl edit <service>`, then run `systemctl daemon-reload`.
+> - Prefer overrides under `/etc/systemd/system/` or `systemctl edit <service>` rather than editing vendor unit files under `/usr/lib/systemd/system/` or `/lib/systemd/system/`; run `systemctl daemon-reload` after changes.
 >
 > ---
 >
 > **Service state**
 > - Runtime or management status reported by the service manager, such as `active`, `inactive`, `failed`, `activating`, `deactivating`, or `masked`.
 > - Used to distinguish whether a service is currently running, stopped cleanly, failed during startup or runtime, or deliberately blocked from being started.
->
-> > [!info] `inactive` does not mean broken
-> >
-> > A service can be `inactive` because it is intentionally stopped or because it is a one-shot unit that completed successfully. `masked` specifically means startup is administratively blocked.
+> - `inactive` does not necessarily mean broken; it can reflect an intentional stop or a one-shot unit that completed successfully. `masked` specifically means startup is administratively blocked.
 >
 > ---
 >
 > **OOM killer**
 > - Linux kernel mechanism that terminates one or more processes when memory pressure becomes severe enough that the system cannot satisfy allocation safely.
 > - Used by the kernel as a last-resort protection mechanism to keep the whole machine alive when memory exhaustion would otherwise cause wider failure.
->
-> > [!warning] OOM kills may not appear clearly in unit-scoped logs
-> >
-> > The decisive evidence is usually in kernel logs rather than only in `journalctl -u <service>`. Cross-check with `journalctl -k` or `dmesg` when a service dies or restarts unexpectedly under memory pressure.
+> - Decisive evidence usually appears in kernel logs rather than only in `journalctl -u <service>`; cross-check with `journalctl -k` or `dmesg` when a service dies under memory pressure.
 >
 > ---
 >
 > **`Get-Service` / `Set-Service`**
 > - PowerShell cmdlets for interacting with the Windows Service Control Manager: `Get-Service` reads service status, while `Set-Service` changes properties such as startup type.
 > - Used for Windows service administration from scripts and shells, alongside `Start-Service`, `Stop-Service`, and `Restart-Service` for runtime control.
->
-> > [!info] Startup type vs running state are independent on Windows
-> >
-> > A service can be configured for automatic startup and still be currently stopped, or configured as manual and currently running. Treat runtime status and startup configuration as separate facts.
+> - Runtime state and startup type are separate facts; a service can be configured for automatic startup and still be stopped, or configured as manual and currently running.
 >
 > ---
 >
 > **`sc.exe`**
 > - Native Windows Service Control command-line utility for querying, creating, deleting, and configuring services.
 > - Used when low-level service operations are needed that are awkward or unavailable through standard PowerShell service cmdlets.
->
-> > [!warning] `sc` is a PowerShell alias for `Set-Content`
-> >
-> > In PowerShell, `sc` does not call the Service Control utility. Use `sc.exe` explicitly to avoid invoking the alias by mistake.
+> - In PowerShell, use `sc.exe` explicitly because `sc` is an alias for `Set-Content`, not the Service Control utility.
 >
 > ---
 >
 > **`Get-WinEvent`**
 > - PowerShell cmdlet for querying Windows Event Log records from the System log and provider-specific logs.
 > - Used as the main Windows equivalent of `journalctl` for diagnosing service starts, stops, crashes, recovery actions, and related OS events.
->
-> > [!info] Key event IDs for service diagnostics
-> >
-> > `7036` records service state changes, `7034` indicates unexpected termination, `7031` indicates a service failure with Service Control Manager recovery action, and `2004` is associated with severe resource exhaustion events.
+> - Service-relevant IDs include `7036` for state changes, `7034` for unexpected termination, `7031` for recovery actions after failure, and `2004` for severe resource exhaustion.
 
 Every long-running process in your infrastructure — SQL Server, Airflow, Datadog agent, Docker daemon — runs as a systemd service on Linux or a Windows Service on Windows. Understanding service management is how you restart a crashed database, check why a monitoring agent stopped collecting metrics, or enable a new service to survive reboots. For Airflow-specific service management (scheduler, worker, webserver), see [airflow-core-concepts](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-core-concepts).
 
@@ -149,28 +122,48 @@ systemd is the init system and service manager for most modern Linux distributio
 
 The `start`, `stop`, and `restart` subcommands are the primary controls for a service's runtime state. They operate immediately, without waiting for a reboot.
 
+The live demonstrations in this section use a disposable user-scoped unit, `vault-style-demo.service`, so the outputs can be captured without mutating a production service. When you target a system service, drop `--user` and add `sudo` as needed.
+
 #### Start a service
 
-`systemctl start` sends a start signal and runs the command defined in `ExecStart` inside the unit file. The command returns once the service has entered the `active` state.
+`systemctl start` sends a start request to the unit and returns after systemd has handed control to the service manager. Because `start` itself is quiet on success, verify the result with `is-active` or `status`.
 
 ```bash
-sudo systemctl start mssql-server
+systemctl --user start vault-style-demo.service
+systemctl --user is-active vault-style-demo.service
+```
+
+```text
+active
 ```
 
 #### Stop a service
 
-`systemctl stop` sends `SIGTERM` to the main process (and `SIGKILL` after a configurable timeout if it does not exit). All resources held by the service are released.
+`systemctl stop` sends the service's configured stop signal, which is `SIGTERM` by default. If the process does not exit before the unit timeout, systemd can escalate to `SIGKILL`.
 
 ```bash
-sudo systemctl stop mssql-server
+systemctl --user stop vault-style-demo.service
+systemctl --user is-active vault-style-demo.service || true
+```
+
+```text
+inactive
 ```
 
 #### Restart a service
 
-`systemctl restart` stops then starts the service in a single operation. All active connections are terminated and in-flight transactions are rolled back.
+`systemctl restart` stops then starts the service in one transaction. For stateful services, treat it as a disruptive operation that drops sessions and forces new process startup.
 
 ```bash
-sudo systemctl restart mssql-server
+systemctl --user restart vault-style-demo.service
+journalctl --user -u vault-style-demo.service -n 4 --no-pager
+```
+
+```text
+Apr 14 15:10:39 Elysium vault-style-demo.sh[29306]: stop signal received
+Apr 14 15:10:39 Elysium systemd[332]: Stopped vault-style-demo.service - Vault style demo service.
+Apr 14 15:10:39 Elysium systemd[332]: Started vault-style-demo.service - Vault style demo service.
+Apr 14 15:10:39 Elysium vault-style-demo.sh[29401]: service started
 ```
 
 > [!warning] Restart drops all connections
@@ -183,18 +176,34 @@ sudo systemctl restart mssql-server
 
 #### Reload configuration without restarting
 
-`systemctl reload` sends SIGHUP to the main process, instructing it to re-read its configuration files without terminating. Not all services define `ExecReload`; if the unit file lacks it, this command returns an error.
+`systemctl reload` asks a running service to re-read its configuration without a full stop/start cycle. The unit must define `ExecReload`; otherwise systemd cannot perform the reload.
 
 ```bash
-sudo systemctl reload datadog-agent
+systemctl --user reload vault-style-demo.service
+journalctl --user -u vault-style-demo.service -n 4 --no-pager
+```
+
+```text
+Apr 14 15:10:39 Elysium systemd[332]: Started vault-style-demo.service - Vault style demo service.
+Apr 14 15:10:39 Elysium vault-style-demo.sh[29401]: service started
+Apr 14 15:10:48 Elysium systemd[332]: Reloading vault-style-demo.service - Vault style demo service...
+Apr 14 15:10:48 Elysium systemd[332]: Reloaded vault-style-demo.service - Vault style demo service.
 ```
 
 #### Reload unit file changes from disk
 
-After editing a unit file directly in `/etc/systemd/system/`, the daemon must be told to re-parse its unit definitions. This does not restart any running service — it only refreshes systemd's internal state.
+After editing a unit file directly on disk, the manager must re-parse its definitions. The pre-check below intentionally touches the demo unit so `NeedDaemonReload` flips to `yes`; the reload should clear that flag without restarting the service.
 
 ```bash
-sudo systemctl daemon-reload
+printf '\n# demo touch\n' >> ~/.config/systemd/user/vault-style-demo.service
+systemctl --user show -p NeedDaemonReload vault-style-demo.service
+systemctl --user daemon-reload
+systemctl --user show -p NeedDaemonReload vault-style-demo.service
+```
+
+```text
+NeedDaemonReload=yes
+NeedDaemonReload=no
 ```
 
 | Flag / Subcommand | Syntax | Description |
@@ -295,10 +304,14 @@ Enabling a service creates a symlink in the appropriate `wants` directory so tha
 
 #### Enable a service to start on boot
 
-`systemctl enable` creates a symlink from `/etc/systemd/system/multi-user.target.wants/<unit>` to the unit file. The service will start automatically on every subsequent reboot.
+`systemctl enable` creates the symlink that binds a unit into a boot target. The live demo below uses the user manager, so the symlink lands under `~/.config/systemd/user/default.target.wants/`.
 
 ```bash
-sudo systemctl enable mssql-server
+systemctl --user enable vault-style-demo.service
+```
+
+```text
+Created symlink /home/alex/.config/systemd/user/default.target.wants/vault-style-demo.service → /home/alex/.config/systemd/user/vault-style-demo.service.
 ```
 
 #### Enable and start immediately
@@ -306,7 +319,14 @@ sudo systemctl enable mssql-server
 The `--now` flag combines enable and start into a single command. This is the standard production pattern when adding a new service.
 
 ```bash
-sudo systemctl enable --now mssql-server
+systemctl --user enable --now vault-style-demo.service
+systemctl --user is-enabled vault-style-demo.service
+systemctl --user is-active vault-style-demo.service
+```
+
+```text
+enabled
+active
 ```
 
 > [!warning] enable does not start the service
@@ -319,22 +339,26 @@ sudo systemctl enable --now mssql-server
 
 #### Disable a service from starting on boot
 
-`systemctl disable` removes the symlink but does not stop the currently running service. Use `stop` separately if you also need to terminate the running process.
+`systemctl disable` removes the boot-time symlink but leaves the running process alone. Pair it with `stop` only when you also need the current instance offline.
 
 ```bash
-sudo systemctl disable mssql-server
+systemctl --user disable vault-style-demo.service
+```
+
+```text
+Removed "/home/alex/.config/systemd/user/default.target.wants/vault-style-demo.service".
 ```
 
 #### Check whether a service is enabled
 
-`is-enabled` returns `enabled`, `disabled`, or `static` (always starts when a dependency requires it). Useful in automation scripts to verify the desired boot state.
+`is-enabled` returns `enabled`, `disabled`, or `static` (starts only as a dependency). Use it in automation to assert the desired boot state before and after configuration changes.
 
 ```bash
-systemctl is-enabled mssql-server
+systemctl --user is-enabled vault-style-demo.service || true
 ```
 
 ```text
-enabled
+disabled
 ```
 
 | Flag / Subcommand | Syntax | Description |
@@ -367,7 +391,23 @@ Apr 03 09:15:22 prod-db01 sqlservr[1234]: Login failed for user 'sa'. Reason: Pa
 `-f` tails the journal live, equivalent to `tail -f` on a traditional log file. Use this while reproducing an issue or watching a service start up.
 
 ```bash
-sudo journalctl -u mssql-server -f
+rm -f /tmp/vault-style-follow.log
+journalctl --user -u vault-style-demo.service -n 0 -f --no-pager > /tmp/vault-style-follow.log &
+pid=$!
+sleep 1
+systemctl --user restart vault-style-demo.service
+wait $pid || true
+cat /tmp/vault-style-follow.log
+rm -f /tmp/vault-style-follow.log
+```
+
+```text
+Apr 14 15:20:12 Elysium systemd[332]: Stopping vault-style-demo.service - Vault style demo service...
+Apr 14 15:20:12 Elysium vault-style-demo.sh[30183]: Terminated
+Apr 14 15:20:12 Elysium vault-style-demo.sh[30183]: stop signal received
+Apr 14 15:20:12 Elysium systemd[332]: Stopped vault-style-demo.service - Vault style demo service.
+Apr 14 15:20:12 Elysium systemd[332]: Started vault-style-demo.service - Vault style demo service.
+Apr 14 15:20:12 Elysium vault-style-demo.sh[30215]: service started
 ```
 
 #### Read the last N lines
@@ -375,15 +415,27 @@ sudo journalctl -u mssql-server -f
 `-n` limits output to the most recent N log entries. Combine with `--no-pager` for scripting.
 
 ```bash
-sudo journalctl -u mssql-server -n 50 --no-pager
+journalctl --user -u vault-style-demo.service -n 5 --no-pager
+```
+
+```text
+Apr 14 15:20:12 Elysium vault-style-demo.sh[30183]: Terminated
+Apr 14 15:20:12 Elysium vault-style-demo.sh[30183]: stop signal received
+Apr 14 15:20:12 Elysium systemd[332]: Stopped vault-style-demo.service - Vault style demo service.
+Apr 14 15:20:12 Elysium systemd[332]: Started vault-style-demo.service - Vault style demo service.
+Apr 14 15:20:12 Elysium vault-style-demo.sh[30215]: service started
 ```
 
 #### Filter by log priority level
 
-`-p` filters by syslog priority. `err` shows only error-level and above (critical, alert, emergency). Useful for extracting only failures from verbose services.
+`-p` filters by syslog priority. `warning` and above are often enough to isolate a failing unit without the surrounding info-level chatter; tighten to `err` when the service or logger actually emits error-priority records.
 
 ```bash
-sudo journalctl -u datadog-agent -p err --since "24 hours ago" --no-pager
+journalctl --user -u vault-style-bad.service -p warning --since "5 minutes ago" --no-pager
+```
+
+```text
+Apr 14 15:14:11 Elysium systemd[332]: vault-style-bad.service: Failed with result 'exit-code'.
 ```
 
 | Flag | Syntax | Description |
@@ -512,16 +564,26 @@ Stopped  SQLBrowser       SQL Server Browser
 
 These cmdlets send control requests to the SCM and wait for the service to reach the target state before returning. They are the PowerShell equivalents of `systemctl start/stop/restart`.
 
+The live demonstrations below use `-WhatIf` against built-in Windows services so the cmdlets emit real confirmation output without mutating the host.
+
 #### Start a service
 
 ```powershell
-Start-Service -Name "MSSQLSERVER"
+Start-Service -Name "BITS" -WhatIf
+```
+
+```text
+What if: Performing the operation "Start-Service" on target "Background Intelligent Transfer Service (BITS)".
 ```
 
 #### Stop a service
 
 ```powershell
-Stop-Service -Name "MSSQLSERVER"
+Stop-Service -Name "Spooler" -WhatIf
+```
+
+```text
+What if: Performing the operation "Stop-Service" on target "Print Spooler (Spooler)".
 ```
 
 > [!warning] Stop-Service blocks on dependent services
@@ -535,7 +597,11 @@ Stop-Service -Name "MSSQLSERVER"
 #### Restart a service
 
 ```powershell
-Restart-Service -Name "MSSQLSERVER"
+Restart-Service -Name "EventLog" -WhatIf
+```
+
+```text
+What if: Performing the operation "Restart-Service" on target "Windows Event Log (EventLog)".
 ```
 
 #### Restart including dependent services
@@ -543,25 +609,36 @@ Restart-Service -Name "MSSQLSERVER"
 `-Force` propagates the restart to dependent services so they do not remain in a stopped state after the primary service comes back up.
 
 ```powershell
-Restart-Service -Name "MSSQLSERVER" -Force
+Restart-Service -Name "Spooler" -Force -WhatIf
+```
+
+```text
+What if: Performing the operation "Restart-Service" on target "Print Spooler (Spooler)".
 ```
 
 | Flag / Parameter | Syntax | Description |
 |---|---|---|
 | `-Name` | `Start-Service -Name "X"` | Target service by short name |
 | `-Force` | `Stop-Service -Name "X" -Force` | Stop service and all its dependents |
+| `-WhatIf` | `Restart-Service -Name "X" -WhatIf` | Preview the change without mutating the service |
 | `-PassThru` | `Restart-Service -Name "X" -PassThru` | Return the service object after the operation |
 
 ### PowerShell | Set-Service | manage startup type
 
 `Set-Service` modifies the service configuration in the SCM registry, including startup type and description. Changes take effect on the next service start; the currently running service is not affected.
 
+These examples keep `-WhatIf` for the same reason as the runtime-control examples: the output is real, but the service configuration is left untouched.
+
 #### Configure a service to start automatically on boot
 
 `Automatic` is equivalent to `systemctl enable`. The service starts during the Windows boot sequence without requiring manual intervention.
 
 ```powershell
-Set-Service -Name "MSSQLSERVER" -StartupType Automatic
+Set-Service -Name "BITS" -StartupType Automatic -WhatIf
+```
+
+```text
+What if: Performing the operation "Set-Service" on target "Background Intelligent Transfer Service (BITS)".
 ```
 
 #### Disable a service from starting on boot
@@ -569,7 +646,11 @@ Set-Service -Name "MSSQLSERVER" -StartupType Automatic
 `Disabled` prevents the service from being started manually or automatically. Use this to lock down services that must not run in a given environment.
 
 ```powershell
-Set-Service -Name "MSSQLSERVER" -StartupType Disabled
+Set-Service -Name "Spooler" -StartupType Disabled -WhatIf
+```
+
+```text
+What if: Performing the operation "Set-Service" on target "Print Spooler (Spooler)".
 ```
 
 #### Set a service to manual start
@@ -577,7 +658,11 @@ Set-Service -Name "MSSQLSERVER" -StartupType Disabled
 `Manual` means the service does not start on boot but can be started on demand. Equivalent to a service with no `[Install]` section in its systemd unit file.
 
 ```powershell
-Set-Service -Name "MSSQLSERVER" -StartupType Manual
+Set-Service -Name "Spooler" -StartupType Manual -WhatIf
+```
+
+```text
+What if: Performing the operation "Set-Service" on target "Print Spooler (Spooler)".
 ```
 
 | Flag / Parameter | Syntax | Description |
@@ -586,6 +671,7 @@ Set-Service -Name "MSSQLSERVER" -StartupType Manual
 | `-StartupType Manual` | `Set-Service -Name "X" -StartupType Manual` | Start on demand only |
 | `-StartupType Disabled` | `Set-Service -Name "X" -StartupType Disabled` | Prevent start entirely |
 | `-StartupType AutomaticDelayedStart` | `Set-Service -Name "X" -StartupType AutomaticDelayedStart` | Start after other Automatic services (reduces boot contention) |
+| `-WhatIf` | `Set-Service -Name "X" -StartupType Manual -WhatIf` | Preview a startup-type change without applying it |
 | `-Description` | `Set-Service -Name "X" -Description "text"` | Update the service description |
 
 ### PowerShell | Get-WinEvent | read service event logs
@@ -612,19 +698,39 @@ Event ID 7036 is a state-change event (service started or stopped). Event ID 703
 
 #### Query a service's dedicated event log provider
 
-SQL Server, Datadog, and other enterprise services write to their own named event log providers in addition to the System log.
+Many Windows services and management stacks publish provider-specific logs in addition to the `System` log. WinRM is one example: querying its provider isolates WS-Management failures without the surrounding SCM noise.
 
 ```powershell
-Get-WinEvent -ProviderName "MSSQLSERVER" -MaxEvents 20
+Get-WinEvent -ProviderName "Microsoft-Windows-WinRM" -MaxEvents 2 |
+    Select-Object TimeCreated, Id, LevelDisplayName, ProviderName, Message |
+    Format-Table -Wrap -AutoSize
 ```
 
-#### Follow events in real time
+```text
+TimeCreated         Id  LevelDisplayName ProviderName            Message
+-----------         --  ---------------- ------------            -------
+14-Apr-26 15:12:22 142 Error            Microsoft-Windows-WinRM WSMan operation Enumeration failed, error code 2150858770
+14-Apr-26 15:12:22 161 Error            Microsoft-Windows-WinRM The client cannot connect to the destination specified in the request. Verify that the service on the destination is running and is accepting requests.
+```
 
-`-Wait` streams new events as they arrive, equivalent to `journalctl -f`.
+#### Poll for newly written events
+
+`Get-WinEvent` does not provide a `-Wait` parameter. In PowerShell, the usual pattern is to record a checkpoint time, trigger the activity you care about, and then query again with `StartTime` in `-FilterHashtable`.
 
 ```powershell
-Get-WinEvent -LogName System -MaxEvents 1 -Wait |
-    Where-Object { $_.Message -like "*MSSQLSERVER*" }
+$start = Get-Date
+$job = Start-Job -ScriptBlock { Start-Sleep -Seconds 1; cmd /c "winrm enumerate winrm/config/listener >NUL 2>&1" }
+Start-Sleep -Seconds 3
+Get-WinEvent -FilterHashtable @{ ProviderName = 'Microsoft-Windows-WinRM'; StartTime = $start } -MaxEvents 5 |
+    Select-Object TimeCreated, Id, LevelDisplayName, ProviderName |
+    Format-Table -AutoSize
+Receive-Job -Job $job -Wait -AutoRemoveJob | Out-Null
+```
+
+```text
+TimeCreated         Id LevelDisplayName ProviderName
+-----------         -- ---------------- ------------
+14-Apr-26 15:13:41 145 Information      Microsoft-Windows-WinRM
 ```
 
 > [!info] No direct equivalent for dmesg on Windows
@@ -634,9 +740,9 @@ Get-WinEvent -LogName System -MaxEvents 1 -Wait |
 | Flag / Parameter | Syntax | Description |
 |---|---|---|
 | `-LogName` | `-LogName System` | Query a named event log |
-| `-ProviderName` | `-ProviderName "MSSQLSERVER"` | Query by event provider name |
+| `-ProviderName` | `-ProviderName "Microsoft-Windows-WinRM"` | Query by event provider name |
 | `-MaxEvents` | `-MaxEvents 50` | Limit number of returned events |
-| `-Wait` | `-Wait` | Stream new events in real time (like journalctl -f) |
+| `StartTime` | `@{ ProviderName='X'; StartTime=(Get-Date).AddMinutes(-5) }` | Filter to events newer than a checkpoint when polling for fresh records |
 | `-FilterHashtable` | `-FilterHashtable @{LogName='System'; Id=7036}` | Fast server-side filtering by log, ID, level, time |
 
 When running multiple services as containers, [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) provides declarative service orchestration with `docker compose up/down/restart` and automatic dependency ordering.
@@ -663,27 +769,68 @@ When running multiple services as containers, [docker-compose](https://alp78.git
 
 ## Recommendations
 
-| Scenario | Recommendation |
-|---|---|
-| Check service status | `systemctl status <service>` (Linux) or `Get-Service <name>` (PowerShell). |
-| Start and enable at boot | `systemctl enable --now <service>`. |
-| View recent service logs | `journalctl -u <service> --since "1 hour ago" --no-pager`. |
-| Follow service logs live | `journalctl -u <service> -f` (equivalent to `tail -F` for service logs). |
-| Diagnose boot failure | `journalctl -u <service> -b` for current-boot logs. Add `-p err` to filter errors only. |
-| Prevent accidental start | `systemctl mask <service>` blocks all start attempts. `unmask` to reverse. |
-| Windows service control | `Get-Service`, `Start-Service`, `Stop-Service`, `Restart-Service`. For creation/deletion: `sc.exe`. |
-| Custom service creation | Create a unit file in `/etc/systemd/system/`, then `systemctl daemon-reload && systemctl enable --now <service>`. |
+### Linux | recommendations | scenario guide
+
+#### Check service status
+
+Start with `systemctl status <service>` when you need the current state, main PID, and recent journal lines in one place. If the service is failing during boot, narrow the log window with `journalctl -u <service> -b --no-pager` and add `-p err` or `-p warning` when the journal volume is noisy.
+
+#### Start and persist a service
+
+Use `systemctl enable --now <service>` when onboarding a service that must survive reboots. Reserve plain `start` for transient runtime changes or for recovery steps when you do not want to alter boot-time configuration.
+
+#### Read recent or live logs
+
+Use `journalctl -u <service> --since "1 hour ago" --no-pager` for retrospective analysis and `journalctl -u <service> -f` when you need to watch a restart or rollout in motion. The two commands answer different questions: one reconstructs what happened, and the other shows whether the current action is progressing.
+
+#### Prevent accidental activation
+
+`systemctl mask <service>` is stronger than `disable`: it blocks manual starts, dependency starts, and boot-time activation. Use it when a unit is dangerous or unsupported in the current environment, and reverse it with `systemctl unmask <service>` before you attempt recovery.
+
+#### Create and activate a new unit
+
+Place custom unit files under `/etc/systemd/system/`, not in vendor-managed directories. After writing or editing the unit, run `systemctl daemon-reload` and then `systemctl enable --now <service>` so the new definition is both loaded and activated.
+
+### PowerShell | recommendations | scenario guide
+
+#### Inspect and control runtime state
+
+Use `Get-Service` to read the current state first, then use `Start-Service`, `Stop-Service`, or `Restart-Service` for the actual runtime change. Reach for `sc.exe` only when you need create/delete operations or low-level configuration that the standard cmdlets do not expose cleanly.
+
+#### Diagnose Windows service events
+
+Query the `System` log with `Get-WinEvent` when you need Service Control Manager events such as starts, stops, crashes, and recovery actions. If the product publishes its own provider, switch to `-ProviderName` so you can isolate product-specific failures without unrelated system noise.
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Service fails to start with "Unit is masked" | `systemctl mask` was run previously, blocking all start attempts. | `systemctl unmask <service>` then `systemctl start <service>`. |
-| Service starts but immediately exits | Application error, missing config, or wrong user permissions. | Check `journalctl -u <service> -b` for the error message. Common causes: missing environment variables, wrong file paths, permission denied. |
-| `systemctl restart` hangs | The service stop phase is waiting for connections to drain or processes to terminate. | Wait for the timeout (default 90s). If unacceptable, `systemctl kill <service>` sends SIGKILL. |
-| Config changes not taking effect after restart | `systemctl daemon-reload` was not run after editing the unit file. | Run `systemctl daemon-reload` then `systemctl restart <service>`. |
-| Service runs but is not accessible from outside | Service is listening on `127.0.0.1` (localhost only) instead of `0.0.0.0`. Or a firewall is blocking the port. | Check binding address in the service config. Check `ss -tlnp` for listen address. Check `ufw status` or `iptables -L`. |
-| Windows service not starting after reboot | Startup type is set to Manual, not Automatic. | `Set-Service -Name <service> -StartupType Automatic`. |
+### Linux | troubleshooting | failure patterns
+
+#### Unit is masked
+
+If `systemctl start` reports that the unit is masked, startup has been administratively blocked with `systemctl mask`. Remove the block with `systemctl unmask <service>` before retrying `start` or `enable`; until you do, both manual and dependency-driven activation attempts will fail.
+
+#### Service exits immediately
+
+An immediate exit usually means the service process failed inside `ExecStart`, hit a missing dependency, or lacks the right environment or file permissions. Start with `journalctl -u <service> -b --no-pager`, then verify file paths, environment variables, and the account under which the service runs.
+
+#### Restart hangs
+
+A hanging restart usually means the stop phase is waiting for processes or client connections to drain. Let systemd reach its configured timeout unless you have clear evidence that the process is wedged; if you must escalate, use `systemctl kill <service>` deliberately rather than assuming the service manager is broken.
+
+#### Config changes are ignored
+
+If a unit file changed on disk but behavior did not, systemd is still using the cached definition. Run `systemctl daemon-reload`, confirm the loaded unit with `systemctl cat <service>`, and then retry the restart so the new definition actually takes effect.
+
+#### Service is reachable only from localhost
+
+A healthy service can still look down if it binds only to `127.0.0.1` or a host firewall blocks the listener. Confirm the bind address with `ss -tlnp`, then inspect `ufw`, `iptables`, or the platform firewall layer before concluding that the service itself failed.
+
+### PowerShell | troubleshooting | boot and startup issues
+
+#### Service does not start after reboot
+
+If a service runs when started manually but stays down after boot, verify its startup type before debugging anything else. `Set-Service -Name <service> -StartupType Automatic` corrects a service left in `Manual`, while `AutomaticDelayedStart` is useful when boot-time contention is the real problem rather than the service definition itself.
+
 ## Cross-references
 - [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — monitor resource usage of a running service
 - [system-resources](https://alp78.github.io/elysium/01-Shell/Process-Management/system-resources) — detect OOM conditions before they kill services

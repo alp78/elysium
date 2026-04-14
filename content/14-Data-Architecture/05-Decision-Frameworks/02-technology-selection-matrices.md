@@ -1108,7 +1108,7 @@ For rapid lookup when you just need the answer:
 #### Architecture and modeling
 
 - [moc-data-architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — full section index
-- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — the principles behind every decision
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — the principles behind every decision
 - [moc-terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) — Terraform and IaC overview
 
 #### Comparison references

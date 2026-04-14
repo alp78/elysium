@@ -4,284 +4,130 @@ tags:
   - shell
   - scripting
 aliases: [command history, shell history, history recall, reverse search, Ctrl+R]
-keywords: [command history, history, reverse search, Ctrl+R, bash history, HISTSIZE, HISTCONTROL, recall, re-run command, bang bang, exclamation, PSReadLine, predictive intellisense]
-description: "How to search, recall, and re-run previous shell commands in bash and PowerShell, including history configuration for data engineers and incident response."
+keywords: [command history, history, reverse search, Ctrl+R, bash history, HISTSIZE, HISTCONTROL, PSReadLine, Get-History, Invoke-History, HistorySavePath, predictive intellisense]
+description: "How to search, replay, retain, and filter command history in Bash and PowerShell without confusing session-local recall with persistent history files."
 ---
 
 # Command History and Recall
 
-> [!quote]
+> [!quote] Operational memory
+>
 > "Those who cannot remember the past are condemned to repeat it."
 >
-> — **George Santayana**, *The Life of Reason* (1905)
+> George Santayana, *The Life of Reason* (1905)
+
+Command history is both a recall surface and a persistence surface. That distinction matters operationally: Bash and PowerShell both let you recover prior commands quickly, but they do not store, flush, or filter those commands the same way.
 
 > [!abstract]- Summary
 >
-> Covers bash and PowerShell command history end to end — from recall mechanics and expansion operators to full retention configuration and operational safety.
->
-> **Recall and search**
-> - View, search, and replay commands from the bash history buffer and file using `history`, `grep`, and numbered entry replay
-> - History expansion operators: `!!`, `!n`, `!-n`, `!string`, `!?string?`, `^old^new`, `$_`, `Alt+.`, and the `:p` preview modifier
-> - Interactive reverse search with `Ctrl+R`, including cancel (`Ctrl+G`) and edit-before-execute (`→`) patterns
-> - Iterative command-building workflows: recalling complex commands and modifying a single argument without retyping
->
-> **Bash configuration**
-> - Retention: `HISTSIZE` (in-memory), `HISTFILESIZE` (on-disk), `HISTFILE` (path), `HISTIGNORE` (pattern exclusion)
-> - Deduplication and secret hygiene: `HISTCONTROL` values (`ignorespace`, `ignoredups`, `ignoreboth`, `erasedups`) and leading-space suppression
-> - Timestamps for incident reconstruction: `HISTTIMEFORMAT` with `strftime` format strings
-> - Crash resilience and multi-session safety: `histappend` and `PROMPT_COMMAND="history -a"` to flush after every command
-> - Productivity binding: arrow keys remapped to `history-search-backward` / `history-search-forward`
->
-> **PowerShell**
-> - Session history: `Get-History` (object pipeline), `Invoke-History` / `r` alias, cross-session search via `HistorySavePath`
-> - PSReadLine: persistent history, `MaximumHistoryCount`, `HistorySaveStyle` (incremental vs exit), predictive IntelliSense, `AddToHistoryHandler` for credential filtering
->
-> **Operations and safety**
-> - Warnings: credential leakage into history files, `!string` executing without confirmation, concurrent session clobbering, PSReadLine saving everything by default
-> - Recommendations table: production server settings, secret hygiene, deduplication strategy, crash resilience, fast recall, cross-session search
-> - Troubleshooting: 6 failure modes covering lost history, session conflicts, disabled expansion, and PSReadLine session scope
+> - Bash keeps an in-memory list plus a persistent history file, so reliable recall depends on both the current buffer and the write policy behind `HISTFILE`.
+> - Safe Bash replay starts with inspection or preview: use `history`, `Ctrl+R`, and `history -p` before relying on immediate `!` expansion.
+> - PowerShell separates current-session history from PSReadLine's persistent file. `Get-History` is session-scoped; `HistorySavePath` is the cross-session search target.
+> - Durable and safe history requires explicit retention, flush behavior, and secret filtering through `HISTSIZE`, `HISTFILESIZE`, `histappend`, `PROMPT_COMMAND`, `MaximumHistoryCount`, and `AddToHistoryHandler`.
 
 > [!note]- Glossary
 >
 > **History buffer**
-> - An in-memory list of commands run during the current shell session. Bounded by `HISTSIZE` in bash and `MaximumHistoryCount` in PSReadLine.
-> - Every recall and search operation (`Ctrl+R`, `!!`, `!n`) reads from this buffer.
 >
-> > [!warning] Session-scoped only
-> >
-> > The in-memory buffer is not the same as the persistent history file. If the session crashes before writing, buffered commands are lost.
+> - The in-memory command list owned by the current shell process.
+> - In Bash it is bounded by `HISTSIZE`; in PowerShell it is the session history surfaced by `Get-History`.
+> - It is distinct from PSReadLine's persistent file. Raising `MaximumHistoryCount` does not enlarge the current `Get-History` scope.
 >
 > ---
 >
 > **History file**
-> - A plain-text file on disk that stores commands across sessions. `~/.bash_history` on Linux, `ConsoleHost_history.txt` on PowerShell.
-> - Allows you to recall commands from previous sessions — days or weeks later.
 >
-> > [!warning] Bash writes on exit, not on execution
-> >
-> > By default, bash flushes to `~/.bash_history` only when the session exits cleanly. A crash or SSH disconnect loses all unwritten commands from that session.
->
-> ---
->
-> **`HISTSIZE`**
-> - An environment variable controlling how many commands the bash history buffer holds in memory.
-> - If set too low (default is often 500), old commands fall off the list before you can recall them during incident investigation.
->
-> > [!warning] `HISTSIZE` ≠ `HISTFILESIZE`
-> >
-> > `HISTSIZE` caps the in-memory list; `HISTFILESIZE` caps the on-disk file. Both must be set for effective long-term history retention.
->
-> ---
->
-> **`HISTCONTROL`**
-> - An environment variable controlling which commands bash saves. Values: `ignorespace` (skip space-prefixed), `ignoredups` (skip consecutive duplicates), `ignoreboth`, `erasedups` (remove all prior duplicates).
-> - `ignorespace` is the standard mechanism for keeping secrets out of history. `erasedups` aggressively deduplicates but loses command ordering.
->
-> > [!danger] Credentials leak without `HISTCONTROL`
-> >
-> > Without `ignorespace`, any command containing a password or token typed inline is saved to `~/.bash_history` in plain text. Always set `HISTCONTROL=ignoreboth` and prefix sensitive commands with a space.
->
-> ---
->
-> **`HISTTIMEFORMAT`**
-> - A `strftime` format string that timestamps each history entry when set.
-> - Essential for incident reconstruction — answers "what commands were run between 14:00 and 14:30?" with exact timing.
->
-> > [!warning] Without timestamps, ordering is all you have
-> >
-> > If `HISTTIMEFORMAT` is not set, history shows command sequence but no timing. Post-incident analysis is severely limited without this variable.
->
-> ---
->
-> **`HISTFILESIZE`**
-> - An environment variable that caps the number of lines kept in `~/.bash_history` on disk. Bash truncates the file to this limit on session exit.
-> - Controls long-term retention independently of `HISTSIZE`. If smaller than `HISTSIZE`, the on-disk file discards entries that were present in memory during the session.
->
-> > [!warning] Set both `HISTSIZE` and `HISTFILESIZE`
-> >
-> > Setting only `HISTSIZE` grows the in-memory list but the file is still capped at the default (often 500). Set `HISTFILESIZE` to at least twice `HISTSIZE` to avoid silent truncation on exit.
->
-> ---
->
-> **`HISTFILE`**
-> - An environment variable specifying the path to the bash history file. Defaults to `~/.bash_history`.
-> - Lets you redirect history to a custom location — useful for per-project separation or storing history on a shared volume accessible across machines.
->
-> > [!info] Changing the path
-> >
-> > Set `export HISTFILE=~/.bash_history_work` in `.bashrc`. The new path takes effect for sessions started after the change. The old file is not deleted or merged automatically.
->
-> ---
->
-> **`HISTIGNORE`**
-> - An environment variable containing a colon-separated list of glob patterns. Any command matching a pattern is silently excluded from history without requiring a leading space.
-> - A surgical alternative to `HISTCONTROL=ignorespace` — permanently excludes specific command forms such as `ls:cd:exit:history` without workflow discipline around leading spaces.
->
-> > [!warning] Glob matching is exact by default
-> >
-> > `ls` suppresses only the bare `ls` command. Use `ls*` to suppress all `ls` variants including `ls -la`. Patterns are matched against the full command line.
->
-> ---
->
-> **`histappend`**
-> - A bash shell option (`shopt -s histappend`) that appends the session's history to `HISTFILE` on exit rather than overwriting it.
-> - Prevents concurrent sessions from clobbering each other's history. Without it, the last session to close wins and all other sessions' entries are permanently lost.
->
-> > [!danger] Off by default
-> >
-> > Without `histappend`, opening two terminals and closing them in sequence silently discards the first session's history. Always set `shopt -s histappend` in `.bashrc`.
->
-> ---
->
-> **`PROMPT_COMMAND`**
-> - A bash variable whose value is executed as a shell command before each primary prompt is displayed. Commonly set to `history -a` to flush the in-memory history to disk after every command.
-> - Combined with `histappend`, provides crash resilience: commands are persisted immediately rather than buffered until clean session exit.
->
-> > [!info] Extending an existing value
-> >
-> > Use `PROMPT_COMMAND="history -a; $PROMPT_COMMAND"` to prepend history flushing while preserving any existing prompt hook already set by the distro or shell framework.
->
-> ---
->
-> **`histexpand`**
-> - A bash shell option that enables the `!`-based history expansion operators (`!!`, `!n`, `!string`, etc.). Enabled by default in interactive shells. Disabled by `set +H` or `set +o histexpand`.
-> - Must be active for all history expansion to function. When disabled, `!` characters are treated as literals and no expansion occurs.
->
-> > [!warning] Silent no-op when disabled
-> >
-> > If history expansion operators appear to do nothing, run `set -o | grep histexpand` to check the current state. Re-enable with `set -o histexpand`.
+> - The persistent text file used for cross-session recall.
+> - Bash defaults to `~/.bash_history`; PowerShell's authoritative path is `(Get-PSReadLineOption).HistorySavePath`.
+> - On Windows console hosts that path often resolves to `ConsoleHost_history.txt`, but the host-specific option value is the safe source of truth.
 >
 > ---
 >
 > **History expansion**
-> - A bash feature that uses `!`-prefixed operators to recall and transform previous commands. Examples: `!!` (last command), `!n` (entry n), `!string` (last command starting with string).
-> - The fastest way to replay or modify commands without full retyping.
 >
-> > [!danger] `!string` executes immediately with no confirmation
-> >
-> > `!rm` replays your most recent `rm` command on the spot. Use `!rm:p` to print the expansion first, then `!!` to execute if correct.
+> - Bash's `!`-based replay syntax, such as `!!`, `!n`, `!string`, and `!?string?`.
+> - Expansion happens before command execution, which makes it fast but also removes the review step unless you add one explicitly.
+> - `history -p` or the `:p` modifier prints the expanded command without running it.
 >
 > ---
 >
-> **`!?string?`**
-> - A history expansion operator that matches the most recent command containing `string` anywhere in the line, not just at the start.
-> - More flexible than `!string` (which requires a prefix match) — use it when you remember a distinctive substring from the middle of a long command.
+> **`HISTCONTROL`**
 >
-> > [!warning] Also executes immediately
-> >
-> > Like `!string`, `!?string?` runs the matched command with no review step. Append `:p` to preview: `!?analytics?:p`.
+> - The Bash variable that controls selective suppression and duplicate handling, including `ignorespace`, `ignoredups`, `ignoreboth`, and `erasedups`.
+> - It affects whether accepted command lines reach the history list and file.
+> - It does not retroactively scrub commands that were already recorded.
 >
 > ---
 >
-> **`:p` modifier**
-> - A history expansion modifier appended to any `!` operator that prints the expanded command without executing it. Example: `!rm:p`.
-> - Safe inspection step before committing to a potentially destructive expansion. After reviewing, run `!!` to execute the printed command.
+> **`HISTIGNORE`**
 >
-> > [!info] Works with all expansion forms
-> >
-> > `!!:p`, `!42:p`, `!string:p`, `!?string?:p` — the `:p` modifier is universally applicable across every history expansion operator.
+> - A colon-separated Bash list of glob patterns for commands that should never be recorded.
+> - It complements `HISTCONTROL` when leading-space discipline alone is too fragile.
+> - Overly broad patterns can hide operationally useful commands, so the pattern set needs review.
 >
 > ---
 >
-> **`Alt+.` / `$_`**
-> - `Alt+.` is a readline key binding that inserts the last argument of the previous command at the cursor, interactively. `$_` is the equivalent non-interactive shell variable, expanded at command time.
-> - Avoids retyping long paths or filenames when chaining commands — `mkdir /data/pipeline && cd $_` reuses the path without repetition.
+> **`histappend`**
 >
-> > [!info] `Alt+.` cycles through history
-> >
-> > Pressing `Alt+.` repeatedly moves backward through the last argument of successive history entries, not just the immediately previous command.
+> - The Bash shell option that appends session history to `HISTFILE` instead of overwriting the file on exit.
+> - It prevents the last terminal to exit from discarding commands written by earlier terminals.
+> - It does not, by itself, flush new commands after each prompt.
 >
 > ---
 >
-> **`Ctrl+R`**
-> - Reverse incremental search — an interactive mode that searches backward through history as you type a fragment. Available in bash (readline) and PowerShell (PSReadLine).
-> - The fastest interactive recall method for complex commands you ran recently.
+> **`PROMPT_COMMAND`**
 >
-> > [!warning] `Enter` executes immediately
-> >
-> > Pressing `Enter` in reverse-i-search runs the matched command without editing. Use the right arrow key to move the match to the prompt and edit it first. Press `Ctrl+G` to cancel without executing.
+> - The Bash hook executed before each primary prompt is displayed.
+> - It is commonly used with `history -a` to flush accepted commands to disk incrementally.
+> - If another framework already owns `PROMPT_COMMAND`, the history hook must be merged instead of replacing the existing value blindly.
 >
 > ---
 >
 > **PSReadLine**
-> - The readline library for PowerShell. Provides `Ctrl+R` search, predictive IntelliSense, and history persistence across sessions. Built into PowerShell 5.1+ and enabled by default in PowerShell 7+.
-> - All PowerShell history configuration — prediction source, save behavior, credential filtering — is managed through PSReadLine options.
 >
-> > [!warning] `Get-History` vs PSReadLine history file
-> >
-> > `Get-History` returns only the current session's commands. The PSReadLine history file (`ConsoleHost_history.txt`) holds all sessions. Use `Get-Content (Get-PSReadLineOption).HistorySavePath` for cross-session search.
+> - The PowerShell line editor and persistent-history subsystem used by modern hosts.
+> - It owns interactive search, key bindings, prediction settings, history storage options, and file-backed recall.
+> - `Get-History` and `Invoke-History` operate on the current session list; PSReadLine owns the persistent file.
 >
 > ---
 >
 > **Predictive IntelliSense**
-> - A PSReadLine feature that shows greyed-out inline suggestions as you type, drawn from history or plugins. Accept with right arrow or `Alt+→` (word-by-word).
-> - Dramatically speeds up command entry for repetitive operations like database queries or deployment commands.
 >
-> > [!info] No plugin required
-> >
-> > `Set-PSReadLineOption -PredictionSource History` works out of the box on PowerShell 7+. No external module or configuration beyond your profile is needed.
->
-> ---
->
-> **`AddToHistoryHandler`**
-> - A PSReadLine option that accepts a scriptblock to filter which commands are saved to the persistent history file. Returns `$true` to save, `$false` to drop.
-> - The PowerShell equivalent of `HISTCONTROL=ignorespace` — use it to suppress commands matching credential patterns before they reach disk.
->
-> > [!danger] PSReadLine saves everything by default
-> >
-> > Without an `AddToHistoryHandler`, every command — including those with passwords, tokens, and API keys — is written to `ConsoleHost_history.txt` in plain text. Configure the handler in your PowerShell profile.
->
-> ---
->
-> **`Get-History`**
-> - A PowerShell cmdlet that returns the current session's command history as objects with `Id`, `CommandLine`, `StartExecutionTime`, and `EndExecutionTime` properties.
-> - Enables filtering, sorting, and pipeline processing of in-session history — e.g., `Get-History | Where-Object CommandLine -like "*sqlcmd*"` to find specific commands.
->
-> > [!warning] Current session only
-> >
-> > `Get-History` does not read PSReadLine's persistent file. Commands from previous sessions are invisible. Use `Get-Content (Get-PSReadLineOption).HistorySavePath` for cross-session search.
->
-> ---
->
-> **`Invoke-History`**
-> - A PowerShell cmdlet that re-executes a command from the in-session history list by its `Id`. Aliased as `r`. Without an ID, replays the most recent command.
-> - The PowerShell equivalent of bash's `!n` operator — replays a specific past command by number without retyping it.
->
-> > [!info] Built-in alias `r`
-> >
-> > `r 42` is equivalent to `Invoke-History -Id 42`. The alias is available in all PowerShell sessions without additional setup.
->
-> ---
->
-> **`MaximumHistoryCount`**
-> - A PSReadLine option that sets the maximum number of commands saved to the persistent history file, controlled via `Set-PSReadLineOption -MaximumHistoryCount`.
-> - The PowerShell equivalent of bash's `HISTFILESIZE` — governs long-term retention in `ConsoleHost_history.txt` across all sessions.
->
-> > [!info] Default is 4096
-> >
-> > The PSReadLine 2.x default is 4096 commands. Raise it to 50000 or more in operational environments where incident reconstruction requires weeks of history.
+> - The PSReadLine feature that proposes inline or list-based command completions from prior history or plugins.
+> - It speeds repetitive command entry by surfacing the most likely continuation as you type.
+> - History-backed prediction and file-backed recall share the same PSReadLine option surface but solve different problems.
 >
 > ---
 >
 > **`HistorySavePath`**
-> - A PSReadLine property (read via `(Get-PSReadLineOption).HistorySavePath`) that specifies the file path where PSReadLine writes the persistent cross-session history log.
-> - Points to `ConsoleHost_history.txt` by default. Read this file directly with `Get-Content` to search across all past sessions without session-scope limitations.
 >
-> > [!info] Path is configurable
-> >
-> > Override with `Set-PSReadLineOption -HistorySavePath "C:\custom\history.txt"` in your PowerShell profile to redirect history to a shared or project-specific location.
+> - The PSReadLine option that identifies the file used for persistent history storage.
+> - It is the correct target for cross-session searches and host-specific validation.
+> - Automation should read this value instead of assuming a fixed filename.
 >
 > ---
 >
 > **`HistorySaveStyle`**
-> - A PSReadLine option controlling when commands are written to the history file. Values: `SaveIncrementally` (after each command), `SaveAtExit` (on session close), `SaveNothing` (disable persistence).
-> - `SaveIncrementally` (the PSReadLine 2.x default) provides crash resilience equivalent to bash's `PROMPT_COMMAND="history -a"` — commands reach disk immediately rather than being buffered until exit.
 >
-> > [!warning] `SaveAtExit` loses history on crash
-> >
-> > If set to `SaveAtExit`, a force-closed or crashed PowerShell session loses all commands from that session — the same risk as bash without `PROMPT_COMMAND`.
-
-Your shell history is a searchable log of every command you have run. In an incident at 2 AM, you do not have time to retype a complex pipeline command from memory — the speed at which you can recall and modify previous commands directly affects your response time.
+> - The PSReadLine option that determines whether commands are written incrementally, only at exit, or not at all.
+> - It controls durability and crash behavior for the PowerShell history file.
+> - `SaveAtExit` recreates the same failure mode as Bash without prompt-time flushing: a terminated session loses commands that were never written.
+>
+> ---
+>
+> **`MaximumHistoryCount`**
+>
+> - The PSReadLine option that caps how many commands are saved in persistent PSReadLine history.
+> - It governs file-backed retention, not the size of the current `Get-History` list.
+> - A fresh PowerShell session can still report an empty `Get-History` result even when the PSReadLine file is large.
+>
+> ---
+>
+> **`AddToHistoryHandler`**
+>
+> - A PSReadLine scriptblock hook that decides how a line is recorded.
+> - It can return booleans or `AddToHistoryOption` values such as `MemoryOnly` or `SkipAdding`.
+> - It is the correct control surface for suppressing passwords, tokens, and other sensitive command lines before they reach persistent history.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
@@ -295,22 +141,24 @@ flowchart LR
     B2[Run PS command] --> H
 ```
 
-## Linux history tools
+The note is split by platform because the recall surface and the persistence surface are not equivalent across Bash and PowerShell. Bash history revolves around shell built-ins and `HIST*` variables, while PowerShell splits responsibility between session history cmdlets and PSReadLine.
 
-Bash maintains a numbered in-memory list of commands (bounded by `HISTSIZE`) and periodically flushes it to `~/.bash_history` (bounded by `HISTFILESIZE`). Every interactive session reads this file on startup. Understanding how to search, replay, and configure the history list is one of the highest-leverage skills for operational work.
+## Bash history
 
-### Linux | history | search and display commands
+Bash history is easiest to reason about when you treat current-session recall and persistent retention as separate problems. The in-memory list powers `history`, `Ctrl+R`, and expansion operators, while the file on disk determines what survives a terminal restart.
 
-The `history` built-in prints the numbered command list. Each entry can be replayed by its number, making it a fast log of all past operations.
+### Linux | history | inspect and replay commands
+
+The `history` built-in and readline bindings cover most current-session recall work. Use numbered listings for deterministic replay, use filtering when you remember only a fragment, and use preview before any `!` expansion that could execute something stale.
 
 #### Display the full history list
 
 Running `history` with no arguments prints all entries currently in memory.
 
+*Print the current session's numbered history list.*
 ```bash
 history
 ```
-
 ```text
   497  sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -Q "SELECT COUNT(*) FROM dbo.market_data"
   498  docker ps -a
@@ -319,39 +167,38 @@ history
 
 #### Search history by keyword
 
-Pipe `history` into `grep` to filter entries by a substring. Useful when you remember part of a command but not its number.
+Pipe `history` into `grep` to filter entries by a substring. Use it when you remember part of a command but not its history number.
 
+*Filter the current session history for commands containing `sqlcmd`.*
 ```bash
 history | grep "sqlcmd"
 ```
-
 ```text
   497  sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -Q "SELECT COUNT(*) FROM dbo.market_data"
 ```
 
-#### Re-execute a command by number
+#### Verify that reverse search is bound to `Ctrl+R`
 
-Prefix the history number with `!` to replay it exactly as recorded.
+Interactive reverse search is a readline feature, not a separate Bash command. Querying the binding directly confirms that `Ctrl+R` still invokes `reverse-search-history` in the current shell environment.
 
+*Query the active binding for reverse search.*
 ```bash
-!497
+bind -q reverse-search-history
 ```
-
-#### Reverse incremental search with Ctrl+R
-
-`Ctrl+R` opens an interactive reverse search through the history buffer. It is the fastest way to recall a complex command you ran recently.
-
-1. Press `Ctrl+R`, then type a fragment (e.g., `sqlcmd`)
-2. Bash shows the most recent match: `(reverse-i-search)'sqlcmd': sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db`
-3. Press `Ctrl+R` again to cycle through older matches
-4. Press `Enter` to execute, or `→` (right arrow) to edit before executing
-5. Press `Ctrl+G` or `Ctrl+C` to cancel
+```text
+reverse-search-history can be invoked via "\C-r".
+```
 
 #### Clear the history list for the current session
 
+Use `history -c` when you need to discard the current shell's in-memory list without touching the persisted file directly.
+
+*Clear the in-memory history list for the current shell process.*
 ```bash
 history -c
 ```
+
+The table below summarizes the `history` options most relevant to inspection, replay, and file synchronization.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -363,82 +210,44 @@ history -c
 | `-w` | `history -w` | Write the current in-memory list to `~/.bash_history`, overwriting it |
 | `-p` | `history -p <string>` | Perform history expansion on `<string>` and print the result without executing |
 
-### Linux | history expansion | recall and modify past commands
+#### Preview an expansion before replaying it
 
-History expansion uses `!` prefixes and modifiers to recall and transform recorded commands. These operators are evaluated by the shell before execution.
+History expansion is efficient because it skips a confirmation step. Use a short isolated history list so each preview is unambiguous before you rely on `!!`, `!string`, or `!?string?` interactively.
 
-#### Re-run the last command
-
-`!!` expands to the entire previous command line. Its most common use is prepending `sudo` after a permission denied error.
-
+*Seed two history entries for the preview examples.*
 ```bash
-!!
+history -c
+history -s 'ls /var/log'
+history -s 'grep db01 /etc/hosts'
 ```
 
+*Preview the previous command with `!!`.*
 ```bash
-sudo !!
+history -p '!!'
+```
+```text
+grep db01 /etc/hosts
 ```
 
-> [!tip] sudo !!
->
-> After "permission denied", type `sudo !!` to re-run the last command with elevated privileges without retyping the full command.
-
-#### Re-run the most recent command starting with a string
-
-`!string` replays the most recent history entry whose text begins with `string`.
-
+*Preview the most recent command whose prefix is `ls`.*
 ```bash
-!git
+history -p '!ls'
+```
+```text
+ls /var/log
 ```
 
+*Preview the most recent command containing `db01`.*
 ```bash
-!docker
+history -p '!?db01?'
+```
+```text
+grep db01 /etc/hosts
 ```
 
-> [!warning] !string executes without confirmation
->
-> `!rm` re-runs your most recent `rm` command immediately with no review step. On a production server this can be destructive.
+In interactive use, `!!`, `!string`, and `!?string?` execute immediately unless you append `:p` or use `history -p` first.
 
-> [!success] Print before executing with :p modifier
->
-> Use `!rm:p` to **print** the expanded command without executing it. Review it, then run `!!` to execute if correct.
-
-#### Re-run the most recent command containing a string
-
-`!?string?` matches any command that contains `string` anywhere in the line, not just at the start.
-
-```bash
-!?analytics_db?
-```
-
-#### Recall the last argument of the previous command
-
-`$_` holds the last word of the previous command. `Alt+.` is the interactive equivalent — it inserts the last argument of the previous line at the cursor.
-
-```bash
-mkdir /data/pipeline/new_output
-cd $_
-```
-
-#### Quick substitution in the last command
-
-`^old^new` replaces the first occurrence of `old` in the previous command with `new` and re-executes it. This is the fastest way to fix a typo in a long command.
-
-```bash
-^typo^fix
-```
-
-#### Prevent a command from being saved to history
-
-A command prefixed with a leading space is excluded from the history list. This requires `HISTCONTROL=ignorespace` (or `ignoreboth`) to be set in `.bashrc`.
-
-```bash
- export DB_PASSWORD="secret123"
-```
-
-> [!tip] Use leading space for sensitive commands
->
-> Credentials passed as environment exports or command arguments should always be prefixed with a space. Combined with `HISTCONTROL=ignoreboth`, neither the command nor any duplicate will appear in `~/.bash_history`.
+The table below summarizes the common history expansion forms used for replay, substitution, and safe preview.
 
 | Operator | Syntax | Description |
 |---|---|---|
@@ -452,96 +261,218 @@ A command prefixed with a leading space is excluded from the history list. This 
 | `Alt+.` | (interactive) | Insert the last argument of the previous command at the cursor |
 | `^old^new` | `^typo^fix` | Substitute first occurrence of `old` with `new` in the previous command and re-execute |
 
-### Linux | HISTSIZE, HISTCONTROL | history configuration
+### Linux | persistence | keep history durable across sessions
 
-These environment variables control how much history Bash retains and which commands are eligible for recording. They are typically set in `~/.bashrc` and apply to every new interactive session.
+Persistent Bash history is a write-policy problem. Retention limits, append behavior, and direct file inspection determine what survives a terminal restart or a dropped session.
 
-#### Configure history size, deduplication, and timestamps
+#### Set explicit retention limits for memory and disk
 
-Add the following block to `~/.bashrc` to maximize the operational value of your history. The settings below are tuned for data engineering work where incident reconstruction is common.
+`HISTSIZE` controls the in-memory list and `HISTFILESIZE` controls file-backed retention. Set them together so current-session recall and durable retention do not drift apart operationally.
 
+*Set large Bash retention limits in the current shell.*
 ```bash
 export HISTSIZE=50000
 export HISTFILESIZE=100000
-export HISTCONTROL=ignoreboth
-export HISTTIMEFORMAT="%Y-%m-%d %H:%M:%S  "
-shopt -s histappend
-PROMPT_COMMAND="history -a"
 ```
 
-`HISTSIZE=50000` keeps 50,000 commands in memory per session. `HISTFILESIZE=100000` keeps 100,000 lines in the persistent file. `HISTCONTROL=ignoreboth` combines `ignoredups` (skip consecutive duplicates) and `ignorespace` (skip space-prefixed commands). `HISTTIMEFORMAT` timestamps each entry, which is invaluable during post-incident reviews: "What commands were run on the database server between 14:00 and 14:30 yesterday?" `shopt -s histappend` appends new entries rather than overwriting the file when the session exits, so concurrent sessions do not clobber each other. `PROMPT_COMMAND="history -a"` flushes to file after every command, so the history survives a crash.
-
-
-> [!tip] Bind up/down arrows to history-search
->
-> By default, up/down arrows cycle through the entire history. Binding them to `history-search-backward` and `history-search-forward` makes them search for entries matching what you have already typed — far more useful. Add to `~/.bashrc`:
-> ```bash
-> bind '"\e[A": history-search-backward'
-> bind '"\e[B": history-search-forward'
-> ```
-> Now type `sqlcmd` then press `↑` to cycle through only commands that started with `sqlcmd`.
-
-#### Apply changes to the current session
-
-After editing `.bashrc`, reload it without opening a new terminal.
-
+*Print the active retention values.*
 ```bash
-source ~/.bashrc
+printf 'HISTSIZE=%s\nHISTFILESIZE=%s\n' "$HISTSIZE" "$HISTFILESIZE"
+```
+```text
+HISTSIZE=50000
+HISTFILESIZE=100000
 ```
 
-#### Inspect the current value of a HIST variable
+#### Append and flush instead of waiting for shell exit
 
+`histappend` prevents one shell from overwriting another shell's history file. `PROMPT_COMMAND='history -a'` reduces crash loss by flushing accepted commands before the next prompt instead of waiting for a clean exit.
+
+*Enable append-on-exit plus prompt-time flushing.*
+```bash
+shopt -s histappend
+PROMPT_COMMAND='history -a'
+```
+
+*Verify that `histappend` is enabled.*
+```bash
+shopt -p histappend
+```
+```text
+shopt -s histappend
+```
+
+*Print the active `PROMPT_COMMAND` value.*
+```bash
+printf 'PROMPT_COMMAND=%s\n' "$PROMPT_COMMAND"
+```
+```text
+PROMPT_COMMAND=history -a
+```
+
+#### Inspect the current value of a history variable
+
+After editing `.bashrc` or setting values interactively, confirm the current shell actually sees the expected history configuration.
+
+*Print the current values of `HISTSIZE` and `HISTCONTROL`.*
 ```bash
 echo $HISTSIZE
 echo $HISTCONTROL
 ```
-
 ```text
 50000
 ignoreboth
 ```
 
+#### Search the persisted history file directly
+
+`history` sees only the in-memory list. When the command you need was run in another shell, search `HISTFILE` itself instead of assuming the entry disappeared.
+
+*Create an isolated history file with a prior `sqlcmd` entry.*
+```bash
+export HOME=/tmp/codex-hist-search
+mkdir -p "$HOME"
+export HISTFILE="$HOME/.bash_history"
+cat > "$HISTFILE" <<'EOF'
+echo hello
+sqlcmd -S db01 -Q "SELECT @@VERSION"
+docker ps
+EOF
+```
+
+*Search the isolated history file for `sqlcmd`.*
+```bash
+grep 'sqlcmd' "$HISTFILE"
+```
+```text
+sqlcmd -S db01 -Q "SELECT @@VERSION"
+```
+
+The table below summarizes the primary Bash variables used to control history retention and filtering.
+
 | Variable | Default | Description |
 |---|---|---|
 | `HISTSIZE` | 500 (distro-dependent) | Number of commands kept in the in-memory list |
 | `HISTFILESIZE` | 500 (distro-dependent) | Maximum lines retained in `~/.bash_history` on disk |
-| `HISTCONTROL` | (unset) | Comma-separated list of `ignorespace`, `ignoredups`, `ignoreboth`, `erasedups` |
+| `HISTCONTROL` | (unset) | Colon-separated list of `ignorespace`, `ignoredups`, `ignoreboth`, `erasedups` |
 | `HISTTIMEFORMAT` | (unset) | `strftime` format string prepended to each history entry as a timestamp |
 | `HISTFILE` | `~/.bash_history` | Path to the persistent history file |
 | `HISTIGNORE` | (unset) | Colon-separated list of patterns (glob syntax) for commands to never save |
 
-### Linux | history workflow | building commands incrementally
+### Linux | secret suppression | keep credentials out of `~/.bash_history`
 
-Rather than retyping long commands, use history recall to iterate: run a base version, search it back with `Ctrl+R`, modify a single parameter, and re-execute. This pattern is central to productive terminal work.
+Inline secrets become plain text in the history file unless you block them before persistence. Bash provides both convention-based suppression and pattern-based suppression, and using both is more reliable than depending on operator memory alone.
 
-#### Iterate on a database query without retyping connection parameters
+#### Combine leading-space suppression with pattern filters
 
-Each step modifies only the query while reusing the full connection string from history.
+`HISTCONTROL=ignoreboth` suppresses leading-space commands and consecutive duplicates. `HISTIGNORE` adds explicit pattern-based exclusions. Together they reduce the chance that a password export or token-bearing command survives to disk.
 
+*Prepare an isolated Bash history file with `ignoreboth` and `HISTIGNORE`.*
 ```bash
-sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -Q "SELECT COUNT(*) FROM dbo.market_data"
+export HOME=/tmp/codex-hist-secret
+mkdir -p "$HOME"
+export HISTFILE="$HOME/.bash_history"
+rm -f "$HISTFILE"
+export HISTCONTROL=ignoreboth
+export HISTIGNORE='*PASSWORD*:*TOKEN*'
+set -o history
+history -c
 ```
 
+*Record a visible command that should persist.*
 ```bash
-sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d analytics_db -Q "SELECT TOP 10 * FROM dbo.market_data ORDER BY date DESC"
+echo visible-entry
+```
+```text
+visible-entry
 ```
 
-After running the first command, press `Ctrl+R` and type `sqlcmd` to bring it back. Use `→` to edit only the `-Q` argument, then press `Enter` to run the refined version.
+*Enter a secret-bearing command with a leading space so `ignorespace` can suppress it.*
+```bash
+ export DB_PASSWORD=secret123
+```
 
-## PowerShell history tools
+*Flush the current session history to disk.*
+```bash
+history -a
+```
 
-PowerShell maintains a separate history list per session via `Get-History` and persists all history across sessions through the PSReadLine module. PSReadLine writes to `(Get-PSReadLineOption).HistorySavePath` (typically `~\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt`) after every command, giving you a unified cross-session log without additional configuration.
+*Print the active suppression settings.*
+```bash
+printf 'HISTCONTROL=%s\nHISTIGNORE=%s\n' "$HISTCONTROL" "$HISTIGNORE"
+```
+```text
+HISTCONTROL=ignoreboth
+HISTIGNORE=*PASSWORD*:*TOKEN*
+```
 
-### PowerShell | Get-History | search and display commands
+*Inspect the resulting history file.*
+```bash
+nl -ba "$HISTFILE"
+```
+```text
+     1	echo visible-entry
+     2	history -a
+```
 
-`Get-History` returns the in-session command list as objects. Each object has an `Id`, `CommandLine`, and timing properties. Because it returns objects, you can filter, sort, and select with the standard pipeline cmdlets.
+The file output proves that the visible command persisted while the secret-bearing `export DB_PASSWORD=secret123` line did not.
+
+### Linux | diagnostics | explain missing matches or missing replay
+
+Most Bash history failures come down to disabled expansion or overly weak synchronization between terminals. Diagnose state first, then change the write or reload policy deliberately.
+
+#### Check whether history expansion is disabled
+
+If `!!`, `!n`, or `!string` appear inert, inspect the `histexpand` shell option before assuming the history list is broken. The option state is the direct diagnostic surface for expansion.
+
+*Disable `histexpand` in the current shell.*
+```bash
+set +H
+```
+
+*Print the `histexpand` option state.*
+```bash
+set -o | grep histexpand
+```
+```text
+histexpand     	off
+```
+
+If the diagnostic returns `off`, re-enable expansion with `set -H` or the corresponding startup-file change before relying on `!` replay.
+
+#### Use a reload hook when concurrent terminals must converge
+
+Incremental flush writes new commands out, but it does not pull commands written by other terminals back into the current shell. When near-real-time convergence matters more than prompt latency, use a heavier reload hook.
+
+*Set a prompt hook that writes, clears, and reloads history.*
+```bash
+PROMPT_COMMAND='history -a; history -c; history -r'
+```
+
+*Print the active `PROMPT_COMMAND` value.*
+```bash
+printf 'PROMPT_COMMAND=%s\n' "$PROMPT_COMMAND"
+```
+```text
+PROMPT_COMMAND=history -a; history -c; history -r
+```
+
+## PowerShell history
+
+PowerShell exposes two distinct history surfaces. `Get-History` and `Invoke-History` operate on the current session list, while PSReadLine owns the file-backed history, prediction settings, and the interactive key bindings that survive across sessions.
+
+### PowerShell | current-session recall | inspect and replay session history
+
+These commands operate only on the current PowerShell process. That is useful for deterministic replay, but it also means a fresh session starts with a fresh history list.
 
 #### Display the full in-session history
 
+`Get-History` returns the current session history as objects. Because the result is object-based, you can filter or sort it before choosing what to replay.
+
+*Return the current session history as PowerShell objects.*
 ```powershell
 Get-History
 ```
-
 ```text
   Id     Duration CommandLine
   --     -------- -----------
@@ -554,126 +485,124 @@ Get-History
 
 Filter the `CommandLine` property with `-like` to find all matching entries across the current session.
 
+*Filter the session history for commands whose text contains `sqlcmd`.*
 ```powershell
 Get-History | Where-Object CommandLine -like "*sqlcmd*"
 ```
-
 ```text
   Id     Duration CommandLine
   --     -------- -----------
    2        1.204 sqlcmd -S .\SQLEXPRESS -Q "SELECT @@VERSION"
 ```
 
-#### Search across all sessions (PSReadLine persistent log)
-
-`Get-History` only covers the current session. To search the full cross-session log, read PSReadLine's history file directly.
-
-```powershell
-Get-Content (Get-PSReadLineOption).HistorySavePath | Select-String "sqlcmd"
-```
-
-```text
-sqlcmd -S .\SQLEXPRESS -Q "SELECT @@VERSION"
-sqlcmd -S 10.132.0.2 -U sa -P $env:SA_PASSWORD -d analytics_db -Q "SELECT COUNT(*) FROM dbo.market_data"
-```
+The table below summarizes the most useful `Get-History` parameters for narrowing the in-session history list.
 
 | Parameter | Syntax | Description |
 |---|---|---|
 | `-Count` | `Get-History -Count 20` | Return only the last `n` entries |
 | `-Id` | `Get-History -Id 5` | Return the single entry with the specified ID |
 
-### PowerShell | Invoke-History | replay past commands
+#### Re-execute a command by history ID
 
-`Invoke-History` re-executes a command from the in-session history list by its ID. Without an ID it replays the most recent entry.
+`Invoke-History -Id` replays the chosen entry from the current session history. Inspect the list first, then replay the exact identifier you intend to run.
 
-#### Re-run the last command
-
+*Create a stable first entry in the session history.*
 ```powershell
-Invoke-History
+Get-Date | Out-Null
 ```
 
-#### Re-run a specific command by ID
-
+*Create a visible entry that is safe to replay.*
 ```powershell
-Invoke-History -Id 42
+Write-Output "history-demo"
+```
+```text
+history-demo
 ```
 
-> [!tip] Use the r alias
->
-> `r` is the built-in alias for `Invoke-History`. `r 42` is equivalent to `Invoke-History -Id 42`.
+*Inspect the session history before replaying entry `2`.*
+```powershell
+Get-History | Select-Object Id, CommandLine | Format-Table -HideTableHeaders
+```
+```text
+ 1 Get-Date | Out-Null
+ 2 Write-Output "history-demo"
+```
+
+*Replay entry `2`.*
+```powershell
+Invoke-History -Id 2
+```
+```text
+Write-Output "history-demo"
+history-demo
+```
+
+The table below summarizes the `Invoke-History` parameters used for replay.
 
 | Parameter | Syntax | Description |
 |---|---|---|
 | `-Id` | `Invoke-History -Id <n>` | Re-execute the command at position `n` in the session history |
 | (none) | `Invoke-History` | Re-execute the most recent command in the session |
 
-### PowerShell | PSReadLine | predictive IntelliSense and history options
+### PowerShell | persistence | inspect PSReadLine storage and retention
 
-PSReadLine is the readline library for PowerShell. It provides interactive history search (`Ctrl+R`, mirroring bash), predictive IntelliSense (inline or list-view completion from history), and fine-grained control over which commands are saved. Available in PowerShell 5.1+ and enabled by default in PowerShell 7+.
+PSReadLine owns the persistent file, its write policy, and its retention ceiling. That makes `Get-PSReadLineOption` the authoritative surface for cross-session history diagnostics.
 
-#### Enable predictive IntelliSense from history
+#### Print the current PSReadLine history save path
 
-`PredictionSource History` makes PSReadLine show a greyed-out inline suggestion as you type, drawn from the most recent matching history entry. Press `→` to accept the full suggestion or `Alt+→` to accept one word at a time.
+`HistorySavePath` tells you which file to inspect when the command you need was run in another PowerShell session.
 
-```powershell
-Set-PSReadLineOption -PredictionSource History
-```
-
-#### Switch to list view for predictions
-
-`ListView` displays multiple history candidates as a dropdown list below the cursor rather than a single inline suggestion. Navigate with `↑`/`↓` and press `Enter` to select.
-
-```powershell
-Set-PSReadLineOption -PredictionViewStyle ListView
-```
-
-#### Persist these options across sessions
-
-Add both lines to your PowerShell profile so the settings apply to every session.
-
-```powershell
-$PROFILE
-```
-
-```text
-C:\Users\aperi\Documents\PowerShell\Microsoft.PowerShell_profile.ps1
-```
-
-Open the profile file and append:
-
-```powershell
-Set-PSReadLineOption -PredictionSource History
-Set-PSReadLineOption -PredictionViewStyle ListView
-```
-
-#### Exclude sensitive commands from history
-
-PSReadLine's `AddToHistoryHandler` accepts a scriptblock that returns `$true` to save or `$false` to drop a command. Use it to block commands containing credential-like patterns.
-
-```powershell
-Set-PSReadLineOption -AddToHistoryHandler {
-    param([string]$line)
-    $line -notmatch 'password|secret|token|key' 
-}
-```
-
-> [!warning] -AddToHistoryHandler is case-insensitive by default only if you use -imatch
->
-> The `-notmatch` operator is case-insensitive by default in PowerShell, but the pattern `password` will not catch `PASSWORD` if you use `-cmatch`. Stick with `-notmatch` or `-inotmatch` for broad credential filtering.
-
-> [!success] Use -notmatch for case-insensitive credential filtering
->
-> `-notmatch` performs case-insensitive regex matching by default. The pattern above will suppress `Export-Password`, `Set-Token`, `Invoke-WithSecretKey`, and similar variants regardless of casing.
-
-#### Check the current PSReadLine history save path
-
+*Print the file path used for persistent PSReadLine history.*
 ```powershell
 (Get-PSReadLineOption).HistorySavePath
 ```
-
 ```text
 C:\Users\aperi\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
 ```
+
+#### Inspect the current history save style
+
+`HistorySaveStyle` determines whether accepted commands are written incrementally, only at exit, or not at all. Use it to distinguish durable history from exit-time-only history.
+
+*Print the current PSReadLine history save style.*
+```powershell
+Get-PSReadLineOption | Select-Object HistorySaveStyle | Format-List
+```
+```text
+HistorySaveStyle : SaveIncrementally
+```
+
+#### Raise the persistent history ceiling separately from session history
+
+`MaximumHistoryCount` limits the PSReadLine file, not the current `Get-History` session list. That separation matters because increasing the file ceiling does not make a new shell inherit a larger live session buffer automatically.
+
+*Set a larger PSReadLine retention ceiling.*
+```powershell
+Set-PSReadLineOption -MaximumHistoryCount 50000
+```
+
+*Print the active `MaximumHistoryCount` value.*
+```powershell
+Get-PSReadLineOption | Select-Object MaximumHistoryCount | Format-List
+```
+```text
+MaximumHistoryCount : 50000
+```
+
+#### Search the persisted history file directly
+
+When `Get-History` cannot see a command because it was run in an older session, search the PSReadLine file itself. This is the PowerShell equivalent of grepping `~/.bash_history`.
+
+*Search the persistent PSReadLine history file for commands containing `sqlcmd`.*
+```powershell
+Get-Content (Get-PSReadLineOption).HistorySavePath | Select-String "sqlcmd"
+```
+```text
+sqlcmd -S .\SQLEXPRESS -Q "SELECT @@VERSION"
+sqlcmd -S 10.132.0.2 -U sa -P $env:SA_PASSWORD -d analytics_db -Q "SELECT COUNT(*) FROM dbo.market_data"
+```
+
+PSReadLine exposes prediction, persistence, and filtering through the same option surface. The table below preserves the most relevant switches for history-oriented work.
 
 | Option | Syntax | Description |
 |---|---|---|
@@ -684,72 +613,94 @@ C:\Users\aperi\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHo
 | `-AddToHistoryHandler` | `{ param($l) $l -notmatch 'secret' }` | Scriptblock returning `$true` to save or `$false` to drop a command |
 | `-HistorySearchCaseSensitive` | `$true` \| `$false` | Whether `Ctrl+R` search is case-sensitive (default `$false`) |
 
-### PowerShell | history workflow | building commands incrementally
+### PowerShell | secret suppression | filter commands before persistence
 
-The same iterative pattern used in bash applies in PowerShell. Use `Ctrl+R` (PSReadLine's reverse-i-search) or the IntelliSense list to surface a prior command, then edit it before re-running.
+PowerShell needs the filter before the write. Once a password-bearing line reaches the PSReadLine file, cleanup is reactive and incomplete. `AddToHistoryHandler` is the intended control surface for that decision.
 
-#### Iterate on a database query without retyping connection parameters
+#### Use `AddToHistoryHandler` to reject credential-bearing lines
 
+The handler can return booleans or explicit `AddToHistoryOption` values. This example uses boolean returns for clarity and relies on PowerShell's default case-insensitive `-notmatch` behavior so common casing variants are still caught.
+
+*Install a handler that rejects password-, token-, secret-, and key-bearing lines.*
 ```powershell
-sqlcmd -S 10.132.0.2 -U sa -P $env:SA_PASSWORD -d analytics_db -Q "SELECT COUNT(*) FROM dbo.market_data"
+$handler = { param([string]$line) $line -notmatch 'password|secret|token|key' }
+Set-PSReadLineOption -AddToHistoryHandler $handler
 ```
 
+*Evaluate a safe line against the handler.*
 ```powershell
-sqlcmd -S 10.132.0.2 -U sa -P $env:SA_PASSWORD -d analytics_db -Q "SELECT TOP 10 * FROM dbo.market_data ORDER BY date DESC"
+"Get-ChildItem -> $(& $handler 'Get-ChildItem')"
+```
+```text
+Get-ChildItem -> True
 ```
 
-After running the first command, press `Ctrl+R` and type `sqlcmd`. PSReadLine brings up the most recent match. Press `→` to move the cursor into the line and edit the `-Q` argument, then press `Enter`.
+*Evaluate a secret-bearing line against the handler.*
+```powershell
+"Invoke-Sqlcmd -Password ""secret123"" -> $(& $handler 'Invoke-Sqlcmd -Password ""secret123""')"
+```
+```text
+Invoke-Sqlcmd -Password "secret123" -> False
+```
 
+### PowerShell | recall ergonomics | make repeated command families easier to scan
 
+The fastest interactive retrieval pattern is usually prefix search rather than linear history traversal. PSReadLine exposes that behavior through explicit key handlers.
 
-## Warnings
+#### Bind the arrow keys to history-prefix search
 
-> [!danger] History files store credentials in plain text
->
-> If you run `export DB_PASSWORD="secret123"` without a leading space and without `HISTCONTROL=ignorespace`, the password is saved to `~/.bash_history` (or PSReadLine's history file) in plain text. Anyone with read access to the file — or anyone who compromises the account — can extract it.
+Binding `UpArrow` and `DownArrow` to `HistorySearchBackward` and `HistorySearchForward` turns the current typed prefix into the search key. That is more precise than generic previous/next navigation when command families repeat.
 
-> [!warning] `!string` executes without confirmation
->
-> `!rm` replays your most recent `rm` command immediately. On a production server, this can delete critical files. Always use `!string:p` to preview the expansion first, then `!!` to execute.
+*Bind the arrow keys to PSReadLine history search.*
+```powershell
+Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+```
 
-> [!warning] Concurrent sessions can clobber history
->
-> By default, bash overwrites `~/.bash_history` on session exit. If two terminals are open, the last one to close wins and the other session's history is lost. Fix this with `shopt -s histappend` and `PROMPT_COMMAND="history -a"` to append after every command.
+*Print the active history-search key bindings.*
+```powershell
+Get-PSReadLineKeyHandler -Bound |
+    Where-Object Function -match 'HistorySearch(Backward|Forward)' |
+    Select-Object Function, Key |
+    Format-Table -AutoSize
+```
+```text
+Function              Key
+--------              ---
+HistorySearchBackward UpArrow
+HistorySearchBackward F8
+HistorySearchForward  DownArrow
+HistorySearchForward  Shift+F8
+```
 
-> [!warning] PSReadLine saves everything by default
->
-> Without an `AddToHistoryHandler` filter, every command — including those with passwords, tokens, and API keys — is saved to the persistent PSReadLine history file. Configure a handler to suppress sensitive patterns.
+### PowerShell | diagnostics | separate session history from file-backed history
 
-## Recommendations
+The most common PowerShell history mistake is assuming that `Get-History` is a cross-session search tool. It is not. The session list starts fresh with each new process, even if the PSReadLine file already contains thousands of commands.
 
-| Scenario | Recommendation |
-|---|---|
-| Production servers | Set `HISTSIZE=50000`, `HISTFILESIZE=100000`, `HISTTIMEFORMAT`, `histappend`, and `PROMPT_COMMAND="history -a"` in `/etc/profile.d/` so all users get audit-grade history. |
-| Secret hygiene | Set `HISTCONTROL=ignoreboth` (bash) or `AddToHistoryHandler` (PowerShell) to suppress credential-containing commands. Always prefix sensitive commands with a space. |
-| Deduplication | Use `erasedups` for aggressive deduplication (removes all prior instances of the same command). Use `ignoredups` if you want to preserve command ordering and only skip consecutive duplicates. |
-| Crash resilience | Add `PROMPT_COMMAND="history -a"` to flush history to disk after every command. Without this, a terminal crash or SSH disconnect loses all unwritten history. |
-| Fast recall | Bind up/down arrows to `history-search-backward` / `history-search-forward` in `~/.inputrc` or `~/.bashrc`. In PowerShell, enable `PredictionSource History` with `ListView` for the fastest recall experience. |
-| Cross-session search (bash) | Use `grep "pattern" ~/.bash_history` or install `fzf` for fuzzy interactive search across the entire history file. |
-| Cross-session search (PowerShell) | Search PSReadLine's persistent file: `Get-Content (Get-PSReadLineOption).HistorySavePath \| Select-String "pattern"`. |
+#### Confirm that `Get-History` is session-scoped
 
-## Troubleshooting
+A fresh PowerShell process proves the point immediately. If the count is zero in a new shell, that does not mean history is gone; it means you need to search the PSReadLine file instead.
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| History is lost when the terminal closes or crashes | bash writes history to file only on clean session exit. If the session is killed or SSH drops, buffered history is lost. | Add `PROMPT_COMMAND="history -a"` to `.bashrc` to flush after every command. |
-| Two terminals show different histories | Each session has its own in-memory buffer. Session B does not see commands from Session A until A exits and B reloads. | Add `shopt -s histappend` and `PROMPT_COMMAND="history -a; history -c; history -r"` to synchronize across sessions (with some overhead). |
-| `Ctrl+R` does not find a command I just ran | The command may match `HISTCONTROL` or `HISTIGNORE` filters and was not saved. | Check `echo $HISTCONTROL` and `echo $HISTIGNORE`. Remove overly aggressive filters. |
-| History expansion (`!!`, `!n`) is disabled | `set +H` or `set +o histexpand` was run, or `histexpand` is off in the shell options. | Run `set -o histexpand` or add it to `.bashrc`. |
-| PowerShell `Get-History` shows nothing from previous sessions | `Get-History` only returns the current session. PSReadLine's file stores cross-session history separately. | Search the PSReadLine file directly: `Get-Content (Get-PSReadLineOption).HistorySavePath \| Select-String "pattern"`. |
-| Sensitive commands appear in history despite `HISTCONTROL=ignorespace` | The command was not prefixed with a space. `HISTCONTROL` only filters commands that match its rules — it cannot retroactively remove already-saved entries. | Delete the entry with `history -d <n>` (bash) or manually edit the PSReadLine history file. Then fix the workflow to always prefix with a space. |
+*Count the entries returned by `Get-History` in a fresh session.*
+```powershell
+Get-History | Measure-Object | Select-Object -ExpandProperty Count
+```
+```text
+0
+```
 
 ## Cross-references
 
-- [environment-variables](https://alp78.github.io/elysium/01-Shell/01-Scripting/01-environment-variables) — Preventing secrets from being stored in history
-- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) — Writing scripts that don't need manual recall
-- [command-chaining](https://alp78.github.io/elysium/01-Shell/01-Scripting/04-command-chaining) — Building complex command pipelines
+These related pages cover adjacent shell practices that affect recall safety, parameter reuse, and defensive command construction.
+
+- [environment-variables](https://alp78.github.io/elysium/01-Shell/01-Scripting/01-environment-variables) - Keeping secrets out of command lines and shell state
+- [command-chaining](https://alp78.github.io/elysium/01-Shell/01-Scripting/04-command-chaining) - Building repeatable one-liners instead of reconstructing them from memory
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) - Turning fragile interactive sequences into auditable scripts
 
 ## References
 
-- [GNU Bash Reference — History](https://www.gnu.org/software/bash/manual/html_node/Bash-History-Facilities.html)
-- [PSReadLine Module](https://learn.microsoft.com/en-us/powershell/module/psreadline/)
+- [GNU Bash Manual - Bash History Facilities](https://www.gnu.org/software/bash/manual/html_node/Bash-History-Facilities.html)
+- [GNU Bash Manual - Bash Builtins (`history`, `bind`)](https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html)
+- [Microsoft Learn - about_History](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_history)
+- [Microsoft Learn - Set-PSReadLineOption](https://learn.microsoft.com/en-us/powershell/module/psreadline/set-psreadlineoption)
+- [Microsoft Learn - about_PSReadLine_Functions](https://learn.microsoft.com/en-us/powershell/module/psreadline/about/about_psreadline_functions)

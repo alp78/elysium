@@ -706,7 +706,7 @@ Run the improvements as a time-boxed project. Re-measure after 90 days. Repeat.
 
 ## Related Concepts
 
-- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — the foundational engineering capabilities that DataOps practices build upon
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — the foundational engineering capabilities that DataOps practices build upon
 - [golden-rules-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — principles that align with DataOps philosophy
 - [data-team-organization](https://alp78.github.io/elysium/15-DataOps/data-team-organization) — how to structure a team to execute DataOps practices effectively
 - [self-service-data-platform](https://alp78.github.io/elysium/15-DataOps/self-service-data-platform) — the platform-level manifestation of DataOps maturity

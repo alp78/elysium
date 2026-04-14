@@ -899,7 +899,7 @@ For [data mesh](https://alp78.github.io/elysium/14-Data-Architecture/Architectur
 - [data-mesh-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/data-mesh-architecture) — domain data products exposed as streaming topics
 - [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — GCP observability for streaming pipelines
 - [cloud-monitoring-metrics](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) — pipeline lag, backlog, and throughput metrics
-- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) — reliability and observability for streaming systems
+- [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — reliability and observability for streaming systems
 
 ## References
 

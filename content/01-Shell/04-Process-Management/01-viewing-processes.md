@@ -8,7 +8,7 @@ aliases: [ps aux, htop, top, pstree, process list, process monitoring, iostat, d
 keywords: [ps aux, htop, top, pstree, process list, PID, CPU usage, memory usage, RSS, VSZ, zombie process, D state, uninterruptible sleep, iostat, docker stats, process tree, uptime, load average, free memory]
 description: "Linux and PowerShell commands for viewing running processes, understanding resource usage, and diagnosing system performance issues. Covers ps aux, htop, top, pstree, and the D state (uninterruptible sleep) that cannot be killed."
 created: 2026-03-22
-updated: 2026-04-03
+updated: 2026-04-14
 status: complete
 ---
 
@@ -21,129 +21,83 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Linux and PowerShell tools for inspecting running processes, diagnosing resource saturation, and identifying I/O bottlenecks — from point-in-time snapshots to real-time monitoring and container stats.
+> Linux and PowerShell follow the same investigation pattern: capture a point-in-time snapshot, switch to a live view if the snapshot is ambiguous, then decide whether CPU, memory, or storage is the bottleneck.
 >
-> **Linux process viewing tools**
-> - `ps aux` produces a point-in-time snapshot of all processes with PID, user, CPU%, RSS, and state columns; pipe through `grep`, `sort`, or `head` for targeted output.
-> - `pgrep` returns PIDs by name or attribute; `-f` matches the full command line, making it more scriptable than `ps | grep`.
-> - `pstree -p` renders the parent-child hierarchy with PIDs; critical for identifying whether a runaway Python process was spawned by Airflow, a shell, or a system service.
-> - `top` refreshes every 3 seconds with system-wide load, CPU breakdown, and per-process stats; interactive keys `P`/`M` sort by CPU/memory, `1` expands per-core view.
-> - `htop` adds colour, mouse support, and a built-in tree view (`F5`) to `top`; requires `apt install htop` on minimal images.
-> - `iostat -xz` samples per-device disk latency (`await`) and throughput; `await` above 20 ms with `%util` above 80% confirms disk saturation, not CPU.
-> - `docker stats --no-stream` gives a one-shot snapshot of CPU, RSS, network, and block I/O per container; true RSS requires reading `memory.stat` inside the cgroup.
-> - D-state processes (`STAT` column starting with `D`) cannot be killed with any signal, including SIGKILL; diagnose the storage layer with `dmesg` rather than retrying kills.
+> Use `ps`, `pgrep`, `pstree`, `top`, `htop`, `iostat`, and `docker stats` on Linux; use `Get-Process`, `Win32_Process`, `Win32_OperatingSystem`, and `Get-Counter` on Windows.
 >
-> **PowerShell process management tools**
-> - `Get-Process` returns typed `System.Diagnostics.Process` objects; `WorkingSet64` is the Windows RSS equivalent; `CPU` is cumulative seconds, not an instantaneous percentage.
-> - `Get-CimInstance Win32_Process` provides cross-user process visibility without elevation; `GetOwner()` resolves the owning account for each process.
-> - `Get-CimInstance Win32_OperatingSystem` exposes total RAM, free RAM, and `LastBootUpTime`; subtract from `Get-Date` for a `TimeSpan` uptime equivalent.
-> - Windows has no direct load-average equivalent; `\System\Processor Queue Length` from `Get-Counter` serves as a proxy — values above 2 per logical core indicate CPU saturation.
+> Prefer RSS or `WorkingSet64` for memory, verify PID identity immediately before sending a signal, and treat D-state tasks or high load with low CPU as I/O symptoms rather than proof of CPU saturation.
 >
-> **When to use process viewing tools**
-> - Use for diagnosing slow systems, identifying stuck or D-state processes, pre-kill PID verification, capacity planning, and container resource accounting.
->
-> **When not to use process viewing tools**
-> - Avoid for historical analysis, automated alerting, and application-level profiling; use monitoring agents (Datadog, Prometheus) and language profilers instead.
->
-> **Warnings**
-> - D-state processes ignore SIGKILL; investigate storage rather than looping kill attempts.
-> - PIDs are reused — always verify identity with `ps -p <pid> -o pid,cmd` before signalling.
-> - Load average includes I/O-waiting processes; high load with low CPU% points to disk, not compute.
-> - VSZ is not actual memory consumption; use RSS for real memory pressure assessment.
->
-> **Recommendations**
-> - Quick snapshot: `ps aux --sort=-%cpu | head -20`; real-time: `htop`; process tree: `pstree -p`; disk saturation: `iostat -xz 1`.
->
-> **Troubleshooting**
-> - High load with low CPU%: check `%wa` in `top` and confirm disk saturation with `iostat -x 1`.
-> - D-state processes: inspect `dmesg` for disk or NFS errors; force-unmount with `umount -lf` for NFS hangs.
-> - Zombie processes: kill the parent; if parent is PID 1, reboot.
+> The code/output pairs below were captured live from this Windows host and its Ubuntu WSL guest, so service names, owners, and container names reflect the current environment instead of illustrative placeholders.
 
 > [!note]- Glossary
 >
 > **Process**
-> - An executing instance of a program, created and managed by the operating system, with its own PID, memory mappings, CPU scheduling state, and open resources.
-> - Used as the basic unit of execution and resource accounting when monitoring, debugging, or signalling running workloads.
 >
-> > [!info] Program vs. process
-> >
-> > A program is the executable code or script on disk. A process is one running instance of that program in memory. One program can have many simultaneous processes.
+> - An executing instance of a program, with its own PID, memory mappings, open files, and scheduler state.
+> - Use the process as the basic unit for inspection, signaling, accounting, and triage.
+> - A program on disk can have many simultaneous processes in memory.
 >
 > ---
 >
 > **PID (Process ID)**
-> - Integer identifier assigned by the operating system to a process for the lifetime of that process.
-> - Used to target a specific running process in tools such as `kill`, `strace`, `lsof -p`, `ps -p`, and debuggers.
 >
-> > [!warning] PIDs are reused after exit
-> >
-> > A PID is unique only among currently running processes. After a process exits, the same PID may later be assigned to a different process, so always verify the command immediately before signalling.
+> - The integer identifier the operating system assigns to a process for the lifetime of that process.
+> - Use the PID when you need to target one exact process with tools such as `kill`, `strace`, `ps -p`, or debuggers.
+> - PIDs are reused after exit, so confirm the command line immediately before sending a signal.
 >
 > ---
 >
 > **`ps aux`**
-> - Unix command that prints a point-in-time snapshot of running processes, including user, PID, CPU, memory, and command information.
-> - Used for quick process inspection, ad hoc filtering, and confirming whether a process exists before switching to deeper tools.
 >
-> > [!tip] Self-contamination bracket trick
-> >
-> > `ps aux | grep "[m]ssql"` matches target command lines containing `mssql` but avoids matching the `grep` command itself.
+> - A Unix snapshot command that prints user, PID, CPU, memory, state, and command information for running processes.
+> - Use it for quick inventory, ad hoc filtering, and pre-kill verification before switching to more specialized tools.
+> - The bracket trick in `grep "[n]ame"` avoids matching the `grep` process itself.
 >
 > ---
 >
 > **`htop` / `top`**
-> - Interactive process monitors that refresh continuously and display CPU, memory, load, and per-process activity in near real time.
-> - Used for live triage when the operator needs to see which processes are consuming CPU or memory right now and how that changes over time.
 >
-> > [!tip] Key interactive commands
-> >
-> > In both tools, `P` sorts by CPU and `M` sorts by memory. In `top`, `1` expands the display to per-core CPU view, which helps reveal single-threaded bottlenecks.
+> - Interactive process viewers that refresh continuously and show CPU, memory, load, and per-process activity.
+> - Use `top` when you need a batch-mode snapshot or a tool that is almost always installed; use `htop` when you want color, filtering, and tree view in the terminal.
+> - In both tools, `P` sorts by CPU and `M` sorts by memory; `top` also uses `1` for per-core CPU detail.
 >
 > ---
 >
 > **RSS (Resident Set Size)**
-> - Amount of a process's memory that is currently resident in physical RAM rather than merely reserved in its virtual address space.
-> - Used as the most practical single process-memory metric when comparing active memory footprint across processes.
 >
-> > [!info] RSS vs. VSZ
-> >
-> > VSZ includes the full virtual address space, which can include mapped files, shared libraries, and reserved regions that are not all resident in RAM. RSS is usually the more actionable number for memory-pressure analysis.
+> - The portion of a process's address space that is currently resident in physical RAM.
+> - Use RSS as the practical memory metric when comparing live processes under memory pressure.
+> - VSZ is larger because it includes reserved address space, mapped files, and other pages that are not necessarily resident.
 >
 > ---
 >
 > **D state (uninterruptible sleep)**
-> - Linux process state in which a task is blocked in the kernel waiting for an uninterruptible operation, most commonly storage or network-backed I/O.
-> - Used diagnostically to explain why a process appears stuck and does not respond to normal signalling.
 >
-> > [!danger] D-state processes cannot be removed immediately with signals
-> >
-> > Even `SIGKILL` cannot complete process termination while the task remains blocked in uninterruptible sleep. Focus on the underlying I/O problem with tools such as `dmesg`, storage diagnostics, or NFS health checks.
+> - A Linux task state in which the kernel is waiting for an uninterruptible operation, usually storage or network-backed I/O.
+> - Use it diagnostically to explain why a process appears hung and ignores normal signals.
+> - Even `SIGKILL` cannot complete process termination until the task returns from the blocked kernel operation.
 >
 > ---
 >
 > **Load average**
-> - Three exponentially weighted moving averages over 1, 5, and 15 minutes representing the number of runnable tasks and tasks in uninterruptible sleep on Linux.
-> - Used as a high-level pressure indicator to show whether work is queueing, but only becomes meaningful when interpreted alongside CPU and I/O metrics.
 >
-> > [!warning] Load average includes I/O waiters, not just CPU-bound work
-> >
-> > A high load value does not automatically mean CPU saturation. If CPU usage is modest and I/O wait is elevated, the real bottleneck is likely storage or some other blocking I/O path.
+> - Three exponentially weighted moving averages over 1, 5, and 15 minutes representing runnable tasks plus tasks in uninterruptible sleep on Linux.
+> - Use it as a pressure indicator only alongside CPU and I/O metrics.
+> - High load with low CPU often points to storage or network I/O, not compute saturation.
 >
 > ---
 >
 > **`pstree`**
-> - Unix command that renders processes as a parent-child hierarchy, optionally including PIDs and user transitions.
-> - Used to understand process ancestry, identify which parent launched a workload, and detect orphaned or unexpectedly spawned child processes.
 >
-> > [!tip] Portable fallback
-> >
-> > `pstree` may be absent on minimal systems. `ps aux --forest` is a common fallback for visualizing the same hierarchy using standard `ps` output.
+> - A Unix command that renders parent-child relationships as a process tree, optionally with PIDs and arguments.
+> - Use it to identify ancestry, service boundaries, and who spawned a runaway child process.
+> - If `pstree` is unavailable, `ps aux --forest` is the common fallback.
 
-When an Airflow VM is slow, a query is hanging, or a runaway process is pinning the CPU — your first move is always to understand what is running. `ps aux` gives you the snapshot; `htop` gives you the real-time picture; `iostat` tells you if the disk is the bottleneck.
+When a VM is slow, a query is hanging, or a service looks stuck, the first question is not what to restart. It is what is running, who owns it, and whether the bottleneck is CPU, memory, or I/O.
 
 ## Linux process viewing tools
 
-Linux offers several tools for inspecting running processes. `ps` produces a static snapshot, `top` and `htop` provide real-time views updated on a timer, and `pstree` visualises the parent-child hierarchy. Choosing the right tool depends on whether you need a point-in-time record (scripts, logs) or an interactive diagnostic session.
+Linux gives you both static and live process views. `ps` and `pgrep` are best for scriptable snapshots, `pstree` explains ancestry, `top` and `htop` help with live triage, and `iostat` answers the question that process tables cannot: whether storage is the actual bottleneck.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
@@ -160,84 +114,76 @@ flowchart TD
 
 ### Linux | ps | list and filter processes
 
-`ps` (process status) reads the `/proc` pseudo-filesystem to produce a point-in-time snapshot of all running processes. It does not refresh — run it again to get an updated view.
+`ps` reads the `/proc` pseudo-filesystem and prints a point-in-time view of running tasks. The classic `aux` combination means all users, user-oriented columns, and processes without controlling terminals.
 
-The `aux` flag combination is the most common invocation:
-- `a` — show processes from **all users**, not just your own
-- `u` — user-oriented format, which adds the USER, %CPU, %MEM, VSZ, RSS, TTY, STAT, START, TIME, and COMMAND columns
-- `x` — include processes **without a controlling terminal** (daemons and background jobs that persist after logout)
+#### Capture a point-in-time snapshot
 
-The most important output columns are:
-- **PID** — process ID, required for `kill` and `strace`
-- **%CPU** — CPU usage percentage; can exceed 100% on multi-core systems when a process uses multiple cores simultaneously
-- **%MEM** — percentage of total physical RAM consumed
-- **RSS** — Resident Set Size in KB: the actual RAM pages currently held in physical memory; this is the number that matters for memory pressure diagnostics
-- **VSZ** — Virtual Size in KB: includes shared libraries and memory-mapped files; typically much larger than RSS and not a reliable indicator of real memory use
-- **STAT** — process state: `R`=running, `S`=sleeping (interruptible), `D`=uninterruptible sleep (I/O wait), `Z`=zombie, `T`=stopped
-- **TIME** — cumulative CPU time consumed since the process started
-- **COMMAND** — full command line including arguments; most useful for identifying what exactly is running
-
-#### List all running processes
+Use `ps aux` when you need a broad inventory before you decide how to filter. In documentation and scripts, piping to `head` keeps the capture readable without changing what `ps` itself reports.
 
 ```bash
-ps aux
+ps aux | head -5
 ```
 
 ```text
 USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-root           1  0.0  0.1 168936 11432 ?        Ss   Mar21   0:07 /sbin/init
-airflow     1234  2.3  4.1 987654 84320 ?        Sl   09:12   1:23 python scheduler.py
-postgres    5678  0.4  2.2 456789 45210 ?        Ss   Mar21   0:41 postgres: checkpointer
+root           1  0.0  0.0  22328 12356 ?        Ss   Apr13   0:05 /sbin/init
+root           2  0.0  0.0   3120  1920 ?        Sl   Apr13   0:00 /init
+root           6  0.0  0.0   3120  1792 ?        Sl   Apr13   0:00 plan9 --control-socket 7 --log-level 4 --server-fd 8 --pipe-fd 10 --log-truncate
+root          42  0.0  0.0  66888 14764 ?        S<s  Apr13   0:30 /usr/lib/systemd/systemd-journald
 ```
 
-RSS is in KB. A process with RSS 84320 is using approximately 82 MB of physical RAM. VSZ 987654 looks alarming but includes shared libraries — compare RSS values across processes to assess actual memory pressure.
+The columns that matter most during triage are `PID`, `STAT`, `RSS`, `%CPU`, `%MEM`, and `COMMAND`. Prefer `RSS` to `VSZ` when you are judging real RAM pressure.
 
-#### Find a specific process by name
+#### Filter by name without matching `grep` itself
 
-`grep` on `ps aux` output has a well-known self-contamination problem: `ps aux | grep mssql` always includes a line for the `grep mssql` process itself, because `grep mssql` appears in the process table at the moment `ps` captures it.
-
-The bracket trick exploits regex character class matching. `[m]ssql` matches the string `mssql` but does not match `[m]ssql` literally — so grep's own command line entry is excluded.
-
-> [!warning] grep on ps output always self-matches
->
-> Running `ps aux | grep mssql` will always include `grep mssql` as a false positive in the output, which can cause confusion when scripting or counting matches.
-
-> [!success] Use the bracket trick to exclude the grep process
->
-> Wrap the first character in square brackets: `ps aux | grep "[m]ssql"`. The regex matches `mssql` in the target process's command line but does not match the grep command itself, which contains `[m]ssql` literally.
+`ps aux | grep name` always risks self-contamination because the `grep` command line is briefly visible in the process table. The bracket trick keeps the match but prevents `grep` from matching its own literal command string.
 
 ```bash
-ps aux | grep "[m]ssql"
+ps aux | grep "[s]ystemd"
 ```
 
 ```text
-mssql     1891  0.8  6.3 1456789 129304 ?  Ssl  Mar21  12:34 /opt/mssql/bin/sqlservr
+root          42  0.0  0.0  66888 14764 ?        S<s  Apr13   0:30 /usr/lib/systemd/systemd-journald
+root          89  0.0  0.0  24884  6016 ?        Ss   Apr13   0:05 /usr/lib/systemd/systemd-udevd
+systemd+     139  0.0  0.0  21460 12800 ?        Ss   Apr13   0:00 /usr/lib/systemd/systemd-resolved
+systemd+     146  0.0  0.0  91028  7680 ?        Ssl  Apr13   0:01 /usr/lib/systemd/systemd-timesyncd
+message+     156  0.0  0.0   9708  4992 ?        Ss   Apr13   0:03 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+root         163  0.0  0.0  18156  8320 ?        Ss   Apr13   0:01 /usr/lib/systemd/systemd-logind
+alex         332  0.0  0.0  20652 11264 ?        Ss   Apr13   0:02 /usr/lib/systemd/systemd --user
+root         480  0.0  0.0  20412 11264 ?        Ss   Apr13   0:00 /usr/lib/systemd/systemd --user
 ```
 
-#### Sort by CPU or memory consumption
+For exact command names, `ps -C name` is usually cleaner. The `grep` pattern remains useful when you need to search the full command line.
 
-Sorting at the `ps` level is more efficient than piping through `sort` for large process tables. `--sort=-%mem` sorts by the `%MEM` column descending (the `-` prefix inverts order). Pipe through `head` to limit the output.
+#### Sort the snapshot by memory or CPU usage
+
+Sorting inside `ps` is cheaper and cleaner than piping to a second `sort` process. The memory-sorted capture below surfaces the heaviest resident sets first, while the CPU-sorted capture shows that this guest is mostly idle at the time of capture.
 
 ```bash
-ps aux --sort=-%mem | head -10
+ps aux --sort=-%mem | head -5
 ```
 
 ```text
-USER         PID %CPU %MEM    VSZ    RSS TTY      STAT START   TIME COMMAND
-airflow     1234  2.3  4.1 987654  84320 ?        Sl   09:12   1:23 python scheduler.py
-postgres    5678  0.4  2.2 456789  45210 ?        Ss   Mar21   0:41 postgres
-java        8901  0.1  1.8 234567  36810 ?        Sl   Mar21   0:12 java -jar app.jar
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         623  0.0  0.0 1253472 27432 pts/2   Ssl+ Apr13   0:01 /mnt/wsl/docker-desktop/docker-desktop-user-distro proxy --distro-name Ubuntu --docker-desktop-root /mnt/wsl/docker-desktop C:\Program Files\Docker\Docker\resources
+root         193  0.0  0.0 107012 22656 ?        Ssl  Apr13   0:00 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+root       28971  0.0  0.0 370096 20224 ?        Ssl  15:09   0:00 /usr/libexec/packagekitd
+root          42  0.0  0.0  66888 14764 ?        S<s  Apr13   0:30 /usr/lib/systemd/systemd-journald
 ```
 
 ```bash
-ps aux --sort=-%cpu | head -10
+ps aux --sort=-%cpu | head -5
 ```
 
 ```text
-USER         PID %CPU %MEM    VSZ    RSS TTY      STAT START   TIME COMMAND
-worker      2345 18.7  1.1 123456  22450 ?        R    10:45   3:21 python etl_job.py
-airflow     1234  2.3  4.1 987654  84320 ?        Sl   09:12   1:23 python scheduler.py
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root          42  0.0  0.0  66888 14764 ?        S<s  Apr13   0:30 /usr/lib/systemd/systemd-journald
+root       28971  0.0  0.0 370096 20224 ?        Ssl  15:09   0:00 /usr/libexec/packagekitd
+root       27963  0.0  0.0 1756108 12928 ?       Ssl  15:01   0:00 /usr/libexec/wsl-pro-service
+root          89  0.0  0.0  24884  6016 ?        Ss   Apr13   0:05 /usr/lib/systemd/systemd-udevd
 ```
+
+On a quiet host the top rows can all show `0.0` percent. That does not make the command useless; it means you need a live view such as `top` or `htop` if the workload is bursty.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -254,47 +200,52 @@ airflow     1234  2.3  4.1 987654  84320 ?        Sl   09:12   1:23 python sched
 
 ### Linux | pgrep | search processes by name or attribute
 
-`pgrep` searches the process table by name or attribute and returns matching PIDs. It is more scriptable than `ps | grep` because it outputs only PIDs (or formatted lines with `-l`/`-a`), making it suitable for use in conditionals and kill scripts.
+`pgrep` is the scriptable alternative to `ps | grep`. It returns only PIDs by default, which makes it safer in shell conditionals and handoffs to commands such as `kill`, `renice`, or `strace`.
 
-#### Find PID by process name
+#### Return matching PIDs only
+
+This is the cleanest way to answer the question "does anything matching this name exist?" without parsing wide process-table output.
 
 ```bash
-pgrep python
+pgrep systemd | head -5
 ```
 
 ```text
-1234
-2345
-3456
+1
+2
+42
+89
+139
 ```
 
-Each line is a PID of a running `python` process. Pipe to `xargs kill` or pass to `kill` directly.
+Each line is a PID. In this guest, the first matches are the init process and several systemd-managed daemons.
 
-#### Find PID with full command display
+#### Include the process name or match the full command line
+
+`-l` and `-a` add context when raw PIDs are not enough, while `-f` switches matching from the executable name to the full command line.
 
 ```bash
-pgrep -la python
+pgrep -la systemd | head -5
 ```
 
 ```text
-1234 python scheduler.py
-2345 python etl_job.py
-3456 python -u worker.py
+1 /sbin/init
+2 /init
+42 /usr/lib/systemd/systemd-journald
+89 /usr/lib/systemd/systemd-udevd
+139 /usr/lib/systemd/systemd-resolved
 ```
 
-The `-l` flag adds the process name; `-a` adds the full command line including arguments.
-
-#### Match against the full command line
-
-By default `pgrep` matches against the process name only. The `-f` flag matches against the full command string including arguments — useful when multiple Python scripts are running and you need to target one specifically.
-
 ```bash
-pgrep -f "python scheduler"
+pgrep -f "/usr/lib/systemd/systemd --user"
 ```
 
 ```text
-1234
+332
+480
 ```
+
+That last query matches the two user-level systemd instances by their full command lines rather than by a short executable name alone.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -308,42 +259,44 @@ pgrep -f "python scheduler"
 | `-c` | `pgrep -c python` | Print count of matching processes only |
 | `-d` | `pgrep -d, python` | Use a custom delimiter between PIDs |
 
-### Linux | pstree | visualise process hierarchy
+### Linux | pstree | visualize process hierarchy
 
-`pstree` reads `/proc` and displays the parent-child process hierarchy as an ASCII tree. It is critical for understanding whether a Python process was spawned by Airflow (part of a scheduled DAG), by a shell (interactive run), or by a system service.
+When the problem is ancestry rather than raw resource use, `pstree` is the fastest way to see who launched what. This matters when a workload could have come from a shell, a service manager, a scheduler, or a container runtime.
 
-#### Display full process tree with PIDs
+#### Render the top of the process tree with PIDs
+
+`pstree -p` gives you the broad relationship map first. Truncating the output keeps the first branches readable in documentation.
 
 ```bash
-pstree -p
+pstree -p | sed -n '1,8p'
 ```
 
 ```text
-systemd(1)─┬─airflow(1100)─┬─python(1234)─┬─{python}(1240)
-            │               │              └─{python}(1241)
-            │               └─python(2345)
-            ├─sshd(812)───sshd(4200)───bash(4201)───pstree(9999)
-            ├─postgres(500)─┬─postgres(501)
-            │               ├─postgres(502)
-            │               └─postgres(503)
-            └─dockerd(720)───containerd(730)
+systemd(1)-+-agetty(171)
+           |-agetty(186)
+           |-cron(155)
+           |-dbus-daemon(156)
+           |-init-systemd(Ub(2)-+-SessionLeader(281)-+-Relay(283)(282)---sh(283)
+           |                    |                    `-Relay(623)(622)---docker-desktop-(623)-+-{docker-desktop-}(624)
+           |                    |                                                             |-{docker-desktop-}(625)
+           |                    |                                                             |-{docker-desktop-}(626)
 ```
 
-Each number in parentheses is the PID. `{python}` entries are threads, not child processes.
+The live capture makes the service boundaries visible immediately: `systemd` owns the host tree, while Docker Desktop introduces its own branch under the WSL init layer.
 
-#### Show tree for a specific user
+#### Trace the ancestor chain for a specific PID
+
+`-s` is the focused view. It is the quickest way to answer which service or shell spawned the process you are inspecting.
 
 ```bash
-pstree -pu airflow
+pstree -sp $$
 ```
 
 ```text
-airflow(1100)─┬─python(1234)─┬─{python}(1240)
-              │              └─{python}(1241)
-              └─python(2345)
+systemd(1)---init-systemd(Ub(2)---SessionLeader(28523)---Relay(29497)(29495)---pstree(29497)
 ```
 
-The `-u` flag filters to processes owned by the named user. Combined with `-p` it shows PIDs for every node.
+For a long-running worker, replace `$$` with the real PID and walk upward until you reach the parent you care about.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -357,54 +310,57 @@ The `-u` flag filters to processes owned by the named user. Combined with `-p` i
 
 ### Linux | top | real-time process monitoring
 
-`top` reads `/proc` on a configurable interval (default 3 seconds) and displays a live table of processes sorted by CPU usage. The header section shows system-wide statistics: uptime, load averages, total tasks, CPU breakdown, and memory usage.
+`top` is the default live monitor on almost every Linux system. It combines process rows with system-wide load, CPU breakdown, and memory counters, which makes it the right second step when a static snapshot does not explain the slowdown.
 
-#### Launch interactive top session
+#### Capture one batch-mode snapshot
+
+`-b -n 1` turns an interactive display into a one-shot text capture. That is the mode you want for automation, logs, and repeatable documentation.
 
 ```bash
-top
+top -b -n 1 | sed -n '1,12p'
 ```
 
 ```text
-top - 10:45:01 up 12 days,  2:14,  2 users,  load average: 1.23, 0.87, 0.72
-Tasks: 214 total,   2 running, 212 sleeping,   0 stopped,   0 zombie
-%Cpu(s): 18.3 us,  2.1 sy,  0.0 ni, 78.9 id,  0.5 wa,  0.0 hi,  0.2 si,  0.0 st
-MiB Mem :  15821.4 total,   1204.8 free,   9832.1 used,   4784.5 buff/cache
-MiB Swap:   2048.0 total,   1923.4 free,    124.6 used.   5421.7 avail Mem
+top - 15:06:08 up 1 day,  6:38,  2 users,  load average: 0.06, 0.01, 0.00
+Tasks:  48 total,   2 running,  46 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st 
+MiB Mem :  30914.2 total,  27144.0 free,   3084.8 used,   1051.5 buff/cache     
+MiB Swap:   8192.0 total,   8192.0 free,      0.0 used.  27829.4 avail Mem 
 
-  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
- 2345 worker    20   0  123456  22450   8120 R  18.7   0.1   3:21.44 python
- 1234 airflow   20   0  987654  84320  12340 S   2.3   0.5   1:23.12 python
- 5678 postgres  20   0  456789  45210   9870 S   0.4   0.3   0:41.07 postgres
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+      1 root      20   0   22328  12356   9156 S   0.0   0.0   0:05.19 systemd
+      2 root      20   0    3120   1920   1920 S   0.0   0.0   0:00.29 init-systemd(Ub
+      6 root      20   0    3120   1792   1792 S   0.0   0.0   0:00.00 init
+     42 root      19  -1   66888  14724  13956 S   0.0   0.0   0:30.82 systemd-journal
+     89 root      20   0   24884   6016   4992 S   0.0   0.0   0:05.44 systemd-udevd
 ```
 
-The `load average` values represent CPU demand over 1, 5, and 15 minutes. A load average equal to the number of CPU cores means the cores are fully utilised. Values persistently above the core count mean processes are queuing for CPU time.
+Interpret the header before you interpret the rows. `load average` tells you whether work is queueing, while `%wa` tells you how much CPU time is being spent waiting on I/O rather than doing useful work.
 
-`%Cpu(s): 0.5 wa` is I/O wait: the percentage of time the CPU was idle but waiting for I/O. Values above 10–15% indicate the disk or network is the bottleneck, not the CPU.
+#### Narrow the view to one user
 
-> [!tip] Interactive keyboard commands in top
->
-> - `P` — sort by CPU usage (default)
-> - `M` — sort by memory usage (RES column)
-> - `k` — kill a process: top prompts for PID, then signal number
-> - `c` — toggle between short command name and full command line with arguments
-> - `1` — expand the CPU summary to show per-core usage; a single core at 100% while others are idle identifies a single-threaded bottleneck
-> - `d` — change the refresh interval in seconds
-> - `q` — quit
-
-#### Filter top to a single user
+`top -u user` is the fast way to isolate one operator, service account, or application owner without losing the live header metrics.
 
 ```bash
-top -u airflow
+top -b -n 1 -u "$(whoami)" | sed -n '1,12p'
 ```
 
 ```text
-top - 10:45:01 up 12 days,  2:14,  2 users,  load average: 1.23, 0.87, 0.72
-Tasks:   8 total,   1 running,   7 sleeping,   0 stopped,   0 zombie
-  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
- 1234 airflow   20   0  987654  84320  12340 S   2.3   0.5   1:23.12 python
- 2345 airflow   20   0  123456  22450   8120 R  18.7   0.1   3:21.44 python
+top - 15:06:08 up 1 day,  6:38,  2 users,  load average: 0.06, 0.01, 0.00
+Tasks:  51 total,   1 running,  50 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.6 us,  0.0 sy,  0.0 ni, 99.4 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st 
+MiB Mem :  30914.2 total,  27145.5 free,   3083.3 used,   1051.5 buff/cache     
+MiB Swap:   8192.0 total,   8192.0 free,      0.0 used.  27830.9 avail Mem 
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+    283 alex      20   0    2800   1664   1664 S   0.0   0.0   0:00.00 sh
+    332 alex      20   0   20688  11264   9216 S   0.0   0.0   0:02.08 systemd
+    333 alex      20   0   21156   3520   1792 S   0.0   0.0   0:00.00 (sd-pam)
+    355 alex      20   0    6072   4864   3456 S   0.0   0.0   0:00.02 bash
+   8515 alex      20   0    6072   5248   3584 S   0.0   0.0   0:00.02 bash
 ```
+
+This is useful when you are separating your own interactive noise from system services or another tenant's workload.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -418,69 +374,61 @@ Tasks:   8 total,   1 running,   7 sleeping,   0 stopped,   0 zombie
 
 ### Linux | htop | enhanced interactive process viewer
 
-`htop` is a more capable alternative to `top` with colour-coded output, mouse support, horizontal scrolling for long command lines, and a built-in process tree view. It displays per-CPU bar graphs and memory/swap meters in the header. Install with `apt install htop` or `yum install htop` if not present.
+`htop` adds color, search, filtering, and tree view on top of the same basic process model as `top`. Because its normal interface is ncurses-based, pasting a screen capture into Markdown would be terminal-control noise rather than useful output.
 
-#### Launch htop
+#### Confirm that `htop` is installed before switching to the interactive view
+
+The help surface is the cleanest verification output for a static note. It proves the installed build and shows the switches you can use before entering the full-screen UI.
 
 ```bash
-htop
+htop --help | sed -n '1,12p'
 ```
 
 ```text
-    0[|||||||||||||                        23.4%]  Tasks: 48, 214 thr; 2 running
-    1[|||                                   5.2%]  Load average: 1.23 0.87 0.72
-    2[|||||||||||                          18.1%]  Uptime: 12 days, 02:14:33
-    3[||                                    3.0%]
-  Mem[|||||||||||||||||||||||||||||||||  9.6G/15.5G]
-  Swap[||                               124M/2.0G]
+htop 3.3.0
+(C) 2004-2019 Hisham Muhammad. (C) 2020-2024 htop dev team.
+Released under the GNU GPLv2+.
 
-  PID USER      PRI  NI  VIRT   RES   SHR S  CPU% MEM%   TIME+  Command
- 2345 worker     20   0  120M  21.9M  7.9M R  18.7  0.1  3:21.44 python etl_job.py
- 1234 airflow    20   0  964M  82.3M 12.1M S   2.3  0.5  1:23.12 python scheduler.py
+-C --no-color                   Use a monochrome color scheme
+-d --delay=DELAY                Set the delay between updates, in tenths of seconds
+-F --filter=FILTER              Show only the commands matching the given filter
+-h --help                       Print this help screen
+-H --highlight-changes[=DELAY]  Highlight new and old processes
+-M --no-mouse                   Disable the mouse
+-n --max-iterations=NUMBER      Exit htop after NUMBER iterations/frame updates
+-p --pid=PID[,PID,PID...]       Show only the given PIDs
 ```
 
-> [!tip] htop keyboard shortcuts
->
-> - `F5` — toggle tree view (shows parent-child relationships inline)
-> - `F6` — select sort column interactively
-> - `F9` — open kill signal selection menu (choose signal by name)
-> - `F3` — search for a process by name
-> - `F4` — filter: show only processes matching a string
-> - `u` — filter by user
-> - `t` — toggle tree/flat view
-> - `Mouse click` — select a process; click column headers to sort
+Once you launch the UI, `F5` toggles tree view and `F6` changes sort order. On minimal images where `htop` is absent, fall back to `top` or install the package from the distro repository.
 
 ### Linux | iostat | disk I/O and CPU statistics
 
-`iostat` from the `sysstat` package samples disk device statistics at a set interval. It is the primary tool for diagnosing whether a slow pipeline or hanging process is blocked on disk I/O rather than CPU or memory.
+Process tables tell you who is waiting. `iostat` tells you whether the storage layer is why they are waiting. Use `iostat -xz` when load is high but CPU is mostly idle, or when D-state tasks suggest a backing-device problem.
 
 #### Sample extended disk statistics
 
-The `-x` flag adds extended per-device columns including await and utilisation. The `-z` flag suppresses devices with zero activity, keeping the output focused. The `2 3` arguments mean: sample every 2 seconds, print 3 samples.
+The `-x` view exposes latency and utilization columns, while `-z` suppresses completely idle devices.
 
 ```bash
-iostat -xz 2 3
+iostat -xz 1 1 | sed -n '1,12p'
 ```
 
 ```text
-Device            r/s     w/s    rMB/s    wMB/s  await  r_await  w_await  svctm  %util
-sda              12.5    45.2     0.45     3.21   18.2     8.4     21.1    0.9   52.3
-nvme0n1           0.0     0.0      0.0      0.0    0.0     0.0      0.0    0.0    0.0
+Linux 6.6.87.2-microsoft-standard-WSL2 (Elysium) 	04/14/26 	_x86_64_	(16 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.09    0.00    0.10    0.00    0.00   99.80
+
+Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz     d/s     dkB/s   drqm/s  %drqm d_await dareq-sz     f/s f_await  aqu-sz  %util
+loop0            0.01      0.61     0.00   0.00    0.31    75.46    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+loop1            0.05      3.54     0.00   0.00    0.55    77.88    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+sda              0.01      0.70     0.00  26.00    0.18    61.97    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+sdb              0.00      0.10     0.00  24.56    0.20    50.33    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+sdc              0.00      0.02     0.00   0.00    0.06    22.73    0.00      0.00     0.00   0.00    0.50     2.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    1.00    0.00   0.00
+sdd              0.01      0.51     0.00  19.54    0.18    61.82    0.00      0.00     0.00  13.17    0.39     1.12    0.00      0.00     0.00   0.00    0.00     3.50    0.00    0.25    0.00   0.00
 ```
 
-Key columns for I/O diagnosis:
-- **await** — average time in milliseconds from I/O request submission to completion, including queue wait time. Values below 10 ms are healthy for SSDs. Values above 20 ms indicate a slow or saturated disk.
-- **r_await / w_await** — separate read and write latency; large read-write asymmetry can indicate write caching issues.
-- **%util** — percentage of wall-clock time the device was servicing requests. Values above 80% indicate the device is nearing saturation. At 100%, new I/O requests are queuing and all I/O-bound processes will stall.
-- **rMB/s / wMB/s** — throughput in megabytes per second; compare against device specification to gauge how close to maximum the device is running.
-
-> [!warning] %util alone does not prove saturation on SSDs and NVMe
->
-> On traditional spinning disks, `%util` approaching 100% reliably indicates saturation because they are sequential devices. On SSDs and NVMe drives, `%util` can hit 100% while `await` remains low, because the device handles parallel queues internally. Use `await` as the primary saturation indicator for modern storage.
-
-> [!success] Use await as the definitive latency indicator
->
-> Check `await` first. If `await` is below 5 ms, the disk is healthy regardless of `%util`. If `await` is above 20 ms and `%util` is above 80%, the disk is genuinely saturated and I/O-bound processes will not improve until the disk bottleneck is resolved.
+Treat `r_await` and `w_await` as the decisive latency signals. `%util` matters, but on SSD- and NVMe-backed systems it is not enough by itself to prove distress if latency is still low.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -497,35 +445,22 @@ Key columns for I/O diagnosis:
 
 ### Linux | docker stats | container resource usage
 
-`docker stats` streams live resource metrics for all running containers. It is the container equivalent of `top`. Use `--no-stream` when you need a one-shot snapshot for scripts or when you do not want a blocking process.
+When the host is healthy but one container is noisy, `docker stats` is the right boundary-specific view. It gives you per-container CPU, memory, network, and block-I/O counters without forcing you to enter the container first.
 
-#### One-shot container resource snapshot
+#### Capture a one-shot container snapshot
+
+Use `--no-stream` when you want one sample instead of a continuously refreshing display.
 
 ```bash
-sudo docker stats --no-stream
+docker stats --no-stream
 ```
 
 ```text
-CONTAINER ID   NAME            CPU %     MEM USAGE / LIMIT    MEM %     NET I/O          BLOCK I/O
-a1b2c3d4e5f6   airflow_web     2.34%     312MiB / 15.5GiB     1.97%     1.2GB / 450MB    8.4GB / 2.1GB
-b2c3d4e5f6a1   postgres_db     0.41%     892MiB / 15.5GiB     5.62%     320MB / 180MB    120GB / 45GB
-c3d4e5f6a1b2   redis_cache     0.02%     45MiB / 15.5GiB      0.28%     890MB / 2.1GB    0B / 0B
+CONTAINER ID   NAME       CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O         PIDS
+8482aae8ad0a   stoxx-db   1.01%     1.904GiB / 30.19GiB   6.31%     5.89MB / 17.1MB   2.03GB / 1.45GB   292
 ```
 
-Column interpretation:
-- **CPU %** — percentage of the host's total CPU capacity consumed. Can exceed 100% if the container uses multiple cores.
-- **MEM USAGE / LIMIT** — current RSS of the container versus the configured memory limit. If no limit is set, the limit shown is the host's total RAM.
-- **MEM %** — MEM USAGE expressed as a percentage of LIMIT. Values above 85–90% indicate the container is at risk of triggering the OOM killer.
-- **NET I/O** — cumulative network bytes received / sent since container start.
-- **BLOCK I/O** — cumulative block device bytes read / written since container start; a proxy for disk I/O generated by the container.
-
-> [!warning] MEM USAGE in docker stats includes page cache
->
-> The reported MEM USAGE includes Linux page cache held by the container, which the kernel can reclaim under memory pressure. The actual non-reclaimable RSS is lower. For precise container RSS, read `/sys/fs/cgroup/memory/memory.usage_in_bytes` minus `cache` from `/sys/fs/cgroup/memory/memory.stat`.
-
-> [!success] Use memory.stat for accurate container memory accounting
->
-> Run `docker exec <container> cat /sys/fs/cgroup/memory/memory.stat | grep -E "^(cache|rss) "` to retrieve the breakdown. Subtract `cache` from `usage_in_bytes` for true application RSS.
+This live capture reflects the `stoxx-db` container that is currently running on the host. Remember that Docker's memory column includes page cache; if you need precise application RSS, inspect the container's cgroup files instead of relying on the aggregate number alone.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -535,127 +470,114 @@ Column interpretation:
 
 ### Linux | D state — uninterruptible sleep processes
 
-A process in state `D` (uninterruptible sleep) is blocked waiting for an I/O operation to complete. The kernel places processes in D state for the duration of certain low-level I/O calls that must not be interrupted — primarily disk reads and NFS operations. Unlike `S` (interruptible sleep), D state ignores signals entirely.
+A process in state `D` is blocked inside the kernel waiting on an uninterruptible operation, usually disk or network-backed I/O. This is the process state that defeats repeated `kill -9` attempts, because the signal cannot complete until the task returns from the blocked kernel path.
 
-> [!warning] D state processes cannot be killed with any signal, including -9
->
-> `kill -9` delivers SIGKILL, which the kernel normally forces on any process. However, processes in D state are executing inside the kernel with interrupts disabled — the signal is queued but never delivered until the process returns to user space, which cannot happen while the I/O is blocked. Common causes:
-> 1. NFS mount hung — the network storage server is unreachable or unresponsive
-> 2. Disk hardware failure — the drive is not responding to I/O commands
-> 3. Kernel bug — rare but real in older kernel versions or exotic drivers
->
-> If many processes pile up in D state, the system load average will spike even though no CPU work is being done.
+#### Check whether any tasks are currently blocked in `D`
 
-> [!success] Diagnose D state with dmesg and check for NFS/disk errors
->
-> Run `dmesg | tail -50` and look for `I/O error`, `EXT4-fs error`, `nfs: server not responding`, or `hung_task_timeout_secs`. These kernel messages identify the root cause. For NFS hangs, force-unmounting with `umount -lf /mnt/point` (lazy force) may unblock the processes. For disk failure, check SMART status with `smartctl -a /dev/sda`.
-
-#### Check for D state processes
+The quickest scan is to filter the process table by the `STAT` column. This version prints an explicit message when the system is currently clean.
 
 ```bash
-ps aux | awk '$8 ~ /^D/ { print $0 }'
+ps -eo user,pid,stat,comm | awk 'BEGIN { print "USER PID STAT COMMAND" } $3 ~ /^D/ { print; found=1 } END { if (!found) print "(no processes currently in D state)" }'
 ```
 
 ```text
-www-data  4512  0.0  0.1  23456  2340 ?  D  08:31  0:00 php-fpm: pool www
-root      4891  0.0  0.0  12345   890 ?  D  08:31  0:00 kworker/0:2+flush-8:0
+USER PID STAT COMMAND
+(no processes currently in D state)
 ```
 
-Any PID in STAT column starting with `D` is in uninterruptible sleep. More than 2–3 D state processes simultaneously indicates a systemic I/O stall rather than an isolated event.
+No D-state tasks are visible in this capture. On a sick host, any row whose state begins with `D` means the problem is the blocked kernel operation, not signal delivery.
 
-#### Read kernel error messages after D state detected
+#### Inspect recent kernel messages after a blocked-task check
+
+Once you suspect I/O trouble, the next question is what the kernel is reporting. `dmesg` is where you confirm storage, filesystem, or NFS faults.
 
 ```bash
-dmesg | tail -50
+dmesg | tail -5
 ```
 
 ```text
-[123456.789] EXT4-fs error (device sda1): ext4_find_entry:1455: inode #12345: comm php-fpm: reading directory lblock 0
-[123457.012] blk_update_request: I/O error, dev sda, sector 2048576
-[123457.015] sd 0:0:0:0: [sda] tag#12 FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK
+[103375.461024] systemd-journald[42]: Time jumped backwards, rotating.
+[103404.718409] systemd-journald[42]: Time jumped backwards, rotating.
+[103433.988653] systemd-journald[42]: Time jumped backwards, rotating.
+[103463.167147] systemd-journald[42]: Time jumped backwards, rotating.
+[103492.431920] systemd-journald[42]: Time jumped backwards, rotating.
 ```
 
-Errors referencing a specific device (`sda`, `sda1`) confirm hardware failure. `nfs: server not responding` confirms a hung NFS mount. `EXT4-fs error` can indicate filesystem corruption or underlying disk issues.
+This guest is not reporting storage failures in the live sample above. On a real I/O incident, look for messages such as `I/O error`, `EXT4-fs error`, or `nfs: server not responding`.
 
 ## PowerShell process management tools
 
-PowerShell provides structured object-based alternatives to Linux's text-based process tools. `Get-Process` returns `System.Diagnostics.Process` objects with typed properties; `Get-CimInstance` queries WMI for system-wide CPU, memory, and uptime data. Because all output is structured, sorting, filtering, and formatting require no text parsing.
+PowerShell exposes the same operational questions as Linux, but the interface is object-based rather than text-based. `Get-Process` is the fast local inventory, `Get-CimInstance` fills in OS and ownership context, and `Get-Counter` gives you the closest thing Windows has to a load proxy.
 
 ### PowerShell | Get-Process | list and filter processes
 
-`Get-Process` retrieves process objects from the local (or remote) machine. Each object exposes typed properties including `WorkingSet64` (physical RAM in bytes), `CPU` (cumulative CPU seconds), `Id` (PID), and `Name`. The cmdlet mirrors `ps aux` in scope: all processes, all users.
+`Get-Process` returns typed `System.Diagnostics.Process` objects. That changes how you work: you sort and filter properties directly instead of parsing text columns, and you can compute derived values such as memory in megabytes without a second text-processing step.
 
-#### List top processes by CPU usage
+#### Sort running processes by cumulative CPU time
+
+The `CPU` property is total processor seconds consumed since the process started, not instantaneous percent usage. It is still the right first sort when you want to find long-running CPU consumers quickly.
 
 ```powershell
-Get-Process | Sort-Object CPU -Descending | Select-Object -First 20 Name, Id, CPU,
-    @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}}
+Get-Process | Sort-Object CPU -Descending | Select-Object -First 5 Name, Id, CPU,
+    @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}} | Format-Table -AutoSize
 ```
 
 ```text
-Name         Id    CPU Mem(MB)
-----         --    --- -------
-sqlservr   1891 1823.4    1842
-python     2345  312.7      82
-svchost     912   45.2     124
+Name         Id       CPU Mem(MB)
+----         --       --- -------
+Code      14688 111501.17 1405.00
+Code      36416  40716.06  644.00
+Code       2004  39605.53  213.00
+XPG-Prime  9244  29219.95  101.00
+Code      12972  16070.06  318.00
 ```
 
-`CPU` is cumulative seconds of CPU time since the process started, not an instantaneous percentage. A process with `CPU` 1823 has consumed 1823 seconds of CPU across all cores since it launched. Divide by the process uptime in seconds to derive average utilisation.
+The live host has several long-lived `Code` processes, which is why cumulative CPU dominates the table. `WorkingSet64` converted to megabytes is the Windows analogue of Linux RSS.
 
-`Mem(MB)` is derived from `WorkingSet64`, which is the Windows equivalent of Linux RSS: actual physical RAM pages currently allocated to the process.
+#### Query a process by name
 
-#### Find a specific process by name
+Filtering by name is the direct equivalent of `ps -C` or `pgrep -a`. Add `-ErrorAction SilentlyContinue` when the lookup is part of a script and a missing process should not raise noise.
 
 ```powershell
-Get-Process -Name "sqlservr" -ErrorAction SilentlyContinue
+Get-Process -Name 'powershell' -ErrorAction SilentlyContinue |
+    Select-Object -First 3 Name, Id, CPU,
+        @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}} |
+    Format-Table -AutoSize
 ```
 
 ```text
-Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  SI ProcessName
--------  ------    -----      -----     ------     --  -- -----------
-   4821     892  2045312    1886210   1823.41   1891   0 sqlservr
+Name          Id   CPU Mem(MB)
+----          --   --- -------
+powershell 14084 10.88   92.00
+powershell 24304  0.39   54.00
+powershell 39976 10.34  140.00
 ```
 
-`-ErrorAction SilentlyContinue` suppresses the non-terminating error that `Get-Process` throws when no match is found, making the command safe to use in scripts.
+This shows three live Windows PowerShell processes on the host. When you need one exact instance, switch to `-Id` after you identify the PID you want.
 
-#### Filter processes exceeding a memory threshold
+#### Filter processes above a working-set threshold
+
+Threshold filtering is the PowerShell equivalent of sorting on RSS and keeping only the heavy hitters. The built-in `MB` suffix keeps the predicate readable.
 
 ```powershell
-Get-Process | Where-Object { $_.WorkingSet64 -gt 500MB } |
-    Format-Table Name, Id, @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}} -AutoSize
+Get-Process | Where-Object { $_.WorkingSet64 -gt 100MB } |
+    Sort-Object WorkingSet64 -Descending |
+    Select-Object -First 5 Name, Id,
+        @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}} |
+    Format-Table -AutoSize
 ```
 
 ```text
-Name        Id Mem(MB)
-----        -- -------
-sqlservr  1891    1842
-java      3412     912
-chrome    5678     724
+Name                  Id Mem(MB)
+----                  -- -------
+vmmemWSL           13912 2721.00
+node               31148 1412.00
+Code               14688 1405.00
+Memory Compression  3784 1084.00
+claude              2264  679.00
 ```
 
-The `500MB` literal is automatically interpreted as 524288000 bytes by PowerShell's multiplier suffixes (`KB`, `MB`, `GB`, `TB`). Adjust the threshold to match your alerting requirements.
-
-#### List processes owned by a specific user
-
-```powershell
-Get-Process -IncludeUserName | Where-Object { $_.UserName -like "*airflow*" } |
-    Select-Object Name, Id, UserName, CPU, @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}}
-```
-
-```text
-Name   Id   UserName            CPU Mem(MB)
-----   --   --------            --- -------
-python 2345 DOMAIN\airflow     312.7      82
-python 3456 DOMAIN\airflow      14.2      45
-```
-
-> [!warning] Get-Process -IncludeUserName requires elevation
->
-> The `-IncludeUserName` parameter requires running as Administrator. Without elevation, the cmdlet throws an `Access is denied` error for processes owned by other users.
-
-> [!success] Elevate the shell or use Get-CimInstance for cross-user queries
->
-> Launch PowerShell as Administrator and retry, or use `Get-CimInstance Win32_Process` which returns `GetOwner()` method results accessible without elevation for most system processes.
+`WorkingSet64` is live resident memory, so it is the number to prefer when the machine feels memory-bound.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -666,26 +588,31 @@ python 3456 DOMAIN\airflow      14.2      45
 | `-Module` | `Get-Process -Name chrome -Module` | List loaded DLL modules for the process |
 | `-FileVersionInfo` | `Get-Process -Name svchost -FileVersionInfo` | Include version info from the process executable |
 
-### PowerShell | Get-CimInstance | CPU, memory, and uptime overview
+### PowerShell | Get-CimInstance | CPU, memory, and ownership context
 
-`Get-CimInstance` queries the CIM (Common Information Model) repository via WMI, returning typed objects for hardware and OS-level data that `Get-Process` does not expose: total RAM, CPU topology, OS version, and system uptime. It is the PowerShell equivalent of reading `/proc/meminfo`, `/proc/cpuinfo`, and `uptime` on Linux.
+`Get-CimInstance` reads operating system and management classes that `Get-Process` does not expose directly. Use it when you need system totals, CPU topology, boot time, or ownership resolution.
 
-#### Query CPU topology
+#### Read CPU topology
+
+`Win32_Processor` tells you how many physical and logical execution contexts the host has, which is the baseline for interpreting queue length and per-process CPU behavior.
 
 ```powershell
 Get-CimInstance -ClassName Win32_Processor |
-    Select-Object Name, NumberOfCores, NumberOfLogicalProcessors
+    Select-Object Name, NumberOfCores, NumberOfLogicalProcessors |
+    Format-Table -AutoSize
 ```
 
 ```text
-Name                                    NumberOfCores NumberOfLogicalProcessors
-----                                    ------------- -------------------------
-Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz             6                        12
+Name                                            NumberOfCores NumberOfLogicalProcessors
+----                                            ------------- -------------------------
+AMD Ryzen 7 9800X3D 8-Core Processor                        8                        16
 ```
 
-`NumberOfCores` is the physical core count. `NumberOfLogicalProcessors` includes hyperthreading threads. Use `NumberOfLogicalProcessors` as the denominator when interpreting `Get-Process` CPU values as percentages.
+The distinction matters: scheduler pressure should be judged against logical processors, not just physical cores.
 
-#### Query memory usage and calculate utilisation percentage
+#### Calculate memory utilization from `Win32_OperatingSystem`
+
+This gives you the same host-level view that `/proc/meminfo` gives on Linux, but through typed WMI properties.
 
 ```powershell
 $os = Get-CimInstance Win32_OperatingSystem
@@ -696,45 +623,33 @@ $os = Get-CimInstance Win32_OperatingSystem
 ```
 
 ```text
-Total: 15.5 GB | Free: 4.2 GB | Used: 73%
+Total: 61.7 GB | Free: 36.1 GB | Used: 41%
 ```
 
-`TotalVisibleMemorySize` and `FreePhysicalMemory` are in KB. Dividing by `1MB` (= 1024) converts to GB. Used percentage above 90% indicates the system is under memory pressure; the kernel will begin paging to the pagefile, which will dramatically increase disk I/O and degrade all process performance.
+`TotalVisibleMemorySize` and `FreePhysicalMemory` are returned in kibibytes, so the `1MB` divisor converts them to gigabyte-scale values.
 
-#### Query system uptime
+#### Resolve the owner for a specific PID
+
+Ownership resolution is cleaner through `Win32_Process` than through `Get-Process -IncludeUserName` when you need a reliable, typed result for one process.
 
 ```powershell
-(Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
+$proc = Get-CimInstance Win32_Process -Filter "ProcessId = $PID"
+$owner = Invoke-CimMethod -InputObject $proc -MethodName GetOwner
+[pscustomobject]@{
+    Name = $proc.Name
+    ProcessId = $proc.ProcessId
+    'Mem(MB)' = [math]::Round($proc.WorkingSetSize / 1MB)
+    Owner = "$($owner.Domain)\$($owner.User)"
+} | Format-Table -AutoSize
 ```
 
 ```text
-Days              : 12
-Hours             : 2
-Minutes           : 14
-Seconds           : 33
-TotalSeconds      : 1045273.4
+Name     ProcessId Mem(MB) Owner
+----     --------- ------- -----
+pwsh.exe     44448   82.00 ELYSIUM\Alex
 ```
 
-`LastBootUpTime` is a `DateTime` object. Subtracting it from `Get-Date` produces a `TimeSpan`. This is the PowerShell equivalent of `uptime`.
-
-#### Query all running processes via WMI for cross-user visibility
-
-```powershell
-Get-CimInstance Win32_Process |
-    Select-Object Name, ProcessId, @{N='Mem(MB)';E={[math]::Round($_.WorkingSetSize/1MB)}},
-        @{N='Owner';E={(Invoke-CimMethod -InputObject $_ -MethodName GetOwner).User}} |
-    Sort-Object 'Mem(MB)' -Descending | Select-Object -First 15
-```
-
-```text
-Name         ProcessId Mem(MB) Owner
-----         --------- ------- -----
-sqlservr.exe      1891    1842 MSSQLSERVER
-java.exe          3412     912 svcuser
-chrome.exe        5678     724 alice
-```
-
-`Win32_Process` provides `WorkingSetSize` in bytes. The `GetOwner()` method resolves the owning account without requiring the `-IncludeUserName` elevation requirement of `Get-Process`.
+This pattern is useful when you can see a PID but need to confirm who owns it before you intervene.
 
 | Flag / Parameter | Syntax | Description |
 |---|---|---|
@@ -745,76 +660,234 @@ chrome.exe        5678     724 alice
 
 ### PowerShell | uptime and load equivalent
 
-PowerShell does not have a single `uptime` command equivalent to Linux. System uptime and load information is assembled from CIM/WMI and performance counters.
+Windows does not have a direct 1/5/15-minute load average. You build the equivalent picture from boot time plus performance counters.
 
-#### Calculate system uptime
+#### Calculate uptime from `LastBootUpTime`
+
+Subtracting the last boot timestamp from the current time gives you a `TimeSpan`, which is the PowerShell equivalent of `uptime`.
 
 ```powershell
-(Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime | Select-Object Days, Hours, Minutes
+(Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime |
+    Select-Object Days, Hours, Minutes
 ```
 
 ```text
 Days Hours Minutes
 ---- ----- -------
-  12     2      14
+   3     2      13
 ```
 
-#### Read CPU queue length as a load average proxy
+Use this to judge whether the process table reflects a fresh boot, a host that has been running for weeks, or a system that has recently recycled services.
 
-On Windows there is no direct equivalent to the Linux 1/5/15-minute load average. The closest metric is `\System\Processor Queue Length` from the performance counter subsystem: the number of threads waiting for CPU time. A value of 0–2 per logical core is healthy; values consistently above 2 per core indicate CPU saturation.
+#### Read the processor queue length as a load proxy
+
+`Processor Queue Length` is not the same metric as Linux load average, but it is the quickest counter-based approximation of CPU scheduling pressure on Windows.
 
 ```powershell
 (Get-Counter '\System\Processor Queue Length').CounterSamples.CookedValue
 ```
 
 ```text
-3
+0
 ```
 
-A value of 3 means 3 threads are currently queued waiting for a CPU core. On a 4-core machine this is mildly elevated. On a single-core machine this would indicate significant CPU saturation.
-
-
+A value near zero means threads are not currently waiting for CPU service. Persistent values above roughly 2 per logical processor indicate saturation or a scheduling bottleneck.
 
 ## Warnings
 
-> [!danger] D-state processes cannot be killed -- not even with SIGKILL
->
-> A process in uninterruptible sleep (D state) is waiting for kernel I/O to complete. `kill -9` has no effect. The process exits only when the I/O finishes, the storage device responds, or the kernel times out. Investigate the storage layer (NFS mount, disk health, RAID status) rather than repeatedly trying to kill the process.
-
-> [!warning] PIDs are reused after process exit
->
-> A PID you noted during investigation may now belong to a different process. Always verify the PID immediately before sending a signal: `ps -p <pid> -o pid,cmd` confirms the process identity.
-
-> [!warning] Load average includes I/O-waiting processes
->
-> A load average of 8.0 on a 4-core machine does not necessarily mean CPU saturation. If most processes are in D state (I/O wait), the bottleneck is disk, not CPU. Check `%wa` in `top` or `iostat` to distinguish.
-
-> [!warning] VSZ is not actual memory consumption
->
-> VSZ (Virtual Size) includes shared libraries, memory-mapped files, and reserved-but-unused pages. RSS (Resident Set Size) is the practical measure of physical RAM used by a process.
+- D-state tasks ignore signals until the blocked kernel I/O operation completes, so repeated `kill -9` attempts do not solve the underlying problem.
+- PIDs are reusable. Verify identity with `ps -p <pid> -o pid,cmd` or `Get-Process -Id <pid>` immediately before you signal or terminate anything.
+- Linux load average includes tasks waiting in uninterruptible sleep, so high load with low CPU is often a storage or filesystem problem.
+- VSZ is not resident memory. Use RSS on Linux and `WorkingSet64` or `WorkingSetSize` on Windows when you care about actual RAM pressure.
 
 ## Recommendations
 
-| Scenario | Recommendation |
-|---|---|
-| Quick process snapshot | `ps aux --sort=-%cpu \| head -20` -- top 20 processes by CPU usage. |
-| Real-time monitoring | `htop` for interactive use with color, sorting, and filtering. `top -bn1` for non-interactive scripted snapshots. |
-| Find a specific process | `ps aux \| grep -i <name>` or `pgrep -a <name>` for cleaner output. |
-| Process tree | `pstree -p` to see parent-child relationships with PIDs. `ps --forest` as a fallback. |
-| Load average interpretation | Compare to CPU count: `nproc` returns core count. Load > nproc = saturation. Check `%wa` for I/O vs CPU distinction. |
-| Container processes | `docker stats` for per-container resource usage. `docker exec <id> ps aux` for process listing inside a container. |
-| PowerShell equivalent | `Get-Process \| Sort-Object CPU -Descending \| Select-Object -First 20` for top processes by CPU. |
+### Linux recommendations
+
+#### Take a sorted snapshot before you reach for `kill`
+
+The fastest safe workflow is to identify the process, confirm its command line, and only then decide whether intervention is warranted.
+
+```bash
+ps aux --sort=-%cpu | head -5
+```
+
+```text
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root          42  0.0  0.0  66888 14764 ?        S<s  Apr13   0:30 /usr/lib/systemd/systemd-journald
+root       28971  0.0  0.0 370096 20224 ?        Ssl  15:09   0:00 /usr/libexec/packagekitd
+root       27963  0.0  0.0 1756108 12928 ?       Ssl  15:01   0:00 /usr/libexec/wsl-pro-service
+root          89  0.0  0.0  24884  6016 ?        Ss   Apr13   0:05 /usr/lib/systemd/systemd-udevd
+```
+
+On a busy host, this immediately tells you whether one process dominates the system or whether the problem is more diffuse.
+
+#### Escalate to storage metrics when load and CPU disagree
+
+If users report slowness but the process table shows little CPU burn, move directly to `iostat` rather than assuming a scheduler problem.
+
+```bash
+iostat -xz 1 1 | sed -n '1,12p'
+```
+
+```text
+Linux 6.6.87.2-microsoft-standard-WSL2 (Elysium) 	04/14/26 	_x86_64_	(16 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.09    0.00    0.10    0.00    0.00   99.80
+
+Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz     d/s     dkB/s   drqm/s  %drqm d_await dareq-sz     f/s f_await  aqu-sz  %util
+loop0            0.01      0.61     0.00   0.00    0.31    75.46    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+loop1            0.05      3.54     0.00   0.00    0.55    77.88    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+sda              0.01      0.70     0.00  26.00    0.18    61.97    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+sdb              0.00      0.10     0.00  24.56    0.20    50.33    0.00      0.00     0.00   0.00    0.00     0.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    0.00    0.00   0.00
+sdc              0.00      0.02     0.00   0.00    0.06    22.73    0.00      0.00     0.00   0.00    0.50     2.00    0.00      0.00     0.00   0.00    0.00     0.00    0.00    1.00    0.00   0.00
+sdd              0.01      0.51     0.00  19.54    0.18    61.82    0.00      0.00     0.00  13.17    0.39     1.12    0.00      0.00     0.00   0.00    0.00     3.50    0.00    0.25    0.00   0.00
+```
+
+The same capture tells you whether the queue is really at the disk layer or whether you need to look elsewhere.
+
+#### Check container boundaries separately from host processes
+
+If the noisy workload is containerized, host-wide process listings are only the first half of the picture.
+
+```bash
+docker stats --no-stream
+```
+
+```text
+CONTAINER ID   NAME       CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O         PIDS
+8482aae8ad0a   stoxx-db   1.01%     1.904GiB / 30.19GiB   6.31%     5.89MB / 17.1MB   2.03GB / 1.45GB   292
+```
+
+This lets you separate container pressure from host pressure before you go inside the container.
+
+### PowerShell recommendations
+
+#### Start with cumulative CPU and working set
+
+The PowerShell analogue of `ps aux --sort=-%cpu` is to sort process objects by `CPU` and then inspect `WorkingSet64`.
+
+```powershell
+Get-Process | Sort-Object CPU -Descending | Select-Object -First 5 Name, Id, CPU,
+    @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}} | Format-Table -AutoSize
+```
+
+```text
+Name         Id       CPU Mem(MB)
+----         --       --- -------
+Code      14688 111501.17 1405.00
+Code      36416  40716.06  644.00
+Code       2004  39605.53  213.00
+XPG-Prime  9244  29219.95  101.00
+Code      12972  16070.06  318.00
+```
+
+This is the fastest way to decide whether the problem is one obvious offender or broad host pressure.
+
+#### Use queue length when Windows feels slow but CPU percentages look ordinary
+
+Windows does not provide a Linux-style load average, so queue length is the first counter to consult when the machine feels busy but `Get-Process` does not explain it.
+
+```powershell
+(Get-Counter '\System\Processor Queue Length').CounterSamples.CookedValue
+```
+
+```text
+0
+```
+
+A low queue length tells you CPU scheduling is not the problem at the moment of capture.
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| System is slow but no single process shows high CPU | Many processes each using a small amount, or I/O bottleneck (high load average with low CPU%). | Check `%wa` (I/O wait) in `top`. Run `iostat -x 1` to confirm disk saturation. |
-| Process in D state cannot be killed | Waiting for kernel I/O (disk, NFS, network filesystem). | Investigate storage: check `dmesg` for disk errors, verify NFS mount health, check RAID status. The process exits when I/O completes. |
-| `ps aux` shows a zombie process (Z state) | Child process exited but parent has not called `wait()` to collect its exit status. | Zombies consume no resources (only a PID table entry). Kill the parent process to clean up zombies. If the parent is PID 1 (init/systemd), reboot. |
-| Load average is high but CPU usage is low | Processes are waiting for I/O (D state), not CPU. | The bottleneck is disk, network filesystem, or storage. Run `iostat -x 1` and check `%util` column. |
-| `htop` is not installed | Minimal Docker images and cloud VMs often omit `htop`. | `apt install htop` (Debian/Ubuntu) or `yum install htop` (RHEL). Use `top` as a fallback. |
+### Linux troubleshooting
+
+#### High load with low CPU usually means blocked I/O, not a CPU emergency
+
+The `top` header is the quickest place to confirm whether the host is spending time in `%wa` or simply waiting for work.
+
+```bash
+top -b -n 1 | sed -n '1,12p'
+```
+
+```text
+top - 15:06:08 up 1 day,  6:38,  2 users,  load average: 0.06, 0.01, 0.00
+Tasks:  48 total,   2 running,  46 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.0 us,  0.0 sy,  0.0 ni,100.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st 
+MiB Mem :  30914.2 total,  27144.0 free,   3084.8 used,   1051.5 buff/cache     
+MiB Swap:   8192.0 total,   8192.0 free,      0.0 used.  27829.4 avail Mem 
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+      1 root      20   0   22328  12356   9156 S   0.0   0.0   0:05.19 systemd
+      2 root      20   0    3120   1920   1920 S   0.0   0.0   0:00.29 init-systemd(Ub
+      6 root      20   0    3120   1792   1792 S   0.0   0.0   0:00.00 init
+     42 root      19  -1   66888  14724  13956 S   0.0   0.0   0:30.82 systemd-journal
+     89 root      20   0   24884   6016   4992 S   0.0   0.0   0:05.44 systemd-udevd
+```
+
+In this capture, `%wa` is `0.0`, so storage wait is not the current issue. On a distressed host, a high `%wa` plus large `await` in `iostat` is the signature to look for.
+
+#### A process stuck in `D` will not die until the kernel returns from the blocked call
+
+Start by checking whether any tasks are actually in uninterruptible sleep before you assume signals are being ignored.
+
+```bash
+ps -eo user,pid,stat,comm | awk 'BEGIN { print "USER PID STAT COMMAND" } $3 ~ /^D/ { print; found=1 } END { if (!found) print "(no processes currently in D state)" }'
+```
+
+```text
+USER PID STAT COMMAND
+(no processes currently in D state)
+```
+
+If you do see `D`, inspect the kernel log next.
+
+```bash
+dmesg | tail -5
+```
+
+```text
+[103375.461024] systemd-journald[42]: Time jumped backwards, rotating.
+[103404.718409] systemd-journald[42]: Time jumped backwards, rotating.
+[103433.988653] systemd-journald[42]: Time jumped backwards, rotating.
+[103463.167147] systemd-journald[42]: Time jumped backwards, rotating.
+[103492.431920] systemd-journald[42]: Time jumped backwards, rotating.
+```
+
+The remediation is at the storage or network layer, not in repeated signal delivery.
+
+#### Zombie processes require parent cleanup
+
+Zombie tasks have already exited. What remains is the unreaped process table entry, which means the parent still needs to call `wait()`.
+
+```bash
+ps -eo pid,ppid,stat,comm | awk 'BEGIN { print "PID PPID STAT COMMAND" } $3 ~ /^Z/ { print; found=1 } END { if (!found) print "(no zombie processes currently visible)" }'
+```
+
+```text
+PID PPID STAT COMMAND
+(no zombie processes currently visible)
+```
+
+If you do find a zombie, investigate or restart the parent process rather than trying to kill the zombie itself.
+
+#### Verify whether `htop` is installed before assuming the host lacks process tooling
+
+Minimal images often omit `htop`, but that is a packaging issue rather than an observability dead end.
+
+```bash
+command -v htop
+```
+
+```text
+/usr/bin/htop
+```
+
+If `command -v htop` returns nothing, install the package from the distro repository or fall back to `top`.
+
 ## Cross-references
+
 - [killing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes) — what to do once you find the problematic process
 - [system-resources](https://alp78.github.io/elysium/01-Shell/Process-Management/system-resources) — deeper memory, CPU, and disk I/O analysis
 - [managing-services](https://alp78.github.io/elysium/01-Shell/Process-Management/managing-services) — checking systemd service status and logs

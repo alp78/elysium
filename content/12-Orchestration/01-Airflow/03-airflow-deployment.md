@@ -59,6 +59,16 @@ The current platform is a production-demo environment with strong needs for insp
 
 That makes a private VM plus Docker Compose a reasonable control-plane choice for this phase.
 
+#### Use Cloud Composer When
+
+Cloud Composer becomes the better fit when Airflow must be treated as shared platform infrastructure instead of as a small, inspectable control plane for one environment.
+
+> [!info] Cloud Composer Costs
+>
+> Cloud Composer is expensive relative to self-hosted Airflow. A small environment is roughly `$300-500/month`. A medium environment with multiple workers can exceed `$1,500/month`.
+>
+> Set `--min-workers 1` and `--max-workers N` to enable autoscaling and keep idle spend bounded.
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',

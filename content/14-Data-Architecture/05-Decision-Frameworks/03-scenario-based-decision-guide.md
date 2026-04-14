@@ -1415,4 +1415,4 @@ A quick reference for when two technologies seem interchangeable.
 
 *This guide is a living document. As new scenarios emerge or technologies change, add new sections and update existing ones. The goal is that any data engineer can open this note and find a starting point for their next architecture decision.*
 
-**See also:** [moc-data-architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) | [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/five-pillars-of-data-engineering) |
+**See also:** [moc-data-architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) | [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) |

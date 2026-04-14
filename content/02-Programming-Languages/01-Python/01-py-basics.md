@@ -4,340 +4,192 @@ tags: [python]
 aliases: [variables, data types, type conversion, operators, console IO]
 description: "Python basics reference with executable examples and cell outputs — covers variables, data types, type conversion, operators, and console I/O. See [01-cs-basics](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/01-cs-basics) for the C# equivalent."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-14
 status: complete
 ---
 
-# Basics - Python
+# 01. Basics - Python
 
-> [!quote]
+> [!quote] Kernighan and Ritchie on learning languages
+>
 > "The only way to learn a new programming language is by writing programs in it."
 >
 > — **Brian W. Kernighan & Dennis Ritchie**, *The C Programming Language* (1978)
 
 > [!abstract]- Summary
 >
-> Python language foundations reference covering runtime setup, console I/O, every built-in data type, all operator families, dunder methods, and the mutable/immutable distinction — the operational base for all Python work in the vault.
+> Python foundations reference covering runtime validation, console I/O, core data types, operator behavior, dunder methods, and mutability semantics.
 >
-> **Environment Setup**
-> - Verify interpreter version with `sys.version` and `sys.executable`; confirm active virtual environment with `os.environ.get('VIRTUAL_ENV')`
-> - Enumerate installed packages with `importlib.metadata.distributions()`; fail-fast import verification with `__import__()` + `try/except ImportError`
+> **Runtime and environment**
+> - Verify interpreter identity with `sys.version` and `sys.executable`
+> - Confirm the active virtual environment with `os.environ.get("VIRTUAL_ENV")`
+> - Inspect installed distributions with `importlib.metadata.distributions()` and fail fast on missing imports with `__import__()`
 >
-> **Console I/O**
-> - `print()` parameters: `sep` (default `" "`), `end` (default `"\n"`), `file` (redirect to `sys.stderr` or file), `flush` (bypass output buffer)
-> - Three string formatting styles: f-strings (preferred, Python 3.6+), `.format()` (dynamic format strings), `%`-formatting (legacy)
-> - Escape sequences: `\t`, `\n`, `\\`, `\uXXXX`; raw strings with `r"..."` disable escape processing
-> - `repr()` vs `str()`: developer representation vs user-facing output; `!r` and `!a` in f-strings
-> - `input()` returns `str` always; parse with `int()` / `float()` inside `try/except ValueError`; EAFP validation loop with `while True` + `return`
+> **Console I/O and formatting**
+> - `print()` controls output with `sep`, `end`, `file`, and `flush`
+> - Prefer f-strings; use `.format()` for dynamic templates and `%` formatting only for legacy code
+> - `input()` always returns `str`; parse with `int()` or `float()` inside `try/except ValueError`
+> - `repr()` exposes developer-oriented representations; `str()` produces user-facing output
 >
-> **Variables, Constants & Data Types**
-> - Dynamic typing: variables are references to objects, not containers; `type()` and `isinstance()` for inspection; PEP 484 type hints
-> - Constants: `ALL_CAPS` convention only; `typing.Final` (PEP 591) for static enforcement
-> - Numeric types: `int` (arbitrary precision, no overflow), `float` (64-bit IEEE 754, `inf`/`nan`/precision loss), `complex` (`j` suffix, `.real`/`.imag`/`.conjugate()`/`abs()`), `Decimal` (exact base-10, always construct from string)
-> - `bool`: subclass of `int`, `True==1`/`False==0`; truthy/falsy: `0`, `0.0`, `""`, `[]`, `{}`, `set()`, `None`, `range(0)` are all falsy
-> - `bytes` (immutable) / `bytearray` (mutable): `.encode("utf-8")` → bytes, `.decode("utf-8")` → str
-> - `None`: singleton of `NoneType`; always test with `is None`, never `== None`; `Optional[T]` / `T | None` type hint
-> - Specialized containers: `defaultdict` (auto-create missing keys), `Counter` (frequency map, `.most_common(n)`), `namedtuple` (immutable named tuple), `deque` (O(1) both-end ops), `memoryview` (zero-copy buffer), `OrderedDict`
-> - `Fraction` (exact rational arithmetic), `Enum` / `IntEnum`
+> **Data model**
+> - Names bind to objects at runtime; rebinding changes the reference, not the object
+> - `int` is arbitrary precision; `float` follows IEEE 754; `Decimal` provides exact base-10 arithmetic
+> - `bool` is a subclass of `int`; `None` is a singleton; `bytes` and `bytearray` separate immutable and mutable binary data
+> - `defaultdict`, `Counter`, `namedtuple`, `deque`, `memoryview`, and `Fraction` cover common specialized cases
 >
-> **Operators**
-> - Arithmetic: `+`, `-`, `*`, `/` (always float), `//` (floor division, floors toward −∞), `%` (same sign as divisor), `**`, `divmod()`
-> - Comparison: `==`, `!=`, `<`, `<=`, `>`, `>=`; chained comparisons `a < b < c` evaluate `b` once
-> - Identity/membership: `is` / `is not` (object identity, use only for singletons); `in` / `not in` (O(1) for sets/dicts, O(n) for lists)
-> - Logical: `and` / `or` return the deciding operand, not just `bool`; `not`; `None or "default"` pattern
-> - Bitwise: `&`, `|`, `^`, `~` (`-(a+1)`), `<<`, `>>`; flag management with `|=` (set), `&= ~flag` (clear)
-> - Compound assignment: `+=`, `-=`, `*=`, `/=`, `//=`, `%=`, `**=`, `&=`, `|=`, `^=`, `<<=`, `>>=`
-> - Ternary: `value if condition else alternative`; walrus `:=` (Python 3.8+, assign-and-return in one expression)
-> - Precedence: `()` → `**` → unary → `* / // %` → `+ -` → shifts → `&` → `^` → `|` → comparisons → `not` → `and` → `or` → `:=`
+> **Operators and protocols**
+> - Arithmetic, comparison, identity, membership, logical, bitwise, ternary, and walrus operators are covered with runnable examples
+> - `and` and `or` return operands, not coerced booleans
+> - Dunder methods define arithmetic, hashing, iteration, context management, and introspection behavior
 >
-> **Magic Methods (Dunder Methods)**
-> - Arithmetic: `__add__`, `__sub__`, `__mul__`, `__truediv__`, `__floordiv__`, `__mod__`, `__pow__`, `__neg__`, `__abs__`; reverse forms `__radd__` etc.; in-place `__iadd__` etc.
-> - Equality and hashing: `__eq__` + `__hash__` must be defined together; hash from immutable fields only
-> - Collection protocol: `__len__`, `__getitem__`, `__setitem__`, `__delitem__`, `__contains__`, `__iter__`, `__next__`
-> - String: `__str__` (user-facing), `__repr__` (developer/REPL); `__format__`
-> - Callable: `__call__`; context manager: `__enter__` / `__exit__`; truthiness: `__bool__`
-> - Introspection: `__name__`, `__doc__`, `__dict__`, `__class__`, `__bases__`, `__mro__`, `__file__`, `__annotations__`, `__defaults__`, `__qualname__`, `__spec__`
-> - Memory optimization: `__slots__` replaces per-instance `__dict__`, saves 30–50% for high-volume classes
->
-> **Mutable vs Immutable Types**
-> - Immutable (safe as dict keys, dataclass defaults, shared state): `int`, `float`, `complex`, `bool`, `str`, `bytes`, `tuple`, `frozenset`, `range`, `None`, `Decimal`, `namedtuple`
-> - Mutable (cannot be dict keys; use `field(default_factory=…)` in dataclasses): `list`, `dict`, `set`, `bytearray`, `deque`, `defaultdict`
-> - Assignment copies the reference, not the data; use `.copy()` / `copy.deepcopy()` for independent copies
->
-> **Operations and safety**
-> - When to use Python: interactive exploration, data engineering glue code, rapid development, mixed-skill teams
-> - Avoid Python for: CPU-bound hot loops (use NumPy/C#), compile-time type safety, GUI apps, CPU-parallel threads (GIL)
-> - Warnings: mutable default arguments (`def f(lst=[])`), float equality (`==` on floats), `is` vs `==` confusion, shared mutable references, float-constructed `Decimal`
+> **Mutability and operational safety**
+> - Immutable objects are safe as dict keys and dataclass defaults; mutable objects require copies or factories
+> - Common defects include mutable default arguments, float equality, identity-vs-equality confusion, shared mutable references, and float-constructed `Decimal`
+> - Python fits I/O-heavy automation and data plumbing; use vectorized libraries or other runtimes for CPU-bound hot paths
 
 > [!note]- Glossary
 >
 > **Variable**
-> - A name bound to an object in memory; in Python variables are references — they point to objects, they do not contain them.
-> - Store, retrieve, and pass data across code; rebinding changes the reference, not the object.
 >
-> > [!warning] Reassignment changes the pointer, not the value
-> >
-> > `x = 5; x = "hi"` does not modify the integer `5`. It rebinds `x` to a new string object. The integer `5` still exists until garbage collected.
+> - Name bound to an object reference.
+> - Variables in Python refer to objects rather than storing values directly.
+> - Reassigning `x` changes what the name points to; it does not mutate the previously referenced object.
 >
 > ---
 >
 > **Dynamic typing**
-> - The type of a variable is determined at runtime and can change freely; contrast with C#'s compile-time static typing.
-> - Enables rapid prototyping and flexible data handling; type errors surface only at runtime.
 >
-> > [!warning] Type errors not caught before runtime
-> >
-> > Without type hints and `mypy`, incorrect types pass undetected until execution. Add PEP 484 type hints to public functions and run `mypy` for static checking in production codebases.
+> - Types belong to objects at runtime rather than to variable names.
+> - The same name can be rebound to values of different types during execution.
+> - Without type hints and static analysis, type errors are detected only during execution.
 >
 > ---
 >
 > **`int`**
-> - Arbitrary-precision integer type — grows as large as memory allows with no fixed bit width and no overflow.
-> - Whole numbers, counters, indices, large financial identifiers; contrast with C#'s fixed 32-bit `int` and 64-bit `long`.
 >
-> > [!info] No overflow, but large ints cost memory
-> >
-> > Python integers never wrap around. The tradeoff is that very large integers are slower than fixed-width machine integers and consume more memory (`sys.getsizeof(10**100)` returns 72 bytes).
+> - Arbitrary-precision integer type.
+> - Suitable for counters, indexes, and identifiers that exceed fixed-width integer limits.
+> - Python integers do not overflow or wrap, but very large values consume more memory and CPU.
 >
 > ---
 >
 > **`float`**
-> - 64-bit IEEE 754 double-precision floating-point; Python has no separate `float`/`double` distinction.
-> - Decimal numbers, scientific values, measurements; `sys.float_info` exposes max, min, and digit precision.
 >
-> > [!danger] Never use float for financial calculations
-> >
-> > `0.1 + 0.2 == 0.30000000000000004` due to binary representation limits. Use `Decimal` for money, tax, and any domain requiring exact decimal arithmetic.
->
-> ---
->
-> **`complex`**
-> - Built-in numeric type with real and imaginary parts using `j` suffix (e.g., `3+4j`); access via `.real` and `.imag`.
-> - Signal processing and scientific computing; `abs(z)` returns magnitude, `.conjugate()` returns the complex conjugate.
->
-> > [!warning] Python uses j, not i
-> >
-> > Writing `3+4i` raises a `NameError` — Python uses `j` for the imaginary unit, not `i` as in mathematics. The `cmath` module provides complex-valued math functions.
+> - IEEE 754 double-precision floating-point type.
+> - Suitable for approximate numeric work where exact decimal semantics are not required.
+> - Binary floating-point cannot exactly represent values such as `0.1`, so financial calculations should use `Decimal`.
 >
 > ---
 >
 > **`Decimal`**
-> - Exact base-10 arithmetic type from the `decimal` module; precision controlled with `getcontext().prec`.
-> - Financial calculations, tax, currency, any domain where binary floating-point rounding is unacceptable.
 >
-> > [!danger] Construct from string, not float
-> >
-> > `Decimal(0.1)` captures the float's binary imprecision — `Decimal(0.1) == Decimal("0.1")` is `False`. Always write `Decimal("0.1")` to get exact decimal representation.
+> - Exact base-10 numeric type from `decimal`.
+> - Suitable for currency, tax, and fixed-point business rules; construct values from strings, not floats.
+> - `Decimal(0.1)` preserves the float approximation, whereas `Decimal("0.1")` preserves the exact decimal value.
 >
 > ---
 >
 > **`bool`**
-> - Subclass of `int` with `True == 1` and `False == 0`; arithmetic with booleans is valid (`True + True == 2`).
-> - Control flow, flags, filters; custom classes control their truthiness via `__bool__`.
 >
-> > [!info] Truthy/falsy: any object works in boolean context
-> >
-> > Falsy values: `0`, `0.0`, `0j`, `""`, `[]`, `{}`, `set()`, `None`, `range(0)`. Everything else is truthy. Use `if my_list:` instead of `if len(my_list) > 0:`.
->
-> ---
->
-> **`str`**
-> - Immutable Unicode text sequence; literals with single or double quotes; multi-line with triple quotes.
-> - Store and manipulate text — names, paths, SQL, JSON; `+=` creates a new string object, never modifies in place.
->
-> > [!warning] String += is not in-place mutation
-> >
-> > `s += " world"` creates a new string and rebinds `s`. For incremental string building in loops, use `io.StringIO` or a list of parts joined with `"".join(parts)`.
+> - Logical type with values `True` and `False`; subclass of `int`.
+> - Used in branching, filters, and truthiness checks.
+> - Falsy values include `0`, `0.0`, `0j`, `""`, `[]`, `{}`, `set()`, `None`, and `range(0)`.
 >
 > ---
 >
 > **`bytes` / `bytearray`**
-> - `bytes` is an immutable sequence of integers 0–255; `bytearray` is the mutable counterpart.
-> - Binary data, network protocols, file I/O; `str.encode("utf-8")` → bytes, `bytes.decode("utf-8")` → str.
 >
-> > [!warning] str and bytes are distinct types in Python 3
-> >
-> > You cannot concatenate or compare `str` with `bytes` directly — `"hello" + b"world"` raises `TypeError`. Always encode/decode at the boundary between text and binary layers.
+> - Immutable and mutable byte sequences.
+> - Used at text/binary boundaries, in file I/O, sockets, and encoded payloads.
+> - In Python 3, `str` and `bytes` are distinct types and require explicit encode/decode at the boundary.
 >
 > ---
 >
 > **`None`**
-> - Python's null singleton of type `NoneType`; functions without an explicit `return` statement return `None`.
-> - Represent absence of a value, optional parameters; annotate with `Optional[T]` or `T | None` (Python 3.10+).
 >
-> > [!warning] Use is None, never == None
-> >
-> > `== None` invokes `__eq__`, which custom classes can override. `is None` is an identity check that cannot be fooled. Always write `if x is None:` or `if x is not None:`.
+> - Singleton representing absence of a value.
+> - Common in optional parameters, sentinel values, and functions with no explicit return.
+> - Use `is None` instead of `== None` because equality can be overridden by custom classes.
 >
 > ---
 >
-> **Mutable**
-> - An object whose internal state can change after creation; Python examples: `list`, `dict`, `set`, `bytearray`, `deque`.
-> - In-place modification avoids copying; assignment copies the reference so both variables point to the same object.
+> **Mutable object**
 >
-> > [!danger] Shared mutable reference is a silent aliasing bug
-> >
-> > `b = a` where `a` is a list makes `b` point to the same list — `a.append(x)` changes `b` too. Use `b = a.copy()` for a shallow copy or `copy.deepcopy(a)` for nested structures.
+> - Object whose state can change in place after creation.
+> - Shared references observe the same in-place changes.
+> - Assigning a mutable object to another name aliases the same object, so in-place changes are visible through both names.
 >
 > ---
 >
-> **Immutable**
-> - An object whose state cannot change after creation; Python examples: `int`, `str`, `tuple`, `frozenset`, `bytes`, `Decimal`.
-> - Safe as dict keys, dataclass field defaults, and shared state across threads.
+> **Immutable object**
 >
-> > [!info] Immutability applies to the object, not the variable
-> >
-> > A variable holding an immutable object can still be rebound (`x = "hello"; x = "world"`). The original string `"hello"` was not changed — `x` now points to a different object.
+> - Object whose value cannot change after creation.
+> - Safe for shared state and commonly suitable for dict keys when hashing is stable.
+> - Immutability applies to the object itself, not to the variable holding the reference.
 >
 > ---
 >
-> **Hashable**
-> - An object with `__hash__()` returning a stable integer; required for use as dict keys or set members.
-> - O(1) lookups in dicts and sets; all immutable built-in types are hashable, all mutable built-in types are not.
+> **Hashable object**
 >
-> > [!warning] Lists and dicts cannot be dict keys
-> >
-> > `d[[1,2]] = "val"` raises `TypeError: unhashable type: 'list'`. Convert to immutable equivalents: `list` → `tuple`, `set` → `frozenset`.
+> - Object with stable hash and equality semantics suitable for dict keys and set members.
+> - Required for dict keys and for membership in sets.
+> - Mutable containers such as `list` and `dict` are not hashable and cannot be used as dict keys.
 >
 > ---
 >
 > **f-string**
-> - Formatted string literal (Python 3.6+) prefixed with `f`; embeds arbitrary Python expressions inside `{...}`.
-> - Readable, performant string interpolation; supports format specifiers (`:.2f`), conversion flags (`!r`, `!a`).
 >
-> > [!warning] Missing f prefix produces a literal string
-> >
-> > `"{name}"` is not an f-string — it is a plain string containing the characters `{name}`. The `f` prefix is mandatory: `f"{name}"`. This is a silent bug that produces no error.
+> - Formatted string literal evaluated at runtime.
+> - Preferred interpolation form for new Python code.
+> - Omitting the `f` prefix leaves the braces uninterpreted and silently produces a plain string.
 >
 > ---
 >
 > **Dunder method**
-> - A method with `__double_underscore__` names (e.g., `__init__`, `__add__`, `__len__`) called automatically by operators and built-ins.
-> - Customize how your class integrates with `+`, `==`, `len()`, `for`, `with`, `abs()`, `hash()`, and all Python protocols.
 >
-> > [!danger] __eq__ without __hash__ breaks sets and dicts
-> >
-> > Defining `__eq__` without `__hash__` sets `__hash__` to `None`, making instances unhashable. Always define both together using immutable fields: `return hash((self.x, self.y))`.
+> - Special `__name__` method invoked by operators and built-ins.
+> - Defines custom arithmetic, iteration, representation, hashing, and protocol integration.
+> - If a class defines `__eq__`, it must also be reviewed for compatible `__hash__` behavior in sets and dicts.
 >
 > ---
 >
-> **Walrus operator (`:=`)**
-> - Assignment expression (Python 3.8+) that assigns a value and returns it in one expression.
-> - Compute-once-use-twice patterns in list comprehensions (`[y for x in data if (y := f(x)) > 0]`) and `while` read-and-test loops.
+> **Walrus operator `:=`**
 >
-> > [!warning] Walrus is not a drop-in replacement for =
-> >
-> > `:=` is only valid inside expressions, not as a standalone statement. Overusing it reduces readability — prefer regular assignment for simple cases and reserve `:=` for the specific patterns where it eliminates a redundant computation.
+> - Assignment expression that both binds and returns a value.
+> - Useful in read-and-test loops and compute-once filter patterns.
+> - It is valid only inside expressions and should not be treated as a replacement for standalone assignment.
 >
 > ---
 >
 > **EAFP**
-> - "Easier to Ask Forgiveness than Permission" — attempt the operation and catch exceptions if it fails; Python's preferred coding style.
-> - Cleaner and often faster than LBYL ("Look Before You Leap") pre-checks; use `try/except` for expected failure paths.
 >
-> > [!warning] Do not wrap every line in try/except
-> >
-> > EAFP applies to specific expected failure paths (e.g., `int()` conversion, file open, dict key access). Broad `except Exception` blocks hide bugs. Catch the narrowest exception that makes sense (`ValueError`, `KeyError`, `FileNotFoundError`).
+> - Exception-first style: attempt the operation and catch expected failures.
+> - Common in parsing, file access, and dict lookups with narrow exception handling.
+> - Catch only the expected exception type; broad `except Exception` blocks hide real defects.
 >
 > ---
 >
 > **Context manager**
-> - An object implementing `__enter__` / `__exit__` used with the `with` statement for automatic resource cleanup.
-> - Python's equivalent of C#'s `using` statement and `IDisposable`; guarantees cleanup of files, connections, and locks even on exception.
 >
-> > [!warning] Forgetting with leaves resources open
-> >
-> > `f = open("file.txt")` without `with` leaves the file handle open if an exception occurs before `f.close()`. Always use `with open(...) as f:` — `__exit__` is called even if the block raises.
+> - Object implementing `__enter__` and `__exit__` for scoped cleanup.
+> - Used for files, locks, and temporary resources managed with `with`.
+> - `with` guarantees cleanup even when the controlled block raises an exception.
 >
 > ---
 >
 > **Virtual environment**
-> - An isolated Python installation with its own site-packages directory, separate from system Python.
-> - Prevents dependency version conflicts between projects; created with `python -m venv .venv`.
 >
-> > [!danger] Never install packages into system Python
-> >
-> > `pip install` into system Python risks breaking OS tools that depend on specific package versions. Always activate a virtual environment first. Use `os.environ.get('VIRTUAL_ENV')` to confirm the environment is active before installing.
+> - Isolated package environment tied to a specific interpreter.
+> - Separates project dependencies from the system interpreter and from other projects.
+> - Install project dependencies into the active virtual environment rather than into the system interpreter.
 >
 > ---
 >
-> **`__slots__`**
-> - A class-level attribute that replaces the per-instance `__dict__` with a fixed tuple of attribute descriptors.
-> - Reduces memory by 30–50% for classes with many instances; used in high-volume data classes (millions of objects).
+> **GIL**
 >
-> > [!warning] __slots__ prevents dynamic attribute addition
-> >
-> > Once `__slots__` is defined, you cannot add attributes to instances at runtime (`p.z = 3` raises `AttributeError`). Avoid `__slots__` for classes that need flexible, runtime-defined attributes.
->
-> ---
->
-> **`defaultdict`**
-> - A `dict` subclass from `collections` that auto-creates a default value when a missing key is accessed, using a factory function.
-> - Eliminates `if key not in d` boilerplate; `defaultdict(int)` for counting, `defaultdict(list)` for grouping.
->
-> > [!info] Factory is called per missing key, not once globally
-> >
-> > Each access to a missing key calls `factory()` independently — `defaultdict(list)` creates a new empty `list` for each new key, not the same shared list. This is different from a single default mutable default argument.
->
-> ---
->
-> **`Counter`**
-> - A `dict` subclass from `collections` that maps hashable elements to their integer counts.
-> - Frequency analysis, word counts, character counts; `.most_common(n)` returns top-n `(element, count)` tuples; supports `+` and `-` arithmetic.
->
-> > [!info] Counter arithmetic ignores zero and negative counts
-> >
-> > `Counter("aab") - Counter("a")` produces `Counter({'a': 1, 'b': 1})` — the subtraction discards non-positive counts from the result. Use `.subtract()` if you need to retain zero/negative values.
->
-> ---
->
-> **`namedtuple`**
-> - A tuple subclass with named fields created by `collections.namedtuple(name, fields)`; combines immutability with attribute-style access.
-> - Lightweight immutable records; `pt.x` instead of `pt[0]`; `_replace()` returns a new instance with one field changed.
->
-> > [!info] For richer records, prefer dataclass or NamedTuple
-> >
-> > `namedtuple` has no default values, no type hints per field, and no methods. Use `typing.NamedTuple` for type-hinted fields or `@dataclass(frozen=True)` for full class features with immutability.
->
-> ---
->
-> **`memoryview`**
-> - An object providing zero-copy access to the internal buffer of a bytes-like object (`bytes`, `bytearray`, `array.array`).
-> - High-performance I/O and image processing; slicing a `memoryview` does not copy data.
->
-> > [!info] Use memoryview to avoid large buffer copies
-> >
-> > Reading a slice of `bytes` creates a copy; reading a slice of `memoryview` does not. For large binary payloads (sockets, file I/O, image buffers), pass `memoryview` objects to avoid O(n) memory allocation per slice.
->
-> ---
->
-> **`Fraction`**
-> - Exact rational arithmetic type from the `fractions` module; `Fraction(1, 3)` is precisely one-third.
-> - Scientific computations, probability calculations, anywhere binary or decimal floating-point error is unacceptable.
->
-> > [!warning] Fraction is exact but slow
-> >
-> > `Fraction` arithmetic is exact at the cost of significant overhead compared to `float`. Do not use it in hot loops or large numerical arrays — use `Decimal` for financial work and NumPy for bulk numerical computation.
->
-> ---
->
-> **`__mro__` (Method Resolution Order)**
-> - The tuple returned by `ClassName.__mro__` listing the full class hierarchy Python traverses when resolving attribute lookups.
-> - Equivalent to C#'s `Type.BaseType` chain; relevant for multiple inheritance and `super()` call ordering.
->
-> > [!info] MRO follows C3 linearization
-> >
-> > Python's MRO uses the C3 linearization algorithm to compute a consistent, conflict-free resolution order for multiple inheritance. `Dog.__mro__` always ends with `(object,)` — every class ultimately inherits from `object`.
->
-> ---
->
-> **GIL (Global Interpreter Lock)**
-> - CPython's mutex that prevents multiple native threads from executing Python bytecode simultaneously.
-> - Limits CPU-parallel execution; use `multiprocessing` for CPU parallelism, `asyncio` for I/O concurrency, or offload to C# for CPU-intensive work.
->
-> > [!warning] Threading does not provide CPU parallelism in CPython
-> >
-> > `threading.Thread` with CPU-bound work will not use multiple cores — the GIL serializes bytecode execution. The GIL is released during I/O and C extension calls, so threading is effective for network and file operations.
+> - CPython lock that serializes Python bytecode execution across threads.
+> - Limits CPU-bound parallel execution in threaded Python code while still allowing useful I/O concurrency.
+> - Threading helps with I/O, but CPU-bound parallelism requires multiprocessing or native/vectorized code.
 
 ## Environment Setup
 
@@ -348,6 +200,8 @@ Covers Python interpreter configuration, virtual environment inspection, and pac
 Confirms the interpreter version, executable location, and installed packages before running language examples.
 
 #### Check Python version, executable path, and hostname
+
+*This example prints the Python version, interpreter path, and host name.*
 
 ```python
 import sys
@@ -368,9 +222,10 @@ print(sys.version)   # Python version
 print(sys.executable)   # Python executable
 print(socket.gethostname())   # Machine
 ```
+
 ```text
 3.12.0 (tags/v3.12.0:0fb18b0, Oct  2 2023, 13:03:39) [MSC v.1935 64 bit (AMD64)]
-c:\Users\aperi\DEV\LANG\.lang\Scripts\python.exe
+C:\Users\aperi\AppData\Local\Programs\Python\Python312\python.exe
 Elysium
 ```
 
@@ -378,39 +233,45 @@ Elysium
 
 `os.environ.get('VIRTUAL_ENV')` returns the path to the active virtual environment, or `None` if running in the system Python. `os.getcwd()` returns the current working directory where file path resolution starts.
 
+*This example prints the active virtual environment path and current working directory.*
+
 ```python
 print(os.environ.get('VIRTUAL_ENV', 'None'))
 print(os.getcwd())
 ```
+
 ```text
-C:\Users\aperi\DEV\LANG\.lang
-c:\Users\aperi\DEV\LANG
+None
+C:\Users\aperi\My Drive\VAULT
 ```
 
 #### List installed packages with importlib.metadata
 
 `importlib.metadata.distributions()` iterates over all installed packages in the current environment. Each distribution object exposes `metadata['Name']` and `version`. This replaces the older `pkg_resources` approach and works in virtual environments.
 
-```python
+*This example lists the first five installed distributions in the current environment.*
 
+```python
 installed = sorted([f"{d.metadata['Name']}=={d.version}" for d in distributions()])
 for pkg in installed[:5]:
     print(pkg)
 ```
+
 ```text
-Flask==3.1.3
 Jinja2==3.1.6
-Markdown==3.10.2
 MarkupSafe==3.0.3
-PyMySQL==1.1.2
+PyYAML==6.0.3
+Pygments==2.19.2
+anyio==4.13.0
 ```
 
 #### Verify that required packages can be imported
 
 `__import__(name)` dynamically imports a module by name string. Wrapping it in try/except catches `ImportError` for missing packages. This pattern is useful at the top of notebooks to fail fast with a clear message if a dependency is not installed.
 
-```python
+*This example imports common packages and reports whether each import succeeds.*
 
+```python
 imports = [
     "numpy", "pandas", "matplotlib",
     "sqlalchemy", "requests", "fastapi",
@@ -424,16 +285,17 @@ for mod in imports:
     except ImportError:
         print(f"  {mod}: MISSING")
 ```
+
 ```text
-numpy: OK
-  pandas: OK
-  matplotlib: OK
-  sqlalchemy: OK
+  numpy: OK
+  pandas: MISSING
+  matplotlib: MISSING
+  sqlalchemy: MISSING
   requests: OK
-  fastapi: OK
-  pydantic: OK
+  fastapi: MISSING
+  pydantic: MISSING
   yaml: OK
-  pytest: OK
+  pytest: MISSING
 ```
 
 ## Console I/O
@@ -448,9 +310,12 @@ Covers `print()` parameters (`sep`, `end`, `file`, `flush`) and the three string
 
 `print()` accepts multiple arguments separated by `sep` (default `" "`) and ends with `end` (default `"\n"`). Accepts any type — calls `str()` on each argument automatically. Use `sep` instead of manual `+` concatenation. For structured logging, use the `logging` module instead.
 
+*This example prints multiple values with custom `sep` and `end` settings.*
+
 ```python
 print("one", "two", "three", sep=" | ", end="\n")
 ```
+
 ```text
 one | two | three
 ```
@@ -459,8 +324,9 @@ one | two | three
 
 Python offers three string formatting approaches. **f-strings** (Python 3.6+) embed expressions directly in the string with `{expr}` — preferred for readability and performance. **`.format()`** uses numbered or named placeholders — useful when the format string is dynamic. **`%`-formatting** is the oldest style (`"Name: %s"`) — still encountered in legacy code but not recommended for new projects. All three support format specifiers like `:.2f` for two decimal places.
 
-```python
+*This example formats the same values with f-strings, `.format()`, and legacy `%` formatting.*
 
+```python
 name = "Alice"
 age = 30
 
@@ -494,14 +360,16 @@ ALICE
 
 The `sep` parameter controls what character(s) `print()` inserts between its arguments (default is a single space). This is Python's equivalent of C#'s `string.Join` — pass multiple values and let `print()` handle the joining. Works with any type that has a `__str__` method.
 
-```python
+*This example changes the separator inserted between `print()` arguments.*
 
+```python
 print("a", "b", "c")                    # a b c
 print("a", "b", "c", sep=", ")          # a, b, c
 print("a", "b", "c", sep="")            # abc
 print("a", "b", "c", sep=" → ")         # a → b → c
 print(2024, 3, 15, sep="-")             # 2024-3-15
 ```
+
 ```text
 a b c
 a, b, c
@@ -514,23 +382,26 @@ a → b → c
 
 The `end` parameter controls what `print()` appends after the output (default `"\n"`). Setting `end=""` or `end=" "` allows building a line incrementally across multiple `print()` calls. The `file` parameter redirects output to any file-like object (`sys.stderr`, an open file). The `flush=True` parameter forces immediate output, bypassing Python's output buffering — essential for progress indicators in loops.
 
-```python
+*This example customizes `print()` line endings, writes to `stderr`, and forces an immediate flush.*
 
+```python
 print("hello", end=" ")
 print("world", end="!\n")               # hello world!
 print("loading", end="")
 print("...", end="")
 print("done!")                           # loading...done!
 
+# flush — force immediate output (useful in loops/progress)
+
+print("Processing...", flush=True)       # immediately visible, no buffering
+print()
+
 # file — redirect output to a file
 
 print("This goes to stderr", file=sys.stderr)
 # print("log entry", file=open("log.txt", "a"))  # append to file
-
-# flush — force immediate output (useful in loops/progress)
-
-print("Processing...", flush=True)       # immediately visible, no buffering
 ```
+
 ```text
 hello world!
 loading...done!
@@ -545,60 +416,70 @@ Demonstrates backslash escape sequences, raw string literals, ANSI terminal colo
 
 #### Escape sequences and raw strings
 
-Escape sequences insert special characters using a backslash prefix: `\t` (tab), `\n` (newline), `\\` (literal backslash), `\"` and `\'` (quotes), `\uXXXX` (Unicode code point), and `\0` (null character). Raw strings (`r"..."`) disable escape processing — backslashes are treated as literal characters, ideal for regex patterns and Windows file paths.
+Escape sequences insert special characters using a backslash prefix: `\t` (tab), `\n` (newline), `\\` (literal backslash), `\"` and `\'` (quotes), `\uXXXX` (Unicode code point), and `\0` (null character). Raw strings (`r"..."`) disable escape processing — backslashes are treated as literal characters, ideal for regex patterns and Windows file paths. The output cell renders the null byte as the visible escape `\0` so the markdown file remains text-safe and searchable.
+
+*This example prints tabs, newlines, backslashes, quotes, Unicode characters, and raw string literals.*
 
 ```python
-
 print("Tab:\tafter tab")
 print("Newline:\nafter newline")
 print("Backslash: \\")
 print("Quote: \"double\" and \'single\'")
 print("Unicode: \u2764 \u2605 \u2602")  # ❤ ★ ☂
-print("Null char: [\0] (invisible)")
-print(r"Raw string: \n \t not escaped")  # raw string with r prefix
+print(r"Null char: [\0] (invisible)")
+print(r"Raw string: \n \t not escaped")
 ```
+
 ```text
 Tab:	after tab
+Newline:
 after newline
 Backslash: \
 Quote: "double" and 'single'
 Unicode: ❤ ★ ☂
-[ ] (invisible)
-\n \t not escaped
+Null char: [\0] (invisible)
+Raw string: \n \t not escaped
 ```
 
 #### Apply ANSI color and style codes to terminal output
 
-ANSI escape codes control text color and style in terminals. Python uses `\033` (octal for ESC) instead of C#'s `\x1b`. Each code is bracketed by `\033[` and terminated with `m`. Always reset with `\033[0m`. Notebook environments may strip ANSI codes — the output below shows raw escape sequences.
+ANSI escape codes control text color and style in terminals. Python uses `\033` (octal for ESC) instead of C#'s `\x1b`. Each code is bracketed by `\033[` and terminated with `m`. Always reset with `\033[0m`. Markdown preview does not interpret ANSI escape sequences, so the rendered preview below uses equivalent HTML styling instead of raw terminal control bytes.
+
+*This example applies ANSI escape codes for foreground color, background color, and bold styling.*
 
 ```python
-
 print("\033[31mRed text\033[0m")
 print("\033[32mGreen text\033[0m")
 print("\033[1;34mBold blue text\033[0m")
 print("\033[43m\033[30mBlack on yellow\033[0m")
 ```
-```text
-[31mRed text[0m
-[32mGreen text[0m
-[1;34mBold blue text[0m
-[43m[30mBlack on yellow[0m
-```
+
+<div>
+<div><span style="color: #c62828;">Red text</span></div>
+<div><span style="color: #2e7d32;">Green text</span></div>
+<div><span style="color: #1565c0; font-weight: 700;">Bold blue text</span></div>
+<div><span style="background: #fdd835; color: #000000; padding: 0 0.25rem;">Black on yellow</span></div>
+</div>
+
 
 #### Distinguish repr() from str() — developer vs user-friendly output
 
 `str()` returns a human-readable representation (what `print()` displays). `repr()` returns a developer representation that, ideally, could recreate the object — it shows escape sequences, quote delimiters, and type information. In f-strings, `!r` applies `repr()` and `!a` applies `ascii()` (escapes non-ASCII characters). Use `repr()` for debugging and logging; use `str()` for user-facing output.
 
-```python
+*Compare `str()` with `repr()`, then use f-string `!r` and `!a` conversions to show escaped newlines and non-ASCII characters.*
 
+```python
 s = "hello\nworld"
-s  # hello\nworld (displays newline)
-s!r  # 'hello\nworld' (shows escape)
-'café'!a  # 'caf\\xe9'
+print(str(s))
+print(repr(s))
+print(f"{s!r}")
+print(f"{'café'!a}")
 ```
+
 ```text
 hello
 world
+'hello\nworld'
 'hello\nworld'
 'caf\xe9'
 ```
@@ -611,12 +492,14 @@ Shows how to read user input with `input()`, parse it to numeric types using `in
 
 `input(prompt)` displays the prompt string and blocks until the user presses Enter, then returns the entire line as a `str`. All console input arrives as text — numeric values must be parsed explicitly with `int()`, `float()`, or `Decimal()`. Returns an empty string if the user presses Enter without typing.
 
-```python
+*This example reads a name from standard input and prints the returned string type.*
 
+```python
 name = input("Enter your name: ")
 print(f"Hello, {name}!")
 print(type(name))   # Type of input
 ```
+
 ```text
 Hello, Alex!
 <class 'str'>
@@ -626,8 +509,9 @@ Hello, Alex!
 
 `int(string)` converts a string to an integer, raising `ValueError` if the string is not a valid integer representation. Wrapping in `try/except ValueError` is the Pythonic equivalent of C#'s `int.TryParse` — catch the exception rather than checking beforehand (EAFP: "Easier to Ask Forgiveness than Permission").
 
-```python
+*This example parses user input with `int()` and handles invalid integers with `try/except`.*
 
+```python
 age_str = input("Enter your age: ")
 
 # Unsafe conversion - crashes on invalid input
@@ -640,6 +524,7 @@ try:
 except ValueError:
     print(f"'{age_str}' is not a valid integer")
 ```
+
 ```text
 Your age is 47, type: <class 'int'>
 ```
@@ -648,8 +533,9 @@ Your age is 47, type: <class 'int'>
 
 `float(string)` works identically to `int()` but for floating-point values. It respects locale-independent format (always uses `.` as the decimal separator). For locale-aware parsing, use the `locale` module. For financial amounts, parse to `Decimal` instead of `float` to avoid binary rounding.
 
-```python
+*This example parses user input with `float()` and handles invalid numbers with `try/except`.*
 
+```python
 price_str = input("Enter a price: ")
 
 try:
@@ -658,16 +544,18 @@ try:
 except ValueError:
     print(f"'{price_str}' is not a valid number")
 ```
+
 ```text
-$30.00, type: <class 'float'>
+Price: $30.00, type: <class 'float'>
 ```
 
 #### Validate input in a loop until parsing succeeds
 
 The standard pattern for interactive console input: `while True` + `try/except` + `return`. The loop repeats until valid input is provided. This is more Pythonic than pre-checking with regex — let the parser do the validation and catch the exception.
 
-```python
+*This example defines a reusable loop that keeps prompting until `int()` succeeds.*
 
+```python
 def get_valid_int(prompt):
     while True:
         value = input(prompt)
@@ -681,8 +569,9 @@ def get_valid_int(prompt):
 
 Same `while True` + `try/except ValueError` pattern applied to `float()` conversion. The structure is identical — only the conversion function changes.
 
-```python
+*This example defines the same reusable validation pattern for `float()` input.*
 
+```python
 def get_valid_float(prompt):
     while True:
         value = input(prompt)
@@ -696,8 +585,9 @@ def get_valid_float(prompt):
 
 Python's truthy/falsy semantics make string validation concise: `"".strip()` returns `""` which is falsy, so `if value:` rejects empty and whitespace-only strings. No explicit length check needed.
 
-```python
+*This example strips input and rejects empty or whitespace-only strings.*
 
+```python
 def get_non_empty_string(prompt):
     while True:
         value = input(prompt).strip()
@@ -710,14 +600,16 @@ def get_non_empty_string(prompt):
 
 Demonstrates calling the validators defined above. In a real console application, `input()` would prompt the user interactively; in a notebook, the values are pre-supplied.
 
-```python
+*This example calls the reusable validators and prints the accepted values.*
 
+```python
 num = get_valid_int("Enter a number: ")
 print(num)   # Got
 
 name = get_non_empty_string("Enter your name: ")
 print(name)   # Got
 ```
+
 ```text
 17
 Alex
@@ -735,6 +627,8 @@ Explains Python's dynamic typing model, where variables are names bound to objec
 
 Assign directly: `x = 10` — Python infers the type at runtime. Variables are names bound to objects; rebinding changes the reference. `type()` reveals the current type; `isinstance()` checks the type hierarchy. Add type hints (PEP 484) for public APIs and complex functions.
 
+*This example binds names to different runtime types and then rebinds one variable to a string.*
+
 ```python
 x = 10          # int
 y = 3.14        # float
@@ -751,6 +645,7 @@ print(f"active = {active}, type: {type(active)}")
 x = "now I'm a string"
 print(f"\nx = {x}, type: {type(x)}")
 ```
+
 ```text
 x = 10, type: <class 'int'>
 y = 3.14, type: <class 'float'>
@@ -764,19 +659,21 @@ x = now I'm a string, type: <class 'str'>
 
 Python has no `const` keyword — constants are a naming convention only. Use `ALL_CAPS` names for values that should not change. Nothing prevents reassignment at runtime, but linters like `mypy` can flag mutations of `Final` annotated variables (PEP 591, Python 3.8+): `PI: Final = 3.14159`.
 
-```python
+*This example declares conventional constants and shows that Python still allows reassignment at runtime.*
 
+```python
 PI = 3.14159
 MAX_USERS = 100
 API_URL = "https://api.example.com"
 
-print(PI)
-print(MAX_USERS)
-print(API_URL)
+print(f"PI = {PI}")
+print(f"MAX_USERS = {MAX_USERS}")
+print(f"API_URL = {API_URL}")
 
 # Nothing prevents reassignment (it's just a convention)
-PI = 999  # No error, but don't do this!
+PI = 999  # Reassignment is allowed at runtime
 ```
+
 ```text
 PI = 3.14159
 MAX_USERS = 100
@@ -789,24 +686,25 @@ Covers Python's four numeric types — `int` (arbitrary precision), `float` (64-
 
 #### Integer — arbitrary precision with no overflow
 
-Python integers have arbitrary precision — they grow as large as memory allows, with no fixed bit width and no overflow. `10**100` works natively without any special library. This is fundamentally different from C#'s fixed-width `int` (32-bit) and `long` (64-bit). The tradeoff is that very large integers are slower than fixed-width machine integers.
+Python integers have arbitrary precision — they grow as large as memory allows, with no fixed bit width and no overflow. `10**100` works natively without any special library. This is fundamentally different from C#'s fixed-width `int` (32-bit) and `long` (64-bit): Python allocates additional memory instead of overflowing or wrapping. The tradeoff is that very large integers are slower than fixed-width machine integers and consume more memory.
 
-> [!info] No overflow in Python — contrast with C#
-> Python integers never overflow or wrap around. C# requires `checked` blocks to detect overflow; Python simply allocates more memory. There is no equivalent of C#'s `checked`/`unchecked` contexts because overflow cannot occur.
+*This example prints small and very large integers, their digit count, and their memory size.*
 
 ```python
-
 a = 42
 b = -100
-c = 10**100  # huge number, no overflow!
+c = 10**100
 
-a
-b
-c
+print(f"a = {a}")
+print(f"b = {b}")
+print(f"c = {c}")
 print(f"c has {len(str(c))} digits")
-sys.getsizeof(a)   # Size of a in bytes
-sys.getsizeof(c)   # Size of c in bytes
+print(f"Size of a in bytes: {sys.getsizeof(a)}")
+print(f"Size of c in bytes: {sys.getsizeof(c)}")
+print()
+print("Python integers grow as needed")
 ```
+
 ```text
 a = 42
 b = -100
@@ -815,28 +713,30 @@ c has 101 digits
 Size of a in bytes: 28
 Size of c in bytes: 72
 
-Python int has NO fixed range - it grows as needed
+Python integers grow as needed
 ```
 
 #### float — IEEE 754 double-precision (64-bit)
 
 Python's `float` is always 64-bit double-precision IEEE 754 — there is no separate `float`/`double`/`decimal` trio like C#. For exact decimal arithmetic, use `Decimal` from the `decimal` module. `sys.float_info` exposes the platform's float characteristics including max value, min positive value, and digit precision.
 
-```python
+*This example prints representative `float` values and the platform limits reported by `sys.float_info`.*
 
+```python
 a = 3.14
 b = -0.001
 c = 1.8e308   # near max
 d = 5e-324    # near min positive
 
-print(a)
-print(b)
-print(c)
-print(d)
+print(f"a = {a}")
+print(f"b = {b}")
+print(f"c = {c}")
+print(f"d = {d}")
 print(sys.float_info.max)   # Max float
 print(sys.float_info.min)   # Min float
 print(f"Precision: {sys.float_info.dig} digits")
 ```
+
 ```text
 a = 3.14
 b = -0.001
@@ -851,15 +751,18 @@ Precision: 15 digits
 
 IEEE 754 defines three special float values: `inf` (positive infinity), `-inf`, and `nan` (Not a Number). Create them with `float('inf')`, `float('nan')`, or via operations like `1.0 / 0.0`. `nan` is not equal to anything, including itself — use `math.isnan()` to test. The classic `0.1 + 0.2 != 0.3` artifact is inherent to binary floating-point; use `Decimal` or `math.isclose()` for exact comparison.
 
-```python
+*This example prints positive infinity, negative infinity, NaN, and the `0.1 + 0.2` precision artifact.*
 
+```python
 print(float('inf'))   # Infinity
 print(float('-inf'))   # Neg Infinity
 print(float('nan'))   # NaN
+print()
 
 # Floating point imprecision
-print(0.1 + 0.2)  # not exactly 0.3!
+print(0.1 + 0.2)  # IEEE 754 rounding artifact
 ```
+
 ```text
 inf
 -inf
@@ -872,14 +775,16 @@ nan
 
 Python has a built-in `complex` type using `j` suffix for the imaginary part (not `i` as in mathematics). Access components with `.real` and `.imag`. `abs(z)` returns the magnitude, `.conjugate()` returns the complex conjugate. Use `cmath` module for complex-valued math functions.
 
-```python
+*This example prints a complex number, its components, its conjugate, and its magnitude.*
 
+```python
 z = 3 + 4j
 print(f"z = {z}, type: {type(z)}")
 print(f"Real: {z.real}, Imaginary: {z.imag}")
 print(z.conjugate())   # Conjugate
 print(abs(z))  # magnitude
 ```
+
 ```text
 z = (3+4j), type: <class 'complex'>
 Real: 3.0, Imaginary: 4.0
@@ -893,10 +798,11 @@ Covers the `bool` type and its integer inheritance, the `bytes`/`bytearray` pair
 
 #### bool — truthy/falsy values and int subclass behavior
 
-`bool` is a subclass of `int` with `True == 1` and `False == 0` — arithmetic with booleans works (`True + True == 2`). Unlike C# which has no truthy/falsy concept, Python evaluates ANY object as a boolean: `0`, `0.0`, `""`, `[]`, `{}`, `set()`, `None`, and `range(0)` are all falsy; everything else is truthy. Custom classes can define `__bool__` to control their truthiness.
+`bool` is a subclass of `int` with `True == 1` and `False == 0` — arithmetic with booleans works (`True + True == 2`). Unlike C#, Python evaluates any object in a boolean context: `0`, `0.0`, `""`, `[]`, `{}`, `set()`, `None`, and `range(0)` are all falsy; everything else is truthy. Custom classes can define `__bool__` to control their truthiness.
+
+*This example shows boolean arithmetic and the truthiness of common values.*
 
 ```python
-
 a = True
 b = False
 
@@ -906,6 +812,7 @@ print(True + True)  # 2 (bool is int)
 print(True * 10)  # 10
 
 # Truthy and falsy values
+print()
 print(bool(0))  # False
 print(bool(1))  # True
 print(bool(''))  # False
@@ -914,6 +821,7 @@ print(bool([]))  # False
 print(bool([1]))  # True
 print(bool(None))  # False
 ```
+
 ```text
 a = True, type: <class 'bool'>
 b = False, type: <class 'bool'>
@@ -933,8 +841,9 @@ False
 
 `bytes` is an immutable sequence of integers (0–255), created with `b"..."` literals or `.encode()`. `bytearray` is the mutable counterpart. `str.encode("utf-8")` converts a string to bytes; `bytes.decode("utf-8")` converts back. UTF-8 is variable-width: `"café"` encodes to 5 bytes because `é` requires two bytes (`\xc3\xa9`).
 
-```python
+*This example converts text to UTF-8 bytes and decodes the bytes back to a string.*
 
+```python
 b1 = b"hello"              # bytes (immutable)
 b2 = bytearray(b"hello")   # bytearray (mutable)
 
@@ -946,8 +855,9 @@ text = "café"
 encoded = text.encode("utf-8")
 decoded = encoded.decode("utf-8")
 print(f"\n'{text}' encoded: {encoded}")
-print(decoded)   # decoded back
+print(f"decoded back: {decoded}")
 ```
+
 ```text
 b1 = b'hello', type: <class 'bytes'>
 b2 = bytearray(b'hello'), type: <class 'bytearray'>
@@ -960,13 +870,15 @@ decoded back: café
 
 `None` is Python's null value — a singleton of type `NoneType`. Always test with `is None` (identity check), not `== None` (equality check), because `==` can be overridden by custom classes. Functions without an explicit `return` statement return `None`. Use `Optional[T]` type hint (or `T | None` in Python 3.10+) to annotate variables that may be None.
 
-```python
+*This example shows the runtime type of `None` and compares `is None` with `== None`.*
 
+```python
 x = None
 print(f"x = {x}, type: {type(x)}")
 print(x is None)  # preferred way to check
 print(x == None)  # works but not idiomatic
 ```
+
 ```text
 x = None, type: <class 'NoneType'>
 True
@@ -1010,8 +922,9 @@ flowchart TD
 
 Complete reference showing all numeric types with their runtime type names. Python has four numeric types: `int` (arbitrary precision), `float` (64-bit IEEE 754), `complex` (real + imaginary), and `bool` (subclass of int, True=1/False=0).
 
-```python
+*This example prints representative values for Python's numeric types and their runtime type names.*
 
+```python
 i = 42
 print(f"int:          {i:>20}  type={type(i).__name__}")
 
@@ -1031,20 +944,22 @@ print(f"bool:         {b:>20}  type={type(b).__name__}")
 s = "hello"
 print(f"str:          {s:>20}  type={type(s).__name__}")
 ```
+
 ```text
-42  type=int
-3.14  type=float
-(3+4j)  type=complex
-1  type=bool
-hello  type=str
+int:                            42  type=int
+float:                        3.14  type=float
+complex:                    (3+4j)  type=complex
+bool:                            1  type=bool
+str:                         hello  type=str
 ```
 
 #### Immutable sequence types — bytes, tuple, frozenset, range, None
 
 Immutable types cannot be modified after creation. They are safe as dict keys, function defaults, and shared state. `tuple` is the immutable counterpart of `list`; `frozenset` is the immutable counterpart of `set`; `range` produces integers lazily without allocating a list.
 
-```python
+*This example prints common immutable built-in types and their runtime type names.*
 
+```python
 by = b"hello"
 print(f"bytes:        {str(by):>20}  type={type(by).__name__}")
 
@@ -1064,20 +979,22 @@ print(f"range:        {str(r):>20}  type={type(r).__name__}")
 n = None
 print(f"NoneType:     {str(n):>20}  type={type(n).__name__}")
 ```
+
 ```text
-b'hello'  type=bytes
-(1, 2, 3)  type=tuple
-frozenset({1, 2, 3})  type=frozenset
-range(0, 5)  type=range
-None  type=NoneType
+bytes:                    b'hello'  type=bytes
+tuple:                   (1, 2, 3)  type=tuple
+frozenset:    frozenset({1, 2, 3})  type=frozenset
+range:                 range(0, 5)  type=range
+NoneType:                     None  type=NoneType
 ```
 
 #### Mutable collection types — list, dict, set, bytearray
 
 Mutable types can be modified in place. Assignment copies the reference (not the data), so two variables can point to the same object. `list` is a dynamic array, `dict` is a hash map, `set` stores unique elements, and `bytearray` is a mutable byte buffer.
 
-```python
+*This example prints common mutable built-in types and their runtime type names.*
 
+```python
 lst = [1, 2, 3]
 print(f"list:         {str(lst):>20}  type={type(lst).__name__}")
 
@@ -1093,55 +1010,60 @@ print(f"set:          {str(st):>20}  type={type(st).__name__}")
 ba = bytearray(b"hello")
 print(f"bytearray:    {str(ba):>20}  type={type(ba).__name__}")
 ```
+
 ```text
-[1, 2, 3]  type=list
-{'a': 1, 'b': 2}  type=dict
-{1, 2, 3}  type=set
-bytearray(b'hello')  type=bytearray
+list:                    [1, 2, 3]  type=list
+dict:             {'a': 1, 'b': 2}  type=dict
+set:                     {1, 2, 3}  type=set
+bytearray:     bytearray(b'hello')  type=bytearray
 ```
 
 #### Specialized containers — memoryview, deque, OrderedDict
 
 `memoryview` provides zero-copy access to the buffer of a bytes-like object — essential for high-performance I/O and image processing. `deque` (double-ended queue) supports O(1) append/pop on both ends. `OrderedDict` explicitly preserves insertion order (redundant since Python 3.7 where all dicts are ordered, but useful when order-dependent equality matters).
 
-```python
+*This example prints stable summaries for `memoryview`, `deque`, and `OrderedDict`.*
 
+```python
 mv = memoryview(ba)
-print(f"memoryview:   {str(mv):>20}  type={type(mv).__name__}")
+print(f"memoryview:   itemsize={mv.itemsize}, nbytes={mv.nbytes}, readonly={mv.readonly}  type={type(mv).__name__}")
 
 
 # deque — double-ended queue
 dq = deque([1, 2, 3])
-print(f"deque:        {str(dq):>40}  (fast append/pop both ends)")
+print(f"deque:        {dq}  (fast append/pop both ends)")
 
 # OrderedDict — insertion-ordered dict (redundant since 3.7, dict keeps order)
 od = OrderedDict(a=1, b=2)
-print(f"OrderedDict:  {str(od):>40}  (explicit ordered dict)")
+print(f"OrderedDict:  {od}  (explicit ordered dict)")
 ```
+
 ```text
-<memory at 0x0000029D91A19240>  type=memoryview
-deque([1, 2, 3])  (fast append/pop both ends)
-OrderedDict({'a': 1, 'b': 2})  (explicit ordered dict)
+memoryview:   itemsize=1, nbytes=5, readonly=False  type=memoryview
+deque:        deque([1, 2, 3])  (fast append/pop both ends)
+OrderedDict:  OrderedDict({'a': 1, 'b': 2})  (explicit ordered dict)
 ```
 
 #### Auto-create missing keys with defaultdict
 
 `defaultdict(factory)` automatically creates a default value when a missing key is accessed, eliminating the need for `if key not in dict` checks. Pass `int` for counting (defaults to 0), `list` for grouping (defaults to `[]`), or `set` for unique grouping. This is Python's most idiomatic pattern for accumulation and grouping tasks.
 
-```python
+*This example accumulates counts and groups values with `defaultdict`.*
 
+```python
 dd = defaultdict(int)          # factory=int → missing keys default to 0
 dd["a"] += 1
 dd["b"] += 3
 dd["a"] += 2
-dict(dd)  # {'a': 3, 'b': 3}
+print(dict(dd))
 
 # defaultdict(list) — group items by key without checking if key exists
 groups = defaultdict(list)
 for name, dept in [("Alice", "Eng"), ("Bob", "Sales"), ("Charlie", "Eng")]:
     groups[dept].append(name)
-dict(groups)   # Groups
+print(dict(groups))
 ```
+
 ```text
 {'a': 3, 'b': 3}
 {'Eng': ['Alice', 'Charlie'], 'Sales': ['Bob']}
@@ -1151,17 +1073,19 @@ dict(groups)   # Groups
 
 `Counter` is a dict subclass that maps elements to their counts. Pass any iterable — a string (counts characters), a list (counts elements), or use `.update()` to add more counts. `.most_common(n)` returns the n most frequent elements as `(element, count)` tuples. Supports arithmetic: `counter1 + counter2` adds counts, `counter1 - counter2` subtracts.
 
-```python
+*This example counts characters, prints the most common entries, and counts words.*
 
+```python
 ct = Counter("abracadabra")
 print(ct)   # Counter
-print(ct.most_common(3))   # Most common 3
+print(f"Most common 3: {ct.most_common(3)}")
 
 # Counting words
 words = "the cat sat on the mat the cat".split()
 word_counts = Counter(words)
 print(word_counts)
 ```
+
 ```text
 Counter({'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1})
 Most common 3: [('a', 5), ('b', 2), ('r', 2)]
@@ -1172,8 +1096,9 @@ Counter({'the': 3, 'cat': 2, 'sat': 1, 'on': 1, 'mat': 1})
 
 `namedtuple` creates a tuple subclass with named fields — combining the immutability and hashability of tuples with the readability of attribute access (`pt.x` instead of `pt[0]`). `_replace()` returns a new instance with one or more fields changed (immutable update). For more features (defaults, methods, type hints), use `@dataclass(frozen=True)` or `typing.NamedTuple`.
 
-```python
+*This example creates a `namedtuple`, reads fields by name and index, and returns an updated copy with `_replace()`.*
 
+```python
 Point = namedtuple("Point", ["x", "y"])
 pt = Point(3, 4)
 print(pt)   # Point
@@ -1182,11 +1107,12 @@ print(pt[0])  # also indexable like a regular tuple
 
 # _replace returns a NEW namedtuple with one field changed (immutable)
 pt2 = pt._replace(x=10)
-print(pt2)   # _replace
+print(f"_replace: {pt2}")
 ```
+
 ```text
 Point(x=3, y=4)
-3, pt.y: 4
+pt.x:    3, pt.y: 4
 3
 _replace: Point(x=10, y=4)
 ```
@@ -1194,6 +1120,8 @@ _replace: Point(x=10, y=4)
 #### Perform exact decimal arithmetic with Decimal
 
 `Decimal` from the `decimal` module provides exact base-10 arithmetic — Python's equivalent of C#'s `decimal`. Use it for financial calculations, tax computation, and any domain where binary floating-point rounding (`0.1 + 0.2 != 0.3`) is unacceptable. Always construct from strings (`Decimal("0.1")`) — constructing from floats (`Decimal(0.1)`) captures the float's imprecision.
+
+*This example compares exact `Decimal` arithmetic with floating-point arithmetic and computes a rounded total.*
 
 ```python
 from decimal import Decimal, getcontext
@@ -1224,17 +1152,19 @@ Demonstrates how immutable types create new objects on "reassignment" while muta
 
 `Fraction` represents exact rational numbers with no floating-point error — `Fraction(1, 3)` is precisely one-third, not `0.33333...`. Strings demonstrate immutability: `+=` creates a new string object rather than modifying in place, so the original reference (`b`) remains unchanged.
 
-```python
+*This example prints an exact rational `Fraction` and shows that string reassignment creates a new object.*
 
+```python
 frac = Fraction(1, 3)
-print(f"Fraction:     {str(frac):>40}  (exact rational)")
+print(f"{frac}  (exact rational)")
 
 # Immutable: reassignment creates a NEW object
 a = "hello"
 b = a
 a += " world"
-print(f"Immutable str: a='{a}', b='{b}'")  # b unchanged!
+print(f"a='{a}', b='{b}'")
 ```
+
 ```text
 1/3  (exact rational)
 a='hello world', b='hello'
@@ -1244,14 +1174,16 @@ a='hello world', b='hello'
 
 Assigning a list to another variable copies the reference, not the data. Both variables point to the same list object — `append()` through either variable is visible through the other. Use `b = a.copy()` or `b = a[:]` for a shallow copy, or `copy.deepcopy(a)` for a deep copy of nested structures.
 
-```python
+*This example appends through one list reference and shows that both names still point to the same object.*
 
+```python
 a = [1, 2, 3]
 b = a
 a.append(4)
-print(f"Mutable list:  a={a}, b={b}")  # b changed too!
-a is b  # True
+print(f"a={a}, b={b}")
+print(f"Same object?   {a is b}")
 ```
+
 ```text
 a=[1, 2, 3, 4], b=[1, 2, 3, 4]
 Same object?   True
@@ -1269,6 +1201,8 @@ Covers Python's full set of arithmetic operators — including floor division an
 
 Python has true division (`/` returns float), floor division (`//` returns int), and exponentiation (`**`). `divmod(a, b)` returns `(quotient, remainder)` in one call. For financial math, use `Decimal` for exact division.
 
+*This example prints arithmetic results and highlights Python's true-division and floor-division behavior.*
+
 ```python
 a, b = 17, 5
 
@@ -1283,12 +1217,13 @@ print(f"-{a}       = {-a}")  # Unary negation
 
 # Division behavior
 
-print(7 / 2)  # 3.5 (true division)
-print(7 // 2)  # 3 (floor division)
-print(-7 // 2)  # -4 (floors toward negative infinity!)
-print(7 % 2)  # 1
-print(-7 % 2)  # 1 (Python modulo always returns same sign as divisor)
+print(f"7 / 2   = {7 / 2}")
+print(f"7 // 2  = {7 // 2}")
+print(f"-7 // 2 = {-7 // 2}")
+print(f"7 % 2   = {7 % 2}")
+print(f"-7 % 2  = {-7 % 2}")
 ```
+
 ```text
 17 + 5  = 22
 17 - 5  = 12
@@ -1309,6 +1244,8 @@ print(-7 % 2)  # 1 (Python modulo always returns same sign as divisor)
 
 Comparison operators return `bool`. Python compares by value for all built-in types (no reference vs value distinction like C#). `==` tests equality, `is` tests identity (same object in memory).
 
+*This example prints the standard equality and relational comparison results.*
+
 ```python
 a, b = 10, 20
 
@@ -1319,6 +1256,7 @@ print(f"{a} < {b}   : {a < b}")  # Less than
 print(f"{a} >= {b}  : {a >= b}")  # Greater than or equal
 print(f"{a} <= {b}  : {a <= b}")  # Less than or equal
 ```
+
 ```text
 10 == 20  : False
 10 != 20  : True
@@ -1332,14 +1270,16 @@ print(f"{a} <= {b}  : {a <= b}")  # Less than or equal
 
 Python supports chained comparisons: `10 < x < 20` is equivalent to `(10 < x) and (x < 20)` but evaluates `x` only once. This is more readable than C#'s required `10 < x && x < 20`. Chains can mix operators: `1 < 2 > 0` means `1 < 2 and 2 > 0`.
 
-```python
+*This example prints chained comparisons for range checks and mixed operators.*
 
+```python
 x = 15
 
 print(f"10 < {x} < 20 : {10 < x < 20}")  # True — same as (10 < x) and (x < 20)
-print(1 < 2 < 3 < 4)  # True
-print(1 < 2 > 0)  # True
+print(f"1 < 2 < 3 < 4 : {1 < 2 < 3 < 4}")
+print(f"1 < 2 > 0     : {1 < 2 > 0}")
 ```
+
 ```text
 10 < 15 < 20 : True
 1 < 2 < 3 < 4 : True
@@ -1354,16 +1294,18 @@ Covers `is`/`is not` for object identity, `in`/`not in` for membership testing, 
 
 `is` checks whether two variables refer to the same object in memory (like C#'s `object.ReferenceEquals`). `==` checks value equality. For singletons like `None`, always use `is`: `if x is None`. For small integers (-5 to 256) and interned strings, `is` may return `True` unexpectedly due to Python's caching — never rely on `is` for value comparison.
 
-```python
+*This example prints value equality and object identity for separate and shared lists.*
 
+```python
 a = [1, 2, 3]
 b = [1, 2, 3]
 c = a
-print(a == b)  # True  (same value)
-print(a is b)  # False (different objects)
-print(a is c)  # True  (same object)
-print(a is not b)  # True
+print(f"a == b  : {a == b}")
+print(f"a is b  : {a is b}")
+print(f"a is c  : {a is c}")
+print(f"a is not b : {a is not b}")
 ```
+
 ```text
 a == b  : True
 a is b  : False
@@ -1375,19 +1317,21 @@ a is not b : True
 
 `in` tests whether a value exists in a collection — works on lists, tuples, sets, dicts (tests keys), strings (tests substrings), and ranges. Time complexity is O(1) for sets and dicts, O(n) for lists and tuples. C# equivalent is `.Contains()` or LINQ `.Any()`.
 
-```python
+*This example prints membership tests for lists, strings, ranges, dictionaries, and boolean operators.*
 
+```python
 fruits = ["apple", "banana", "cherry"]
-print('banana' in fruits)   # 'banana' in fruits
-print('grape' not in fruits)   # 'grape' not in fruits
-print('an' in 'banana')  # works on strings too
-print(3 in range(5))  # works on range
+print(f"'banana' in fruits     : {'banana' in fruits}")
+print(f"'grape' not in fruits  : {'grape' not in fruits}")
+print(f"'an' in 'banana'       : {'an' in 'banana'}")
+print(f"3 in range(5)          : {3 in range(5)}")
 print(f"'key' in {{'key': 1}}    : {'key' in {'key': 1}}")  # works on dict keys
 
-print(True and False)  # False
-print(True or False)  # True
-print(not True)  # False
+print(f"True and False  : {True and False}")
+print(f"True or False   : {True or False}")
+print(f"not True        : {not True}")
 ```
+
 ```text
 'banana' in fruits     : True
 'grape' not in fruits  : True
@@ -1403,22 +1347,24 @@ not True        : False
 
 Unlike C#'s `&&`/`||` which always return `bool`, Python's `and`/`or` return the actual operand that determined the result. `and` returns the first falsy value (or the last value if all truthy). `or` returns the first truthy value (or the last value if all falsy). This enables the `None or 'default'` pattern for providing fallback values — Python's equivalent of C#'s `??` null-coalescing.
 
-```python
+*This example prints the raw operand returned by each `and` and `or` expression.*
 
-print(0 and 5)  # 0 (first falsy)
-print(3 and 5)  # 5 (last value, both truthy)
-print('' and 'hello')  # '' (first falsy)
+```python
+print(f"0 and 5         : {0 and 5}")
+print(f"3 and 5         : {3 and 5}")
+print(f"'' and 'hello'  : {'' and 'hello'}")
 
 # 'or' returns first truthy value or last value
-print(0 or 5)  # 5 (first truthy)
-print(3 or 5)  # 3 (first truthy)
-print('' or 'hello')  # 'hello'
-print(None or 'default')  # 'default' (common pattern!)
+print(f"0 or 5          : {0 or 5}")
+print(f"3 or 5          : {3 or 5}")
+print(f"'' or 'hello'   : {'' or 'hello'}")
+print(f"None or 'default': {None or 'default'}")
 ```
+
 ```text
 0 and 5         : 0
 3 and 5         : 5
-'' and 'hello'  : 
+'' and 'hello'  :
 0 or 5          : 5
 3 or 5          : 3
 '' or 'hello'   : hello
@@ -1427,11 +1373,14 @@ None or 'default': default
 
 **Truthy/Falsy values** — `0`, `0.0`, `""`, `[]`, `{}`, `set()`, `None`, and `range(0)` are all falsy; every other value is truthy. Custom classes can define `__bool__` to control their truthiness.
 
+*This example prints the boolean value of common falsy objects.*
+
 ```python
 falsy_values = [False, 0, 0.0, 0j, "", [], {}, set(), None, range(0)]
 for val in falsy_values:
     print(f"  bool({str(val):10}) = {bool(val)}")
 ```
+
 ```text
   bool(False     ) = False
   bool(0         ) = False
@@ -1453,8 +1402,9 @@ Covers Python's bitwise operators (`&`, `|`, `^`, `~`, `<<`, `>>`) and the pract
 
 Bitwise operators work on the binary representation of integers. Python integers have arbitrary precision, so `~a` inverts all bits (including the sign bit via two's complement), producing `-(a+1)`. The operators are identical to C#: `&` (AND), `|` (OR), `^` (XOR), `~` (NOT), `<<` (left shift), `>>` (right shift). Python has no unsigned right shift (`>>>`) since integers are arbitrary-width.
 
-```python
+*This example prints the result of each bitwise operator in binary and decimal form.*
 
+```python
 a, b = 0b1100, 0b1010  # 12 and 10
 
 print(f"a = {a:04b} ({a}),  b = {b:04b} ({b})")
@@ -1467,6 +1417,7 @@ print(f"a >> 1 (RIGHT)= {a >> 1:04b} ({a >> 1})")  # 0110 (6)
 
 # Common use cases for bitwise operators
 ```
+
 ```text
 a = 1100 (12),  b = 1010 (10)
 a & b  (AND)  = 1000 (8)
@@ -1481,8 +1432,9 @@ a >> 1 (RIGHT)= 0110 (6)
 
 Same flag pattern as C#: define each permission as a power of 2, combine with `|`, test with `&`, add with `|=`, remove with `&= ~flag`. Python has no `[Flags]` enum equivalent, but `enum.IntFlag` (Python 3.6+) provides similar functionality with named flags and readable `repr()`.
 
-```python
+*This example combines flags, tests individual permissions, and removes a flag with bitwise masks.*
 
+```python
 READ, WRITE, EXECUTE = 0b100, 0b010, 0b001
 
 # Combine two flags with OR
@@ -1490,8 +1442,8 @@ perms = READ | WRITE
 print(f"{perms:03b}")   # Start
 
 # Test a flag with AND
-print(bool(perms & READ))   # Can read?
-print(bool(perms & EXECUTE))   # Can execute?
+print(f"Can read?        {bool(perms & READ)}")
+print(f"Can execute?     {bool(perms & EXECUTE)}")
 
 # Add a flag — set its bit with |=
 perms |= EXECUTE
@@ -1499,12 +1451,13 @@ print(f"{perms:03b}")   # After |= EXEC
 
 # Remove a flag — AND with inverted mask using &= ~
 perms &= ~WRITE
-print(f"{perms:03b}")   # After &= ~WRITE
+print(f"After &= ~WRITE: {perms:03b}")
 
 # Even/odd check — LSB is 1 for odd, 0 for even
 n = 42
 print(f"\n{n} is {'even' if n & 1 == 0 else 'odd'}")
 ```
+
 ```text
 110
 Can read?        True
@@ -1521,11 +1474,14 @@ XOR swap works the same as in C#, but Python's idiomatic swap is `x, y = y, x` (
 
 XOR swap works because XOR is its own inverse: `a ^ b ^ b == a`. The algorithm proceeds in three steps: (1) `x = x^y` — `x` now holds the combined bits; (2) `y = (x^y)^y` — recovers the original `x`; (3) `x = (x^y)^x` — recovers the original `y`. Always prefer `x, y = y, x` in real code — this is a curiosity, not a recommendation.
 
+*This example swaps two integers with the XOR trick and prints the final values.*
+
 ```python
 x, y = 5, 10
 x ^= y; y ^= x; x ^= y
 print(f"Swapped: x={x}, y={y}")
 ```
+
 ```text
 Swapped: x=10, y=5
 ```
@@ -1538,8 +1494,9 @@ Documents Python's compound assignment operators for arithmetic and bitwise oper
 
 Same compound operators as C# (`+=`, `-=`, `*=`, `/=`, `%=`) plus Python-specific `//=` (floor division) and `**=` (exponentiation). Note that `/=` always produces a `float` in Python, even between two integers — use `//=` for integer floor division.
 
-```python
+*This example applies each arithmetic compound-assignment operator and prints the intermediate result.*
 
+```python
 x = 10;  print(f"x = 10       → {x}")
 
 # Addition assignment
@@ -1565,6 +1522,7 @@ x = 2
 # Exponentiation assignment
 x **= 8; print(f"x **= 8      → {x}")
 ```
+
 ```text
 x = 10       → 10
 x += 5       → 15
@@ -1580,8 +1538,9 @@ x **= 8      → 256
 
 Same bitwise compound operators as C#: `&=` masks, `|=` sets, `^=` toggles, `<<=` shifts left, `>>=` shifts right. No `>>>=` (unsigned right shift) in Python since integers are arbitrary-width.
 
-```python
+*This example applies each bitwise compound-assignment operator and prints the resulting value.*
 
+```python
 x = 0b1100
 x &= 0b1010; print(f"x &= 0b1010  → {x:04b}")
 
@@ -1600,6 +1559,7 @@ x >>= 2; print(f"x >>= 2      → {x}")
 # Left shift assignment — multiply by 2^n
 x <<= 3; print(f"x <<= 3      → {x}")
 ```
+
 ```text
 x &= 0b1010  → 1000
 x |= 0b1010  → 1110
@@ -1616,12 +1576,14 @@ Covers Python's inline conditional expression, the walrus operator (`:=`) for as
 
 Python's ternary syntax is `value_if_true if condition else value_if_false` — note the reversed order compared to C#'s `condition ? true : false`. Reads like English: "adult if age >= 18 else minor".
 
-```python
+*This example assigns a value with Python's ternary conditional expression.*
 
+```python
 age = 20
 status = "adult" if age >= 18 else "minor"
 print(f"age={age} → {status}")
 ```
+
 ```text
 age=20 → adult
 ```
@@ -1630,8 +1592,9 @@ age=20 → adult
 
 Ternary expressions can be chained for multi-condition logic, though readability suffers beyond two levels — prefer `if/elif/else` for complex cases. The **walrus operator** `:=` (Python 3.8+) assigns a value AND returns it in one expression, enabling compute-once-use-twice patterns in comprehensions and while loops. C# has no direct equivalent.
 
-```python
+*This example uses a nested ternary expression and a ternary inside an f-string.*
 
+```python
 score = 85
 grade = "A" if score >= 90 else "B" if score >= 80 else "C" if score >= 70 else "D" if score >= 60 else "F"
 print(f"score={score} → grade={grade}")
@@ -1640,6 +1603,7 @@ print(f"score={score} → grade={grade}")
 items = 3
 print(f"You have {items} {'item' if items == 1 else 'items'}")
 ```
+
 ```text
 score=85 → grade=B
 You have 3 items
@@ -1647,11 +1611,14 @@ You have 3 items
 
 **Walrus operator in list comprehension** — `:=` assigns a value and returns it in the same expression, so `y := x * 2` computes the doubled value, filters on `> 10`, and includes `y` in the result — all without a separate pre-comprehension variable.
 
+*This example uses the walrus operator inside a list comprehension and prints the filtered doubled values.*
+
 ```python
 data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 filtered = [y for x in data if (y := x * 2) > 10]
-print(filtered)   # Doubled > 10
+print(f"Doubled > 10: {filtered}")
 ```
+
 ```text
 Doubled > 10: [12, 14, 16, 18, 20]
 ```
@@ -1660,24 +1627,27 @@ Doubled > 10: [12, 14, 16, 18, 20]
 
 The walrus operator shines in `while` loops that read input and test a condition: `while (line := reader.readline())` reads a line, assigns it to `line`, and tests truthiness in one expression. Without `:=`, you need a priming read before the loop and a duplicate read at the end.
 
-```python
+*This example reads lines from a `StringIO` buffer until the stream is exhausted.*
 
+```python
 reader = io.StringIO("line1\nline2\nline3")
 while (line := reader.readline()):
     print(f"  Read: {line.strip()}")
 ```
+
 ```text
-line1
-  line2
-  line3
+  Read: line1
+  Read: line2
+  Read: line3
 ```
 
 #### Operator precedence — evaluation order from highest to lowest
 
 Python evaluates operators in a strict precedence order. Parentheses bind tightest (level 1), the walrus operator binds loosest (level 14). Key difference from C#: `**` (exponentiation) is level 2 and binds tighter than unary minus, so `-2 ** 2 == -4` (not 4).
 
-```python
+*This example prints Python's operator precedence table as a formatted multiline string.*
 
+```python
 precedence = """
   1. ()              Parentheses
   2. **              Exponentiation
@@ -1695,8 +1665,9 @@ precedence = """
  13. or              Logical OR
  14. :=              Walrus operator
 """
-precedence
+print(precedence.strip())
 ```
+
 ```text
 1. ()              Parentheses
   2. **              Exponentiation
@@ -1707,20 +1678,21 @@ precedence
   7. &               Bitwise AND
   8. ^               Bitwise XOR
   9. |               Bitwise OR
-10. ==, !=, <, <=,  Comparisons, identity, membership
+ 10. ==, !=, <, <=,  Comparisons, identity, membership
      >, >=, is, in
-11. not             Logical NOT
-12. and             Logical AND
-13. or              Logical OR
-14. :=              Walrus operator
+ 11. not             Logical NOT
+ 12. and             Logical AND
+ 13. or              Logical OR
+ 14. :=              Walrus operator
 ```
 
-#### Precedence gotchas — exponentiation vs unary minus
+#### Exponentiation and unary-minus precedence
 
-The most common Python precedence surprise: `-2 ** 2` evaluates as `-(2 ** 2) = -4`, not `(-2) ** 2 = 4`, because `**` binds tighter than unary `-`. Also, `not 1 == 1` evaluates as `not (1 == 1)` because `==` has higher precedence than `not`.
+A common precedence error is assuming `-2 ** 2` means `(-2) ** 2`. Python evaluates it as `-(2 ** 2) = -4` because `**` binds tighter than unary `-`. Likewise, `not 1 == 1` evaluates as `not (1 == 1)` because `==` has higher precedence than `not`.
+
+*This example compares grouped and ungrouped expressions to show Python's precedence rules.*
 
 ```python
-
 print(2 + 3 * 4)  # 14 (not 20)
 print((2 + 3) * 4)  # 20
 print(-2 ** 2)  # -4 (** binds tighter than unary -)
@@ -1728,6 +1700,7 @@ print((-2) ** 2)  # 4
 print(not 1 == 1)  # False (== before not)
 print(not (1 == 1))  # False (same, but explicit)
 ```
+
 ```text
 14
 20
@@ -1758,6 +1731,8 @@ Implement dunder methods for full operator support: `__add__`/`__sub__`/`__mul__
 > [!success] Correct pattern
 >
 > Always define `__hash__` alongside `__eq__`. Keep `__hash__` consistent: `return hash((self.x, self.y))`. Use `__eq__` + `__hash__` together so instances work correctly as dict keys and in sets.
+
+*This example defines a `Vector` type that supports arithmetic, indexing, hashing, iteration, and truthiness.*
 
 ```python
 class Vector:
@@ -1838,14 +1813,16 @@ class Vector:
 
 `__str__` is called by `print()` and `str()` — for end users. `__repr__` is called by the REPL, debugger, and `repr()` — for developers. Best practice: `__repr__` should return a string that could recreate the object. If only one is defined, define `__repr__` — Python falls back to it when `__str__` is missing.
 
-```python
+*This example prints the `Vector` object with both `str()` and `repr()`.*
 
+```python
 v1 = Vector(3, 4)
 v2 = Vector(1, 2)
 
 print(str(v1))  # __str__
 print(repr(v1))  # __repr__
 ```
+
 ```text
 Vector(3, 4)
 Vector(x=3, y=4)
@@ -1855,8 +1832,9 @@ Vector(x=3, y=4)
 
 Once dunder methods are defined, instances support natural Python syntax: `v1 + v2` calls `__add__`, `abs(v1)` calls `__abs__`, `v1 == v2` calls `__eq__`, and `v1 < v2` calls `__lt__`. `hash()` calls `__hash__` — required for using instances as dict keys or set members.
 
-```python
+*This example exercises the arithmetic, equality, comparison, and hashing dunder methods on `Vector`.*
 
+```python
 print(v1 + v2)  # __add__
 print(v1 - v2)  # __sub__
 print(v1 * 3)  # __mul__
@@ -1864,10 +1842,11 @@ print(-v1)  # __neg__
 print(abs(v1))  # __abs__
 
 print(v1 == v2)  # __eq__
-print(v1 == Vector(3, 4))   # v1 == Vector(3,4)
+print(f"v1 == Vector(3,4): {v1 == Vector(3, 4)}")
 print(v1 < v2)  # __lt__ (compares magnitude)
 print(hash(v1))  # __hash__
 ```
+
 ```text
 Vector(4, 6)
 Vector(2, 2)
@@ -1884,8 +1863,9 @@ False
 
 `__getitem__` enables `v1[0]`, `__len__` enables `len(v1)`, `__iter__` enables `for x in v1` and `list(v1)`, `__contains__` enables `3 in v1`, `__call__` makes the instance callable like a function (`v1(2)`), and `__bool__` controls truthiness (`if v1:`).
 
-```python
+*This example indexes, iterates, tests membership, calls, and checks truthiness on a `Vector`.*
 
+```python
 print(v1[0])  # __getitem__
 print(v1[1])   # v1[1]
 print(3 in v1)  # __contains__
@@ -1897,6 +1877,7 @@ print(list(v1))  # __iter__
 print(bool(v1))  # __bool__
 print(bool(Vector(0, 0)))   # bool(Vector(0,0))
 ```
+
 ```text
 3
 4
@@ -1913,28 +1894,30 @@ False
 
 Context managers enable the `with` statement for automatic resource cleanup — Python's equivalent of C#'s `using` statement and `IDisposable`. `__enter__` runs at the start of the `with` block (return value is bound to `as`). `__exit__` runs when the block ends (even on exception). Return `False` from `__exit__` to propagate exceptions, `True` to suppress them.
 
-```python
+*This example implements a context manager that prints enter and exit messages around a timed block.*
 
+```python
 class Timer:
     """Context manager that times a block of code"""
     def __enter__(self):
         self.start = _time.perf_counter()
-        print("  Timer started")
+        print("Timer started")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        elapsed = _time.perf_counter() - self.start
-        print(f"  Timer stopped: {elapsed:.6f}s")
+        self.elapsed = _time.perf_counter() - self.start
+        print("Timer stopped")
         return False
-    
+
 with Timer() as t:
     total = sum(range(1_000_000))
-    print(f"  Sum: {total}")
+    print(f"Sum: {total}")
 ```
+
 ```text
 Timer started
-  499999500000
-  0.018712s
+Sum: 499999500000
+Timer stopped
 ```
 
 ### Type inspection and reflection
@@ -1945,12 +1928,14 @@ Covers Python's introspection system — magic attributes on modules, functions,
 
 Every module has `__name__` (its import name, or `"__main__"` for the entry-point script) and `__doc__` (its docstring). The `if __name__ == "__main__"` guard prevents code from running when the module is imported as a library.
 
-```python
+*This example prints a module name and a short preview of a module docstring.*
 
+```python
 print(__name__)
 print(math.__name__)   # math.__name__
 print(f"math.__doc__[:50]: {(math.__doc__ or '')[:50]}...")
 ```
+
 ```text
 __main__
 math
@@ -1961,15 +1946,17 @@ math.__doc__[:50]: This module provides access to the mathematical fu...
 
 `__class__` and `type()` both return the type of an instance. `isinstance()` checks the type hierarchy (including parent classes). `__dict__` exposes the object's attributes as a dictionary — this is Python's equivalent of C# reflection on instance fields.
 
-```python
+*This example prints the runtime type, class name, and instance dictionary for a `Vector`.*
 
+```python
 v = Vector(3, 4)
 print(v.__class__)   # v.__class__
-print(v.__class__.__name__)   # v.__class__.__name__
+print(f"v.__class__.__name__: {v.__class__.__name__}")
 print(type(v))   # type(v)
 print(isinstance(v, Vector))   # isinstance(v, Vector)
 print(v.__dict__)   # v.__dict__
 ```
+
 ```text
 <class '__main__.Vector'>
 v.__class__.__name__: Vector
@@ -1982,8 +1969,9 @@ True
 
 `__slots__` replaces the per-instance `__dict__` with a fixed-size tuple of attribute descriptors. This reduces memory usage by 30–50% for classes with many instances (e.g., millions of data points). The tradeoff: you cannot add attributes dynamically. Use for data-heavy classes; avoid for classes that need runtime attribute flexibility.
 
-```python
+*This example shows that `__slots__` blocks new attributes and removes the normal instance dictionary.*
 
+```python
 class Point:
     __slots__ = ('x', 'y')
     def __init__(self, x, y):
@@ -1992,9 +1980,13 @@ class Point:
 
 p = Point(1, 2)
 print(f"Point({p.x}, {p.y})")
-# p.z = 3 → AttributeError (slots restricts attributes)
-hasattr(p, '__dict__')   # Has __dict__?
+try:
+    p.z = 3
+except AttributeError:
+    print("p.z = 3 → AttributeError (slots restricts attributes)")
+print(f"Has __dict__? {hasattr(p, '__dict__')}")
 ```
+
 ```text
 Point(1, 2)
 p.z = 3 → AttributeError (slots restricts attributes)
@@ -2005,8 +1997,9 @@ Has __dict__? False
 
 Comprehensive list of all major dunder method categories. Each category enables a different aspect of Python's protocol system — implementing the right dunders lets your class integrate seamlessly with built-in functions, operators, and control flow.
 
-```python
+*This example prints the main dunder-method categories and the special methods in each group.*
 
+```python
 categories = {
     "Creation/Destroy": "__init__, __new__, __del__",
     "String":           "__str__, __repr__, __format__",
@@ -2027,106 +2020,83 @@ categories = {
 for cat, methods in categories.items():
     print(f"  {cat:20}: {methods}")
 ```
+
 ```text
-Creation/Destroy    : __init__, __new__, __del__
-  __str__, __repr__, __format__
-  __eq__, __ne__, __lt__, __le__, __gt__, __ge__
-  __add__, __sub__, __mul__, __truediv__, __floordiv__, __mod__, __pow__
+  Creation/Destroy    : __init__, __new__, __del__
+  String              : __str__, __repr__, __format__
+  Comparison          : __eq__, __ne__, __lt__, __le__, __gt__, __ge__
+  Arithmetic          : __add__, __sub__, __mul__, __truediv__, __floordiv__, __mod__, __pow__
   Reverse Arith       : __radd__, __rsub__, __rmul__ (when left operand doesn't support it)
   In-place Arith      : __iadd__, __isub__, __imul__ (+=, -=, *=)
-  __neg__, __pos__, __abs__, __invert__
+  Unary               : __neg__, __pos__, __abs__, __invert__
   Type Conversion     : __int__, __float__, __bool__, __complex__, __bytes__
-  __len__, __getitem__, __setitem__, __delitem__, __contains__
-  __iter__, __next__, __reversed__
-  __call__
+  Container           : __len__, __getitem__, __setitem__, __delitem__, __contains__
+  Iteration           : __iter__, __next__, __reversed__
+  Callable            : __call__
   Context Manager     : __enter__, __exit__
   Attribute Access    : __getattr__, __setattr__, __delattr__, __getattribute__
-  __hash__
-  __get__, __set__, __delete__
+  Hashing             : __hash__
+  Descriptor          : __get__, __set__, __delete__
 ```
 
 #### Explore module magic attributes — __name__, __file__, __spec__
 
 Every Python module exposes metadata attributes. `__file__` is the source file path (unavailable for C extensions and notebooks). `__spec__` (PEP 451) holds import system metadata: name, loader, origin path, and submodule search locations. Built-in C extension modules (like `math`) may lack `__file__` but still have `__name__` and `__doc__`.
 
+*This example prints stable summaries for module names, docstrings, file paths, and import metadata.*
+
 ```python
+doc_preview = (os.__doc__ or "").replace("\n", " ")[:60]
+math_doc_preview = (math.__doc__ or "").replace("\n", " ")[:60]
 
-__name__
-
-# __file__ — absolute path of the module's source file (not available in notebooks)
-# print(f"__file__:    {__file__}")
-
-# __doc__ — the module's docstring (first string literal at the top of the file)
-print(f"__doc__:       {(os.__doc__ or '')[:60]}...")
-
-# Common guard: prevents code from running when the module is imported
-# if __name__ == "__main__":
-#     main()
-
-# math.__name__ — built-in C extension modules still carry a __name__
-math.__name__   # math.__name__
-
-# math.__doc__ — even C extensions expose their docstring
-print(f"math.__doc__:     {(math.__doc__ or '')[:60]}...")
-
-# math.__file__ — C extension modules may not have a .py __file__
-getattr(math, '__file__', 'N/A (built-in C module)')   # math.__file__
-
-# os.__name__ and os.__file__ — pure Python stdlib module
-os.__name__   # os.__name__
-os.__file__   # os.__file__
-
-# json.__file__ — pure Python module always has a __file__
-json.__file__   # json.__file__
-
-# json.__spec__ — import system metadata (name, origin, loader, submodule_search_locations)
-json.__spec__   # json.__spec__
+print(__name__)
+print(f"__doc__:       {doc_preview}...")
+print(math.__name__)
+print(f"math.__doc__:  {math_doc_preview}...")
+print(getattr(math, '__file__', 'N/A (built-in C module)'))
+print(os.__name__)
+print(os.__file__)
+print(json.__file__)
+print(f"json.__spec__.name: {json.__spec__.name}")
+print(f"json.__spec__.origin: {json.__spec__.origin}")
 ```
+
 ```text
 __main__
-OS routines for NT or Posix depending on what system we're o...
+__doc__:       OS routines for NT or Posix depending on what system we're o...
 math
-This module provides access to the mathematical functions
-de...
+math.__doc__:  This module provides access to the mathematical functions de...
 N/A (built-in C module)
 os
 C:\Users\aperi\AppData\Local\Programs\Python\Python312\Lib\os.py
 C:\Users\aperi\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py
-ModuleSpec(name='json', loader=<_frozen_importlib_external.SourceFileLoader object at 0x0000029DEA85D2B0>, origin='C:\\Users\\aperi\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\json\\__init__.py', submodule_search_locations=['C:\\Users\\aperi\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\json'])
+json.__spec__.name: json
+json.__spec__.origin: C:\Users\aperi\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py
 ```
 
 #### Inspect function metadata — __name__, __doc__, __annotations__, __defaults__
 
 Functions are first-class objects with their own magic attributes. `__annotations__` holds type hints as a dict. `__defaults__` holds default argument values as a tuple. `__qualname__` gives the fully qualified name — for nested functions it shows the enclosing scope (e.g., `Outer.inner`).
 
-```python
+*This example prints the key metadata attributes exposed by a Python function object.*
 
+```python
 def greet(name: str, greeting: str = "Hello") -> str:
     """Returns a greeting message."""
     return f"{greeting}, {name}!"
 
-# __name__ — the function's own name as a string
-greet.__name__   # __name__
-
-# __doc__ — the function's docstring
-greet.__doc__   # __doc__
-
-# __module__ — name of the module where the function was defined
-greet.__module__   # __module__
-
-# __defaults__ — tuple of default values for positional arguments with defaults
-greet.__defaults__   # __defaults__
-
-# __annotations__ — dict mapping parameter names (and 'return') to their type hints
-greet.__annotations__   # __annotations__
-
-# __qualname__ — fully qualified name; for nested functions shows the enclosing scope (e.g. 'Outer.inner')
-greet.__qualname__   # __qualname__
+print(greet.__name__)
+print(greet.__doc__)
+print(greet.__module__)
+print(greet.__defaults__)
+print(f"__annotations__: {greet.__annotations__}")
+print(greet.__qualname__)
 
 class Animal:
     """Base class for animals."""
     pass
 ```
+
 ```text
 greet
 Returns a greeting message.
@@ -2140,8 +2110,9 @@ greet
 
 Setting up a simple `Animal` → `Dog` hierarchy to demonstrate class and instance magic attributes.
 
-```python
+*This example defines a simple `Animal` and `Dog` class hierarchy for later introspection.*
 
+```python
 class Dog(Animal):
     """A dog."""
     species = "canine"
@@ -2153,26 +2124,28 @@ class Dog(Animal):
 
 `__bases__` lists direct parent classes. `__mro__` (Method Resolution Order) shows the full inheritance chain Python follows when resolving attribute lookups — equivalent to C#'s `Type.BaseType` chain. `__dict__` on a class shows the class namespace (methods, class variables); on an instance it shows instance attributes only.
 
-```python
+*This example prints the inheritance metadata and instance attributes for the `Dog` class.*
 
+```python
 d = Dog("Rex")
 print(Dog.__name__)  # 'Dog'
 print(Dog.__doc__)  # 'A dog.'
 print(Dog.__module__)  # '__main__'
 print(Dog.__bases__)  # (Animal,) — direct parent classes
 print(Dog.__mro__)  # method resolution order
-print(list(Dog.__dict__.keys()))  # class namespace
+print(f"Dog.__dict__.keys: {list(Dog.__dict__.keys())}")
 
 print(d.__class__)  # <class 'Dog'>
-print(d.__class__.__name__)  # 'Dog'
+print(f"d.__class__.__name__: {d.__class__.__name__}")
 print(d.__dict__)  # {'name': 'Rex'} — instance attributes
-print(f"d.__sizeof__():    {d.__sizeof__()} bytes")  # memory size
+print(f"{d.__sizeof__()} bytes")
 
 print(type(d).__name__)  # 'Dog'
 print(isinstance(d, Dog))   # isinstance(d, Dog)
 print(isinstance(d, Animal))   # isinstance(d, Animal)
 print(issubclass(Dog, Animal))   # issubclass(Dog, Animal)
 ```
+
 ```text
 Dog
 A dog.
@@ -2210,90 +2183,91 @@ These are read-only metadata — not methods you override.
 
 ## Mutable vs Immutable Types Reference
 
-Quick-reference section for Python's mutable/immutable distinction — which types are safe as dict keys, dataclass defaults, and shared state, and which require copies or factories.
+Quick-reference section for Python's mutable/immutable distinction — which types are safe as dict keys, dataclass defaults, and shared state, and which require copies, factories, or synchronization.
 
-### Mutability matrix
+### Operational semantics
 
-Python's key distinction is **mutable vs immutable** — not value vs reference (everything is a reference). Immutable types create new objects on "modification". Mutable types change in place.
+Python's key distinction is between mutable and immutable objects, not between value types and reference types. Immutable operations allocate a new object; mutable operations update the existing object in place.
 
-Understanding this prevents aliasing bugs with lists and dicts, enables using types as dict keys (only immutables are hashable), and is essential for thread safety (immutables need no synchronization).
+This subsection explains how that distinction affects aliasing, hashing, dataclass defaults, and shared state across call boundaries.
 
-> [!warning] Common mutability pitfalls
->
-> - **Mutable default arguments:** `def f(lst=[])` shares one list across all calls — use `def f(lst=None)` instead
-> - **Assuming `+=` copies:** for lists, `+=` mutates in place; for strings, it creates a new object
-> - **Sharing mutable objects across threads** without locks causes race conditions
+#### Assignment
 
-> [!success] Correct pattern
->
-> Use `def f(lst=None): if lst is None: lst = []` for mutable defaults. Use `copy.copy()` or `copy.deepcopy()` when you need an independent copy of a mutable object. Use `threading.Lock` or immutable data structures when sharing state across threads.
+When an immutable value appears to change, Python creates a new object and rebinds the name, so existing aliases continue to reference the earlier value. Mutable objects behave differently: in-place operations update the shared object, and every alias observes the change immediately.
 
-#### Why it matters — 5 key scenarios
+#### Function arguments
 
-The table below contrasts how immutable and mutable types behave across the five most common pitfall areas.
+Passing an immutable object into a function is operationally safe when the function only rebinds the local parameter, because the caller's object is unchanged. Passing a mutable object transfers a reference to the same object, so in-place mutation inside the function is visible to the caller.
 
-| Scenario | Immutable | Mutable |
+#### Dict keys and set elements
+
+Immutable values with stable equality and hash behavior can participate in dictionary keys and set membership. Mutable built-in containers such as `list`, `dict`, and `set` cannot, because their contents can change after insertion and would invalidate hash-based lookups.
+
+#### Dataclass defaults
+
+Immutable literal defaults are usually safe because the value itself does not change in place across instances. Mutable defaults must be created with `field(default_factory=...)` so each instance receives an independent object instead of sharing hidden state.
+
+#### Shared state
+
+Immutable values are easier to share across scopes and threads because readers cannot observe in-place mutation. Mutable values require copying, ownership boundaries, or explicit synchronization when several call sites can mutate the same object.
+
+### Type reference
+
+This subsection lists the common immutable and mutable types that matter most when evaluating hashability, sharing behavior, and safe default construction.
+
+#### Immutable type reference
+
+These common immutable types are safe to share and, where hash semantics permit, can participate in dict and set keys.
+
+| Type | Example | Operational note |
 |---|---|---|
-| Assignment | `a = "hello"; b = a; a += " world"` → `b` is still `"hello"` (new object) | `a = [1,2]; b = a; a.append(3)` → `b` is `[1,2,3]` (same object!) |
-| Function arguments | Function can't modify the caller's variable | Function CAN modify the caller's object |
-| Dict keys / set elements | CAN be used as dict key (hashable) | CANNOT be used as dict key (unhashable) |
-| Dataclass defaults | Safe: `salary: float = 50000.0` | Unsafe: `tags: list = []` — use `field(default_factory=list)` |
-| Thread safety | Safe to share between threads | Needs locks/synchronization |
+| `int` | `42` | Arbitrary precision integer |
+| `float` | `3.14` | IEEE 754 double-precision float |
+| `complex` | `3+4j` | Built-in complex number |
+| `bool` | `True` | Subclass of `int` |
+| `str` | `"hello"` | Unicode text sequence |
+| `bytes` | `b"hello"` | Immutable byte sequence |
+| `tuple` | `(1, 2, 3)` | Ordered immutable container |
+| `frozenset` | `frozenset({1, 2})` | Immutable set |
+| `range` | `range(10)` | Immutable arithmetic sequence |
+| `None` | `None` | Singleton null object |
+| `Decimal` | `Decimal("3.14")` | Exact base-10 numeric type |
+| `Fraction` | `Fraction(1, 3)` | Exact rational value |
+| `namedtuple` | `Point(3, 4)` | Tuple with named fields |
 
-> [!abstract]- Immutable types (safe as defaults,
->
-> Immutable types (safe as defaults, dict keys, shared across contexts)
-> | Type | Example | Notes |
-> |---|---|---|
-> | `int` | `42` | Arbitrary precision |
-> | `float` | `3.14` | 64-bit IEEE 754 |
-> | `complex` | `3+4j` | Real + imaginary |
-> | `bool` | `True`/`False` | Subclass of int |
-> | `str` | `"hello"` | Unicode string |
-> | `bytes` | `b"hello"` | Byte sequence |
-> | `tuple` | `(1, 2, 3)` | Ordered, indexed |
-> | `frozenset` | `frozenset({1, 2})` | Set but immutable |
-> | `range` | `range(10)` | Lazy integer sequence |
-> | `None` | `None` | Singleton null |
-> | `Decimal` | `Decimal("3.14")` | Exact decimal (from `decimal` module) |
-> | `datetime` | `datetime.now()` | Date/time (from `datetime` module) |
-> | `namedtuple` | `Point(3, 4)` | Tuple with named fields |
+#### Mutable type reference
 
-The counterpart mutable types cannot be dict keys or safe dataclass defaults — use `field(default_factory=…)` for all of them.
+These mutable types need factories, copies, or coordination when shared across instances or threads.
 
-> [!abstract]- Mutable types (unsafe as defaults,
->
-> Mutable types (unsafe as defaults, can't be dict keys)
-> | Type | Example | Safe dataclass default |
-> |---|---|---|
-> | `list` | `[1, 2, 3]` | `field(default_factory=list)` |
-> | `dict` | `{"a": 1}` | `field(default_factory=dict)` |
-> | `set` | `{1, 2, 3}` | `field(default_factory=set)` |
-> | `bytearray` | `bytearray(b"hi")` | `field(default_factory=bytearray)` |
-> | `deque` | `deque([1, 2])` | `field(default_factory=deque)` |
-> | `defaultdict` | `defaultdict(int)` | `field(default_factory=lambda: defaultdict(int))` |
-> | Any class | `MyClass()` | `field(default_factory=MyClass)` |
->
-> **Quick test:** if you can `.append()`, `.add()`, `[key]=value`, or modify in-place → it's mutable.
+| Type | Example | Safe dataclass default |
+|---|---|---|
+| `list` | `[1, 2, 3]` | `field(default_factory=list)` |
+| `dict` | `{"a": 1}` | `field(default_factory=dict)` |
+| `set` | `{1, 2, 3}` | `field(default_factory=set)` |
+| `bytearray` | `bytearray(b"hi")` | `field(default_factory=bytearray)` |
+| `deque` | `deque([1, 2])` | `field(default_factory=deque)` |
+| `defaultdict` | `defaultdict(int)` | `field(default_factory=lambda: defaultdict(int))` |
+| User-defined mutable class | `MyClass()` | `field(default_factory=MyClass)` |
 
-### Assignment, equality, and argument passing
+### Runtime examples
 
-Demonstrates with runnable cells how mutability affects variable assignment, function argument semantics, and dict key legality.
+Demonstrates the mutability rules with runnable examples for reassignment, aliasing, hashability, and function calls.
 
 #### Immutable reassignment — strings create new objects
 
-String `+=` produces a new object, leaving the original reference unchanged — verified by `is` identity check.
+String `+=` produces a new object, leaving the original reference unchanged. The identity check confirms that `a` and `b` no longer reference the same string object.
+
+*This example shows that string concatenation rebinds the name instead of mutating the original object.*
 
 ```python
-# String immutability — += creates a new object, not in-place modification
-
 a = "hello"
 b = a
 a += " world"
-print(a)
-print(b)
-print(a is b)   # Same object?
+print(f"a = {a!r}")
+print(f"b = {b!r}")
+print(f"Same object? {a is b}")
 ```
+
 ```text
 a = 'hello world'
 b = 'hello'
@@ -2304,15 +2278,17 @@ Same object? False
 
 Assigning a list to another variable copies the reference, not the data. Both variables point to the same list object — `append()` through either variable is visible through the other. Use `b = a.copy()` or `b = list(a)` for a shallow copy.
 
-```python
+*This example appends through one list alias and shows that the second alias sees the same mutation.*
 
+```python
 a = [1, 2, 3]
 b = a
 a.append(4)
-a
-b
-a is b   # Same object?
+print(f"a = {a}")
+print(f"b = {b}")
+print(f"Same object? {a is b}")
 ```
+
 ```text
 a = [1, 2, 3, 4]
 b = [1, 2, 3, 4]
@@ -2321,24 +2297,17 @@ Same object? True
 
 #### Dict keys must be hashable — only immutable types allowed
 
-Only objects with a `__hash__` method can be dict keys or set members. All immutable built-in types are hashable. Mutable types (`list`, `set`, `dict`) are not hashable — attempting to use them as keys raises `TypeError`. Convert to immutable equivalents: `list` → `tuple`, `set` → `frozenset`.
+Only objects with a stable `__hash__` implementation can be dict keys or set members. Mutable built-in containers (`list`, `set`, `dict`) are not hashable — attempting to use them as keys raises `TypeError`. Convert to immutable equivalents such as `tuple` and `frozenset`.
+
+*This example builds a dictionary with immutable key types, including a tuple and a `frozenset`.*
 
 ```python
-
 d = {}
-d["string_key"] = 1        # str is immutable → OK
-d[(1, 2)] = 2              # tuple is immutable → OK
-d[frozenset({3})] = 3      # frozenset is immutable → OK
-d   # Dict
+d["string_key"] = 1
+d[(1, 2)] = 2
+d[frozenset({3})] = 3
+print(f"Dict: {d}")
 ```
-
-> [!warning] Mutable Types Cannot Be Dict Keys
->
-> Lists and sets are mutable, so they're not hashable and cannot be used as dictionary keys. Use tuples (immutable) instead: `d[(1, 2)] = 4`.
-
-> [!success] Correct pattern
->
-> Replace mutable keys with immutable equivalents: `list` → `tuple`, `set` → `frozenset`. Both are hashable and can be used as dict keys or set elements: `d[(1, 2)] = 4` or `d[frozenset({3})] = "val"`.
 
 ```text
 Dict: {'string_key': 1, (1, 2): 2, frozenset({3}): 3}
@@ -2346,96 +2315,551 @@ Dict: {'string_key': 1, (1, 2): 2, frozenset({3}): 3}
 
 #### Demonstrate mutable function arguments — caller's object is modified
 
-When a mutable object is passed to a function, the function receives a reference to the same object. Mutations inside the function (`.append()`, `[key]=value`) affect the caller's variable. This is identical in behavior to C# reference types. To prevent modification, pass a copy: `add_item(my_list.copy(), 3)`.
+When a mutable object is passed to a function, the function receives a reference to the same object. Mutations inside the function (`.append()`, `[key]=value`) affect the caller's variable. To prevent modification, pass a copy such as `add_item(my_list.copy(), 3)`.
+
+*This example mutates a list inside a function and then prints the caller's modified list.*
 
 ```python
-
 def add_item(lst, item):
     lst.append(item)
 
 my_list = [1, 2]
 add_item(my_list, 3)
-my_list
+print(f"my_list: {my_list}")
 ```
+
 ```text
 my_list: [1, 2, 3]
 ```
 
-> [!example] Usage
->
-> > [!success] Applicability
-> >
-> > - **Interactive exploration and prototyping** — Python's REPL, Jupyter notebooks, and dynamic typing make it the fastest path from idea to working code for data exploration, one-off scripts, and ad-hoc analysis.
-> > - **Data engineering glue code** — connecting APIs, transforming files, orchestrating pipelines, parsing configuration. Python's ecosystem (`requests`, `pandas`, `polars`, `sqlalchemy`, `pydantic`) is unmatched for data plumbing.
-> > - **Rapid development over runtime performance** — when development speed matters more than microsecond execution time. Python's expressiveness reduces lines of code by 3–5x vs C# for typical data tasks.
-> > - **Team environments with mixed skill levels** — Python's low ceremony and readable syntax lower the barrier for analysts, data scientists, and junior engineers to contribute to shared codebases.
->
-> > [!failure] Limitations
-> >
-> > - **CPU-bound hot loops** — pure Python is 10–100x slower than C# for tight numerical loops. Use NumPy, Polars, or Cython for computation-heavy work, or move the logic to C#/.NET.
-> > - **Memory-constrained environments** — Python objects carry significant overhead (28 bytes for a single `int`). For millions of small objects, C# structs or arrays are far more memory-efficient.
-> > - **Type safety at compile time** — Python's dynamic typing means type errors surface at runtime. For large, long-lived codebases where refactoring safety matters, C#'s static type system catches more bugs earlier.
-> > - **Desktop/mobile GUI applications** — Python's GUI ecosystem (Tkinter, PyQt) is functional but inferior to C#'s WPF/MAUI/Blazor for production desktop applications.
-> > - **Concurrency with CPU parallelism** — the GIL (Global Interpreter Lock) prevents true parallel execution of Python threads. Use `multiprocessing`, `asyncio` (for I/O), or move CPU work to C#.
+## Workload Selection
 
-## Warnings
+Summarizes the workload profiles where Python is operationally strong and the cases where its runtime model or ecosystem constraints justify a different implementation strategy.
 
-> [!warning] Mutable default arguments
->
-> `def f(lst=[])` shares one list across all calls — the default is created once at function definition, not per call. This is Python's most common beginner bug.
+### Appropriate workloads
 
-> [!success] Correct pattern
->
-> Use `def f(lst=None): lst = lst if lst is not None else []`. For dataclasses, use `field(default_factory=list)`.
+Python is strongest where developer throughput, library breadth, and I/O orchestration matter more than raw per-core execution speed.
 
-> [!warning] Float equality
->
-> Never compare floats with `==` — `0.1 + 0.2 == 0.3` is `False`. Binary floating-point cannot represent all decimal fractions exactly.
+#### Interactive analysis and notebooks
 
-> [!success] Correct pattern
->
-> Use `math.isclose(a, b, rel_tol=1e-9)` for approximate comparison, or `Decimal` for exact decimal arithmetic.
+Python is a strong default for exploratory work because the REPL, notebooks, and data libraries shorten the loop between hypothesis, inspection, and revision. That matters when analysts or engineers need to profile payloads, validate assumptions, or iterate on transformations before the logic is hardened into a service or scheduled pipeline.
 
-> [!warning] `is` vs `==` confusion
->
-> `is` checks identity (same object in memory), `==` checks value equality. Small integers (-5 to 256) and short strings are cached, so `is` may misleadingly return `True` for equal values — but this is an implementation detail, not a guarantee.
+#### Data movement, orchestration, and automation
 
-> [!success] Correct pattern
->
-> Use `==` for value comparison. Use `is` only for singletons: `if x is None`, `if x is True`.
+Python fits control-plane work well: pulling data from APIs, moving files, coordinating database operations, and driving scheduled jobs. The language spends most of its time at I/O boundaries in these workloads, so the ecosystem matters more than interpreter overhead.
 
-> [!warning] Shared mutable references
->
-> `b = a` where `a` is a list copies the reference, not the data. `a.append(x)` changes `b` too.
+#### I/O-bound services and tooling
 
-> [!success] Correct pattern
->
-> Use `b = a.copy()` for a shallow copy, or `import copy; b = copy.deepcopy(a)` for nested structures.
+Python remains effective for services and utilities that wait on networks, disks, subprocesses, or remote systems more than they saturate CPU cores. `asyncio`, mature client libraries, and concise scripting syntax make it practical for integration-heavy tooling and service endpoints.
 
-## Recommendations
+#### Rapid iteration on heterogeneous data
 
-- **Always use f-strings** for string formatting in new code — they are faster, more readable, and less error-prone than `.format()` or `%`.
-- **Always use `is` for None checks** — `if x is None:` not `if x == None:`.
-- **Always use virtual environments** — never install project dependencies into system Python.
-- **Add type hints to public functions** — even in a dynamically typed language, type hints enable IDE support, documentation, and `mypy` static analysis.
-- **Prefer `Decimal` for money** — binary floats cause rounding errors that accumulate in financial calculations. Always construct from strings: `Decimal("19.99")`.
-- **Use `__slots__`** for data-heavy classes with millions of instances — reduces memory by 30–50%.
-- **Prefer EAFP over LBYL** — use `try/except` for expected failure paths rather than pre-checking with `if key in dict`. It is both more Pythonic and often faster.
-- **Pair `__eq__` with `__hash__`** — if your class defines equality, it must define hashing too, or instances cannot be used in dicts/sets.
+When schemas are still evolving or inputs arrive in several formats, Python's dynamic object model reduces the ceremony required to inspect, normalize, and reshape the data. That is useful during early pipeline design, one-off migrations, and operational tooling that must tolerate uneven source quality.
+
+#### Glue code around optimized engines
+
+Python works well as the orchestration layer around systems that do the heavy compute elsewhere, such as NumPy, Polars, vectorized database execution, and external services. In that role, Python coordinates the workflow while optimized engines handle the expensive inner loops.
+
+### Constraints and trade-offs
+
+The following constraints matter when deciding whether Python should remain the primary runtime in production.
+
+#### CPU-bound hot loops
+
+Pure Python loops pay interpreter overhead on every iteration, so tight numeric or per-record transformations often become throughput bottlenecks. When the hot path is compute-heavy, move it into NumPy, Polars, Cython, a native extension, or another runtime such as C#.
+
+#### Memory-constrained workloads
+
+Python objects carry significant per-object overhead compared with packed arrays or lower-level runtimes. If the workload is dominated by millions of small objects, prefer vectorized structures, columnar engines, or a runtime that gives tighter control over memory layout.
+
+#### Compile-time type guarantees
+
+Python detects most type mismatches only when the code executes. Type hints, `mypy`, and `pyright` improve safety substantially, but they remain optional tooling layers rather than hard compile-time enforcement.
+
+#### Desktop and mobile GUI applications
+
+Python can support GUI work, but its ecosystem is weaker than the primary .NET and platform-native stacks for long-lived desktop or mobile applications. Choose Python only when the surrounding problem is primarily scripting or data integration and the UI surface is secondary.
+
+#### CPU parallelism with threads
+
+In CPython, the GIL prevents parallel execution of Python bytecode across CPU threads. Threads remain useful for I/O concurrency, but CPU-bound scaling requires `multiprocessing`, vectorized or native libraries, or a runtime without that execution model.
+
+## Engineering Practices
+
+These practices keep basic Python code predictable in production and reduce the most common correctness defects.
+
+### String formatting and sentinel checks
+
+These conventions keep basic value formatting and sentinel handling explicit and predictable.
+
+#### Prefer f-strings in new code
+
+Use f-strings when the template is written inline with the code because they keep the literal text and interpolated expressions in one place. Prefer `.format()` only when the format string itself is dynamic or externally supplied.
+
+*This example formats a literal template with an inline f-string.*
+
+```python
+name = "Alice"
+total = 19.5
+message = f"{name} owes {total:.2f}"
+print(message)
+```
+
+```text
+Alice owes 19.50
+```
+
+#### Use `is None` for sentinel checks
+
+`None` is a singleton, so identity testing expresses the intended semantics directly and avoids surprises from overloaded equality methods. Reserve `==` for value comparison between objects that meaningfully participate in equality.
+
+*This example separates singleton checks from ordinary value comparison.*
+
+```python
+def choose_limit(limit=None):
+    if limit is None:
+        return 100
+    return limit
+
+print(choose_limit())
+print(choose_limit(25))
+print(None is None)
+```
+
+```text
+100
+25
+True
+```
+
+### Environment and interface discipline
+
+These conventions reduce dependency drift and make public contracts easier to validate during review and in CI.
+
+#### Keep dependencies inside a virtual environment
+
+Install project packages into the active virtual environment instead of the system interpreter. That isolates dependency graphs across projects and prevents toolchain drift from breaking unrelated work.
+
+*This example records the interpreter path and active virtual environment before dependency installation.*
+
+```python
+import os
+import sys
+
+interpreter = sys.executable
+active_venv = os.environ.get("VIRTUAL_ENV")
+```
+
+#### Add type hints to public APIs
+
+Type hints improve code review, editor support, and refactor safety by making the intended contract explicit. Validate those contracts in CI with `mypy`, `pyright`, or an equivalent checker rather than leaving them as unenforced comments.
+
+*This example annotates a public helper with explicit input and return types.*
+
+```python
+def normalize_id(value: str | None) -> str | None:
+    return value.strip().lower() if value else None
+```
+
+### Runtime correctness and object semantics
+
+These conventions address the cases where Python's runtime model most often causes correctness defects in production code.
+
+#### Use `Decimal` for currency and tax rules
+
+Use `Decimal` when the domain requires exact base-10 behavior, and construct values from strings rather than floats. That preserves the intended decimal value instead of inheriting a binary floating-point approximation.
+
+*This example performs currency arithmetic with exact decimal values.*
+
+```python
+from decimal import Decimal
+
+subtotal = Decimal("19.99")
+tax_rate = Decimal("0.21")
+print(subtotal * tax_rate)
+```
+
+```text
+4.1979
+```
+
+#### Apply `__slots__` only to stable, high-volume classes
+
+`__slots__` can reduce per-instance memory and block accidental attribute creation, but it also removes normal instance dictionaries and changes inheritance behavior. Use it only when the class shape is stable and the memory savings are operationally relevant.
+
+*This example defines a fixed-shape object without an instance dictionary.*
+
+```python
+class Point:
+    __slots__ = ("x", "y")
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+point = Point(1, 2)
+print(hasattr(point, "__dict__"))
+```
+
+```text
+False
+```
+
+#### Prefer targeted EAFP
+
+EAFP remains idiomatic in Python, but the exception handler must be narrow enough to distinguish expected control-flow failures from real defects. Catch only the exception type that the operation can legitimately raise.
+
+*This example catches only the conversion failure that `int()` is expected to raise.*
+
+```python
+value = "42"
+
+try:
+    age = int(value)
+except ValueError:
+    age = None
+
+print(age)
+```
+
+```text
+42
+```
+
+#### Pair `__eq__` with `__hash__` on value objects
+
+If a class defines value-based equality and instances are meant to participate in sets or dictionary keys, review `__hash__` at the same time. Base hashing only on immutable fields so equality and hash stability remain aligned over the object's lifetime.
+
+*This example keeps equality and hashing aligned so instances work in sets.*
+
+```python
+class UserId:
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        return isinstance(other, UserId) and self.value == other.value
+
+    def __hash__(self):
+        return hash(self.value)
+
+ids = {UserId(7)}
+print(UserId(7) in ids)
+```
+
+```text
+True
+```
+
+## Common Failure Modes
+
+Consolidates the recurring defects that appear in introductory Python code and the safe patterns that prevent them.
+
+### Shared-state and aliasing defects
+
+These entries cover the failure modes where object reuse or reference sharing produces hidden state changes.
+
+#### Mutable default arguments
+
+Default argument values are evaluated once at function definition time, not once per call. A mutable default therefore becomes shared state across invocations and accumulates prior mutations unless you use a sentinel such as `None` and allocate inside the function body.
+
+*This example contrasts a shared default list with a per-call allocation pattern.*
+
+```python
+def bad_append(item, bucket=[]):
+    bucket.append(item)
+    return bucket
+
+def good_append(item, bucket=None):
+    if bucket is None:
+        bucket = []
+    bucket.append(item)
+    return bucket
+
+print(bad_append(1))
+print(bad_append(2))
+print(good_append(1))
+print(good_append(2))
+```
+
+```text
+[1]
+[1, 2]
+[1]
+[2]
+```
+
+#### Shared mutable references
+
+Assigning a list or dictionary to another variable copies the reference, not the underlying object. Mutating through either name changes the same shared object unless you explicitly create a shallow or deep copy.
+
+*This example shows the difference between aliasing the same list and copying it.*
+
+```python
+a = [1, 2]
+b = a
+c = a.copy()
+b.append(3)
+
+print(a)
+print(b)
+print(c)
+```
+
+```text
+[1, 2, 3]
+[1, 2, 3]
+[1, 2]
+```
+
+### Numeric and comparison defects
+
+These entries cover the cases where value comparison and numeric representation diverge from naive expectations.
+
+#### Float equality
+
+Binary floating-point cannot represent many decimal fractions exactly, so direct equality checks across computed floats are brittle. Use `math.isclose()` for tolerance-based comparison or `Decimal` when the domain requires exact decimal semantics.
+
+*This example compares direct float equality with tolerance-based comparison.*
+
+```python
+import math
+
+print(0.1 + 0.2 == 0.3)
+print(math.isclose(0.1 + 0.2, 0.3))
+```
+
+```text
+False
+True
+```
+
+#### Identity used for value comparison
+
+Identity answers whether two names point to the same object, not whether two values are equal. `is` can appear to work for some literals because of interning, but that behavior is incidental and must not be used as application logic.
+
+*This example separates value equality from object identity.*
+
+```python
+x = [1, 2]
+y = [1, 2]
+
+print(x == y)
+print(x is y)
+print(None is None)
+```
+
+```text
+True
+False
+True
+```
+
+#### `Decimal` built from float
+
+`Decimal(0.1)` preserves the float approximation that already exists in memory, which defeats the purpose of moving to exact decimal arithmetic. Construct the value from a string or integer inputs so the decimal representation starts exact.
+
+*This example shows that `Decimal(0.1)` is not equivalent to `Decimal("0.1")`.*
+
+```python
+from decimal import Decimal
+
+print(Decimal(0.1) == Decimal("0.1"))
+print(Decimal("0.1") == Decimal("0.1"))
+```
+
+```text
+False
+True
+```
+
+### Exception-handling defects
+
+These entries cover patterns where Python's concise exception syntax is used too broadly and starts hiding real failures.
+
+#### Over-broad exception handling in EAFP code
+
+EAFP does not justify catching every exception class around a risky operation. A broad `except Exception` block suppresses unrelated defects and makes production diagnostics materially harder.
+
+*This example shows a broad handler swallowing an unrelated defect that a narrow handler would not hide.*
+
+```python
+def parse_age_bad(value):
+    try:
+        return int(value) / 0
+    except Exception:
+        return "hidden"
+
+def parse_age_good(value):
+    try:
+        return int(value)
+    except ValueError:
+        return "invalid"
+
+print(parse_age_bad("12"))
+print(parse_age_good("x"))
+```
+
+```text
+hidden
+invalid
+```
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `TypeError: unhashable type: 'list'` | Used a `list` as a dict key or set element | Convert to `tuple`: `d[tuple(my_list)] = val` |
-| `TypeError: 'NoneType' object is not iterable` | Function returned `None` instead of a collection | Check that the function has an explicit `return` statement |
-| `ValueError: invalid literal for int()` | Passed a non-numeric string to `int()` | Wrap in `try/except ValueError` |
-| `0.1 + 0.2 != 0.3` returns `True` | IEEE 754 binary float representation | Use `math.isclose()` or `Decimal` |
-| `NameError: name 'x' is not defined` | Variable used before assignment | Assign the variable before referencing it; check scope and spelling |
-| `UnboundLocalError` in function | Assigned to a variable that shadows an outer name | Use `nonlocal` or `global` keyword, or rename the local variable |
-| Mutable default argument shares state across calls | Default `list`/`dict` is created once at definition time | Use `None` as default and create inside the function body |
-| `SyntaxError: invalid syntax` on `:=` | Running on Python < 3.8 | Upgrade to Python 3.8+ or rewrite without the walrus operator |
-| `ModuleNotFoundError` | Package not installed in the active virtual environment | Run `pip install <package>` inside the correct venv |
-| `PermissionError` when importing | System Python is protected or pip needs `--user` flag | Activate a virtual environment first; never use `sudo pip` |
+Maps common runtime and language errors to their immediate cause and first corrective action.
+
+### Collection and conversion errors
+
+These errors usually come from invalid value shapes, missing returns, or unsafe coercion at runtime boundaries.
+
+#### Unhashable list used as a dict key or set element
+
+This error means a mutable container such as `list` was used where Python requires a stable hash value. Convert the key material to an immutable equivalent such as `tuple` or `frozenset` before inserting it into a dictionary or set.
+
+*This example converts list-based key material to a tuple before insertion.*
+
+```python
+tags = ["python", "data"]
+lookup = {tuple(tags): "ok"}
+print(lookup[("python", "data")])
+```
+
+```text
+ok
+```
+
+#### `None` returned where iteration expects a collection
+
+This usually means the function returned `None` implicitly because execution reached the end of the function without an explicit `return`. Verify the branch structure and ensure every successful path returns the collection type that the caller expects.
+
+*This example returns an empty list instead of allowing an implicit `None`.*
+
+```python
+def get_items(flag):
+    if flag:
+        return [1, 2]
+    return []
+
+print(get_items(False))
+```
+
+```text
+[]
+```
+
+#### Invalid integer literal passed to `int()`
+
+`int()` accepts only strings that already represent integers in the expected format. Wrap the conversion in `try/except ValueError` when the input originates from users, files, or external systems that can produce malformed values.
+
+*This example catches malformed numeric input at the conversion boundary.*
+
+```python
+value = "12x"
+
+try:
+    parsed = int(value)
+except ValueError:
+    parsed = None
+
+print(parsed)
+```
+
+```text
+None
+```
+
+### Scope and binding errors
+
+These errors come from name resolution and Python's local-binding rules inside function bodies.
+
+#### Name used before assignment
+
+`NameError` indicates that the name does not exist in the current scope at the point where Python evaluates it. Check spelling first, then verify the variable is bound before the reference and that the code path actually executed the binding statement.
+
+*This example binds the name before it is referenced.*
+
+```python
+x = 1
+print(x)
+```
+
+```text
+1
+```
+
+#### Local rebinding causes `UnboundLocalError`
+
+This error occurs when a function assigns to a name that also exists in an outer scope and then tries to read the name before the local assignment has run. Rename the local variable or declare `nonlocal` or `global` only when shared state is truly intended.
+
+*This example uses `nonlocal` to make the binding intent explicit inside a nested function.*
+
+```python
+def outer():
+    total = 1
+
+    def inner():
+        nonlocal total
+        total += 2
+        return total
+
+    return inner()
+
+print(outer())
+```
+
+```text
+3
+```
+
+### Interpreter and environment errors
+
+These errors point to runtime-version mismatches or packages being resolved from the wrong interpreter context.
+
+#### Walrus operator used on a pre-3.8 interpreter
+
+Assignment expressions were introduced in Python 3.8, so earlier interpreters treat `:=` as invalid syntax. Confirm the active interpreter with `sys.version` and either upgrade the runtime or rewrite the expression as a separate assignment statement.
+
+*This example checks whether the active interpreter supports assignment expressions.*
+
+```python
+import sys
+
+print(sys.version_info >= (3, 8))
+```
+
+```text
+True
+```
+
+#### Package missing from the active virtual environment
+
+`ModuleNotFoundError` usually means the dependency was installed into a different interpreter or virtual environment from the one currently running the program. Activate the intended environment first, then install the package there and verify with `sys.executable` if necessary.
+
+*This example captures the interpreter and active virtual environment before package installation.*
+
+```python
+import os
+import sys
+
+interpreter = sys.executable
+active_venv = os.environ.get("VIRTUAL_ENV")
+```
+
+#### Protected interpreter installation or incorrect environment activation
+
+`PermissionError` during import or package management usually points to a protected system interpreter, a locked path, or an operation being attempted outside the intended virtual environment. Activate the project environment and avoid `sudo pip` or equivalent system-wide package mutations.
+
+*This example creates a project-local virtual environment before package installation.*
+
+```powershell
+python -m venv .venv
+```
+
+## Related Topics
+
+Points to adjacent material when the core language types start affecting serialization and pipeline design decisions.
+
+### Adjacent references
 
 - **Data Architecture: Serialization** — [Serialization Formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for when `bytes`, JSON, and Parquet choices matter in pipelines

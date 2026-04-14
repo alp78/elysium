@@ -193,8 +193,8 @@ status: complete
 stateDiagram-v2
   [*] --> Created
   Created --> Running: docker compose up
-  Running --> Healthy: healthcheck passes\nstoxx-db, app-airflow-scheduler-1
-  Running --> Unhealthy: healthcheck fails\napp-airflow-dag-processor-1
+  Running --> Healthy: healthcheck passes<br/>stoxx-db, app-airflow-scheduler-1
+  Running --> Unhealthy: healthcheck fails<br/>app-airflow-dag-processor-1
   Running --> Exited: process ends or container is stopped
   Exited --> Running: docker start / compose up
   Exited --> Removed: docker rm / compose down

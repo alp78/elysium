@@ -18,153 +18,91 @@ status: complete
 > "Unix was not designed to stop you from doing stupid things, because that would also stop you from doing clever things."
 >
 > — **Douglas Gwyn**
->
-> "Only wimps use tape backup. Real men just upload their important stuff on ftp and let the rest of the world mirror it."
->
-> — **Linus Torvalds**, Usenet post (1996)
 
 > [!abstract]- Summary
 >
-> Safe patterns for copying, moving, deleting, and permissioning files in Linux and PowerShell production environments — covering the tools, their failure modes, and when to use each.
->
-> **Linux file manipulation tools**
-> - `cp -a` preserves timestamps, permissions, and symlinks; plain `cp -r` resets `mtime` and breaks downstream change detection
-> - `rsync` supports resumable transfers, checksum verification, and `--delete` sync; trailing slash on source controls whether contents or the directory itself is copied
-> - `mv` is atomic on the same filesystem (single `rename()` syscall); cross-filesystem `mv` is copy + delete — prefer `rsync -a src dst && rm src` for critical cross-filesystem moves
-> - `rm -rf` is immediate and unrecoverable; the trash pattern (move to timestamped staging dir, verify, then delete) is mandatory in scripts
-> - `rename` (Perl) applies regex substitutions to filenames in bulk; Debian and RHEL ship incompatible versions — check `rename --version`
-> - `mkdir -p` creates nested paths idempotently; `chmod` sets permissions in octal (755, 644, 600) or symbolic (`u+x`) notation; `chown -R uid:0` fixes Docker/Airflow bind-mount ownership
-> - `du -sh` reports directory size; `df -h` reports filesystem free space — check both bytes and inodes (`df -i`) before large writes
->
-> **PowerShell file manipulation tools**
-> - `Copy-Item -Recurse` does not preserve timestamps by default; no direct equivalent of `cp -a`
-> - `Move-Item` is atomic on the same drive; cross-drive moves are copy + delete
-> - `Rename-Item` renames in place; pipe `Get-ChildItem` into it for batch renames with `-NewName { $_.Name -replace ... }`
-> - `Remove-Item -Recurse -Force` has no recycle bin and no confirmation; use `-WhatIf` to preview; use `[System.IO.Directory]::Delete($path, $true)` when `-Recurse` fails with "directory is not empty"
-> - `icacls` manages NTFS ACLs: `/grant "user:(OI)(CI)F"` for recursive full control, `/reset /T` to restore inheritance; `takeown` is required when locked out before `icacls` can act
-> - `Get-PSDrive -PSProvider FileSystem` shows used/free per drive; `Get-ChildItem -Recurse | Measure-Object -Sum Length` calculates directory size
->
-> **Operations and safety**
-> - Use `cp -a` for data directories, `rsync` for large/network transfers, and the trash pattern for any script-driven deletion
-> - Never `rm -rf $VAR/*` without `set -u`; an unset variable expands to `rm -rf /*`
-> - Always dry-run `rsync --delete` with `-n` before the real run; a wrong trailing slash with `--delete` wipes the destination
-> - Do not move or delete live database files (`.mdf`, `.ldf`) directly — use database backup/restore tools
-> - Cross-server transfers require `rsync -e ssh`, `scp`, or `gsutil` — `cp` and `mv` are local-only
-> - 6 troubleshooting scenarios covered: Docker permission denied, rsync --delete over-deletion, cp -r timestamp reset, slow cross-filesystem mv, Remove-Item -Recurse failure, chmod no-op on FAT32/exFAT
+> Use archive-preserving copies when metadata matters, `rsync` when transfer integrity matters, same-filesystem renames when atomic publication matters, and staged deletion when a path could be wrong. The Linux and PowerShell sections below keep the command surfaces separate, use disposable fixtures, and verify every state-changing example with live output.
 
 > [!note]- Glossary
 >
 > **`cp`**
-> - The Linux command for copying files and directories; without flags copies a single file, `-r` copies recursively, `-a` (archive) preserves timestamps, permissions, ownership, and symlinks.
-> - Central to staging pipeline data: always use `cp -a` for data directories so downstream change-detection logic based on `mtime` is not broken.
->
-> > [!warning] `-r` silently resets modification times
-> >
-> > `cp -r` copies all files but sets every `mtime` to the current time. Tools using `find -newer` or `stat` will treat every file as "new." Use `cp -a` whenever timestamps matter.
+> - The standard Linux command for copying files and directories; `-r` copies trees and `-a` preserves metadata such as timestamps, modes, ownership, and symlinks.
+> - Use it for local copies where you control both paths and do not need resumable transfer logic.
+> - Plain recursive copies are not archive copies; use `cp -a` when downstream jobs rely on original metadata.
 >
 > ---
 >
 > **`rsync`**
-> - A file-transfer tool that copies only the delta between source and destination, supports checksum verification, and resumes after interruption by re-running the same command.
-> - The standard choice for large, networked, or unreliable transfers; `-ah --progress` gives human-readable output with per-file speed; `--delete` keeps source and destination in exact sync.
->
-> > [!danger] Trailing slash controls scope with `--delete`
-> >
-> > `rsync -a src/ dst/` copies contents into `dst/`; `rsync -a src dst/` creates `dst/src/`. Combined with `--delete`, a wrong slash wipes the destination. Always dry-run with `rsync -avn --delete` first.
+> - A file-transfer tool that compares source and destination state and copies only what is needed.
+> - Use it for large local copies, network transfers, resumable jobs, and exact synchronization with `--delete`.
+> - A trailing slash on the source changes the copy boundary; with `--delete`, the wrong slash can prune the wrong destination tree.
 >
 > ---
 >
 > **`mv`**
-> - The Linux command for moving and renaming files; same-filesystem moves are a single `rename()` syscall (instant, atomic); cross-filesystem moves are copy + delete (not atomic).
-> - Used for atomic output commits in pipelines: write to a temp file, then `mv` it to the final destination — same-filesystem `mv` prevents downstream readers from seeing a partial file.
->
-> > [!warning] Cross-filesystem `mv` can leave partial files
-> >
-> > If a cross-filesystem `mv` fails mid-copy (disk full, permission error), the partial copy remains at the destination and the original is still at the source. Use `rsync -a src dst && rm src` for verifiable cross-filesystem moves.
+> - The Linux move and rename command.
+> - Use it for in-place renames and same-filesystem publish steps after writing to a temporary path.
+> - Same-filesystem moves are fast renames; cross-filesystem moves degrade into copy-then-delete and lose the all-or-nothing behavior.
 >
 > ---
 >
 > **`rm`**
-> - The Linux command for permanently deleting files and directories; there is no system trash — deletion is immediate and unrecoverable without a backup.
-> - The most operationally dangerous standard command: `rm -rf` with a wrong path or unset variable can destroy entire directory trees instantly.
->
-> > [!danger] Unset variable expands to `rm -rf /*`
-> >
-> > `rm -rf "$STAGING_DIR"/*` with an unset `STAGING_DIR` expands to `rm -rf /*`. Always enable `set -u` and verify paths before deletion. Use the trash pattern in all scripts.
+> - The Linux command for permanent deletion.
+> - Use it for deliberate removal when you have already verified the path and recovery story.
+> - `rm -rf` is immediate and has no recycle bin; in automation, move targets into a trash directory first.
 >
 > ---
 >
 > **Trash pattern**
-> - A safe deletion strategy: move the target to a timestamped staging directory (`/tmp/trash_$(date +%Y%m%d_%H%M%S)`) instead of deleting immediately, verify, then delete the staging directory.
-> - Provides a recovery window at the cost of a 30-second verification step — the only safe approach for `rm`-equivalent operations in automated scripts.
->
-> > [!warning] Skipping verification defeats the pattern
-> >
-> > The trash pattern only helps if you inspect the staging directory before final deletion. An unverified trash-then-delete is functionally equivalent to `rm -rf` — just slower.
+> - A safe-delete workflow that moves the target into a dedicated staging directory before final removal.
+> - Use it in scripts when the delete path comes from variables, globs, or upstream logic.
+> - The pattern only helps if you inspect the staging directory before the final `rm -rf`.
 >
 > ---
 >
 > **`chmod`**
-> - The Linux command for setting file permissions using octal notation (e.g., `755`) or symbolic notation (e.g., `u+x`); each octal digit encodes read (4) + write (2) + execute (1) for owner, group, and others.
-> - Common production values: `755` for scripts and executables, `644` for data files and configs, `600` for secrets and key files, `700` for private directories.
->
-> > [!info] `chmod` modifies the target, not the symlink
-> >
-> > `chmod 600 my_link` changes permissions on the target file the symlink points to, not the symlink itself. On most Linux filesystems, symlink permissions are ignored entirely — the target's permissions govern access.
+> - The Linux command for changing permission bits with octal or symbolic notation.
+> - Use it to make scripts executable, lock down secrets, or normalize file modes in deployment steps.
+> - Mode changes only behave predictably on filesystems that support Unix permissions; FAT32, exFAT, and some mounted Windows paths do not.
 >
 > ---
 >
 > **`chown`**
-> - The Linux command for changing file ownership; `chown user:group file` sets both owner and group in a single operation; `-R` applies recursively.
-> - Required in Docker/Airflow environments where containers run as a specific UID (Airflow default: `50000`) and need write access to host-mounted directories.
->
-> > [!warning] Mismatched container UID causes silent write failures
-> >
-> > Setting `chown root:root` on a bind mount that an Airflow container (UID 50000) must write to causes "Permission denied" at runtime. Always match the container's UID — verify with `docker inspect`.
+> - The Linux command for changing file ownership.
+> - Use it when a service account, container UID, or deployment user must own a path.
+> - Ownership changes usually require root or `sudo`, and container bind mounts fail if the host path owner does not match the runtime UID.
 >
 > ---
 >
 > **`rename` (Perl)**
-> - A Debian/Ubuntu utility that applies a Perl regex substitution (`s/old/new/`) to filenames for bulk renaming; not installed by default on RHEL/CentOS.
-> - Used for batch extension changes, prefix/suffix operations, and pattern-based renames; `-n` dry-runs the operation before committing.
->
-> > [!danger] Two incompatible `rename` utilities exist
-> >
-> > Debian/Ubuntu ship Perl `rename` (`rename 's/old/new/' files`); RHEL/CentOS ship util-linux `rename` (`rename old new files`) — completely different syntax. Running the wrong version silently corrupts filenames. Check with `rename --version`.
+> - A batch renamer that applies a Perl substitution expression to filenames.
+> - Use it for consistent pattern-based renames when the Perl implementation is installed.
+> - Debian and Ubuntu ship a different `rename` utility than several RHEL-family systems, so verify the implementation with `rename --version`.
 >
 > ---
 >
 > **`du` / `df`**
-> - `du` (disk usage) reports how much space a file or directory occupies on disk; `df` (disk free) reports filesystem-level used/available space for all mounted filesystems.
-> - Always check `df -h` before large copies or data imports to avoid mid-transfer failures; check `df -i` for inode exhaustion — a filesystem can have 0% byte usage but 100% inode usage, blocking all new file creation.
->
-> > [!warning] Inode exhaustion looks identical to disk-full errors
-> >
-> > Millions of small files (log entries, cache shards) can exhaust inodes while leaving gigabytes free. `df -i` reveals this; `df -h` does not. The fix is deleting many small files, not freeing large ones.
+> - `du` reports how much disk space a path consumes; `df` reports how much free space and inode capacity the underlying filesystem still has.
+> - Use `du` to find the heavy directories and `df` to confirm whether the filesystem itself can absorb more writes.
+> - Byte usage and inode usage can fail independently, so large write jobs should check both `df -h` and `df -i`.
 >
 > ---
 >
 > **`icacls`**
-> - The Windows command-line tool for viewing and modifying NTFS access control lists (ACLs); the functional equivalent of `chmod` on Linux; inheritance flags `(OI)(CI)` are required for permissions to cascade to children.
-> - Used to grant (`/grant`), deny (`/deny`), remove (`/remove`), or reset (`/reset /T`) NTFS permissions on files and directories; `takeown` must precede `icacls` when ownership is lost.
->
-> > [!warning] Missing inheritance flags limit scope to the directory only
-> >
-> > `/grant "user:F"` grants Full Control on the directory itself but not on its files or subdirectories. Use `/grant "user:(OI)(CI)F"` for permissions that cascade to all children.
+> - The Windows ACL tool for viewing, granting, removing, and resetting NTFS permissions.
+> - Use it when directory access depends on inherited Windows permissions rather than Unix mode bits.
+> - Grant entries need inheritance flags such as `(OI)(CI)` if the permission should cascade to child files and folders.
 >
 > ---
 >
 > **`Remove-Item`**
-> - The PowerShell cmdlet for deleting files and directories; `-Recurse -Force` is the equivalent of `rm -rf` — no confirmation, no recycle bin, no recovery.
-> - Use `-WhatIf` to preview every file that would be deleted before committing; use `[System.IO.Directory]::Delete($path, $true)` when `-Recurse` fails with "directory is not empty" due to open file handles.
->
-> > [!danger] `-Recurse` has no confirmation and no undo
-> >
-> > `Remove-Item -Recurse -Force` deletes immediately and permanently. There is no `-WhatIf` safety net once the command runs. Always inspect with `Get-ChildItem` and run with `-WhatIf` first.
+> - The PowerShell cmdlet for deleting files and directories.
+> - Use it for deliberate file-system cleanup after you have inspected the target path or previewed with `-WhatIf`.
+> - `Remove-Item -Recurse -Force` has no recycle bin and sometimes needs a .NET fallback when other processes still hold handles.
 
 ## Linux file manipulation tools
 
-Linux provides dedicated single-purpose tools for each file operation: `cp` for copying, `mv` for moving and renaming, `rm` for deletion, `rsync` for resumable transfers, `rename` for batch renames, `mkdir` for directory creation, `chmod` for permissions, `chown` for ownership, `du` for directory size, and `df` for disk space. Each tool has a narrow contract — composing them correctly is where safe file handling begins.
+Linux keeps file manipulation in small, explicit utilities. The demonstrations below were run in WSL against disposable paths under `/tmp/elysium-file-manipulation`, so the output shows real command behavior without touching production data.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#7aa2f7', 'primaryTextColor': '#c0caf5', 'primaryBorderColor': '#3b4261', 'lineColor': '#7dcfff', 'secondaryColor': '#1a1b26', 'tertiaryColor': '#16161e', 'background': '#1a1b26', 'mainBkg': '#1a1b26', 'nodeBorder': '#3b4261', 'clusterBkg': '#16161e', 'titleColor': '#c0caf5', 'edgeLabelBackground': '#1a1b26', 'attributeBackgroundColorEven': '#16161e', 'attributeBackgroundColorOdd': '#1a1b26'}}}%%
@@ -189,56 +127,83 @@ flowchart TD
 
 ### Linux | cp | copy files and directories
 
-`cp` copies files and directories. Without flags it copies a single file. With `-r` it copies directories recursively. With `-a` it preserves all metadata (timestamps, permissions, symlinks).
+`cp` is the direct tool for local copies. Use plain `cp` for one file, `cp -r` for a directory tree, and `cp -a` when timestamps, modes, symlinks, and ownership have to survive the copy intact.
 
 #### Copy a single file
 
-Copies `source.txt` to `dest.txt`. If `dest.txt` already exists it is silently overwritten — use `-i` to prompt before overwrite or `-n` to skip.
+This is the baseline local copy. Add `-v` in demonstrations or incident response work when you want the destination path echoed back immediately.
 
 ```bash
-cp source.txt dest.txt
+cp -v /tmp/elysium-file-manipulation/cp-single/source.txt /tmp/elysium-file-manipulation/cp-single/dest.txt
+```
+
+```text
+'/tmp/elysium-file-manipulation/cp-single/source.txt' -> '/tmp/elysium-file-manipulation/cp-single/dest.txt'
 ```
 
 #### Copy a directory recursively
 
-`-r` enables recursive copy. All subdirectories and files are copied, but metadata (timestamps, permissions) is not preserved — use `-a` for that.
+`-r` copies the tree structure and file contents, but it is still not archive mode. Use this form for quick copies when you do not care about preserving the original metadata.
 
 ```bash
-cp -r source_dir/ dest_dir/
+cp -rv /tmp/elysium-file-manipulation/cp-recursive/source_dir /tmp/elysium-file-manipulation/cp-recursive/dest_dir
+```
+
+```text
+'/tmp/elysium-file-manipulation/cp-recursive/source_dir' -> '/tmp/elysium-file-manipulation/cp-recursive/dest_dir'
+'/tmp/elysium-file-manipulation/cp-recursive/source_dir/nested' -> '/tmp/elysium-file-manipulation/cp-recursive/dest_dir/nested'
+'/tmp/elysium-file-manipulation/cp-recursive/source_dir/nested/file.txt' -> '/tmp/elysium-file-manipulation/cp-recursive/dest_dir/nested/file.txt'
 ```
 
 #### Archive copy preserving all metadata
 
-`-a` (archive) combines `-r` with full metadata preservation: timestamps, permissions, ownership, and symlinks. Use this when copying pipeline data directories — downstream processes often rely on modification times for change detection.
+`cp -a` is the safer default for data directories because it preserves the state that downstream tooling often keys on. That includes `mtime`, modes, and symlink shape.
 
 ```bash
-cp -a source_dir/ dest_dir/
+cp -av /tmp/elysium-file-manipulation/cp-archive/source_dir /tmp/elysium-file-manipulation/cp-archive/dest_dir
 ```
 
-> [!warning] cp -r does not preserve timestamps
->
-> Plain `cp -r` copies files but resets `mtime` to the current time. If a downstream
-> process uses `find -newer` or `stat` to detect changes, every file appears "new" after
-> a `cp -r` copy. Always use `cp -a` for data directories.
+```text
+'/tmp/elysium-file-manipulation/cp-archive/source_dir' -> '/tmp/elysium-file-manipulation/cp-archive/dest_dir'
+'/tmp/elysium-file-manipulation/cp-archive/source_dir/config.ini' -> '/tmp/elysium-file-manipulation/cp-archive/dest_dir/config.ini'
+'/tmp/elysium-file-manipulation/cp-archive/source_dir/config.link' -> '/tmp/elysium-file-manipulation/cp-archive/dest_dir/config.link'
+```
 
-> [!success] Use cp -a for data directories
->
-> `cp -a source_dir/ dest_dir/` preserves timestamps and permissions, keeping downstream change-detection logic intact.
+```bash
+stat -c '%n %A %y %N' /tmp/elysium-file-manipulation/cp-archive/dest_dir/config.ini /tmp/elysium-file-manipulation/cp-archive/dest_dir/config.link
+```
+
+```text
+/tmp/elysium-file-manipulation/cp-archive/dest_dir/config.ini -rw-r--r-- 2024-01-02 03:04:00.000000000 +0100 '/tmp/elysium-file-manipulation/cp-archive/dest_dir/config.ini'
+/tmp/elysium-file-manipulation/cp-archive/dest_dir/config.link lrwxrwxrwx 2026-04-14 10:49:21.668580698 +0200 '/tmp/elysium-file-manipulation/cp-archive/dest_dir/config.link' -> 'config.ini'
+```
 
 #### Skip existing files (no-clobber)
 
-`-n` prevents overwriting an existing destination file. The copy is silently skipped if the target already exists.
+No-clobber copies are intentionally quiet when the destination already exists, so verify the target immediately after the command if you need proof that the original file stayed in place.
 
 ```bash
-cp -n source.txt dest.txt
+cp -n /tmp/elysium-file-manipulation/cp-noclobber/source.txt /tmp/elysium-file-manipulation/cp-noclobber/dest.txt
+```
+
+```bash
+cat /tmp/elysium-file-manipulation/cp-noclobber/dest.txt
+```
+
+```text
+destination-stays
 ```
 
 #### Copy only when source is newer
 
-`-u` copies only if the source modification time is newer than the destination, or if the destination does not exist. Useful for incremental updates.
+`-u` turns `cp` into a simple timestamp-based update step. It is useful in build or staging workflows that do not need `rsync` but still want to avoid replacing newer destinations.
 
 ```bash
-cp -u source.txt dest.txt
+cp -vu /tmp/elysium-file-manipulation/cp-update/source.txt /tmp/elysium-file-manipulation/cp-update/dest.txt
+```
+
+```text
+'/tmp/elysium-file-manipulation/cp-update/source.txt' -> '/tmp/elysium-file-manipulation/cp-update/dest.txt'
 ```
 
 | Flag | Syntax | Description |
@@ -256,47 +221,62 @@ cp -u source.txt dest.txt
 
 ### Linux | rsync | resumable copy with checksum verification
 
-`rsync` is the standard tool for large or resumable file copies. If interrupted, re-run the same command — it picks up where it left off by comparing checksums. The `-a` flag enables archive mode (recursive + preserve all attributes).
+Use `rsync` when the copy might be large, remote, restartable, or destructive to the destination. It is the right tool for transfers that need visibility and a dry-run phase before commit.
 
 #### Copy a file with progress display
 
-`-ah` enables archive mode and human-readable output. `--progress` prints per-file transfer speed and a running byte count.
+`--progress` makes a one-off copy observable. In automation, keep the progress output for operator runs and drop it when logs need to stay compact.
 
 ```bash
-rsync -ah --progress source.tar.gz dest/
+rsync -ah --progress /tmp/elysium-file-manipulation/rsync-progress/source.tar.gz /tmp/elysium-file-manipulation/rsync-progress/dest/
+```
+
+```text
+sending incremental file list
+source.tar.gz
+          4.10K 100%    0.00kB/s    0:00:00
+          4.10K 100%    0.00kB/s    0:00:00 (xfr#1, to-chk=0/1)
 ```
 
 #### Sync a directory, deleting removed files from destination
 
-`--delete` removes destination files no longer present in the source. Always dry-run before using `--delete` to confirm the source path is correct.
+`--delete` makes the destination converge on the source. That is what you want for mirror directories and exactly what you do not want if the source path is wrong, so dry-run this form before the live pass.
 
 ```bash
-rsync -ah --delete src/ dest/
+rsync -avh --delete /tmp/elysium-file-manipulation/rsync-delete/src/ /tmp/elysium-file-manipulation/rsync-delete/dest/
 ```
 
-> [!danger] rsync trailing slash behavior
->
-> A trailing `/` on the source means "copy the **contents** of this directory." No
-> trailing `/` means "copy the **directory itself**."
->
-> | Command | Result |
-> |---|---|
-> | `rsync -a src/ dest/` | Files land directly in `dest/` |
-> | `rsync -a src dest/` | Creates `dest/src/` containing the files |
->
-> Combined with `--delete`, a wrong trailing slash can **wipe the destination directory**.
+```text
+sending incremental file list
+deleting extra.txt
+keep.txt
 
-> [!success] Always dry-run before --delete
->
-> `rsync -avn --delete src/ dest/` shows exactly what would be transferred and deleted
-> without touching any files. Make this a habit before any `rsync --delete` operation.
+sent 128 bytes  received 48 bytes  352.00 bytes/sec
+total size is 5  speedup is 0.03
+```
+
+The source slash controls whether `rsync` copies the directory itself or only its contents:
+
+| Command | Result |
+|---|---|
+| `rsync -a src/ dest/` | Files land directly in `dest/` |
+| `rsync -a src dest/` | Creates `dest/src/` containing the files |
 
 #### Dry-run preview
 
-`-n` simulates the transfer and prints every file that would be sent or deleted without making any changes to either side.
+Dry runs are the last safe place to catch a bad trailing slash, a wrong destination, or an unexpected delete set.
 
 ```bash
-rsync -avn --delete src/ dest/
+rsync -avn --delete /tmp/elysium-file-manipulation/rsync-dryrun/src/ /tmp/elysium-file-manipulation/rsync-dryrun/dest/
+```
+
+```text
+sending incremental file list
+deleting extra.txt
+keep.txt
+
+sent 79 bytes  received 28 bytes  214.00 bytes/sec
+total size is 5  speedup is 0.05 (DRY RUN)
 ```
 
 | Flag | Syntax | Description |
@@ -316,34 +296,31 @@ rsync -avn --delete src/ dest/
 
 ### Linux | mv | move and rename files
 
-`mv` renames files on the same filesystem using a single `rename()` syscall — instantaneous regardless of file size. When source and destination are on different filesystems, `mv` falls back to copy + delete.
+`mv` is the fast path for renames and same-filesystem publishes. When source and destination live on different filesystems, treat it as copy-then-delete and switch to `rsync` if you need verifiable progress or a resumable fallback.
 
 #### Rename a file
 
-On the same filesystem, `mv` is a single `rename()` syscall — instantaneous regardless of file size.
+This is the standard same-directory rename. Use it after writing a temporary file in the final destination directory so readers never see a partial publish.
 
 ```bash
-mv old.txt new.txt
+mv -v /tmp/elysium-file-manipulation/mv-rename/old.txt /tmp/elysium-file-manipulation/mv-rename/new.txt
+```
+
+```text
+renamed '/tmp/elysium-file-manipulation/mv-rename/old.txt' -> '/tmp/elysium-file-manipulation/mv-rename/new.txt'
 ```
 
 #### Move a file to another directory
 
-If the destination directory does not exist, `mv` renames the file to that name rather than moving it inside. Verify the destination path exists first.
+This form relocates the file into an existing directory. If the target is on another filesystem and the payload is large, prefer `rsync -ah --remove-source-files` so you can watch and verify the transfer.
 
 ```bash
-mv file.txt /other/dir/
+mv -v /tmp/elysium-file-manipulation/mv-move/file.txt /tmp/elysium-file-manipulation/mv-move/target-dir/
 ```
 
-> [!warning] mv across filesystems is not atomic
->
-> Same-filesystem `mv` is a single syscall — it either succeeds or fails, nothing in
-> between. Cross-filesystem `mv` is copy-then-delete. If the copy fails (disk full,
-> permission error), you end up with a partial file at the destination and the original
-> still at the source.
-
-> [!success] Use rsync for critical cross-filesystem moves
->
-> `rsync -a src dst && rm src` gives you a verified copy before deletion. Interruption leaves the source intact.
+```text
+renamed '/tmp/elysium-file-manipulation/mv-move/file.txt' -> '/tmp/elysium-file-manipulation/mv-move/target-dir/file.txt'
+```
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
@@ -355,29 +332,31 @@ mv file.txt /other/dir/
 
 ### Linux | rename | batch rename with Perl regex
 
-The Perl-based `rename` utility applies a regex substitution to every matching filename. Install with `apt install rename` (Debian/Ubuntu). Not installed by default.
+The Perl `rename` utility is efficient when you have the expected implementation installed. The portable fallback is still a shell loop around `mv`, which is why both forms are worth keeping on hand.
 
 #### Batch rename file extensions
 
-The Perl `s/old/new/` regex is applied to each matching filename. Only the filename is modified — the directory path is unchanged. The `.csv$` anchor prevents matching `.csv` embedded in the middle of a name.
+This form rewrites matching filenames in place. Check `rename --version` first because Debian-family and some RHEL-family systems do not ship the same syntax.
 
 ```bash
-rename 's/\.csv$/.csv.bak/' *.csv
+rename -v 's/\.csv$/.csv.bak/' /tmp/elysium-file-manipulation/rename-perl/*.csv
 ```
 
-> [!warning] Two different rename utilities
->
-> Debian/Ubuntu ship the **Perl rename** (`rename 's/old/new/' files`). RHEL/CentOS ship
-> the **util-linux rename** (`rename old new files`) — completely different syntax. Check
-> which you have with `rename --version`. If you need portability, use a `for` loop with
-> `mv` instead.
+```text
+/tmp/elysium-file-manipulation/rename-perl/report-01.csv renamed as /tmp/elysium-file-manipulation/rename-perl/report-01.csv.bak
+/tmp/elysium-file-manipulation/rename-perl/report-02.csv renamed as /tmp/elysium-file-manipulation/rename-perl/report-02.csv.bak
+```
 
-> [!success] Portable alternative using a for loop
->
-> ```bash
-> for f in *.csv; do mv "$f" "${f%.csv}.csv.bak"; done
-> ```
-> Works on any system without the `rename` utility.
+When you need the same behavior on systems without the Perl utility, a loop around `mv` is the portable fallback.
+
+```bash
+for f in /tmp/elysium-file-manipulation/rename-portable/*.csv; do mv -v "$f" "${f%.csv}.csv.bak"; done
+```
+
+```text
+renamed '/tmp/elysium-file-manipulation/rename-portable/report-01.csv' -> '/tmp/elysium-file-manipulation/rename-portable/report-01.csv.bak'
+renamed '/tmp/elysium-file-manipulation/rename-portable/report-02.csv' -> '/tmp/elysium-file-manipulation/rename-portable/report-02.csv.bak'
+```
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
@@ -387,58 +366,86 @@ rename 's/\.csv$/.csv.bak/' *.csv
 
 ### Linux | rm | delete files and directories safely
 
-`rm` permanently deletes files and directories. There is no system trash for `rm` — deletion is immediate and unrecoverable without a backup. Safe delete patterns replace direct `rm -rf` with a move-to-staging approach that preserves a recovery window.
+`rm` is permanent. For interactive one-off cleanup, `-v` makes the target explicit. For scripts, move the path into a staging directory first and verify it before final deletion.
 
 #### Delete a single file
 
-`rm` permanently deletes the file with no trash or undo. The space is reclaimed immediately on most filesystems.
+Use this for a confirmed single-file delete. There is no recycle bin and no rollback.
 
 ```bash
-rm file.txt
+rm -v /tmp/elysium-file-manipulation/rm-file/file.txt
+```
+
+```text
+removed '/tmp/elysium-file-manipulation/rm-file/file.txt'
 ```
 
 #### Delete a directory recursively
 
-`-r` traverses the directory tree and removes all files and subdirectories. No confirmation is requested.
+`-r` walks the tree and removes every nested entry. Use it only after inspecting the directory contents.
 
 ```bash
-rm -r directory/
+rm -rv /tmp/elysium-file-manipulation/rm-directory/directory/
+```
+
+```text
+removed '/tmp/elysium-file-manipulation/rm-directory/directory/nested/file.txt'
+removed directory '/tmp/elysium-file-manipulation/rm-directory/directory/nested'
+removed directory '/tmp/elysium-file-manipulation/rm-directory/directory/'
 ```
 
 #### Force delete without confirmation
 
-`-f` suppresses all prompts and ignores non-existent files. Combined with `-r`, this is the most dangerous shell command — verify the path before running.
+`-f` suppresses prompts and ignores missing files. Combined with `-r`, it is the fastest way to remove the wrong tree, so pair it with explicit path checks and `set -u` in scripts.
 
 ```bash
-rm -rf directory/
+rm -rfv /tmp/elysium-file-manipulation/rm-force/directory/
+```
+
+```text
+removed '/tmp/elysium-file-manipulation/rm-force/directory/nested/file.txt'
+removed directory '/tmp/elysium-file-manipulation/rm-force/directory/nested'
+removed directory '/tmp/elysium-file-manipulation/rm-force/directory/'
 ```
 
 #### Safe delete — move to staging area instead
 
-Move the target to a timestamped trash directory rather than deleting immediately. Verify the staging area, then delete.
+A staged move gives you a recovery window. The live demo uses a fixed trash directory name so the verification stays readable, but the same pattern should be timestamped in production scripts.
 
 ```bash
-mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
+mkdir -pv /tmp/elysium-trash-20260414-061410
 ```
 
-> [!warning] Never rm -rf directly in scripts
->
-> Use the trash pattern instead:
-> ```bash
-> TRASH_DIR="/tmp/trash_$(date +%Y%m%d_%H%M%S)"
-> mkdir -p "$TRASH_DIR"
-> mv "$TARGET_DIR" "$TRASH_DIR/"
-> echo "Moved to $TRASH_DIR — delete manually after verification"
-> ```
-> This gives you a recovery window. In production, the cost of a 30-second delay to verify is infinitely less than the cost of accidentally deleting a database backup directory.
+```text
+mkdir: created directory '/tmp/elysium-trash-20260414-061410'
+```
 
-> [!success] Enable set -euo pipefail before any delete logic
->
-> `set -u` prevents the catastrophic `rm -rf $UNDEFINED/` expansion. `trap EXIT` ensures cleanup runs even on error. See [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting).
+```bash
+mv -v /tmp/elysium-file-manipulation/rm-safe-delete/directory /tmp/elysium-trash-20260414-061410/
+```
 
-> [!info] trash-cli — freedesktop-compatible trash on Linux
->
-> `trash-put file.txt` moves files to the XDG trash (`~/.local/share/Trash`) instead of permanent deletion. Install with `apt install trash-cli`. Use `trash-restore` to recover. Not a substitute for backup, but prevents accidental single-file deletions in interactive use.
+```text
+renamed '/tmp/elysium-file-manipulation/rm-safe-delete/directory' -> '/tmp/elysium-trash-20260414-061410/directory'
+```
+
+```bash
+find /tmp/elysium-trash-20260414-061410 -maxdepth 2 -printf '%P\n' | sort
+```
+
+```text
+directory
+directory/file.txt
+```
+
+Use the same pattern in automation, but generate a unique trash path before the move:
+
+```bash
+mkdir -p /tmp/trash_20260414_061410 && mv /tmp/elysium-file-manipulation/rm-script/target /tmp/trash_20260414_061410/ && echo "Moved to /tmp/trash_20260414_061410 — verify before final deletion"
+```
+
+```text
+Moved to /tmp/trash_20260414_061410 — verify before final deletion
+```
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
@@ -451,22 +458,39 @@ mv directory/ /tmp/delete_me_$(date +%Y%m%d)/
 
 ### Linux | mkdir | create directory trees
 
-`mkdir` creates directories. Without flags it fails if the directory already exists or if parent directories are missing. The `-p` flag makes it idempotent and handles nested paths.
+`mkdir` is simple until the path becomes nested or rerunnable. `-p` is the idempotent form you want in setup scripts and deploy steps.
 
 #### Create a directory
 
-Creates `mydir` in the current directory. Fails if `mydir` already exists or if parent directories are missing — use `-p` to handle both.
+This creates one directory and shows the resulting path immediately.
 
 ```bash
-mkdir mydir
+mkdir -pv /tmp/elysium-file-manipulation/mkdir-single/mydir
+```
+
+```text
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-single'
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-single/mydir'
 ```
 
 #### Create nested directories with parents
 
-`-p` creates parent directories as needed and suppresses "already exists" errors — making it safe to run repeatedly. Combined with [brace expansion](https://alp78.github.io/elysium/01-Shell/01-Scripting/05-brace-expansion-and-globbing), a single command creates an entire [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) directory tree.
+This is the Linux equivalent of a declarative directory scaffold. It is safe to run repeatedly because existing parents are not treated as errors.
 
 ```bash
-mkdir -p /data/pipeline/{bronze,silver,gold}/staging
+mkdir -pv /tmp/elysium-file-manipulation/mkdir-nested/data/pipeline/bronze/staging /tmp/elysium-file-manipulation/mkdir-nested/data/pipeline/silver/staging /tmp/elysium-file-manipulation/mkdir-nested/data/pipeline/gold/staging
+```
+
+```text
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-nested'
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-nested/data'
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-nested/data/pipeline'
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-nested/data/pipeline/bronze'
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-nested/data/pipeline/bronze/staging'
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-nested/data/pipeline/silver'
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-nested/data/pipeline/silver/staging'
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-nested/data/pipeline/gold'
+mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-nested/data/pipeline/gold/staging'
 ```
 
 | Flag | Syntax | Description |
@@ -477,50 +501,50 @@ mkdir -p /data/pipeline/{bronze,silver,gold}/staging
 
 ### Linux | chmod | set file permissions
 
-`chmod` sets read/write/execute permissions. Octal notation (e.g., `755`) sets all three permission groups at once. Symbolic notation (e.g., `u+x`) modifies specific bits without affecting the rest.
+`chmod` changes Unix mode bits, not Windows ACLs. Use it on native Linux filesystems for executables, secrets, and deployment artifacts, and move to `icacls` when the backing path is really NTFS, FAT32, or exFAT.
 
 #### Set permissions with octal notation
 
-Octal notation sets all three permission groups (owner, group, others) simultaneously. `755` gives the owner read/write/execute and gives group and others read/execute.
+Octal notation is the compact way to normalize a file or script to a known state.
 
 ```bash
-chmod 755 script.sh
+chmod -v 755 /tmp/elysium-file-manipulation/chmod-octal/script.sh
+```
+
+```text
+mode of '/tmp/elysium-file-manipulation/chmod-octal/script.sh' changed from 0644 (rw-r--r--) to 0755 (rwxr-xr-x)
 ```
 
 #### Add execute bit with symbolic notation
 
-`+x` adds the execute bit for all three permission groups without changing any other bits. Use this to make a script runnable without touching read/write permissions.
+Symbolic notation is safer when you only want to add one capability and leave the rest of the mode alone.
 
 ```bash
-chmod +x script.sh
+chmod -v +x /tmp/elysium-file-manipulation/chmod-exec/script.sh
+```
+
+```text
+mode of '/tmp/elysium-file-manipulation/chmod-exec/script.sh' changed from 0644 (rw-r--r--) to 0755 (rwxr-xr-x)
 ```
 
 #### Modify specific permission bits
 
-Comma-separated symbolic expressions are applied atomically. `u+w` adds write for the owner; `g-w` removes write for the group.
+This form adjusts only the named subject and permission bits. It is useful when group write access needs to be removed without rewriting the whole mode by hand.
 
 ```bash
-chmod u+w,g-w file
+chmod -v u+w,g-w /tmp/elysium-file-manipulation/chmod-specific/file.txt
 ```
 
-> [!warning] chmod follows symlinks
->
-> `chmod 600 my_link` changes permissions on the **target file**, not the symlink itself.
-> On most Linux filesystems, symlink permissions are ignored entirely — the target's
-> permissions govern access. This surprises people who expect the symlink to act as a
-> permission barrier.
+```text
+mode of '/tmp/elysium-file-manipulation/chmod-specific/file.txt' changed from 0444 (r--r--r--) to 0644 (rw-r--r--)
+```
 
-> [!success] Use -h to change the symlink itself
->
-> `chmod -h` (where supported) changes the symlink's own permissions, not the target. Availability varies by OS — check `man chmod` on your system.
+Common production patterns:
 
-> [!info] Octal permission patterns
->
-> - `755` — scripts and executables (owner can write, everyone can read/execute)
-> - `644` — data files and configs (owner can write, everyone can read)
-> - `600` — secrets and key files (only owner can read/write)
-> - `700` — private directories (only owner can enter)
-> - Each digit = read (4) + write (2) + execute (1)
+- `755` for scripts and executables
+- `644` for ordinary data files and configs
+- `600` for secrets and key material
+- `700` for private directories
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
@@ -531,27 +555,34 @@ chmod u+w,g-w file
 
 ### Linux | chown | change file ownership
 
-`chown` changes the owner and group of a file. The `user:group` syntax sets both at once. `-R` applies recursively to all files in a directory tree.
+Ownership fixes are where container runtime mismatches usually surface. These examples were run as root in a disposable WSL fixture because `chown` normally requires elevated rights.
 
 #### Change owner and group of a file
 
-Sets the owner to `user` and the group to `group` in a single operation. Both `user` and `group` must exist on the system.
+This is the direct fix when the wrong account owns a single file or artifact.
 
 ```bash
-chown user:group file.txt
+chown -v root:root /tmp/elysium-file-manipulation/chown-single/file.txt
+```
+
+```text
+changed ownership of '/tmp/elysium-file-manipulation/chown-single/file.txt' from alex:alex to root:root
 ```
 
 #### Fix Airflow container permissions on a bind mount
 
-The UID `50000` is Airflow's default container user. Verify with `docker inspect` if using a custom image. For the full [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) including bind mounts and volume management, see the Docker section.
+Airflow images commonly run as UID `50000`. If the bind-mounted host path belongs to another user, task logs, DAG parsing, or plugins can fail with `Permission denied`.
 
 ```bash
-chown -R 50000:0 /opt/airflow/dags/
+chown -Rv 50000:0 /tmp/elysium-file-manipulation/chown-airflow/dags
 ```
 
-> [!tip] Docker bind mount permission fix
->
-> The most common Docker permission error in data engineering is an Airflow or pipeline container unable to write to a host-mounted directory. Fix it with `chown -R <uid>:0 /path/`. The UID 50000 is Airflow's default — verify for custom images.
+```text
+changed ownership of '/tmp/elysium-file-manipulation/chown-airflow/dags/example.py' from root:root to 50000:0
+changed ownership of '/tmp/elysium-file-manipulation/chown-airflow/dags' from root:root to 50000:0
+```
+
+Verify the container UID with `docker inspect` before applying the same pattern to a real bind mount.
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
@@ -563,22 +594,32 @@ chown -R 50000:0 /opt/airflow/dags/
 
 ### Linux | du | check directory size
 
-`du` (disk usage) reports how much disk space a file or directory occupies. `-s` gives a summary total, `-h` makes it human-readable. For a full disk investigation workflow including `du` vs `df` discrepancies and inode exhaustion, see [navigation-and-listing](https://alp78.github.io/elysium/01-Shell/02-File-Operations/01-navigation-and-listing).
+`du` answers "what is large under this path?" Use it before cleanup and after large copies to see where the bytes actually landed.
 
 #### Get total size of a directory
 
-`-s` prints only the summary total (not per-file sizes). `-h` formats the result as human-readable K/M/G.
+This is the quick size check before a move, archive, or cleanup window.
 
 ```bash
-du -sh /var/opt/mssql/data/
+du -sh /tmp/elysium-file-manipulation/du/data
+```
+
+```text
+20K	/tmp/elysium-file-manipulation/du/data
 ```
 
 #### List subdirectory sizes, sorted largest first
 
-`--max-depth=1` prints sizes for immediate subdirectories only, avoiding per-file recursion. Piped to `sort -rh` to rank by descending human-readable size.
+This form shows which immediate child directories are dominating the parent path.
 
 ```bash
-du -h --max-depth=1 /var/opt/mssql/ | sort -rh
+du -h --max-depth=1 /tmp/elysium-file-manipulation/du/data | sort -rh
+```
+
+```text
+20K	/tmp/elysium-file-manipulation/du/data
+8.0K	/tmp/elysium-file-manipulation/du/data/silver
+8.0K	/tmp/elysium-file-manipulation/du/data/bronze
 ```
 
 | Flag | Syntax | Description |
@@ -592,30 +633,32 @@ du -h --max-depth=1 /var/opt/mssql/ | sort -rh
 
 ### Linux | df | check available disk space
 
-`df` (disk free) shows mounted filesystem usage. Always check free space before large copies or data imports — full disks cause silent data corruption or application failure.
+`df` answers "can the filesystem behind this path absorb more writes?" Pass a path to limit the report to the filesystem you actually care about, then check inodes separately when a system says it is full but byte usage looks fine.
 
-#### Show disk usage for all mounted filesystems
+#### Show disk usage for the target filesystem
 
-`-h` formats sizes in human-readable units (K, M, G). Reports used, available, and percent-used for every mounted filesystem.
+This narrows the report to the filesystem that backs `/tmp`.
 
 ```bash
-df -h
+df -h /tmp
 ```
 
-> [!warning] Check free space before writing
->
-> SQL Server **stops** when the disk is full. Always verify free space before large copies or data imports. For the full disk-full runbook, see [sql-server-problems](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-problems#data-disk-full).
-
-> [!success] Monitor inodes as well as bytes
->
-> `df -i` shows inode usage. A filesystem can be 0% full by bytes but 100% full by inodes if millions of tiny files exist, which causes "no space left on device" despite apparent free space.
+```text
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdf       1007G  2.2G  954G   1% /
+```
 
 #### Check inode usage
 
-A filesystem can exhaust inodes before exhausting disk space if millions of small files (logs, cache entries) accumulate. `df -i` reveals this condition — a near-100% `IUse%` with plenty of free bytes means you cannot create new files until inodes are freed.
+Bytes are not the only capacity limit. Inode exhaustion blocks new files even when the disk still has free space.
 
 ```bash
-df -i
+df -i /tmp
+```
+
+```text
+Filesystem       Inodes IUsed    IFree IUse% Mounted on
+/dev/sdf       67108864 58159 67050705    1% /
 ```
 
 | Flag | Syntax | Description |
@@ -628,26 +671,62 @@ df -i
 
 ## PowerShell file manipulation tools
 
-PowerShell provides `Copy-Item`, `Move-Item`, `Rename-Item`, `Remove-Item`, and `New-Item` as the core file manipulation cmdlets. For permissions, use `icacls` (the Windows ACL tool). For disk space, use `Get-PSDrive`. For directory size, use `Get-ChildItem` piped to `Measure-Object`.
+PowerShell covers the same problem space with cmdlets instead of single-purpose binaries. The examples below use disposable paths under `$env:TEMP\ElysiumFileManipulation` and were captured on PowerShell `7.5.5`.
 
 ### PowerShell | Copy-Item | copy files and directories
 
-`Copy-Item` copies files and directories. Unlike `cp -a`, it does NOT preserve timestamps by default — the copy gets the current timestamp.
+`Copy-Item` handles ordinary file-system copies well, but there is no single switch that maps to Linux `cp -a` archive semantics across ownership, links, and permission models. In the live file-system run below, `LastWriteTime` stayed intact, so treat metadata behavior as something to verify rather than something to assume away.
 
 #### Copy a file
 
-Copies `source.txt` to `dest.txt`. Overwrites without prompt by default. Unlike `cp -a`, timestamps are reset to the current time.
+`-PassThru` makes the copy observable. The follow-up check shows both source and destination timestamps after the copy.
 
 ```powershell
-Copy-Item source.txt dest.txt
+Copy-Item -Path "$env:TEMP\ElysiumFileManipulation\copy-item-file\source.txt" -Destination "$env:TEMP\ElysiumFileManipulation\copy-item-file\dest.txt" -PassThru | Select-Object Name, LastWriteTime
+```
+
+```text
+Name     LastWriteTime
+----     -------------
+dest.txt 02-Jan-24 3:04:00
+```
+
+```powershell
+Get-Item "$env:TEMP\ElysiumFileManipulation\copy-item-file\source.txt", "$env:TEMP\ElysiumFileManipulation\copy-item-file\dest.txt" | Select-Object Name, LastWriteTime
+```
+
+```text
+Name       LastWriteTime
+----       -------------
+source.txt 02-Jan-24 3:04:00
+dest.txt   02-Jan-24 3:04:00
 ```
 
 #### Copy a directory recursively
 
-`-Recurse` is required for directories. Without it, `Copy-Item` copies only the directory container and none of its contents.
+`-Recurse` is required for directory trees. The destination container and its nested file appear in the returned object stream.
 
 ```powershell
-Copy-Item -Path source_dir -Destination dest_dir -Recurse
+Copy-Item -Path "$env:TEMP\ElysiumFileManipulation\copy-item-directory\source_dir" -Destination "$env:TEMP\ElysiumFileManipulation\copy-item-directory\dest_dir" -Recurse -PassThru | Select-Object FullName
+```
+
+```text
+FullName
+--------
+C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\copy-item-directory\dest_dir
+C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\copy-item-directory\dest_dir\nested
+C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\copy-item-directory\dest_dir\nested\file.txt
+```
+
+```powershell
+Get-ChildItem -Recurse "$env:TEMP\ElysiumFileManipulation\copy-item-directory\dest_dir" | Select-Object FullName
+```
+
+```text
+FullName
+--------
+C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\copy-item-directory\dest_dir\nested
+C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\copy-item-directory\dest_dir\nested\file.txt
 ```
 
 | Parameter | Syntax | Description |
@@ -662,14 +741,20 @@ Copy-Item -Path source_dir -Destination dest_dir -Recurse
 
 ### PowerShell | Move-Item | move files between paths
 
-`Move-Item` moves files between paths. Like Linux `mv`, same-drive moves are instant renames; cross-drive moves are copy + delete.
+`Move-Item` is the PowerShell rename and relocation cmdlet. Same-drive moves behave like in-place renames; cross-drive moves still need the same caution as any copy-then-remove workflow.
 
 #### Move a file
 
-Renames or moves `old.txt` to `new.txt`. Same-drive moves are instant renames; cross-drive moves are copy + delete.
+The returned object confirms the new path immediately.
 
 ```powershell
-Move-Item old.txt new.txt
+Move-Item -Path "$env:TEMP\ElysiumFileManipulation\move-item-file\old.txt" -Destination "$env:TEMP\ElysiumFileManipulation\move-item-file\new.txt" -PassThru | Select-Object Name, FullName
+```
+
+```text
+Name    FullName
+----    --------
+new.txt C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\move-item-file\new.txt
 ```
 
 | Parameter | Syntax | Description |
@@ -681,22 +766,35 @@ Move-Item old.txt new.txt
 
 ### PowerShell | Rename-Item | rename files in place
 
-`Rename-Item` renames a file or directory within the same location without moving it.
+`Rename-Item` changes the name without changing the containing directory. Use it when the path stays put and only the leaf name changes.
 
 #### Rename a file
 
-Renames within the same directory. `-NewName` takes a name only, not a full path — use `Move-Item` to relocate a file.
+This is the direct in-place rename.
 
 ```powershell
-Rename-Item old.txt new.txt
+Rename-Item -Path "$env:TEMP\ElysiumFileManipulation\rename-item-file\old.txt" -NewName "new.txt" -PassThru | Select-Object Name, FullName
+```
+
+```text
+Name    FullName
+----    --------
+new.txt C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\rename-item-file\new.txt
 ```
 
 #### Batch rename with regex
 
-`Get-ChildItem` pipelines into `Rename-Item` for bulk renames. The scriptblock form of `-NewName` receives the current item as `$_` and returns the new name string.
+The script block form of `-NewName` lets you reuse .NET regex replacement logic across every matching file in the pipeline.
 
 ```powershell
-Get-ChildItem *.csv | Rename-Item -NewName { $_.Name -replace '\.csv$', '.csv.bak' }
+Get-ChildItem "$env:TEMP\ElysiumFileManipulation\rename-item-batch\*.csv" | Rename-Item -NewName { $_.Name -replace '\.csv$', '.csv.bak' } -PassThru | Select-Object Name
+```
+
+```text
+Name
+----
+one.csv.bak
+two.csv.bak
 ```
 
 | Parameter | Syntax | Description |
@@ -708,43 +806,50 @@ Get-ChildItem *.csv | Rename-Item -NewName { $_.Name -replace '\.csv$', '.csv.ba
 
 ### PowerShell | Remove-Item | delete files and directories
 
-`Remove-Item -Recurse -Force` is the PowerShell equivalent of `rm -rf` — no confirmation, no recovery.
+`Remove-Item -Recurse -Force` is permanent. Preview uncertain paths with `-WhatIf`, list the target before you delete it, and keep the .NET fallback around for cases where Windows still reports that the directory is not empty.
 
 #### List contents before deleting
 
-Inspect the directory before removal. Reviewing this output is the last manual check before an irreversible delete operation.
+This is the last cheap check before an irreversible delete.
 
 ```powershell
-Get-ChildItem directory | Format-Table Name
+Get-ChildItem "$env:TEMP\ElysiumFileManipulation\remove-item-list\directory" | Format-Table Name
+```
+
+```text
+Name
+----
+alpha.txt
+beta.txt
 ```
 
 #### Delete a directory recursively
 
-`-Recurse` deletes the directory and all its contents. `-Force` suppresses confirmation prompts and removes read-only files.
+The delete itself is silent, so verify the result immediately. If Windows still holds a handle open and `Remove-Item` fails, the .NET `Directory.Delete()` call is the fallback worth keeping in your runbook.
 
 ```powershell
-Remove-Item directory -Recurse -Force
+Remove-Item "$env:TEMP\ElysiumFileManipulation\remove-item-delete\directory" -Recurse -Force
 ```
 
-> [!warning] Verify before Remove-Item
->
-> Always verify contents before removing. `Remove-Item -Recurse -Force` has no confirmation prompt and no recycle bin.
+```powershell
+Test-Path "$env:TEMP\ElysiumFileManipulation\remove-item-delete\directory"
+```
 
-> [!success] Use -WhatIf to preview before deleting
->
-> `Remove-Item directory -Recurse -Force -WhatIf` lists every file and directory that would be deleted without removing anything. Run this first on any path you are not 100% certain about.
+```text
+False
+```
 
-> [!danger] Remove-Item -Recurse intermittent bug
->
-> On Windows, `Remove-Item -Recurse` occasionally fails with "directory is not empty"
-> when files are still being released by antivirus or indexing processes.
+```powershell
+[System.IO.Directory]::Delete("$env:TEMP\ElysiumFileManipulation\remove-item-dotnet\directory", $true)
+```
 
-> [!success] Reliable recursive deletion workaround
->
-> ```powershell
-> [System.IO.Directory]::Delete($path, $true)
-> ```
-> This .NET call is synchronous and reliable — it waits for file handles to release before completing.
+```powershell
+Test-Path "$env:TEMP\ElysiumFileManipulation\remove-item-dotnet\directory"
+```
+
+```text
+False
+```
 
 | Parameter | Syntax | Description |
 |-----------|--------|-------------|
@@ -756,14 +861,20 @@ Remove-Item directory -Recurse -Force
 
 ### PowerShell | New-Item | create directories with parent creation
 
-`-Force` creates parent directories as needed (like `mkdir -p`) and returns the created item object.
+`New-Item -ItemType Directory -Force` is the PowerShell equivalent of `mkdir -p`. It creates missing parents and returns the created directory so the path is immediately visible.
 
 #### Create a directory
 
-`-Force` creates all missing parent directories and suppresses the error if the directory already exists — equivalent to `mkdir -p` on Linux.
+This creates the full parent chain and returns the final directory object.
 
 ```powershell
-New-Item -ItemType Directory -Path "C:\data\pipeline\bronze" -Force
+New-Item -ItemType Directory -Path "$env:TEMP\ElysiumFileManipulation\new-item\data\pipeline\bronze" -Force | Select-Object FullName, Name, PSIsContainer
+```
+
+```text
+FullName                                                                                Name   PSIsContainer
+--------                                                                                ----   -------------
+C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\new-item\data\pipeline\bronze bronze          True
 ```
 
 | Parameter | Syntax | Description |
@@ -775,58 +886,88 @@ New-Item -ItemType Directory -Path "C:\data\pipeline\bronze" -Force
 
 ### PowerShell | icacls | manage file and directory permissions
 
-`icacls` is the Windows command-line tool for viewing and editing NTFS access control lists. It is the functional equivalent of `chmod` on Windows.
+`icacls` is the NTFS ACL tool. Use it when access depends on inherited Windows permissions rather than Unix mode bits, and use `takeown` first when you have lost ownership of the target.
 
 #### View permissions on a file or directory
 
-Prints the DACL (Discretionary Access Control List) for the path, showing each principal and their assigned access rights.
+The raw ACL output is machine-specific, but the structure shows which ACEs are inherited and which principal owns which right.
 
 ```powershell
-icacls "C:\data\pipeline"
+icacls "$env:TEMP\ElysiumFileManipulation\icacls"
+```
+
+```text
+C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\icacls S-1-5-21-2737032662-1412455026-3434764341-3764966773:(I)(OI)(CI)(M,DC)
+                                                                 ELYSIUM\CodexSandboxUsers:(I)(OI)(CI)(M,DC)
+                                                                 S-1-5-21-3124073542-4190037349-2288886573-1349906437:(I)(OI)(CI)(M,DC)
+                                                                 NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+                                                                 BUILTIN\Administrators:(I)(OI)(CI)(F)
+                                                                 ELYSIUM\Alex:(I)(OI)(CI)(F)
+
+Successfully processed 1 files; Failed processing 0 files
 ```
 
 #### Grant a user full control
 
-`(OI)(CI)F` grants Full Control with object inheritance (applies to files) and container inheritance (applies to subdirectories), so the permission cascades to all children.
+The `(OI)(CI)` flags make the grant flow to files and child directories as well as the directory itself.
 
 ```powershell
-icacls "C:\data\pipeline" /grant "DOMAIN\user:(OI)(CI)F"
+icacls "$env:TEMP\ElysiumFileManipulation\icacls" /grant "$($env:USERDOMAIN)\$($env:USERNAME):(OI)(CI)F"
+```
+
+```text
+processed file: C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\icacls
+Successfully processed 1 files; Failed processing 0 files
 ```
 
 #### Remove all permissions for a user
 
-Removes all ACEs (access control entries) for the specified user. The user will have no access unless they inherit permissions through a group membership.
+This removes explicit ACEs for the named principal. Inherited permissions can still leave the user effective access through another group.
 
 ```powershell
-icacls "C:\data\pipeline" /remove "DOMAIN\user"
+icacls "$env:TEMP\ElysiumFileManipulation\icacls" /remove "$($env:USERDOMAIN)\$($env:USERNAME)"
+```
+
+```text
+processed file: C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\icacls
+Successfully processed 1 files; Failed processing 0 files
 ```
 
 #### Reset permissions to inherited defaults
 
-Removes all explicit ACEs and restores inheritance from the parent directory. `/T` applies the reset recursively to all subdirectories and files.
+`/reset /T` is the recovery path when explicit grants have drifted too far from the parent directory policy.
 
 ```powershell
-icacls "C:\data\pipeline" /reset /T
+icacls "$env:TEMP\ElysiumFileManipulation\icacls" /reset /T
+```
+
+```text
+processed file: C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\icacls
+Successfully processed 1 files; Failed processing 0 files
 ```
 
 #### Take ownership of a file or directory
 
-`takeown` reassigns ownership of a file to the current user or a specified account. Required before `icacls` can grant access when you are locked out of your own files (e.g., after restoring from a different machine).
+Use `takeown` before `icacls` when you are locked out of the path entirely.
 
 ```powershell
-takeown /F "C:\data\pipeline" /R /D Y
+takeown /F "$env:TEMP\ElysiumFileManipulation\icacls" /R /D Y
 ```
 
-> [!info] icacls permission syntax
->
-> - `F` — Full control
-> - `M` — Modify
-> - `RX` — Read and execute
-> - `R` — Read only
-> - `W` — Write only
-> - `(OI)` — Object inherit: applies to files in the directory
-> - `(CI)` — Container inherit: applies to subdirectories
-> - `(NP)` — No propagate: does not cascade to children
+```text
+SUCCESS: The file (or folder): "C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\icacls" now owned by user "ELYSIUM\Alex".
+```
+
+Permission shorthand:
+
+- `F` for Full control
+- `M` for Modify
+- `RX` for Read and execute
+- `R` for Read
+- `W` for Write
+- `(OI)` for object inherit
+- `(CI)` for container inherit
+- `(NP)` for no-propagate
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
@@ -852,90 +993,60 @@ takeown /F "C:\data\pipeline" /R /D Y
 
 ### PowerShell | Get-PSDrive | check available disk space
 
-`Get-PSDrive` lists all PowerShell drives including filesystem drives with used/free space. It is the functional equivalent of `df -h` on Linux.
+`Get-PSDrive` is the PowerShell-native disk-capacity view. Use raw byte output when another tool needs exact numbers and computed properties when you need a quick operational read.
 
 #### Show disk space for all drives
 
-`-PSProvider FileSystem` filters to filesystem drives only, excluding registry and certificate drives. `Used` and `Free` values are in bytes.
+This keeps the raw byte counts intact.
 
 ```powershell
 Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free
 ```
 
-#### Show disk space in human-readable GB
-
-Computed properties with `@{N=...; E=...}` convert raw byte values to GB rounded to two decimal places — equivalent to `df -h` output.
-
-```powershell
-Get-PSDrive -PSProvider FileSystem | Select-Object Name,
-  @{N='UsedGB';E={[math]::Round($_.Used/1GB,2)}},
-  @{N='FreeGB';E={[math]::Round($_.Free/1GB,2)}}
+```text
+Name          Used         Free
+----          ----         ----
+C    1777709449216 268719779840
+Temp 1777709449216 268719779840
 ```
 
-### PowerShell | Get-ChildItem + Measure-Object | check directory size
+#### Show disk space in human-readable GB
 
-`Get-ChildItem -Recurse` combined with `Measure-Object -Sum Length` calculates total directory size. It is the functional equivalent of `du -sh` on Linux.
+This converts the same numbers into operator-friendly gigabytes.
+
+```powershell
+Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{N='UsedGB';E={[math]::Round($_.Used/1GB,2)}}, @{N='FreeGB';E={[math]::Round($_.Free/1GB,2)}}
+```
+
+```text
+Name  UsedGB FreeGB
+----  ------ ------
+C    1655.62 250.26
+Temp 1655.62 250.26
+```
+
+### PowerShell | Get-ChildItem with Measure-Object | check directory size
+
+This is the PowerShell equivalent of `du -sh`: enumerate the files, sum their byte counts, and project the result into a readable unit.
 
 #### Get total size of a directory in MB
 
-`Get-ChildItem -Recurse` enumerates every file. `Measure-Object -Sum Length` totals the byte sizes. The computed property converts the result from bytes to MB.
+The fixture contains two files totaling 5 MB, which makes the math easy to validate.
 
 ```powershell
-Get-ChildItem -Recurse "C:\data\pipeline" |
-  Measure-Object -Property Length -Sum |
-  Select-Object @{N='TotalMB';E={[math]::Round($_.Sum/1MB,2)}}
+Get-ChildItem -Recurse "$env:TEMP\ElysiumFileManipulation\measure-object" | Measure-Object -Property Length -Sum | Select-Object @{N='TotalMB';E={[math]::Round($_.Sum/1MB,2)}}
 ```
 
+```text
+TotalMB
+-------
+   5.00
+```
 
-
-## Warnings
-
-> [!danger] `rm -rf` with an unset variable deletes everything
->
-> `rm -rf "$STAGING_DIR"/*` with an unset `STAGING_DIR` expands to `rm -rf /*`. Always use `set -u` and verify the path before deletion. Use the trash pattern in scripts.
-
-> [!danger] rsync trailing slash determines what gets copied
->
-> `rsync -a src/ dst/` copies contents into `dst/`. `rsync -a src dst/` creates `dst/src/`. Combined with `--delete`, a wrong slash can wipe the destination directory. Always dry-run first with `rsync -avn --delete`.
-
-> [!warning] `cp -r` resets modification timestamps
->
-> Plain `cp -r` copies files but resets `mtime` to the current time. If downstream processes use modification time for change detection, every file appears "new." Use `cp -a` for data directories.
-
-> [!warning] Cross-filesystem `mv` is not atomic
->
-> Same-filesystem `mv` is a single syscall. Cross-filesystem `mv` is copy-then-delete. If the copy fails mid-transfer, you end up with a partial file at the destination and the original still at the source.
-
-> [!warning] Two different `rename` utilities exist
->
-> Debian/Ubuntu ship the Perl-based `rename` (`rename 's/old/new/' files`). RHEL/CentOS ship the util-linux `rename` (`rename old new files`). Check `rename --version` to determine which you have.
-
-## Recommendations
-
-| Scenario | Recommendation |
-|---|---|
-| Copying data directories | Use `cp -a` (archive mode) to preserve timestamps, permissions, and symlinks. |
-| Large or network transfers | Use `rsync -ah --progress` for resumable, verifiable transfers. |
-| Safe deletion in scripts | Move to `TRASH_DIR="/tmp/trash_$(date +%Y%m%d_%H%M%S)"`, verify, then delete the trash. |
-| Atomic file output | Write to a temp file in the same directory, then `mv` to the final name. Same-filesystem `mv` is atomic. |
-| Docker bind mount permissions | `chown -R <container_uid>:0 /path`. Verify UID with `docker inspect`. |
-| Secret file permissions | `chmod 600` for key files and credentials. `chmod 700` for private directories. |
-| Batch renames (portable) | `for f in *.csv; do mv "$f" "${f%.csv}.parquet"; done` works on any system. |
-| Pre-delete verification | Always run `ls -la` or `Get-ChildItem` on the target path before `rm -rf` or `Remove-Item -Recurse`. |
-
-## Troubleshooting
-
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| "Permission denied" when copying files in Docker | Container runs as a non-root UID that does not own the bind-mounted directory. | `chown -R <uid>:0 /path` on the host. For Airflow, UID is 50000 by default. |
-| `rsync --delete` removed files it should not have | Trailing slash mismatch on the source path. | Always dry-run first: `rsync -avn --delete src/ dst/`. |
-| `cp -r` broke downstream change detection | `cp -r` reset all modification timestamps to the current time. | Use `cp -a` to preserve timestamps. |
-| `mv` is slow for a large directory | Source and destination are on different filesystems. `mv` is performing a full copy + delete. | Use `rsync -ah --remove-source-files` for cross-filesystem moves with progress and resume support. |
-| `Remove-Item -Recurse` fails with "directory is not empty" | Antivirus or Windows Search indexer still holds file handles. | Use `[System.IO.Directory]::Delete($path, $true)` which waits for handles to release. |
-| `chmod 755 script.sh` has no effect on a mounted Windows filesystem | FAT32 and exFAT do not support Unix permissions. NTFS via WSL has limited support. | Use a native Linux filesystem, or manage permissions with `icacls` on Windows. |
 ## Cross-references
-- [navigation-and-listing](https://alp78.github.io/elysium/01-Shell/02-File-Operations/01-navigation-and-listing) — check what's there before moving it
-- [brace-expansion-and-globbing](https://alp78.github.io/elysium/01-Shell/01-Scripting/05-brace-expansion-and-globbing) — create directory trees with brace expansion
-- [compression](https://alp78.github.io/elysium/01-Shell/02-File-Operations/04-compression) — compress before transferring large directories
-- [data-transfer](https://alp78.github.io/elysium/01-Shell/02-File-Operations/05-data-transfer) — rsync for remote file transfers with resume support
-- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) — `set -euo pipefail` prevents silent failures in delete scripts
+
+- [navigation-and-listing](https://alp78.github.io/elysium/01-Shell/02-File-Operations/01-navigation-and-listing) — check what is present before moving or deleting it
+- [brace-expansion-and-globbing](https://alp78.github.io/elysium/01-Shell/01-Scripting/05-brace-expansion-and-globbing) — create directory trees efficiently
+- [compression](https://alp78.github.io/elysium/01-Shell/02-File-Operations/04-compression) — compress large directories before transfer when bandwidth matters
+- [data-transfer](https://alp78.github.io/elysium/01-Shell/02-File-Operations/05-data-transfer) — use `rsync`, `scp`, or object-store tools for remote copies
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) — use `set -euo pipefail` to harden delete and move logic

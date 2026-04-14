@@ -2,15 +2,15 @@
 title: "07 - Generics & Functional Data Processing - Python"
 tags: [python]
 aliases: [generics, LINQ, type parameters, generic collections, comprehensions, functional programming]
-description: "Python generics and functional data processing reference with executable examples and cell outputs — covers TypeVar, Generic classes, Protocol, functional tools, and itertools. See [07-cs-generics-linq](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/07-cs-generics-linq) for the C# equivalent."
+description: "Python generics and functional data processing reference with executable examples and captured outputs — covers duck typing, `TypeVar`, `Generic`, `Protocol`, iterator tools, and pandas/Polars equivalents. See [07-cs-generics-linq](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/07-cs-generics-linq) for the C# equivalent."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-14
 status: complete
 ---
 
 # Generics & Functional Data Processing - Python
 
-> [!quote]
+> [!quote] Leaky abstractions
 > "All non-trivial abstractions, to some degree, are leaky."
 >
 > — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)
@@ -20,172 +20,118 @@ status: complete
 > **Generics**
 > - Python's duck typing makes functions naturally generic — any object with the right methods works without type declarations or generic syntax.
 > - `TypeVar` declares a generic type variable (`T = TypeVar('T')`); resolved by the static checker at each call site, erased at runtime.
-> - `Generic[T]` as a base class enables parameterized containers (`Stack[int]`, `Repository[Trade]`); mypy tracks the inner type through operations.
-> - Bounded type variables (`TypeVar('T', bound=Comparable)`) restrict `T` to subtypes of a given class, enabling method calls on `T` that are only safe for that bound.
-> - `Protocol` defines structural interfaces: any class with the required methods satisfies the protocol without inheritance; add `@runtime_checkable` to enable `isinstance()` checks.
-> - Built-in generic hints: `list[int]`, `dict[str, int]`, `tuple[int, str]`, `Optional[str]`, `Callable[[int], bool]` — no import needed in Python 3.9+.
+> - `Generic[T]` keeps custom container classes type-safe for static analysis, even though the parameterization is erased at runtime.
+> - Bounded type variables (`TypeVar('T', bound=SomeProtocolOrClass)`) let generic code call methods that are guaranteed by the bound.
+> - `Protocol` defines structural interfaces: any class with the right methods satisfies the contract without inheritance; add `@runtime_checkable` only when you need runtime `isinstance()` checks.
+> - Built-in collection annotations such as `list[int]`, `dict[str, int]`, and `tuple[int, str]` need no `typing.List`/`typing.Dict` import in Python 3.9+; `Optional` and `Callable` still come from `typing` unless you use newer alternatives such as `str | None`.
 >
 > **Functional Data Processing**
 > - List/dict/set comprehensions are Python's primary replacement for C# LINQ `Select`/`Where`; generator expressions (`()`) are the lazy, memory-efficient variant.
-> - `map(func, iter)` transforms, `filter(pred, iter)` selects, `functools.reduce(func, iter)` accumulates — all return lazy iterators; wrap in `list()` to materialise.
+> - `map(func, iter)` transforms and `filter(pred, iter)` selects as lazy iterators; `functools.reduce(func, iter)` returns the final accumulated value.
 > - `itertools.groupby` groups consecutive equal elements after a mandatory pre-sort; yields `(key, group_iterator)` pairs consumed once.
 > - `zip` pairs elements from parallel iterables positionally, stopping at the shortest — equivalent to C# `Zip`.
 > - Nested comprehensions (`[x for outer in col for x in outer]`) replace C# `SelectMany`; `set(...)` deduplicates.
 > - Dictionary lookups replace C# `Join`; `defaultdict(list)` handles left-join fan-out without key-presence checks.
 >
 > **Pandas vs Polars Analytics**
-> - Both libraries are demonstrated against live SQL Server data: `silver.eurostoxx50_ohlcv` (66 K rows, 50 symbols) and `gold.scores_daily` (466 rows).
+> - The pandas examples query SQL Server with a `2026-03-12` snapshot cutoff, and the Polars examples read the matching Parquet snapshot so the preserved outputs stay aligned at 66,355 OHLCV rows and 466 score rows.
 > - Operations shown side-by-side: row/column subsetting, filter, groupby+aggregate, join, window functions, sort.
-> - Pandas: mutable, row-indexed, NumPy-backed; `.iloc[]` / `.loc[]` / double-bracket column selection; `groupby().agg()`; `merge()`; `transform()` for window results.
-> - Polars: immutable, Rust-backed, Apache Arrow columnar; `slice()` / `select()` / `filter()`; `group_by().agg()`; `join()`; `over()` for window expressions; lazy mode via `.lazy()` + `.collect()`.
-> - Comparison matrix: Polars 10–100× faster on large datasets; 2–5× less RAM via Arrow; no row index; lazy plan applies predicate/projection pushdown automatically.
+> - Pandas is mutable and index-aware; Polars is immutable, Arrow-backed, and expression-oriented.
+> - The comparison matrix focuses on indexing, execution model, lazy planning, ecosystem fit, and memory trade-offs rather than universal speed claims.
 
 > [!note]- Glossary
 >
 > **`TypeVar`**
 > - A placeholder for a type that the static checker (mypy, pyright) resolves at each call site: `T = TypeVar('T')`.
 > - Enables writing functions and classes that work on any type while retaining full type-checker coverage across the call graph.
->
-> > [!info] Runtime erasure
-> >
-> > `TypeVar` is a development-time construct only. The interpreter ignores it at runtime — it provides no enforcement, no dispatch, and no overhead. All checking is performed by mypy or pyright during CI or IDE analysis.
+> - Runtime behavior is unchanged: `TypeVar` exists for static analysis only, so the interpreter does not enforce or dispatch on it.
 >
 >  ---
 >
 > **`Generic[T]`**
 > - Base class for parameterised classes: `class Stack(Generic[T])` tells the type checker to track the inner type `T` through every method.
 > - Used for custom container classes and typed wrappers; when built-in containers (`list`, `dict`) suffice, no custom class is needed.
->
-> > [!warning] Missing `Generic[T]` inheritance
-> >
-> > If you omit `Generic[T]`, the class works at runtime but mypy cannot track the inner type — you lose all type-safety benefits for callers.
-> >
-> > > [!success] Correct pattern
-> > >
-> > > Always inherit: `class Stack(Generic[T]):` and annotate the internal storage as `list[T]`.
+> - If you omit `Generic[T]`, the class still works at runtime, but callers lose type propagation through the API.
 >
 >  ---
 >
 > **`bound` (TypeVar bound)**
 > - `TypeVar('T', bound=SomeClass)` restricts `T` to subtypes of `SomeClass`, enabling method calls on `T` that are only safe for that type.
 > - Essential when the generic function must call a method (e.g., `__lt__` for sorting, `.close()` for resources) that is not defined on arbitrary objects.
->
-> > [!tip] `bound` vs constrained TypeVar
-> >
-> > `bound=X` accepts any subtype of X. `TypeVar('T', X, Y)` accepts *exactly* X or Y — nothing else, including subtypes of X. Use `bound` for "at least this interface"; use constrained form only when the set of valid types is fixed.
+> - `bound=X` accepts any subtype of `X`; constrained form such as `TypeVar('T', X, Y)` accepts only the listed types.
 >
 >  ---
 >
 > **`Protocol`**
 > - Structural typing interface from `typing`: any class with the required method signatures satisfies the protocol without explicit inheritance.
 > - Defines contracts for duck-typed code that mypy can verify statically — the Python equivalent of C# interface checking without the inheritance overhead.
->
-> > [!warning] Missing `@runtime_checkable`
-> >
-> > Without `@runtime_checkable`, `isinstance(obj, MyProtocol)` raises `TypeError` at runtime. The decorator must be applied explicitly.
-> >
-> > > [!success] Add the decorator when runtime checks are needed
-> > >
-> > > `@runtime_checkable` on the Protocol class enables `isinstance()` checks while preserving static verification.
+> - Without `@runtime_checkable`, `isinstance(obj, MyProtocol)` raises `TypeError`; add the decorator only when runtime checks are part of the design.
 >
 >  ---
 >
 > **duck typing**
 > - Python's default polymorphism model: if an object has the right methods and attributes, it works — no base class, interface, or generic declaration required.
 > - Most Python code is naturally generic through duck typing; `TypeVar` and `Generic` add optional static-analysis safety on top without changing this behaviour.
->
-> > [!tip] Avoid over-constraining with `isinstance()`
-> >
-> > Adding `isinstance()` guards defeats duck typing's flexibility. Prefer structural checks (try/except `AttributeError`) or Protocol annotations in signatures.
+> - Avoid over-constraining with `isinstance()` when the operation itself is the contract; prefer Protocol annotations or direct method use.
 >
 >  ---
 >
 > **comprehension**
 > - Concise syntax for building collections in a single expression: `[expr for x in iter if cond]` (list), `{k: v for ...}` (dict), `{x for ...}` (set).
 > - Python's primary replacement for C# LINQ `Select`/`Where` chains; generally faster than equivalent `for` loops due to CPython bytecode optimisation.
->
-> > [!warning] Nested comprehensions and readability
-> >
-> > Beyond two levels of nesting, comprehensions become difficult to read and debug. Prefer explicit `for` loops or `itertools` combinators for complex multi-level logic.
+> - Beyond two levels of nesting, readability drops quickly; prefer explicit loops or `itertools` helpers for multi-stage transforms.
 >
 >  ---
 >
 > **generator expression**
 > - Lazy comprehension using `()` instead of `[]`: `(x*2 for x in items)`. Yields items one at a time without building the full list in memory.
 > - Essential for processing large datasets — a generator of 10 M rows uses constant memory regardless of the dataset size.
->
-> > [!warning] Generators are single-pass
-> >
-> > Once a generator is exhausted it yields nothing on re-iteration. Wrap with `list()` if multiple passes are needed: `data = list(gen_expr)`.
+> - Generators are single-pass; materialise with `list()` if the data must be reused.
 >
 >  ---
 >
 > **`map` / `filter` / `reduce`**
 > - Functional built-ins: `map(func, iter)` applies a function to every element, `filter(pred, iter)` keeps elements where the predicate is `True`, `functools.reduce(func, iter)` folds the sequence into a single value left-to-right.
 > - Python's closest equivalents to C# LINQ method-syntax chains (`Select`, `Where`, `Aggregate`).
->
-> > [!info] Lazy iterators — materialise explicitly
-> >
-> > `map()` and `filter()` return iterator objects, not lists. Wrap in `list()` to force evaluation: `list(map(str, nums))`. `reduce` is in `functools` (not a built-in since Python 3).
+> - `map()` and `filter()` return iterators, not lists; `reduce` lives in `functools` and returns the accumulated scalar result.
 >
 >  ---
 >
 > **`itertools`**
 > - Standard library module with efficient iterator combinators: `groupby`, `chain`, `islice`, `product`, `combinations`, `permutations`, `repeat`, `cycle`.
 > - Enables advanced iteration patterns — grouping, windowing, Cartesian products, infinite sequences — without loading data into memory.
->
-> > [!warning] `itertools.groupby` requires pre-sorted input
-> >
-> > `groupby` groups *consecutive* equal elements, not all matching elements across the sequence. Always sort by the grouping key first: `sorted(data, key=lambda x: x['dept'])`. Without sorting, the same key can appear in multiple non-adjacent groups.
+> - `groupby` groups consecutive equal elements, not all matching values globally, so sort by the grouping key first when you want SQL-style grouping.
 >
 >  ---
 >
 > **pandas**
-> - DataFrame library for tabular data analysis: mutable, row-indexed, NumPy-backed, with a massive ecosystem (scikit-learn, matplotlib, statsmodels, SQLAlchemy integration).
-> - The standard tool for data exploration, notebooks, and existing Python analytics pipelines; the dominant library in production data engineering as of 2025.
->
-> > [!warning] `SettingWithCopyWarning` — view vs copy ambiguity
-> >
-> > Modifying a column on a DataFrame slice may silently modify only a copy, not the original. Use `.copy()` to force a new DataFrame, or `.loc[row_mask, col]` for in-place assignment. The warning signals that pandas cannot determine whether the slice is a view or copy.
+> - Mutable DataFrame library for tabular analysis, with deep integration across notebook, plotting, and ML ecosystems.
+> - View-vs-copy ambiguity matters during assignment: prefer `.loc[...]` or `.copy()` when modifying slices.
 >
 >  ---
 >
 > **Polars**
-> - High-performance DataFrame library: immutable, Rust-backed, lazy-by-default, Apache Arrow columnar format; no row index.
-> - 10–100× faster than pandas for large datasets; native lazy execution with automatic predicate pushdown and projection pushdown; 2–5× less RAM via Arrow columnar storage.
->
-> > [!info] No `.loc[]` — use `.filter()` instead
-> >
-> > Polars has no row-label index. Label-based row selection with `.loc[]` does not exist. Use `.filter(pl.col('symbol') == 'ASML.AS')` for conditional row selection.
+> - Immutable, Rust-backed DataFrame library built around Arrow columns and expression-oriented transforms.
+> - Often faster and more memory-efficient on analytical workloads, but there is no row-label index, so row filtering uses expressions instead of `.loc[]`.
 >
 >  ---
 >
 > **lazy evaluation (Polars)**
 > - Polars builds a logical query plan without executing it when the API is called in lazy mode (`.lazy()`); `.collect()` triggers optimised execution.
-> - Predicate pushdown, projection pushdown, and multi-threaded parallelism are applied automatically at `.collect()` time — operations that would be expensive in eager mode become cheap.
->
-> > [!warning] Forgetting `.collect()`
-> >
-> > A `LazyFrame` is not a `DataFrame`. Printing a `LazyFrame` shows the plan, not the data. All downstream operations that expect a `DataFrame` will fail until `.collect()` is called.
->
-> > [!success] Always terminate the lazy chain with `.collect()`
-> >
-> > Call `.collect()` at the end of every lazy chain when a `DataFrame` is needed: `df = lf.filter(...).group_by(...).agg(...).collect()`. Use `.lazy()` / `.collect()` as the outer boundary and keep all transformations in between lazy for automatic query optimization.
+> - Predicate pushdown and projection pruning happen at collection time, so keep the plan lazy until the point where you need a materialised frame.
+> - A `LazyFrame` is not data yet; call `.collect()` before inspection or library handoff.
 >
 >  ---
 >
 > **Apache Arrow**
 > - Columnar in-memory data format used by Polars as its internal storage layer. Enables zero-copy reads between Arrow-compatible libraries and efficient Parquet/IPC I/O.
-> - Columnar layout means analytical queries (aggregations, filters on one column) scan only the required columns — 2–5× less RAM and better cache locality than row-oriented storage.
->
-> > [!info] Arrow is a format, not a user-facing API
-> >
-> > Polars uses Arrow internally; users interact with Polars DataFrames and Series, not Arrow arrays directly. Arrow becomes relevant when exchanging data with other libraries (PyArrow, DuckDB, Hugging Face Datasets) via zero-copy interop.
+> - Columnar layout improves cache locality for analytical scans, and it matters most when moving data between Arrow-compatible systems such as Polars, PyArrow, and DuckDB.
+> - Arrow is the storage/interchange layer, not the primary user-facing API in this note.
 
-Python's duck typing makes most code naturally generic — any iterable, any callable, any object with the right methods just works. Type hints with `TypeVar` and `Generic` add static analysis without changing runtime behavior, bridging the gap to C#-style type safety for library APIs and complex codebases. For data processing, Python replaces C#'s LINQ with built-in functional tools (`map`, `filter`, `zip`, `itertools.groupby`, comprehensions) and the pandas/Polars DataFrame libraries for analytical workloads. 
+Python is already generic at runtime through duck typing: any object with the required methods can participate in the operation. Type hints add static contracts when you want library-grade APIs, and the later iterator and DataFrame sections show the common Python equivalents for C# LINQ-style transforms.
 
 ```python
-from typing import TypeVar, Generic, Optional
+from typing import Callable, Generic, Optional, Protocol, TypeVar, runtime_checkable
 from itertools import groupby
 from collections import defaultdict
 from functools import reduce
@@ -197,11 +143,11 @@ import polars as pl
 
 ## Generics
 
-Python's type system is fundamentally different from C#'s — duck typing means any object with the right interface already works without generic declarations. The `typing` module adds optional type hints that static analysis tools (mypy, pyright) check at development time, but the interpreter ignores them at runtime. `TypeVar` declares generic type variables, `Generic[T]` enables parameterized classes, and `Protocol` defines structural subtyping for duck-typed interfaces.
+Python's type system is fundamentally different from C#'s. Duck typing already gives you runtime flexibility, while the `typing` module adds optional static contracts for editors, CI, and reusable APIs. The examples below move from implicit generic behavior to bounded type variables and structural typing.
 
-### Python | Generics | duck typing and type hints
+### Python | Generics | duck typing, bounds, and structural typing
 
-Python functions are inherently generic through duck typing. Type hints with `TypeVar` and `Generic` add compile-time-like safety for IDE tooling and CI checks without changing runtime behavior.
+These examples show where Python stays dynamic by default and where `typing` adds useful guarantees without changing the runtime dispatch model.
 
 #### Duck typing — no generics needed
 
@@ -214,18 +160,20 @@ def first_element(items):
         return item
     return None
 
-first_element([1, 2, 3])
-first_element('hello')
-first_element((10, 20))
+print(first_element([1, 2, 3]))
+print(first_element("hello"))
+print(first_element((10, 20)))
 ```
 
 ```text
 1
-string: h
+h
 10
 ```
 
 #### TypeVar — generic type hints
+
+This cell uses both an unconstrained `TypeVar` and a constrained one. The output proves that the annotations preserve the original runtime values while giving the type checker enough information to track `int`, `str`, and numeric-only call sites separately.
 
 ```python
 T = TypeVar("T")
@@ -242,20 +190,71 @@ Number = TypeVar("Number", int, float)
 def add(a: Number, b: Number) -> Number:
     return a + b
 
-add(3, 4)
-add(3.5, 4.5)
+print(add(3, 4))
+print(add(3.5, 4.5))
 # add("a", "b")  # type checker flags this — Python still runs it
 ```
 
 ```text
 int: 1, str: a
 7
-float: 8.0
+8.0
+```
+
+#### Bounded TypeVar — method access from a bound
+
+Use `bound=` when generic code needs a method or protocol that arbitrary objects do not have. Here the bound guarantees `abs()` is valid for every item, so the function can return the original concrete type instead of falling back to `object`.
+
+```python
+class SupportsAbs(Protocol):
+    def __abs__(self) -> float: ...
+
+AbsT = TypeVar("AbsT", bound=SupportsAbs)
+
+def largest_magnitude(values: list[AbsT]) -> AbsT:
+    return max(values, key=abs)
+
+print(largest_magnitude([3, -7, 2]))
+print(largest_magnitude([1.5, -4.25, 2.0]))
+```
+
+```text
+-7
+-4.25
+```
+
+#### Protocol — structural typing without inheritance
+
+`Protocol` lets the type checker reason about capabilities instead of ancestry. The runtime check is optional: with `@runtime_checkable`, `isinstance()` succeeds for objects that implement the required method, even if they never inherit from the protocol.
+
+```python
+@runtime_checkable
+class SupportsClose(Protocol):
+    def close(self) -> str: ...
+
+class FileHandle:
+    def close(self) -> str:
+        return "closed file handle"
+
+class Logger:
+    def write(self, message: str) -> None:
+        pass
+
+handle = FileHandle()
+print(isinstance(handle, SupportsClose))
+print(handle.close())
+print(isinstance(Logger(), SupportsClose))
+```
+
+```text
+True
+closed file handle
+False
 ```
 
 #### Generic class — Generic[T]
 
-Inherit from `Generic[T]` so the type checker tracks what's inside. Use for custom container classes and typed wrappers — when built-in containers (`list`, `dict`) suffice, no custom class is needed. Runtime `isinstance` checks on generic types are not supported (type erasure).
+Inherit from `Generic[T]` so the type checker tracks what's inside. The last lines also demonstrate runtime erasure: the parameterized stacks share the same runtime class, and `isinstance(..., Stack[int])` is not allowed.
 
 ```python
 class Stack(Generic[T]):
@@ -281,41 +280,54 @@ int_stack: Stack[int] = Stack()
 int_stack.push(1)
 int_stack.push(2)
 int_stack.push(3)
-int_stack
-int_stack.pop()
+print(int_stack)
+print(int_stack.pop())
 
 str_stack: Stack[str] = Stack()
 str_stack.push("hello")
 str_stack.push("world")
-str_stack
+print(str_stack)
+print(type(int_stack) is type(str_stack))
+try:
+    print(isinstance(int_stack, Stack[int]))
+except TypeError as exc:
+    print(type(exc).__name__)
+    print(exc)
 ```
 
 ```text
 Stack([1, 2, 3])
 3
 Stack(['hello', 'world'])
+True
+TypeError
+Subscripted generics cannot be used with class and instance checks
 ```
 
-#### Built-in generic type hints — list[int], dict[str, T], Optional
+#### Common generic type annotations — built-in collections and typing aliases
 
-| Type hint | Meaning |
-|---|---|
-| `list[int]` | Typed list |
-| `dict[str, int]` | Typed dictionary |
-| `set[str]` | Typed set |
-| `tuple[int, str]` | Typed tuple |
-| `Optional[str]` | `str` or `None` |
-| `Callable[\[int], bool]` | Function signature |
+PEP 585 moved the core collection generics onto the built-in container types in Python 3.9+, but helpers such as `Optional` and `Callable` still come from `typing` unless you use newer syntax such as `str | None`.
+
+| Annotation | Meaning | Import note |
+|---|---|---|
+| `list[int]` | Typed list | Built-in in Python 3.9+ |
+| `dict[str, int]` | Typed dictionary | Built-in in Python 3.9+ |
+| `set[str]` | Typed set | Built-in in Python 3.9+ |
+| `tuple[int, str]` | Fixed-length typed tuple | Built-in in Python 3.9+ |
+| `Optional[str]` | `str` or `None` | Import from `typing`, or write `str | None` |
+| `Callable[[int], bool]` | Function signature | Import from `typing` |
 
 ## Functional Data Processing
 
-Python's built-in functional tools — `map`, `filter`, `zip`, comprehensions, `itertools.groupby`, and `functools.reduce` — provide the same pipeline semantics as C#'s LINQ without a separate query language. These operate on plain iterables (lists, generators, tuples) and compose into lazy pipelines via generators. This section mirrors the C# "Advanced LINQ" section using Python's standard library equivalents.
+Python's built-in functional tools provide the same pipeline vocabulary as C# LINQ, but they operate on plain iterables rather than query objects. This section shows the core iterator behaviors first, then applies the same ideas to grouping, joining, zipping, and flattening.
 
-### Python | Functional tools | groupby, zip, comprehensions
+### Python | Functional tools | generators, map/filter/reduce, groupby, zip
 
-The examples below use the same employee/department data as the C# file, expressed as plain dictionaries.
+The examples below use the same employee/department data as the C# note, expressed as plain dictionaries.
 
 #### Sample data
+
+This shared setup keeps the later examples focused on the transformation itself. The records are simple enough to show grouping, joining, sorting, and flattening without hiding the iterator behavior behind a larger framework.
 
 ```python
 employees = [
@@ -333,6 +345,47 @@ departments = [
     {"dept": "Marketing", "budget": 200000, "head": "CMO"},
     {"dept": "HR", "budget": 150000, "head": "CHRO"},
 ]
+```
+
+#### Generator expressions — lazy and single-pass
+
+Generator expressions are the lazy companion to list comprehensions. The output shows that values are produced only as they are consumed, and that a generator is empty once it has been exhausted.
+
+```python
+squares = (x * x for x in range(4))
+print(next(squares))
+print(list(squares))
+print(list(squares))
+```
+
+```text
+0
+[1, 4, 9]
+[]
+```
+
+#### map(), filter(), and reduce()
+
+This example covers the three standard-library functions that most directly mirror LINQ method chains. The output proves that `map()` and `filter()` are iterator-producing wrappers, while `reduce()` returns the final scalar result.
+
+```python
+nums = [1, 2, 3, 4]
+mapped = map(lambda x: x * 10, nums)
+filtered = filter(lambda x: x % 2 == 0, nums)
+
+print(type(mapped).__name__)
+print(type(filtered).__name__)
+print(list(mapped))
+print(list(filtered))
+print(reduce(lambda acc, x: acc + x, nums, 0))
+```
+
+```text
+map
+filter
+[10, 20, 30, 40]
+[2, 4]
+10
 ```
 
 #### GroupBy and aggregations
@@ -467,45 +520,64 @@ Flat matrix: [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 ## Pandas vs Polars Analytics
 
-Side-by-side analytics on live SQL Server data. Each operation shown first in pandas, then in Polars. Mirrors the C# notebook's LINQ vs Polars.NET section. Tables: `silver.eurostoxx50_ohlcv` (66K rows), `gold.scores_daily` (466 rows).
+Side-by-side analytics on the same preserved snapshot boundary. Pandas reads SQL Server with an explicit `2026-03-12` cutoff, while Polars reads the matching Parquet extract so the HTML evidence tables remain comparable across both libraries.
 
 ### Python | Data setup | SQL Server connection and data loading
 
-Loads OHLCV and composite score data from the local `stoxx` database via SQLAlchemy/pyodbc into pandas, and reads the same Parquet file into Polars.
+This setup cell is the boundary between live data access and the preserved notebook evidence below. The password is read from an environment variable instead of being embedded in the note, and the date cutoff keeps the pandas SQL result aligned with the stored Polars snapshot and captured outputs.
 
 #### Connect to SQL Server and load data
 
+The code below loads the shared OHLCV and score slices that the pandas and Polars examples reuse later. The output confirms the aligned row counts, symbol count, and date range for the frozen snapshot used by this note.
+
 ```python
+import os
 from sqlalchemy import create_engine
 from urllib.parse import quote_plus
 
+snapshot_end = "2026-03-12"
 odbc_str = (
     'DRIVER={ODBC Driver 18 for SQL Server};'
     'SERVER=localhost,1434;DATABASE=stoxx;'
-    'UID=sa;PWD=EsgDev2026Pass1;'
+    f"UID=sa;PWD={os.environ['STOXX_SQL_PASSWORD']};"
     'Encrypt=yes;TrustServerCertificate=yes;'
 )
 engine = create_engine(f'mssql+pyodbc:///?odbc_connect={quote_plus(odbc_str)}')
 
-ohlcv = pd.read_sql('SELECT symbol, date, [open], high, low, [close], adj_close, volume FROM silver.eurostoxx50_ohlcv', engine)
-scores = pd.read_sql('SELECT symbol, sector, country, composite_score, composite_rank, momentum_score, current_price, ytd_change_pct FROM gold.scores_daily', engine)
+ohlcv = pd.read_sql(
+    f"SELECT symbol, date, [open], high, low, [close], adj_close, volume "
+    f"FROM silver.eurostoxx50_ohlcv WHERE date <= '{snapshot_end}'",
+    engine,
+)
+scores = pd.read_sql(
+    f"SELECT symbol, sector, country, composite_score, composite_rank, "
+    f"momentum_score, current_price, ytd_change_pct "
+    f"FROM gold.scores_daily WHERE score_date <= '{snapshot_end}'",
+    engine,
+)
 
 pldf = pl.read_parquet('C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet')
 
 print(f"  Pandas: {len(ohlcv):,} rows, {ohlcv.symbol.nunique()} symbols")
 print(f"  Polars: {pldf.height:,} rows")
 print(f"  Date range: {ohlcv.date.min()} to {ohlcv.date.max()}")
+print(f"  Scores rows: {len(scores):,}")
 ```
 
 ```text
-66,355 rows, 50 symbols
-66,355 rows
-2021-01-04 to 2026-03-12
+  Pandas: 66,355 rows, 50 symbols
+  Polars: 66,355 rows
+  Date range: 2021-01-04 to 2026-03-12
+  Scores rows: 466
 ```
 
 ### Subsetting
 
+These pairs show the closest pandas and Polars equivalents for row slicing, column projection, and symbol-specific subsets on the same OHLCV snapshot.
+
 #### Pandas — Subset rows by slicing with iloc[]
+
+`iloc[100:103]` slices rows by integer position while leaving the original labeled index intact. The output proves pandas returns three consecutive rows with their existing row labels still visible.
 
 ```python
 ohlcv.iloc[100:103]
@@ -570,6 +642,8 @@ ohlcv.iloc[100:103]
 
 #### Polars — Subset rows by slicing with slice()
 
+`slice(100, 3)` is the Polars equivalent of positional row slicing. The output shows the same three-row window without a separate pandas-style index column.
+
 ```python
 pldf.slice(100, 3)
 ```
@@ -578,6 +652,8 @@ pldf.slice(100, 3)
 <!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21260</td><td>&quot;ABI.BR&quot;</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21261</td><td>&quot;ABI.BR&quot;</td><td>2021-05-27</td><td>61.8</td><td>62.64</td><td>61.73</td><td>62.13</td><td>58.6795</td><td>1796477</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21262</td><td>&quot;ABI.BR&quot;</td><td>2021-05-28</td><td>62.14</td><td>62.58</td><td>61.96</td><td>62.34</td><td>58.8779</td><td>1004125</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 #### Pandas — Subset columns with double-bracket notation
+
+Double brackets keep the result as a DataFrame instead of collapsing to a Series. The output confirms that only the requested four columns are materialized.
 
 ```python
 ohlcv[['symbol', 'date', 'close', 'volume']].head(5)
@@ -636,6 +712,8 @@ ohlcv[['symbol', 'date', 'close', 'volume']].head(5)
 
 #### Polars — Subset columns with select()
 
+Polars uses `select()` for column projection, even in the simplest cases. The output shows the matching four-column subset plus explicit schema metadata above the table.
+
 ```python
 pldf.select('symbol', 'date', 'close', 'volume').head(5)
 ```
@@ -644,6 +722,8 @@ pldf.select('symbol', 'date', 'close', 'volume').head(5)
 <!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td><td>1513937</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td><td>1382722</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td><td>1370204</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td><td>1469911</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td><td>1428681</td></tr></tbody></table></div>
 
 #### Pandas — Subset single row with iloc[n]
+
+Selecting one row with `iloc[0]` returns a Series keyed by column name. The output proves pandas collapses the row into a one-dimensional labeled result rather than a one-row DataFrame.
 
 ```python
 ohlcv.iloc[0]
@@ -663,6 +743,8 @@ Name: 0, dtype: object
 ```
 
 #### Polars — Subset single row with row()
+
+`row(0, named=True)` materializes one record as a Python mapping. The text output shows that Polars returns named scalar values instead of a pandas Series.
 
 ```python
 pldf.row(0, named=True)
@@ -684,6 +766,8 @@ pldf.row(0, named=True)
 ```
 
 #### Pandas — Subset with loc[] label filter
+
+This uses a boolean mask with `loc[]` to keep only `date` and `close` for one symbol. The output confirms pandas combines row filtering and column selection in a single label-oriented expression.
 
 ```python
 ohlcv.loc[ohlcv.symbol == 'ASML.AS', ['date', 'close']].head(5)
@@ -730,6 +814,8 @@ ohlcv.loc[ohlcv.symbol == 'ASML.AS', ['date', 'close']].head(5)
 
 #### Polars — Subset with filter() + select()
 
+Polars has no row-label index, so the same subset is expressed as `filter()` followed by `select()`. The output shows the equivalent ASML date/close slice with the Polars schema banner.
+
 ```python
 pldf.filter(pl.col('symbol') == 'ASML.AS').select('date', 'close').head(5)
 ```
@@ -738,6 +824,8 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').select('date', 'close').head(5)
 <!-- shape: (5, 2) --><table><thead><tr><th>date</th><th>close</th></tr><tr><td>date</td><td>f64</td></tr></thead><tbody><tr><td>2021-01-04</td><td>406.25</td></tr><tr><td>2021-01-05</td><td>406.9</td></tr><tr><td>2021-01-06</td><td>402.85</td></tr><tr><td>2021-01-07</td><td>403.9</td></tr><tr><td>2021-01-08</td><td>416.05</td></tr></tbody></table></div>
 
 #### Pandas — Subset multiple rows with iloc index
+
+Passing a list of integer positions selects non-contiguous rows in the order requested. The output shows pandas preserving the original row labels for those sampled positions.
 
 ```python
 ohlcv.iloc[[0, 50, 100, 500]]
@@ -814,6 +902,8 @@ ohlcv.iloc[[0, 50, 100, 500]]
 
 #### Polars — Subset multiple rows with index list
 
+Indexing with a list pulls the same non-contiguous rows by position in Polars. The output confirms the selected records are returned without a dedicated row index.
+
 ```python
 pldf[[0, 50, 100, 500]]
 ```
@@ -822,6 +912,8 @@ pldf[[0, 50, 100, 500]]
 <!-- shape: (4, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21210</td><td>&quot;ABI.BR&quot;</td><td>2021-03-15</td><td>52.32</td><td>53.05</td><td>52.18</td><td>52.29</td><td>48.9686</td><td>1253312</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21260</td><td>&quot;ABI.BR&quot;</td><td>2021-05-26</td><td>61.99</td><td>62.39</td><td>61.83</td><td>62.12</td><td>58.6701</td><td>940186</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21660</td><td>&quot;ABI.BR&quot;</td><td>2022-12-09</td><td>56.64</td><td>56.96</td><td>56.54</td><td>56.88</td><td>54.2262</td><td>1098905</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 #### Pandas — Select columns
+
+This is the minimal pandas projection pattern used throughout notebook work. The output confirms the frame is reduced to the requested three columns and keeps the default tabular display.
 
 ```python
 ohlcv[['symbol', 'date', 'close']].head(5)
@@ -874,6 +966,8 @@ ohlcv[['symbol', 'date', 'close']].head(5)
 
 #### Polars — Select columns
 
+The equivalent Polars projection stays expression-oriented even when no computation is involved. The output shows the same three-column shape with inferred dtypes.
+
 ```python
 pldf.select('symbol', 'date', 'close').head(5)
 ```
@@ -882,6 +976,8 @@ pldf.select('symbol', 'date', 'close').head(5)
 <!-- shape: (5, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-06</td><td>58.77</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-07</td><td>58.4</td></tr><tr><td>&quot;ABI.BR&quot;</td><td>2021-01-08</td><td>57.86</td></tr></tbody></table></div>
 
 #### Pandas — Filter rows
+
+This boolean mask keeps only ASML rows whose close is above 600 and then projects the relevant columns. The output proves pandas evaluates the mask eagerly and returns only matching rows.
 
 ```python
 ohlcv[(ohlcv.symbol == 'ASML.AS') & (ohlcv['close'] > 600)][['symbol', 'date', 'close']].head(5)
@@ -934,6 +1030,8 @@ ohlcv[(ohlcv.symbol == 'ASML.AS') & (ohlcv['close'] > 600)][['symbol', 'date', '
 
 #### Polars — Filter rows
 
+The same predicate becomes a column expression in Polars. The output confirms the filtered subset matches the pandas result while keeping the expression syntax explicit.
+
 ```python
 pldf.filter((pl.col('symbol') == 'ASML.AS') & (pl.col('close') > 600)).select('symbol', 'date', 'close').head(5)
 ```
@@ -942,6 +1040,8 @@ pldf.filter((pl.col('symbol') == 'ASML.AS') & (pl.col('close') > 600)).select('s
 <!-- shape: (5, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-14</td><td>609.1</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-22</td><td>620.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-23</td><td>638.8</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-26</td><td>638.0</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-07-27</td><td>623.0</td></tr></tbody></table></div>
 
 #### Pandas — Sort
+
+`sort_values(..., ascending=False)` ranks the rows by trading volume. The output shows the highest-volume days rising to the top of the frame.
 
 ```python
 ohlcv.sort_values('volume', ascending=False)[['symbol', 'date', 'volume']].head(5)
@@ -994,6 +1094,8 @@ ohlcv.sort_values('volume', ascending=False)[['symbol', 'date', 'volume']].head(
 
 #### Polars — Sort
 
+Polars sorts the same snapshot with `descending=True` and then projects the interesting columns. The output confirms the same top-volume records are surfaced.
+
 ```python
 pldf.sort('volume', descending=True).select('symbol', 'date', 'volume').head(5)
 ```
@@ -1002,6 +1104,8 @@ pldf.sort('volume', descending=True).select('symbol', 'date', 'volume').head(5)
 <!-- shape: (5, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ISP.MI&quot;</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>&quot;ISP.MI&quot;</td><td>2023-05-31</td><td>317362978</td></tr><tr><td>&quot;ISP.MI&quot;</td><td>2023-03-13</td><td>311886033</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>2021-11-03</td><td>306973344</td></tr></tbody></table></div>
 
 #### Pandas — Add computed column
+
+`assign()` creates a derived `range` column without mutating the original DataFrame in place. The output proves the calculated high-minus-low spread is available alongside the original columns.
 
 ```python
 ohlcv.assign(range=ohlcv.high - ohlcv.low)[['symbol', 'close', 'range']].head(5)
@@ -1054,6 +1158,8 @@ ohlcv.assign(range=ohlcv.high - ohlcv.low)[['symbol', 'close', 'range']].head(5)
 
 #### Polars — Add computed column
 
+`with_columns()` is the Polars equivalent for derived expressions. The output shows the same `range` calculation added as a new column in the returned frame.
+
 ```python
 pldf.with_columns((pl.col('high') - pl.col('low')).alias('range')).select('symbol', 'close', 'range').head(5)
 ```
@@ -1063,7 +1169,11 @@ pldf.with_columns((pl.col('high') - pl.col('low')).alias('range')).select('symbo
 
 ### Aggregations
 
+These examples translate SQL-style `GROUP BY` and `HAVING` logic into the native pandas and Polars aggregation APIs.
+
 #### Pandas — GroupBy with aggregates
+
+This groups rows by `symbol` and computes multiple aggregate columns in one pass. The output confirms pandas returns one row per symbol with named summary metrics.
 
 ```python
 ohlcv.groupby('symbol').agg(
@@ -1126,6 +1236,8 @@ ohlcv.groupby('symbol').agg(
 
 #### Polars — GroupBy with aggregates
 
+Polars performs the same grouped reduction with expression-based aggregations. The output shows the grouped result as a regular DataFrame with explicit schema metadata.
+
 ```python
 pldf.group_by('symbol').agg(
     pl.col('close').mean().alias('avg_close'),
@@ -1138,6 +1250,8 @@ pldf.group_by('symbol').agg(
 <!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_vol</th><th>days</th></tr><tr><td>str</td><td>f64</td><td>i64</td><td>u32</td></tr></thead><tbody><tr><td>&quot;RMS.PA&quot;</td><td>1761.555748</td><td>81633862</td><td>1331</td></tr><tr><td>&quot;ADYEN.AS&quot;</td><td>1545.976409</td><td>110400463</td><td>1331</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>671.348911</td><td>945070720</td><td>1331</td></tr><tr><td>&quot;MC.PA&quot;</td><td>662.404508</td><td>557855567</td><td>1331</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>544.661533</td><td>308359744</td><td>1324</td></tr></tbody></table></div>
 
 #### Pandas — HAVING
+
+This reproduces SQL `HAVING` behavior by aggregating first and filtering the grouped result afterward. The output proves the threshold is applied to per-symbol summaries rather than raw rows.
 
 ```python
 avg_vol = ohlcv.groupby('symbol')['volume'].mean()
@@ -1207,6 +1321,8 @@ avg_vol[avg_vol > 5_000_000].sort_values(ascending=False).to_frame('avg_volume')
 
 #### Polars — HAVING
 
+The Polars version applies the same post-aggregation filter inside an expression pipeline. The output shows only the groups that survive the aggregate condition.
+
 ```python
 pldf.group_by('symbol').agg(
     pl.col('volume').mean().alias('avg_vol')
@@ -1218,7 +1334,11 @@ pldf.group_by('symbol').agg(
 
 ### Window Functions
 
+Window functions let each row see neighboring or group-level context without collapsing the dataset. The pairs below keep the same ASML slice or per-symbol partition so the pandas and Polars semantics stay comparable.
+
 #### Pandas — Window Function LAG()
+
+`shift(1)` aligns each close with the prior trading day's close after sorting by date. The output proves the first row has no lag value and later rows inherit the previous close.
 
 ```python
 asml = ohlcv[ohlcv.symbol == 'ASML.AS'].sort_values('date').copy()
@@ -1280,6 +1400,8 @@ asml[['date', 'close', 'prev_close', 'return_pct']].tail(5)
 
 #### Polars — Window Function LAG()
 
+Polars expresses the same lag with a shifted column over the filtered symbol slice. The output shows the same prior-close alignment as the pandas example.
+
 ```python
 pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
     pl.col('close').shift(1).over('symbol').alias('prev_close')
@@ -1292,6 +1414,8 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 <!-- shape: (5, 4) --><table><thead><tr><th>date</th><th>close</th><th>prev_close</th><th>return_pct</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-06</td><td>1147.0</td><td>1186.0</td><td>-3.288364</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1147.0</td><td>0.05231</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1147.6</td><td>4.566051</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1200.0</td><td>-0.1</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1198.8</td><td>-0.667334</td></tr></tbody></table></div>
 
 #### Pandas — Window Function Cumulative SUM()
+
+This builds a running total of ASML volume over time. The output confirms the cumulative value increases row by row in date order.
 
 ```python
 asml = ohlcv[ohlcv.symbol == 'ASML.AS'].sort_values('date').copy()
@@ -1346,6 +1470,8 @@ asml[['date', 'volume', 'cum_vol']].tail(5)
 
 #### Polars — Window Function Cumulative SUM()
 
+The Polars version computes the same running total as a column expression. The output shows the cumulative sum growing across the ordered rows.
+
 ```python
 pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
     pl.col('volume').cum_sum().over('symbol').alias('cum_vol')
@@ -1356,6 +1482,8 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 <!-- shape: (5, 3) --><table><thead><tr><th>date</th><th>volume</th><th>cum_vol</th></tr><tr><td>date</td><td>i64</td><td>i64</td></tr></thead><tbody><tr><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table></div>
 
 #### Pandas — Window Function AVG() Moving Average
+
+This applies a rolling average to smooth short-term price movement. The output shows the moving-average column filling in only once enough rows exist for the configured window.
 
 ```python
 asml = ohlcv[ohlcv.symbol == 'ASML.AS'].sort_values('date').copy()
@@ -1410,6 +1538,8 @@ asml[['date', 'close', 'sma_20']].tail(5).round(2)
 
 #### Polars — Window Function AVG() Moving Average
 
+Polars computes the same moving window as an expression over the ordered slice. The output confirms the rolling average aligns with the pandas result.
+
 ```python
 pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
     pl.col('close').rolling_mean(20).over('symbol').alias('sma_20')
@@ -1420,6 +1550,8 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 <!-- shape: (5, 3) --><table><thead><tr><th>date</th><th>close</th><th>sma_20</th></tr><tr><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>2026-03-06</td><td>1147.0</td><td>1214.02</td></tr><tr><td>2026-03-09</td><td>1147.6</td><td>1211.16</td></tr><tr><td>2026-03-10</td><td>1200.0</td><td>1211.51</td></tr><tr><td>2026-03-11</td><td>1198.8</td><td>1211.06</td></tr><tr><td>2026-03-12</td><td>1190.8</td><td>1211.61</td></tr></tbody></table></div>
 
 #### Pandas — Window Function ROW_NUMBER()
+
+Here `rank(..., method='first')` emulates `ROW_NUMBER()` within each symbol partition. The output proves ranking restarts per symbol and orders rows by descending volume.
 
 ```python
 ohlcv['vol_rank'] = ohlcv.groupby('symbol')['volume'].rank(ascending=False, method='first').astype(int)
@@ -1473,6 +1605,8 @@ ohlcv[ohlcv.vol_rank == 1].sort_values('volume', ascending=False)[['symbol', 'da
 
 #### Polars — Window Function ROW_NUMBER()
 
+Polars assigns the same per-symbol ranking through expressions rather than a mutable helper column. The output shows the generated row numbers beside the source rows.
+
 ```python
 pldf.with_columns(
     pl.col('volume').rank(descending=True).over('symbol').alias('vol_rank')
@@ -1483,6 +1617,8 @@ pldf.with_columns(
 <!-- shape: (5, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>i64</td></tr></thead><tbody><tr><td>&quot;ISP.MI&quot;</td><td>2023-08-08</td><td>376391539</td></tr><tr><td>&quot;SAN.MC&quot;</td><td>2021-10-20</td><td>367211467</td></tr><tr><td>&quot;BBVA.MC&quot;</td><td>2021-09-17</td><td>228528294</td></tr><tr><td>&quot;NDA-FI.HE&quot;</td><td>2022-09-16</td><td>140675854</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>2021-08-17</td><td>114772834</td></tr></tbody></table></div>
 
 #### Pandas — Window Function LEAD()
+
+This looks ahead to the next trading day and measures the calendar gap between rows. The output proves weekends and holidays appear as multi-day jumps even though market rows remain consecutive.
 
 ```python
 asml = ohlcv[ohlcv.symbol == 'ASML.AS'].sort_values('date').copy()
@@ -1538,6 +1674,8 @@ asml[asml.gap_days > 3][['date', 'next_date', 'gap_days']].sort_values('gap_days
 
 #### Polars — Window Function LEAD()
 
+The Polars version computes the same next-date and gap calculation on the ordered symbol slice. The output shows the identical five-day holiday/weekend gaps as preserved notebook evidence.
+
 ```python
 pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
     pl.col('date').shift(-1).over('symbol').alias('next_date')
@@ -1551,7 +1689,11 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').sort('date').with_columns(
 
 ### Joins
 
+These examples move from aggregated price summaries into cross-table analytics by merging the OHLCV snapshot with the score snapshot.
+
 #### Pandas — JOIN
+
+This merges average close per symbol with the score table. Because `scores` contains multiple scoring dates per symbol inside the preserved snapshot, the output intentionally shows repeated join matches rather than a deduplicated dimension table.
 
 ```python
 avg_df = ohlcv.groupby('symbol')['close'].mean().round(2).reset_index(name='avg_close')
@@ -1611,6 +1753,8 @@ avg_df.merge(scores[['symbol', 'sector', 'composite_rank']], on='symbol').sort_v
 
 #### Polars — JOIN
 
+Polars performs the same join after converting the score slice into a Polars DataFrame. The repeated rows in the output confirm the same join cardinality as the pandas example.
+
 ```python
 pl_avg = pldf.group_by('symbol').agg(pl.col('close').mean().alias('avg_close'))
 pl_scores = pl.DataFrame({
@@ -1625,6 +1769,8 @@ pl_avg.join(pl_scores, on='symbol').sort('composite_rank').head(5)
 <!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>sector</th><th>composite_rank</th></tr><tr><td>str</td><td>f64</td><td>str</td><td>i64</td></tr></thead><tbody><tr><td>&quot;BNP.PA&quot;</td><td>60.937712</td><td>&quot;Financial Services&quot;</td><td>1</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>60.937712</td><td>&quot;Financial Services&quot;</td><td>1</td></tr><tr><td>&quot;BNP.PA&quot;</td><td>60.937712</td><td>&quot;Financial Services&quot;</td><td>1</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>22.430097</td><td>&quot;Communication Services&quot;</td><td>2</td></tr><tr><td>&quot;DTE.DE&quot;</td><td>22.430097</td><td>&quot;Communication Services&quot;</td><td>2</td></tr></tbody></table></div>
 
 #### Pandas — STDEV()
+
+This computes annualized volatility from percentage returns per symbol. The output ranks symbols by realized volatility, with the most volatile names at the top.
 
 ```python
 returns = ohlcv.sort_values(['symbol', 'date']).groupby('symbol')['close'].pct_change()
@@ -1691,6 +1837,8 @@ vol.sort_values(ascending=False).head(10).round(2).to_frame('annual_vol_%')
 
 #### Polars — STDEV()
 
+Polars derives the same annualized standard deviation from per-symbol returns. The output confirms the same high-volatility symbols appear first.
+
 ```python
 pldf.sort('symbol', 'date').with_columns(
     pl.col('close').pct_change().over('symbol').alias('ret')
@@ -1702,9 +1850,13 @@ pldf.sort('symbol', 'date').with_columns(
 <div>
 <!-- shape: (10, 2) --><table><thead><tr><th>symbol</th><th>annual_vol_%</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ADYEN.AS&quot;</td><td>50.295865</td></tr><tr><td>&quot;ENR.DE&quot;</td><td>50.045128</td></tr><tr><td>&quot;RHM.DE&quot;</td><td>40.84623</td></tr><tr><td>&quot;PRX.AS&quot;</td><td>39.715469</td></tr><tr><td>&quot;ARGX.BR&quot;</td><td>39.305925</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>37.624556</td></tr><tr><td>&quot;IFX.DE&quot;</td><td>37.249051</td></tr><tr><td>&quot;UCG.MI&quot;</td><td>35.550249</td></tr><tr><td>&quot;VOW.DE&quot;</td><td>35.509649</td></tr><tr><td>&quot;ADS.DE&quot;</td><td>34.372174</td></tr></tbody></table></div>
 
-### CRUD-like Operations
+### Data modification patterns
+
+These examples mirror insert-, update-, delete-, and drop-style transformations without writing back to storage. Each one returns a transformed frame so the effect is visible immediately in the preserved output.
 
 #### Pandas — Add rows
+
+`pd.concat()` appends a synthetic one-row DataFrame to the existing snapshot. The output proves the new `TEST.XX` row lands at the bottom and leaves missing derived columns such as `vol_rank` empty.
 
 ```python
 new_row = pd.DataFrame([{'symbol': 'TEST.XX', 'date': '2025-01-01', 'open': 100, 'high': 105,
@@ -1771,6 +1923,8 @@ pd.concat([ohlcv, new_row], ignore_index=True).tail(3)
 
 #### Polars — Add rows
 
+`vstack()` appends a schema-compatible row built from an existing template. The output shows why that template matters: fields you do not override, such as `id`, `date`, and `adj_close`, are inherited from the source row.
+
 ```python
 new_row = pldf.head(1).with_columns(
     pl.lit('TEST.XX').alias('symbol'), pl.lit(102.0).alias('close'), pl.lit(50000).cast(pl.Int64).alias('volume'))
@@ -1781,6 +1935,8 @@ pldf.vstack(new_row).tail(3)
 <!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>66877</td><td>&quot;WKL.AS&quot;</td><td>2026-03-11</td><td>67.5</td><td>69.6</td><td>67.02</td><td>67.22</td><td>67.22</td><td>1142531</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>66929</td><td>&quot;WKL.AS&quot;</td><td>2026-03-12</td><td>67.0</td><td>67.54</td><td>66.28</td><td>67.32</td><td>67.32</td><td>210379</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21160</td><td>&quot;TEST.XX&quot;</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>102.0</td><td>53.5761</td><td>50000</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
 
 #### Pandas — Update column
+
+This recalculates `adj_close` for one symbol with `assign()` and returns the modified slice. The output proves the new values are computed from the current `close` column instead of mutating the base frame in place.
 
 ```python
 ohlcv[ohlcv.symbol == 'ASML.AS'].assign(adj_close=lambda d: d['close'] * 1.05)[['symbol', 'date', 'adj_close']].head(5)
@@ -1833,6 +1989,8 @@ ohlcv[ohlcv.symbol == 'ASML.AS'].assign(adj_close=lambda d: d['close'] * 1.05)[[
 
 #### Polars — Update column
 
+The Polars version overwrites `adj_close` in the returned expression result. The output shows the same recalculated values for the first ASML rows.
+
 ```python
 pldf.filter(pl.col('symbol') == 'ASML.AS').with_columns(
     (pl.col('close') * 1.05).alias('adj_close')
@@ -1843,6 +2001,8 @@ pldf.filter(pl.col('symbol') == 'ASML.AS').with_columns(
 <!-- shape: (5, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>adj_close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-04</td><td>426.5625</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-05</td><td>427.245</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-06</td><td>422.9925</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-07</td><td>424.095</td></tr><tr><td>&quot;ASML.AS&quot;</td><td>2021-01-08</td><td>436.8525</td></tr></tbody></table></div>
 
 #### Pandas — Delete rows
+
+This removes ASML rows with a negated boolean mask and compares the row counts. The text output proves the filter drops exactly the ASML slice from the snapshot.
 
 ```python
 filtered = ohlcv[ohlcv.symbol != 'ASML.AS']
@@ -1855,6 +2015,8 @@ print(f"  {len(ohlcv)} - ASML rows = {len(filtered)} remaining")
 
 #### Polars — Delete rows
 
+Polars expresses the same delete-style operation as a filter that keeps every other symbol. The output confirms the remaining row count matches the pandas result.
+
 ```python
 filtered = pldf.filter(pl.col('symbol') != 'ASML.AS')
 print(f"  {pldf.height} - ASML rows = {filtered.height} remaining")
@@ -1865,6 +2027,8 @@ print(f"  {pldf.height} - ASML rows = {filtered.height} remaining")
 ```
 
 #### Pandas — Drop column
+
+`drop(columns=...)` removes housekeeping fields from the displayed frame. The output proves the requested columns are gone while the rest of the schema stays intact.
 
 ```python
 ohlcv.drop(columns=['dividends', 'stock_splits', 'is_filled'], errors='ignore').head(3)
@@ -1929,6 +2093,8 @@ ohlcv.drop(columns=['dividends', 'stock_splits', 'is_filled'], errors='ignore').
 
 #### Polars — Drop column
 
+Polars drops the same housekeeping columns with a positional expression-style call. The output shows the frame reduced to the retained nine columns.
+
 ```python
 pldf.drop('dividends', 'stock_splits', 'is_filled').head(3)
 ```
@@ -1940,116 +2106,69 @@ pldf.drop('dividends', 'stock_splits', 'is_filled').head(3)
 
 | Feature | Pandas | Polars |
 |---------|--------|--------|
-| **Engine** | C + Cython (NumPy) | Rust (Apache Arrow) |
-| **Memory model** | Copy-heavy, mutable | Zero-copy, immutable |
-| **Index** | Row labels (`.loc`, `.iloc`) | No index — positional only |
-| **Lazy evaluation** | No — every operation materializes | Yes — `.lazy()` builds a query plan, `.collect()` executes |
-| **Multithreading** | Single-threaded (GIL) | Multi-threaded by default |
-| **String handling** | Python `object` dtype (slow) | Arrow `Utf8` (fast, zero-copy) |
-| **Missing values** | `NaN` (float only), `None`, `pd.NA` | `null` (first-class, any type) |
-| **GroupBy** | Split-apply-combine | Hash-based, parallelized |
-| **Window functions** | `.shift()`, `.rolling()`, `.rank()` | `.over()` expressions (partition without materializing groups) |
-| **Joins** | `.merge(on=, how=)` | `.join(on=, how=)` — same API, faster execution |
-| **SQL support** | Via `pandasql` (slow) | Built-in `pl.sql()` on DataFrames |
-| **Streaming** | No | `pl.scan_*()` + `.collect(streaming=True)` for larger-than-RAM |
-| **Ecosystem** | Massive — scikit-learn, matplotlib, seaborn all expect pandas | Growing — `.to_pandas()` bridge available |
-| **Learning curve** | Lower — 10+ years of tutorials, Stack Overflow answers | Steeper — expression API is powerful but different |
+| **Engine** | NumPy-backed DataFrame library with C/Cython kernels | Rust query engine over Arrow-style columnar data |
+| **Memory model** | Mutable; copies depend on operation and settings | Immutable, expression-oriented columns |
+| **Index** | Optional row index with `.loc[]` and `.iloc[]` | No row-label index; positional rows plus expressions |
+| **Evaluation model** | Eager DataFrame operations | Eager frames plus optional lazy query plans via `.lazy()` |
+| **Parallelism** | Some vectorized kernels release the GIL, but many workflows remain effectively single-threaded | Multithreaded execution for many operations by default |
+| **String handling** | `object`, `string`, or Arrow-backed string dtypes depending on configuration | Arrow UTF-8 strings by default |
+| **Missing values** | `NaN`, `None`, and `pd.NA` depending on dtype | `null` as a first-class value across dtypes |
+| **GroupBy** | Split-apply-combine API | Expression-based grouped aggregations |
+| **Window functions** | `shift()`, `rolling()`, `rank()`, `transform()` | `over()` expressions plus rolling/window helpers |
+| **Joins** | `.merge(on=, how=)` | `.join(on=, how=)` |
+| **SQL support** | `read_sql*()` via SQLAlchemy / DBAPI connectors | SQL surface via `SQLContext` / `pl.sql`, with expressions as the primary API |
+| **Large-file scans** | Chunked reads at the IO boundary; in-memory work stays eager | Lazy scans such as `scan_parquet()` can reduce memory and push filters earlier |
+| **Ecosystem** | Default target for many notebook, plotting, and ML libraries | Growing ecosystem with `.to_pandas()` as a common bridge |
+| **Learning curve** | Lower if you already know notebook-style pandas | Higher until the expression API becomes familiar |
 
 ### When to use Pandas
 
-- **Prototyping and exploration** — familiar API, instant Stack Overflow answers
-- **Interop with ML libraries** — scikit-learn, XGBoost, statsmodels all expect pandas DataFrames
-- **Small data** (< 1M rows) — performance difference is negligible
-- **Row-label semantics** — time-series with DatetimeIndex, multi-level hierarchical indices
-- **Legacy codebases** — existing pandas pipelines that work and don't need optimization
+- **Notebook exploration and plotting** — pandas remains the default target for many examples, charting libraries, and ad hoc analysis flows.
+- **ML and statistics interop** — scikit-learn, statsmodels, and many feature-engineering utilities still expect pandas objects directly.
+- **Index-heavy workflows** — labeled time-series and multi-index operations are more natural when row indices are part of the design.
+- **Existing pandas codebases** — if the pipeline already works and is not bottlenecked, pandas is usually the cheaper operational choice.
 
 ### When to use Polars
 
-- **Large datasets** (1M–100M+ rows) — 10–100x faster than pandas due to Rust engine + multithreading
-- **ETL pipelines** — lazy evaluation optimizes the query plan before execution (predicate pushdown, projection pushdown)
-- **Memory-constrained environments** — Arrow columnar format uses 2–5x less RAM than pandas
-- **Streaming / larger-than-RAM** — `scan_parquet().collect(streaming=True)` processes data in chunks
-- **Reproducibility** — immutable DataFrames prevent accidental mutation bugs
-- **Cloud-native pipelines** — reads/writes Parquet, IPC, NDJSON natively without conversion
+- **Large analytical workloads** — Polars often shines when wide or tall datasets can stay in vectorized column expressions.
+- **Lazy ETL pipelines** — `.lazy()` plus scan APIs help push filters and projections earlier in the plan.
+- **Memory-sensitive batch transforms** — immutable columnar execution reduces some of the copy and Python-object overhead common in pandas workflows.
+- **Arrow- and Parquet-centered stacks** — Polars fits naturally when the rest of the pipeline already speaks columnar formats.
 
-### Gotchas
+## Operational constraints and diagnostics
 
-| Gotcha | Pandas | Polars |
-|--------|--------|--------|
-| **SettingWithCopyWarning** | Modifying a view vs copy is ambiguous — use `.copy()` or `.loc[]` | Not an issue — DataFrames are immutable |
-| **dtype coercion** | Silently upcasts int to float when NaN is present | Keeps int + null separate (no silent coercion) |
-| **Chained indexing** | `df[cond][col]` may return copy or view unpredictably | Not possible — use `.filter().select()` (always predictable) |
-| **Memory spikes** | `.apply()` and `.iterrows()` create Python objects per row | Expressions stay in Rust — no per-row Python overhead |
-| **Column order** | Preserved but fragile after joins/concats | Preserved, deterministic |
-| **Datetime handling** | `pd.Timestamp` (nanosecond precision, Y2262 overflow) | Arrow temporal types (microsecond default, configurable) |
-| **No index in Polars** | — | If you rely on `.loc[label]`, you need `.filter()` instead |
-| **Ecosystem gaps** | — | Some viz/ML libraries don't accept Polars — use `.to_pandas()` |
+### Typing and iterator rules
 
-## Warnings
+#### `Optional`, `Callable`, and `list[int]` follow different syntax eras
 
-> [!warning] `TypeVar` and `Generic` are erased at runtime
->
-> Type hints in Python provide no runtime enforcement. `Stack[int]` and `Stack[str]` are the same class at runtime — you cannot check `isinstance(stack, Stack[int])`.
+`list[int]`, `dict[str, int]`, and similar container annotations are built-in syntax in Python 3.9+, but `Optional` and `Callable` still come from `typing` unless you adopt newer alternatives such as `str | None`. If you need compatibility with Python versions older than 3.9, use `typing.List[...]` or `from __future__ import annotations` instead of assuming the built-in generic syntax exists.
 
-> [!success] Correct pattern
->
-> Use type hints for static analysis (mypy/pyright) and IDE support. For runtime validation, use `pydantic` or manual checks.
+#### Missing `Generic[T]` and mypy assignment errors usually have the same root cause
 
-> [!warning] `itertools.groupby` requires pre-sorted input
->
-> `groupby` groups consecutive equal elements — it does NOT collect all matching elements like SQL `GROUP BY` or pandas `groupby()`. Unsorted input produces fragmented groups.
+When mypy reports an incompatible assignment in generic code, the problem is often that the type variable stopped propagating through the API. The usual fixes are to inherit from `Generic[T]`, annotate the internal storage with the same `T`, and then correct whichever assignment or return path drifted away from the declared type.
 
-> [!success] Correct pattern
->
-> Always sort before grouping: `groupby(sorted(data, key=keyfunc), key=keyfunc)`. Or use `defaultdict(list)` for a single-pass grouping without sorting.
+#### Iterator exhaustion and `groupby()` ordering are consumption problems
 
-> [!warning] Generators are single-pass
->
-> A generator expression `(x for x in iter)` can only be consumed once. Iterating a second time yields nothing — the generator is exhausted.
+The generator and `map()` examples above show why iterator pipelines are single-pass: once consumed, they are empty. `itertools.groupby()` has a related constraint in a different dimension: it only groups consecutive equal keys, so sort first when you want SQL-style grouping, or use `defaultdict(list)` when a one-pass accumulation is clearer.
 
-> [!success] Correct pattern
->
-> If you need multiple passes, materialize with `list()`. If the data is too large for memory, restructure the pipeline to consume in a single pass or use `itertools.tee()` (but note `tee` stores all consumed items in memory).
+### Pandas constraints
 
-> [!warning] pandas `SettingWithCopyWarning`
->
-> `df[df['col'] > 5]['other'] = 1` may modify a copy, not the original DataFrame. The result is silently discarded.
+#### Chained assignment and nullable integer handling
 
-> [!success] Correct pattern
->
-> Use `.loc[]` for chained assignment: `df.loc[df['col'] > 5, 'other'] = 1`. Or switch to Polars where DataFrames are immutable.
+`SettingWithCopyWarning` exists because `df[mask][col] = ...` may target a temporary slice instead of the original frame. Use `.loc[...]` for in-place updates or `.copy()` when you want an isolated slice. For integer columns that may hold missing values later, prefer nullable dtypes such as `pd.Int64Dtype()` so pandas does not silently promote the whole column to `float64`.
 
-> [!warning] pandas silently upcasts int to float when NaN is present
->
-> A column of `int64` values becomes `float64` the moment a single `NaN` is introduced — this can break downstream type-sensitive code.
+#### Row-wise pandas APIs and timestamp edges
 
-> [!success] Correct pattern
->
-> Use `pd.Int64Dtype()` (nullable integer) or switch to Polars, which keeps int + null separate without coercion.
+Row-wise helpers such as `.apply(axis=1)` and `.iterrows()` materialize Python objects and usually cost more memory and CPU than vectorized expressions. Also keep temporal precision in mind: pandas timestamps use nanosecond semantics with an upper bound around year 2262, so cross-library time handling can diverge once you move between pandas, Arrow, and Polars.
 
-## Recommendations
+### Polars constraints
 
-- **Use type hints for library APIs and shared code** — even though Python doesn't enforce them at runtime, they enable IDE autocomplete, mypy checking, and self-documenting function signatures.
-- **Prefer comprehensions over `map`/`filter`** for most code — comprehensions are more Pythonic and readable. Reserve `map`/`filter` for when you're passing an existing named function.
-- **Use generators for large datasets** — `(x for x in iter)` processes one item at a time without loading everything into memory.
-- **Use `defaultdict(list)` for single-pass grouping** — more intuitive than `itertools.groupby` and doesn't require pre-sorting.
-- **Use Polars for new pipelines with large data** — 10–100x faster than pandas, lazy evaluation, immutable DataFrames, less memory.
-- **Keep pandas for exploration and ecosystem compatibility** — notebooks, quick analysis, and libraries that don't accept Polars yet.
-- **Use `Protocol` for structural typing** — lighter than `ABC`, no inheritance required, and works with mypy for static contract verification.
-- **Use `TypeVar` with `bound=` for constrained generics** — when your generic function needs to call specific methods on the type parameter.
+#### No `.loc[]` and no materialized data until `.collect()`
 
-## Troubleshooting
+The subsetting examples above show the first implication of Polars having no row-label index: row filters become explicit expressions such as `.filter(pl.col("symbol") == "ASML.AS")`. The second implication appears in lazy mode: a `LazyFrame` is only a plan until `.collect()` runs it, so inspect or export only after materialization.
 
-| Problem | Cause | Fix |
-|---|---|---|
-| mypy error: `Incompatible types in assignment` | Type hint mismatch — assigning wrong type to a typed variable | Fix the type annotation or the assignment |
-| `itertools.groupby` produces fragmented groups | Input not sorted by the grouping key | Sort first: `sorted(data, key=keyfunc)` |
-| Generator yields nothing on second iteration | Generators are single-pass — already exhausted | Materialize with `list()` or recreate the generator |
-| `map()` returns an iterator, not a list | Python 3 `map` is lazy | Wrap in `list()`: `list(map(func, data))` |
-| `SettingWithCopyWarning` in pandas | Chained indexing modifies a copy, not the original | Use `.loc[]` for assignment |
-| pandas column changed from int to float | NaN introduced into an int column | Use `pd.Int64Dtype()` or Polars |
-| Polars `LazyFrame` has no data | Haven't called `.collect()` yet | Call `.collect()` to materialize the query |
-| Polars `.loc[]` doesn't exist | Polars has no row index | Use `.filter()` for row selection |
-| `TypeError: 'type' object is not subscriptable` | Using `list[int]` in Python <3.9 | Use `from __future__ import annotations` or `typing.List[int]` |
-| Generic class not type-checked | Forgot to inherit from `Generic[T]` | Add `Generic[T]` to the class bases |
+#### Schema inspection and pandas handoff still matter
+
+Polars preserves schema predictably, but joins, appends, and interop boundaries are still worth checking explicitly, especially when you build synthetic rows from templates as in the `vstack()` example above. When a downstream visualization or ML library expects pandas, convert at the boundary with `.to_pandas()` rather than bouncing back and forth mid-pipeline.
+
 

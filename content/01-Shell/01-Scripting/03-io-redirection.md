@@ -8,7 +8,7 @@ aliases: [IO redirection, I/O redirection, output redirection, stderr redirect, 
 keywords: [redirection, stdout, stderr, stdin, file descriptor, dev null, redirect output, redirect error, tee, append, overwrite, fd 0, fd 1, fd 2, 2>&1, output to file]
 description: "How to redirect stdin, stdout, and stderr to files, other streams, or /dev/null in bash and PowerShell, including production logging patterns and common gotchas."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-14
 status: complete
 ---
 
@@ -17,184 +17,131 @@ status: complete
 > [!quote]
 > "Expect the output of every program to become the input to another, as yet unknown, program."
 >
-> — **Doug McIlroy**, *Bell System Technical Journal* (1978)
->
-> "Rule of Silence: When a program has nothing surprising to say, it should say nothing."
->
-> — **Eric S. Raymond**, *The Art of Unix Programming* (2003)
+> -- **Doug McIlroy**, *Bell System Technical Journal* (1978)
 
 > [!abstract]- Summary
 >
-> Covers stdin, stdout, and stderr redirection in bash and PowerShell — operators, here-documents, stream splitting with `tee`, and safe-use patterns for production pipeline logging.
+> Explains how Bash and PowerShell redirect input, normal output, and diagnostic streams to files, pipes, or null sinks.
 >
-> **File descriptors and stream model**
-> - The three standard file descriptors: fd 0 (stdin), fd 1 (stdout), fd 2 (stderr) and their role as the target of all redirection operators
-> - PowerShell's six-stream model: stream 1 (Success), 2 (Error), 3 (Warning), 4 (Verbose), 5 (Debug), 6 (Information) and the `*>` wildcard operator
+> Shows overwrite and append operators, combined stream redirection, here-documents, here-strings, and `tee` / `Tee-Object` logging patterns with live verification output.
 >
-> **Output redirection (bash)**
-> - Overwrite with `>`, append with `>>`, stderr with `2>`, combined with `2>&1` and `&>` / `&>>` (bash 4+)
-> - Discard with `> /dev/null 2>&1` or `&> /dev/null`
-> - `noclobber` / `set -C` safety option and the `>|` force-overwrite bypass
->
-> **Input redirection (bash)**
-> - File input with `<`; inline multi-line stdin with here-documents (`<<DELIM`, `<<'DELIM'` for literal); single-string stdin with here-strings (`<<<`)
->
-> **Output redirection (PowerShell)**
-> - Stream-specific operators `>`, `>>`, `2>`, `3>`–`6>`, `*>`, `*>>`; `Out-File` with `-Encoding` and `-Append`; discard with `*> $null` or `Out-Null`
-> - PowerShell here-strings: expandable `@"..."@` and literal `@'...'@`
->
-> **Stream splitting and production logging**
-> - `tee` (bash: `-a`, `-i` flags) and `Tee-Object` (PowerShell: `-FilePath`, `-Append`, `-Variable`) for simultaneous terminal display and persistent log file
-> - Pattern for separating stdout and stderr into timestamped log files using process substitution
->
-> **Operations and safety**
-> - Warnings: 5 — redirect-before-write silent data loss, wrong `2>&1` ordering loses stderr, `>` overwrites without confirmation, pipe does not capture stderr by default, PowerShell 5.1 UTF-16LE default encoding
-> - Recommendations table: 7 scenarios covering production logging, error separation, tool-availability checks, noclobber, here-doc quoting, PowerShell encoding, discarding all output
-> - Troubleshooting: 7 failure modes covering empty output file, stderr on terminal despite redirect, garbled characters, unexpected here-doc expansion, noclobber false positive, pipe missing warnings (PowerShell), tee showing nothing
+> Covers the failure modes that cause silent truncation, lost stderr, missed warnings, and cross-platform encoding surprises.
 
 > [!note]- Glossary
 >
 > **File descriptor (fd)**
-> - A small integer the operating system assigns to each open file, socket, or stream within a process; every process starts with three: fd 0 (stdin), fd 1 (stdout), fd 2 (stderr).
-> - All redirection operators work by reassigning file descriptor numbers — understanding the numbered model is required for correct combined redirections such as `> file 2>&1`.
 >
-> > [!warning] Descriptors are not special objects
-> >
-> > stdin, stdout, and stderr are not privileged constructs — they are fd 0, 1, and 2. Any file descriptor can be redirected, duplicated (`2>&1`), or closed (`2>&-`); the three standard ones are simply the ones the shell opens by default.
+> - A small integer that identifies an open file, socket, or stream within a process; the shell starts each process with fd 0, 1, and 2 already open.
+> - Redirection operators work by reassigning or duplicating those numbers before the target command starts.
+> - stdin, stdout, and stderr are not special objects; they are just the three descriptors the shell opens by default.
 >
 > ---
 >
 > **`stdin` (fd 0)**
-> - Standard input — the default source of data for a process; for an interactive shell, stdin is the keyboard.
-> - Input redirection operators (`<`, `<<`, `<<<`) replace the keyboard with a file or inline text, enabling non-interactive execution of tools that normally expect a terminal prompt.
 >
-> > [!info] Pipes feed stdin, not files
-> >
-> > The pipe operator `|` connects the previous command's stdout to the next command's stdin. It does not create a file. If you need a named reference to piped output, use process substitution (`<()`) instead.
+> - Standard input is the default data source for a process; in an interactive shell it is usually the keyboard.
+> - `<`, `<<`, and `<<<` replace that interactive source with a file or inline text.
+> - A pipe feeds the next command's stdin; it does not create a file you can reopen later.
 >
 > ---
 >
 > **`stdout` (fd 1)**
-> - Standard output — the default destination for a process's normal (non-error) output; for an interactive shell, stdout is the terminal screen.
-> - Output redirection operators (`>`, `>>`) reroute fd 1 to a file instead of the terminal; `tee` and `Tee-Object` split fd 1 to both simultaneously.
 >
-> > [!danger] `>` truncates before the command starts
-> >
-> > The shell opens and truncates the output file to zero bytes before launching the target command. If the input and output file are the same path (e.g., `sort file.txt > file.txt`), the file is destroyed before the command reads a single byte. No error is reported.
+> - Standard output is the default destination for normal command results.
+> - `>` and `>>` move fd 1 from the terminal to a file, while `tee` and `Tee-Object` duplicate it.
+> - `>` truncates the target before the command runs, so `sort file.txt > file.txt` destroys the input first.
 >
 > ---
 >
 > **`stderr` (fd 2)**
-> - Standard error — a separate output stream reserved for error messages, warnings, and diagnostics; written independently of stdout so structured data on fd 1 is not contaminated.
-> - Separating stderr from stdout lets you log errors independently and prevents error messages from corrupting CSV or JSON output on stdout.
 >
-> > [!warning] Stderr bypasses pipes and stdout redirects
-> >
-> > `command > file` redirects only fd 1. Stderr still flows to the terminal. Similarly, `command | grep pattern` filters only stdout — stderr bypasses the pipe entirely. Use `2>&1` before the pipe (`command 2>&1 | grep pattern`) or `|&` (bash 4+) to include stderr.
+> - Standard error is a separate output stream for failures, warnings, and diagnostics.
+> - Keeping stderr separate prevents error text from corrupting structured stdout such as CSV or JSON.
+> - `command > file` and `command | next` affect stdout only; stderr still bypasses the file or pipe unless you redirect it explicitly.
 >
 > ---
 >
 > **`/dev/null` / `$null`**
-> - A special file on Unix/Linux (`/dev/null`) and a built-in automatic variable in PowerShell (`$null`) that discards all data written to it and returns EOF on read.
-> - Used to silence noisy commands when only the exit code matters (e.g., connectivity checks, tool-existence tests).
 >
-> > [!warning] Platform-specific sink names
-> >
-> > `> /dev/null` does not work in PowerShell — use `> $null`, `*> $null`, or `Out-Null`. Conversely, `> $null` is not meaningful in bash (it creates a file literally named `$null`).
+> - `/dev/null` on Unix-like systems and `$null` in PowerShell are sink targets that discard anything written to them.
+> - They are useful when the exit status matters more than the output.
+> - The names are platform-specific: `> /dev/null` is Bash syntax, while `*> $null` or `Out-Null` is the PowerShell form.
 >
 > ---
 >
 > **`2>&1`**
-> - A redirection expression that duplicates fd 2 (stderr) into fd 1 (stdout), merging both streams to the same destination.
-> - Required for capturing both normal output and errors in the same file or pipe; must appear after the output redirect so fd 1 already points to the target file at evaluation time.
 >
-> > [!danger] Order is strict and non-obvious
-> >
-> > `command 2>&1 > file` sends stderr to the terminal (where fd 1 was pointing at evaluation time of `2>&1`) and only stdout to the file. The correct form is `command > file 2>&1`. The shell evaluates redirections left-to-right.
+> - `2>&1` duplicates stderr into whatever destination stdout is using at that moment.
+> - It is the standard Bash form for merging both streams into one file or pipe.
+> - Order matters: `command > file 2>&1` works, while `command 2>&1 > file` leaves stderr on the terminal.
 >
 > ---
 >
 > **`&>` / `&>>`**
-> - Bash 4+ shorthand operators equivalent to `> file 2>&1` (overwrite) and `>> file 2>&1` (append); redirect both stdout and stderr in a single token.
-> - Cleaner syntax for the common pattern of capturing all output from a command; not available in POSIX sh or bash versions below 4.0.
 >
-> > [!info] Not available in POSIX sh
-> >
-> > Scripts using `#!/bin/sh` or deployed to minimal Unix environments (BusyBox, Alpine `sh`) cannot use `&>` or `&>>`. Use the explicit `> file 2>&1` form for maximum portability.
+> - Bash 4+ provides `&>` for overwrite and `&>>` for append as shorthand for redirecting stdout and stderr together.
+> - They make the common "both streams to one destination" pattern shorter.
+> - They are Bash extensions, not POSIX `sh` syntax.
 >
 > ---
 >
 > **`tee` / `Tee-Object`**
-> - A command (`tee` on Linux, `Tee-Object` on PowerShell) that splits its stdin: one copy goes to a file, the other continues to stdout — named after a T-shaped plumbing fitting.
-> - The standard pattern for real-time monitoring of long-running pipeline jobs while simultaneously capturing a persistent log file.
 >
-> > [!warning] Default mode overwrites the log file
-> >
-> > Without `-a` (bash) or `-Append` (PowerShell), `tee` overwrites the destination file on each run. In production logging, always use the append flag to preserve the history of previous runs.
+> - `tee` in Bash and `Tee-Object` in PowerShell copy a stream to both persistent storage and the current pipeline.
+> - They are the standard choice when you want live console visibility and a saved log at the same time.
+> - Without `-a` or `-Append`, they overwrite the target file on each run.
 >
 > ---
 >
 > **Here-document (`<<`)**
-> - A shell construct that feeds multi-line inline text to a command's stdin without creating a temporary file; delimited by a user-chosen word (e.g., `EOF`).
-> - Used to embed SQL scripts, configuration blocks, or multi-line strings directly in shell scripts without managing separate template files.
 >
-> > [!danger] Unquoted delimiter expands variables
-> >
-> > `<<EOF` expands `$variables`, backticks, and `$(...)` inside the block. `<<'EOF'` (quoted delimiter) disables all expansion and treats content as literal text. SQL scripts that use `$1`-style placeholders or dollar-quoting must use the quoted form to avoid injecting shell variable values.
+> - A here-document feeds a multi-line block directly into stdin without creating a separate file.
+> - It is useful for inline SQL, config fragments, and generated text.
+> - `<<EOF` expands variables; `<<'EOF'` keeps the block literal.
 >
 > ---
 >
 > **Here-string (`<<<`)**
-> - A bash construct that feeds a single string directly to a command's stdin; more efficient than `echo "text" | command` because it avoids spawning a subshell.
-> - Quick way to feed short values to tools like `base64`, `bc`, `jq`, or `read` without a pipe.
 >
-> > [!warning] Bash-only — not POSIX sh
-> >
-> > Here-strings are a bash extension and are not available in POSIX sh, dash, or BusyBox sh. Scripts starting with `#!/bin/sh` cannot use `<<<` and will fail silently or with a syntax error on non-bash systems.
+> - A Bash here-string sends a single string to stdin without building an `echo ... | command` pipeline.
+> - It is convenient for short values and command substitution tests.
+> - It is Bash-only and does not exist in POSIX `sh`.
 >
 > ---
 >
 > **`noclobber` / `set -C`**
-> - A bash shell option (`set -C` or `set -o noclobber`) that prevents `>` from overwriting existing files; requires `>|` to explicitly force an overwrite.
-> - A safety net for automated scripts that should never silently clobber output from a previous run; combined with `set -euo pipefail` it closes a common class of data-loss bugs.
 >
-> > [!info] `>|` is the bypass — not `>!`
-> >
-> > To force an overwrite when `noclobber` is active, use `>|` (the `noclobber bypass` operator). The `>!` form is csh syntax and does not work in bash.
+> - `set -C` (or `set -o noclobber`) stops Bash from overwriting an existing file with `>`.
+> - It is a safety net for scripts that should fail before replacing previous output.
+> - `>|` is the explicit bypass; `>!` is not valid Bash syntax.
 >
 > ---
 >
 > **PowerShell streams**
-> - PowerShell defines six numbered output streams: 1 (Success), 2 (Error), 3 (Warning), 4 (Verbose), 5 (Debug), 6 (Information); the `*>` wildcard operator targets all six simultaneously.
-> - More granular than Unix's two-stream model — allows selectively capturing warnings, verbose traces, or debug output that bash has no direct equivalent for.
 >
-> > [!warning] `2>` does not capture warnings in PowerShell
-> >
-> > Warnings are stream 3, not stream 2. `2>` only captures terminating and non-terminating errors (stream 2). To capture warnings, use `3>` or `*>`. This is a common source of missed diagnostic output in PowerShell scripts.
+> - PowerShell exposes six numbered streams: 1 Success, 2 Error, 3 Warning, 4 Verbose, 5 Debug, and 6 Information.
+> - That model is more granular than the Unix stdout/stderr split.
+> - `2>` captures errors only; warnings remain on stream 3 unless you merge or redirect them separately.
 >
 > ---
 >
 > **PowerShell here-string (`@"..."@` / `@'...'@`)**
-> - Multi-line string literals in PowerShell delimited by `@"` / `"@` (expandable, interpolates `$variables` and `$(expressions)`) or `@'` / `'@` (literal, no expansion).
-> - Used to define SQL queries, JSON templates, regex patterns, or any multi-line content without escape sequences; the closing delimiter must appear at column zero with no leading whitespace.
 >
-> > [!danger] Closing delimiter indentation breaks parsing
-> >
-> > If the closing `"@` or `'@` has any leading whitespace (tabs or spaces), PowerShell throws a parse error or includes the whitespace in the string. This is a frequent source of subtle bugs in indented script blocks or functions.
+> - PowerShell here-strings are multi-line string literals that either expand variables (`@"..."@`) or keep text literal (`@'...'@`).
+> - They are useful for SQL, JSON, regexes, and any multi-line payload you want to keep readable.
+> - The closing delimiter must start at column zero with no leading spaces.
 >
 > ---
 >
 > **`Out-File`**
-> - A PowerShell cmdlet that writes pipeline output to a file; the underlying implementation of the `>` and `>>` operators, exposing `-Encoding` and `-Width` parameters not available through the operators alone.
-> - Use `Out-File -Encoding utf8` in cross-platform scripts targeting both Windows PowerShell 5.1 (which defaults to UTF-16LE) and PowerShell 7+ (which defaults to UTF-8 with no BOM).
 >
-> > [!warning] PowerShell 5.1 defaults to UTF-16LE
-> >
-> > In Windows PowerShell 5.1, `>` and `Out-File` write UTF-16LE, which breaks Unix tools and pipelines expecting UTF-8. Always specify `-Encoding utf8` in scripts that may run on 5.1, or migrate to PowerShell 7+ where the default is UTF-8.
+> - `Out-File` is the cmdlet behind `>` and `>>`, with explicit parameters for encoding, width, and append behavior.
+> - It is the reliable way to state file encoding in scripts that cross Windows and Unix boundaries.
+> - Windows PowerShell 5.1 defaults to UTF-16LE, so cross-platform scripts should set `-Encoding utf8` deliberately.
 
-Every process has three standard file descriptors: fd 0 (stdin) for input, fd 1 (stdout) for normal output, and fd 2 (stderr) for error messages. Redirection lets you reroute these streams to files, other streams, or `/dev/null` (the void). Mastering redirection is essential for logging pipeline runs, suppressing noise, and separating errors from normal output.
+Every process starts with stdin, stdout, and stderr already attached. Redirection rewires those streams before the command begins, which is why operator order can change behavior completely.
 
-The diagram below shows how the three standard file descriptors relate to a running process and where each redirection operator reroutes them.
+The diagram below shows the standard descriptors, the common redirection operators that target them, and the split between terminal, files, and discard sinks.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
@@ -214,7 +161,7 @@ flowchart LR
     proc --> stderr
     stdout -- "> file<br>>> file" --> file1
     stderr -- "2> file" --> file2
-    stdout -- "&> / > f 2>&1" --> file1
+    stdout -- "&> / > file 2>&1" --> file1
     stderr -- "2>&1" --> stdout
     stdout -- "| tee -a" --> teenode
     teenode --> file1
@@ -223,66 +170,109 @@ flowchart LR
     stderr -- "2>/dev/null" --> devnull
 ```
 
-
 ## Linux I/O redirection tools
 
-Bash uses file-descriptor numbers (0, 1, 2) and symbolic operators (`>`, `>>`, `<`, `2>`, `&>`) to redirect streams. All operators act on the shell level before the target command starts, which is critical for understanding ordering rules and the redirect-before-write gotcha documented below.
+Bash applies redirections in the shell before the target process starts. That model is simple once you think in file descriptors, but it also explains why bad ordering can silently drop output or truncate files.
 
 ### Linux | redirection | output operators
 
-The output redirection operators control where fd 1 (stdout) and fd 2 (stderr) are written. Understanding their evaluation order is required for correct combined redirections.
+These operators target stdout, stderr, or both. The examples below use temporary directories so the behavior is visible without depending on project-specific files or paths.
 
 #### Redirect stdout to a file (overwrite)
 
-The `>` operator opens the target file and truncates it to zero bytes before the command starts, then connects fd 1 to that file. If the file does not exist it is created. If it already exists all previous content is lost.
+`>` opens the destination for writing and truncates any previous content before the command runs. The example overwrites an existing file and then prints the final contents so the effect is visible.
 
 ```bash
-command > output.txt
+tmp=$(mktemp -d)
+printf 'old\n' > "$tmp/output.txt"
+printf 'new\n' > "$tmp/output.txt"
+cat "$tmp/output.txt"
+```
+
+```text
+new
 ```
 
 #### Redirect stdout to a file (append)
 
-The `>>` operator opens the target file in append mode so existing content is preserved. New output is written after the last byte. This is safe for log aggregation across multiple runs.
+`>>` keeps the existing file contents and writes new stdout at the end. That makes it the default choice for cumulative logs and audit trails.
 
 ```bash
-command >> output.txt
+tmp=$(mktemp -d)
+printf 'first\n' > "$tmp/output.txt"
+printf 'second\n' >> "$tmp/output.txt"
+cat "$tmp/output.txt"
+```
+
+```text
+first
+second
 ```
 
 #### Redirect stderr to a file
 
-The `2>` operator connects fd 2 (stderr) to the target file. Normal output (fd 1) still flows to the terminal. Use this when you want to capture error messages separately for later analysis while keeping live output visible.
+`2>` moves only stderr. Stdout keeps going to the terminal, which is why this pattern is useful when you want live progress but a separate error record.
 
 ```bash
-command 2> errors.txt
+tmp=$(mktemp -d)
+bash -lc 'printf "visible stdout\n"; printf "captured stderr\n" >&2' 2> "$tmp/errors.txt"
+printf 'stderr file:\n'
+cat "$tmp/errors.txt"
+```
+
+```text
+visible stdout
+stderr file:
+captured stderr
 ```
 
 #### Redirect both stdout and stderr to the same file
 
-The `2>&1` expression redirects fd 2 to wherever fd 1 currently points. The ordering is strict: `> all.txt` must appear first to redirect fd 1 to the file, then `2>&1` redirects fd 2 to that same destination. Reversing the order (`2>&1 > all.txt`) redirects fd 2 to the terminal (the original location of fd 1) and only fd 1 ends up in the file.
+`> file 2>&1` first points stdout at the file and then duplicates stderr into that same destination. The output below proves that both streams were written into one file instead of the terminal.
 
 ```bash
-command > all.txt 2>&1
+tmp=$(mktemp -d)
+bash -lc 'printf "stdout line\n"; printf "stderr line\n" >&2' > "$tmp/all.txt" 2>&1
+cat "$tmp/all.txt"
 ```
 
-#### Redirect both stdout and stderr — bash 4+ shorthand
-
-The `&>` operator is syntactic sugar for `> file 2>&1`. It is available in bash 4.0 and later and produces identical results with cleaner syntax. It always overwrites; use `&>>` to append both streams.
-
-```bash
-command &> all.txt
+```text
+stdout line
+stderr line
 ```
 
+#### Redirect both stdout and stderr with Bash shorthand
+
+`&>` is the overwrite shorthand and `&>>` is the append shorthand. They are convenient in Bash-only scripts when the explicit `> file 2>&1` form is not needed for portability.
+
 ```bash
-command &>> all.txt
+tmp=$(mktemp -d)
+bash -lc 'printf "first stdout\n"; printf "first stderr\n" >&2' &> "$tmp/all.txt"
+bash -lc 'printf "second stdout\n"; printf "second stderr\n" >&2' &>> "$tmp/all.txt"
+cat "$tmp/all.txt"
+```
+
+```text
+first stdout
+first stderr
+second stdout
+second stderr
 ```
 
 #### Discard all output
 
-Writing to `/dev/null` discards output silently. Reads from `/dev/null` return EOF immediately. The combined pattern `> /dev/null 2>&1` (or `&> /dev/null`) is used when a command is run purely for its exit code, such as testing connectivity or checking if a file exists.
+Redirecting to `/dev/null` is the Bash way to silence a command when only success or failure matters. Because the redirect is intentionally silent, the follow-up line verifies that the command still ran and returned exit code `0`.
 
 ```bash
-command > /dev/null 2>&1
+bash -lc 'printf "hidden stdout\n"; printf "hidden stderr\n" >&2' > /dev/null 2>&1
+printf 'command completed with exit code %s\n' "$?"
 ```
+
+```text
+command completed with exit code 0
+```
+
+Use the lookup table below when you need the Bash syntax quickly.
 
 | Operator | Syntax | Effect |
 |---|---|---|
@@ -291,45 +281,58 @@ command > /dev/null 2>&1
 | `2>` | `cmd 2> file` | Redirect stderr to file (overwrite) |
 | `2>>` | `cmd 2>> file` | Redirect stderr to file (append) |
 | `2>&1` | `cmd > file 2>&1` | Merge stderr into stdout, both to file |
-| `&>` | `cmd &> file` | Redirect stdout and stderr to file (bash 4+, overwrite) |
-| `&>>` | `cmd &>> file` | Redirect stdout and stderr to file (bash 4+, append) |
+| `&>` | `cmd &> file` | Redirect stdout and stderr to file (Bash 4+, overwrite) |
+| `&>>` | `cmd &>> file` | Redirect stdout and stderr to file (Bash 4+, append) |
 | `> /dev/null` | `cmd > /dev/null` | Discard stdout |
 | `&> /dev/null` | `cmd &> /dev/null` | Discard stdout and stderr |
 
 ### Linux | redirection | input operators
 
-Input redirection feeds file content or inline text directly into a command's stdin, replacing interactive keyboard input. This enables non-interactive execution of tools that normally expect a terminal prompt.
+Input redirection replaces interactive keyboard input with a file or inline block. That matters any time a script needs to feed a command deterministically.
 
 #### Redirect stdin from a file
 
-The `<` operator opens the specified file and feeds its contents as the standard input of the command. The command sees the file data exactly as if the user had typed it. This is commonly used to feed SQL scripts to database clients without interactive prompts.
+`<` opens a file and makes it the command's stdin. `wc -l` is a compact verification target because the output reflects only what came from the redirected file.
 
 ```bash
-sqlcmd -S server -U sa -P "$PASS" -d data-pipeline < query.sql
+tmp=$(mktemp -d)
+printf 'alpha\nbeta\ngamma\n' > "$tmp/input.txt"
+wc -l < "$tmp/input.txt"
 ```
 
-#### Here-document — embed multi-line stdin inline
+```text
+3
+```
 
-A here-doc (`<<`) lets you embed multi-line text directly in the script without creating a temporary file. The shell feeds everything between the two delimiters to the command's stdin. Quoting the delimiter (`<<'EOF'`) disables variable expansion and command substitution inside the block, which is important when the content contains `$` or backticks.
+#### Here-document - embed multi-line stdin inline
+
+A here-document keeps multi-line input in the script itself. The first example shows normal expansion, and the second uses a quoted delimiter so the payload stays literal.
 
 ```bash
+name='Elysium'
 cat <<EOF
-Line one
-Line two with variable: $HOME
+Hello, $name
 EOF
 ```
 
-Use the quoted form when the block must be treated literally:
+```text
+Hello, Elysium
+```
 
 ```bash
+name='Elysium'
 cat <<'EOF'
-This $variable will NOT be expanded.
+Hello, $name
 EOF
 ```
 
-#### Here-string — feed a single string to stdin
+```text
+Hello, $name
+```
 
-A here-string (`<<<`) passes a single string directly to a command's stdin. It avoids a subshell compared to `echo "text" | command` and is useful for feeding short values to tools like `read`, `bc`, or `base64`.
+#### Here-string - feed a single string to stdin
+
+`<<<` is the compact Bash form for passing one string into stdin. The example below base64-encodes a short string and preserves the original captured output.
 
 ```bash
 base64 <<< "encode this string"
@@ -338,6 +341,8 @@ base64 <<< "encode this string"
 ```text
 ZW5jb2RlIHRoaXMgc3RyaW5nCg==
 ```
+
+Use the lookup table below when you need the input forms at a glance.
 
 | Operator | Syntax | Effect |
 |---|---|---|
@@ -348,33 +353,75 @@ ZW5jb2RlIHRoaXMgc3RyaW5nCg==
 
 ### Linux | redirection | tee and production logging
 
-The `tee` command reads from stdin and writes simultaneously to a file and to stdout, allowing a pipeline to both save and display output. This is the standard pattern for real-time monitoring of long-running jobs while also capturing a persistent log.
+`tee` duplicates stdout so the same stream can be watched live and persisted to disk. When stderr matters too, you have to merge it before the pipe.
 
 #### Write to terminal and file simultaneously
 
-`tee` without flags overwrites the destination file. It splits the stream so the downstream terminal sees the same data that is written to disk.
+The command below writes two lines to stdout, shows them live, and then prints the saved log so the duplicated stream is obvious.
 
 ```bash
-python3 pipeline/run.py | tee /var/log/pipeline/run.log
+tmp=$(mktemp -d)
+printf 'line one\nline two\n' | tee "$tmp/run.log"
+printf '\nlog file:\n'
+cat "$tmp/run.log"
+```
+
+```text
+line one
+line two
+
+log file:
+line one
+line two
 ```
 
 #### Append to log file while displaying live output
 
-The `-a` flag puts `tee` in append mode, preserving previous log content. Prepending `2>&1` merges stderr into stdout before the pipe so both streams are captured and displayed.
+`tee -a` preserves prior log content. The example seeds the file with one line, merges stderr into stdout with `2>&1`, and then appends the new combined stream.
 
 ```bash
-python3 pipeline/run.py 2>&1 | tee -a /var/log/pipeline/run.log
+tmp=$(mktemp -d)
+printf 'seed line\n' > "$tmp/run.log"
+bash -lc 'printf "stdout line\n"; printf "stderr line\n" >&2' 2>&1 | tee -a "$tmp/run.log"
+printf '\nlog file:\n'
+cat "$tmp/run.log"
+```
+
+```text
+stdout line
+stderr line
+
+log file:
+seed line
+stdout line
+stderr line
 ```
 
 #### Separate stdout and stderr into distinct log files
 
-This pattern uses process substitution to simultaneously redirect stdout to one file and stderr to another, both with timestamps derived from the same `date` call. Useful for post-mortem analysis where distinguishing error lines from normal output is required.
+Separate log files are easier to search when the normal data stream and diagnostics have different consumers. This example uses a fixed timestamp string so the resulting paths stay stable inside the demo.
 
 ```bash
-python3 pipeline/run.py \
-  > /var/log/pipeline/run_$(date +%Y%m%d_%H%M%S).log \
-  2> /var/log/pipeline/run_$(date +%Y%m%d_%H%M%S).err
+tmp=$(mktemp -d)
+stamp='20260414_061410'
+bash -lc 'printf "ok\n"; printf "problem\n" >&2' \
+  > "$tmp/run_${stamp}.log" \
+  2> "$tmp/run_${stamp}.err"
+printf 'stdout file:\n'
+cat "$tmp/run_${stamp}.log"
+printf '\nstderr file:\n'
+cat "$tmp/run_${stamp}.err"
 ```
+
+```text
+stdout file:
+ok
+
+stderr file:
+problem
+```
+
+Use the lookup table below when you only need the `tee` flags.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -382,52 +429,169 @@ python3 pipeline/run.py \
 | `-a` | `cmd \| tee -a file` | Append to file, pass through to stdout |
 | `-i` | `cmd \| tee -i file` | Ignore SIGINT (keep writing even if Ctrl-C is pressed) |
 
-### Linux | redirection | common gotchas
+### Linux | recommendations
 
-Understanding the shell's evaluation order prevents data-loss bugs that are difficult to diagnose because no error is reported.
+The operator sections above explain mechanics. The recommendations below turn those mechanics into repeatable Bash patterns for production scripts and terminal workflows.
 
-#### Redirect-before-write — sort overwrites itself to empty
+#### Capture both streams in a production log
 
-The shell opens and truncates the output file before launching the command. When the input and output file are the same path, the file is emptied before the command reads a single byte.
+If a job can fail noisily, append a merged stream to a persistent log. That gives you a complete timeline without sacrificing live terminal visibility.
 
 ```bash
-sort output.txt > output.txt
+tmp=$(mktemp -d)
+bash -lc 'printf "job ok\n"; printf "job warning\n" >&2' 2>&1 | tee -a "$tmp/run.log"
+printf '\nlog file:\n'
+cat "$tmp/run.log"
 ```
 
-> [!warning] This command silently destroys the contents of `output.txt`. The shell truncates the file to zero bytes before `sort` reads a single line. No error is reported.
+```text
+job ok
+job warning
 
-> [!success] Use a temporary file and rename it, or use `sponge` from the `moreutils` package. `sponge` buffers all input in memory before opening the output file, making in-place rewrites safe.
->
-> ```bash
-> sort output.txt > tmp.txt && mv tmp.txt output.txt
-> ```
->
-> ```bash
-> sort output.txt | sponge output.txt
-> ```
-
-#### Wrong order for 2>&1 combined redirect
-
-Placing `2>&1` before `>` redirects stderr to the terminal (the original fd 1 location) and sends only stdout to the file.
-
-```bash
-command 2>&1 > all.txt
+log file:
+job ok
+job warning
 ```
 
-> [!warning] This does NOT capture stderr in the file. At the moment `2>&1` is evaluated, fd 1 still points to the terminal, so stderr is sent to the terminal. The subsequent `> all.txt` then redirects only fd 1 to the file.
+#### Keep data output and error output separate
 
-> [!success] Always place `2>&1` after the output redirect so fd 1 is already pointing to the file when stderr is merged into it.
->
-> ```bash
-> command > all.txt 2>&1
-> ```
-
-
-#### Prevent accidental overwrites with noclobber
-
-`set -C` (or `set -o noclobber`) makes the shell refuse to overwrite existing files with `>`. You must use `>|` to explicitly force an overwrite. This is a safety net for automated scripts that should never clobber previous output.
+Structured output should not share a file with diagnostics. The example keeps CSV-like data on stdout and sends the bad row marker to a separate error log.
 
 ```bash
+tmp=$(mktemp -d)
+bash -lc 'printf "row1,row2\n"; printf "bad row\n" >&2' > "$tmp/data.csv" 2> "$tmp/errors.log"
+printf 'data.csv:\n'
+cat "$tmp/data.csv"
+printf '\nerrors.log:\n'
+cat "$tmp/errors.log"
+```
+
+```text
+data.csv:
+row1,row2
+
+errors.log:
+bad row
+```
+
+#### Check whether a tool exists without printing noise
+
+`command -v tool > /dev/null 2>&1` is the quiet existence check for shell scripts. The verification line prints the exit code instead of the command path.
+
+```bash
+command -v bash > /dev/null 2>&1
+printf 'bash_available=%s\n' "$?"
+```
+
+```text
+bash_available=0
+```
+
+#### Quote here-document delimiters when embedded text must stay literal
+
+Quoted delimiters prevent accidental expansion inside inline SQL, JSON templates, and shell snippets that contain `$`-prefixed placeholders.
+
+```bash
+ticker='AAPL'
+cat <<'EOF'
+SELECT '$ticker' AS literal_symbol;
+EOF
+```
+
+```text
+SELECT '$ticker' AS literal_symbol;
+```
+
+### Linux | troubleshooting
+
+These are the failure signatures that show up most often in shell scripts. Each example is intentionally small so the broken behavior is obvious before the fix is explained.
+
+#### Output file is empty after a redirect
+
+If the input file and output file are the same path, the shell truncates the target before the command reads it. The byte count below drops to zero because `sort` destroyed the input first.
+
+```bash
+tmp=$(mktemp -d)
+printf 'pear\napple\n' > "$tmp/items.txt"
+sort "$tmp/items.txt" > "$tmp/items.txt"
+printf 'bytes_after_sort=%s\n' "$(wc -c < "$tmp/items.txt")"
+```
+
+```text
+bytes_after_sort=0
+```
+
+#### Stderr still appears on the terminal after a redirect
+
+This symptom usually means stderr was never redirected correctly. The example uses the classic wrong-order form, so stderr stays on the terminal while only stdout reaches the file.
+
+```bash
+tmp=$(mktemp -d)
+bash -lc 'printf "stdout line\n"; printf "stderr line\n" >&2' 2>&1 > "$tmp/all.txt"
+printf 'file:\n'
+cat "$tmp/all.txt"
+```
+
+```text
+stderr line
+file:
+stdout line
+```
+
+#### Here-document variables expanded when they should stay literal
+
+An unquoted delimiter expands shell variables inside the block. If you expected literal text, the output below is the failure mode you are looking for.
+
+```bash
+name='Elysium'
+cat <<EOF
+name=$name
+EOF
+```
+
+```text
+name=Elysium
+```
+
+#### `noclobber` seems to block a new file
+
+`noclobber` only blocks overwriting an existing file. If a first write to a new path succeeds, a failure on a supposedly missing file is more likely a path, permission, or disk issue.
+
+```bash
+tmp=$(mktemp -d)
+cd "$tmp"
+set -C
+printf 'new file\n' > new.txt
+cat new.txt
+```
+
+```text
+new file
+```
+
+#### `tee` wrote nothing because the pipeline produced only stderr
+
+`tee` receives stdout from the pipe, not stderr. When the upstream command writes only to stderr, the terminal still shows the message but the log stays empty.
+
+```bash
+tmp=$(mktemp -d)
+bash -lc 'printf "stderr only\n" >&2' | tee "$tmp/out.log"
+printf 'log_bytes=%s\n' "$(wc -c < "$tmp/out.log")"
+```
+
+```text
+stderr only
+log_bytes=0
+```
+
+#### Prevent accidental overwrites with `noclobber`
+
+`set -C` turns accidental overwrite into an explicit failure. The existing refusal output below is preserved, and the second command shows the deliberate `>|` bypass.
+
+```bash
+tmp=$(mktemp -d)
+cd "$tmp"
+printf 'old\n' > existing_file.txt
 set -C
 echo "data" > existing_file.txt
 ```
@@ -437,76 +601,129 @@ bash: existing_file.txt: cannot overwrite existing file
 ```
 
 ```bash
+tmp=$(mktemp -d)
+cd "$tmp"
+printf 'old\n' > existing_file.txt
+set -C
 echo "data" >| existing_file.txt
+cat existing_file.txt
 ```
 
-> [!tip] Add `set -C` to production scripts
->
-> Combined with `set -euo pipefail` (see [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting)), `set -C` prevents a class of data-loss bugs where a redirect silently destroys an output file from a previous run.
+```text
+data
+```
 
 ## PowerShell I/O redirection tools
 
-PowerShell extends the two-stream Unix model to six numbered streams: 1 (Success/stdout), 2 (Error), 3 (Warning), 4 (Verbose), 5 (Debug), 6 (Information). The `*>` wildcard operator targets all six at once. PowerShell also replaces `/dev/null` with `$null`, a built-in variable that discards all data written to it.
+PowerShell keeps the familiar success and error streams but adds separate warning, verbose, debug, and information channels. That is why the redirection syntax looks similar to Bash at first and then quickly diverges.
 
 ### PowerShell | redirection | output operators
 
-The PowerShell redirection operators mirror their bash counterparts for streams 1 and 2 but extend to streams 3–6 and the `*` wildcard. `Out-File` is the cmdlet equivalent and offers additional parameters for encoding and width.
+These operators target the numbered PowerShell streams. The examples use temporary directories and simple strings so the stream behavior stays visible instead of host-specific.
 
-#### Redirect stdout (Success stream) to a file — overwrite
+#### Redirect stdout (Success stream) to a file
 
-The `>` operator is an alias for `Out-File`. It writes the Success stream (stream 1) to a file, overwriting it if it exists. PowerShell serializes objects as formatted strings using the default formatter before writing.
+`>` writes the Success stream to a file. The example overwrites an existing file and then reads it back so the final state is unambiguous.
 
 ```powershell
-Get-Process > processes.txt
+$tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+$path = Join-Path $tmp 'processes.txt'
+'old' | Out-File $path -Encoding utf8
+'new' > $path
+Get-Content $path
 ```
 
-An explicit `Out-File` call gives access to encoding and line-width parameters:
-
-```powershell
-Get-Process | Out-File processes.txt -Encoding utf8 -Width 200
+```text
+new
 ```
 
-#### Redirect stdout to a file — append
+#### Redirect stdout to a file and append additional output
 
-The `>>` operator and `Out-File -Append` both open the file in append mode. The `-Append` flag on `Out-File` is preferred in scripts because it makes intent explicit.
+`>>` appends to the same file, and `Out-File -Append` makes that intent explicit in scripts. The final read shows all three writes in order.
 
 ```powershell
-Get-Process >> processes.txt
+$tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+$path = Join-Path $tmp 'processes.txt'
+'first' > $path
+'second' >> $path
+'third' | Out-File $path -Append
+Get-Content $path
 ```
 
-```powershell
-Get-Process | Out-File processes.txt -Append
+```text
+first
+second
+third
 ```
 
 #### Redirect stderr (Error stream) to a file
 
-Stream 2 carries terminating and non-terminating errors. Redirecting `2>` captures error records to a file while the Success stream continues to the default output.
+`2>` captures the error stream without touching the Success stream. The verification step filters the redirected file down to the message line so the captured error is easy to inspect.
 
 ```powershell
-Get-ChildItem C:<br>onExistent 2> errors.txt
+$tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+$path = Join-Path $tmp 'errors.txt'
+Write-Error 'captured error' 2> $path
+Get-Content $path | Select-String -Pattern 'captured error' | ForEach-Object { $_.Matches.Value }
+```
+
+```text
+captured error
 ```
 
 #### Redirect all streams to a file
 
-The `*>` operator redirects all six streams simultaneously. This is the PowerShell equivalent of `&> all.txt` in bash but also captures Warning, Verbose, Debug, and Information streams that bash has no direct equivalent for.
+`*>` is the wildcard form that captures Success, Warning, Verbose, Debug, Information, and Error output in one destination. The verification step extracts the key tokens from the saved file so each stream is visible without the surrounding formatting noise.
 
 ```powershell
-command *> all.txt
+if ($PSVersionTable.PSVersion.Major -ge 7) { $PSStyle.OutputRendering = 'PlainText' }
+$tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+$path = Join-Path $tmp 'all.txt'
+& {
+  Write-Output 'success'
+  Write-Warning 'warning'
+  Write-Verbose 'verbose' -Verbose
+  Write-Debug 'debug' -Debug
+  Write-Information 'info' -InformationAction Continue
+  Write-Error 'error'
+} *> $path
+Get-Content $path |
+  Select-String -Pattern 'success|warning|verbose|debug|info|error' -AllMatches |
+  ForEach-Object { $_.Matches.Value }
+```
+
+```text
+success
+warning
+verbose
+debug
+info
+Error
+error
 ```
 
 #### Discard all output
 
-`$null` is a built-in automatic variable. Assigning to it or redirecting to it discards data without writing to disk. Using `*> $null` silences all six streams simultaneously.
+`*> $null` discards every PowerShell stream. Because the redirected command is intentionally silent, the follow-up line proves that only later output is still visible.
 
 ```powershell
-command *> $null
+& {
+  Write-Output 'success'
+  Write-Warning 'warning'
+  Write-Information 'info' -InformationAction Continue
+} *> $null
+'only this line remains'
 ```
 
-Alternatively, pipe to `Out-Null`:
-
-```powershell
-command | Out-Null
+```text
+only this line remains
 ```
+
+Use the lookup table below for the numbered PowerShell stream operators.
 
 | Operator | Syntax | Effect |
 |---|---|---|
@@ -520,35 +737,75 @@ command | Out-Null
 | `6>` | `cmd 6> file` | Redirect Information stream to file |
 | `*>` | `cmd *> file` | Redirect all streams to file |
 | `*>>` | `cmd *>> file` | Redirect all streams to file (append) |
-| `*> $null` | `cmd *> $null` | Discard all streams (equivalent to `> /dev/null 2>&1`) |
+| `*> $null` | `cmd *> $null` | Discard all streams |
 
 ### PowerShell | redirection | Tee-Object
 
-`Tee-Object` is the PowerShell equivalent of the Unix `tee` command. It splits the pipeline so output is written to a file (or variable) while simultaneously passing the objects through to the next pipeline stage or the console.
+`Tee-Object` is the PowerShell split-point for live output plus persisted output. Unlike Bash `tee`, it works with PowerShell objects, not just plain text.
 
 #### Write to terminal and file simultaneously
 
-`Tee-Object -FilePath` writes the string representation of each pipeline object to a file while letting the objects continue down the pipeline to the console.
+`Tee-Object -FilePath` writes the same Success stream to the console and a file. The verification step reads the file back immediately.
 
 ```powershell
-Get-Process | Tee-Object -FilePath processes.txt
+$tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+$path = Join-Path $tmp 'processes.txt'
+'alpha','beta' | Tee-Object -FilePath $path
+"`nfile:"
+Get-Content $path
 ```
 
-#### Append to log file while displaying live output
+```text
+alpha
+beta
 
-The `-Append` switch preserves previous file content, mirroring `tee -a` in bash.
+file:
+alpha
+beta
+```
+
+#### Append to a log file while displaying live output
+
+`-Append` keeps existing log content. Because warnings live on stream 3, the example merges `3>&1` before `Tee-Object` so both lines are visible and persisted.
 
 ```powershell
-python3 pipeline/run.py 2>&1 | Tee-Object -FilePath C:\Logs\run.log -Append
+if ($PSVersionTable.PSVersion.Major -ge 7) { $PSStyle.OutputRendering = 'PlainText' }
+$tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+$path = Join-Path $tmp 'run.log'
+'seed' | Set-Content $path
+& { Write-Output 'live success'; Write-Warning 'live warning' } 3>&1 | Tee-Object -FilePath $path -Append
+"`nfile:"
+Get-Content $path
 ```
 
+```text
+live success
+WARNING: live warning
+
+file:
+seed
+live success
+live warning
+```
 #### Capture output in a variable and continue the pipeline
 
-`Tee-Object -Variable` stores objects in a PowerShell variable for later inspection while still sending them to the next command. This is useful in interactive debugging sessions.
+`Tee-Object -Variable` lets you inspect the full stream later while the pipeline keeps moving. The filtered output proves the downstream pipeline still ran, and the final line shows the saved copy.
 
 ```powershell
-Get-Service | Tee-Object -Variable services | Where-Object Status -eq Running
+$captured = $null
+'one','two','three' | Tee-Object -Variable captured | Where-Object { $_ -match 't' }
+"captured=$($captured -join ',')"
 ```
+
+```text
+two
+three
+captured=one,two,three
+```
+
+Use the lookup table below for the most common `Tee-Object` parameters.
 
 | Parameter | Syntax | Description |
 |---|---|---|
@@ -558,17 +815,18 @@ Get-Service | Tee-Object -Variable services | Where-Object Status -eq Running
 
 ### PowerShell | redirection | here-string
 
-PowerShell here-strings use `@"..."@` (expandable) and `@'...'@` (literal) delimiters. The closing delimiter must appear at the start of a line with no leading whitespace. They are used to define multi-line string literals without escape sequences, and to feed multi-line content to commands.
+PowerShell here-strings are multi-line literals, not stdin redirection. They matter in this note because they are often the PowerShell substitute for Bash here-doc content blocks.
 
-#### Expandable here-string — variable interpolation active
+#### Expandable here-string - variable interpolation active
 
-Inside `@"..."@`, PowerShell expands `$variables` and `$(expressions)` normally. Use this form when the string content must reference runtime values.
+`@"..."@` expands variables and expressions inside the block. The example uses a fixed date string so the original captured output remains stable.
 
 ```powershell
 $name = "World"
+$today = "2026-04-03"
 $text = @"
 Hello, $name
-Today is $(Get-Date -Format 'yyyy-MM-dd')
+Today is $today
 "@
 Write-Output $text
 ```
@@ -578,9 +836,9 @@ Hello, World
 Today is 2026-04-03
 ```
 
-#### Literal here-string — no expansion
+#### Literal here-string - no expansion
 
-Inside `@'...'@`, all content is treated as literal text. Dollar signs, backticks, and parentheses have no special meaning. Use this form for content that must not be processed (e.g., JSON templates, SQL scripts, regex patterns).
+`@'...'@` keeps the content untouched. That is the safe form for SQL, JSON, templates, and any block that contains `$`-prefixed text you do not want interpolated.
 
 ```powershell
 $sql = @'
@@ -589,70 +847,152 @@ FROM dbo.Positions
 WHERE ticker = '$AAPL'
   AND date >= '2026-01-01'
 '@
-Invoke-Sqlcmd -Query $sql -ServerInstance "srv01"
+Write-Output $sql
 ```
+
+```text
+SELECT *
+FROM dbo.Positions
+WHERE ticker = '$AAPL'
+  AND date >= '2026-01-01'
+```
+
+Use the lookup table below when choosing the PowerShell here-string form.
 
 | Form | Delimiters | Variable expansion | Use case |
 |---|---|---|---|
 | Expandable | `@"..."@` | Yes | Strings with dynamic values |
 | Literal | `@'...'@` | No | SQL, JSON, regex, raw templates |
 
+### PowerShell | recommendations
 
+These patterns build on the core operators above and focus on the cases that most often matter in scripts shared across Windows and Unix environments.
+
+#### Append production logs with `Tee-Object -Append`
+
+When operators need both live visibility and a durable log, append instead of overwrite. Merging stream 3 before the tee step keeps warning text in the same timeline.
+
+```powershell
+if ($PSVersionTable.PSVersion.Major -ge 7) { $PSStyle.OutputRendering = 'PlainText' }
+$tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+$path = Join-Path $tmp 'run.log'
+'seed' | Set-Content $path
+& { Write-Output 'live success'; Write-Warning 'live warning' } 3>&1 | Tee-Object -FilePath $path -Append
+"`nfile:"
+Get-Content $path
+```
+
+```text
+live success
+WARNING: live warning
+
+file:
+seed
+live success
+live warning
+```
+
+#### Keep success output and error output in separate files
+
+Separating data from diagnostics keeps structured results machine-readable. The example writes the data row to one file and the error text to another.
+
+```powershell
+$tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+$data = Join-Path $tmp 'data.csv'
+$errors = Join-Path $tmp 'errors.log'
+& { 'row1,row2'; [Console]::Error.WriteLine('bad row') } > $data 2> $errors
+'data.csv:'
+Get-Content $data
+"`nerrors.log:"
+Get-Content $errors
+```
+
+```text
+data.csv:
+row1,row2
+
+errors.log:
+bad row
+```
+
+#### Prefer `Out-File -Encoding utf8` when another tool will read the file
+
+Encoding bugs are easiest to prevent before the file leaves PowerShell. The byte dump below shows the UTF-8 representation of `olá` rather than the UTF-16LE layout that surprises many Unix tools.
+
+```powershell
+$tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+$path = Join-Path $tmp 'utf8.txt'
+'olá' | Out-File $path -Encoding utf8
+[BitConverter]::ToString([IO.File]::ReadAllBytes($path))
+```
+
+```text
+6F-6C-C3-A1-0D-0A
+```
+
+### PowerShell | troubleshooting
+
+Most PowerShell redirect bugs come from the extra streams or from encoding defaults that differ across hosts. These examples isolate those two cases.
+
+#### Redirected file contains UTF-16LE bytes
+
+If a file starts with `FF-FE` and every character is followed by `00`, you wrote UTF-16LE. That is the default many people still encounter in Windows PowerShell 5.1.
+
+```powershell
+$tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $tmp | Out-Null
+$path = Join-Path $tmp 'unicode.txt'
+'olá' | Out-File $path -Encoding unicode
+[BitConverter]::ToString([IO.File]::ReadAllBytes($path))
+```
+
+```text
+FF-FE-6F-00-6C-00-E1-00-0D-00-0A-00
+```
+
+#### The pipeline missed warnings
+
+PowerShell pipes stream 1 by default, not stream 3. The first command shows the warning reaching the console while the pipeline sees only the data row; the second merges `3>&1` so the warning enters the pipeline too.
+
+```powershell
+if ($PSVersionTable.PSVersion.Major -ge 7) { $PSStyle.OutputRendering = 'PlainText' }
+& { Write-Warning 'pay attention'; Write-Output 'data row' } | ForEach-Object { "pipe saw: $_" }
+```
+
+```text
+WARNING: pay attention
+pipe saw: data row
+```
+
+```powershell
+if ($PSVersionTable.PSVersion.Major -ge 7) { $PSStyle.OutputRendering = 'PlainText' }
+& { Write-Warning 'pay attention'; Write-Output 'data row' } 3>&1 | ForEach-Object { "pipe saw: $_" }
+```
+
+```text
+pipe saw: pay attention
+pipe saw: data row
+```
 
 ## Warnings
 
-> [!danger] Redirect-before-write destroys data silently
->
-> `sort file.txt > file.txt` empties the file because the shell truncates it to zero bytes before `sort` reads a single line. No error is reported. Always use a temporary file and rename, or pipe through `sponge` from `moreutils`.
-
-> [!warning] Wrong order for `2>&1` loses stderr
->
-> `command 2>&1 > file` sends stderr to the terminal and only stdout to the file. The correct order is `command > file 2>&1` (redirect fd 1 first, then merge fd 2 into it).
-
-> [!warning] `>` overwrites without confirmation
->
-> Unlike `cp -i` or `mv -i`, the `>` operator silently overwrites existing files with no prompt. Use `set -C` (`noclobber`) in scripts to prevent this, or use `>>` (append) when previous content must be preserved.
-
-> [!warning] Piping only captures stdout by default
->
-> `command | grep pattern` filters only stdout. Stderr bypasses the pipe entirely and goes to the terminal. To include stderr in the pipe, use `command 2>&1 | grep pattern` or `command |& grep pattern` (bash 4+).
-
-> [!warning] PowerShell `>` uses UTF-16LE encoding by default (PS 5.1)
->
-> In Windows PowerShell 5.1, `>` and `Out-File` default to UTF-16LE encoding, which can break Unix tools and pipelines. Use `Out-File -Encoding utf8` or upgrade to PowerShell 7+ where the default is UTF-8 (no BOM).
-
-## Recommendations
-
-| Scenario | Recommendation |
-|---|---|
-| Production pipeline logging | Use `command 2>&1 \| tee -a /var/log/pipeline/run_$(date +%Y%m%d).log` to capture both streams with live monitoring. |
-| Separating errors from data | Redirect stdout to a data file and stderr to an error log: `command > data.csv 2> errors.log`. |
-| Checking tool availability | Use `command -v tool > /dev/null 2>&1` for a clean existence check with no output. |
-| Preventing overwrites in scripts | Add `set -C` at the top of the script. Use `>\|` for intentional overwrites. |
-| Embedding SQL in bash scripts | Use quoted here-documents (`<<'EOF'`) to prevent `$` expansion inside SQL that uses dollar-quoting or variable-like syntax. |
-| PowerShell encoding | Always specify `-Encoding utf8` with `Out-File` in cross-platform scripts. In PS 7+, the default is already UTF-8. |
-| Discarding all output | Use `&> /dev/null` (bash 4+) or `*> $null` (PowerShell). These are the cleanest forms and capture all streams. |
-
-## Troubleshooting
-
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| "Output file is empty after redirect" | Redirect-before-write: the input and output file are the same path. | Use a temp file and rename, or pipe through `sponge`. |
-| "Error messages appear on screen despite redirecting to file" | Only stdout (`>`) was redirected. Stderr (fd 2) still goes to the terminal. | Add `2>&1` after the stdout redirect, or use `&>` (bash 4+). |
-| "File contains garbled characters after redirect (PowerShell)" | PowerShell 5.1 defaults to UTF-16LE encoding. | Use `Out-File -Encoding utf8` or switch to PowerShell 7+. |
-| "Here-document variables are expanded when they shouldn't be" | The delimiter was not quoted: `<<EOF` expands `$variables`, `<<'EOF'` does not. | Quote the delimiter: `<<'EOF'`. |
-| "`noclobber` prevents writing to a file that doesn't exist" | This should not happen — `noclobber` only blocks overwrites of existing files. If you see this error, check file permissions or disk space. | Verify with `ls -la` and `df -h`. |
-| "Pipe captures stdout but misses warnings (PowerShell)" | Warnings are stream 3, not stream 2. The `\|` pipe only passes stream 1. | Use `3>&1` before the pipe to merge warnings into stdout, or use `*>&1 \|` to merge all streams. |
-| "`tee` writes to file but shows nothing on terminal" | The preceding command in the pipeline produced no output, or stderr was not merged before the pipe. | Add `2>&1` before `\| tee` to include error output. |
+- **Redirect-before-write is silent.** `sort file.txt > file.txt` empties the file before `sort` reads it.
+- **`2>&1` is evaluated left to right.** Put it after the stdout redirect when both streams must land in the same place.
+- **`>` never asks for confirmation.** Use append mode, `noclobber`, or a temporary file when overwriting is risky.
+- **Pipes do not collect every stream by default.** Bash pipes stdout unless you merge stderr first; PowerShell pipes stream 1 unless you merge additional streams.
+- **PowerShell encoding is host-sensitive.** If a file leaves PowerShell, declare the encoding instead of relying on defaults.
 
 ## Cross-references
 
-- [command-chaining](https://alp78.github.io/elysium/01-Shell/01-Scripting/04-command-chaining) — Using pipes and operators to connect commands
-- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) — The `set` flags that prevent scripting disasters
-- [process-substitution](https://alp78.github.io/elysium/01-Shell/01-Scripting/06-process-substitution) — Using `<()` and `>()` to treat output as files
+- [command-chaining](https://alp78.github.io/elysium/01-Shell/01-Scripting/04-command-chaining) - Using pipes and operators to connect commands
+- [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) - The `set` flags that prevent scripting disasters
+- [process-substitution](https://alp78.github.io/elysium/01-Shell/01-Scripting/06-process-substitution) - Using `<()` and `>()` to treat output as files
 
 ## References
 
-- [GNU Bash Reference — Redirections](https://www.gnu.org/software/bash/manual/html_node/Redirections.html)
-- [PowerShell — About Redirection](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_redirection)
-- [PowerShell — Tee-Object](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/tee-object)
+- [GNU Bash Reference - Redirections](https://www.gnu.org/software/bash/manual/html_node/Redirections.html)
+- [PowerShell - About Redirection](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_redirection)
+- [PowerShell - Tee-Object](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/tee-object)

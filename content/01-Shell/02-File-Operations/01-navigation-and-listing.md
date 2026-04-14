@@ -8,473 +8,461 @@ aliases: [ls, du, df, directory listing, disk usage, disk free, tree command]
 keywords: [ls, du, df, tree, directory listing, disk usage, disk space, file sizes, hidden files, human readable, sort by time, modification time, disk free, filesystem, navigation]
 description: "Linux and PowerShell commands for navigating the filesystem, listing files sorted by modification time, checking disk usage with du, and monitoring free disk space with df. Includes the du vs df discrepancy explained."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-14
 status: complete
 ---
 
 # Navigation and Listing
 
 > [!quote]
-> "UNIX is basically a simple operating system, but you have to be a genius to understand the simplicity."
->
-> — **Dennis Ritchie**, attributed remark (c. 1980s)
->
 > "I think the major good idea in Unix was its clean and simple interface: open, close, read, and write."
 >
-> — **Ken Thompson**, *Coders at Work* interview (2009)
+> -- **Ken Thompson**, *Coders at Work* (2009)
 
 > [!abstract]- Summary
 >
-> Linux and PowerShell tools for navigating the filesystem, listing files sorted by modification time, measuring disk consumption with `du`, and monitoring free space with `df` — including the `du` vs `df` discrepancy that trips up every data engineer at least once.
->
-> **Linux navigation and listing tools**
-> - `ls -lhrt` — long format, human-readable sizes, reverse-chronological sort; most recently modified file appears last
-> - `ls -la` — includes dotfiles (`.env`, `.git/`, `.dbt/`); use `-A` to exclude `.` and `..`
-> - `ls -d */` — lists only directories via the `*/` glob; `-S` sorts by size largest-first
-> - `tree -L 2 --dirsfirst` — visual directory tree limited to 2 levels; `-I` excludes patterns; not installed by default on minimal images
-> - `du -h --max-depth=1 | sort -rh | head -10` — top space consumers at one level of depth
-> - `df -h` for block usage, `df -i` for inode usage; run after `du` to confirm remaining headroom
->
-> **PowerShell navigation and listing tools**
-> - `Get-ChildItem` (aliases `ls`, `dir`, `gci`) returns typed `FileInfo`/`DirectoryInfo` objects, not text
-> - `-Force` required to see hidden and system files; `-Filter` is filesystem-level (fast), `-Include` is post-retrieval (10× slower)
-> - `Get-PSDrive -PSProvider FileSystem` — disk-free equivalent of `df -h`; filter by `-PSProvider FileSystem` to exclude registry and certificate drives
-> - Calculated properties `@{N=...; E=...}` with `Select-Object` produce human-readable GB/MB/KB sizes
->
-> **Operations and safety**
-> - Use `ls -lhrt` to verify pipeline output; use `du` → `df` in order before any disk remediation
-> - Never parse `ls` output in scripts — use shell globs, `find -print0 | xargs -0`, or `stat` instead
-> - Deleted files held open by a process are counted by `df` but not `du`; diagnose with `sudo lsof +L1 | grep deleted`
-> - Inode exhaustion produces "No space left on device" with free disk blocks; `df -i` reveals the true cause
-> - 4 warnings, 6 recommendations, 5 troubleshooting entries covering disk-full scenarios and PowerShell hidden-file failures
+> Linux and PowerShell answer the same operational questions with different command surfaces: what is in a path, what changed most recently, how much space is allocated, and how much capacity remains. This note shows `ls`, `tree`, `du`, `df`, `Get-ChildItem`, and `Get-PSDrive` with live outputs, plus the two discrepancies that matter most in practice: sparse files and deleted files still held open by a process.
 
 > [!note]- Glossary
 >
 > **`ls`**
-> - The primary Linux command for listing directory contents; with flags shows permissions, sizes, timestamps, and ownership.
-> - Used in this note to verify pipeline output, identify recently modified files (`-t`), expose hidden dotfiles (`-a`), and sort by size (`-S`).
 >
-> > [!danger] Never parse ls output in scripts
-> >
-> > Filenames containing spaces, newlines, or glob characters silently break any script that parses `ls`. Use `for f in *.csv`, `find -print0 | xargs -0`, or `stat` for programmatic file handling.
+> - Lists directory entries and can sort by time, size, and visibility flags.
+> - Use it for interactive inspection when you need a quick read of names, timestamps, and sizes.
+> - Do not parse its output in scripts; use shell globs, `find -print0`, or `stat` instead.
 >
 > ---
 >
 > **`tree`**
-> - A recursive directory listing tool that prints the filesystem as an indented tree; not installed by default on minimal Linux images (Debian slim, Alpine).
-> - Used to quickly visualise project structure and pipeline output directories; always limit with `-L` on data directories.
 >
-> > [!warning] Always set -L depth on large directories
-> >
-> > Without `-L`, `tree` recurses the entire subtree. On a directory with millions of partitioned Parquet files this produces unusable output and can take minutes.
+> - Prints a recursive directory tree.
+> - Use it to inspect project layout or data drops without opening each directory manually.
+> - Always set a depth limit on large paths or fall back to `find` when `tree` is not installed.
 >
 > ---
 >
-> **`du`** (disk usage)
-> - Reports how much disk space files and directories actually occupy on disk, measured in allocated blocks — not logical file sizes.
-> - The primary tool for diagnosing disk pressure: `du -h --max-depth=1 | sort -rh | head -10` identifies the largest consumers before any remediation.
+> **`du`**
 >
-> > [!warning] du reports blocks, not logical size
-> >
-> > `du` output differs from `ls -l` sizes. Sparse files (e.g., pre-allocated database files) show especially large divergences. Use `du -sh file` for actual disk consumption.
+> - Reports allocated blocks consumed by files and directories.
+> - Use it to identify which paths are actually consuming disk.
+> - Its totals can diverge from `df` when deleted files remain open or when files are sparse.
 >
 > ---
 >
-> **`df`** (disk free)
-> - Reports filesystem-level disk usage: total, used, available, and percent-used for each mounted filesystem.
-> - Run after `du` to confirm remaining headroom; use `df -i` (not `df -h`) to diagnose inode exhaustion.
+> **`df`**
 >
-> > [!danger] df can show free space when disk writes are failing
-> >
-> > Deleted files still held open by a running process consume blocks that `df` counts but `du` does not. The space is not freed until the process releases the file handle. Use `sudo lsof +L1 | grep deleted` to find these files.
->
-> ---
->
-> **Inode**
-> - A filesystem data structure that stores file metadata (permissions, owner, timestamps, block pointers) — not the filename or content. Each file consumes exactly one inode.
-> - Inode exhaustion produces the same "No space left on device" error as disk-full, but `df -h` shows plenty of free space; `df -i` reveals `IUse%` at 100%.
->
-> > [!danger] Inode exhaustion looks identical to disk full
-> >
-> > Millions of small files — logs, cache entries, lock files — exhaust inodes while disk bytes remain plentiful. Always check `df -i` when `df -h` shows free space but writes are failing.
->
-> ---
->
-> **Hidden file (dotfile)**
-> - A file whose name starts with `.` (e.g., `.env`, `.git/`, `.dockerignore`). Hidden from `ls` and `Get-ChildItem` by default.
-> - Critical config files like `.env` and `.dbt/` are hidden; if a pipeline cannot find its config, expose dotfiles with `ls -a` (bash) or `Get-ChildItem -Force` (PowerShell).
->
-> > [!warning] ls hides dotfiles without -a
-> >
-> > `ls` without `-a` silently omits dotfiles. PowerShell's `Get-ChildItem` skips hidden files entirely with no error message — `Get-ChildItem -Path ".env"` returns nothing if the file is hidden.
+> - Reports filesystem-level capacity, used blocks, free blocks, and inode usage.
+> - Use it after `du` to confirm whether the underlying filesystem still has headroom.
+> - `df -h` shows block usage; `df -i` shows inode pressure, which can fail writes even when free blocks remain.
 >
 > ---
 >
 > **`ncdu`**
-> - An interactive, ncurses-based disk usage explorer that displays directories sorted by size with keyboard navigation.
-> - Far more efficient than running `du` repeatedly when hunting the largest consumers; press `d` inside the interface to delete with confirmation. Install with `apt install ncdu`.
 >
-> > [!info] ncdu is not installed by default
-> >
-> > Not present on minimal images. On Debian/Ubuntu: `apt install ncdu`. Run `ncdu /path/` to start, then navigate with arrow keys.
+> - An interactive ncurses disk-usage browser that ranks directories by allocated size.
+> - Use it after a `du` pass when you need faster drill-down through a large tree than repeated summaries provide.
+> - Treat it as an optional follow-up rather than the baseline workflow here; it may be absent on minimal images.
+>
+> ---
+>
+> **Inode**
+>
+> - A filesystem record that stores metadata for one file or directory entry.
+> - Use inode counts to diagnose "No space left on device" when `df -h` still shows free space.
+> - Large populations of tiny files exhaust inodes long before they exhaust disk blocks.
+>
+> ---
+>
+> **Hidden file**
+>
+> - On Linux, a hidden file is usually a dotfile such as `.env`; on Windows, hidden status is a file attribute.
+> - Hidden entries often contain configuration, cache, or state that matters during debugging.
+> - `ls -a` and `Get-ChildItem -Force` solve different visibility rules; they are not interchangeable semantics.
 >
 > ---
 >
 > **`Get-ChildItem`**
-> - The PowerShell cmdlet for listing files and directories; aliases `ls`, `dir`, `gci`. Returns typed `FileInfo`/`DirectoryInfo` objects, not text strings.
-> - Objects pipeline directly into `Sort-Object`, `Where-Object`, `Measure-Object`, and `Select-Object` without text parsing — immune to filename-space pitfalls that affect bash `ls`.
 >
-> > [!warning] -Filter vs -Include performance gap
-> >
-> > `-Filter` is applied at the filesystem provider level during retrieval (fast). `-Include` retrieves everything first and filters in PowerShell (slow). On directories with millions of files, `-Include "*.parquet"` can take 10× longer than `-Filter "*.parquet"`.
+> - Returns `FileInfo` and `DirectoryInfo` objects rather than plain text.
+> - Use it when you want to sort, filter, and measure filesystem items without string parsing.
+> - Prefer `-Filter` over `-Include` when one filesystem-level pattern is enough.
 >
 > ---
 >
 > **`Get-PSDrive`**
-> - A PowerShell cmdlet that returns drive objects with `Used` and `Free` byte properties; covers disk, registry, certificate, and environment drives.
-> - The PowerShell equivalent of `df -h`; always filter with `-PSProvider FileSystem` to exclude non-disk providers and avoid misleading output.
 >
-> > [!warning] Filter to FileSystem provider
-> >
-> > Without `-PSProvider FileSystem`, `Get-PSDrive` returns registry (`HKLM:`, `HKCU:`), certificate (`Cert:`), and environment (`Env:`) drives alongside disk drives, making disk-space readings unreadable.
+> - Returns PowerShell drive objects with `Used` and `Free` properties.
+> - Use it as the PowerShell equivalent of `df` for filesystem drives.
+> - Filter to `-PSProvider FileSystem` so registry and certificate drives do not pollute disk-capacity checks.
 
 ## Linux navigation and listing tools
 
-Linux provides `ls` for directory listing, `tree` for visual structure, `du` for measuring disk consumption, and `df` for monitoring free space. In data engineering, you use these constantly to verify pipeline output, diagnose disk pressure, and track what changed between runs.
+The Linux examples below use a disposable fixture at `/tmp/elysium-nav-demo`. `ls` is for interactive inspection, `tree` is for bounded structure checks, `du` explains allocated usage, and `df` confirms what the filesystem can still accept.
 
-### Linux | ls | list files and directories
+### Linux | ls | inspect directory contents
 
-`ls` is the primary directory listing tool. The flags you combine determine how much information is shown: size, permissions, ownership, timestamps, and hidden files. The default `ls` output is sorted alphabetically — almost never what you want in a data directory.
+Use `ls` to answer interactive questions quickly: what changed last, what is hidden, which entries are directories, and which files dominate a directory by size. For programmatic file handling, switch to `find`, shell globs, or `stat` instead of parsing display text.
 
 #### List files sorted by modification time
 
-`-lhrt` combines four flags: `-l` (long format with permissions, owner, size, date), `-h` (human-readable sizes like 1.2G instead of raw bytes), `-r` (reverse sort order), and `-t` (sort by modification time). Combined, the most recently modified file appears last — right at the bottom of your terminal next to your cursor.
+`ls -lhrt` keeps long-format metadata, converts sizes to human-readable units, and reverses the default newest-first time sort so the newest file is last. The output makes it easy to confirm the latest pipeline artifact without losing permissions, owner, or timestamp detail.
 
 ```bash
-ls -lhrt
+ls -lhrt /tmp/elysium-nav-demo/data
 ```
 
-#### Show hidden files
+```text
+total 2.1M
+-rw-r--r-- 1 alex alex 8.0K Apr 14 08:05 archive.log
+-rw-r--r-- 1 alex alex  64K Apr 14 08:15 daily.csv
+-rw-r--r-- 1 alex alex 2.0M Apr 14 08:25 latest.parquet
+-rw-r--r-- 1 alex alex 128M Apr 14 08:30 sparse.bin
+```
 
-`-a` includes entries starting with `.` — the convention Unix uses to hide files. In data engineering directories, critical files like `.env`, `.git/`, `.dockerignore`, and `.dbt/` are all hidden by default. If a pipeline cannot find its config, check hidden files first.
+#### Reveal hidden dotfiles
+
+`ls -la` includes dotfiles in the listing and keeps directory metadata visible. Use it first when a configuration file appears to be missing but the application insists the path exists.
 
 ```bash
-ls -la
+ls -la /tmp/elysium-nav-demo
+```
+
+```text
+total 32
+drwxr-xr-x   5 alex alex  4096 Apr 14 10:03 .
+drwxrwxrwt 187 root root 12288 Apr 14 10:03 ..
+-rw-r--r--   1 alex alex    11 Apr 14 10:03 .env
+drwxr-xr-x   2 alex alex  4096 Apr 14 10:03 data
+drwxr-xr-x   2 alex alex  4096 Apr 14 10:03 logs
+drwxr-xr-x   4 alex alex  4096 Apr 14 10:03 project
 ```
 
 #### List only directories
 
-`-d` tells `ls` to list the directory entry itself rather than its contents. Combined with the `*/` glob, this shows only directories in the current path — useful for surveying project structure without file noise.
+`ls -d */` lists the directory entries themselves instead of their contents. That is useful when you want a quick survey of branches under a path without mixing in file noise.
 
 ```bash
-ls -d */
+ls -d /tmp/elysium-nav-demo/*/
+```
+
+```text
+/tmp/elysium-nav-demo/data/
+/tmp/elysium-nav-demo/logs/
+/tmp/elysium-nav-demo/project/
 ```
 
 #### Sort files by size
 
-`-S` sorts by file size, largest first. Combine with `-lh` for human-readable output. Useful for quickly identifying what is consuming the most space in a directory.
+`ls -lhS` is the quickest way to see which files dominate a directory. The listing below also shows why `ls` is not a disk-usage tool: `sparse.bin` has the largest logical size, but that does not mean it consumed 128 MB of blocks.
 
 ```bash
-ls -lhS
+ls -lhS /tmp/elysium-nav-demo/data
 ```
+
+```text
+total 2.1M
+-rw-r--r-- 1 alex alex 128M Apr 14 08:30 sparse.bin
+-rw-r--r-- 1 alex alex 2.0M Apr 14 08:25 latest.parquet
+-rw-r--r-- 1 alex alex  64K Apr 14 08:15 daily.csv
+-rw-r--r-- 1 alex alex 8.0K Apr 14 08:05 archive.log
+```
+
+Use these `ls` flags as quick reference when adapting the examples.
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
-| `-l` | `ls -l` | Long format: permissions, owner, size, date, name |
-| `-h` | `ls -lh` | Human-readable sizes (requires `-l`) |
+| `-l` | `ls -l` | Long format with permissions, owner, size, and timestamp columns |
+| `-h` | `ls -lh` | Human-readable sizes |
 | `-r` | `ls -r` | Reverse sort order |
-| `-t` | `ls -t` | Sort by modification time (newest first) |
-| `-S` | `ls -S` | Sort by file size (largest first) |
-| `-a` | `ls -a` | Include hidden files (dotfiles) |
-| `-A` | `ls -A` | Like `-a` but excludes `.` and `..` |
-| `-d` | `ls -d */` | List directory entries themselves, not their contents |
-| `-R` | `ls -R` | Recursive listing |
+| `-t` | `ls -t` | Sort by modification time |
+| `-S` | `ls -S` | Sort by logical file size, largest first |
+| `-a` | `ls -a` | Include dotfiles |
+| `-A` | `ls -A` | Include dotfiles but omit `.` and `..` |
+| `-d` | `ls -d */` | List directory entries themselves |
+| `-R` | `ls -R` | Recurse into subdirectories |
 | `-i` | `ls -i` | Show inode numbers |
-| `-1` | `ls -1` | One file per line (useful for piping) |
+| `-1` | `ls -1` | Print one entry per line |
 
-> [!danger] Never parse ls output in scripts
->
-> `ls` output is designed for humans, not programs. Filenames containing spaces, newlines,
-> or glob characters break any script that parses `ls`. Instead:
-> - **Loop over files:** `for f in *.csv; do ...` (shell glob — safe)
-> - **Find files programmatically:** `find . -name "*.csv" -print0 | xargs -0 ...`
-> - **Get file metadata in scripts:** `stat --format='%s %n' *` instead of parsing `ls -l`
->
-> See [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) for robust file-handling patterns.
+### Linux | tree | inspect structure
 
-> [!success] Use globs and find for programmatic file handling
->
-> `for f in *.csv; do echo "$f"; done` is safe against any filename. `find . -name "*.csv" -print0 | xargs -0 cmd` handles spaces and special characters correctly. Both are immune to the pitfalls of parsing `ls` output.
+`tree` is useful when the question is about shape rather than metadata. On minimal images it may be absent; if so, install it or fall back to `find`, but keep the recursion depth bounded.
 
-### Linux | tree | visualize directory structure
+#### Inspect a project tree without full recursion
 
-`tree` prints a recursive directory structure as an indented tree. It is not installed by default on minimal Linux images (Debian slim, Alpine, Docker base images) — install with `apt install tree` (Debian/Ubuntu) or `yum install tree` (RHEL/CentOS). In Docker environments without `tree`, use `find . -maxdepth 2 -type d` as a substitute. On Windows, `tree.com` is built in: `tree C:\data /F` prints the full tree including filenames.
-
-#### Visual directory tree
-
-`-L 2` limits recursion depth to 2 levels — essential for large repos and data directories. Without `-L`, `tree` recurses the entire subtree; on a directory with millions of partitioned Parquet files this produces unusable output and can take minutes.
+`tree -L 2 --dirsfirst` surfaces the first two levels of a hierarchy and shows directories before files. That is enough to inspect project layout without dumping every nested artifact in a deep data path.
 
 ```bash
-tree -L 2 --dirsfirst
+tree -L 2 --dirsfirst /tmp/elysium-nav-demo
 ```
 
-> [!tip] Limit tree depth with -L
->
-> `-L 2` limits depth to 2 levels — essential for large repos. Without `-L`,
-> `tree` recurses the entire subtree. On a data directory with millions of partitioned
-> Parquet files this produces unusable output and can take minutes.
+```text
+/tmp/elysium-nav-demo
+├── data
+│   ├── archive.log
+│   ├── daily.csv
+│   ├── latest.parquet
+│   └── sparse.bin
+├── logs
+│   ├── app.log
+│   └── elysium-nav-deleted.pid
+└── project
+    ├── docs
+    └── src
+
+6 directories, 6 files
+```
+
+These `tree` options are the ones most likely to matter during routine inspection.
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
 | `-L` | `tree -L 2` | Limit recursion depth |
 | `-d` | `tree -d` | Show directories only |
-| `--dirsfirst` | `tree --dirsfirst` | List directories before files |
-| `-h` | `tree -h` | Human-readable file sizes |
+| `--dirsfirst` | `tree --dirsfirst` | Print directories before files |
+| `-h` | `tree -h` | Show human-readable sizes |
 | `-a` | `tree -a` | Include hidden files |
-| `-I` | `tree -I '*.log'` | Exclude files matching pattern |
-| `--noreport` | `tree --noreport` | Suppress file/directory count at end |
+| `-I` | `tree -I '*.log'` | Exclude names that match a pattern |
+| `--noreport` | `tree --noreport` | Suppress the final count summary |
 
-### Linux | du + df | disk space investigation
+### Linux | du | measure allocated disk usage
 
-The standard disk-full runbook starts with `du` to locate the largest consumers, then `ls` to identify specific files, then `df` to confirm how much free space remains. Run these three steps in order before taking any remediation action.
+Use `du` when the question is "what actually consumed blocks on disk?" rather than "how large does the file look in a directory listing?" It is the right first step before any cleanup or capacity remediation. If you need interactive drill-down after the first ranking pass, `ncdu` is a useful follow-up where it is installed, but the executable baseline here stays with stock `du`.
 
-#### Find top space-consuming directories
+#### Find the largest immediate directories
 
-`--max-depth=1` limits recursion to immediate subdirectories. `sort -rh` ranks by descending human-readable size. `head -10` keeps output manageable.
-
-```bash
-du -h --max-depth=1 /var/opt/mssql/ | sort -rh | head -10
-```
-
-#### List database files by size
-
-`-lhS` combines long format, human-readable sizes, and sort-by-size. The `2>/dev/null` suppresses "no such file" errors when `.ndf` files do not exist.
+`du -h --max-depth=1 | sort -rh` ranks only the first level below the target path. That keeps the signal tight enough to identify the branch worth investigating next.
 
 ```bash
-ls -lhS /var/opt/mssql/data/*.mdf /var/opt/mssql/data/*.ndf 2>/dev/null
+du -h --max-depth=1 /tmp/elysium-nav-demo | sort -rh
 ```
 
-#### Check filesystem free space
+```text
+2.4M	/tmp/elysium-nav-demo
+2.1M	/tmp/elysium-nav-demo/data
+264K	/tmp/elysium-nav-demo/logs
+20K	/tmp/elysium-nav-demo/project
+```
 
-Run this after `du` to confirm how much headroom remains. If `du` total and `df` used diverge significantly, see the discrepancy diagnosis section below.
+#### Show allocated blocks for a sparse file
+
+`du` reports allocated blocks, not logical file length. The sparse file below occupies almost no disk even though `ls` reports a 128 MB logical size.
 
 ```bash
-df -h /var/opt/mssql/
+du -h /tmp/elysium-nav-demo/data/sparse.bin
 ```
 
-> [!warning] SQL Server stops when disk is full
->
-> SQL Server halts all writes when the data volume is full — transactions fail and the service may not restart cleanly. Monitor `df -h` on schedule and alert before reaching 85% usage.
+```text
+0	/tmp/elysium-nav-demo/data/sparse.bin
+```
 
-> [!success] Set a disk-full alert before you need this runbook
->
-> Configure a cron job or monitoring agent to alert at 80% disk usage. `df -h` in a cron script with a threshold check is a 5-line script that prevents the entire runbook above from ever being needed in production.
+Keep `du` usage narrow and explicit so the output stays attributable to a specific path depth or file set.
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
-| `-s` | `du -s dir/` | Summary: total only, no per-subdirectory breakdown |
-| `-h` | `du -h dir/` | Human-readable sizes (K, M, G) |
+| `-s` | `du -s dir/` | Print a single summary total |
+| `-h` | `du -h dir/` | Use human-readable units |
 | `--max-depth` | `du --max-depth=1 dir/` | Limit recursion depth |
-| `-c` | `du -c dir/` | Print grand total at end |
-| `-a` | `du -a dir/` | Include all files, not just directories |
-| `--exclude` | `du --exclude='*.log' dir/` | Skip files matching pattern |
+| `-c` | `du -c dir/` | Add a grand total row |
+| `-a` | `du -a dir/` | Include files as well as directories |
+| `--exclude` | `du --exclude='*.log' dir/` | Skip paths that match a pattern |
+
+### Linux | df | check filesystem headroom
+
+After `du` identifies the heavy paths, use `df` to confirm whether the filesystem itself is close to a block or inode limit. The two views answer different questions and should be read together.
+
+#### Check free blocks before cleanup
+
+`df -h` reports filesystem-wide capacity for the mounted path. It tells you whether the filesystem is actually near exhaustion, not just whether one directory is large.
+
+```bash
+df -h /tmp/elysium-nav-demo
+```
+
+```text
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdf       1007G  2.2G  954G   1% /
+```
+
+#### Check inode usage before assuming blocks are full
+
+`df -i` answers the failure mode that `df -h` misses. If block usage looks healthy but writes still fail, inode exhaustion is the next thing to inspect.
+
+```bash
+df -i /tmp/elysium-nav-demo
+```
+
+```text
+Filesystem       Inodes IUsed    IFree IUse% Mounted on
+/dev/sdf       67108864 58030 67050834    1% /
+```
+
+Use these `df` flags when you need capacity context instead of directory-level attribution.
 
 | Flag | Syntax | Description |
 |------|--------|-------------|
-| `-h` | `df -h` | Human-readable sizes |
+| `-h` | `df -h` | Show human-readable block totals |
 | `-i` | `df -i` | Show inode usage instead of block usage |
 | `-T` | `df -T` | Show filesystem type |
 | `-t` | `df -t ext4` | Filter by filesystem type |
-| `--total` | `df --total` | Print grand total row |
+| `--total` | `df --total` | Add a grand total row |
 
-### Linux | du vs df | discrepancy diagnosis
+### Linux | du vs df | diagnose mismatches
 
-`du` measures actual file sizes. `df` measures filesystem block allocation. These numbers frequently disagree — understanding why tells you which tool to trust and what action to take.
+When `ls`, `du`, and `df` disagree, the discrepancy is usually explainable. The common cases are sparse files, deleted files still held open, and filesystem-level overhead that directory walks do not attribute back to a visible path.
 
-> [!warning] du vs df numbers don't match
->
-> Three root causes:
-> 1. **Deleted files still held open:** If a process has a file open and you delete it, `du` no longer counts it but `df` still does — the blocks are not freed until the process closes the file handle. This is the most common cause of "I deleted 20 GB of logs but disk space did not change."
-> 2. **Filesystem metadata and reserved blocks:** ext4 reserves 5% for root by default. Reduce with `tune2fs -m 1 /dev/sda1` (set to 1%) on data-only volumes.
-> 3. **Sparse files:** Files with holes (e.g., database pre-allocated files) report different sizes via `ls -l` (logical) vs `du` (actual blocks).
+#### Show the sparse file's logical size
 
-> [!success] Find deleted-but-held-open files with lsof
->
-> `lsof +L1` lists all file descriptors with a link count below 1 — i.e., deleted files still held open by a process. Restarting the process (or fixing log rotation) releases the blocks and reclaims the space.
+`ls -lh` reports the file's logical length, which is what most applications see. Compare it with the earlier `du` output to distinguish logical size from allocated blocks.
 
 ```bash
-sudo lsof +L1 | grep deleted
+ls -lh /tmp/elysium-nav-demo/data/sparse.bin
 ```
 
-#### Check inode usage
+```text
+-rw-r--r-- 1 alex alex 128M Apr 14 08:30 /tmp/elysium-nav-demo/data/sparse.bin
+```
 
-Running out of inodes produces the same "No space left on device" error as running out of disk blocks — but `df -h` shows plenty of free space. This happens on systems with millions of small files (e.g., `/tmp` full of lock files, or a logging directory with one file per request). The `IUse%` column reveals the condition.
+#### Find deleted files still held open
+
+`lsof +L1` lists file handles whose link count dropped below one, and `grep` narrows the result to the deleted fixture file. This is the canonical explanation when `df` still shows used space after a log file was removed.
 
 ```bash
-df -i /var/opt/mssql/
+lsof +L1 | grep elysium-nav-deleted
 ```
 
-> [!danger] Inode exhaustion looks like disk full
->
-> Running out of inodes produces the same "No space left on device" error as running out of disk blocks — but `df -h` shows plenty of free space.
+```text
+python3 18559 alex    3r   REG   8,80       23     0 45119 /tmp/elysium-nav-demo/logs/elysium-nav-deleted.log (deleted)
+```
 
-> [!success] Find the directory responsible for inode exhaustion
->
-> `for d in /var/log /tmp /var/opt/mssql; do echo "$d: $(find $d -maxdepth 1 | wc -l) files"; done` shows which directory is generating the most file entries. Clean up or compress the offending log/temp directories.
-
-> [!tip] ncdu interactive disk explorer
->
-> `ncdu` (NCurses Disk Usage) provides an interactive, navigable view of disk consumption
-> sorted by size. Far more efficient than running `du` repeatedly. Install with
-> `apt install ncdu`, then run `ncdu /var/opt/mssql/`. Press `d` to delete directly from
-> the interface (with confirmation).
+If neither case explains the mismatch, reserved blocks and filesystem metadata are the next places to inspect.
 
 ## PowerShell navigation and listing tools
 
-PowerShell provides `Get-ChildItem` for directory listing and `Get-PSDrive` for disk space monitoring. Unlike Unix `ls`, `Get-ChildItem` returns typed objects — you pipe `FileInfo` and `DirectoryInfo` objects, not text — which makes PowerShell immune to the filename-parsing pitfalls that affect bash `ls`.
+The PowerShell examples below use a disposable fixture at `$env:TEMP\elysium-nav-demo`. `Get-ChildItem` returns typed objects, so sorting and measurement happen on properties rather than parsed text.
 
-### PowerShell | Get-ChildItem | list and inspect files
+### PowerShell | Get-ChildItem | inspect files and directories
 
-`Get-ChildItem` (aliases: `ls`, `dir`, `gci`) returns objects with properties including `Name`, `Length`, `LastWriteTime`, and `Mode`. These objects feed directly into `Sort-Object`, `Where-Object`, `Select-Object`, and `Measure-Object` without text parsing.
+Use `Get-ChildItem` when you want the equivalent of `ls` plus object-aware filtering and measurement. For large trees, prefer `-Filter` over `-Include` so filtering happens in the filesystem provider instead of after full enumeration.
 
-#### List files sorted by modification time
+#### List items by last write time
 
-`Sort-Object LastWriteTime` sorts the file objects by their last write timestamp. Without `-Descending`, the oldest file appears first and the most recently modified file appears last — matching the `ls -lhrt` convention.
-
-```powershell
-Get-ChildItem -Path . | Sort-Object LastWriteTime
-```
-
-#### Display human-readable file sizes
-
-PowerShell has no `-h` flag for human-readable sizes. Build a calculated property with `Select-Object` and a format expression using `if`/`elseif` to choose the right unit. This pattern is reusable anywhere byte counts need to be displayed cleanly.
+`Sort-Object LastWriteTime` orders the file objects by modification time. The formatted output makes it easy to verify which artifact arrived last without losing the underlying metadata.
 
 ```powershell
-Get-ChildItem -Path . | Sort-Object Length -Descending |
-    Select-Object Name, @{N='Size';E={
-        if ($_.Length -ge 1GB) { "{0:N1} GB" -f ($_.Length/1GB) }
-        elseif ($_.Length -ge 1MB) { "{0:N1} MB" -f ($_.Length/1MB) }
-        else { "{0:N1} KB" -f ($_.Length/1KB) }
-    }}, LastWriteTime
+Get-ChildItem -Path "$env:TEMP\elysium-nav-demo\data" | Sort-Object LastWriteTime | Format-Table Mode, LastWriteTime, Length, Name -AutoSize
 ```
 
-#### Show hidden and system files
+```text
+Mode   LastWriteTime     Length Name
+----   -------------     ------ ----
+-a---- 14-Apr-26 8:15:00  65536 daily.csv
+-a---- 14-Apr-26 8:25:00 262144 latest.parquet
+```
 
-By default `Get-ChildItem` skips hidden and system files entirely — unlike `ls` which only hides dotfiles. Use `-Force` to include everything, or `-Hidden` to return hidden items only.
+#### Format human-readable sizes
+
+PowerShell does not have a native `-h` switch, so a calculated property is the standard way to convert byte counts into readable units. The command below keeps the pipeline object-based while presenting sizes the way an operator expects to read them.
 
 ```powershell
-Get-ChildItem -Force
+Get-ChildItem -Path "$env:TEMP\elysium-nav-demo\data" | Sort-Object Length -Descending | Select-Object Name, @{N='Size';E={ if ($_.Length -ge 1MB) { '{0:N1} MB' -f ($_.Length / 1MB) } elseif ($_.Length -ge 1KB) { '{0:N1} KB' -f ($_.Length / 1KB) } else { '{0} B' -f $_.Length } }}, LastWriteTime | Format-Table -AutoSize
 ```
 
-> [!warning] -Force required for hidden files
->
-> `Get-ChildItem -Path ".env"` returns nothing if `.env` is hidden — no error, no
-> output. You must use `Get-ChildItem -Force -Path ".env"`. This catches many people
-> when debugging "file not found" issues on Windows.
+```text
+Name           Size     LastWriteTime
+----           ----     -------------
+latest.parquet 256.0 KB 14-Apr-26 8:25:00
+daily.csv      64.0 KB  14-Apr-26 8:15:00
+```
 
-> [!success] Check for hidden files when a config is "missing"
->
-> Before concluding a file does not exist, always run `Get-ChildItem -Force` in the directory. Hidden system files and dotfiles are invisible to the default listing, causing silent "file not found" failures in pipeline scripts.
+#### Reveal hidden configuration files
 
-#### Calculate recursive directory size
-
-Pipe recursive file objects into `Measure-Object -Sum` to total the `Length` property. The `-File` switch excludes directories, which have no meaningful `Length`. The result is in bytes — divide by `1GB` and round for a human-readable figure.
+`Get-ChildItem` skips hidden items unless you add `-Force`. Use this before concluding that a configuration file is absent on Windows.
 
 ```powershell
-$bytes = (Get-ChildItem -Path "C:\data\pipeline" -Recurse -File |
-    Measure-Object -Property Length -Sum).Sum
-[math]::Round($bytes / 1GB, 2)
+Get-ChildItem -Force -Path "$env:TEMP\elysium-nav-demo" | Format-Table Mode, Length, Name -AutoSize
 ```
 
-> [!warning] -Filter vs -Include performance
->
-> `-Filter` is applied by the filesystem provider during retrieval (fast). `-Include`
-> retrieves everything first, then filters in PowerShell (slow). On directories with
-> millions of files, `-Include "*.parquet"` can take 10x longer than
-> `-Filter "*.parquet"`. Always prefer `-Filter` for single-pattern matching.
+```text
+Mode   Length Name
+----   ------ ----
+d-----        data
+d-----        logs
+d-----        project
+---h-- 12     .env
+```
 
-> [!success] Use -Filter for single-pattern filtering
->
-> `Get-ChildItem -Recurse -Filter "*.parquet"` delegates filtering to the OS filesystem layer, making it orders of magnitude faster than `-Include` on large directories.
+#### Measure a directory recursively
+
+`Measure-Object -Sum` totals the `Length` property across all files under the path. Wrapping the expression in `[math]::Round()` produces a single numeric result that can feed alerting or threshold logic.
+
+```powershell
+[math]::Round(((Get-ChildItem -Path "$env:TEMP\elysium-nav-demo" -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1KB), 1)
+```
+
+```text
+322
+```
+
+These parameters cover the cases used most often when exploring or measuring a Windows path.
 
 | Parameter | Syntax | Description |
 |-----------|--------|-------------|
-| `-Path` | `-Path "C:\dir"` | Target path |
-| `-Recurse` | `-Recurse` | Recursive listing |
-| `-Filter` | `-Filter "*.csv"` | Filter by pattern (filesystem-level, fast) |
-| `-Include` | `-Include "*.csv"` | Include matching items (post-retrieval, slower) |
-| `-Exclude` | `-Exclude "*.tmp"` | Exclude matching items |
-| `-Force` | `-Force` | Include hidden and system files |
-| `-Hidden` | `-Hidden` | Show only hidden items |
-| `-File` | `-File` | Return only files (no directories) |
-| `-Directory` | `-Directory` | Return only directories |
+| `-Path` | `-Path "C:\dir"` | Target directory or file path |
+| `-Recurse` | `-Recurse` | Enumerate child items recursively |
+| `-Filter` | `-Filter "*.csv"` | Apply one filesystem-level pattern during enumeration |
+| `-Include` | `-Include "*.csv"` | Filter after enumeration completes |
+| `-Exclude` | `-Exclude "*.tmp"` | Skip names that match a pattern |
+| `-Force` | `-Force` | Include hidden and system items |
+| `-Hidden` | `-Hidden` | Return only hidden items |
+| `-File` | `-File` | Return files only |
+| `-Directory` | `-Directory` | Return directories only |
 | `-Depth` | `-Depth 2` | Limit recursion depth |
-| `-Name` | `-Name` | Return names only, not file objects |
+| `-Name` | `-Name` | Return names instead of full objects |
 
-### PowerShell | Get-PSDrive | check free disk space
+### PowerShell | Get-PSDrive | report disk capacity
 
-`Get-PSDrive` returns PS drive objects including `Used` and `Free` byte counts. Filter to the `FileSystem` provider to exclude registry, certificate, and environment drives.
+`Get-PSDrive` is the PowerShell capacity view that corresponds to `df`. Filter it to filesystem drives so the output stays focused on actual disk-backed volumes.
 
-#### Check free disk space across all drives
+#### Report used and free space by drive
 
-Computed properties with `@{N=...; E=...}` convert raw byte values to GB rounded to one decimal place — equivalent to `df -h` output.
+The calculated properties below convert raw byte counts into gigabytes and keep the result concise enough for routine checks. This is the PowerShell equivalent of a human-readable filesystem-capacity report.
 
 ```powershell
-Get-PSDrive -PSProvider FileSystem | Format-Table Name,
-    @{N='Used(GB)';E={[math]::Round($_.Used/1GB,1)}},
-    @{N='Free(GB)';E={[math]::Round($_.Free/1GB,1)}}
+Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{N='Used(GB)';E={[math]::Round($_.Used / 1GB, 1)}}, @{N='Free(GB)';E={[math]::Round($_.Free / 1GB, 1)}} | Format-Table -AutoSize
 ```
+
+```text
+Name Used(GB) Free(GB)
+---- -------- --------
+C      1655.6    250.3
+```
+
+#### Flag drives above an alert threshold
+
+A simple percentage threshold turns the same drive data into an operational check. The example below surfaces only drives already above 80 percent used, which is a sensible point to alert before a filesystem hard-fails.
+
+```powershell
+Get-PSDrive -PSProvider FileSystem | Where-Object { (($_.Used / ($_.Used + $_.Free)) * 100) -ge 80 } | Select-Object Name, @{N='UsedPct';E={[math]::Round((($_.Used / ($_.Used + $_.Free)) * 100), 1)}} | Format-Table -AutoSize
+```
+
+```text
+Name UsedPct
+---- -------
+C       86.9
+```
+
+Use this small parameter set when turning an ad hoc disk check into a repeatable PowerShell routine.
 
 | Parameter | Syntax | Description |
 |-----------|--------|-------------|
-| `-PSProvider` | `-PSProvider FileSystem` | Filter to a specific provider type |
-| `-Name` | `-Name C` | Return a specific drive by name |
+| `-PSProvider` | `-PSProvider FileSystem` | Restrict output to filesystem drives |
+| `-Name` | `-Name C` | Return one named drive |
 
-For continuous disk and resource monitoring beyond manual `du`/`df` checks, see [system-resources](https://alp78.github.io/elysium/01-Shell/04-Process-Management/04-system-resources) which covers `vmstat`, `iostat`, and automated alerting patterns.
+For continuous resource monitoring beyond ad hoc directory inspection, see [system-resources](https://alp78.github.io/elysium/01-Shell/04-Process-Management/04-system-resources).
 
-
-
-## Warnings
-
-> [!danger] SQL Server stops when the disk is full
->
-> SQL Server halts all writes when the data volume reaches 100% -- transactions fail and the service may not restart cleanly. Monitor `df -h` on schedule and alert before reaching 85% usage.
-
-> [!danger] Inode exhaustion looks identical to disk full
->
-> Running out of inodes produces the same "No space left on device" error. `df -h` shows plenty of free space but `df -i` reveals 100% inode usage. Caused by millions of small files (logs, cache entries, lock files).
-
-> [!warning] `du` and `df` numbers frequently disagree
->
-> Deleted files still held open by a process: `du` no longer counts them but `df` still does. The space is not freed until the process releases the file handle. Use `lsof +L1 | grep deleted` to find these files.
-
-> [!warning] Never parse `ls` output in scripts
->
-> Filenames containing spaces, newlines, or glob characters break any script that parses `ls`. Use shell globs (`for f in *.csv`), `find -print0 | xargs -0`, or `stat` for programmatic file handling.
-
-## Recommendations
-
-| Scenario | Recommendation |
-|---|---|
-| Verify pipeline output | `ls -lhrt` -- most recently modified file at the bottom, human-readable sizes. |
-| Find largest directories | `du -h --max-depth=1 /path | sort -rh | head -10` |
-| Check free space | `df -h /path` for bytes, `df -i /path` for inodes. |
-| Investigate du vs df mismatch | `sudo lsof +L1 | grep deleted` to find deleted-but-held-open files. |
-| Visual directory overview | `tree -L 2 --dirsfirst` -- limit depth to avoid unusable output on large trees. |
-| PowerShell file sizes | Use calculated properties with `Select-Object` and `@{N=...; E=...}` for human-readable GB/MB/KB. |
-| Disk monitoring in production | Configure a monitoring agent to alert at 80% disk usage and 90% inode usage. |
-
-## Troubleshooting
-
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| "No space left on device" but `df -h` shows free space | Inode exhaustion. Millions of small files consumed all inodes. | Run `df -i` to confirm. Find the directory with the most files: `find / -xdev -maxdepth 3 -type d -exec sh -c 'echo "$(find "$1" -maxdepth 1 | wc -l) $1"' _ {} \; | sort -rn | head`. |
-| Deleted 20 GB of logs but disk space did not change | Deleted files are still held open by a running process. | Run `sudo lsof +L1 | grep deleted` to find the process. Restart it or use `truncate -s 0 /proc/<pid>/fd/<fd>` to release. |
-| `du` total is much smaller than `df` used | Same as above -- deleted-but-held-open files, or filesystem reserved blocks (ext4 reserves 5% by default). | Reduce reserved blocks with `tune2fs -m 1 /dev/sdX` on data-only volumes. |
-| `Get-ChildItem` does not show `.env` file | The file is hidden. PowerShell skips hidden files by default. | Use `Get-ChildItem -Force` to include hidden and system files. |
-| `ls -lhrt` shows wrong sizes for database files | Database files are often sparse (pre-allocated). `ls -l` shows logical size; `du` shows actual blocks used. | Use `du -sh file` for actual disk consumption. |
 ## Cross-references
-- [file-manipulation](https://alp78.github.io/elysium/01-Shell/02-File-Operations/02-file-manipulation) — copying, moving, permissions, and safe delete patterns
-- [finding-files](https://alp78.github.io/elysium/01-Shell/02-File-Operations/03-finding-files) — surgical search for specific files across large trees
-- [reading-file-contents](https://alp78.github.io/elysium/01-Shell/03-Text-Processing/01-reading-file-contents) — what to do once you find the file
-- [compression](https://alp78.github.io/elysium/01-Shell/02-File-Operations/04-compression) — reduce disk usage with gzip, zstd, and tar
+
+- [file-manipulation](https://alp78.github.io/elysium/01-Shell/02-File-Operations/02-file-manipulation) - copying, moving, permissions, and safe delete patterns
+- [finding-files](https://alp78.github.io/elysium/01-Shell/02-File-Operations/03-finding-files) - search large trees once directory layout is clear
+- [reading-file-contents](https://alp78.github.io/elysium/01-Shell/03-Text-Processing/01-reading-file-contents) - inspect files after you locate them
+- [compression](https://alp78.github.io/elysium/01-Shell/02-File-Operations/04-compression) - reduce disk pressure with archive and compression tools

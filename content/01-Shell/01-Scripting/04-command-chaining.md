@@ -8,201 +8,148 @@ aliases: [command chaining, shell operators, chain commands, && operator, pipe o
 keywords: [command chaining, exit code, logical AND, logical OR, pipe, pipeline, semicolon, fail-fast, bash operators, powershell operators, process exit code, shell execution flow]
 description: "How bash and PowerShell command chaining operators (&&, ||, ;, |) use exit codes to control execution flow, enabling fail-fast scripts and graceful error handling."
 created: 2026-03-22
-updated: 2026-04-03
+updated: 2026-04-14
 status: complete
 ---
 
 # Command Chaining
 
-> [!quote]
+> [!quote] Unix philosophy
+>
 > "This is the Unix philosophy: Write programs that do one thing and do it well. Write programs to work together. Write programs to handle text streams, because that is a universal interface."
 >
 > — **Doug McIlroy**, *Bell System Technical Journal* (1978)
 
 > [!abstract]- Summary
 >
-> Covers bash and PowerShell command chaining operators (`&&`, `||`, `;`, `|`) and how each uses process exit codes to control execution flow, enabling fail-fast deployment scripts, fallback logic, streaming pipelines, and safe error handling.
+> Shows how Bash and PowerShell decide whether the next command runs, skips, or branches after a success or failure.
 >
-> **Bash chaining operators**
-> - `&&` (AND): runs next command only on exit code 0 — backbone of fail-fast scripting; use between all causally dependent steps
-> - `||` (OR): runs next command only on non-zero exit — fallback logic, default-value assignment, and the `&& / ||` try/catch idiom
-> - `;` (semicolon): runs next command unconditionally, ignoring exit codes — appropriate only for independent commands (e.g., diagnostic sweeps)
-> - `|` (pipe): connects stdout of one process to stdin of the next; commands run concurrently; pipeline exit code is the last command's by default
-> - `pipefail` (`set -o pipefail`): makes the pipeline return the first non-zero exit code from any stage; required in all scripts
->
-> **PowerShell chaining operators**
-> - `&&` / `||` (PS 7+): native pipeline chain operators, checking `$?` after each command; not available in Windows PowerShell 5.1
-> - `;`: sequential separator, available in all PowerShell versions, ignores success/failure
-> - `|` (object pipeline): passes structured .NET objects between cmdlets — typed properties, no text parsing; external executables (`git`, `curl`, `python`) still emit raw text
-> - `*>`: redirects all output streams (stdout + stderr + verbose + warning + debug + information) to a file
->
-> **Patterns and idioms**
-> - Fail-fast deploy chain: `git pull && build && restart`
-> - Shell try/catch: `cmd && echo "ok" || { echo "fail" >&2; exit 1; }`
-> - Safe default value: `val=$(cmd) || val=default`
-> - Script header: `set -euo pipefail` combines fail-fast, unset-variable detection, and pipeline failure propagation
-> - Cleanup on failure: use `trap 'cleanup' EXIT` (bash) or `try/catch/finally` (PS) — not `||`
->
-> **Operations and safety**
-> - Warnings: semicolons in data pipelines mask failures silently; `&& / ||` try/catch pattern has a fragile edge case when the success branch fails; pipeline exit code is last-command-only without `pipefail`; `&&` / `||` are syntax errors in PS 5.1
-> - Recommendations table: 7 scenarios covering script header, dependent steps, fallback logic, cleanup, long pipelines, cross-platform, and interactive use
-> - Troubleshooting: 5 failure modes covering silent step continuation, empty pipeline output, `&&` syntax error in PS, `||` triggering on success-branch failure, and `$?` / `$LASTEXITCODE` mismatch in PowerShell
+> - Bash coverage: `&&`, `||`, `;`, `|`, `set -o pipefail`, `${PIPESTATUS[@]}`, and `trap ... EXIT`
+> - PowerShell coverage: `&&` and `||` in PowerShell 7+, `;`, the object pipeline, `*>`, `$?`, and `$LASTEXITCODE`
+> - Recommended patterns: fail-fast chains, explicit fallbacks, cleanup handlers, and verification for silent settings
+> - Troubleshooting: semicolon fallthrough, masked pipeline failures, fragile `cmd && ok || fail` patterns, PowerShell 5.1 parser errors, and `$?` versus `$LASTEXITCODE`
 
 > [!note]- Glossary
 >
 > **Exit code**
-> - A numeric value (0–255) every process returns on exit; 0 means success, any non-zero value means failure.
-> - Every chaining operator reads the exit code of the preceding command to decide whether to run, skip, or branch — it is the universal signal that connects all operators in this note.
 >
-> > [!warning] Output does not imply success
-> >
-> > A command can print text to stdout and still exit with a non-zero code. Never infer success from visible output; always inspect the exit code via `$?` or `$LASTEXITCODE`.
+> - A numeric status that a process returns when it exits; `0` means success and any non-zero value means failure.
+> - Chaining operators read that status to decide whether to continue, skip the next step, or take a fallback path.
+> - Visible output does not guarantee success; a command can print text and still exit non-zero.
 >
 > ---
 >
 > **`$?`**
-> - A bash special variable that holds the exit code of the most recently executed foreground command or pipeline.
-> - Used implicitly by `&&`, `||`, and `set -e` to make branching decisions; inspect it explicitly in scripts to detect failure after commands that do not chain naturally.
 >
-> > [!warning] `$?` is overwritten immediately
-> >
-> > Every command — including `echo` — overwrites `$?`. Capture it in a variable (`rc=$?`) immediately after the command you care about, before any other statement runs.
+> - In Bash, `$?` expands to the numeric exit status of the most recent foreground command or pipeline.
+> - In PowerShell, `$?` is a Boolean success flag for the last command in the pipeline: `$true` for success, `$false` for failure.
+> - Capture it immediately in the shell you are using because the next command overwrites it.
 >
 > ---
 >
 > **`$LASTEXITCODE`**
-> - A PowerShell automatic variable that holds the exit code of the last native executable (non-cmdlet) that ran.
-> - Essential for checking results of `git`, `curl`, `python`, and other external binaries inside PowerShell scripts, where `$?` reflects cmdlet error state, not native exit codes.
 >
-> > [!warning] `$?` and `$LASTEXITCODE` diverge
-> >
-> > In PowerShell, `$?` can be `$false` (a cmdlet raised a non-terminating error) while `$LASTEXITCODE` is 0 (the last native exe succeeded), and vice versa. Use the right variable for the right tool type.
+> - A PowerShell automatic variable that stores the exit code of the last native executable such as `git`, `cmd`, `python`, or `curl`.
+> - Use it when the command you care about is not a cmdlet, because `$?` and `$LASTEXITCODE` can diverge.
+> - A cmdlet can fail while `$LASTEXITCODE` still shows the previous native process result.
 >
 > ---
 >
 > **`&&` operator**
-> - A chaining operator (bash and PS 7+) that runs the right-hand command only if the left-hand command exits with code 0 (success).
-> - The backbone of fail-fast scripting: prevents downstream steps from running on corrupted, missing, or partially produced input.
 >
-> > [!warning] Fragile in the `&& / ||` try/catch pattern
-> >
-> > `cmd && echo "ok" || echo "fail"`: if `cmd` succeeds but `echo "ok"` fails (e.g., broken pipe), the `||` branch fires even though the primary command succeeded. Use explicit `if/then/else` for critical logic.
+> - Runs the command on the right only when the command on the left succeeds.
+> - It is the standard fail-fast operator for dependent steps such as build, test, and deploy chains.
+> - The combined `cmd && ok || fail` idiom is fragile because a failure in the `ok` branch can still trigger the `fail` branch.
 >
 > ---
 >
 > **`||` operator**
-> - A chaining operator (bash and PS 7+) that runs the right-hand command only if the left-hand command exits with a non-zero code (failure).
-> - Used for fallback logic (try fast path, fall back to safe path) and for assigning safe default values when a command or lookup fails.
 >
-> > [!info] Exit code of the overall expression
-> >
-> > The exit code of `cmd_a || cmd_b` is the exit code of whichever command actually ran last. If `cmd_a` fails and `cmd_b` succeeds, the overall result is 0 — the failure of `cmd_a` is absorbed.
+> - Runs the command on the right only when the command on the left fails.
+> - Use it for simple fallback actions and default values when the recovery logic is short and local.
+> - If the fallback succeeds, the whole expression succeeds and the original failure is absorbed.
 >
 > ---
 >
 > **`;` semicolon**
-> - A sequential statement separator that executes the next command unconditionally, regardless of whether the previous command succeeded or failed.
-> - Appropriate only for independent commands where the second does not depend on the first (e.g., gathering multiple diagnostic snapshots during an outage).
 >
-> > [!danger] Silent failure masking in data pipelines
-> >
-> > A semicolon between causally dependent steps — `truncate_table ; load_data` — means `load_data` runs even if `truncate_table` failed, producing duplicate or inconsistent data with no error surfaced.
+> - Separates statements without inspecting success or failure.
+> - The next command runs even when the previous one failed.
+> - Use it only when later steps are genuinely independent, such as collecting multiple diagnostics.
 >
 > ---
 >
-> **`|` pipe (bash)**
-> - An operator that connects the stdout of one process to the stdin of the next; both processes run concurrently as separate kernel processes linked by an in-memory buffer.
-> - Enables streaming composition over arbitrarily large inputs without intermediate files, and is the foundation of Unix-style text pipeline idioms.
+> **`|` pipe (Bash)**
 >
-> > [!warning] Exit code is the last stage's by default
-> >
-> > Without `set -o pipefail`, a failed early stage (e.g., `grep` exits 1 on no matches) is invisible — the pipeline's exit code is the last command's. Enable `pipefail` in every script.
+> - Connects stdout from one process to stdin of the next process.
+> - Pipelines let commands stream data without intermediate files.
+> - Without `pipefail`, the pipeline status comes from the last stage only, which can hide an earlier failure.
 >
 > ---
 >
 > **`pipefail`**
-> - A bash shell option (`set -o pipefail`) that makes a pipeline exit with the first non-zero exit code from any stage, rather than always using the last stage's exit code.
-> - Without it, failures in early pipeline stages are silently swallowed, producing empty or wrong results that downstream steps and CI/CD systems treat as success.
 >
-> > [!warning] Avoid in interactive shells
-> >
-> > `pipefail` makes benign interactive patterns like `history | grep cmd` return an error exit when the pattern is not found, which is confusing and can interfere with interactive shell workflows. Enable it only in scripts.
+> - A Bash option enabled with `set -o pipefail`.
+> - It makes a pipeline return a non-zero status when any stage fails instead of trusting the last command alone.
+> - Keep it in scripts, but avoid enabling it casually in interactive shells where a harmless `grep` miss can look like a failure.
 >
 > ---
 >
 > **`set -e`**
-> - A bash option that causes the shell to exit immediately whenever a simple command returns a non-zero exit code (roughly equivalent to adding `|| exit` after every command).
-> - Combined with `set -u` (unset variable detection) and `pipefail` in the idiomatic `set -euo pipefail` script header for maximum safety.
 >
-> > [!warning] `set -e` has silent exceptions
-> >
-> > Commands in `if` conditions, after `!`, in `while`/`until` tests, and in subshells with `||` or `&&` do not trigger `set -e` on failure. Relying on `set -e` alone is insufficient — explicit `&&` chaining and `pipefail` are still needed.
+> - A Bash option that exits the shell when a simple command fails.
+> - It is commonly paired with `set -u` and `pipefail` in `set -euo pipefail`.
+> - It does not fire in every context, so explicit `&&` chains and careful conditionals still matter.
 >
 > ---
 >
 > **Fail-fast**
-> - A scripting strategy where execution stops at the first error rather than continuing through subsequent steps, achieved with `&&` chaining and/or `set -e`.
-> - Ensures the system is left in a known state after a failure: if step 2 of 5 fails, steps 3–5 never execute, preventing partial or inconsistent state.
 >
-> > [!info] Fail-fast is not the same as error handling
-> >
-> > Stopping early prevents further damage but does not clean up. Use `trap 'cleanup' EXIT` (bash) or `try/catch/finally` (PowerShell) alongside fail-fast operators when resources must be released on failure.
+> - A scripting style that stops at the first failed dependency instead of continuing into a broken state.
+> - `&&`, `set -e`, and `pipefail` are the usual Bash building blocks for it.
+> - Fail-fast stops damage; cleanup still needs `trap` in Bash or `try/finally` in PowerShell.
 >
 > ---
 >
-> **Pipeline chain operators (PS 7+)**
-> - PowerShell 7's native `&&` and `||` operators, which check `$?` after each command to decide whether to run the next — directly mirroring bash behavior.
-> - Enables fail-fast chaining and fallback patterns in PowerShell without `try/catch` boilerplate; not available in Windows PowerShell 5.1.
+> **Pipeline chain operators (PowerShell 7+)**
 >
-> > [!danger] Syntax error in PowerShell 5.1
-> >
-> > Using `&&` or `||` in Windows PowerShell 5.1 is a parse error, not just a runtime failure. Scripts break immediately. For 5.1 compatibility, use `try/catch` blocks or manually check `if ($LASTEXITCODE -ne 0)` after each command.
+> - PowerShell 7 introduced `&&` and `||` to mirror Bash-style chaining.
+> - These operators evaluate whether the preceding command succeeded before deciding to continue or branch.
+> - Windows PowerShell 5.1 does not parse them at all.
 >
 > ---
 >
 > **Object pipeline (PowerShell)**
-> - PowerShell's `|` passes structured .NET objects — with typed properties (integers, datetimes, booleans) — between cmdlets, rather than raw text strings.
-> - Eliminates the text-parsing step required in bash pipelines and removes a class of bugs caused by whitespace, locale-dependent formatting, and column reordering.
 >
-> > [!warning] Object pipeline does not apply to external executables
-> >
-> > When PowerShell pipes output from `git`, `curl`, `python`, or any non-cmdlet binary, the pipe carries raw text strings, not objects. Text parsing is still required for external tool output even inside a PowerShell pipeline.
+> - PowerShell pipes .NET objects between cmdlets instead of raw text lines.
+> - This preserves types such as integers, dates, and Booleans across the pipeline.
+> - External executables still emit text, so object semantics apply only when PowerShell commands are producing the data.
 >
 > ---
 >
 > **`${PIPESTATUS[@]}`**
-> - A bash array that holds the exit codes of all commands in the most recently executed pipeline, indexed left to right.
-> - Used after critical pipelines to identify which specific stage failed, complementing `pipefail` when per-stage diagnostics are needed.
 >
-> > [!warning] `${PIPESTATUS[@]}` is overwritten by the next command
-> >
-> > Like `$?`, the array is replaced the moment any subsequent command runs. Capture it immediately: `pipe_statuses=("${PIPESTATUS[@]}")` on the line directly after the pipeline.
+> - A Bash array that stores the exit code from every stage of the most recent pipeline.
+> - Use it when a long pipeline failed and you need to identify which stage returned non-zero.
+> - Capture it immediately because the next command replaces it.
 >
 > ---
 >
-> **`trap` (bash)**
-> - A bash built-in that registers a command or function to run automatically when the shell receives a signal or exits, regardless of how the exit happens.
-> - The correct mechanism for guaranteed cleanup (closing connections, removing temp files, sending alerts) when fail-fast `&&` chaining stops execution early.
+> **`trap` (Bash)**
 >
-> > [!info] `trap 'cleanup' EXIT` fires on all exits
-> >
-> > Unlike `||` cleanup patterns, `trap ... EXIT` fires on both successful and failed exits, making it the reliable choice when cleanup must always happen regardless of outcome.
+> - A Bash built-in that runs cleanup code when the shell exits or receives a signal.
+> - `trap ... EXIT` is the reliable way to remove temp files or release resources after a fail-fast stop.
+> - It runs on both success and failure, which `|| cleanup` does not guarantee.
 >
 > ---
 >
 > **`*>` redirect (PowerShell)**
-> - A PowerShell redirection operator that captures all output streams — stdout, stderr, verbose, warning, debug, and information — and writes them to a file.
-> - More comprehensive than bash's `2>&1`, which only merges stderr into stdout; `*>` captures every PowerShell output channel in a single operator.
 >
-> > [!info] Stream numbers for selective capture
-> >
-> > PowerShell numbers its streams: 1 (stdout), 2 (error), 3 (warning), 4 (verbose), 5 (debug), 6 (information). Use `2>` to capture only errors, or `3>&1` to merge warnings into stdout, for finer control than `*>`.
+> - A PowerShell redirection operator that writes every output stream to one file.
+> - It captures standard output, errors, warnings, verbose output, debug output, and information output together.
+> - Because `*>` is silent by itself, verify it by reading the target file after the command runs.
 
-Command chaining operators use process exit codes to decide what runs next. Every command exits with a numeric code: 0 means success, anything else means failure. Understanding these operators is the difference between a deployment script that stops on the first error and one that silently plows through failures, leaving your system in an inconsistent state.
-
-## Linux command chaining operators
-
-Bash provides four primary chaining operators: `&&` (AND), `||` (OR), `;` (sequential), and `|` (pipe). Each operator reads the exit code of the preceding command to determine whether and how to continue. These operators are the core building blocks of safe, expressive shell scripting.
+Command chaining is exit-status routing. Bash and PowerShell both let the previous command decide what happens next, but they expose that decision differently: Bash uses numeric exit codes everywhere, while PowerShell mixes `$?`, `$LASTEXITCODE`, and object-aware pipelines. The examples below use safe toy commands and captured output so the control flow is visible instead of implied.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
@@ -221,336 +168,443 @@ flowchart TD
     style F fill:#24283b,color:#c0caf5
 ```
 
-### Linux | && | AND operator — fail-fast chaining
+## Linux command chaining operators
 
-The `&&` operator is a logical AND gate on exit codes. The shell executes the first command, checks its exit code, and only proceeds to the next command if the exit code is exactly 0. If any command in the chain fails, the rest of the chain is skipped — this is fail-fast chaining.
+### Linux | `&&` | fail-fast chaining
 
-#### Run a single dependent command
+Bash uses `&&` for dependent steps that must not continue after a failure. This is the operator that keeps later work from running on missing files, half-built artifacts, or bad input.
 
-The simplest form: run `command_b` only if `command_a` exits with code 0.
+#### Stop after the first failed step
 
-```bash
-command_a && command_b
-```
-
-#### Chain a deploy — git pull, docker build, docker up
-
-Each step only runs if the previous succeeded. The backslash continues the command across lines for readability.
+This chain prints two successful stages, fails deliberately at `false`, and never reaches `deploy`. The final `printf` captures the numeric exit code that the chain returned.
 
 ```bash
-git pull origin main && \
-docker compose build pipeline && \
-docker compose up -d pipeline && \
-echo "Deploy complete at $(date)"
-```
-
-If `git pull` fails (merge conflict, network error), the build never starts. If the build fails (syntax error, missing dependency), the container is never restarted with broken code. This is the backbone of every safe deployment script.
-
-#### Combine AND with OR — shell try/catch pattern
-
-The most powerful pattern combines `&&` and `||` for try/catch-style logic. The curly braces `{ }` group multiple failure actions into a single logical unit. The space after `{` and the semicolon before `}` are both syntactically required in bash.
-
-```bash
-sqlcmd -S 10.132.0.2 -U sa -P "$DB_PASS" -d data-pipeline -Q "SELECT 1" > /dev/null 2>&1 \
-  && echo "Database connection OK" \
-  || { echo "FATAL: Cannot connect to database" >&2; exit 1; }
-```
-
-This reads as: try the SQL connection → on success, print OK → on failure, print error to stderr and exit with code 1.
-
-| Operator | Syntax | Runs next command when... |
-|---|---|---|
-| `&&` | `cmd_a && cmd_b` | `cmd_a` exits with code 0 (success) |
-| `\|\|` | `cmd_a \|\| cmd_b` | `cmd_a` exits with any non-zero code (failure) |
-| `&&` + `\|\|` | `cmd_a && ok \|\| fail` | Combined: `ok` on success, `fail` on failure |
-
-### Linux | || | OR operator — fallback on failure
-
-The `||` operator is a logical OR gate — the fallback operator. Use it to provide an alternative action when the primary action fails. The second command runs only if the first exits with a non-zero code.
-
-#### Run a fallback command on failure
-
-```bash
-command_a || command_b
-```
-
-#### Fall back from rsync to scp on failure
-
-Try the fast network sync path first; if it fails (e.g., `rsync` is not installed on the remote, or the connection drops), fall back to the slower but universally available `scp`.
-
-```bash
-rsync -avz /data/ backup-server:/data/ || scp -r /data/ backup-server:/data/
-```
-
-#### Provide a safe default value
-
-The `||` operator is commonly used to assign a default value when a variable lookup or command fails.
-
-```bash
-DB_HOST=$(cat /etc/db_host 2>/dev/null) || DB_HOST="localhost"
-```
-
-| Operator | Syntax | Runs next command when... |
-|---|---|---|
-| `\|\|` | `cmd_a \|\| cmd_b` | `cmd_a` exits with non-zero (failure) |
-| `\|\|` | `val=$(cmd) \|\| val=default` | `cmd` fails — sets a safe default |
-
-### Linux | ; | semicolon — sequential with no error checking
-
-The semicolon is a sequential separator with no error checking. It is the equivalent of pressing Enter between two commands. The second command always runs, regardless of whether the first succeeded or failed.
-
-#### Run commands sequentially regardless of outcome
-
-```bash
-command_a ; command_b
-```
-
-#### Gather diagnostics during an outage
-
-All diagnostic commands should run regardless of whether earlier ones fail — you want as much information as possible during an incident.
-
-```bash
-free -h ; df -h ; docker ps ; ss -tlnp
-```
-
-> [!warning] Never use semicolons in data pipeline scripts
->
-> A semicolon between "delete old data" and "load new data" means the load runs even if the delete failed. The result is duplicate or inconsistent data with no error surfaced.
-
-> [!success] Use `&&` in data scripts
->
-> Replace semicolons with `&&` whenever commands are causally dependent. The pipeline will stop at the first failure and return a non-zero exit code that CI/CD systems, cron monitors, and alerting tools can detect.
->
-> ```bash
-> truncate_staging_table && load_new_data && validate_row_count
-> ```
-
-| Operator | Syntax | Runs next command when... |
-|---|---|---|
-| `;` | `cmd_a ; cmd_b` | Always — exit code is ignored |
-
-### Linux | | | pipe — streaming composition
-
-Pipes are the shell's composition mechanism. Each command in a pipeline runs as a separate process, and the kernel connects them via an in-memory buffer. Data flows from left to right as a continuous stream — the second command can begin processing before the first has finished producing all its output. This allows pipelines to process files larger than available RAM.
-
-#### Connect stdout of one command to stdin of another
-
-```bash
-command_a | command_b
-```
-
-#### Analyze a 50 GB compressed log file — stream without loading into memory
-
-The pipeline decompresses, filters on error patterns, extracts timestamp and message fields, counts occurrences, and surfaces the top 20 patterns — all in a single streaming pass. No intermediate files are written and no full decompression is needed.
-
-```bash
-zcat /var/log/pipeline-2025-03-*.gz | \
-  grep -E "ERROR|DEADLOCK|TIMEOUT" | \
-  awk '{print $1, $2, $NF}' | \
-  sort | uniq -c | sort -rn | head -20
-```
-
-#### Enable pipefail to propagate failures through the pipeline
-
-By default, a pipeline's exit code is the exit code of the last command only. If `grep` finds no matches (exit code 1) but `wc -l` succeeds (exit code 0), the pipeline as a whole reports success — silently masking the grep failure.
-
-```bash
-set -o pipefail
-```
-
-With `pipefail` active, the pipeline exits with the first non-zero exit code from any stage. Enable it at the top of every script. Avoid it in interactive shells — it makes common patterns like `history | grep cmd` return errors when the pattern is not found.
-
-> [!warning] Pipeline exit code trap without pipefail
->
-> Without `set -o pipefail`, a failed early stage (e.g., a `grep` returning no results) is silently swallowed. The script continues as if the pipeline succeeded, which can produce empty or incorrect results in downstream steps.
-
-> [!success] Enable pipefail in all scripts
->
-> Add `set -o pipefail` (or combine with `set -euo pipefail`) at the top of every bash script. This ensures any stage failure propagates as the pipeline's overall exit code, making failures visible to the caller and to CI/CD systems.
->
-> ```bash
-> #!/usr/bin/env bash
-> set -euo pipefail
-> ```
-
-| Operator | Syntax | Description |
-|---|---|---|
-| `\|` | `cmd_a \| cmd_b` | Connects stdout of `cmd_a` to stdin of `cmd_b`; commands run concurrently |
-| `\|&` | `cmd_a \|& cmd_b` | Connects both stdout and stderr of `cmd_a` to stdin of `cmd_b` (bash 4+) |
-
-## PowerShell command chaining operators
-
-PowerShell mirrors bash's chaining operators. PowerShell 7 introduced native `&&` and `||` pipeline chain operators, aligning its syntax with bash for users writing cross-platform scripts. The fundamental difference is that PowerShell's `|` pipe passes structured .NET objects rather than raw text, eliminating the text-parsing step required in bash pipelines.
-
-### PowerShell | && | AND operator — fail-fast chaining
-
-The `&&` pipeline chain operator was introduced in PowerShell 7.0. It behaves identically to bash: the right-hand command runs only if the left-hand command succeeds (i.e., `$?` is `$true` and no terminating error was thrown). This operator is not available in Windows PowerShell 5.1.
-
-#### Run a dependent command on success (PowerShell 7+)
-
-```powershell
-command_a && command_b
-```
-
-#### Chain a deploy — git pull, dotnet build, service restart (PowerShell 7+)
-
-```powershell
-git pull origin main && `
-dotnet build ./Pipeline.sln --configuration Release && `
-Restart-Service -Name PipelineWorker && `
-Write-Host "Deploy complete at $(Get-Date)"
-```
-
-#### Combine AND with OR — PowerShell try/catch pattern (PowerShell 7+)
-
-```powershell
-Test-NetConnection -ComputerName db-server -Port 1433 -Quiet && `
-  Write-Host "Database connection OK" || `
-  { Write-Error "FATAL: Cannot connect to database"; exit 1 }
-```
-
-| Operator | Syntax | Runs next command when... |
-|---|---|---|
-| `&&` | `cmd_a && cmd_b` | `cmd_a` succeeds (`$?` is `$true`) |
-| `\|\|` | `cmd_a \|\| cmd_b` | `cmd_a` fails (`$?` is `$false`) |
-| `&&` + `\|\|` | `cmd_a && ok \|\| fail` | Combined: `ok` on success, `fail` on failure |
-
-### PowerShell | || | OR operator — fallback on failure
-
-The `||` pipeline chain operator runs the right-hand command only if the left-hand command fails. Introduced in PowerShell 7.0, it mirrors bash's `||` behavior.
-
-#### Run a fallback command on failure (PowerShell 7+)
-
-```powershell
-command_a || command_b
-```
-
-#### Fall back to a local copy if remote fetch fails (PowerShell 7+)
-
-```powershell
-Invoke-RestMethod -Uri "https://api.example.com/rates" -OutFile rates.json || `
-  Copy-Item -Path ".\rates_fallback.json" -Destination ".\rates.json"
-```
-
-| Operator | Syntax | Runs next command when... |
-|---|---|---|
-| `\|\|` | `cmd_a \|\| cmd_b` | `cmd_a` fails (`$?` is `$false`) |
-
-### PowerShell | ; | semicolon — sequential with no error checking
-
-The semicolon in PowerShell separates statements sequentially, equivalent to pressing Enter between them. The second statement always executes regardless of whether the first succeeded. Available in all PowerShell versions.
-
-#### Run statements sequentially regardless of outcome
-
-```powershell
-command_a; command_b
-```
-
-#### Gather diagnostics during an outage
-
-```powershell
-Get-Process | Measure-Object WorkingSet -Sum; Get-Disk; Get-NetTCPConnection -State Listen
-```
-
-> [!warning] Never use semicolons in pipeline scripts with causal dependencies
->
-> A semicolon between "clear staging table" and "insert new data" means the insert runs even if the truncation failed, producing duplicate rows.
-
-> [!success] Use `&&` for causally dependent steps
->
-> ```powershell
-> Invoke-Sqlcmd -Query "TRUNCATE TABLE staging.Rates" && `
-> Import-Csv rates.csv | Write-SqlTableData -TableName "staging.Rates"
-> ```
-
-| Operator | Syntax | Runs next command when... |
-|---|---|---|
-| `;` | `cmd_a; cmd_b` | Always — exit status is ignored |
-
-### PowerShell | | | pipe — object pipeline
-
-PowerShell's pipe passes structured .NET objects from one cmdlet to the next, not raw text. This means downstream cmdlets receive typed properties (integers, datetimes, booleans) rather than strings that need to be parsed. The trade-off is that PowerShell pipelines are more verbose and slower for simple text-only tasks compared to bash.
-
-The key cmdlets for pipeline processing are: `Where-Object` (filter), `Select-Object` (project properties), `Sort-Object` (sort by property), `ForEach-Object` (iterate), and `Group-Object` (aggregate).
-
-#### Filter, sort, and select top results from an object pipeline
-
-`Where-Object CPU -gt 100` filters by the actual numeric `CPU` property — not by string comparison. `Sort-Object CPU -Descending` sorts numerically. No parsing is required.
-
-```powershell
-Get-Process | Where-Object CPU -gt 100 | Sort-Object CPU -Descending | Select-Object -First 5
+printf 'build\n' && printf 'test\n' && false && printf 'deploy\n'
+printf 'exit=%s\n' "$?"
 ```
 
 ```text
- NPM(K)    PM(M)      WS(M)     CPU(s)      Id  SI ProcessName
- ------    -----      -----     ------      --  -- -----------
-     82   256.34     312.45    1845.22    4512   1 chrome
-     41   128.10     145.33     923.11    3201   1 node
-     ...
+build
+test
+exit=1
 ```
 
-#### Redirect all output streams to a file
+### Linux | `||` | fallback branching
 
-The `*>` operator captures all PowerShell output streams: stdout, stderr, verbose, warning, debug, and information. This is more comprehensive than bash's `2>&1`, which only merges stderr into stdout.
+Use `||` when the fallback is short, local, and safe to run only after a failure. It is a good fit for default values, alternate data sources, and small recovery actions.
+
+#### Run a fallback command after a failure
+
+The left-hand `false` simulates a failed primary command. Because it fails, Bash runs the fallback `printf`, and the overall expression finishes successfully.
+
+```bash
+false || printf 'fallback\n'
+printf 'exit=%s\n' "$?"
+```
+
+```text
+fallback
+exit=0
+```
+
+### Linux | `;` | unconditional sequencing
+
+The semicolon is just a separator. Bash executes the next statement whether the previous one succeeded or failed, so it is dangerous in dependent workflows and useful only for independent work.
+
+#### Show why a semicolon masks failures
+
+The failed command does not stop execution. `still-ran` proves the second statement executed anyway, and the final exit code is `0` because the last command succeeded.
+
+```bash
+false; printf 'still-ran\n'
+printf 'exit=%s\n' "$?"
+```
+
+```text
+still-ran
+exit=0
+```
+
+### Linux | `|` and `pipefail` | streaming pipelines
+
+Bash pipelines connect text streams. They are powerful, but their exit semantics need extra care because the default pipeline status only reflects the last command.
+
+#### Stream stdout into the next command
+
+This pipeline sends two lines into `grep`, keeps only the line that begins with `b`, and counts the result. The pipeline succeeds because every stage completed successfully.
+
+```bash
+printf 'alpha\nbeta\n' | grep '^b' | wc -l
+printf 'exit=%s\n' "$?"
+```
+
+```text
+1
+exit=0
+```
+
+#### Enable and verify `pipefail`
+
+`set -o pipefail` produces no output, so you have to verify the setting explicitly. The `sed` filter confirms that `pipefail` is on before you rely on it in a script.
+
+```bash
+set -o pipefail
+set -o | sed -n '/pipefail/p'
+```
+
+```text
+pipefail       	on
+```
+
+#### Inspect `${PIPESTATUS[@]}` after a failed pipeline stage
+
+This pipeline prints no matches from `grep`, so the middle stage exits with `1` even though `wc -l` still prints `0`. Capturing `${PIPESTATUS[@]}` immediately shows which stage failed.
+
+```bash
+set -o pipefail
+printf 'alpha\n' | grep z | wc -l
+statuses=("${PIPESTATUS[@]}")
+printf 'grep-exit=%s\n' "${statuses[1]}"
+printf 'stages=%s\n' "${statuses[*]}"
+```
+
+```text
+0
+grep-exit=1
+stages=0 1 0
+```
+
+## PowerShell command chaining operators
+
+### PowerShell | `&&` | fail-fast chaining
+
+PowerShell 7 added Bash-style chain operators. They are useful for native tools and short pipelines, but they do not exist in Windows PowerShell 5.1.
+
+#### Stop after the first failed native command
+
+This chain prints `build` and `test`, then calls `cmd /c exit 1`. Because that native command fails, `deploy` never runs, `$?` becomes `$false`, and `$LASTEXITCODE` records the native exit code.
 
 ```powershell
-Some-Command *> all-output.txt
+Write-Output 'build' &&
+Write-Output 'test' &&
+cmd /c exit 1 &&
+Write-Output 'deploy'
+"success=$?"
+"exit=$LASTEXITCODE"
 ```
 
-PowerShell pipes raw text strings when you run an external executable (e.g., `git`, `curl`, `python`). The object pipeline only applies to native PowerShell cmdlets and functions that return .NET objects.
+```text
+build
+test
+success=False
+exit=1
+```
 
-> [!info] PowerShell object pipeline vs bash text pipeline
->
-> Bash pipes raw text — every command must parse the text it receives, and subtle formatting changes (whitespace, column reordering, locale-specific date formats) can silently break downstream commands. PowerShell pipes structured .NET objects with typed properties. `Sort-Object CPU` sorts by an actual numeric value; `Where-Object StartTime -gt (Get-Date).AddHours(-1)` compares real `DateTime` objects.
->
-> When processing structured data (JSON, CSV, database results, Windows event logs), PowerShell's object pipeline eliminates an entire class of parsing bugs. For unstructured text (log files, arbitrary command output, Unix-native tools), bash remains the more ergonomic choice.
+### PowerShell | `||` | fallback branching
 
-| Operator | Syntax | Description |
-|---|---|---|
-| `\|` | `cmd_a \| cmd_b` | Passes .NET objects from `cmd_a` to `cmd_b` (cmdlets) or text (external executables) |
-| `*>` | `cmd *> file.txt` | Redirects all output streams (stdout + stderr + verbose + warning + debug + information) to a file |
+In PowerShell 7+, `||` runs the right-hand command only when the left-hand command failed. It is a direct analogue of Bash `||`.
 
+#### Run a fallback after a non-zero exit
 
+The first native command exits with code `1`, so the fallback `echo` runs. After the fallback succeeds, the overall chain reports success and `$LASTEXITCODE` reflects the last native command that ran.
 
-## Warnings
+```powershell
+cmd /c exit 1 || cmd /c echo fallback
+"success=$?"
+"exit=$LASTEXITCODE"
+```
 
-> [!danger] Semicolons in data pipelines mask failures
->
-> `truncate_table ; load_data ; validate` runs all three steps regardless of failures. If truncation fails, load runs on stale data. If load fails, validation runs on empty or corrupt data. Always use `&&` for causally dependent steps.
+```text
+fallback
+success=True
+exit=0
+```
 
-> [!warning] The `&&` / `||` try/catch pattern has a subtle bug
->
-> `cmd && echo "ok" || echo "fail"` — if `cmd` succeeds but `echo "ok"` fails (e.g., broken pipe, write error), the `|| echo "fail"` runs even though `cmd` succeeded. For critical scripts, use proper `if/then/else` blocks instead of the chained pattern.
+### PowerShell | `;` | unconditional sequencing
 
-> [!warning] Pipeline exit code is the last command's exit code by default
->
-> `broken_cmd | wc -l` returns exit code 0 (from `wc`) even when `broken_cmd` fails. Enable `set -o pipefail` in every script to propagate the first failure.
+The semicolon keeps going regardless of failure, just as it does in Bash. That makes it appropriate for independent diagnostics and unsafe for dependent steps.
 
-> [!warning] `&&` / `||` not available in PowerShell 5.1
->
-> The pipeline chain operators were introduced in PowerShell 7.0. Scripts targeting Windows PowerShell 5.1 must use `try/catch`, `if ($LASTEXITCODE -ne 0)`, or the `$ErrorActionPreference` variable instead.
+#### Show why a semicolon keeps going
 
-## Recommendations
+`cmd /c exit 1` fails, but `Write-Output` still runs because the semicolon does not inspect the previous status. `$LASTEXITCODE` still remembers the native failure even though the last cmdlet succeeded.
 
-| Scenario | Recommendation |
-|---|---|
-| Script header | Start every bash script with `set -euo pipefail`. This combines fail-fast (`-e`), unset variable detection (`-u`), and pipeline failure propagation (`pipefail`). |
-| Dependent steps | Use `&&` between causally dependent commands. Reserve `;` for truly independent operations. |
-| Fallback logic | Use `primary_cmd \|\| fallback_cmd`. For complex fallbacks, use `if ! primary_cmd; then fallback_logic; fi`. |
-| Cleanup on failure | Use `trap 'cleanup' EXIT` (bash) or `try/catch/finally` (PowerShell) — not `\|\|` — for cleanup that must run on both success and failure. |
-| Long pipelines | Add `set -o pipefail` and check `${PIPESTATUS[@]}` after critical pipelines to identify which stage failed. |
-| Cross-platform scripts | Stick to `&&` and `\|\|` for PowerShell 7+ environments. For 5.1 compatibility, use `try/catch` blocks. |
-| Interactive use | Avoid `set -o pipefail` in interactive shells — it makes benign patterns like `history \| grep cmd` return errors when the pattern is not found. |
+```powershell
+cmd /c exit 1; Write-Output 'still-ran'
+"success=$?"
+"exit=$LASTEXITCODE"
+```
+
+```text
+still-ran
+success=True
+exit=1
+```
+
+### PowerShell | `|` and `*>` | object pipeline and stream capture
+
+PowerShell pipelines move structured objects between cmdlets. When you need to persist every output stream, `*>` captures them into one file for later inspection.
+
+#### Pass objects through the pipeline
+
+This pipeline starts with integers, filters them as integers, and formats the surviving values. The output proves that PowerShell is piping objects, not text columns.
+
+```powershell
+1..5 | Where-Object { $_ -gt 3 } | ForEach-Object { "item=$_" }
+```
+
+```text
+item=4
+item=5
+```
+
+#### Capture every stream with `*>` and verify the file
+
+`*>` itself is silent, so the proof comes from reading the file after the block runs. The resulting file contains standard output, a warning, and information output in one place.
+
+```powershell
+$temp = Join-Path $env:TEMP 'chain-streams-demo.txt'
+Remove-Item $temp -ErrorAction SilentlyContinue
+& {
+  Write-Output 'stdout'
+  Write-Warning 'warning'
+  Write-Information 'info' -InformationAction Continue
+} *> $temp
+Get-Content $temp
+Remove-Item $temp
+```
+
+```text
+stdout
+warning
+info
+```
+
+## Recommended patterns
+
+### Linux | recommended patterns
+
+These Bash patterns cover the scenarios that show up most often in scripts: safe defaults, dependent steps, cleanup, and long pipelines.
+
+#### Start script entrypoints with `set -euo pipefail`
+
+This is the standard Bash safety header: `-e` stops on failures, `-u` catches unset variables, and `pipefail` exposes failed pipeline stages. The verification command confirms that all three settings are enabled.
+
+```bash
+set -euo pipefail
+set -o | sed -n '/errexit/p;/nounset/p;/pipefail/p'
+```
+
+```text
+errexit        	on
+nounset        	on
+pipefail       	on
+```
+
+#### Use `&&` between causally dependent steps
+
+When step 3 depends on step 2, and step 2 depends on step 1, chain them with `&&`. The missing `deploy` line proves that the failure stopped the chain before the unsafe step.
+
+```bash
+printf 'build\n' && printf 'test\n' && false && printf 'deploy\n'
+printf 'exit=%s\n' "$?"
+```
+
+```text
+build
+test
+exit=1
+```
+
+#### Use `primary || fallback` for short default paths
+
+This pattern is appropriate when the fallback is simple and local. The failed file read falls through to a safe default value, and the chain exits successfully.
+
+```bash
+db_host=$(cat /tmp/chain-missing 2>/dev/null) || db_host='localhost'
+printf 'db_host=%s\n' "$db_host"
+printf 'exit=%s\n' "$?"
+```
+
+```text
+db_host=localhost
+exit=0
+```
+
+#### Use `trap ... EXIT` for cleanup that must always run
+
+Cleanup belongs in `trap`, not in `||`, because cleanup must run on every shell exit path. This script fails deliberately after creating a temp directory, and the trap still prints `cleanup`.
+
+```bash
+rm -rf /tmp/chain-trap-demo
+mkdir /tmp/chain-trap-demo
+trap "rm -rf /tmp/chain-trap-demo; printf 'cleanup\n'" EXIT
+set -e
+touch /tmp/chain-trap-demo/demo
+false
+```
+
+```text
+cleanup
+```
+
+#### Inspect `${PIPESTATUS[@]}` after long pipelines
+
+`pipefail` tells you that the pipeline failed; `${PIPESTATUS[@]}` tells you which stage failed. That is the fastest way to isolate a bad stage in a long text-processing chain.
+
+```bash
+set -o pipefail
+printf 'alpha\n' | grep z | wc -l
+statuses=("${PIPESTATUS[@]}")
+printf 'grep-exit=%s\n' "${statuses[1]}"
+printf 'stages=%s\n' "${statuses[*]}"
+```
+
+```text
+0
+grep-exit=1
+stages=0 1 0
+```
+
+#### Keep `pipefail` in scripts, not in ad hoc interactive searches
+
+With `pipefail` enabled, a normal `grep` miss becomes a failed pipeline. That is usually what you want in automation and usually not what you want when you are exploring interactively.
+
+```bash
+set -o pipefail
+printf 'alpha\n' | grep z | wc -l
+printf 'pipeline=%s\n' "$?"
+```
+
+```text
+0
+pipeline=1
+```
+
+### PowerShell | recommended patterns
+
+PowerShell recommendations depend on the version you are targeting. PowerShell 7 can use Bash-like chain operators; Windows PowerShell 5.1 needs explicit control flow.
+
+#### Use `&&` and `||` in PowerShell 7+ when you want Bash-like chaining
+
+This is the shortest readable form for dependent steps and simple fallbacks in modern PowerShell. The fallback runs only after the deliberate failure, and the chain finishes successfully.
+
+```powershell
+cmd /c exit 1 || cmd /c echo fallback
+"success=$?"
+"exit=$LASTEXITCODE"
+```
+
+```text
+fallback
+success=True
+exit=0
+```
+
+#### Use `try/catch/finally` with `$LASTEXITCODE` when you must support Windows PowerShell 5.1
+
+Windows PowerShell 5.1 has no `&&` or `||`, so you have to inspect native exit codes yourself. This example throws when the native command fails, reports the reason in `catch`, and still runs cleanup in `finally`.
+
+```powershell
+try {
+  cmd /c exit 1
+  if ($LASTEXITCODE -ne 0) { throw 'step failed' }
+} catch {
+  $_.Exception.Message
+} finally {
+  'cleanup-ran'
+}
+```
+
+```text
+step failed
+cleanup-ran
+```
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| "Script continues past a failed step" | Steps are separated by `;` instead of `&&`, or `set -e` / `pipefail` is not enabled. | Replace `;` with `&&` for dependent steps. Add `set -euo pipefail` to the script header. |
-| "Pipeline succeeds but produces empty output" | An early pipeline stage failed (e.g., `grep` found no matches) but the last stage (`wc -l`, `head`) succeeded, masking the error. | Enable `set -o pipefail`. Check `${PIPESTATUS[@]}` to find which stage returned non-zero. |
-| "`&&` syntax error in PowerShell" | Using `&&` in Windows PowerShell 5.1, which does not support pipeline chain operators. | Upgrade to PowerShell 7+ or replace with `if ($LASTEXITCODE -eq 0) { next_cmd }`. |
-| "Fallback `\|\|` command runs even though the primary succeeded" | The primary command succeeded but a subsequent `&&` step failed, triggering the `\|\|` branch. The combined pattern `cmd && ok \|\| fail` is fragile. | Use explicit `if/then/else` for critical logic instead of the chained `&& / \|\|` pattern. |
-| "External command in PowerShell pipeline returns 0 but pipeline fails" | PowerShell treats non-terminating errors (e.g., `Write-Error`) differently from native exit codes. `$?` may be `$false` even when `$LASTEXITCODE` is 0. | Check `$LASTEXITCODE` for native executables. Use `$ErrorActionPreference = 'Stop'` to convert non-terminating errors to terminating ones. |
+### Linux | troubleshooting
+
+These Bash failure modes are common because they look harmless in code review while changing runtime behavior in important ways.
+
+#### A script keeps going after a failed step
+
+If the line uses `;`, Bash treats the next command as unconditional. The first line prints because the semicolon does not care about failure; the second line never prints because `&&` does.
+
+```bash
+false; printf 'ran-with-semicolon\n'
+false && printf 'ran-with-and\n'
+```
+
+```text
+ran-with-semicolon
+```
+
+#### A pipeline returns success but the result is empty
+
+Without `pipefail`, the pipeline status comes from `wc -l`, not from `grep`. `0` lines were counted, but the pipeline still reports success because the last stage succeeded.
+
+```bash
+printf 'alpha\n' | grep z | wc -l
+printf 'exit=%s\n' "$?"
+```
+
+```text
+0
+exit=0
+```
+
+#### `cmd && ok || fail` triggers the `fail` branch even though the primary command succeeded
+
+The left-hand `true` succeeds, but the grouped `ok` branch returns failure because it ends with `false`. That failure is enough to trigger the `||` branch, which is why this idiom is unsafe for critical logic.
+
+```bash
+true && { printf 'primary-succeeded\n'; false; } || printf 'fallback-ran\n'
+printf 'exit=%s\n' "$?"
+```
+
+```text
+primary-succeeded
+fallback-ran
+exit=0
+```
+
+### PowerShell | troubleshooting
+
+PowerShell adds a second axis of complexity: version support and the difference between cmdlet failures and native exit codes.
+
+#### `&&` is a syntax error in Windows PowerShell 5.1
+
+Windows PowerShell 5.1 never learned the chain operators, so the parser fails before execution starts. If you need 5.1 compatibility, replace this syntax with explicit `if`, `try/catch`, and `$LASTEXITCODE` checks.
+
+```powershell
+Write-Output 'ok' && Write-Output 'later'
+```
+
+```text
+At line:1 char:19
++ Write-Output 'ok' && Write-Output 'later'
++                   ~~
+The token '&&' is not a valid statement separator in this version.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : InvalidEndOfLine
+```
+
+#### `$?` is `$false` even though the last native command exited `0`
+
+This happens when a cmdlet fails after a native executable succeeded. The output shows the cmdlet error first, then proves that `$?` tracks the cmdlet failure while `$LASTEXITCODE` still holds the native process result.
+
+```powershell
+cmd /c exit 0
+Write-Error 'cmdlet failure' -ErrorAction Continue
+"success=$?"
+"lastnative=$LASTEXITCODE"
+```
+
+```text
+cmdlet failure
+success=False
+lastnative=0
+```
 
 ## Cross-references
 
@@ -563,3 +617,5 @@ PowerShell pipes raw text strings when you run an external executable (e.g., `gi
 - [GNU Bash Reference — Pipelines](https://www.gnu.org/software/bash/manual/html_node/Pipelines.html)
 - [GNU Bash Reference — Lists of Commands](https://www.gnu.org/software/bash/manual/html_node/Lists.html)
 - [PowerShell 7 Pipeline Chain Operators](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_pipeline_chain_operators)
+- [PowerShell Automatic Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables)
+- [PowerShell Redirection Operators](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_redirection)

@@ -1,519 +1,301 @@
 ---
 title: "01 - Reading File Contents"
 tags: [shell, text-processing]
-aliases: [cat, head, tail, tail -f, grep large files, log analysis, less, reading files]
-keywords: [cat, head, tail, tail -f, grep, awk, less, log file, incident response, reading files, follow log, large file, line count, wc -l, extract time window, ripgrep, rg, Select-String]
-description: "Commands for reading file contents from quick config checks to deep log file analysis during incidents. Covers tail -f for real-time log following, grep performance flags, and PowerShell Select-String."
+aliases: [cat, head, tail, tail -f, less, reading files, Select-String]
+keywords: [cat, head, tail, grep, awk, less, Get-Content, Select-String, log analysis, reading files]
+description: "Read small files safely, inspect larger logs with bounded commands, and follow live output on Linux and PowerShell."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-14
 status: complete
 ---
 
-# Reading File Contents — From Quick Glance to Deep Analysis
+# Read File Contents
 
 > [!quote]
 > "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
 >
 > — **Brian Kernighan**, *Unix for Beginners* (1979)
->
-> "Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it."
->
-> — **Brian Kernighan**, *The Elements of Programming Style* (1974)
 
-> [!abstract]- Summary
+> [!abstract]-
 >
-> Commands for reading file contents across the full spectrum from a quick config glance to surgical 50 GB log triage during a production incident. Tool choice is the critical decision: wrong tool turns a 30-second task into a server-killing operation.
+> Start with bounded reads before you open or stream an unknown file. Use `cat` only for small files, `head` and `tail` for quick inspection, `tail -F` or `Get-Content -Wait` for live logs, and `grep` or `Select-String` when you need context around a known pattern.
 >
-> **Linux file reading tools**
-> - `cat` prints an entire file; use only for small configs and scripts.
-> - `head -n N` / `tail -n N` extract first or last N lines without loading the file.
-> - `tail -f` / `tail -F` follow a live log stream; `-F` survives log rotation.
-> - `less` provides interactive paging with forward/backward search and follow mode.
-> - `wc -l` counts newlines in constant memory — the fastest row-count check.
->
-> **Linux grep / awk — incident log analysis**
-> - Six-step triage workflow: size → structure → error count → context → time window → categorization.
-> - `grep -c` counts matches; `-n` adds line numbers; `-B N`/`-A N` shows surrounding context.
-> - `awk '/ts1/,/ts2/'` range pattern isolates a time window without loading the full file.
->
-> **Linux grep — performance flags for large files**
-> - `-F` (fixed-string) is 3–5x faster than regex for literal patterns.
-> - `-m N` exits after N matches, saving minutes on 50 GB files.
-> - `LC_ALL=C` removes UTF-8 overhead; 4x speedup on ASCII-only log data.
-> - `rg` (ripgrep) is 5–10x faster than `grep -r`; multi-threaded and `.gitignore`-aware.
->
-> **PowerShell file reading tools**
-> - `Get-Content` returns lines as string objects; `-Head`/`-Tail` mirror `head`/`tail`; `-Raw` returns the whole file as a single string.
-> - `Get-Content -Wait` polls for new lines, equivalent to `tail -f`.
-> - `Select-String` returns `MatchInfo` objects with `LineNumber`, `Line`, `Filename`, and `Matches` properties.
->
-> **Incident log triage — decision flowchart**
-> - Mermaid flowchart from incident report → file size branch → structured triage path.
->
-> **Operations and safety**
-> - Warnings: 4 (terminal flood from `cat`, `tail -f` vs rotation, `wc -l` newline count, `Get-Content` memory).
-> - Troubleshooting: 6 symptoms covered.
+> - Check size or line count before dumping a large file to the terminal.
+> - Prefer `tail -F` when a Linux log may rotate under the same filename.
+> - Treat `Get-Content -Raw` as the whole-file case; default `Get-Content` emits one string per line.
 
 > [!note]- Glossary
 >
 > **`cat`**
-> - Standard Unix command that reads one or more files and writes their contents to standard output in sequence.
-> - Used for simple file display, quick concatenation, and piping file contents into other commands when the file size is modest.
 >
-> > [!danger] `cat` on multi-GB files floods the terminal
-> >
-> > Dumping a very large file to stdout can make the terminal unusable and produce huge amounts of scrollback. Use `less`, `head`, or `tail` for inspection instead.
+> - Prints a file to standard output without paging or filtering.
+> - Useful for small configs and scripts, or when you want to pipe the whole file into another command.
+> - On an unknown or very large log, check size first and prefer bounded reads.
 >
 > ---
 >
 > **`head` / `tail`**
-> - Standard Unix commands that print the beginning (`head`) or end (`tail`) of a file or input stream, by lines by default.
-> - Used to inspect file structure quickly, preview headers, and view the most recent log lines without reading the whole file interactively.
 >
-> > [!info] `-c N` for byte-level inspection
-> >
-> > `head -c 100 file` reads the first 100 bytes rather than the first 100 lines, which is useful for checking encodings, byte-order marks, or file signatures.
->
-> ---
->
-> **`tail -f` / `tail -F`**
-> - `tail -f` follows a file as new data is appended to the current file handle; `tail -F` follows by name and attempts to reopen the file after rotation or replacement.
-> - Used for live log monitoring during running jobs, deployments, and incident response, especially when logs are actively growing.
->
-> > [!warning] `-f` follows the descriptor, not the name
-> >
-> > After log rotation, `tail -f` may keep following the old file handle and miss new writes to the replacement file. `tail -F` is usually safer for rotating logs.
->
-> ---
->
-> **`less`**
-> - Interactive terminal pager that displays file contents one screen at a time and supports scrolling and searching without requiring the whole file to be opened in an editor.
-> - Used for safe inspection of large files when the operator needs navigation, search, and controlled paging rather than raw streaming to the terminal.
->
-> > [!info] `less +F` combines paging and follow
-> >
-> > `less +F file` enters follow mode similar to `tail -f`, but still lets you leave follow mode and scroll back through earlier content.
->
-> ---
->
-> **`wc`**
-> - Standard Unix counting utility that reports line, word, byte, or character counts depending on the flags used.
-> - Used for quick size and row-count checks, especially `wc -l` for counting newline-terminated records in logs and text files.
->
-> > [!warning] `wc -l` counts newline characters
-> >
-> > `wc -l` counts line terminators, not human-visible rows in an editor. A final line without a trailing newline is therefore not counted the way many users expect.
+> - Print the first or last lines of a file.
+> - They are the fastest safe inspection step before you search or follow a log.
+> - `tail -F` follows the filename across rotation; plain `tail -f` keeps following the previous file handle.
 >
 > ---
 >
 > **`grep`**
-> - Command-line text-search tool that prints lines matching a given pattern from files or standard input.
-> - Used to locate errors, count matches, filter logs, and narrow large text streams to the lines relevant to an investigation.
 >
-> > [!info] `-E` enables extended regex
-> >
-> > `grep -E 'ERROR|WARN|DEADLOCK'` allows alternation and other extended regex features without extra backslashes.
->
-> ---
->
-> **`--line-buffered`** **(grep flag)**
-> - `grep` option that flushes output line by line instead of buffering larger chunks before writing them downstream.
-> - Used when `grep` sits inside a live pipeline, such as after `tail -f`, so matching lines appear promptly instead of arriving in bursts.
->
-> > [!danger] Buffered output can break live monitoring
-> >
-> > In pipelines that follow a growing log, buffered output can make the search appear stalled even though matches are occurring. Add `--line-buffered` when immediacy matters.
+> - Prints lines that match a pattern.
+> - Use it to locate errors, add context around a hit, or count matches before deeper inspection.
+> - `--line-buffered` matters when `grep` sits in a live pipeline.
 >
 > ---
 >
 > **`awk`**
-> - Line-oriented text-processing language and tool that splits each input record into fields and applies pattern-action rules.
-> - Used in log analysis to extract columns, filter records, aggregate values, and print ranges such as everything between two marker lines.
 >
-> > [!info] `$NF` references the last field
-> >
-> > In `awk`, `$NF` means "the last field in the current record," which is often useful for extracting trailing tokens from structured log lines.
+> - Applies pattern-action rules to each input line.
+> - It is useful for slicing a log to a known time window or extracting specific fields.
+> - Range patterns such as `/start/,/stop/` are inclusive.
 >
 > ---
 >
-> **`ripgrep` (`rg`)**
-> - Modern recursive search tool designed for speed and developer workflows, with defaults such as recursive descent, binary-file skipping, and `.gitignore` awareness.
-> - Used as a faster and more ergonomic alternative to recursive `grep` for interactive search across repositories and log trees.
+> **`Get-Content`**
 >
-> > [!warning] Not installed by default
-> >
-> > `rg` is often absent from minimal Linux images and base containers. The executable name is `rg`, even though the project name is ripgrep.
+> - Reads file content into the PowerShell pipeline.
+> - By default it emits one string per line, while `-Raw` emits one string for the whole file.
+> - `-Wait` is for live follow mode; `-Raw` is not a large-log shortcut.
 >
 > ---
 >
-> **`LC_ALL=C`**
-> - Per-process locale setting that forces commands to run under the POSIX C locale instead of a language-specific UTF-8 locale.
-> - Used to speed up some text-processing operations on plain ASCII-heavy data and to make character-class and sort behavior more predictable for low-level tooling.
+> **`Select-String`**
 >
-> > [!info] Scope is per-command
-> >
-> > Prefix it as `LC_ALL=C grep ...` when you want the change limited to one command. Do not export it globally unless you want all downstream locale-sensitive behavior to change.
->
-> ---
->
-> **`Get-Content`** **(PowerShell)**
-> - PowerShell cmdlet that reads content from a file or stream and emits it into the pipeline, usually as one string per line unless options change that behavior.
-> - Used as the PowerShell equivalent of common file-reading patterns such as `cat`, `head`, `tail`, and follow-mode inspection.
->
-> > [!warning] `-Raw` and some usage patterns can materialize large content in memory
-> >
-> > `Get-Content` often streams line by line, but options such as `-Raw` or collecting all output into an array can consume large amounts of memory on big files. Use `-Tail`, `-ReadCount`, or targeted reads when scale matters.
->
-> ---
->
-> **`Select-String`** **(PowerShell)**
-> - PowerShell cmdlet that searches text using .NET regular expressions and returns structured match objects rather than plain matching lines alone.
-> - Used for pattern search in files and pipelines when the result needs to flow into further PowerShell object-based analysis.
->
-> > [!info] .NET regex, not POSIX
-> >
-> > `Select-String` uses .NET regular expressions. Use `-SimpleMatch` when you want literal matching behavior closer to `grep -F`.
+> - Searches files or pipeline input with .NET regular expressions.
+> - It returns `MatchInfo` objects, so later pipeline steps can inspect line numbers, context, and counts.
+> - Use `-SimpleMatch` when you need literal matching rather than regex behavior.
 
-## Linux file reading tools
+## Choose the first read
 
-The choice of tool depends entirely on file size. `cat` is fine for small config files. For anything over a few MB, stream with `head`, `tail`, or `grep` — never load the whole file into memory. `less` provides an interactive pager for exploration. During incidents, `tail -f | grep` and `awk` range patterns are the fastest path to answers.
+- Small config or script: `cat` or `Get-Content`.
+- Unknown log: check size or line count first, then inspect with `head`, `tail`, `Get-Content -TotalCount`, or `Get-Content -Tail`.
+- Live log: `tail -F` on Linux, `Get-Content -Wait -Tail 0` in PowerShell.
+- Known error pattern: `grep -n -C` or `Select-String -Context`.
 
-### Linux | cat / head / tail | reading file contents
+## Linux
 
-`cat` prints the entire file. `head` and `tail` limit to the first or last N lines. Both are essential for checking file structure without loading large files. `less` provides interactive paging with search (`/pattern`, `n` for next, `G` for end, `q` to quit, `F` to follow like `tail -f`).
+### Linux | bounded reads
 
-#### Read an entire file
+Use bounded reads first so you can confirm structure and recent activity before you search or follow a file.
 
-`cat` concatenates and prints to stdout. Use it for small config files and scripts — never on log files above a few hundred lines.
+#### Print a small file with `cat`
+
+`cat` is appropriate when the file is small and you actually want the full contents on standard output. For unknown logs, treat `cat` as the last choice rather than the first.
 
 ```bash
-cat filename
+cat /tmp/elysium-reading-demo/app.conf
 ```
-
-#### Inspect file boundaries
-
-`head` shows the first N lines (default 10), `tail` shows the last N lines. `head -n 1` extracts the CSV header row — always check this before loading into a dataframe.
-
-```bash
-head -n 20 data.csv
-tail -n 20 data.csv
-```
-
-#### Extract a CSV header row
-
-```bash
-head -n 1 data.csv
-```
-
-| Flag | Syntax | Description |
-|---|---|---|
-| `-n N` | `head -n 20 file` | Show first N lines (head) or last N lines (tail) |
-| `-c N` | `head -c 100 file` | Show first N bytes |
-| `-q` | `head -q file1 file2` | Suppress filename headers when reading multiple files |
-| `less +F` | `less +F file` | Open in follow mode (like `tail -f` but interactive) |
-| `less +/pattern` | `less +/ERROR file` | Open at first occurrence of pattern |
-
-### Linux | tail | live log following
-
-`tail -f` keeps the file handle open and prints new lines as they are appended, making it the most-used command during production incidents. Without `--line-buffered`, piping `tail -f` through `grep` causes silent buffering — grep accumulates lines internally and flushes in large batches, so output appears to freeze.
-
-#### Follow a log file in real-time
-
-```bash
-tail -f /var/log/pipeline/run.log
-tail -f /var/log/pipeline/*.log
-```
-
-#### Filter a live log stream
-
-> [!warning] --line-buffered required when piping tail -f through grep
->
-> Without `--line-buffered`, grep buffers its output internally. You see nothing for minutes, then a large batch of lines. This makes it useless for live incident monitoring.
-
-> [!success] Always add --line-buffered when filtering a live stream
-> `tail -f ... | grep --line-buffered -E "ERROR|WARN"` flushes grep's output buffer on every matching line, giving real-time results.
-
-```bash
-tail -f /var/log/pipeline/run.log | grep --line-buffered -E "ERROR|WARN|DEADLOCK"
-```
-
-| Flag | Syntax | Description |
-|---|---|---|
-| `-f` | `tail -f file` | Follow: print new lines as they are appended |
-| `-F` | `tail -F file` | Follow by name: re-open file if rotated |
-| `-n N` | `tail -n 50 file` | Show last N lines before following |
-| `--line-buffered` | `grep --line-buffered` | Flush output buffer on each matching line (required in pipes) |
-| `-E` | `grep -E 'A\|B'` | Extended regex — pipe-OR pattern for multiple keywords |
-
-### Linux | grep / awk | incident log analysis
-
-When a 15GB log file needs triage during an outage, loading it into any editor is a mistake. The correct workflow streams through the file in stages: size check → structure check → error count → context extraction → time-window isolation → error categorization.
-
-#### Check file size and line count
-
-`wc -l` counts newlines only — it reads the file sequentially without loading it, making it fast even on very large files.
-
-```bash
-ls -lh pipeline.log
-wc -l pipeline.log
-```
-
-#### Inspect log file structure
-
-```bash
-head -5 pipeline.log
-```
-
 ```text
-2025-03-09 14:23:01 INFO  [loader.ohlcv] Loaded 50 rows for ASML
-2025-03-09 14:23:02 INFO  [loader.ohlcv] Loaded 50 rows for AAPL
-2025-03-09 14:23:03 ERROR [loader.ohlcv] Connection timeout after 30s
+APP_ENV=prod
+PORT=8080
+LOG_LEVEL=info
 ```
 
-#### Count and locate errors
+#### Read the first lines with `head -n`
 
-`grep -c` gives a count without showing the lines — useful for assessing severity before committing to a full extraction. `grep -n` adds line numbers, which you can use with `sed` or `awk` for precise extraction.
+`head` is the safer first look when you need schema, headers, or the opening lines of a file. If you only need a CSV header row, drop the count to `1`.
 
 ```bash
-grep -c "ERROR" pipeline.log
-grep -n "ERROR" pipeline.log
+head -n 3 /tmp/elysium-reading-demo/data.csv
+```
+```text
+symbol,price,volume
+AAPL,214.32,1200
+MSFT,428.10,900
 ```
 
-#### Get context around a specific error
+#### Read the last lines with `tail -n`
 
-`-B N` shows N lines before the match (what happened leading up to the error), `-A N` shows N lines after (the immediate aftermath and recovery).
+`tail` is the quick way to inspect recent log activity without paging through the entire file. It is usually the first bounded read on an append-only log.
 
 ```bash
-grep -n -B 5 -A 10 "DEADLOCK" pipeline.log
+tail -n 2 /tmp/elysium-reading-demo/pipeline.log
+```
+```text
+2026-04-14 14:24:03 ERROR [loader.ohlcv] Deadlock detected in writer
+2026-04-14 14:24:04 INFO  [loader.ohlcv] Batch complete
 ```
 
-#### Extract a time window with awk
+### Linux | inspect unknown logs before deeper analysis
 
-`awk` range patterns (`/start/,/stop/`) print every line from the first match to the second match inclusive. This is the fastest way to isolate a time window without loading the whole file. The output is piped to a temp file for further analysis in subsequent steps.
+Before you stream or search an unfamiliar log, confirm its size and then narrow the scope with targeted reads.
+
+#### Check file size with `ls -lh`
+
+File size tells you whether a full-file read is cheap or reckless. On a large file, switch to bounded reads and targeted search immediately.
 
 ```bash
-awk '/^2025-03-09 14:0/,/^2025-03-09 14:3/' pipeline.log > /tmp/outage_window.log
+ls -lh /tmp/elysium-reading-demo/pipeline.log
+```
+```text
+-rw-r--r-- 1 alex alex 437 Apr 14 13:09 /tmp/elysium-reading-demo/pipeline.log
 ```
 
-#### Categorize errors in the extracted window
+#### Count newline-terminated records with `wc -l`
 
-`$NF` in awk refers to the last field on each line — in structured log formats this is often the error type or component name. `sort | uniq -c | sort -rn` counts occurrences and ranks them highest first.
+`wc -l` counts newline characters, which makes it a fast way to estimate record count before you decide how aggressively to inspect the file. A final line without a trailing newline is not counted the way many editors display it.
 
 ```bash
-grep "ERROR" /tmp/outage_window.log | awk '{print $NF}' | sort | uniq -c | sort -rn | head -10
+wc -l /tmp/elysium-reading-demo/pipeline.log
+```
+```text
+7 /tmp/elysium-reading-demo/pipeline.log
 ```
 
-| Flag | Syntax | Description |
-|---|---|---|
-| `-c` | `grep -c "pattern" file` | Print count of matching lines only |
-| `-n` | `grep -n "pattern" file` | Prefix each matching line with its line number |
-| `-B N` | `grep -B 5 "pattern" file` | Show N lines before each match |
-| `-A N` | `grep -A 10 "pattern" file` | Show N lines after each match |
-| `-C N` | `grep -C 3 "pattern" file` | Show N lines before AND after each match |
-| `-E` | `grep -E 'A\|B'` | Extended regex |
-| `$NF` | `awk '{print $NF}'` | Last field on the line |
-| `/start/,/stop/` | `awk '/ts1/,/ts2/' file` | Print lines between two matching patterns (inclusive) |
+#### Show line numbers and surrounding context with `grep -n -C`
 
-### Linux | grep | performance flags for large files
-
-For files over 1GB, standard `grep` performance degrades with complex regex patterns or recursive searches. Four techniques provide significant speedups.
-
-#### Use fixed-string matching for literal patterns
-
-`-F` uses a Boyer-Moore-Horspool algorithm instead of the regex engine, making it 3–5x faster for literal string searches where no metacharacters are needed.
+When you already know the pattern, `grep -n -C` gives you the hit, its line number, and a bounded amount of context around it. That is usually enough to decide whether you need a longer time-window extract.
 
 ```bash
-grep -F "Connection timeout" pipeline.log
+grep -n -C 1 'ERROR' /tmp/elysium-reading-demo/pipeline.log
+```
+```text
+3-2026-04-14 14:24:00 WARN  [loader.ohlcv] Retrying after timeout
+4:2026-04-14 14:24:01 ERROR [loader.ohlcv] Connection timeout after 30s
+5-2026-04-14 14:24:02 INFO  [loader.ohlcv] Retry succeeded
+6:2026-04-14 14:24:03 ERROR [loader.ohlcv] Deadlock detected in writer
+7-2026-04-14 14:24:04 INFO  [loader.ohlcv] Batch complete
 ```
 
-#### Limit match count with -m
+#### Slice a known time window with `awk`
 
-`-m N` stops after N matches — if you only need the first few occurrences in a 50GB file, this exits the scan early and saves minutes.
+If the interesting period is already known, an `awk` range pattern is the simplest way to isolate that window without opening the rest of the file.
 
 ```bash
-grep -m 10 "ERROR" pipeline.log
+awk '/^2026-04-14 14:24:00/,/^2026-04-14 14:24:02/' /tmp/elysium-reading-demo/pipeline.log
+```
+```text
+2026-04-14 14:24:00 WARN  [loader.ohlcv] Retrying after timeout
+2026-04-14 14:24:01 ERROR [loader.ohlcv] Connection timeout after 30s
+2026-04-14 14:24:02 INFO  [loader.ohlcv] Retry succeeded
 ```
 
-#### Use ripgrep for recursive searches
+### Linux | follow live logs
 
-`rg` respects `.gitignore`, uses multiple CPU threads, and is 5–10x faster than `grep -r` on typical codebases and log directories.
+Once the bounded reads tell you that the file is the right target, switch to follow mode for ongoing activity.
+
+#### Follow a rotating log with `tail -F`
+
+Use `tail -F` when the writer may rotate or replace the file under the same name. The captured output below shows the reopen event, which is exactly why `-F` is safer than plain `-f` for production logs.
 
 ```bash
-rg "ERROR" /var/log/pipeline/
+tail -n 0 -F /tmp/elysium-reading-demo/live.log
+```
+```text
+2026-04-14 14:25:00 INFO appended before rotation
+tail: '/tmp/elysium-reading-demo/live.log' has become inaccessible: No such file or directory
+tail: '/tmp/elysium-reading-demo/live.log' has appeared;  following new file
+2026-04-14 14:25:01 INFO resumed after rotation
+2026-04-14 14:25:02 WARN retrying on new file
 ```
 
-#### Force C locale for ASCII data
+## PowerShell
 
-`LC_ALL=C` disables Unicode character-class handling. For ASCII-only log data, this removes the UTF-8 processing overhead and can be 4x faster.
+### PowerShell | bounded reads
 
-```bash
-LC_ALL=C grep "ERROR" pipeline.log
-```
+PowerShell exposes the same core reading patterns, but the pipeline carries string objects and `MatchInfo` objects instead of plain text lines alone.
 
-| Flag | Syntax | Description |
-|---|---|---|
-| `-F` | `grep -F "literal"` | Fixed-string match (no regex) — 3–5x faster for literals |
-| `-m N` | `grep -m 10 "pattern"` | Stop after N matches |
-| `-r` | `grep -r "pattern" /dir` | Recursive search across a directory |
-| `LC_ALL=C` | `LC_ALL=C grep ...` | Force C locale — skips Unicode, 4x faster for ASCII data |
-| `rg` | `rg "pattern" /dir` | ripgrep — multi-threaded, `.gitignore`-aware, PCRE2 |
+#### Print a small file with `Get-Content`
 
-## PowerShell file reading tools
-
-PowerShell file reading uses `Get-Content` (aliased `cat`, `type`, `gc`) for streaming lines as strings, and `Select-String` for pattern matching. Both operate on objects rather than raw text, which means you can pipe results directly to `Where-Object`, `Sort-Object`, and `Group-Object` for in-memory analysis.
-
-### PowerShell | Get-Content | reading file contents
-
-`Get-Content` reads a file and returns each line as a string object in an array. `-Head` and `-Tail` mirror `head -n` and `tail -n`. `-Raw` returns the entire file as a single string — use this when you need to parse multi-line content (e.g. JSON files).
-
-#### Read an entire file or inspect boundaries
+Default `Get-Content` is the PowerShell equivalent of a basic file read. It emits one string per line, which means later pipeline steps still work line by line.
 
 ```powershell
-Get-Content filename
-Get-Content filename -Head 20
-Get-Content filename -Tail 20
-Get-Content filename -Raw
+Get-Content (Join-Path $env:TEMP 'elysium-reading-demo\app.conf')
+```
+```text
+APP_ENV=prod
+PORT=8080
+LOG_LEVEL=info
 ```
 
-#### Extract a CSV header row
+#### Read the first lines with `-TotalCount`
+
+`Get-Content` uses `-TotalCount` for the bounded "read the first N lines" case. Use `1` when you only need the header row.
 
 ```powershell
-Get-Content data.csv -Head 1
+Get-Content (Join-Path $env:TEMP 'elysium-reading-demo\data.csv') -TotalCount 3
+```
+```text
+symbol,price,volume
+AAPL,214.32,1200
+MSFT,428.10,900
 ```
 
-### PowerShell | Get-Content | live log following
+#### Read the last lines with `-Tail`
 
-#### Follow a log file in real-time
-
-`-Wait` polls for new lines and streams them to the pipeline. `-Tail 10` starts from the last 10 lines rather than from the beginning of the file.
+`-Tail` is the direct equivalent of `tail -n`. It is the safest way to inspect the newest log lines without materializing the full file.
 
 ```powershell
-Get-Content filename -Wait -Tail 10
+Get-Content (Join-Path $env:TEMP 'elysium-reading-demo\pipeline.log') -Tail 2
+```
+```text
+2026-04-14 14:24:03 ERROR [loader.ohlcv] Deadlock detected in writer
+2026-04-14 14:24:04 INFO  [loader.ohlcv] Batch complete
 ```
 
-#### Filter a live log stream
+#### Use `-Raw` only when you need one string
 
-`Where-Object` filters the object stream in real-time, equivalent to `grep --line-buffered` in the bash pipeline.
+`-Raw` changes the shape of the result from line-by-line output to a single string object. That is useful for whole-file parsing, but it is the wrong default for large log inspection.
 
 ```powershell
-Get-Content filename -Wait -Tail 0 | Where-Object { $_ -match "ERROR|WARN|DEADLOCK" }
+(Get-Content (Join-Path $env:TEMP 'elysium-reading-demo\pipeline.log') -Raw).GetType().FullName
+```
+```text
+System.String
 ```
 
-| Parameter | Syntax | Description |
-|---|---|---|
-| `-Head N` | `Get-Content file -Head 20` | Return first N lines |
-| `-Tail N` | `Get-Content file -Tail 20` | Return last N lines |
-| `-Wait` | `Get-Content file -Wait` | Poll for new lines (like `tail -f`) |
-| `-Raw` | `Get-Content file -Raw` | Return entire file as a single string |
-| `-Encoding` | `Get-Content file -Encoding UTF8` | Specify file encoding |
+### PowerShell | follow and search logs
 
-### PowerShell | Select-String | searching file contents
+For ongoing logs, follow the file as it grows. For known patterns, switch to `Select-String` so the result includes match metadata instead of plain text alone.
 
-`Select-String` searches files or pipeline input for regex patterns and returns `MatchInfo` objects containing `LineNumber`, `Line`, `Filename`, and `Matches` properties. For the full `Select-String` reference, see [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching).
+#### Follow appended lines with `-Wait`
 
-#### Search files for a pattern with context
+`-Wait` keeps reading as new lines arrive. Pair it with `-Tail 0` when you only want future writes instead of replaying the current file contents first.
 
 ```powershell
-Select-String -Path "C:\logs\*.log" -Pattern "ERROR" -Context 3
+Get-Content -Path (Join-Path $env:TEMP 'elysium-reading-demo\live.log') -Wait -Tail 0
+```
+```text
+2026-04-14 14:25:00 INFO appended line
+2026-04-14 14:25:01 WARN retrying
 ```
 
-#### Count matching lines
+#### Search with context using `Select-String`
+
+`Select-String` is the right tool when you need the match plus surrounding lines. Converting each result to a string keeps the example readable while still showing line numbers and context.
 
 ```powershell
-(Select-String -Path pipeline.log -Pattern "ERROR").Count
+Select-String -Path (Join-Path $env:TEMP 'elysium-reading-demo\pipeline.log') -Pattern 'ERROR' -Context 1,1 | ForEach-Object { $_.ToString() }
+```
+```text
+  C:\Users\aperi\AppData\Local\Temp\elysium-reading-demo\pipeline.log:3:2026-04-14 14:24:00 WARN  [loader.ohlcv] Retrying after timeout
+> C:\Users\aperi\AppData\Local\Temp\elysium-reading-demo\pipeline.log:4:2026-04-14 14:24:01 ERROR [loader.ohlcv] Connection timeout after 30s
+  C:\Users\aperi\AppData\Local\Temp\elysium-reading-demo\pipeline.log:5:2026-04-14 14:24:02 INFO  [loader.ohlcv] Retry succeeded
+> C:\Users\aperi\AppData\Local\Temp\elysium-reading-demo\pipeline.log:6:2026-04-14 14:24:03 ERROR [loader.ohlcv] Deadlock detected in writer
+  C:\Users\aperi\AppData\Local\Temp\elysium-reading-demo\pipeline.log:7:2026-04-14 14:24:04 INFO  [loader.ohlcv] Batch complete
 ```
 
-#### Filter live stream with Select-String
+#### Count matching lines with `Select-String`
+
+If you only need magnitude before you inspect full context, count the `MatchInfo` results first and expand later only when the number justifies it.
 
 ```powershell
-Get-Content pipeline.log -Wait -Tail 0 | Select-String -Pattern "DEADLOCK" -Context 5
+(Select-String -Path (Join-Path $env:TEMP 'elysium-reading-demo\pipeline.log') -Pattern 'ERROR').Count
+```
+```text
+2
 ```
 
-| Parameter | Syntax | Description |
-|---|---|---|
-| `-Path` | `-Path "C:\logs\*.log"` | Files to search (supports wildcards) |
-| `-Pattern` | `-Pattern "ERROR\|WARN"` | Regex pattern to match |
-| `-Context N` | `-Context 3` | Show N lines before and after each match |
-| `-CaseSensitive` | `-CaseSensitive` | Case-sensitive matching (default is case-insensitive) |
-| `-NotMatch` | `-NotMatch` | Return lines that do NOT match the pattern |
-| `-List` | `-List` | Return only the first match per file (like `grep -l`) |
-| `-SimpleMatch` | `-SimpleMatch` | Literal string match (no regex, like `grep -F`) |
-
-## Incident log triage — decision flowchart
-
-```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'primaryColor': '#292e42',
-  'primaryTextColor': '#c0caf5',
-  'primaryBorderColor': '#565f89',
-  'lineColor': '#565f89',
-  'secondaryColor': '#1a1b26',
-  'tertiaryColor': '#24283b',
-  'noteTextColor': '#c0caf5',
-  'noteBkgColor': '#292e42',
-  'textColor': '#c0caf5',
-  'fontSize': '14px'
-}}}%%
-flowchart TD
-    A[Incident reported] --> B{File size?}
-    B -- Small under 10MB --> C[cat / less / editor]
-    B -- Large over 10MB --> D["ls -lh + wc -l"]
-    D --> E["head -5 to check structure"]
-    E --> F["grep -c 'ERROR' to count"]
-    F --> G{Many errors?}
-    G -- Yes --> H["grep -n 'ERROR' for line numbers"]
-    H --> I["grep -B5 -A10 'DEADLOCK' for context"]
-    I --> J{Outage window known?}
-    J -- Yes --> K["awk '/ts1/,/ts2/' to extract window"]
-    K --> L["grep | awk | sort | uniq -c to categorize"]
-    J -- No --> M["tail -f | grep --line-buffered for live"]
-    G -- No --> M
-```
-
-
-
-## Warnings
-
-> [!danger] `cat` on a multi-GB file floods the terminal
->
-> Running `cat` on a 10 GB log file dumps the entire contents to stdout, freezing the terminal and potentially filling scroll buffer memory. Use `head`, `tail`, `less`, or `grep` to read selectively.
-
-> [!warning] `tail -f` does not survive log rotation
->
-> `tail -f` follows the file descriptor. When log rotation replaces the file (new inode), `tail -f` continues reading the old (now deleted) file. Use `tail -F` to reopen the file on rotation.
-
-> [!warning] `wc -l` counts newlines, not visual lines
->
-> A file without a trailing newline character reports one fewer line than you see in an editor. Most Unix tools write trailing newlines, but some Windows-origin files do not.
-
-> [!warning] `Get-Content` loads entire files into memory
->
-> PowerShell `Get-Content` reads the whole file as a string array. On multi-GB files this consumes all available memory. Use `Get-Content -Tail 100` or `-ReadCount 1000` for large files.
-
-## Recommendations
-
-| Scenario | Recommendation |
-|---|---|
-| Quick config check | `cat file` for small files; `head -20 file` for larger ones. |
-| Monitor live logs | `tail -F /var/log/pipeline.log` (capital F for rotation-safe following). |
-| Count rows in output | `wc -l output.csv`. Subtract 1 if the file has a header row. |
-| Search a large log file | `grep -n "ERROR" app.log` or `rg "ERROR" /var/log/` for faster results. |
-| Navigate a large file | `less +F /var/log/syslog` starts in follow mode with scrollback. |
-| PowerShell log following | `Get-Content -Path log.txt -Wait -Tail 50`. |
-| Extract a time window | `awk '/14:00:00/,/14:30:00/' app.log` extracts lines between two timestamps. |
-
-## Troubleshooting
-
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Terminal frozen after `cat` on large file | File is very large and stdout is overwhelmed. | Press Ctrl+C. Use `less`, `head`, or `tail` instead. |
-| `tail -f` stops showing new lines after log rotation | `tail -f` follows the file descriptor, not the name. | Use `tail -F` to reopen on rotation. |
-| `wc -l` reports one fewer line than expected | File lacks a trailing newline character. | Expected for some Windows-origin files. |
-| `less` shows garbled output | Binary content or non-UTF-8 encoding. | Use `less -R` for ANSI colors, or `file <name>` to check encoding. |
-| `rg` command not found | ripgrep is not installed by default. | `apt install ripgrep`. Binary is named `rg`. |
-| PowerShell `Get-Content -Wait` hangs | File is not being appended to. | Press Ctrl+C. Verify the log path and that the app is writing. |
 ## Cross-references
-- [navigation-and-listing](https://alp78.github.io/elysium/01-Shell/File-Operations/navigation-and-listing) — find the right file before reading it
-- [finding-files](https://alp78.github.io/elysium/01-Shell/File-Operations/finding-files) — search for files by name, size, or modification time
-- [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — pair log reading with process inspection during incidents
-- [connectivity-testing](https://alp78.github.io/elysium/01-Shell/Networking/connectivity-testing) — network layer to check when logs show connection errors
+
+- [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) — move from bounded reads to targeted search
+- [navigation-and-listing](https://alp78.github.io/elysium/01-Shell/File-Operations/navigation-and-listing) — find the file before you inspect it
+- [finding-files](https://alp78.github.io/elysium/01-Shell/File-Operations/finding-files) — search by path, name, size, or modification time
+- [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — correlate log output with the process that produced it
