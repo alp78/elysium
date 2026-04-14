@@ -120,10 +120,7 @@ This subsection shows which Airflow services are actually running now and how to
 
 #### Inspect The Running Airflow Services
 
-**When to run:** Run this after deployment, after any Compose restart, or whenever the UI suggests a service-level problem.
-**Trigger:** A DAG is missing, tasks are not advancing, or container health is in doubt.
-**Context:** Run from a workstation with `gcloud` access. The command is read-only. It tunnels through IAP because the VM has no public IP.
-**Purpose:** Confirm that the Airflow API server, scheduler, dag processor, triggerer, worker, Postgres, and Redis are all present and healthy.
+Run this after deployment, after any Compose restart, or whenever the UI suggests a service-level problem. It is typically triggered by A DAG is missing, tasks are not advancing, or container health is in doubt. Run from a workstation with `gcloud` access. The command is read-only. It tunnels through IAP because the VM has no public IP. Confirm that the Airflow API server, scheduler, dag processor, triggerer, worker, Postgres, and Redis are all present and healthy.
 
 *This command SSHes through IAP to `stoxx-airflow` and asks Docker Compose for the live container state.*
 
@@ -157,10 +154,7 @@ The important operational reading is straightforward:
 
 #### Read The Scheduler Role From Live Logs
 
-**When to run:** Run this when the scheduler might be unhealthy or after a restart when you need to see whether it actually came back.
-**Trigger:** DAG runs remain queued, task instances do not advance, or the scheduler heartbeat is suspect.
-**Context:** Run from the same VM shell path. The command is read-only and tails scheduler logs.
-**Purpose:** Prove that the scheduler has loaded the executor, started its main loop, and is responding to health probes.
+Run this when the scheduler might be unhealthy or after a restart when you need to see whether it actually came back. It is typically triggered by DAG runs remain queued, task instances do not advance, or the scheduler heartbeat is suspect. Run from the same VM shell path. The command is read-only and tails scheduler logs. Prove that the scheduler has loaded the executor, started its main loop, and is responding to health probes.
 
 *This tails the scheduler container log so the operator can confirm that scheduling has actually resumed.*
 
@@ -196,10 +190,7 @@ Airflow's state model is only useful if the scheduler can see the DAG, the execu
 
 #### Verify That The DAG Is Registered
 
-**When to run:** Run this after copying a new DAG file, after restarting Airflow services, or when the UI does not show the workflow.
-**Trigger:** A newly deployed DAG does not appear, or a known DAG appears paused or missing.
-**Context:** This is a read-only CLI check executed inside the Airflow worker container.
-**Purpose:** Confirm that `stoxx_stage_yfinance` is present in the DagBag and visible to Airflow.
+Run this after copying a new DAG file, after restarting Airflow services, or when the UI does not show the workflow. It is typically triggered by A newly deployed DAG does not appear, or a known DAG appears paused or missing. This is a read-only CLI check executed inside the Airflow worker container. Confirm that `stoxx_stage_yfinance` is present in the DagBag and visible to Airflow.
 
 *This command filters the Airflow DAG catalog to the live STOXX DAG.*
 
@@ -221,10 +212,7 @@ The important field here is `False` in the paused column. Earlier in the rollout
 
 #### Verify The Executor And Google Connection
 
-**When to run:** Run this on first bootstrap, after image rebuilds, or when Google operators start failing unexpectedly.
-**Trigger:** Tasks queue but do not launch Cloud Run jobs, or provider operators complain about missing credentials or connection IDs.
-**Context:** These are read-only Airflow CLI calls executed inside the worker container.
-**Purpose:** Prove that the runtime uses `CeleryExecutor` and that `google_cloud_default` exists in the metadata database.
+Run this on first bootstrap, after image rebuilds, or when Google operators start failing unexpectedly. It is typically triggered by tasks queue but do not launch Cloud Run jobs, or provider operators complain about missing credentials or connection IDs. These are read-only Airflow CLI calls executed inside the worker container. Prove that the runtime uses `CeleryExecutor` and that `google_cloud_default` exists in the metadata database.
 
 *The first command prints the configured executor. The second prints the stored Google connection record that the Cloud Run operator relies on.*
 
@@ -423,10 +411,7 @@ This subsection uses the validated serving run to show exactly what a completed 
 
 #### Inspect The Task States For The Successful Serving Run
 
-**When to run:** Run this after a full DAG execution, during incident review, or while proving that a rollout succeeded end to end.
-**Trigger:** You need to know which tasks ran, in what order, and whether the whole graph finished successfully.
-**Context:** This is a read-only Airflow CLI command executed inside the worker container.
-**Purpose:** Print the task-instance state table for a specific DAG run and use it as the authoritative run ledger.
+Run this after a full DAG execution, during incident review, or while proving that a rollout succeeded end to end. It is typically triggered by you need to know which tasks ran, in what order, and whether the whole graph finished successfully. This is a read-only Airflow CLI command executed inside the worker container. Print the task-instance state table for a specific DAG run and use it as the authoritative run ledger.
 
 *This command reads task-instance state for the validated end-to-end serving run.*
 

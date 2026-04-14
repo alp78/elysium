@@ -456,10 +456,7 @@ These commands answer the first operational question: "Which identity, project, 
 
 #### Print the active account
 
-**When to run:** Before any Firestore admin command, especially in a shared workstation or Cloud Shell session.
-**Trigger:** You open a new shell, switch configurations, or are about to make a state change.
-**Context:** `gcloud` CLI, read-only. Requires an authenticated account but does not mutate any resource.
-**Purpose:** Confirm which identity will authorize Firestore admin actions.
+Before any Firestore admin command, especially in a shared workstation or Cloud Shell session. It is typically triggered by you open a new shell, switch configurations, or are about to make a state change. `gcloud` CLI, read-only. Requires an authenticated account but does not mutate any resource. Confirm which identity will authorize Firestore admin actions.
 
 *Print the active `gcloud` account that will execute Firestore admin commands.*
 
@@ -473,10 +470,7 @@ alexper.recovery@gmail.com
 
 #### Print the active project
 
-**When to run:** Immediately after confirming the account and before using any `gcloud firestore` command.
-**Trigger:** You suspect a configuration switch, or a command could hit the wrong project.
-**Context:** `gcloud` CLI, read-only.
-**Purpose:** Confirm which Google Cloud project is the default target for the current shell session.
+Immediately after confirming the account and before using any `gcloud firestore` command. It is typically triggered by you suspect a configuration switch, or a command could hit the wrong project. `gcloud` CLI, read-only. Confirm which Google Cloud project is the default target for the current shell session.
 
 *Print the active Google Cloud project from the current `gcloud` configuration.*
 
@@ -490,10 +484,7 @@ bq-wh-nb
 
 #### List Firestore databases in the active project
 
-**When to run:** Before any database-scoped admin action.
-**Trigger:** You need to know whether the project uses `'(default)'` or a named database, or you want to verify location and delete protection state.
-**Context:** `gcloud` CLI, read-only. Requires metadata access to the project.
-**Purpose:** Show which Firestore databases exist in the active project so later commands target the correct database ID.
+Before any database-scoped admin action. It is typically triggered by you need to know whether the project uses `'(default)'` or a named database, or you want to verify location and delete protection state. `gcloud` CLI, read-only. Requires metadata access to the project. Show which Firestore databases exist in the active project so later commands target the correct database ID.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -518,10 +509,7 @@ The important result is that this project does not use `'(default)'`. Any comman
 
 #### Describe the current Firestore database configuration
 
-**When to run:** After listing databases and before changing delete protection, PITR, or location-dependent integrations.
-**Trigger:** You need to verify the current configuration of the exact database you are about to touch.
-**Context:** `gcloud` CLI, read-only.
-**Purpose:** Retrieve the current platform settings that govern recovery window, real-time behavior, and destructive-risk posture.
+After listing databases and before changing delete protection, PITR, or location-dependent integrations. It is typically triggered by you need to verify the current configuration of the exact database you are about to touch. `gcloud` CLI, read-only. Retrieve the current platform settings that govern recovery window, real-time behavior, and destructive-risk posture.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -566,10 +554,7 @@ These commands are state-changing. Run the read-only inspection commands above f
 
 #### Create a new Firestore database
 
-**When to run:** During initial environment provisioning or when intentionally adding a separate database for testing, regional isolation, or customer separation.
-**Trigger:** A new environment needs its own Firestore database, or the project currently lacks the intended database.
-**Context:** `gcloud` CLI, state-changing. Requires `roles/datastore.owner`. Database location and mode are foundational choices.
-**Purpose:** Create a new Firestore database with explicit mode, location, and deletion-risk posture instead of relying on console defaults.
+During initial environment provisioning or when intentionally adding a separate database for testing, regional isolation, or customer separation. It is typically triggered by A new environment needs its own Firestore database, or the project currently lacks the intended database. `gcloud` CLI, state-changing. Requires `roles/datastore.owner`. Database location and mode are foundational choices. Create a new Firestore database with explicit mode, location, and deletion-risk posture instead of relying on console defaults.
 
 > [!warning] Creation choices are architectural
 >
@@ -601,10 +586,7 @@ If you run this command, verify the result with `gcloud firestore databases desc
 
 #### Enable delete protection or PITR on an existing database
 
-**When to run:** After provisioning if these protections were omitted, or during a hardening pass before production use.
-**Trigger:** The describe output shows `DELETE_PROTECTION_DISABLED` or `POINT_IN_TIME_RECOVERY_DISABLED`.
-**Context:** `gcloud` CLI, state-changing. Requires database update permission.
-**Purpose:** Raise the safety baseline of an existing database without recreating it.
+After provisioning if these protections were omitted, or during a hardening pass before production use. It is typically triggered by the describe output shows `DELETE_PROTECTION_DISABLED` or `POINT_IN_TIME_RECOVERY_DISABLED`. `gcloud` CLI, state-changing. Requires database update permission. Raise the safety baseline of an existing database without recreating it.
 
 > [!warning] Do not confuse protection scopes
 >
@@ -650,10 +632,7 @@ Index and TTL configuration are infrastructure, not application trivia. They cha
 
 #### List composite indexes in the current database
 
-**When to run:** Before deploying a new query shape, after a failed precondition error, or during environment drift inspection.
-**Trigger:** A planned query needs a composite index, or an environment behaves differently than another.
-**Context:** `gcloud` CLI, read-only. Requires metadata access to the database.
-**Purpose:** Show which composite indexes already exist and which collection groups they govern.
+Before deploying a new query shape, after a failed precondition error, or during environment drift inspection. It is typically triggered by A planned query needs a composite index, or an environment behaves differently than another. `gcloud` CLI, read-only. Requires metadata access to the database. Show which composite indexes already exist and which collection groups they govern.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -679,10 +658,7 @@ The practical lesson is that the current environment already versioned one impor
 
 #### Inspect TTL fields in the current database
 
-**When to run:** When verifying cleanup behavior or checking whether old operational records should already be disappearing.
-**Trigger:** Historical control-plane data is growing, or the team believes TTL is configured but documents remain visible.
-**Context:** `gcloud` CLI, read-only.
-**Purpose:** Show which collection-group fields are configured as TTL expiry fields.
+When verifying cleanup behavior or checking whether old operational records should already be disappearing. It is typically triggered by historical control-plane data is growing, or the team believes TTL is configured but documents remain visible. `gcloud` CLI, read-only. Show which collection-group fields are configured as TTL expiry fields.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -706,10 +682,7 @@ This output shows that `pipeline_runs.expires_at` is the live TTL field today. T
 
 #### Create a composite index safely
 
-**When to run:** After a query design review has identified a stable production query shape that needs explicit index support.
-**Trigger:** A Firestore query fails with `FAILED_PRECONDITION`, or a new operational query is being promoted into production.
-**Context:** `gcloud` CLI, state-changing. Index builds are asynchronous and may take time.
-**Purpose:** Create the exact composite index that a known query shape needs.
+After a query design review has identified a stable production query shape that needs explicit index support. It is typically triggered by A Firestore query fails with `FAILED_PRECONDITION`, or a new operational query is being promoted into production. `gcloud` CLI, state-changing. Index builds are asynchronous and may take time. Create the exact composite index that a known query shape needs.
 
 > [!warning] Create only stable indexes
 >
@@ -734,10 +707,7 @@ Verify completion with `gcloud firestore indexes composite list --database='main
 
 #### Enable TTL and exempt the expiry field from unnecessary indexing
 
-**When to run:** When a collection group contains short-lived operational data such as run history, replay manifests, dedup tokens, or checkpoints.
-**Trigger:** Storage is growing without bound, or a timestamp field exists purely for expiry and not for query filtering.
-**Context:** `gcloud` CLI, state-changing. These are separate operations: one configures TTL, the other changes indexing behavior.
-**Purpose:** Automate cleanup while reducing avoidable write fanout on a sequential expiry timestamp field.
+When a collection group contains short-lived operational data such as run history, replay manifests, dedup tokens, or checkpoints. It is typically triggered by storage is growing without bound, or a timestamp field exists purely for expiry and not for query filtering. `gcloud` CLI, state-changing. These are separate operations: one configures TTL, the other changes indexing behavior. Automate cleanup while reducing avoidable write fanout on a sequential expiry timestamp field.
 
 > [!warning] TTL is not immediate deletion
 >
@@ -784,10 +754,7 @@ Recovery workflows are where teams most often discover they never verified the r
 
 #### List backup schedules for the current database
 
-**When to run:** During a hardening review, before a maintenance window, or after onboarding a new environment.
-**Trigger:** You need to confirm whether automated backups exist at all.
-**Context:** `gcloud` CLI, read-only.
-**Purpose:** Show whether the database currently has scheduled backups configured.
+During a hardening review, before a maintenance window, or after onboarding a new environment. It is typically triggered by you need to confirm whether automated backups exist at all. `gcloud` CLI, read-only. Show whether the database currently has scheduled backups configured.
 
 *List backup schedules configured for the live `main` database.*
 
@@ -805,10 +772,7 @@ There are currently no scheduled backups for `main`.
 
 #### List existing backups in the current Firestore region
 
-**When to run:** Before planning restore, clone, or disaster-recovery exercises.
-**Trigger:** You need to know whether recoverable backup artifacts already exist in the database location.
-**Context:** `gcloud` CLI, read-only.
-**Purpose:** Show which backup artifacts exist in the database's region.
+Before planning restore, clone, or disaster-recovery exercises. It is typically triggered by you need to know whether recoverable backup artifacts already exist in the database location. `gcloud` CLI, read-only. Show which backup artifacts exist in the database's region.
 
 *List Firestore backups in `europe-west1`, the current database location.*
 
@@ -826,10 +790,7 @@ The live project currently has no managed Firestore backups in `europe-west1`.
 
 #### Create a weekly backup schedule
 
-**When to run:** Before placing the database into production or before accepting that historical operational metadata must be recoverable beyond the PITR window.
-**Trigger:** A hardening review shows no backup schedule is present.
-**Context:** `gcloud` CLI, state-changing. Requires backup schedule permissions on the database.
-**Purpose:** Add a managed backup policy with explicit cadence and retention.
+Before placing the database into production or before accepting that historical operational metadata must be recoverable beyond the PITR window. It is typically triggered by A hardening review shows no backup schedule is present. `gcloud` CLI, state-changing. Requires backup schedule permissions on the database. Add a managed backup policy with explicit cadence and retention.
 
 > [!warning] Backups and PITR solve different problems
 >
@@ -856,10 +817,7 @@ Verify with `gcloud firestore backups schedules list --database='main'`.
 
 #### Export collection groups to Cloud Storage
 
-**When to run:** Before major data migrations, before destructive cleanup, or when offloading history for analytics or offline processing.
-**Trigger:** You need a portable snapshot in Cloud Storage or want to load a Firestore export into BigQuery.
-**Context:** `gcloud` CLI, state-changing. Requires billing, a writable Cloud Storage bucket, and Firestore plus Storage permissions.
-**Purpose:** Produce a managed export without reading documents through an SDK.
+Before major data migrations, before destructive cleanup, or when offloading history for analytics or offline processing. It is typically triggered by you need a portable snapshot in Cloud Storage or want to load a Firestore export into BigQuery. `gcloud` CLI, state-changing. Requires billing, a writable Cloud Storage bucket, and Firestore plus Storage permissions. Produce a managed export without reading documents through an SDK.
 
 > [!warning] Export location must be real
 >
@@ -881,10 +839,7 @@ If you need the export for BigQuery loading, prefer narrow collection-group expo
 
 #### Import from a managed export prefix
 
-**When to run:** During controlled restore or migration workflows where the source is an existing Firestore managed export.
-**Trigger:** You have a known-good export prefix and need to load it into an existing target database.
-**Context:** `gcloud` CLI, state-changing. Import overwrites documents with matching IDs that already exist in the target database.
-**Purpose:** Load data from a managed export back into Firestore without writing custom loader code.
+During controlled restore or migration workflows where the source is an existing Firestore managed export. It is typically triggered by you have a known-good export prefix and need to load it into an existing target database. `gcloud` CLI, state-changing. Import overwrites documents with matching IDs that already exist in the target database. Load data from a managed export back into Firestore without writing custom loader code.
 
 > [!danger] Import can overwrite live documents
 >
@@ -908,10 +863,7 @@ After import, verify critical document counts and document IDs before allowing a
 
 #### Restore a new database from a backup
 
-**When to run:** During disaster recovery, restore testing, or forensic comparison against a backup artifact.
-**Trigger:** A known backup exists and the team needs a safe recovery target.
-**Context:** `gcloud` CLI, state-changing. Restore creates or targets a destination database in the same location as the source backup.
-**Purpose:** Recover data into a separate database instead of disturbing the current primary database.
+During disaster recovery, restore testing, or forensic comparison against a backup artifact. It is typically triggered by A known backup exists and the team needs a safe recovery target. `gcloud` CLI, state-changing. Restore creates or targets a destination database in the same location as the source backup. Recover data into a separate database instead of disturbing the current primary database.
 
 > [!warning] Restore workflow changes which database applications should target
 >

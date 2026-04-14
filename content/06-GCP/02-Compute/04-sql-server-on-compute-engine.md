@@ -301,10 +301,7 @@ All commands execute on `stoxx-vm` via `gcloud compute ssh stoxx-vm --tunnel-thr
 
 #### Import Microsoft GPG key
 
-**When to run:** before adding any Microsoft package repository on Ubuntu 22.04.
-**Trigger:** fresh VM with no Microsoft packages installed.
-**Context:** executed via `gcloud compute ssh stoxx-vm --tunnel-through-iap --command="..."`. Requires internet access via Cloud NAT. Read-only side effect: writes `/usr/share/keyrings/microsoft-prod.gpg`.
-**Purpose:** establish the cryptographic trust anchor for Microsoft's APT repository so that subsequent `apt-get install` commands can verify package signatures.
+Before adding any Microsoft package repository on Ubuntu 22.04. It is typically triggered by fresh VM with no Microsoft packages installed. Executed via `gcloud compute ssh stoxx-vm --tunnel-through-iap --command="..."`. Requires internet access via Cloud NAT. Read-only side effect: writes `/usr/share/keyrings/microsoft-prod.gpg`. Establish the cryptographic trust anchor for Microsoft's APT repository so that subsequent `apt-get install` commands can verify package signatures.
 
 *Import the Microsoft GPG key in two steps to avoid the `/dev/tty` error in non-interactive SSH.*
 
@@ -326,10 +323,7 @@ GPG key imported successfully
 
 #### Add SQL Server 2022 APT repository
 
-**When to run:** immediately after GPG key import.
-**Trigger:** first-time SQL Server installation on the VM.
-**Context:** `gcloud compute ssh --command` on the VM. Writes to `/etc/apt/sources.list.d/mssql-server-2022.list`. The `signed-by=` field is required on Ubuntu 22.04 — without it, APT rejects the repo with `NO_PUBKEY EB3E94ADBE1229CF`.
-**Purpose:** register the Microsoft SQL Server 2022 package repository so `apt-get` can discover the `mssql-server` package.
+Immediately after GPG key import. It is typically triggered by first-time SQL Server installation on the VM. `gcloud compute ssh --command` on the VM. Writes to `/etc/apt/sources.list.d/mssql-server-2022.list`. The `signed-by=` field is required on Ubuntu 22.04 — without it, APT rejects the repo with `NO_PUBKEY EB3E94ADBE1229CF`. Register the Microsoft SQL Server 2022 package repository so `apt-get` can discover the `mssql-server` package.
 
 > [!warning] Missing signed-by causes NO_PUBKEY error on Ubuntu 22.04
 >
@@ -360,10 +354,7 @@ Get:6 https://packages.microsoft.com/ubuntu/22.04/mssql-server-2022 jammy/main a
 
 #### Install SQL Server package
 
-**When to run:** after the APT repository is registered and `apt-get update` has completed.
-**Trigger:** initial installation; also used to upgrade an existing instance to a new cumulative update.
-**Context:** `gcloud compute ssh --command` on the VM. Requires `sudo`. Downloads ~600 MB from packages.microsoft.com. The service is not started automatically — setup requires a subsequent `mssql-conf setup` call.
-**Purpose:** install the `mssql-server` binary package on the VM.
+After the APT repository is registered and `apt-get update` has completed. It is typically triggered by initial installation; also used to upgrade an existing instance to a new cumulative update. `gcloud compute ssh --command` on the VM. Requires `sudo`. Downloads ~600 MB from packages.microsoft.com. The service is not started automatically — setup requires a subsequent `mssql-conf setup` call. Install the `mssql-server` binary package on the VM.
 
 *Install `mssql-server` and show the final lines of the package manager output.*
 
@@ -390,10 +381,7 @@ No VM guests are running outdated hypervisor (qemu) binaries on this host.
 
 #### Run mssql-conf setup
 
-**When to run:** once after package installation, before starting the service for the first time.
-**Trigger:** first-time setup. Also required after `mssql-server` version upgrades that reset the EULA acceptance.
-**Context:** `gcloud compute ssh --command` on the VM. Uses environment variables to pass edition and SA password non-interactively (the `-n` flag suppresses the interactive prompt). The SA password must satisfy SQL Server's complexity policy: ≥8 characters, with uppercase, lowercase, digit, and special character.
-**Purpose:** set the SQL Server edition (Developer), accept the EULA, configure the SA login password, and start the service.
+Once after package installation, before starting the service for the first time. It is typically triggered by first-time setup. Also required after `mssql-server` version upgrades that reset the EULA acceptance. `gcloud compute ssh --command` on the VM. Uses environment variables to pass edition and SA password non-interactively (the `-n` flag suppresses the interactive prompt). The SA password must satisfy SQL Server's complexity policy: ≥8 characters, with uppercase, lowercase, digit, and special character. Set the SQL Server edition (Developer), accept the EULA, configure the SA login password, and start the service.
 
 > [!warning] SA password complexity required
 >
@@ -432,10 +420,7 @@ The "Failed to open password policy registry path" line is expected on Linux —
 
 #### Verify SQL Server is running
 
-**When to run:** immediately after `mssql-conf setup` completes.
-**Trigger:** post-installation smoke test; also after any restart.
-**Context:** `gcloud compute ssh --command` on the VM. Read-only systemctl query. No permissions beyond SSH access required.
-**Purpose:** confirm the service is active and record the initial resource footprint (PID and memory).
+Immediately after `mssql-conf setup` completes. It is typically triggered by post-installation smoke test; also after any restart. `gcloud compute ssh --command` on the VM. Read-only systemctl query. No permissions beyond SSH access required. Confirm the service is active and record the initial resource footprint (PID and memory).
 
 *Check systemd service status for `mssql-server`.*
 
@@ -463,10 +448,7 @@ gcloud compute ssh stoxx-vm --tunnel-through-iap \
 
 #### Install mssql-tools18 and unixODBC
 
-**When to run:** after `mssql-server` is running; before any local `sqlcmd` calls from the VM.
-**Trigger:** first-time setup. Tools are not installed as part of the server package.
-**Context:** requires a second Microsoft repository (`prod.list`) for the tools package. The `mssql-tools18` package provides `sqlcmd` and `bcp` at `/opt/mssql-tools18/bin/`.
-**Purpose:** install `sqlcmd` so SQL commands can be executed directly on the VM via SSH.
+After `mssql-server` is running; before any local `sqlcmd` calls from the VM. It is typically triggered by first-time setup. Tools are not installed as part of the server package. Requires a second Microsoft repository (`prod.list`) for the tools package. The `mssql-tools18` package provides `sqlcmd` and `bcp` at `/opt/mssql-tools18/bin/`. Install `sqlcmd` so SQL commands can be executed directly on the VM via SSH.
 
 *Register the Microsoft `prod` APT repository and install `mssql-tools18` and `unixodbc-dev`.*
 
@@ -494,10 +476,7 @@ No user sessions are running outdated binaries.
 
 #### Add tools to PATH and verify connectivity
 
-**When to run:** after `mssql-tools18` is installed.
-**Trigger:** first-time setup. Also required in any new shell session on the VM until the `~/.bashrc` change takes effect.
-**Context:** appends to `~/.bashrc`. The `-C` flag trusts the self-signed server certificate (required for all local connections without a CA-issued cert). `@@VERSION` returns the full SQL Server build string confirming the installed version.
-**Purpose:** make `sqlcmd` available on PATH and confirm SQL Server accepts connections.
+After `mssql-tools18` is installed. It is typically triggered by first-time setup. Also required in any new shell session on the VM until the `~/.bashrc` change takes effect. Appends to `~/.bashrc`. The `-C` flag trusts the self-signed server certificate (required for all local connections without a CA-issued cert). `@@VERSION` returns the full SQL Server build string confirming the installed version. Make `sqlcmd` available on PATH and confirm SQL Server accepts connections.
 
 *Add `/opt/mssql-tools18/bin` to PATH and query `@@VERSION` to confirm the installed build.*
 
@@ -569,10 +548,7 @@ After installation, SQL Server defaults to `/var/opt/mssql/data/` for all files.
 
 #### Set default data and log directories
 
-**When to run:** immediately after installation, before creating any user databases.
-**Trigger:** initial server setup; also if the data disk mount point changes.
-**Context:** `gcloud compute ssh --command`. Each `mssql-conf set` writes a key-value pair to `/var/opt/mssql/mssql.conf`. Requires `sudo`. Changes take effect after `systemctl restart mssql-server`.
-**Purpose:** redirect SQL Server's default data file location to `/mnt/sqldata`, log file location to `/mnt/sqllog`, and crash dump location to `/mnt/sqldata/dump`.
+Immediately after installation, before creating any user databases. It is typically triggered by initial server setup; also if the data disk mount point changes. `gcloud compute ssh --command`. Each `mssql-conf set` writes a key-value pair to `/var/opt/mssql/mssql.conf`. Requires `sudo`. Changes take effect after `systemctl restart mssql-server`. Redirect SQL Server's default data file location to `/mnt/sqldata`, log file location to `/mnt/sqllog`, and crash dump location to `/mnt/sqldata/dump`.
 
 *Set `defaultdatadir`, `defaultlogdir`, and `defaultdumpdir` to the dedicated persistent disk mount points.*
 
@@ -607,10 +583,7 @@ The repeated restart prompt is expected and correct — all three settings will 
 
 #### Set ownership and restart SQL Server
 
-**When to run:** after all `mssql-conf set` commands are complete, before any database creation.
-**Trigger:** initial setup. Also after adding new disk mount points or changing the `mssql` user's UID.
-**Context:** `gcloud compute ssh --command` with `sudo`. The `mssql` system user owns all SQL Server files. Without this ownership, SQL Server cannot write to the mount points and database creation fails with an OS error.
-**Purpose:** transfer ownership of all three mount points to `mssql:mssql` and restart the service so the new file path configuration takes effect.
+After all `mssql-conf set` commands are complete, before any database creation. It is typically triggered by initial setup. Also after adding new disk mount points or changing the `mssql` user's UID. `gcloud compute ssh --command` with `sudo`. The `mssql` system user owns all SQL Server files. Without this ownership, SQL Server cannot write to the mount points and database creation fails with an OS error. Transfer ownership of all three mount points to `mssql:mssql` and restart the service so the new file path configuration takes effect.
 
 *Change ownership of all three disk mount points to the `mssql` system user and restart the service.*
 
@@ -648,10 +621,7 @@ New PID 4568 confirms the restart completed. Memory of 544.2 MB is lower than im
 
 #### Verify mssql.conf settings
 
-**When to run:** after restart, to confirm the configuration file contains the expected values before database creation.
-**Trigger:** post-restart verification; also useful for debugging if databases are created in the wrong location.
-**Context:** `gcloud compute ssh --command` with `sudo cat`. Read-only. The file is at `/var/opt/mssql/mssql.conf`.
-**Purpose:** confirm that all three `filelocation` keys are written correctly in the configuration file.
+After restart, to confirm the configuration file contains the expected values before database creation. It is typically triggered by post-restart verification; also useful for debugging if databases are created in the wrong location. `gcloud compute ssh --command` with `sudo cat`. Read-only. The file is at `/var/opt/mssql/mssql.conf`. Confirm that all three `filelocation` keys are written correctly in the configuration file.
 
 *Read the current `/var/opt/mssql/mssql.conf` to confirm file path settings.*
 
@@ -696,10 +666,7 @@ The default TempDB on Linux ships with 8 equally-sized data files (SQL Server 20
 
 #### Move TempDB files to dedicated disk
 
-**When to run:** after `mssql-conf` file path configuration and before creating any user databases. TempDB must be on its dedicated disk before production-level RCSI workloads begin.
-**Trigger:** initial server setup. Also required if the TempDB disk is replaced or remounted.
-**Context:** `gcloud compute ssh --command` with `sqlcmd`. T-SQL DDL — modifies the system catalog but does not move files on disk until the next restart. Requires `sysadmin` rights. Changes take effect after `systemctl restart mssql-server`.
-**Purpose:** redirect all 8 TempDB data files and the TempDB log file from the default `/var/opt/mssql/data/` path to `/mnt/sqltempdb/`.
+After `mssql-conf` file path configuration and before creating any user databases. TempDB must be on its dedicated disk before production-level RCSI workloads begin. It is typically triggered by initial server setup. Also required if the TempDB disk is replaced or remounted. `gcloud compute ssh --command` with `sqlcmd`. T-SQL DDL — modifies the system catalog but does not move files on disk until the next restart. Requires `sysadmin` rights. Changes take effect after `systemctl restart mssql-server`. Redirect all 8 TempDB data files and the TempDB log file from the default `/var/opt/mssql/data/` path to `/mnt/sqltempdb/`.
 
 > [!info]- T-SQL clause breakdown
 >
@@ -737,10 +704,7 @@ The message "The new path will be used the next time the database is started" is
 
 #### Restart and verify TempDB file placement
 
-**When to run:** immediately after all 9 `MODIFY FILE` statements succeed.
-**Trigger:** required for TempDB file moves to take effect.
-**Context:** `gcloud compute ssh --command`. Restart is the only way to apply TempDB file moves. The `sys.master_files` catalog view reflects the actual physical path after restart.
-**Purpose:** apply the file moves and confirm all 9 TempDB files are on `/mnt/sqltempdb/`.
+Immediately after all 9 `MODIFY FILE` statements succeed. It is typically triggered by required for TempDB file moves to take effect. `gcloud compute ssh --command`. Restart is the only way to apply TempDB file moves. The `sys.master_files` catalog view reflects the actual physical path after restart. Apply the file moves and confirm all 9 TempDB files are on `/mnt/sqltempdb/`.
 
 *Restart SQL Server and verify TempDB file placement via `sys.master_files`.*
 
@@ -799,10 +763,7 @@ All 9 files are on `/mnt/sqltempdb/`. The 8 ROWS files are 136 MB each (1,088 MB
 
 #### Create stoxx_db with full filegroup layout
 
-**When to run:** after TempDB is configured and all disk mount points are confirmed.
-**Trigger:** initial database creation.
-**Context:** `gcloud compute ssh --command` with `sqlcmd`. DDL executed as `sa`. `CREATE DATABASE` with explicit file specifications overrides the `defaultdatadir` and `defaultlogdir` settings from `mssql-conf` — the per-file `FILENAME` parameters take precedence.
-**Purpose:** create the `stoxx_db` database with the exact file layout matching the Docker baseline: PRIMARY + FG_Current (2 files) + FG_Archive, log on a separate disk.
+After TempDB is configured and all disk mount points are confirmed. It is typically triggered by initial database creation. `gcloud compute ssh --command` with `sqlcmd`. DDL executed as `sa`. `CREATE DATABASE` with explicit file specifications overrides the `defaultdatadir` and `defaultlogdir` settings from `mssql-conf` — the per-file `FILENAME` parameters take precedence. Create the `stoxx_db` database with the exact file layout matching the Docker baseline: PRIMARY + FG_Current (2 files) + FG_Archive, log on a separate disk.
 
 > [!info]- CREATE DATABASE clause breakdown
 >
@@ -844,10 +805,7 @@ No output from `CREATE DATABASE` indicates success — SQL Server emits no rows 
 
 #### Configure filegroups
 
-**When to run:** immediately after `CREATE DATABASE` succeeds.
-**Trigger:** initial setup. These properties are not set by `CREATE DATABASE` and must be configured separately.
-**Context:** `gcloud compute ssh --command` with `sqlcmd`. Three `ALTER DATABASE` statements. `AUTOGROW_ALL_FILES` syntax does not use the `SET` keyword — this is a common syntax error.
-**Purpose:** make `FG_Current` the default filegroup so tables created without an explicit `ON <filegroup>` clause land on the active data disk; enable `AUTOGROW_ALL_FILES` on both user filegroups so all files in each filegroup grow simultaneously rather than sequentially.
+Immediately after `CREATE DATABASE` succeeds. It is typically triggered by initial setup. These properties are not set by `CREATE DATABASE` and must be configured separately. `gcloud compute ssh --command` with `sqlcmd`. Three `ALTER DATABASE` statements. `AUTOGROW_ALL_FILES` syntax does not use the `SET` keyword — this is a common syntax error. Make `FG_Current` the default filegroup so tables created without an explicit `ON <filegroup>` clause land on the active data disk; enable `AUTOGROW_ALL_FILES` on both user filegroups so all files in each filegroup grow simultaneously rather than sequentially.
 
 > [!warning] AUTOGROW_ALL_FILES syntax error — no SET keyword
 >
@@ -883,10 +841,7 @@ Filegroup configuration complete
 
 #### Set database options
 
-**When to run:** immediately after filegroup configuration.
-**Trigger:** initial setup. These options are not inherited from a model database template — they must be set explicitly.
-**Context:** `gcloud compute ssh --command` with `sqlcmd`. Each `ALTER DATABASE` statement is idempotent. `READ_COMMITTED_SNAPSHOT ON` briefly acquires a schema lock on `stoxx_db` and requires no other connections during the `ALTER`. `COLLATE` is a one-time setting at creation; changing it later requires rebuilding all string-column indexes.
-**Purpose:** enable the production configuration: FULL recovery for point-in-time restore, RCSI for optimistic read concurrency, snapshot isolation for read consistency under write contention, UTF-8 collation, Query Store for workload analysis, and compatibility level 160 for SQL Server 2022 optimizer features.
+Immediately after filegroup configuration. It is typically triggered by initial setup. These options are not inherited from a model database template — they must be set explicitly. `gcloud compute ssh --command` with `sqlcmd`. Each `ALTER DATABASE` statement is idempotent. `READ_COMMITTED_SNAPSHOT ON` briefly acquires a schema lock on `stoxx_db` and requires no other connections during the `ALTER`. `COLLATE` is a one-time setting at creation; changing it later requires rebuilding all string-column indexes. Enable the production configuration: FULL recovery for point-in-time restore, RCSI for optimistic read concurrency, snapshot isolation for read consistency under write contention, UTF-8 collation, Query Store for workload analysis, and compatibility level 160 for SQL Server 2022 optimizer features.
 
 *Set all six database-level options in a single sqlcmd call.*
 
@@ -920,10 +875,7 @@ Compatibility level 160 set
 
 #### Verify database file layout
 
-**When to run:** after all database configuration steps complete.
-**Trigger:** post-creation verification; run this query whenever a discrepancy between the documented and actual layout is suspected.
-**Context:** `gcloud compute ssh --command` with `sqlcmd`. Read-only query against `stoxx_db.sys.database_files` and `stoxx_db.sys.filegroups`. Returns one row per file.
-**Purpose:** confirm that all 5 files match the Docker baseline in path, filegroup assignment, initial size, autogrowth increment, maximum size, and file type.
+After all database configuration steps complete. It is typically triggered by post-creation verification; run this query whenever a discrepancy between the documented and actual layout is suspected. `gcloud compute ssh --command` with `sqlcmd`. Read-only query against `stoxx_db.sys.database_files` and `stoxx_db.sys.filegroups`. Returns one row per file. Confirm that all 5 files match the Docker baseline in path, filegroup assignment, initial size, autogrowth increment, maximum size, and file type.
 
 *Query `sys.database_files` joined to `sys.filegroups` to produce a complete file layout report.*
 
@@ -967,10 +919,7 @@ The layout matches the Docker baseline exactly. `filegroup = NULL` for the log f
 
 #### Verify database options
 
-**When to run:** after setting all six database options.
-**Trigger:** post-setup confirmation; also useful during audits to compare GCE and Docker instances.
-**Context:** read-only query against `sys.databases`. Returns one row.
-**Purpose:** confirm all six configured options match the Docker baseline settings.
+After setting all six database options. It is typically triggered by post-setup confirmation; also useful during audits to compare GCE and Docker instances. Read-only query against `sys.databases`. Returns one row. Confirm all six configured options match the Docker baseline settings.
 
 *Query `sys.databases` for all configured option columns on `stoxx_db`.*
 
@@ -1025,10 +974,7 @@ All six settings match the Docker baseline: FULL recovery, UTF-8 collation, SQL 
 
 #### Start IAP tunnel on local port 1435
 
-**When to run:** before any local `sqlcmd` session targeting `stoxx-vm`. The tunnel must be running in the background for the duration of the session.
-**Trigger:** whenever a local SQL Client (sqlcmd, SSMS, Azure Data Studio) needs to connect to `stoxx-vm`.
-**Context:** PowerShell on the local workstation. Requires `gcloud` CLI authenticated with an account that has `roles/iap.tunnelResourceAccessor` on the project. The `allow-sql-server-iap` firewall rule must exist (see Firewall Rules section).
-**Purpose:** open a local TCP listener on `localhost:1435` that forwards to `stoxx-vm:1433` through the IAP service.
+Before any local `sqlcmd` session targeting `stoxx-vm`. The tunnel must be running in the background for the duration of the session. It is typically triggered whenever a local SQL Client (sqlcmd, SSMS, Azure Data Studio) needs to connect to `stoxx-vm`. PowerShell on the local workstation. Requires `gcloud` CLI authenticated with an account that has `roles/iap.tunnelResourceAccessor` on the project. The `allow-sql-server-iap` firewall rule must exist (see Firewall Rules section). Open a local TCP listener on `localhost:1435` that forwards to `stoxx-vm:1433` through the IAP service.
 
 *Start the IAP tunnel via a PowerShell subprocess and confirm the local port is listening.*
 
@@ -1055,10 +1001,7 @@ Testing if tunnel connection works.
 
 #### Connect from local machine
 
-**When to run:** after the IAP tunnel is established on `localhost:1435`.
-**Trigger:** any interactive SQL session, schema inspection, or ad-hoc query from the local workstation.
-**Context:** `sqlcmd.exe` (ODBC 18 driver) on the local Windows workstation. The `-l 60` login timeout is required — the IAP WebSocket handshake takes longer than the default 30-second timeout. Use `tcp:` prefix to force TCP protocol and avoid named-pipe fallback.
-**Purpose:** confirm end-to-end connectivity from the local workstation through IAP to `stoxx-vm`, verifying server identity.
+After the IAP tunnel is established on `localhost:1435`. It is typically triggered by any interactive SQL session, schema inspection, or ad-hoc query from the local workstation. `sqlcmd.exe` (ODBC 18 driver) on the local Windows workstation. The `-l 60` login timeout is required — the IAP WebSocket handshake takes longer than the default 30-second timeout. Use `tcp:` prefix to force TCP protocol and avoid named-pipe fallback. Confirm end-to-end connectivity from the local workstation through IAP to `stoxx-vm`, verifying server identity.
 
 *Connect via the IAP tunnel and query `@@SERVERNAME` and `@@VERSION` to confirm identity.*
 
@@ -1081,10 +1024,7 @@ stoxx-vm                 Microsoft SQL Server 2022 (RTM-CU24) (KB5080999) - 16.0
 
 #### Verify stoxx_db remotely
 
-**When to run:** after confirming basic connectivity.
-**Trigger:** post-deployment verification; also after a full backup/restore cycle to confirm file placement.
-**Context:** `sqlcmd.exe` with `-d stoxx_db` to set the initial database context. Same IAP tunnel process must still be running.
-**Purpose:** confirm that `stoxx_db` and all its files are accessible through the remote connection.
+After confirming basic connectivity. It is typically triggered by post-deployment verification; also after a full backup/restore cycle to confirm file placement. `sqlcmd.exe` with `-d stoxx_db` to set the initial database context. Same IAP tunnel process must still be running. Confirm that `stoxx_db` and all its files are accessible through the remote connection.
 
 *Connect to `stoxx_db` via the IAP tunnel and list all database files.*
 
@@ -1122,10 +1062,7 @@ Two firewall rules govern TCP access to port 1433 on `stoxx-vm`. Neither rule ex
 
 #### Create IAP TCP tunnel firewall rule
 
-**When to run:** before the first IAP tunnel connection attempt. Without this rule, the tunnel handshake succeeds but the TCP connection to port 1433 is dropped at the VM's network interface.
-**Trigger:** initial deployment; without this rule `gcloud start-iap-tunnel` reports "Testing if tunnel connection works" but the connection never reaches `sqlservr`.
-**Context:** `gcloud compute firewall-rules create`. Requires `compute.firewalls.create` IAM permission. Source range `35.235.240.0/20` is GCP's fixed IAP proxy IP block — all IAP TCP forwarding originates from this range. Target tag `sql-server` is already applied to `stoxx-vm`.
-**Purpose:** allow GCP's IAP proxy to forward TCP:1433 connections to VMs tagged `sql-server`.
+Before the first IAP tunnel connection attempt. Without this rule, the tunnel handshake succeeds but the TCP connection to port 1433 is dropped at the VM's network interface. It is typically triggered by initial deployment; without this rule `gcloud start-iap-tunnel` reports "Testing if tunnel connection works" but the connection never reaches `sqlservr`. `gcloud compute firewall-rules create`. Requires `compute.firewalls.create` IAM permission. Source range `35.235.240.0/20` is GCP's fixed IAP proxy IP block — all IAP TCP forwarding originates from this range. Target tag `sql-server` is already applied to `stoxx-vm`. Allow GCP's IAP proxy to forward TCP:1433 connections to VMs tagged `sql-server`.
 
 *Create the firewall rule allowing IAP TCP tunnel access to port 1433.*
 
@@ -1149,10 +1086,7 @@ allow-sql-server-iap  default  INGRESS    1000      tcp:1433  False
 
 #### Create internal SQL Server firewall rule
 
-**When to run:** when other GCE VMs in the same VPC (e.g., application servers, Airflow workers) need to connect to SQL Server directly over the internal network without IAP.
-**Trigger:** deployment of any workload that connects to `stoxx-vm:1433` from inside the `default` VPC network.
-**Context:** source range `10.128.0.0/9` covers all `default` subnet ranges in all GCP regions (europe-west1 subnet is `10.132.0.0/20`). Target tag `stoxx-db` must be applied to `stoxx-vm` to receive this rule.
-**Purpose:** allow internal VPC traffic on TCP:1433 to reach VMs tagged `stoxx-db`.
+When other GCE VMs in the same VPC (e.g., application servers, Airflow workers) need to connect to SQL Server directly over the internal network without IAP. It is typically triggered by deployment of any workload that connects to `stoxx-vm:1433` from inside the `default` VPC network. Source range `10.128.0.0/9` covers all `default` subnet ranges in all GCP regions (europe-west1 subnet is `10.132.0.0/20`). Target tag `stoxx-db` must be applied to `stoxx-vm` to receive this rule. Allow internal VPC traffic on TCP:1433 to reach VMs tagged `stoxx-db`.
 
 *Create the internal-only SQL Server access rule for VPC-internal clients.*
 
@@ -1176,10 +1110,7 @@ allow-sql-internal  default  INGRESS    1000      tcp:1433  False
 
 #### List SQL Server firewall rules
 
-**When to run:** during deployment verification and during security audits.
-**Trigger:** any change to the firewall configuration; routine verification of the attack surface.
-**Context:** `gcloud compute firewall-rules list` with a filter. Read-only.
-**Purpose:** confirm both rules are present and that no rule exists with `sourceRanges = 0.0.0.0/0` for port 1433.
+During deployment verification and during security audits. It is typically triggered by any change to the firewall configuration; routine verification of the attack surface. `gcloud compute firewall-rules list` with a filter. Read-only. Confirm both rules are present and that no rule exists with `sourceRanges = 0.0.0.0/0` for port 1433.
 
 *List all firewall rules matching `stoxx` or `sql` in the project.*
 
@@ -1269,10 +1200,7 @@ SQL Server backups on GCE write to `/mnt/sqldata/backup/` (on the `stoxx-data` p
 
 #### Create backup directory
 
-**When to run:** once after `stoxx_db` is created.
-**Trigger:** initial setup. The `mssql` user must own the backup directory for `BACKUP DATABASE` to write to it.
-**Context:** `gcloud compute ssh --command` with `sudo`. No SQL Server interaction.
-**Purpose:** create `/mnt/sqldata/backup/` and transfer ownership to `mssql:mssql`.
+Once after `stoxx_db` is created. It is typically triggered by initial setup. The `mssql` user must own the backup directory for `BACKUP DATABASE` to write to it. `gcloud compute ssh --command` with `sudo`. No SQL Server interaction. Create `/mnt/sqldata/backup/` and transfer ownership to `mssql:mssql`.
 
 *Create the backup directory and set ownership to the `mssql` system user.*
 
@@ -1286,10 +1214,7 @@ No output on success.
 
 #### Full backup with compression
 
-**When to run:** before any schema changes or data loading; on a recurring schedule via the startup script or SQL Agent.
-**Trigger:** manual backup before a deployment; first backup after initial database setup.
-**Context:** `gcloud compute ssh --command` with `sqlcmd`. `BACKUP DATABASE` is state-changing — it creates the `.bak` file on disk. `WITH COMPRESSION` reduces backup size by up to 70% for data-heavy databases. `STATS=10` emits a progress line every 10% completion.
-**Purpose:** create a full backup of `stoxx_db` to `/mnt/sqldata/backup/stoxx_db_full.bak`.
+Before any schema changes or data loading; on a recurring schedule via the startup script or SQL Agent. It is typically triggered by manual backup before a deployment; first backup after initial database setup. `gcloud compute ssh --command` with `sqlcmd`. `BACKUP DATABASE` is state-changing — it creates the `.bak` file on disk. `WITH COMPRESSION` reduces backup size by up to 70% for data-heavy databases. `STATS=10` emits a progress line every 10% completion. Create a full backup of `stoxx_db` to `/mnt/sqldata/backup/stoxx_db_full.bak`.
 
 > [!info]- BACKUP DATABASE clause breakdown
 >
@@ -1332,10 +1257,7 @@ BACKUP DATABASE successfully processed 706 pages in 0.334 seconds (16.502 MB/sec
 
 #### Verify backup file and header
 
-**When to run:** immediately after each backup to confirm the file was written and the backup set is readable.
-**Trigger:** post-backup verification step in any backup procedure.
-**Context:** `gcloud compute ssh --command`. `RESTORE HEADERONLY` is read-only — it reads the backup set metadata without restoring data. Returns one row per backup set in the file.
-**Purpose:** confirm the backup file exists on disk and that SQL Server can read its header (BackupName, BackupType, Compressed).
+Immediately after each backup to confirm the file was written and the backup set is readable. It is typically triggered by post-backup verification step in any backup procedure. `gcloud compute ssh --command`. `RESTORE HEADERONLY` is read-only — it reads the backup set metadata without restoring data. Returns one row per backup set in the file. Confirm the backup file exists on disk and that SQL Server can read its header (BackupName, BackupType, Compressed).
 
 *List the backup file and read its backup set header.*
 
@@ -1367,10 +1289,7 @@ stoxx_db Full Backup    | NULL              | 1          | NULL           | 1
 
 #### Restore to stoxx_db_restored
 
-**When to run:** to test backup recoverability; to create a parallel copy of the database for testing or debugging.
-**Trigger:** post-backup recoverability test; disaster recovery drill.
-**Context:** `gcloud compute ssh --command` with `sqlcmd`. `RESTORE DATABASE` is state-changing — it creates new database files at the `MOVE` target paths. `WITH REPLACE` overwrites the target database if it already exists.
-**Purpose:** restore `stoxx_db` backup to a new database `stoxx_db_restored` with all 5 files moved to distinct names to avoid conflicts with the source database files.
+To test backup recoverability; to create a parallel copy of the database for testing or debugging. It is typically triggered by post-backup recoverability test; disaster recovery drill. `gcloud compute ssh --command` with `sqlcmd`. `RESTORE DATABASE` is state-changing — it creates new database files at the `MOVE` target paths. `WITH REPLACE` overwrites the target database if it already exists. Restore `stoxx_db` backup to a new database `stoxx_db_restored` with all 5 files moved to distinct names to avoid conflicts with the source database files.
 
 > [!info]- RESTORE DATABASE clause breakdown
 >
@@ -1440,10 +1359,7 @@ Run this workflow from an interactive shell on `stoxx-vm` reached via `gcloud co
 
 #### Reset the SA password and write a root-only credential file
 
-**When to run:** when the original SQL admin password is unknown and no tested named sysadmin exists on the instance.
-**Trigger:** failed authentication for `sa`, missing instance metadata for the original bootstrap password, or post-bootstrap drift where the only surviving admin path is host root.
-**Context:** Ubuntu shell on the VM as `root`. State-changing. Requires stopping `mssql-server` first. The generated passwords are stored locally on the VM in `/root/.stoxx_sql_login.env`.
-**Purpose:** recover SQL administrative access without rebuilding the VM and stage the generated credentials for the named login created in the next step.
+When the original SQL admin password is unknown and no tested named sysadmin exists on the instance. It is typically triggered by failed authentication for `sa`, missing instance metadata for the original bootstrap password, or post-bootstrap drift where the only surviving admin path is host root. Ubuntu shell on the VM as `root`. State-changing. Requires stopping `mssql-server` first. The generated passwords are stored locally on the VM in `/root/.stoxx_sql_login.env`. Recover SQL administrative access without rebuilding the VM and stage the generated credentials for the named login created in the next step.
 
 *Stop the engine, generate fresh `sa` and break-glass passwords, write them to `/root/.stoxx_sql_login.env`, and run `mssql-conf -n set-sa-password`.*
 
@@ -1491,10 +1407,7 @@ The password reset completed successfully, the credential file was written with 
 
 #### Restart SQL Server after the password reset
 
-**When to run:** immediately after `set-sa-password` completes.
-**Trigger:** the password reset command finishes with the engine still inactive.
-**Context:** Ubuntu shell on the VM as `root`. State-changing at the service level but not at the database level. Read-only from SQL Server's metadata perspective once the service is back up.
-**Purpose:** bring the database engine back online and confirm that the reset did not leave the service in a failed startup state.
+Immediately after `set-sa-password` completes. It is typically triggered by the password reset command finishes with the engine still inactive. Ubuntu shell on the VM as `root`. State-changing at the service level but not at the database level. Read-only from SQL Server's metadata perspective once the service is back up. Bring the database engine back online and confirm that the reset did not leave the service in a failed startup state.
 
 *Start `mssql-server` again and inspect the first 12 lines of service status.*
 
@@ -1522,10 +1435,7 @@ The engine returned to `active (running)` state cleanly, and the new PID pair co
 
 #### Create the named `dba_break_glass` sysadmin login
 
-**When to run:** immediately after `sa` access has been restored.
-**Trigger:** successful service restart and the need to move away from using `sa` for all subsequent administration.
-**Context:** Ubuntu shell on the VM. State-changing T-SQL executed through `sqlcmd` using the freshly reset `sa` credential sourced from `/root/.stoxx_sql_login.env`.
-**Purpose:** create a stable named sysadmin login, grant it `sysadmin`, and make the rest of the provisioning workflow independent of the default `sa` account.
+Immediately after `sa` access has been restored. It is typically triggered by successful service restart and the need to move away from using `sa` for all subsequent administration. Ubuntu shell on the VM. State-changing T-SQL executed through `sqlcmd` using the freshly reset `sa` credential sourced from `/root/.stoxx_sql_login.env`. Create a stable named sysadmin login, grant it `sysadmin`, and make the rest of the provisioning workflow independent of the default `sa` account.
 
 *Create `dba_break_glass` if it does not already exist, add it to `sysadmin`, and list both admin logins with their role state.*
 
@@ -1566,10 +1476,7 @@ Both logins are enabled (`is_disabled = 0`) and both are currently members of `s
 
 #### Verify the named sysadmin login directly
 
-**When to run:** immediately after the named login is created and added to `sysadmin`.
-**Trigger:** completion of the `CREATE LOGIN` / `ALTER SERVER ROLE` step.
-**Context:** Ubuntu shell on the VM. Read-only T-SQL through `sqlcmd`, authenticated as the new named login.
-**Purpose:** prove that the named login works before it is used for restore and migration operations.
+Immediately after the named login is created and added to `sysadmin`. It is typically triggered by completion of the `CREATE LOGIN` / `ALTER SERVER ROLE` step. Ubuntu shell on the VM. Read-only T-SQL through `sqlcmd`, authenticated as the new named login. Prove that the named login works before it is used for restore and migration operations.
 
 *Connect as `dba_break_glass` and confirm the login name, `sysadmin` membership, and default database.*
 
@@ -1589,10 +1496,7 @@ The session authenticated as `dba_break_glass`, inherited `sysadmin = 1`, and la
 
 #### Inspect the instance before provisioning the new `stoxx` database
 
-**When to run:** before restoring the source backup and before creating the final target database.
-**Trigger:** successful break-glass login validation.
-**Context:** Ubuntu shell on the VM. Read-only T-SQL executed as `dba_break_glass`.
-**Purpose:** confirm the current database inventory and verify that `stoxx` does not already exist before the migration creates it.
+Before restoring the source backup and before creating the final target database. It is typically triggered by successful break-glass login validation. Ubuntu shell on the VM. Read-only T-SQL executed as `dba_break_glass`. Confirm the current database inventory and verify that `stoxx` does not already exist before the migration creates it.
 
 *List every database on the instance before the `stoxx_seed` restore.*
 
@@ -1616,10 +1520,7 @@ Before the provisioning run, the instance contains only the system databases plu
 
 #### Verify the staged `stoxx` source backup
 
-**When to run:** before any restore from the local source backup.
-**Trigger:** the `stoxx` backup file has been copied to `/mnt/sqldata/backup/incoming/`.
-**Context:** Ubuntu shell on the VM. Read-only restore metadata operation through `sqlcmd`.
-**Purpose:** prove that SQL Server can read the staged backup before spending time on the full restore.
+Before any restore from the local source backup. It is typically triggered by the `stoxx` backup file has been copied to `/mnt/sqldata/backup/incoming/`. Ubuntu shell on the VM. Read-only restore metadata operation through `sqlcmd`. Prove that SQL Server can read the staged backup before spending time on the full restore.
 
 *Run `RESTORE VERIFYONLY` against the staged local `stoxx` backup.*
 
@@ -1639,10 +1540,7 @@ The staged backup is readable and structurally valid. This is the minimum recove
 
 #### Inspect the logical files inside the staged `stoxx` backup
 
-**When to run:** immediately after `RESTORE VERIFYONLY` succeeds and before writing the `MOVE` clauses for the seed restore.
-**Trigger:** recoverability has been confirmed and the restore path is about to be executed.
-**Context:** Ubuntu shell on the VM. Read-only restore metadata inspection through `sqlcmd`.
-**Purpose:** retrieve the logical file names that must be referenced in the `RESTORE DATABASE ... WITH MOVE ...` statement.
+Immediately after `RESTORE VERIFYONLY` succeeds and before writing the `MOVE` clauses for the seed restore. It is typically triggered by recoverability has been confirmed and the restore path is about to be executed. Ubuntu shell on the VM. Read-only restore metadata inspection through `sqlcmd`. Retrieve the logical file names that must be referenced in the `RESTORE DATABASE ... WITH MOVE ...` statement.
 
 *Run `RESTORE FILELISTONLY` against the staged local `stoxx` backup.*
 
@@ -1666,10 +1564,7 @@ Three logical files matter to the restore: `stoxx` (primary data), `stoxx_log` (
 
 #### Restore the staged backup into `stoxx_seed`
 
-**When to run:** after the backup file has passed `VERIFYONLY` and its logical file names are known.
-**Trigger:** the instance is ready to materialize a temporary full-fidelity source database on the VM.
-**Context:** Ubuntu shell on the VM. State-changing restore through `sqlcmd` as `dba_break_glass`. The command drops any stale `stoxx_seed` copy first and removes the previous XTP directory if present.
-**Purpose:** create a temporary on-VM source database that exactly matches the local `stoxx` backup, so the final migration script can copy only `bronze`, `silver`, and `gold` into the published VM `stoxx`.
+After the backup file has passed `VERIFYONLY` and its logical file names are known. It is typically triggered by the instance is ready to materialize a temporary full-fidelity source database on the VM. Ubuntu shell on the VM. State-changing restore through `sqlcmd` as `dba_break_glass`. The command drops any stale `stoxx_seed` copy first and removes the previous XTP directory if present. Create a temporary on-VM source database that exactly matches the local `stoxx` backup, so the final migration script can copy only `bronze`, `silver`, and `gold` into the published VM `stoxx`.
 
 > [!info]- Why `stoxx_seed` exists
 >
@@ -1713,10 +1608,7 @@ The full local `stoxx` backup is now materialized on the VM as `stoxx_seed`. The
 
 #### Run the bronze/silver/gold migration script to build the final VM `stoxx`
 
-**When to run:** immediately after `stoxx_seed` is online and before any application traffic points at the VM `stoxx` database.
-**Trigger:** successful seed restore and the presence of `/opt/stoxx/ddl/stoxx_bsg_vm_migration.sql` on the VM.
-**Context:** Ubuntu shell on the VM. State-changing `sqlcmd -i` execution using `-v` sqlcmd variables to parameterize the source database, target database, and file locations.
-**Purpose:** create a new split-layout `stoxx` database on the VM, copy only `bronze`, `silver`, and `gold` from `stoxx_seed`, recreate their defaults, primary keys, and nonclustered indexes, and validate per-table row counts.
+Immediately after `stoxx_seed` is online and before any application traffic points at the VM `stoxx` database. It is typically triggered by successful seed restore and the presence of `/opt/stoxx/ddl/stoxx_bsg_vm_migration.sql` on the VM. Ubuntu shell on the VM. State-changing `sqlcmd -i` execution using `-v` sqlcmd variables to parameterize the source database, target database, and file locations. Create a new split-layout `stoxx` database on the VM, copy only `bronze`, `silver`, and `gold` from `stoxx_seed`, recreate their defaults, primary keys, and nonclustered indexes, and validate per-table row counts.
 
 *Run the staged migration script against `stoxx_seed` and publish the final VM `stoxx` to `/mnt/sqldata` and `/mnt/sqllog`.*
 
@@ -1762,10 +1654,7 @@ Every row-count pair matched exactly, so the published VM `stoxx` database is a 
 
 #### Validate the final `stoxx` file layout
 
-**When to run:** immediately after the migration script completes successfully.
-**Trigger:** creation of the final VM `stoxx` database.
-**Context:** Ubuntu shell on the VM. Read-only T-SQL against `sys.master_files`.
-**Purpose:** confirm that the target database really uses the VM split-file layout rather than the original source layout from the backup.
+Immediately after the migration script completes successfully. It is typically triggered by creation of the final VM `stoxx` database. Ubuntu shell on the VM. Read-only T-SQL against `sys.master_files`. Confirm that the target database really uses the VM split-file layout rather than the original source layout from the backup.
 
 *List the logical files and physical paths for the final VM `stoxx` database.*
 
@@ -1789,10 +1678,7 @@ The file placement is correct for the VM design: one primary file, two `FG_Curre
 
 #### Validate the published schema inventory
 
-**When to run:** after file-layout validation and before any application or demo process targets the new database.
-**Trigger:** successful migration script completion.
-**Context:** Ubuntu shell on the VM. Read-only T-SQL against the final `stoxx` database.
-**Purpose:** verify that only the intended schemas were published into the final target.
+After file-layout validation and before any application or demo process targets the new database. It is typically triggered by successful migration script completion. Ubuntu shell on the VM. Read-only T-SQL against the final `stoxx` database. Verify that only the intended schemas were published into the final target.
 
 *Count the tables per schema in the final VM `stoxx` database.*
 
@@ -1814,10 +1700,7 @@ The published target contains exactly the three medallion schemas and no `demo_s
 
 #### Validate the published row counts
 
-**When to run:** after schema inventory validation and before taking the first on-VM backup of the published database.
-**Trigger:** confirmation that only `bronze`, `silver`, and `gold` exist in the final target.
-**Context:** Ubuntu shell on the VM. Read-only T-SQL against the final `stoxx` database, authenticated as `dba_break_glass`.
-**Purpose:** confirm that every published table contains the same current data volume as the local source after the bronze/silver/gold-only migration.
+After schema inventory validation and before taking the first on-VM backup of the published database. It is typically triggered by confirmation that only `bronze`, `silver`, and `gold` exist in the final target. Ubuntu shell on the VM. Read-only T-SQL against the final `stoxx` database, authenticated as `dba_break_glass`. Confirm that every published table contains the same current data volume as the local source after the bronze/silver/gold-only migration.
 
 *Count the rows in every published `bronze`, `silver`, and `gold` table in the final VM `stoxx` database.*
 
@@ -1882,10 +1765,7 @@ The published table counts match the local source across all 22 target tables. I
 
 #### Back up the provisioned VM `stoxx` database
 
-**When to run:** immediately after the target database has passed row-count and schema validation.
-**Trigger:** successful publication of the final `stoxx` database.
-**Context:** Ubuntu shell on the VM. State-changing `BACKUP DATABASE` command executed as `dba_break_glass`.
-**Purpose:** establish the first on-VM recoverability artifact for the published `stoxx` database before the temporary seed database is dropped.
+Immediately after the target database has passed row-count and schema validation. It is typically triggered by successful publication of the final `stoxx` database. Ubuntu shell on the VM. State-changing `BACKUP DATABASE` command executed as `dba_break_glass`. Establish the first on-VM recoverability artifact for the published `stoxx` database before the temporary seed database is dropped.
 
 *Create a full compressed backup of the provisioned VM `stoxx` database.*
 
@@ -1928,10 +1808,7 @@ ls -lh /mnt/sqldata/backup/stoxx_post_cutover_full.bak
 
 #### Drop the temporary `stoxx_seed` database and confirm the final inventory
 
-**When to run:** only after the published `stoxx` database has been backed up and validated.
-**Trigger:** successful creation of `stoxx_post_cutover_full.bak`.
-**Context:** Ubuntu shell on the VM. State-changing `DROP DATABASE` cleanup followed by a read-only inventory query.
-**Purpose:** remove the temporary full-source copy so only the published target remains, then confirm the final instance database list.
+Only after the published `stoxx` database has been backed up and validated. It is typically triggered by successful creation of `stoxx_post_cutover_full.bak`. Ubuntu shell on the VM. State-changing `DROP DATABASE` cleanup followed by a read-only inventory query. Remove the temporary full-source copy so only the published target remains, then confirm the final instance database list.
 
 *Drop `stoxx_seed`, remove its XTP directory, and list the final database inventory on the VM.*
 
@@ -1983,10 +1860,7 @@ The startup script is a bash script attached to `stoxx-vm`'s instance metadata u
 
 #### Attach startup script via instance metadata
 
-**When to run:** once after the VM is fully configured, as the final setup step.
-**Trigger:** initial deployment; also update after any change to the startup logic.
-**Context:** `gcloud compute instances add-metadata` from the local workstation. The script file is read from the local path and stored in the instance metadata. The guest agent retrieves and executes it on the next boot.
-**Purpose:** ensure SQL Server starts automatically and safely on every VM boot, with mount point verification before service start.
+Once after the VM is fully configured, as the final setup step. It is typically triggered by initial deployment; also update after any change to the startup logic. `gcloud compute instances add-metadata` from the local workstation. The script file is read from the local path and stored in the instance metadata. The guest agent retrieves and executes it on the next boot. Ensure SQL Server starts automatically and safely on every VM boot, with mount point verification before service start.
 
 The startup script checks each required mount with `mountpoint -q` before starting `mssql-server`, and logs all actions to syslog via `logger`. If any mount is missing, the script exits without starting SQL Server, preventing silent data corruption from missing disks.
 
@@ -2005,10 +1879,7 @@ Updated [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-we
 
 #### Verify startup script in instance metadata
 
-**When to run:** immediately after attaching, to confirm the correct script content is stored.
-**Trigger:** post-attach verification; also to confirm after any metadata update.
-**Context:** `gcloud compute instances describe` with `--format="yaml(metadata.items)"`. Read-only.
-**Purpose:** confirm the startup-script metadata key contains the expected bash script.
+Immediately after attaching, to confirm the correct script content is stored. It is typically triggered by post-attach verification; also to confirm after any metadata update. `gcloud compute instances describe` with `--format="yaml(metadata.items)"`. Read-only. Confirm the startup-script metadata key contains the expected bash script.
 
 *Describe the instance metadata to verify the startup script is stored correctly.*
 

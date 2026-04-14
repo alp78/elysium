@@ -14,7 +14,8 @@ status: complete
 
 # Compression
 
-> [!quote]
+> [!quote] Compression tradeoffs
+>
 > "There is no compression algorithm for experience."
 >
 > - **Andy Jassy**, AWS re:Invent keynote (2012)
@@ -107,6 +108,9 @@ Compression decisions split into two questions: are you compressing one file or 
 
 `gzip -c` writes compressed bytes to stdout instead of replacing the source file. Piping the result into `wc -c` gives a fast way to compare output size without creating a file on disk.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to compress a stream with `gzip`.*
 ```bash
 gzip -c /etc/services | wc -c
 ```
@@ -119,6 +123,9 @@ gzip -c /etc/services | wc -c
 
 `gzip -l` reports compressed size, uncompressed size, and ratio for an existing gzip member. Use it when you need to estimate payload size or confirm that a file is actually gzip before decompressing it.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to inspect a `.gz` file without extracting it.*
 ```bash
 gzip -l /usr/share/man/man1/printf.1.gz
 ```
@@ -132,6 +139,9 @@ gzip -l /usr/share/man/man1/printf.1.gz
 
 `pigz -c` emits the same gzip format as `gzip -c`. On the same input used above, the byte count is identical, which is why `pigz` works as a drop-in replacement for `.gz` workflows.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to keep the gzip format but parallelize compression with `pigz`.*
 ```bash
 pigz -c /etc/services | wc -c
 ```
@@ -148,6 +158,9 @@ When downstream systems do not require `.gz`, compare a modern codec against gzi
 
 This command sends `/etc/services` through `zstd` at its default level and counts the compressed bytes. The result is close to gzip on this small input, which is exactly why ratio claims should be validated against real payloads.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to compress the same input with `zstd`.*
 ```bash
 zstd -cq /etc/services | wc -c
 ```
@@ -160,6 +173,9 @@ zstd -cq /etc/services | wc -c
 
 `lz4` trades ratio for speed. The larger byte count here is expected and is usually acceptable only when decompression latency matters more than storage or network cost.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to compress the same input with `lz4`.*
 ```bash
 lz4 -cq /etc/services | wc -c
 ```
@@ -176,6 +192,9 @@ A directory tree has to be archived before it can be compressed as one unit. `ta
 
 This example archives `/etc/hosts` and `/etc/services` into one gzip-compressed tar stream and measures the resulting byte count. The key point is that `tar` is operating on multiple paths, not on a single file.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to create a gzip-compressed tar stream.*
 ```bash
 tar -C /etc -czf - hosts services | wc -c
 ```
@@ -188,6 +207,9 @@ tar -C /etc -czf - hosts services | wc -c
 
 `tar --zstd` swaps the compression algorithm while keeping the same archive structure. On this tiny two-file archive, the zstd-wrapped tar stream is slightly larger, which is a reminder to benchmark instead of assuming.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to create a zstd-compressed tar stream.*
 ```bash
 tar -C /etc --zstd -cf - hosts services | wc -c
 ```
@@ -208,6 +230,9 @@ Before extracting an archive you did not create, list it first with `tar -tf arc
 
 `-PassThru` makes the cmdlet emit the created archive object, which gives you immediate verification without a second command. `-CompressionLevel Fastest` is usually the right starting point for already structured data that will be moved again soon.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to create a ZIP archive with `Compress-Archive`.*
 ```powershell
 Compress-Archive -Path "$PSHOME\pwsh.exe" -DestinationPath "$env:TEMP\vault-compression-demo.zip" -CompressionLevel Fastest -Force -PassThru | ForEach-Object { "{0}`t{1}" -f $_.Name, $_.Length }
 ```
@@ -224,6 +249,9 @@ When the workflow needs `.gz` rather than `.zip`, use the explicit 7-Zip binary 
 
 This command writes a gzip member from `pwsh.exe` and filters the tool output down to the confirmation lines that matter in automation logs.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to create a gzip file with the explicit `7z.exe` path.*
 ```powershell
 & 'C:\Program Files\7-Zip\7z.exe' a -tgzip "$env:TEMP\vault-compression-demo.gz" "$PSHOME\pwsh.exe" | Select-String -Pattern 'Archive size:','Everything is Ok' | ForEach-Object { $_.Line.Trim() }
 ```
@@ -237,6 +265,9 @@ Everything is Ok
 
 `7z l` is the inspection step before extraction. Here it confirms that the gzip member contains `pwsh.exe` and reports both logical and compressed size.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to list the member stored in that gzip file.*
 ```powershell
 & 'C:\Program Files\7-Zip\7z.exe' l "$env:TEMP\vault-compression-demo.gz" | Select-String -Pattern 'Type = gzip','Name$','pwsh\.exe$' | ForEach-Object { $_.Line }
 ```
@@ -255,6 +286,9 @@ Type = gzip
 
 This example opens the source file as a stream, copies it into a gzip stream, and emits the created `.gz` file information. The command stays in-process and avoids the `ReadAllBytes()` pattern that scales poorly on large files.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to compress a file with stream-based `GZipStream`.*
 ```powershell
 $source = Join-Path $PSHOME 'pwsh.exe'; $target = Join-Path $env:TEMP 'vault-compression-gzipstream.gz'; $input = [System.IO.File]::OpenRead($source); $output = [System.IO.File]::Create($target); $gzip = [System.IO.Compression.GZipStream]::new($output, [System.IO.Compression.CompressionLevel]::Fastest); $input.CopyTo($gzip); $gzip.Dispose(); $output.Dispose(); $input.Dispose(); Get-Item $target | ForEach-Object { "{0}`t{1}" -f $_.Name, $_.Length }
 ```

@@ -207,10 +207,7 @@ The distinction between *creator* and *owner* matters because the creator is usu
 
 #### Inspect existing schemas and their owners
 
-**When to run:** First time you touch a new SQL Server database, or whenever you need to confirm schema ownership before a deployment.
-**Trigger:** Writing or reviewing DDL, auditing permissions, or investigating why a `CREATE TABLE` landed in the wrong schema.
-**Context:** Read-only T-SQL against any catalog view. Any database user with `VIEW DEFINITION` permission (which is granted by default to `public` at the database level on SQL Server 2022) can run this.
-**Purpose:** Enumerate every schema in the current database, its owner principal, and the owner's type, so you can confirm that production schemas are owned by a stable principal (typically `dbo`) and not by a rotating service account.
+First time you touch a new SQL Server database, or whenever you need to confirm schema ownership before a deployment. It is typically triggered by writing or reviewing DDL, auditing permissions, or investigating why a `CREATE TABLE` landed in the wrong schema. Read-only T-SQL against any catalog view. Any database user with `VIEW DEFINITION` permission (which is granted by default to `public` at the database level on SQL Server 2022) can run this. Enumerate every schema in the current database, its owner principal, and the owner's type, so you can confirm that production schemas are owned by a stable principal (typically `dbo`) and not by a rotating service account.
 
 > [!info]- Query breakdown — joining sys.schemas to sys.database_principals
 >
@@ -268,10 +265,7 @@ The field-definition reference for the two catalog views read by the query:
 
 #### Object density per schema
 
-**When to run:** Before deciding where a new object should live, or when auditing a database for schema sprawl.
-**Trigger:** A review of the database layout ("does every team's data live in its own schema, or has `dbo` become a dumping ground?").
-**Context:** Read-only query against `sys.schemas` and `sys.objects`. Filters out Microsoft-shipped system objects (`is_ms_shipped = 0`).
-**Purpose:** Surface how many user tables, views, procedures, and functions live in each schema so you can see at a glance whether the medallion separation is being respected.
+Before deciding where a new object should live, or when auditing a database for schema sprawl. It is typically triggered by A review of the database layout ("does every team's data live in its own schema, or has `dbo` become a dumping ground?"). Read-only query against `sys.schemas` and `sys.objects`. Filters out Microsoft-shipped system objects (`is_ms_shipped = 0`). Surface how many user tables, views, procedures, and functions live in each schema so you can see at a glance whether the medallion separation is being respected.
 
 *Count user objects per schema, grouped by object kind.*
 
@@ -335,10 +329,7 @@ The `sys.objects.type` column uses a 2-character code for every object type. The
 
 #### Create a schema with explicit authorization
 
-**When to run:** During initial database provisioning, or when adding a new bounded context to an existing database.
-**Trigger:** A new team, a new data source, or a new lifecycle boundary that justifies its own namespace.
-**Context:** T-SQL DDL statement. Must be the first statement in its batch — wrap it in its own `GO`-separated block. Requires `CREATE SCHEMA` permission at the database level, typically granted via membership in `db_ddladmin` or higher.
-**Purpose:** Create a schema owned by a stable principal (not the running deployment account), so that ownership is predictable across environments and survives service-account rotation.
+During initial database provisioning, or when adding a new bounded context to an existing database. It is typically triggered by A new team, a new data source, or a new lifecycle boundary that justifies its own namespace. T-SQL DDL statement. Must be the first statement in its batch — wrap it in its own `GO`-separated block. Requires `CREATE SCHEMA` permission at the database level, typically granted via membership in `db_ddladmin` or higher. Create a schema owned by a stable principal (not the running deployment account), so that ownership is predictable across environments and survives service-account rotation.
 
 > [!info]- CREATE SCHEMA syntax notes
 >
@@ -367,10 +358,7 @@ GO
 
 #### Transfer an object between schemas
 
-**When to run:** When an object's lifecycle moves from one layer to another — for example, a table that has graduated from `staging` to `silver` after validation.
-**Trigger:** A deliberate reclassification; never use `ALTER SCHEMA ... TRANSFER` to rename objects — use `sp_rename` for that.
-**Context:** T-SQL DDL, single statement per transfer. Metadata-only operation that acquires a schema-modification (`SCH-M`) lock on the target object for the duration of the statement, which typically completes in under a second but blocks all readers and writers on that one object during the transfer. Requires `ALTER` on the source schema and `CREATE` (or `ALTER`) on the destination schema, or `ALTER ANY SCHEMA` at the database level.
-**Purpose:** Move an existing table (or view, procedure, function) into a different schema without recreating it or copying data.
+When an object's lifecycle moves from one layer to another — for example, a table that has graduated from `staging` to `silver` after validation. It is typically triggered by A deliberate reclassification; never use `ALTER SCHEMA ... TRANSFER` to rename objects — use `sp_rename` for that. T-SQL DDL, single statement per transfer. Metadata-only operation that acquires a schema-modification (`SCH-M`) lock on the target object for the duration of the statement, which typically completes in under a second but blocks all readers and writers on that one object during the transfer. Requires `ALTER` on the source schema and `CREATE` (or `ALTER`) on the destination schema, or `ALTER ANY SCHEMA` at the database level. Move an existing table (or view, procedure, function) into a different schema without recreating it or copying data.
 
 *Transfer a staging table into the silver schema.*
 
@@ -388,10 +376,7 @@ ALTER SCHEMA silver TRANSFER staging.intraday_ticks;
 
 #### Drop a schema safely
 
-**When to run:** At the end of a deprecation cycle, after every object has been moved out of the schema and every grant on the schema has been revoked.
-**Trigger:** A confirmed retirement plan for a bounded context that is no longer active.
-**Context:** T-SQL DDL. Requires `CONTROL` on the schema or membership in `db_ddladmin`. Hard requirement: the schema must be empty. `DROP SCHEMA` fails if any object still references it, including tables, views, procedures, functions, synonyms, and user-defined types.
-**Purpose:** Remove a schema from the database.
+At the end of a deprecation cycle, after every object has been moved out of the schema and every grant on the schema has been revoked. It is typically triggered by A confirmed retirement plan for a bounded context that is no longer active. T-SQL DDL. Requires `CONTROL` on the schema or membership in `db_ddladmin`. Hard requirement: the schema must be empty. `DROP SCHEMA` fails if any object still references it, including tables, views, procedures, functions, synonyms, and user-defined types. Remove a schema from the database.
 
 *Drop a retired demo schema.*
 
@@ -489,10 +474,7 @@ Beyond those three, two more questions complete the pre-DDL checklist: **types**
 
 #### Create a table with explicit nullability
 
-**When to run:** During initial provisioning of a new fact or dimension table, or when rebuilding an existing table under a new contract.
-**Trigger:** The design questions above have been answered and approved.
-**Context:** T-SQL DDL. Runs as part of a deployment batch. Requires `CREATE TABLE` on the target schema (typically granted via `db_ddladmin` or direct schema-level `CREATE` permission). Metadata-only operation that completes in well under a second regardless of the table's eventual size.
-**Purpose:** Materialise the designed table shape with every column's nullability, type, default, and primary key constraint defined up front — so the table starts life with a complete contract rather than acquiring one incrementally via ALTER statements.
+During initial provisioning of a new fact or dimension table, or when rebuilding an existing table under a new contract. It is typically triggered by the design questions above have been answered and approved. T-SQL DDL. Runs as part of a deployment batch. Requires `CREATE TABLE` on the target schema (typically granted via `db_ddladmin` or direct schema-level `CREATE` permission). Metadata-only operation that completes in well under a second regardless of the table's eventual size. Materialise the designed table shape with every column's nullability, type, default, and primary key constraint defined up front — so the table starts life with a complete contract rather than acquiring one incrementally via ALTER statements.
 
 > [!info]- CREATE TABLE clause breakdown
 >
@@ -526,10 +508,7 @@ This DDL is a teaching template — `silver.instrument_price` does not exist on 
 
 #### Inspect the table metadata after creation
 
-**When to run:** Immediately after `CREATE TABLE`, or whenever you need to confirm that the table's physical shape matches the design.
-**Trigger:** Post-deployment verification, or an audit pass over existing tables.
-**Context:** Read-only T-SQL against `sys.tables`, `sys.indexes`, and `sys.partitions`. Any database user with `VIEW DEFINITION` can run this.
-**Purpose:** Return the table's metadata (creation date, last modification, physical shape, row count) as a single row so the design review pass has an authoritative source of truth.
+Immediately after `CREATE TABLE`, or whenever you need to confirm that the table's physical shape matches the design. It is typically triggered by post-deployment verification, or an audit pass over existing tables. Read-only T-SQL against `sys.tables`, `sys.indexes`, and `sys.partitions`. Any database user with `VIEW DEFINITION` can run this. Return the table's metadata (creation date, last modification, physical shape, row count) as a single row so the design review pass has an authoritative source of truth.
 
 *Inspect the metadata and physical shape of `silver.eurostoxx50_ohlcv`.*
 
@@ -569,10 +548,7 @@ The table was created on 2026-03-04 and last modified on 2026-03-27 (the modify 
 
 #### Inspect the column contract after creation
 
-**When to run:** After creating a new table, after an `ALTER TABLE` that modifies columns, or when auditing whether an existing table's column contract matches a documented specification.
-**Trigger:** Design review, data-contract validation, or onboarding a new reader who needs to understand what the table actually exposes.
-**Context:** Read-only T-SQL against `sys.columns` joined to `sys.types`. Returns one row per column.
-**Purpose:** Surface the complete column-by-column contract of a table (ordinal position, name, type, length / precision / scale, nullability, identity flag) in a format that mirrors the `CREATE TABLE` statement the table was built from.
+After creating a new table, after an `ALTER TABLE` that modifies columns, or when auditing whether an existing table's column contract matches a documented specification. It is typically triggered by design review, data-contract validation, or onboarding a new reader who needs to understand what the table actually exposes. Read-only T-SQL against `sys.columns` joined to `sys.types`. Returns one row per column. Surface the complete column-by-column contract of a table (ordinal position, name, type, length / precision / scale, nullability, identity flag) in a format that mirrors the `CREATE TABLE` statement the table was built from.
 
 *Return every column of `silver.eurostoxx50_ohlcv` with its type, length, precision, scale, nullability, and identity flag.*
 
@@ -762,10 +738,7 @@ SQL's treatment of NULL is the single most common source of subtly wrong query r
 
 #### Three-valued logic in action
 
-**When to run:** To verify or demonstrate NULL semantics to yourself or to a reader. Also useful as the canonical reference for truth-table questions during design reviews.
-**Trigger:** Confusion over why a `WHERE` clause is returning fewer rows than expected, or a code review where a NULL-handling pattern looks suspicious.
-**Context:** Read-only T-SQL, returns one row with four truth-table columns.
-**Purpose:** Empirically prove that `NULL = NULL`, `NULL <> NULL`, and `1 = NULL` all evaluate to UNKNOWN rather than TRUE or FALSE, while `NULL IS NULL` evaluates to TRUE.
+To verify or demonstrate NULL semantics to yourself or to a reader. Also useful as the canonical reference for truth-table questions during design reviews. It is typically triggered by confusion over why a `WHERE` clause is returning fewer rows than expected, or a code review where a NULL-handling pattern looks suspicious. Read-only T-SQL, returns one row with four truth-table columns. Empirically prove that `NULL = NULL`, `NULL <> NULL`, and `1 = NULL` all evaluate to UNKNOWN rather than TRUE or FALSE, while `NULL IS NULL` evaluates to TRUE.
 
 *Return the truth values for the four canonical NULL comparisons.*
 
@@ -785,10 +758,7 @@ Three of the four comparisons return `unknown`. Only `NULL IS NULL` returns `tru
 
 #### The silent exclusion trap in WHERE
 
-**When to run:** When investigating a query that returns unexpectedly few rows, or when writing a filter over a nullable column.
-**Trigger:** A `WHERE` clause that uses `=`, `<>`, `<`, `>`, `LIKE`, or `IN` against a column that might contain NULL.
-**Context:** Read-only T-SQL. Produces the same symptom on every RDBMS that follows the ANSI standard.
-**Purpose:** Show that a seemingly-harmless `WHERE v <> 2` filter silently drops NULL rows, producing an incomplete result set that callers may not notice.
+When investigating a query that returns unexpectedly few rows, or when writing a filter over a nullable column. It is typically triggered by A `WHERE` clause that uses `=`, `<>`, `<`, `>`, `LIKE`, or `IN` against a column that might contain NULL. Read-only T-SQL. Produces the same symptom on every RDBMS that follows the ANSI standard. Show that a seemingly-harmless `WHERE v <> 2` filter silently drops NULL rows, producing an incomplete result set that callers may not notice.
 
 *A filter `WHERE v <> 2` over a column that contains NULL rows silently drops the NULL rows.*
 
@@ -817,10 +787,7 @@ The input has five rows: `1, NULL, 2, NULL, 3`. The filter `v <> 2` should logic
 
 #### Correct filtering with explicit NULL handling
 
-**When to run:** Whenever the business rule genuinely wants "everything except the excluded value, including the rows where the value is unknown".
-**Trigger:** Any filter on a nullable column.
-**Context:** Read-only T-SQL, same input as the previous cell.
-**Purpose:** Show the corrected filter that restores the NULL rows to the result set by adding an explicit `OR v IS NULL`.
+Whenever the business rule genuinely wants "everything except the excluded value, including the rows where the value is unknown". It is typically triggered by any filter on a nullable column. Read-only T-SQL, same input as the previous cell. Show the corrected filter that restores the NULL rows to the result set by adding an explicit `OR v IS NULL`.
 
 *The same query with the NULL rows explicitly restored.*
 
@@ -842,10 +809,7 @@ With the explicit NULL clause, the row count is now 4 (`1, NULL, NULL, 3`) — t
 
 #### ISNULL vs COALESCE for fallback values
 
-**When to run:** When replacing NULL with a fallback value in a projected column or a computed expression.
-**Trigger:** A SELECT list, computed column, or JOIN expression that needs to substitute a default when the source value is NULL.
-**Context:** Read-only T-SQL. Both `ISNULL` and `COALESCE` are supported; they have subtly different type-promotion rules and operand-count limits.
-**Purpose:** Show that `ISNULL(x, y)` takes exactly two arguments and returns the type of the *first* argument, while `COALESCE(a, b, c, ...)` takes any number of arguments and returns the highest-precedence type across all arguments.
+When replacing NULL with a fallback value in a projected column or a computed expression. It is typically triggered by A SELECT list, computed column, or JOIN expression that needs to substitute a default when the source value is NULL. Read-only T-SQL. Both `ISNULL` and `COALESCE` are supported; they have subtly different type-promotion rules and operand-count limits. Show that `ISNULL(x, y)` takes exactly two arguments and returns the type of the *first* argument, while `COALESCE(a, b, c, ...)` takes any number of arguments and returns the highest-precedence type across all arguments.
 
 *Compare ISNULL and COALESCE for NULL fallback.*
 
@@ -884,10 +848,7 @@ Identity columns are covered in depth in the sibling note [04-keys-defaults-iden
 
 #### Inspect seed, increment, and last value for every identity column
 
-**When to run:** Before and after bulk loads, when investigating "gaps" in identity values, during migration planning when identity-range transfer is needed, or when auditing a database for unexpectedly near-exhausted identity columns.
-**Trigger:** A question about "what is the next value that will be generated", a concern about running out of `int` range, or a migration that needs to preserve identity values.
-**Context:** Read-only T-SQL against `sys.identity_columns`. The `seed_value`, `increment_value`, and `last_value` columns are stored as `sql_variant` and must be cast to `bigint` for display via `pyodbc` because the driver cannot map `sql_variant` directly.
-**Purpose:** Enumerate every identity column in the listed schemas with its seed, increment, and the most recently assigned value — so you can see how close each column is to exhausting its range.
+Before and after bulk loads, when investigating "gaps" in identity values, during migration planning when identity-range transfer is needed, or when auditing a database for unexpectedly near-exhausted identity columns. It is typically triggered by A question about "what is the next value that will be generated", a concern about running out of `int` range, or a migration that needs to preserve identity values. Read-only T-SQL against `sys.identity_columns`. The `seed_value`, `increment_value`, and `last_value` columns are stored as `sql_variant` and must be cast to `bigint` for display via `pyodbc` because the driver cannot map `sql_variant` directly. Enumerate every identity column in the listed schemas with its seed, increment, and the most recently assigned value — so you can see how close each column is to exhausting its range.
 
 *Return every identity column in the bronze / silver / gold schemas with its seed, increment, and last-assigned value.*
 
@@ -965,10 +926,7 @@ The canonical use case in stoxx is JSON indexing: the `demo_jx.indexed_json_even
 
 #### Inspect every computed column in the database
 
-**When to run:** When auditing a schema for computed-column usage, or when investigating why a column appears in the column list but is not writable.
-**Trigger:** A review of JSON-backed tables, a refactor that wants to promote computed columns to real columns, or an investigation into why an index build failed with "not deterministic" errors.
-**Context:** Read-only T-SQL against `sys.computed_columns` joined to `sys.tables`, `sys.columns`, and `sys.types`.
-**Purpose:** Surface every computed column in the database with its expression, persistence flag, nullability, and declared type.
+When auditing a schema for computed-column usage, or when investigating why a column appears in the column list but is not writable. It is typically triggered by A review of JSON-backed tables, a refactor that wants to promote computed columns to real columns, or an investigation into why an index build failed with "not deterministic" errors. Read-only T-SQL against `sys.computed_columns` joined to `sys.tables`, `sys.columns`, and `sys.types`. Surface every computed column in the database with its expression, persistence flag, nullability, and declared type.
 
 *Return every computed column in the database with its definition and persistence.*
 
@@ -1036,10 +994,7 @@ If the table does not match one of those patterns, the correct shape is clustere
 
 #### Inspect a heap's physical stats
 
-**When to run:** When investigating slow heap queries, before deciding whether to rebuild or re-cluster, or during a routine fragmentation audit.
-**Trigger:** Suspected forwarded rows, unexpectedly high `PAGELATCH_IO` waits on a heap, or a quarterly heap-health check.
-**Context:** Read-only T-SQL via `sys.dm_db_index_physical_stats`, which is a table-valued function that accepts `database_id`, `object_id`, `index_id`, `partition_id`, and scan mode (`LIMITED`, `SAMPLED`, `DETAILED`). `DETAILED` walks every page and is accurate but expensive on large tables; `SAMPLED` reads 1% of pages and is fine for spot checks.
-**Purpose:** Return the heap's page count, record count, forwarded-record count, and fragmentation percentage so you can see whether a rebuild is justified.
+When investigating slow heap queries, before deciding whether to rebuild or re-cluster, or during a routine fragmentation audit. It is typically triggered by suspected forwarded rows, unexpectedly high `PAGELATCH_IO` waits on a heap, or a quarterly heap-health check. Read-only T-SQL via `sys.dm_db_index_physical_stats`, which is a table-valued function that accepts `database_id`, `object_id`, `index_id`, `partition_id`, and scan mode (`LIMITED`, `SAMPLED`, `DETAILED`). `DETAILED` walks every page and is accurate but expensive on large tables; `SAMPLED` reads 1% of pages and is fine for spot checks. Return the heap's page count, record count, forwarded-record count, and fragmentation percentage so you can see whether a rebuild is justified.
 
 > [!info]- DMV breakdown — sys.dm_db_index_physical_stats parameters
 >
@@ -1106,10 +1061,7 @@ The trade-offs:
 
 #### Inspect a clustered index's B-tree structure
 
-**When to run:** When sizing a table, planning an index rebuild, verifying the depth of the B-tree, or investigating unexpectedly high logical reads on a range scan.
-**Trigger:** Any capacity or performance review that needs to know how many pages the table occupies and how fragmented the leaf level is.
-**Context:** Read-only T-SQL via `sys.dm_db_index_physical_stats` with `index_id = 1` (the clustered index) and mode `DETAILED` to surface all levels of the B-tree.
-**Purpose:** Show the per-level page count, record count, fragmentation, and fill percentage so you can see the full tree shape (root → intermediate → leaf).
+When sizing a table, planning an index rebuild, verifying the depth of the B-tree, or investigating unexpectedly high logical reads on a range scan. It is typically triggered by any capacity or performance review that needs to know how many pages the table occupies and how fragmented the leaf level is. Read-only T-SQL via `sys.dm_db_index_physical_stats` with `index_id = 1` (the clustered index) and mode `DETAILED` to surface all levels of the B-tree. Show the per-level page count, record count, fragmentation, and fill percentage so you can see the full tree shape (root → intermediate → leaf).
 
 *Inspect every level of the clustered index on `silver.eurostoxx50_ohlcv`.*
 
@@ -1163,10 +1115,7 @@ When columnstore is wrong:
 
 #### Inspect columnstore rowgroup state
 
-**When to run:** When investigating columnstore performance, auditing rowgroup health after a large load, or planning `ALTER INDEX ... REORGANIZE` to consolidate delta-store fragments.
-**Trigger:** Columnstore scan performance regression, a bulk load that exceeded expected row counts, or a quarterly health check.
-**Context:** Read-only T-SQL against `sys.dm_db_column_store_row_group_physical_stats`. Returns one row per rowgroup with its state, row count, deleted-row count, and compressed size.
-**Purpose:** Surface how many rowgroups exist, whether they are `COMPRESSED` / `OPEN` / `CLOSED` / `TOMBSTONE`, and how much delta-store activity is outstanding.
+When investigating columnstore performance, auditing rowgroup health after a large load, or planning `ALTER INDEX ... REORGANIZE` to consolidate delta-store fragments. It is typically triggered by columnstore scan performance regression, a bulk load that exceeded expected row counts, or a quarterly health check. Read-only T-SQL against `sys.dm_db_column_store_row_group_physical_stats`. Returns one row per rowgroup with its state, row count, deleted-row count, and compressed size. Surface how many rowgroups exist, whether they are `COMPRESSED` / `OPEN` / `CLOSED` / `TOMBSTONE`, and how much delta-store activity is outstanding.
 
 *Inspect the rowgroups of `dbo.demo_idxmaint_columnstore`, the only columnstore-clustered table in the stoxx user schemas.*
 
@@ -1274,10 +1223,7 @@ A table can have at most one `PRIMARY KEY`. For alternate unique keys, use `UNIQ
 
 #### Inspect every primary key with its backing key columns
 
-**When to run:** When auditing table design, reviewing whether declared PKs match the intended business grain, or preparing a migration that needs to preserve uniqueness guarantees.
-**Trigger:** Design review, schema comparison, or investigating why a duplicate-row incident was not caught by the PK.
-**Context:** Read-only T-SQL joining `sys.key_constraints`, `sys.tables`, `sys.schemas`, `sys.indexes`, `sys.index_columns`, `sys.columns`. Uses `STRING_AGG` (SQL Server 2017+) to collapse multiple key columns into a single comma-separated string per row.
-**Purpose:** Enumerate every primary key in the `bronze`, `silver`, and `gold` schemas with its backing index type and the ordered list of key columns.
+When auditing table design, reviewing whether declared PKs match the intended business grain, or preparing a migration that needs to preserve uniqueness guarantees. It is typically triggered by design review, schema comparison, or investigating why a duplicate-row incident was not caught by the PK. Read-only T-SQL joining `sys.key_constraints`, `sys.tables`, `sys.schemas`, `sys.indexes`, `sys.index_columns`, `sys.columns`. Uses `STRING_AGG` (SQL Server 2017+) to collapse multiple key columns into a single comma-separated string per row. Enumerate every primary key in the `bronze`, `silver`, and `gold` schemas with its backing index type and the ordered list of key columns.
 
 *Return every PK with its backing index type and ordered key column list.*
 
@@ -1325,10 +1271,7 @@ Two real-world patterns jump out. First, `bronze.dim_country` has its PK on `cou
 
 #### The system-named-constraint anti-pattern
 
-**When to run:** When auditing a database for deployment portability, or when investigating why a constraint-drop script failed on a different environment.
-**Trigger:** A migration script that worked in dev but failed in prod with `Cannot find the object "PK__eurostox__...` errors.
-**Context:** Read-only T-SQL against `sys.key_constraints`. The `is_system_named` column reveals whether the constraint name was generated by the engine or supplied by the user.
-**Purpose:** Quantify how many PKs and defaults in the database carry unstable, hash-suffixed names versus stable, explicit names.
+When auditing a database for deployment portability, or when investigating why a constraint-drop script failed on a different environment. It is typically triggered by A migration script that worked in dev but failed in prod with `Cannot find the object "PK__eurostox__...` errors. Read-only T-SQL against `sys.key_constraints`. The `is_system_named` column reveals whether the constraint name was generated by the engine or supplied by the user. Quantify how many PKs and defaults in the database carry unstable, hash-suffixed names versus stable, explicit names.
 
 *Count system-named versus user-named primary keys across the medallion schemas.*
 
@@ -1383,10 +1326,7 @@ A `UNIQUE` constraint declares an alternate key — a column (or combination) th
 
 #### Stoxx uses unique indexes, not UNIQUE constraints
 
-**When to run:** When auditing whether a database enforces natural-key uniqueness.
-**Trigger:** The `sys.key_constraints WHERE type = 'UQ'` query returned zero rows on stoxx, which at first looked like a design gap. The follow-up query below reveals that uniqueness is in fact enforced — via unique *indexes* rather than unique *constraints*.
-**Context:** Read-only T-SQL against `sys.indexes`, filtered to unique indexes that are neither the PK nor a `UNIQUE` constraint.
-**Purpose:** Surface the unique indexes that stoxx uses to enforce natural-key uniqueness outside the constraint surface.
+When auditing whether a database enforces natural-key uniqueness. It is typically triggered by the `sys.key_constraints WHERE type = 'UQ'` query returned zero rows on stoxx, which at first looked like a design gap. The follow-up query below reveals that uniqueness is in fact enforced — via unique *indexes* rather than unique *constraints*. Read-only T-SQL against `sys.indexes`, filtered to unique indexes that are neither the PK nor a `UNIQUE` constraint. Surface the unique indexes that stoxx uses to enforce natural-key uniqueness outside the constraint surface.
 
 *Return every unique index that is neither a PK nor a UNIQUE constraint.*
 
@@ -1432,10 +1372,7 @@ Three patterns are visible. First, the `silver.eurostoxx50_ohlcv` table does enf
 
 #### The one-NULL rule and its modern replacement
 
-**When to run:** To demonstrate why a naive `UNIQUE (col)` constraint on a nullable column behaves in an unexpectedly restrictive way, and to show the filtered-unique-index workaround.
-**Trigger:** A design discussion about how to enforce "each active user has a unique email, but some users have no email".
-**Context:** Read-only T-SQL demonstrating the partitioning behaviour of `NULL` under `COUNT(*) OVER (PARTITION BY v)`.
-**Purpose:** Show that SQL Server treats NULL as a distinct value for partitioning (so two NULL rows group together), while the *uniqueness* rule treats NULL differently — leading to the one-NULL restriction on classic `UNIQUE` indexes.
+To demonstrate why a naive `UNIQUE (col)` constraint on a nullable column behaves in an unexpectedly restrictive way, and to show the filtered-unique-index workaround. It is typically triggered by A design discussion about how to enforce "each active user has a unique email, but some users have no email". Read-only T-SQL demonstrating the partitioning behaviour of `NULL` under `COUNT(*) OVER (PARTITION BY v)`. Show that SQL Server treats NULL as a distinct value for partitioning (so two NULL rows group together), while the *uniqueness* rule treats NULL differently — leading to the one-NULL restriction on classic `UNIQUE` indexes.
 
 *Show that two NULL rows partition together under window aggregation.*
 
@@ -1475,10 +1412,7 @@ A `FOREIGN KEY` constraint declares that values in a child column must exist in 
 
 #### Stoxx enforces zero foreign keys
 
-**When to run:** When onboarding a new engineer to the database, when planning an ETL load, or when debating whether to add referential integrity to an existing analytical schema.
-**Trigger:** A first-look audit of the database's enforcement surface.
-**Context:** Read-only T-SQL against `sys.foreign_keys`.
-**Purpose:** Quantify the number of enforced foreign keys in the database.
+When onboarding a new engineer to the database, when planning an ETL load, or when debating whether to add referential integrity to an existing analytical schema. It is typically triggered by A first-look audit of the database's enforcement surface. Read-only T-SQL against `sys.foreign_keys`. Quantify the number of enforced foreign keys in the database.
 
 *Count every foreign key in the database.*
 
@@ -1505,10 +1439,7 @@ The cost of dropping FKs is that queries can no longer trust the referential int
 
 #### Add a trusted foreign key
 
-**When to run:** When the table is a dimension lookup, a reference table, or any context where write volume is low enough that the FK overhead is negligible, and the correctness benefit outweighs the operational cost.
-**Trigger:** A new child table whose integrity the database should enforce.
-**Context:** T-SQL DDL. Runs as part of a deployment batch. Acquires a schema-modification lock on the child table plus a shared lock on the parent for the validation scan. Validation scan time scales with child-table row count, so large tables may need `WITH NOCHECK` + `WITH CHECK CHECK` in two phases to control downtime.
-**Purpose:** Create an enforced, trusted `FOREIGN KEY` from `silver.instrument_price` to `silver.instrument_dim`, with explicit `ON DELETE NO ACTION` to reject any delete of a referenced parent.
+When the table is a dimension lookup, a reference table, or any context where write volume is low enough that the FK overhead is negligible, and the correctness benefit outweighs the operational cost. It is typically triggered by A new child table whose integrity the database should enforce. T-SQL DDL. Runs as part of a deployment batch. Acquires a schema-modification lock on the child table plus a shared lock on the parent for the validation scan. Validation scan time scales with child-table row count, so large tables may need `WITH NOCHECK` + `WITH CHECK CHECK` in two phases to control downtime. Create an enforced, trusted `FOREIGN KEY` from `silver.instrument_price` to `silver.instrument_dim`, with explicit `ON DELETE NO ACTION` to reject any delete of a referenced parent.
 
 *Add a trusted FK from the instrument_price table to the instrument_dim parent.*
 
@@ -1540,10 +1471,7 @@ The constraint name follows the `FK_<child>_<parent>` convention. `ON DELETE NO 
 
 #### Disable and re-enable an FK for bulk load
 
-**When to run:** When a bulk load of known-clean data against a populated child table would otherwise trigger an FK check on every row.
-**Trigger:** A large `BULK INSERT`, `INSERT ... SELECT`, or `MERGE` targeting the child table.
-**Context:** T-SQL DDL around a DML operation. Requires `ALTER` on the child table. The disable/enable sequence must complete in the same deployment window; leaving an FK disabled indefinitely creates a silent integrity gap.
-**Purpose:** Disable the FK check during the load, run the load, re-enable the FK with revalidation so the constraint remains *trusted*.
+When a bulk load of known-clean data against a populated child table would otherwise trigger an FK check on every row. It is typically triggered by A large `BULK INSERT`, `INSERT ... SELECT`, or `MERGE` targeting the child table. T-SQL DDL around a DML operation. Requires `ALTER` on the child table. The disable/enable sequence must complete in the same deployment window; leaving an FK disabled indefinitely creates a silent integrity gap. Disable the FK check during the load, run the load, re-enable the FK with revalidation so the constraint remains *trusted*.
 
 *Disable the FK, bulk-load the child table, then re-enable with full revalidation.*
 
@@ -1590,10 +1518,7 @@ A `CHECK` constraint is a row-level predicate that must evaluate to `TRUE` or `U
 
 #### Inspect every check constraint
 
-**When to run:** When auditing which domain rules are enforced at the database layer versus the application layer.
-**Trigger:** A design review, or investigating an insert rejection with error 547 (`The INSERT statement conflicted with the CHECK constraint`).
-**Context:** Read-only T-SQL against `sys.check_constraints`.
-**Purpose:** Return every check constraint with its expression, trust state, disabled state, and replication flag.
+When auditing which domain rules are enforced at the database layer versus the application layer. It is typically triggered by A design review, or investigating an insert rejection with error 547 (`The INSERT statement conflicted with the CHECK constraint`). Read-only T-SQL against `sys.check_constraints`. Return every check constraint with its expression, trust state, disabled state, and replication flag.
 
 *Return every CHECK constraint in the database with its expression and state flags.*
 
@@ -1623,10 +1548,7 @@ Two check constraints, both on `demo_jx`, both enforcing JSON validity on a `pay
 
 #### Add a named CHECK constraint
 
-**When to run:** When a column has a domain rule that is invariant across the entire history of the table (e.g., "close price must be non-negative", "country code must be exactly 2 uppercase letters", "event type must be one of a fixed set").
-**Trigger:** A design decision to enforce the rule at the database layer rather than trust every upstream writer.
-**Context:** T-SQL DDL. The validation scan runs once against existing rows at creation time (unless `WITH NOCHECK` is specified). Acquires a schema-modification lock on the target table during the validation.
-**Purpose:** Add a named, trusted CHECK constraint enforcing a domain rule.
+When a column has a domain rule that is invariant across the entire history of the table (e.g., "close price must be non-negative", "country code must be exactly 2 uppercase letters", "event type must be one of a fixed set"). It is typically triggered by A design decision to enforce the rule at the database layer rather than trust every upstream writer. T-SQL DDL. The validation scan runs once against existing rows at creation time (unless `WITH NOCHECK` is specified). Acquires a schema-modification lock on the target table during the validation. Add a named, trusted CHECK constraint enforcing a domain rule.
 
 *Add a check constraint that rejects negative close prices.*
 
@@ -1640,10 +1562,7 @@ The constraint name follows the `CK_<table>_<rule>` convention. The predicate `c
 
 #### Live check-constraint verification
 
-**When to run:** After adding a CHECK constraint to confirm it is operating correctly against real data, or when investigating whether upstream data matches the enforced rule.
-**Trigger:** Post-deployment smoke test, or a report of unexpected constraint violations.
-**Context:** Read-only T-SQL — runs the check predicate as a `SELECT` expression to surface how it evaluates against live rows.
-**Purpose:** Verify that every payload in `demo_jx.indexed_json_events` satisfies the `ISJSON` check constraint.
+After adding a CHECK constraint to confirm it is operating correctly against real data, or when investigating whether upstream data matches the enforced rule. It is typically triggered by post-deployment smoke test, or a report of unexpected constraint violations. Read-only T-SQL — runs the check predicate as a `SELECT` expression to surface how it evaluates against live rows. Verify that every payload in `demo_jx.indexed_json_events` satisfies the `ISJSON` check constraint.
 
 *Run the ISJSON check predicate as a SELECT expression against live payloads.*
 
@@ -1674,10 +1593,7 @@ A `DEFAULT` constraint is a named object that supplies a value when an `INSERT` 
 
 #### The system-named default anti-pattern on stoxx
 
-**When to run:** When auditing defaults for deployment portability.
-**Trigger:** A migration script that failed to drop a default because its name differed across environments.
-**Context:** Read-only T-SQL against `sys.default_constraints`.
-**Purpose:** Count system-named versus user-named defaults across the main schemas.
+When auditing defaults for deployment portability. It is typically triggered by A migration script that failed to drop a default because its name differed across environments. Read-only T-SQL against `sys.default_constraints`. Count system-named versus user-named defaults across the main schemas.
 
 *Count system-named versus user-named default constraints.*
 
@@ -1702,10 +1618,7 @@ WHERE s.name IN ('bronze','silver','gold','dbo','demo_jx');
 
 #### Add a named DEFAULT constraint
 
-**When to run:** At `CREATE TABLE` time (inline) or after-the-fact via `ALTER TABLE ... ADD CONSTRAINT`.
-**Trigger:** A column that should get a fill value when callers omit it — typically audit columns (`_created_at`, `_ingested_at`, `_updated_at`), soft-delete flags (`is_deleted DEFAULT 0`), version columns (`version int DEFAULT 1`).
-**Context:** T-SQL DDL. When added inline with `CREATE TABLE`, the constraint is created instantly. When added via `ALTER TABLE ... ADD CONSTRAINT` on a populated table, SQL Server 2012+ Enterprise adds it as a metadata-only operation if the default is a runtime expression; earlier versions or non-Enterprise editions rewrite every row with the default value.
-**Purpose:** Add a named, explicit DEFAULT constraint to an existing column.
+At `CREATE TABLE` time (inline) or after-the-fact via `ALTER TABLE ... ADD CONSTRAINT`. It is typically triggered by A column that should get a fill value when callers omit it — typically audit columns (`_created_at`, `_ingested_at`, `_updated_at`), soft-delete flags (`is_deleted DEFAULT 0`), version columns (`version int DEFAULT 1`). T-SQL DDL. When added inline with `CREATE TABLE`, the constraint is created instantly. When added via `ALTER TABLE ... ADD CONSTRAINT` on a populated table, SQL Server 2012+ Enterprise adds it as a metadata-only operation if the default is a runtime expression; earlier versions or non-Enterprise editions rewrite every row with the default value. Add a named, explicit DEFAULT constraint to an existing column.
 
 *Add a named default that stamps new rows with the current UTC time.*
 
@@ -1740,10 +1653,7 @@ Adding a column is the most common schema evolution, and its cost depends entire
 
 #### Add a nullable column — metadata-only
 
-**When to run:** When adding a new optional column that existing rows do not need to carry a value for.
-**Trigger:** A new upstream field that is optional at the source, or a backfill workflow that will populate the column in a second step.
-**Context:** T-SQL DDL. Metadata-only operation on every supported edition — completes in milliseconds regardless of table size. Acquires a schema-modification (`SCH-M`) lock on the table for the duration of the statement (sub-second for this case).
-**Purpose:** Add a new nullable column to an existing populated table without rewriting any rows.
+When adding a new optional column that existing rows do not need to carry a value for. It is typically triggered by A new upstream field that is optional at the source, or a backfill workflow that will populate the column in a second step. T-SQL DDL. Metadata-only operation on every supported edition — completes in milliseconds regardless of table size. Acquires a schema-modification (`SCH-M`) lock on the table for the duration of the statement (sub-second for this case). Add a new nullable column to an existing populated table without rewriting any rows.
 
 *Add a nullable column — safe at any scale.*
 
@@ -1756,10 +1666,7 @@ The statement updates the table's metadata to include the new column and is done
 
 #### Add a NOT NULL column with a constant default — metadata-only on 2012+ Enterprise
 
-**When to run:** When adding a required column that existing rows must still carry a deterministic value for.
-**Trigger:** A new column whose domain genuinely forbids NULL (e.g., a `currency_code char(3) NOT NULL DEFAULT 'USD'` column where every existing row is known to be USD).
-**Context:** T-SQL DDL. Metadata-only on SQL Server 2012+ Enterprise Edition when the default expression is a constant or a runtime function (`SYSUTCDATETIME()`, `NEWID()`, etc.). On other editions or with non-constant defaults, the operation rewrites every row and acquires a full table lock for the duration — which on a 60-million-row table means hours of downtime.
-**Purpose:** Add a required column with a default in a single statement that either completes instantly (Enterprise 2012+) or rewrites the entire table (other editions).
+When adding a required column that existing rows must still carry a deterministic value for. It is typically triggered by A new column whose domain genuinely forbids NULL (e.g., a `currency_code char(3) NOT NULL DEFAULT 'USD'` column where every existing row is known to be USD). T-SQL DDL. Metadata-only on SQL Server 2012+ Enterprise Edition when the default expression is a constant or a runtime function (`SYSUTCDATETIME()`, `NEWID()`, etc.). On other editions or with non-constant defaults, the operation rewrites every row and acquires a full table lock for the duration — which on a 60-million-row table means hours of downtime. Add a required column with a default in a single statement that either completes instantly (Enterprise 2012+) or rewrites the entire table (other editions).
 
 *Add a NOT NULL column with a runtime default — metadata-only on 2012 Enterprise+.*
 
@@ -1783,10 +1690,7 @@ On Enterprise Edition the operation completes in milliseconds because SQL Server
 
 #### Add a NOT NULL column without a default — dangerous on populated tables
 
-**When to run:** Never, on a populated table, without a prior backfill step. SQL Server will reject the statement with error 4901 (`Column must be added with either NULL or a default constraint`) if there is no default.
-**Trigger:** This is not a pattern to use — it is a pattern to recognise and avoid.
-**Context:** T-SQL DDL.
-**Purpose:** Document the failure mode so the reader recognises it when it happens.
+Never, on a populated table, without a prior backfill step. SQL Server will reject the statement with error 4901 (`Column must be added with either NULL or a default constraint`) if there is no default. It is typically triggered by this is not a pattern to use — it is a pattern to recognise and avoid. T-SQL DDL. Document the failure mode so the reader recognises it when it happens.
 
 *Attempting to add a NOT NULL column without a default fails when the table is not empty.*
 
@@ -1908,10 +1812,7 @@ The mechanism replaces hand-rolled audit triggers for most use cases. It is the 
 
 #### Inspect temporal tables in the database
 
-**When to run:** When auditing whether row-version history is enabled anywhere in the schema.
-**Trigger:** A data retention audit, or an investigation into how a deleted row can be recovered.
-**Context:** Read-only T-SQL against `sys.tables.temporal_type`. The column is `0` for non-temporal tables, `1` for the history table itself, and `2` for a system-versioned table.
-**Purpose:** List every temporal table and its paired history table.
+When auditing whether row-version history is enabled anywhere in the schema. It is typically triggered by A data retention audit, or an investigation into how a deleted row can be recovered. Read-only T-SQL against `sys.tables.temporal_type`. The column is `0` for non-temporal tables, `1` for the history table itself, and `2` for a system-versioned table. List every temporal table and its paired history table.
 
 *Return every system-versioned temporal table in the database.*
 
@@ -1935,10 +1836,7 @@ Two rows, one pair. The first row is the main table (`temporal_type_desc = SYSTE
 
 #### Create a temporal table
 
-**When to run:** When designing a new table that must retain every historical state of every row for audit or reconstruction.
-**Trigger:** A compliance requirement, a "what did this row look like yesterday" query pattern, or an audit-trail specification.
-**Context:** T-SQL DDL. The history table must be specified or auto-created. The main table must have a `PERIOD FOR SYSTEM_TIME` clause identifying two `datetime2` columns as the validity period, and the `WITH (SYSTEM_VERSIONING = ON)` clause to enable mirroring.
-**Purpose:** Create a temporal table with an auto-generated history table and automatic row versioning.
+When designing a new table that must retain every historical state of every row for audit or reconstruction. It is typically triggered by A compliance requirement, a "what did this row look like yesterday" query pattern, or an audit-trail specification. T-SQL DDL. The history table must be specified or auto-created. The main table must have a `PERIOD FOR SYSTEM_TIME` clause identifying two `datetime2` columns as the validity period, and the `WITH (SYSTEM_VERSIONING = ON)` clause to enable mirroring. Create a temporal table with an auto-generated history table and automatic row versioning.
 
 *Create a system-versioned table with inline period columns and an explicit history table (this is the real DDL that provisioned `demo_stc.instrument_state` on stoxx).*
 
@@ -1961,10 +1859,7 @@ Key points in the DDL. `valid_from` and `valid_to` are declared with `GENERATED 
 
 #### Inspect the current state of the temporal table
 
-**When to run:** When reading the "now" view of a temporal table, which is identical to a normal `SELECT` — the temporal machinery is invisible to standard queries.
-**Trigger:** Any query that needs the current state without history.
-**Context:** Read-only T-SQL. Produces identical output to a normal non-temporal table.
-**Purpose:** Return every currently-valid row in `demo_stc.instrument_state`.
+When reading the "now" view of a temporal table, which is identical to a normal `SELECT` — the temporal machinery is invisible to standard queries. It is typically triggered by any query that needs the current state without history. Read-only T-SQL. Produces identical output to a normal non-temporal table. Return every currently-valid row in `demo_stc.instrument_state`.
 
 *Return the current rows of the temporal table.*
 
@@ -1986,10 +1881,7 @@ Five rows in the current state — note that every `status_code` is `ACTIVE`. Th
 
 #### Inspect the history table directly
 
-**When to run:** When auditing the full change history of a temporal row, or when producing an audit report showing every past state.
-**Trigger:** An audit request, or a design review of what data the history table is actually storing.
-**Context:** Read-only T-SQL against the history table. The history table is a normal queryable table — SQL Server allows direct `SELECT` from it, though `INSERT` / `UPDATE` / `DELETE` are blocked while system versioning is on.
-**Purpose:** Return every historical row with its validity period, so the reader can see what each row looked like before the update.
+When auditing the full change history of a temporal row, or when producing an audit report showing every past state. It is typically triggered by an audit request, or a design review of what data the history table is actually storing. Read-only T-SQL against the history table. The history table is a normal queryable table — SQL Server allows direct `SELECT` from it, though `INSERT` / `UPDATE` / `DELETE` are blocked while system versioning is on. Return every historical row with its validity period, so the reader can see what each row looked like before the update.
 
 *Return every row currently in the history table with its validity period.*
 
@@ -2014,10 +1906,7 @@ Exactly two history rows, corresponding to the two rows that were updated after 
 
 #### Query the full timeline with FOR SYSTEM_TIME ALL
 
-**When to run:** When the question is "show me every version of this row, past and present", in a single query without manually unioning the main and history tables.
-**Trigger:** An audit query, a point-in-time reconstruction, or a "what did this row look like on date X" report.
-**Context:** Read-only T-SQL using the `FOR SYSTEM_TIME ALL` clause. Alternatives include `FOR SYSTEM_TIME AS OF <datetime>` (single point in time), `FOR SYSTEM_TIME FROM <dt1> TO <dt2>` (rows overlapping a range), and `FOR SYSTEM_TIME BETWEEN <dt1> AND <dt2>` (semantically similar with different edge cases).
-**Purpose:** Return every version of rows 3 and 5, past and present, in a single query.
+When the question is "show me every version of this row, past and present", in a single query without manually unioning the main and history tables. It is typically triggered by an audit query, a point-in-time reconstruction, or a "what did this row look like on date X" report. Read-only T-SQL using the `FOR SYSTEM_TIME ALL` clause. Alternatives include `FOR SYSTEM_TIME AS OF <datetime>` (single point in time), `FOR SYSTEM_TIME FROM <dt1> TO <dt2>` (rows overlapping a range), and `FOR SYSTEM_TIME BETWEEN <dt1> AND <dt2>` (semantically similar with different edge cases). Return every version of rows 3 and 5, past and present, in a single query.
 
 *Return every version of rows 3 and 5 using FOR SYSTEM_TIME ALL.*
 
@@ -2085,10 +1974,7 @@ Once the filegroup existed the `CREATE TABLE ... WITH (MEMORY_OPTIMIZED = ON)` s
 
 #### Create a memory-optimized table
 
-**When to run:** When designing a new table whose dominant workload is short, high-frequency, contention-prone transactions — typical examples are session state tables, order queue tables, and cache tables.
-**Trigger:** A performance analysis showing that disk-based table contention is the bottleneck.
-**Context:** T-SQL DDL. Requires a `MEMORY_OPTIMIZED_DATA` file group to exist on the database (created via `ALTER DATABASE ... ADD FILEGROUP ... CONTAINS MEMORY_OPTIMIZED_DATA`). The database must be on an edition that supports In-Memory OLTP — Enterprise, Developer, or Azure SQL Database / Managed Instance.
-**Purpose:** Create a durable memory-optimized table with a non-clustered hash index (the idiomatic in-memory index type for equality-heavy access).
+When designing a new table whose dominant workload is short, high-frequency, contention-prone transactions — typical examples are session state tables, order queue tables, and cache tables. It is typically triggered by A performance analysis showing that disk-based table contention is the bottleneck. T-SQL DDL. Requires a `MEMORY_OPTIMIZED_DATA` file group to exist on the database (created via `ALTER DATABASE ... ADD FILEGROUP ... CONTAINS MEMORY_OPTIMIZED_DATA`). The database must be on an edition that supports In-Memory OLTP — Enterprise, Developer, or Azure SQL Database / Managed Instance. Create a durable memory-optimized table with a non-clustered hash index (the idiomatic in-memory index type for equality-heavy access).
 
 *Create a memory-optimized table with a hash index (the real DDL that provisioned `demo_stc.session_state`).*
 
@@ -2174,10 +2060,7 @@ One ledger table: `demo_stc.compliance_event`, declared as `APPEND_ONLY_LEDGER_T
 
 #### Create an append-only ledger table
 
-**When to run:** When designing an audit-trail or change-log table whose contents must be cryptographically provable to an auditor as unmodified.
-**Trigger:** A regulatory requirement (SOX, FINRA record-keeping, SEC 17a-4, GDPR audit requirements) that demands tamper-evidence at the database layer.
-**Context:** T-SQL DDL on SQL Server 2022+. Requires Enterprise, Developer, or Azure SQL edition. Every ledger operation is logged to a blockchain-style hash chain that is periodically aggregated into database digests stored outside the database (in Azure Blob Storage, Azure Confidential Ledger, or a customer-managed secure storage).
-**Purpose:** Create an append-only ledger table with automatic ledger-view generation.
+When designing an audit-trail or change-log table whose contents must be cryptographically provable to an auditor as unmodified. It is typically triggered by A regulatory requirement (SOX, FINRA record-keeping, SEC 17a-4, GDPR audit requirements) that demands tamper-evidence at the database layer. T-SQL DDL on SQL Server 2022+. Requires Enterprise, Developer, or Azure SQL edition. Every ledger operation is logged to a blockchain-style hash chain that is periodically aggregated into database digests stored outside the database (in Azure Blob Storage, Azure Confidential Ledger, or a customer-managed secure storage). Create an append-only ledger table with automatic ledger-view generation.
 
 *Create an append-only ledger table for compliance audit events (this is the real DDL that provisioned `demo_stc.compliance_event`).*
 
@@ -2301,10 +2184,7 @@ Two rows: one node table (`demo_stc.employee`) and one edge table (`demo_stc.rep
 
 #### Create a node and edge pair
 
-**When to run:** When designing a new database component whose access pattern is multi-hop graph traversal.
-**Trigger:** A requirement to answer "give me all descendants of node X" or "find the shortest path from A to B" with variable-depth results.
-**Context:** T-SQL DDL on SQL Server 2017+. Standard editions and above.
-**Purpose:** Create a node table `employee` and an edge table `reports_to` connecting employees.
+When designing a new database component whose access pattern is multi-hop graph traversal. It is typically triggered by A requirement to answer "give me all descendants of node X" or "find the shortest path from A to B" with variable-depth results. T-SQL DDL on SQL Server 2017+. Standard editions and above. Create a node table `employee` and an edge table `reports_to` connecting employees.
 
 *Create a graph node and edge pair for an org chart (this is the real DDL that provisioned `demo_stc.employee` and `demo_stc.reports_to`).*
 
@@ -2414,10 +2294,7 @@ Every inspection query in this note queries one or more catalog views under the 
 
 ### SQL Server | catalog surface | table census
 
-**When to run:** During schema review, capacity planning, or onboarding a new engineer to the database.
-**Trigger:** The question "what tables live in this database, and what kind of tables are they?" — broad but specific.
-**Context:** Read-only T-SQL. Joins `sys.tables` to `sys.indexes`, `sys.partitions`, and `sys.columns` to produce one row per table with its physical shape, row count, column count, and special-variant flags.
-**Purpose:** Produce a single-row-per-table audit surface that surfaces every structural attribute a reviewer is likely to care about, in a form that can be pasted directly into a review document.
+During schema review, capacity planning, or onboarding a new engineer to the database. It is typically triggered by the question "what tables live in this database, and what kind of tables are they?" — broad but specific. Read-only T-SQL. Joins `sys.tables` to `sys.indexes`, `sys.partitions`, and `sys.columns` to produce one row per table with its physical shape, row count, column count, and special-variant flags. Produce a single-row-per-table audit surface that surfaces every structural attribute a reviewer is likely to care about, in a form that can be pasted directly into a review document.
 
 *Produce a full per-table audit across the teaching schemas.*
 
@@ -2479,10 +2356,7 @@ Ten rows covering `demo_jx` (5 JSON/XML demo tables from a sibling note) and `de
 
 ### SQL Server | catalog surface | constraint census
 
-**When to run:** During constraint-naming audits, deployment-portability reviews, or when reporting on the database's overall enforcement posture.
-**Trigger:** A need to inventory every declared constraint across every table, regardless of constraint kind.
-**Context:** Read-only T-SQL. Uses a `UNION ALL` across the five constraint catalog views (`sys.key_constraints` for PK and UQ, `sys.foreign_keys`, `sys.check_constraints`, `sys.default_constraints`) and joins to `sys.tables` and `sys.schemas` for context.
-**Purpose:** Return a single unified row set of every constraint in the target schemas, with the kind, name, disabled flag, and trust flag.
+During constraint-naming audits, deployment-portability reviews, or when reporting on the database's overall enforcement posture. It is typically triggered by A need to inventory every declared constraint across every table, regardless of constraint kind. Read-only T-SQL. Uses a `UNION ALL` across the five constraint catalog views (`sys.key_constraints` for PK and UQ, `sys.foreign_keys`, `sys.check_constraints`, `sys.default_constraints`) and joins to `sys.tables` and `sys.schemas` for context. Return a single unified row set of every constraint in the target schemas, with the kind, name, disabled flag, and trust flag.
 
 *Produce a unified constraint inventory across the demo schemas.*
 
@@ -2536,10 +2410,7 @@ Every constraint returned is active (`is_disabled = False`) and trusted (`is_not
 
 ### SQL Server | catalog surface | index census
 
-**When to run:** When auditing index strategy, reviewing whether unique-index uniqueness is being enforced as intended, or investigating which indexes are the PKs / UQs / plain performance indexes.
-**Trigger:** A performance review, a constraint audit, or a schema comparison between environments.
-**Context:** Read-only T-SQL against `sys.indexes` joined to `sys.tables` and `sys.schemas`. Excludes `index_id = 0` (heaps) because heaps have no index name to return.
-**Purpose:** Return every index on every table in a schema, with its type, uniqueness, role (PK / UQ / other), and filter status.
+When auditing index strategy, reviewing whether unique-index uniqueness is being enforced as intended, or investigating which indexes are the PKs / UQs / plain performance indexes. It is typically triggered by A performance review, a constraint audit, or a schema comparison between environments. Read-only T-SQL against `sys.indexes` joined to `sys.tables` and `sys.schemas`. Excludes `index_id = 0` (heaps) because heaps have no index name to return. Return every index on every table in a schema, with its type, uniqueness, role (PK / UQ / other), and filter status.
 
 *List every index in `demo_stc` with its role and shape.*
 

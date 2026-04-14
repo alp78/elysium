@@ -191,10 +191,7 @@ Use `gcloud compute ssh` when the end goal is an SSH session and `gcloud compute
 
 #### Open an interactive SSH session
 
-**When to run:** You need an interactive shell on a private VM.
-**Trigger:** The instance has no external IP or access must stay on the IAP control path.
-**Context:** Requires the IAP tunnel role, firewall access to port `22`, and the VM's normal SSH authorization method.
-**Purpose:** Open SSH through IAP without managing a separate local tunnel.
+You need an interactive shell on a private VM. It is typically triggered by the instance has no external IP or access must stay on the IAP control path. Requires the IAP tunnel role, firewall access to port `22`, and the VM's normal SSH authorization method. Open SSH through IAP without managing a separate local tunnel.
 
 *This PowerShell command opens an interactive SSH session through IAP.*
 ```powershell
@@ -208,10 +205,7 @@ Interactive shell opens and stays attached to the remote session until you exit.
 
 #### Run one remote command through IAP
 
-**When to run:** You need a quick state check instead of a full shell.
-**Trigger:** The task is a single command such as checking a service or reading a file.
-**Context:** Uses the same IAP and SSH authorization requirements as an interactive session.
-**Purpose:** Execute one command remotely and return the output locally.
+You need a quick state check instead of a full shell. It is typically triggered by the task is a single command such as checking a service or reading a file. Uses the same IAP and SSH authorization requirements as an interactive session. Execute one command remotely and return the output locally.
 
 *This PowerShell command runs a remote service-status check through IAP.*
 ```powershell
@@ -226,10 +220,7 @@ The command prints the remote `systemctl` output locally and then closes the SSH
 
 #### Copy a file through IAP
 
-**When to run:** You need to transfer a file to or from a private VM.
-**Trigger:** The instance is reachable only through IAP and the transfer fits the SSH/SCP path.
-**Context:** File transfer uses the same tunnel permission and SSH access path as `gcloud compute ssh`.
-**Purpose:** Copy files without opening a public SSH endpoint.
+You need to transfer a file to or from a private VM. It is typically triggered by the instance is reachable only through IAP and the transfer fits the SSH/SCP path. File transfer uses the same tunnel permission and SSH access path as `gcloud compute ssh`. Copy files without opening a public SSH endpoint.
 
 *This PowerShell command copies a local file to the VM through IAP-backed SCP.*
 ```powershell
@@ -247,10 +238,7 @@ The copy runs over the temporary IAP-backed SSH tunnel and exits when the transf
 
 #### Open an interactive SSH session
 
-**When to run:** You need an interactive shell on a private VM.
-**Trigger:** The instance has no external IP or access must stay on the IAP control path.
-**Context:** Requires the IAP tunnel role, firewall access to port `22`, and the VM's normal SSH authorization method.
-**Purpose:** Open SSH through IAP without managing a separate local tunnel.
+You need an interactive shell on a private VM. It is typically triggered by the instance has no external IP or access must stay on the IAP control path. Requires the IAP tunnel role, firewall access to port `22`, and the VM's normal SSH authorization method. Open SSH through IAP without managing a separate local tunnel.
 
 *This bash command opens an interactive SSH session through IAP.*
 ```bash
@@ -264,10 +252,7 @@ Interactive shell opens and stays attached to the remote session until you exit.
 
 #### Run one remote command through IAP
 
-**When to run:** You need a quick state check instead of a full shell.
-**Trigger:** The task is a single command such as checking a service or reading a file.
-**Context:** Uses the same IAP and SSH authorization requirements as an interactive session.
-**Purpose:** Execute one command remotely and return the output locally.
+You need a quick state check instead of a full shell. It is typically triggered by the task is a single command such as checking a service or reading a file. Uses the same IAP and SSH authorization requirements as an interactive session. Execute one command remotely and return the output locally.
 
 *This bash command runs a remote service-status check through IAP.*
 ```bash
@@ -282,10 +267,7 @@ The command prints the remote `systemctl` output locally and then closes the SSH
 
 #### Copy a file through IAP
 
-**When to run:** You need to transfer a file to or from a private VM.
-**Trigger:** The instance is reachable only through IAP and the transfer fits the SSH/SCP path.
-**Context:** File transfer uses the same tunnel permission and SSH access path as `gcloud compute ssh`.
-**Purpose:** Copy files without opening a public SSH endpoint.
+You need to transfer a file to or from a private VM. It is typically triggered by the instance is reachable only through IAP and the transfer fits the SSH/SCP path. File transfer uses the same tunnel permission and SSH access path as `gcloud compute ssh`. Copy files without opening a public SSH endpoint.
 
 *This bash command copies a local file to the VM through IAP-backed SCP.*
 ```bash
@@ -307,10 +289,7 @@ Use `gcloud compute start-iap-tunnel` when the client is not SSH-aware, such as 
 
 #### Forward a loopback port to SQL Server
 
-**When to run:** A local application must reach a service listening on a private VM.
-**Trigger:** The service is not SSH itself, but it is reachable over TCP once the tunnel exists.
-**Context:** The local port can differ from the remote port. Keep the local bind on loopback unless you intentionally need LAN exposure.
-**Purpose:** Expose a private VM port as a local listener on your workstation.
+A local application must reach a service listening on a private VM. It is typically triggered by the service is not SSH itself, but it is reachable over TCP once the tunnel exists. The local port can differ from the remote port. Keep the local bind on loopback unless you intentionally need LAN exposure. Expose a private VM port as a local listener on your workstation.
 
 *This PowerShell command forwards local port `1435` to SQL Server on port `1433` through IAP.*
 ```powershell
@@ -324,10 +303,7 @@ The process stays in the foreground while the tunnel is active. Connect SSMS to 
 
 #### Skip the immediate connection check
 
-**When to run:** You want `gcloud` to skip its initial connection probe after creating the tunnel.
-**Trigger:** The service is slow to accept the first connection or you want to remove the client-side startup check.
-**Context:** This flag affects only `gcloud`'s startup behavior. It does not change the one-hour inactivity timeout enforced by IAP.
-**Purpose:** Start the tunnel without the immediate post-bind connection test.
+You want `gcloud` to skip its initial connection probe after creating the tunnel. It is typically triggered by the service is slow to accept the first connection or you want to remove the client-side startup check. This flag affects only `gcloud`'s startup behavior. It does not change the one-hour inactivity timeout enforced by IAP. Start the tunnel without the immediate post-bind connection test.
 
 *This PowerShell command starts the tunnel and disables the initial client-side connection check.*
 ```powershell
@@ -342,10 +318,7 @@ Tunnel startup skips the immediate connection probe, but idle sessions still tim
 
 #### Run multiple tunnels in parallel
 
-**When to run:** You need more than one private service at the same time.
-**Trigger:** A workflow uses multiple remote ports, such as SQL Server and an Airflow UI.
-**Context:** Each tunnel is a separate foreground process and owns its own local port.
-**Purpose:** Keep multiple service-specific tunnels open at once.
+You need more than one private service at the same time. It is typically triggered by A workflow uses multiple remote ports, such as SQL Server and an Airflow UI. Each tunnel is a separate foreground process and owns its own local port. Keep multiple service-specific tunnels open at once.
 
 *These PowerShell commands are meant to run in separate terminals, one tunnel per window.*
 ```powershell
@@ -367,10 +340,7 @@ Each terminal keeps one tunnel process attached. Closing that terminal closes on
 
 #### Forward a loopback port to SQL Server
 
-**When to run:** A local application must reach a service listening on a private VM.
-**Trigger:** The service is not SSH itself, but it is reachable over TCP once the tunnel exists.
-**Context:** The local port can differ from the remote port. Keep the local bind on loopback unless you intentionally need LAN exposure.
-**Purpose:** Expose a private VM port as a local listener on your workstation.
+A local application must reach a service listening on a private VM. It is typically triggered by the service is not SSH itself, but it is reachable over TCP once the tunnel exists. The local port can differ from the remote port. Keep the local bind on loopback unless you intentionally need LAN exposure. Expose a private VM port as a local listener on your workstation.
 
 *This bash command forwards local port `1435` to SQL Server on port `1433` through IAP.*
 ```bash
@@ -384,10 +354,7 @@ The process stays in the foreground while the tunnel is active. Connect SSMS or 
 
 #### Skip the immediate connection check
 
-**When to run:** You want `gcloud` to skip its initial connection probe after creating the tunnel.
-**Trigger:** The service is slow to accept the first connection or you want to remove the client-side startup check.
-**Context:** This flag affects only `gcloud`'s startup behavior. It does not change the one-hour inactivity timeout enforced by IAP.
-**Purpose:** Start the tunnel without the immediate post-bind connection test.
+You want `gcloud` to skip its initial connection probe after creating the tunnel. It is typically triggered by the service is slow to accept the first connection or you want to remove the client-side startup check. This flag affects only `gcloud`'s startup behavior. It does not change the one-hour inactivity timeout enforced by IAP. Start the tunnel without the immediate post-bind connection test.
 
 *This bash command starts the tunnel and disables the initial client-side connection check.*
 ```bash
@@ -402,10 +369,7 @@ Tunnel startup skips the immediate connection probe, but idle sessions still tim
 
 #### Run multiple tunnels in parallel
 
-**When to run:** You need more than one private service at the same time.
-**Trigger:** A workflow uses multiple remote ports, such as SQL Server and an Airflow UI.
-**Context:** Each tunnel is a separate foreground process and owns its own local port.
-**Purpose:** Keep multiple service-specific tunnels open at once.
+You need more than one private service at the same time. It is typically triggered by A workflow uses multiple remote ports, such as SQL Server and an Airflow UI. Each tunnel is a separate foreground process and owns its own local port. Keep multiple service-specific tunnels open at once.
 
 *These bash commands are meant to run in separate terminals, one tunnel per window.*
 ```bash
@@ -431,10 +395,7 @@ Work through control-plane checks first. Most failures happen before the target 
 
 #### Check whether the Cloud IAP API is enabled
 
-**When to run:** `start-iap-tunnel` or `gcloud compute ssh --tunnel-through-iap` fails before the service is reachable.
-**Trigger:** The tunnel never stabilizes or the project was created recently.
-**Context:** API enablement is project-scoped.
-**Purpose:** Confirm that the project allows IAP TCP forwarding requests.
+`start-iap-tunnel` or `gcloud compute ssh --tunnel-through-iap` fails before the service is reachable. It is typically triggered by the tunnel never stabilizes or the project was created recently. API enablement is project-scoped. Confirm that the project allows IAP TCP forwarding requests.
 
 *This PowerShell command lists enabled services and filters for the IAP API.*
 ```powershell
@@ -446,10 +407,7 @@ iap.googleapis.com                    Cloud Identity-Aware Proxy API
 
 #### Check whether the tunnel role is granted
 
-**When to run:** `gcloud` returns a permission error before the tunnel opens.
-**Trigger:** The caller recently changed identities, projects, or IAM bindings.
-**Context:** Tunnel creation requires `roles/iap.tunnelResourceAccessor`; SSH itself may require additional roles or key access.
-**Purpose:** Verify that the effective IAM policy contains the IAP tunnel role.
+`gcloud` returns a permission error before the tunnel opens. It is typically triggered by the caller recently changed identities, projects, or IAM bindings. Tunnel creation requires `roles/iap.tunnelResourceAccessor`; SSH itself may require additional roles or key access. Verify that the effective IAM policy contains the IAP tunnel role.
 
 *This PowerShell command inspects the project IAM policy for the IAP tunnel role.*
 ```powershell
@@ -464,10 +422,7 @@ An empty result means no binding matched the IAP tunnel role in the returned pol
 
 #### Check whether the firewall rule allows IAP traffic
 
-**When to run:** The tunnel opens, but the application cannot connect.
-**Trigger:** IAM is correct and the VM exists, but the remote service still looks unreachable.
-**Context:** IAP forwards traffic from `35.235.240.0/20`.
-**Purpose:** Verify that the VPC ingress rule allows the IAP proxy to reach the target port.
+The tunnel opens, but the application cannot connect. It is typically triggered by IAM is correct and the VM exists, but the remote service still looks unreachable. IAP forwards traffic from `35.235.240.0/20`. Verify that the VPC ingress rule allows the IAP proxy to reach the target port.
 
 *This PowerShell command lists firewall rules and filters for the IAP IPv4 range.*
 ```powershell
@@ -480,10 +435,7 @@ allow-iap-ingress  35.235.240.0/20  tcp:22,tcp:1433
 
 #### Check whether the VM is running
 
-**When to run:** The target looks unreachable even though project-level configuration appears correct.
-**Trigger:** The instance may have been stopped manually or by automation.
-**Context:** Tunnel creation does not start a stopped VM.
-**Purpose:** Confirm the instance power state before debugging anything deeper.
+The target looks unreachable even though project-level configuration appears correct. It is typically triggered by the instance may have been stopped manually or by automation. Tunnel creation does not start a stopped VM. Confirm the instance power state before debugging anything deeper.
 
 *This PowerShell command returns the Compute Engine instance status.*
 ```powershell
@@ -499,10 +451,7 @@ RUNNING
 
 #### Check whether the Cloud IAP API is enabled
 
-**When to run:** `start-iap-tunnel` or `gcloud compute ssh --tunnel-through-iap` fails before the service is reachable.
-**Trigger:** The tunnel never stabilizes or the project was created recently.
-**Context:** API enablement is project-scoped.
-**Purpose:** Confirm that the project allows IAP TCP forwarding requests.
+`start-iap-tunnel` or `gcloud compute ssh --tunnel-through-iap` fails before the service is reachable. It is typically triggered by the tunnel never stabilizes or the project was created recently. API enablement is project-scoped. Confirm that the project allows IAP TCP forwarding requests.
 
 *This bash command lists enabled services and filters for the IAP API.*
 ```bash
@@ -514,10 +463,7 @@ iap.googleapis.com                    Cloud Identity-Aware Proxy API
 
 #### Check whether the tunnel role is granted
 
-**When to run:** `gcloud` returns a permission error before the tunnel opens.
-**Trigger:** The caller recently changed identities, projects, or IAM bindings.
-**Context:** Tunnel creation requires `roles/iap.tunnelResourceAccessor`; SSH itself may require additional roles or key access.
-**Purpose:** Verify that the effective IAM policy contains the IAP tunnel role.
+`gcloud` returns a permission error before the tunnel opens. It is typically triggered by the caller recently changed identities, projects, or IAM bindings. Tunnel creation requires `roles/iap.tunnelResourceAccessor`; SSH itself may require additional roles or key access. Verify that the effective IAM policy contains the IAP tunnel role.
 
 *This bash command inspects the project IAM policy for the IAP tunnel role.*
 ```bash
@@ -530,10 +476,7 @@ gcloud projects get-iam-policy YOUR_PROJECT --format=json | \
 
 #### Check whether the firewall rule allows IAP traffic
 
-**When to run:** The tunnel opens, but the application cannot connect.
-**Trigger:** IAM is correct and the VM exists, but the remote service still looks unreachable.
-**Context:** IAP forwards traffic from `35.235.240.0/20`.
-**Purpose:** Verify that the VPC ingress rule allows the IAP proxy to reach the target port.
+The tunnel opens, but the application cannot connect. It is typically triggered by IAM is correct and the VM exists, but the remote service still looks unreachable. IAP forwards traffic from `35.235.240.0/20`. Verify that the VPC ingress rule allows the IAP proxy to reach the target port.
 
 *This bash command lists firewall rules and filters for the IAP IPv4 range.*
 ```bash
@@ -546,10 +489,7 @@ allow-iap-ingress  35.235.240.0/20  tcp:22,tcp:1433
 
 #### Check whether the VM is running
 
-**When to run:** The target looks unreachable even though project-level configuration appears correct.
-**Trigger:** The instance may have been stopped manually or by automation.
-**Context:** Tunnel creation does not start a stopped VM.
-**Purpose:** Confirm the instance power state before debugging anything deeper.
+The target looks unreachable even though project-level configuration appears correct. It is typically triggered by the instance may have been stopped manually or by automation. Tunnel creation does not start a stopped VM. Confirm the instance power state before debugging anything deeper.
 
 *This bash command returns the Compute Engine instance status.*
 ```bash
@@ -565,10 +505,7 @@ RUNNING
 
 #### Check whether the target service is listening on the expected port
 
-**When to run:** The tunnel is up, but the client still cannot complete the application connection.
-**Trigger:** Firewall, IAM, and instance-state checks already passed.
-**Context:** This command runs on the VM through IAP-backed SSH.
-**Purpose:** Confirm that the service is actually listening on the remote port you are tunneling.
+The tunnel is up, but the client still cannot complete the application connection. It is typically triggered by firewall, IAM, and instance-state checks already passed. This command runs on the VM through IAP-backed SSH. Confirm that the service is actually listening on the remote port you are tunneling.
 
 *This bash command opens an IAP-backed SSH session long enough to inspect listening sockets on the VM.*
 ```bash
@@ -598,10 +535,7 @@ Once the tunnel starts, verify the local listener first and the remote connectio
 
 #### Check the local listener
 
-**When to run:** Immediately after `start-iap-tunnel` binds the local port.
-**Trigger:** You want to confirm that the local listener exists before testing the remote service.
-**Context:** The owning process is usually `gcloud.exe` or its Python wrapper from the Cloud SDK.
-**Purpose:** Verify that the expected local port is listening.
+Immediately after `start-iap-tunnel` binds the local port. It is typically triggered by you want to confirm that the local listener exists before testing the remote service. The owning process is usually `gcloud.exe` or its Python wrapper from the Cloud SDK. Verify that the expected local port is listening.
 
 *This PowerShell command shows the listening socket on the chosen local port.*
 ```powershell
@@ -614,10 +548,7 @@ Look for a listening socket on the chosen port owned by `gcloud.exe` or the Clou
 
 #### Test local reachability
 
-**When to run:** After the listener appears bound locally.
-**Trigger:** You want to distinguish a dead local tunnel from a remote service problem.
-**Context:** This verifies only the local listener, not the application protocol behind it.
-**Purpose:** Confirm that the workstation can reach the local tunnel port.
+After the listener appears bound locally. It is typically triggered by you want to distinguish a dead local tunnel from a remote service problem. This verifies only the local listener, not the application protocol behind it. Confirm that the workstation can reach the local tunnel port.
 
 *This PowerShell command tests whether the local tunnel listener is reachable.*
 ```powershell
@@ -631,10 +562,7 @@ True
 
 #### Check the local listener
 
-**When to run:** Immediately after `start-iap-tunnel` binds the local port.
-**Trigger:** You want to confirm that the local listener exists before testing the remote service.
-**Context:** The owning process is usually `gcloud` or the Cloud SDK Python wrapper.
-**Purpose:** Verify that the expected local port is listening.
+Immediately after `start-iap-tunnel` binds the local port. It is typically triggered by you want to confirm that the local listener exists before testing the remote service. The owning process is usually `gcloud` or the Cloud SDK Python wrapper. Verify that the expected local port is listening.
 
 *This bash command shows the listening socket on the chosen local port.*
 ```bash
@@ -646,10 +574,7 @@ Look for a listening socket on the chosen port owned by `gcloud`. With a loopbac
 
 #### Test local reachability
 
-**When to run:** After the listener appears bound locally.
-**Trigger:** You want to distinguish a dead local tunnel from a remote service problem.
-**Context:** This verifies only the local listener, not the application protocol behind it.
-**Purpose:** Confirm that the workstation can reach the local tunnel port.
+After the listener appears bound locally. It is typically triggered by you want to distinguish a dead local tunnel from a remote service problem. This verifies only the local listener, not the application protocol behind it. Confirm that the workstation can reach the local tunnel port.
 
 *This bash command tests whether the local tunnel listener is reachable.*
 ```bash
@@ -663,10 +588,7 @@ Connection to 127.0.0.1 1435 port [tcp/*] succeeded!
 
 #### Check active connections on the target port
 
-**When to run:** The local tunnel exists and the application has already tried to connect.
-**Trigger:** You need to confirm whether traffic is reaching the VM.
-**Context:** Run this on the VM through `gcloud compute ssh --tunnel-through-iap`.
-**Purpose:** Confirm that the target port shows established connections from Google's internal forwarding path.
+The local tunnel exists and the application has already tried to connect. It is typically triggered by you need to confirm whether traffic is reaching the VM. Run this on the VM through `gcloud compute ssh --tunnel-through-iap`. Confirm that the target port shows established connections from Google's internal forwarding path.
 
 *This bash command inspects established connections on the VM's target port.*
 ```bash

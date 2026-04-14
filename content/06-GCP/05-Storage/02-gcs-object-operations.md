@@ -289,10 +289,7 @@ This subsection uses the flat scratch bucket `bq-wh-nb-codex-gcs-flat-20260413-3
 
 #### List the current object estate recursively
 
-**When to run:** Before bulk copy, delete, lifecycle tuning, or prefix cleanup.
-**Trigger:** You need to know what really exists under a bucket or prefix.
-**Context:** Read-only listing.
-**Purpose:** Show current prefixes, object sizes, and last-write timestamps.
+Before bulk copy, delete, lifecycle tuning, or prefix cleanup. It is typically triggered by you need to know what really exists under a bucket or prefix. Read-only listing. Show current prefixes, object sizes, and last-write timestamps.
 
 *List every object currently stored in the flat scratch bucket.*
 
@@ -321,10 +318,7 @@ This single command answers three operator questions immediately: which prefixes
 
 #### Read a small object without downloading it
 
-**When to run:** When an object is small enough to inspect inline.
-**Trigger:** You need to validate schema, manifest payload, or text content quickly.
-**Context:** Read-only object read to stdout.
-**Purpose:** Verify the object payload without writing a local copy first.
+When an object is small enough to inspect inline. It is typically triggered by you need to validate schema, manifest payload, or text content quickly. Read-only object read to stdout. Verify the object payload without writing a local copy first.
 
 *Print the CSV payload stored at `landing/ohlcv.csv`.*
 
@@ -343,10 +337,7 @@ Use `cat` only for small text-like payloads. For larger objects, download select
 
 #### Describe object metadata
 
-**When to run:** After upload, metadata patching, overwrite, or restore.
-**Trigger:** You need exact metadata fields, not just a listing row.
-**Context:** Read-only metadata lookup.
-**Purpose:** Confirm size, generation, metageneration, content type, and current metadata values.
+After upload, metadata patching, overwrite, or restore. It is typically triggered by you need exact metadata fields, not just a listing row. Read-only metadata lookup. Confirm size, generation, metageneration, content type, and current metadata values.
 
 *Describe the live `landing/ohlcv.csv` object.*
 
@@ -367,10 +358,7 @@ The important distinction here is `generation` versus `metageneration`. The body
 
 #### Hash a local file before or after upload
 
-**When to run:** Before upload, after download, or when debugging checksum mismatch.
-**Trigger:** You need proof that a local file matches the object you expect.
-**Context:** Local command only. No API mutation.
-**Purpose:** Compute CRC32C and MD5 on the local file so you can compare them to the object metadata.
+Before upload, after download, or when debugging checksum mismatch. It is typically triggered by you need proof that a local file matches the object you expect. Local command only. No API mutation. Compute CRC32C and MD5 on the local file so you can compare them to the object metadata.
 
 *Calculate the local hashes for the source CSV file.*
 
@@ -410,10 +398,7 @@ The safest way to think about object movement is this:
 
 #### Copy an object to a colder prefix
 
-**When to run:** When promoting or duplicating an object into another prefix without removing the source.
-**Trigger:** A landing artifact needs to be archived or staged elsewhere.
-**Context:** State-changing object copy.
-**Purpose:** Create a second live object without mutating the source object.
+When promoting or duplicating an object into another prefix without removing the source. It is typically triggered by A landing artifact needs to be archived or staged elsewhere. State-changing object copy. Create a second live object without mutating the source object.
 
 *Copy the latest landing CSV into the `archive/` prefix.*
 
@@ -429,10 +414,7 @@ Copying gs://bq-wh-nb-codex-gcs-flat-20260413-3938/landing/ohlcv.csv to gs://bq-
 
 #### Preview and run an incremental sync
 
-**When to run:** Before publishing a directory of local files to GCS, especially when several files may already exist at the destination.
-**Trigger:** A local export directory must be mirrored or incrementally copied into a bucket prefix.
-**Context:** `rsync` can be read-only in dry-run mode or state-changing in normal mode.
-**Purpose:** Show the delta before copying it, then apply only the needed transfers.
+Before publishing a directory of local files to GCS, especially when several files may already exist at the destination. It is typically triggered by A local export directory must be mirrored or incrementally copied into a bucket prefix. `rsync` can be read-only in dry-run mode or state-changing in normal mode. Show the delta before copying it, then apply only the needed transfers.
 
 *Preview the sync from the local `sync-src` directory into the bucket.*
 
@@ -467,10 +449,7 @@ Average throughput: 1.5kiB/s
 
 #### Move an object after the destination is ready
 
-**When to run:** Only after you are comfortable with copy-plus-delete semantics.
-**Trigger:** An object must change prefix and the source should no longer remain live.
-**Context:** State-changing copy followed by delete.
-**Purpose:** Relocate the manifest from `landing/` into `archive/`.
+Only after you are comfortable with copy-plus-delete semantics. It is typically triggered by an object must change prefix and the source should no longer remain live. State-changing copy followed by delete. Relocate the manifest from `landing/` into `archive/`.
 
 *Move the manifest object into the archive prefix.*
 
@@ -487,10 +466,7 @@ Removing gs://bq-wh-nb-codex-gcs-flat-20260413-3938/landing/manifest.json...
 
 #### Change storage class on an object
 
-**When to run:** When one object should move to a colder class without waiting for bucket lifecycle evaluation.
-**Trigger:** An archive artifact is ready for cold storage immediately.
-**Context:** State-changing object rewrite.
-**Purpose:** Show that a storage-class change creates a rewritten object generation.
+When one object should move to a colder class without waiting for bucket lifecycle evaluation. It is typically triggered by an archive artifact is ready for cold storage immediately. State-changing object rewrite. Show that a storage-class change creates a rewritten object generation.
 
 *Rewrite `archive/manifest.json` into `NEARLINE`.*
 
@@ -535,10 +511,7 @@ Safe automation depends on knowing whether you are updating the object body or o
 
 #### Show every generation of a versioned object
 
-**When to run:** After overwrite or when investigating versioning behavior.
-**Trigger:** One logical object name has been written more than once.
-**Context:** Read-only listing against a versioned bucket.
-**Purpose:** Prove that versioning is preserving older generations instead of mutating one in place.
+After overwrite or when investigating versioning behavior. It is typically triggered by one logical object name has been written more than once. Read-only listing against a versioned bucket. Prove that versioning is preserving older generations instead of mutating one in place.
 
 *List every generation of the landing CSV.*
 
@@ -555,10 +528,7 @@ The same object name now has two generations. The higher generation is current; 
 
 #### Patch metadata with explicit preconditions
 
-**When to run:** When a workflow must update metadata safely after first reading object state.
-**Trigger:** You need to add metadata or fix content type without risking a lost update.
-**Context:** State-changing metadata patch. Preconditions turn it into an optimistic-concurrency pattern.
-**Purpose:** Update content type and custom metadata only if the expected generation and metageneration still match.
+When a workflow must update metadata safely after first reading object state. It is typically triggered by you need to add metadata or fix content type without risking a lost update. State-changing metadata patch. Preconditions turn it into an optimistic-concurrency pattern. Update content type and custom metadata only if the expected generation and metageneration still match.
 
 *Patch the object safely using both generation and metageneration preconditions.*
 
@@ -578,10 +548,7 @@ After the patch, the object still has generation `1776085553882775`, but its met
 
 #### Show the failure path for a stale precondition
 
-**When to run:** During automation testing or when explaining why optimistic concurrency is safer than blind patching.
-**Trigger:** Another metadata update has already advanced metageneration.
-**Context:** State-changing command expected to fail safely.
-**Purpose:** Demonstrate that stale preconditions fail with `412` instead of silently overwriting current metadata.
+During automation testing or when explaining why optimistic concurrency is safer than blind patching. It is typically triggered by another metadata update has already advanced metageneration. State-changing command expected to fail safely. Demonstrate that stale preconditions fail with `412` instead of silently overwriting current metadata.
 
 *Retry a metadata patch with a stale metageneration.*
 
@@ -618,10 +585,7 @@ These controls decide whether an object may be changed or deleted right now:
 
 #### Apply and release a temporary hold
 
-**When to run:** During manual review, incident containment, or handoff approval.
-**Trigger:** An object must not be deleted or overwritten until a human clears it.
-**Context:** State-changing metadata patch.
-**Purpose:** Show manual mutation blocking without changing the object body.
+During manual review, incident containment, or handoff approval. It is typically triggered by an object must not be deleted or overwritten until a human clears it. State-changing metadata patch. Show manual mutation blocking without changing the object body.
 
 *Enable a temporary hold on the landing CSV.*
 
@@ -655,10 +619,7 @@ Patching gs://bq-wh-nb-codex-gcs-flat-20260413-3938/landing/ohlcv.csv...
 
 #### Apply and release an event-based hold
 
-**When to run:** When a workflow must validate data before allowing later mutation or delete.
-**Trigger:** Newly landed data should stay frozen until a release step completes.
-**Context:** State-changing metadata patch.
-**Purpose:** Show the object-level hold that mirrors the bucket-level default event-based hold pattern.
+When a workflow must validate data before allowing later mutation or delete. It is typically triggered by newly landed data should stay frozen until a release step completes. State-changing metadata patch. Show the object-level hold that mirrors the bucket-level default event-based hold pattern.
 
 *Enable the event-based hold on the same object.*
 
@@ -692,10 +653,7 @@ Patching gs://bq-wh-nb-codex-gcs-flat-20260413-3938/landing/ohlcv.csv...
 
 #### Set and clear per-object retention
 
-**When to run:** When one object in a mixed-use bucket needs its own minimum retention horizon.
-**Trigger:** A delivery file or regulatory artifact must not be deleted before a specific timestamp.
-**Context:** State-changing object-retention update. Requires a bucket created with per-object retention enabled.
-**Purpose:** Apply an object-specific `retain-until` timestamp and then clear it while still unlocked.
+When one object in a mixed-use bucket needs its own minimum retention horizon. It is typically triggered by A delivery file or regulatory artifact must not be deleted before a specific timestamp. State-changing object-retention update. Requires a bucket created with per-object retention enabled. Apply an object-specific `retain-until` timestamp and then clear it while still unlocked.
 
 *Set an unlocked object retention window 15 minutes into the future.*
 
@@ -732,10 +690,7 @@ Patching gs://bq-wh-nb-codex-gcs-flat-20260413-3938/landing/ohlcv.csv...
 
 #### Delete, inspect, and restore a soft-deleted object
 
-**When to run:** During restore drills or after an accidental delete.
-**Trigger:** An object was removed from a soft-delete-enabled bucket.
-**Context:** Destructive delete followed by read-only inspection of soft-deleted metadata and then a state-changing restore.
-**Purpose:** Show exactly what soft-deleted object metadata looks like and how restore creates a new live generation.
+During restore drills or after an accidental delete. It is typically triggered by an object was removed from a soft-delete-enabled bucket. Destructive delete followed by read-only inspection of soft-deleted metadata and then a state-changing restore. Show exactly what soft-deleted object metadata looks like and how restore creates a new live generation.
 
 *Upload a disposable object into the HNS bucket, delete it, inspect the soft-deleted version, and restore it.*
 
@@ -809,10 +764,7 @@ Some object workflows are not about storage at rest at all. They are about how o
 
 #### Generate a signed URL for controlled delivery
 
-**When to run:** When an external consumer needs temporary access to one object but should not receive project IAM.
-**Trigger:** Manual download handoff, partner delivery, dashboard export, or short-lived distribution path.
-**Context:** Read-only signing operation that requires signing credentials rather than object mutation rights.
-**Purpose:** Produce a time-limited URL for `archive/ohlcv.csv`.
+When an external consumer needs temporary access to one object but should not receive project IAM. It is typically triggered by manual download handoff, partner delivery, dashboard export, or short-lived distribution path. Read-only signing operation that requires signing credentials rather than object mutation rights. Produce a time-limited URL for `archive/ohlcv.csv`.
 
 *Generate a ten-minute signed URL using the project service-account key.*
 
@@ -831,10 +783,7 @@ The important output fields are `expiration`, `http_verb`, and `signed_url`. The
 
 #### Create a bucket notification and pull the resulting Pub/Sub message
 
-**When to run:** When downstream processing should react to new objects rather than polling for them.
-**Trigger:** Object-arrival workflows, ingestion fan-out, or audit/event pipelines.
-**Context:** State-changing configuration across Cloud Storage and Pub/Sub. Requires `pubsub.googleapis.com`, a topic, a subscription, and permission for the Cloud Storage service agent to publish.
-**Purpose:** Show an end-to-end finalize event for objects written under the `events/` prefix.
+When downstream processing should react to new objects rather than polling for them. It is typically triggered by object-arrival workflows, ingestion fan-out, or audit/event pipelines. State-changing configuration across Cloud Storage and Pub/Sub. Requires `pubsub.googleapis.com`, a topic, a subscription, and permission for the Cloud Storage service agent to publish. Show an end-to-end finalize event for objects written under the `events/` prefix.
 
 *Enable the Pub/Sub API in the active project.*
 

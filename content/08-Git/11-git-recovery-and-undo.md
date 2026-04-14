@@ -257,10 +257,7 @@ This table shows exactly what each undo command changes and what it leaves untou
 
 #### Discard working tree changes
 
-**When to run:** A file in the working directory has been modified but not staged, and the changes are no longer wanted.
-**Trigger:** You edited a file experimentally and want to revert it to the last committed state.
-**Context:** Operates on the working tree only. Does not affect the index or commit history. Changes are permanently lost — there is no reflog entry for uncommitted work.
-**Purpose:** Restore a single file (or set of files) to their state at HEAD.
+A file in the working directory has been modified but not staged, and the changes are no longer wanted. It is typically triggered by you edited a file experimentally and want to revert it to the last committed state. Operates on the working tree only. Does not affect the index or commit history. Changes are permanently lost — there is no reflog entry for uncommitted work. Restore a single file (or set of files) to their state at HEAD.
 
 *Overwrite `load_ohlcv.py` in the working tree with the version from the last commit.*
 
@@ -278,10 +275,7 @@ git restore ingestion/loaders/load_ohlcv.py
 
 #### Unstage a file without discarding changes
 
-**When to run:** A file has been staged with `git add` but should not be included in the next commit.
-**Trigger:** You accidentally staged a file, or you want to split a large staging area into smaller commits.
-**Context:** Moves the file from the index back to the working tree as an unstaged modification. The file's content is not changed on disk.
-**Purpose:** Remove a file from the staging area while preserving the working tree edits.
+A file has been staged with `git add` but should not be included in the next commit. It is typically triggered by you accidentally staged a file, or you want to split a large staging area into smaller commits. Moves the file from the index back to the working tree as an unstaged modification. The file's content is not changed on disk. Remove a file from the staging area while preserving the working tree edits.
 
 *Remove `load_ohlcv.py` from the staging area — changes remain in the working tree as unstaged modifications.*
 
@@ -291,10 +285,7 @@ git restore --staged ingestion/loaders/load_ohlcv.py
 
 #### Restore a file from a specific commit
 
-**When to run:** You need to retrieve a file's content from an earlier commit without checking out the entire repository to that state.
-**Trigger:** A recent change broke a file and you want to revert it to a known-good version from a specific point in history.
-**Context:** Reads the file from the specified commit and writes it to the working tree. The current branch pointer and HEAD are not affected.
-**Purpose:** Surgically restore one file to a historical version.
+You need to retrieve a file's content from an earlier commit without checking out the entire repository to that state. It is typically triggered by A recent change broke a file and you want to revert it to a known-good version from a specific point in history. Reads the file from the specified commit and writes it to the working tree. The current branch pointer and HEAD are not affected. Surgically restore one file to a historical version.
 
 > [!info]- Command breakdown
 >
@@ -337,10 +328,7 @@ Three tools for undoing committed work, each with different safety profiles: `re
 
 #### Revert a single commit
 
-**When to run:** A commit on a shared branch introduced a bug, wrong configuration, or unintended change that must be undone.
-**Trigger:** Production incident, failed deployment, or post-review discovery of a bad commit.
-**Context:** Creates a new commit. Safe for any branch that others have checked out — they receive the revert on their next `git pull`. Requires no force-push.
-**Purpose:** Undo one commit's effect while preserving full audit history.
+A commit on a shared branch introduced a bug, wrong configuration, or unintended change that must be undone. It is typically triggered by production incident, failed deployment, or post-review discovery of a bad commit. Creates a new commit. Safe for any branch that others have checked out — they receive the revert on their next `git pull`. Requires no force-push. Undo one commit's effect while preserving full audit history.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -395,10 +383,7 @@ a451cc4 Revert "fix: reduce batch size for memory optimization"
 
 #### Revert a merge commit
 
-**When to run:** A merge commit on main needs to be undone — for example, a feature branch was merged that broke production.
-**Trigger:** Post-merge deployment failure or regression discovered after PR merge.
-**Context:** Merge commits have two parents. The `-m 1` flag tells Git which parent to treat as the mainline (parent 1 is the branch you merged into — typically `main`). Without `-m`, Git does not know which side to keep and the revert fails.
-**Purpose:** Undo a merge commit while preserving history.
+A merge commit on main needs to be undone — for example, a feature branch was merged that broke production. It is typically triggered by post-merge deployment failure or regression discovered after PR merge. Merge commits have two parents. The `-m 1` flag tells Git which parent to treat as the mainline (parent 1 is the branch you merged into — typically `main`). Without `-m`, Git does not know which side to keep and the revert fails. Undo a merge commit while preserving history.
 
 > [!info]- Why -m 1 is required for merge reverts
 >
@@ -445,10 +430,7 @@ git revert -m 1 <merge-SHA>
 
 #### Reset --soft — undo commit, keep changes staged
 
-**When to run:** You want to undo the most recent commit(s) but keep all changes staged and ready to recommit.
-**Trigger:** Wrong commit message, need to add more files to the commit, or want to combine multiple commits into one.
-**Context:** Moves HEAD backward. The staging area and working tree are not modified — changes from the un-done commits appear as staged modifications. Local only.
-**Purpose:** Undo a commit while preserving the exact staging state for immediate recommit.
+You want to undo the most recent commit(s) but keep all changes staged and ready to recommit. It is typically triggered by wrong commit message, need to add more files to the commit, or want to combine multiple commits into one. Moves HEAD backward. The staging area and working tree are not modified — changes from the un-done commits appear as staged modifications. Local only. Undo a commit while preserving the exact staging state for immediate recommit.
 
 **Before reset (starting state):**
 
@@ -512,10 +494,7 @@ The `M` in the first column (no space before it) indicates the file is staged. T
 
 #### Reset --mixed — undo commit, unstage changes (default)
 
-**When to run:** You want to undo a commit and unstage its changes so you can selectively re-stage files into smaller, more focused commits.
-**Trigger:** A commit bundled too many unrelated changes, or you want to split it into multiple commits.
-**Context:** Moves HEAD backward and resets the index. Changes from the un-done commits remain in the working tree as unstaged modifications. This is the default mode when no flag is specified.
-**Purpose:** Break apart a commit into smaller pieces.
+You want to undo a commit and unstage its changes so you can selectively re-stage files into smaller, more focused commits. It is typically triggered by A commit bundled too many unrelated changes, or you want to split it into multiple commits. Moves HEAD backward and resets the index. Changes from the un-done commits remain in the working tree as unstaged modifications. This is the default mode when no flag is specified. Break apart a commit into smaller pieces.
 
 *Undo the last commit — changes remain in the working tree as unstaged modifications.*
 
@@ -537,10 +516,7 @@ The `M` with a leading space indicates the file is modified but not staged. Use 
 
 #### Reset --hard — discard all changes permanently
 
-**When to run:** You want to completely discard one or more local commits and all their changes — both staged and working tree.
-**Trigger:** An experimental approach failed and you want to return to a clean state. Or you need to sync your local branch exactly to a known-good commit.
-**Context:** Moves HEAD backward, clears the index, and overwrites the working tree to match the target commit. All uncommitted work is permanently lost. The discarded commits remain in the reflog for ~90 days.
-**Purpose:** Hard discard of local history and working tree to a known-good state.
+You want to completely discard one or more local commits and all their changes — both staged and working tree. It is typically triggered by an experimental approach failed and you want to return to a clean state. Or you need to sync your local branch exactly to a known-good commit. Moves HEAD backward, clears the index, and overwrites the working tree to match the target commit. All uncommitted work is permanently lost. The discarded commits remain in the reflog for ~90 days. Hard discard of local history and working tree to a known-good state.
 
 *Undo the last commit and discard all changes — working tree matches HEAD~1 exactly.*
 
@@ -562,10 +538,7 @@ HEAD is now at a451cc4 Revert "fix: reduce batch size for memory optimization"
 
 #### Reset --hard origin/main — sync local branch to remote
 
-**When to run:** Your local branch has diverged from the remote and you want to discard all local-only work to match the remote exactly.
-**Trigger:** Local experiments went wrong, or you want a fresh start from the team's current state.
-**Context:** Discards all local-only commits, staged changes, and working tree modifications. Equivalent to deleting your local branch and re-checking it out from the remote.
-**Purpose:** Hard sync local branch to remote state.
+Your local branch has diverged from the remote and you want to discard all local-only work to match the remote exactly. It is typically triggered by local experiments went wrong, or you want a fresh start from the team's current state. Discards all local-only commits, staged changes, and working tree modifications. Equivalent to deleting your local branch and re-checking it out from the remote. Hard sync local branch to remote state.
 
 *Discard all local work — local branch matches `origin/main` exactly.*
 
@@ -598,10 +571,7 @@ git reset --hard origin/main
 
 #### Amend a commit message
 
-**When to run:** The most recent commit has a typo in its message, or the message does not follow the team's commit convention.
-**Trigger:** Immediately after committing, before pushing.
-**Context:** Replaces the HEAD commit with a new commit that has the same changes but a different message (and therefore a different SHA). Local only — do not amend pushed commits.
-**Purpose:** Fix a commit message without creating an additional commit.
+The most recent commit has a typo in its message, or the message does not follow the team's commit convention. It is typically triggered by immediately after committing, before pushing. Replaces the HEAD commit with a new commit that has the same changes but a different message (and therefore a different SHA). Local only — do not amend pushed commits. Fix a commit message without creating an additional commit.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -682,10 +652,7 @@ a451cc4 Revert "fix: reduce batch size for memory optimization"
 
 #### Amend a commit to include forgotten files
 
-**When to run:** You just committed but forgot to stage a file that should have been part of the same commit.
-**Trigger:** Running `git status` after committing reveals an unstaged file that belongs with the last commit.
-**Context:** Stage the forgotten file with `git add`, then run `git commit --amend --no-edit`. The amendment combines the previously committed changes with the newly staged file. The commit message stays the same, but the SHA changes.
-**Purpose:** Add a forgotten file to the last commit without creating a separate "add missed file" commit.
+You just committed but forgot to stage a file that should have been part of the same commit. It is typically triggered by running `git status` after committing reveals an unstaged file that belongs with the last commit. Stage the forgotten file with `git add`, then run `git commit --amend --no-edit`. The amendment combines the previously committed changes with the newly staged file. The commit message stays the same, but the SHA changes. Add a forgotten file to the last commit without creating a separate "add missed file" commit.
 
 *Stage the forgotten file, then amend the last commit to include it.*
 
@@ -724,10 +691,7 @@ The reflog is a local, chronological log of every position HEAD has occupied —
 
 #### View all HEAD movements
 
-**When to run:** You need to find the SHA of a commit that was lost due to a reset, rebase, or branch deletion.
-**Trigger:** You ran `git reset --hard` by mistake, deleted a branch, or lost track of where HEAD was before an operation.
-**Context:** Reads `.git/logs/HEAD`. Shows entries for ~90 days by default. Each entry includes the short SHA, reflog index (`HEAD@{N}`), and the action that caused the movement.
-**Purpose:** Find the SHA of any commit HEAD has ever pointed to — even ones removed from all branch pointers.
+You need to find the SHA of a commit that was lost due to a reset, rebase, or branch deletion. It is typically triggered by you ran `git reset --hard` by mistake, deleted a branch, or lost track of where HEAD was before an operation. Reads `.git/logs/HEAD`. Shows entries for ~90 days by default. Each entry includes the short SHA, reflog index (`HEAD@{N}`), and the action that caused the movement. Find the SHA of any commit HEAD has ever pointed to — even ones removed from all branch pointers.
 
 *List all recent HEAD movements — newest first.*
 
@@ -758,10 +722,7 @@ The reflog retains entries for approximately 90 days by default (`gc.reflogExpir
 
 #### Recover after accidental hard reset
 
-**When to run:** Immediately after an accidental `git reset --hard` that discarded commits you need.
-**Trigger:** You ran `git reset --hard HEAD~N` and lost important work.
-**Context:** The reset moved the branch pointer backward, but the discarded commits still exist in the object store. The reflog preserves their SHAs. Recovery is a single `git reset --hard <SHA>` to move the branch pointer forward again.
-**Purpose:** Restore the branch pointer to include the accidentally discarded commits.
+Immediately after an accidental `git reset --hard` that discarded commits you need. It is typically triggered by you ran `git reset --hard HEAD~N` and lost important work. The reset moved the branch pointer backward, but the discarded commits still exist in the object store. The reflog preserves their SHAs. Recovery is a single `git reset --hard <SHA>` to move the branch pointer forward again. Restore the branch pointer to include the accidentally discarded commits.
 
 **Before recovery — commit lost after hard reset:**
 
@@ -838,10 +799,7 @@ HEAD is now at 469fef6 ops: increase batch size to 10000 for bulk load
 
 #### Recover a deleted branch
 
-**When to run:** A branch was deleted (locally or remotely) but the commits it contained are still needed.
-**Trigger:** You ran `git branch -D <branch>` or the remote branch was deleted before the PR was merged.
-**Context:** When Git deletes a branch, it prints the SHA of the branch tip: `Deleted branch feat/my-feature (was ec9ff69)`. If you missed that output, the reflog contains the checkout and commit entries that reveal the SHA.
-**Purpose:** Recreate a deleted branch by pointing a new branch at the last known commit SHA.
+A branch was deleted (locally or remotely) but the commits it contained are still needed. It is typically triggered by you ran `git branch -D <branch>` or the remote branch was deleted before the PR was merged. When Git deletes a branch, it prints the SHA of the branch tip: `Deleted branch feat/my-feature (was ec9ff69)`. If you missed that output, the reflog contains the checkout and commit entries that reveal the SHA. Recreate a deleted branch by pointing a new branch at the last known commit SHA.
 
 *Delete a branch, then find its tip SHA in the reflog.*
 
@@ -902,10 +860,7 @@ The stash stores changes as a special commit object in a side-stack (`refs/stash
 
 #### Stash all tracked changes with a message
 
-**When to run:** You need to switch branches but have uncommitted changes that are not ready to commit.
-**Trigger:** Urgent bug report on another branch, need to pull remote changes on a dirty working tree, or context switch to review a PR.
-**Context:** Saves all modified and staged tracked files to the stash and reverts the working directory to a clean state matching HEAD. Does not affect commit history.
-**Purpose:** Temporarily shelve work-in-progress to switch context safely.
+You need to switch branches but have uncommitted changes that are not ready to commit. It is typically triggered by urgent bug report on another branch, need to pull remote changes on a dirty working tree, or context switch to review a PR. Saves all modified and staged tracked files to the stash and reverts the working directory to a clean state matching HEAD. Does not affect commit history. Temporarily shelve work-in-progress to switch context safely.
 
 *Stash uncommitted changes with a descriptive label.*
 
@@ -929,10 +884,7 @@ stash@{0}: On demo/recovery-undo: WIP: batch size tuning and ESG metric flag
 
 #### View stash contents
 
-**When to run:** Before popping or applying a stash entry, to verify what it contains.
-**Trigger:** Multiple stash entries exist and you need to identify the right one.
-**Context:** `git stash show` displays a stat summary. Add `-p` for the full diff.
-**Purpose:** Inspect stash contents without applying them.
+Before popping or applying a stash entry, to verify what it contains. It is typically triggered by multiple stash entries exist and you need to identify the right one. `git stash show` displays a stat summary. Add `-p` for the full diff. Inspect stash contents without applying them.
 
 *View a summary of what the stash entry changed.*
 
@@ -977,10 +929,7 @@ index 0b56375..8c60514 100644
 
 #### Pop — apply and remove top entry
 
-**When to run:** You are back on the correct branch and ready to resume the stashed work.
-**Trigger:** Context switch is complete — the urgent fix is done, the pull is finished, or you are back on the original branch.
-**Context:** Applies the most recent stash entry and removes it from the stack. If applying causes merge conflicts, the stash entry is **not** auto-dropped — you must resolve conflicts first, then drop it manually with `git stash drop`.
-**Purpose:** Restore stashed changes to the working tree and clean up the stash stack.
+You are back on the correct branch and ready to resume the stashed work. It is typically triggered by context switch is complete — the urgent fix is done, the pull is finished, or you are back on the original branch. Applies the most recent stash entry and removes it from the stack. If applying causes merge conflicts, the stash entry is **not** auto-dropped — you must resolve conflicts first, then drop it manually with `git stash drop`. Restore stashed changes to the working tree and clean up the stash stack.
 
 *Apply the most recent stash entry and remove it from the stack.*
 
@@ -1001,10 +950,7 @@ Dropped refs/stash@{0} (8af944275baab58bb23363cc0dc84e1dd39af530)
 
 #### Apply without removing
 
-**When to run:** You want to apply a stash entry to the current branch but keep it in the stack — for example, to apply the same stash to multiple branches.
-**Trigger:** You need the same set of changes on more than one branch, or you want to keep the stash as a reference.
-**Context:** Applies the entry but does not drop it from the stack. Use `stash@{N}` to apply a specific entry.
-**Purpose:** Non-destructive stash application.
+You want to apply a stash entry to the current branch but keep it in the stack — for example, to apply the same stash to multiple branches. It is typically triggered by you need the same set of changes on more than one branch, or you want to keep the stash as a reference. Applies the entry but does not drop it from the stack. Use `stash@{N}` to apply a specific entry. Non-destructive stash application.
 
 *Apply a specific stash entry by index without removing it.*
 
@@ -1014,10 +960,7 @@ git stash apply stash@{0}
 
 #### Stash with untracked files
 
-**When to run:** Your working tree has both modified tracked files and new untracked files, and you want to stash everything.
-**Trigger:** You created a new file as part of work-in-progress but need to switch branches. Without `-u`, new files are left behind.
-**Context:** The `-u` flag (`--include-untracked`) tells `git stash` to also stash files that have never been tracked. The `-a` flag (`--all`) additionally stashes files matched by `.gitignore`.
-**Purpose:** Stash the complete working state including new files.
+Your working tree has both modified tracked files and new untracked files, and you want to stash everything. It is typically triggered by you created a new file as part of work-in-progress but need to switch branches. Without `-u`, new files are left behind. The `-u` flag (`--include-untracked`) tells `git stash` to also stash files that have never been tracked. The `-a` flag (`--all`) additionally stashes files matched by `.gitignore`. Stash the complete working state including new files.
 
 *Stash tracked modifications and untracked new files.*
 
@@ -1031,10 +974,7 @@ Saved working directory and index state On demo/recovery-undo: WIP: analysis not
 
 #### Drop a specific stash entry
 
-**When to run:** A stash entry is no longer needed.
-**Trigger:** You applied the stash successfully, or the work is no longer relevant.
-**Context:** Removes one entry by index. Does not apply the changes.
-**Purpose:** Clean up the stash stack.
+A stash entry is no longer needed. It is typically triggered by you applied the stash successfully, or the work is no longer relevant. Removes one entry by index. Does not apply the changes. Clean up the stash stack.
 
 *Remove the stash entry at index 2.*
 
@@ -1044,10 +984,7 @@ git stash drop stash@{2}
 
 #### Clear all stash entries
 
-**When to run:** All stash entries are obsolete and the entire stack should be emptied.
-**Trigger:** After a major refactor or branch cleanup where all stashed work has been either committed or discarded.
-**Context:** Permanently removes every entry in the stash stack. There is no undo.
-**Purpose:** Clean slate for the stash stack.
+All stash entries are obsolete and the entire stack should be emptied. It is typically triggered after a major refactor or branch cleanup where all stashed work has been either committed or discarded. Permanently removes every entry in the stash stack. There is no undo. Clean slate for the stash stack.
 
 ```bash
 git stash clear
@@ -1104,10 +1041,7 @@ Cherry-picking reads the diff of a single commit from one branch and applies it 
 
 #### Cherry-pick a commit
 
-**When to run:** A specific commit on another branch contains a fix or feature needed on your current branch, but you do not want to merge the entire source branch.
-**Trigger:** A hotfix was committed to a release branch and needs to be applied to main. Or a single commit from a feature branch is needed before the branch is ready to merge.
-**Context:** Creates a new commit on the current branch with the same diff but a new SHA. The original commit remains on its source branch unchanged. No merge relationship is created.
-**Purpose:** Surgically copy one commit's changes without merging branch histories.
+A specific commit on another branch contains a fix or feature needed on your current branch, but you do not want to merge the entire source branch. It is typically triggered by A hotfix was committed to a release branch and needs to be applied to main. Or a single commit from a feature branch is needed before the branch is ready to merge. Creates a new commit on the current branch with the same diff but a new SHA. The original commit remains on its source branch unchanged. No merge relationship is created. Surgically copy one commit's changes without merging branch histories.
 
 **Before cherry-pick:**
 
@@ -1213,10 +1147,7 @@ Interactive rebase rewrites your recent commit history — reorder commits, comb
 
 #### Interactive rebase to squash commits
 
-**When to run:** Before pushing a feature branch or opening a PR, to consolidate work-in-progress commits into clean, logical units.
-**Trigger:** Your branch has multiple small "WIP" or "fix typo" commits that should be combined before review.
-**Context:** Rewrites all commits in the specified range — every commit gets a new SHA. Local only. Never rebase commits that have been pushed to a shared branch.
-**Purpose:** Clean up commit history to present a clear, reviewable narrative.
+Before pushing a feature branch or opening a PR, to consolidate work-in-progress commits into clean, logical units. It is typically triggered by your branch has multiple small "WIP" or "fix typo" commits that should be combined before review. Rewrites all commits in the specified range — every commit gets a new SHA. Local only. Never rebase commits that have been pushed to a shared branch. Clean up commit history to present a clear, reviewable narrative.
 
 **Before `git rebase -i HEAD~3` (squashing C and D into B):**
 

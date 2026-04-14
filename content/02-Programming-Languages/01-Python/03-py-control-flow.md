@@ -64,7 +64,7 @@ status: complete
 > - Generators are single-pass — re-call the function to get a fresh iterator
 > - `pass` in production `except` blocks silently swallows errors — always log at minimum
 > - `match`/`case` does not enforce exhaustiveness at compile time — missing cases fail silently; always add `case _:`
-> - Python loops are 10–100× slower than C# for CPU-bound work — use NumPy/Polars vectorization for tight loops
+> - Python loops are materially slower than C# in CPU-bound paths — use NumPy/Polars vectorization for tight loops
 
 > [!note]- Glossary
 >
@@ -73,7 +73,7 @@ status: complete
 > - Conditional branching construct; Python uses indentation (not braces) to delimit blocks; `elif` replaces C#'s `else if`; conditions need no parentheses; first matching branch wins
 > - Directs program execution based on boolean conditions; the primary tool for multi-tier conditional logic
 >
-> - Tip: Flatten with early return. Replace `if cond: do_work() else: return` with `if not cond: return; do_work()` to reduce nesting levels.
+> - Flatten with early return. Replace `if cond: do_work() else: return` with `if not cond: return; do_work()` to reduce nesting levels.
 >
 >  ---
 >
@@ -82,7 +82,7 @@ status: complete
 > - Inline conditional: `value_if_true if condition else value_if_false`; reversed order vs C#'s `condition ? true : false`; can be chained but readability degrades past 2 levels
 > - Enables single-line conditional assignment without a full `if`/`else` block
 >
-> - Warning: Reversed operand order vs C#. Python puts the true-branch first: `x if cond else y`. C# puts the condition first: `cond ? x : y`. The inversion causes subtle bugs when reading Python with C# muscle memory.
+> - Reversed operand order vs C#. Python puts the true-branch first: `x if cond else y`. C# puts the condition first: `cond ? x : y`. The inversion causes subtle bugs when reading Python with C# muscle memory.
 >
 >  ---
 >
@@ -91,7 +91,7 @@ status: complete
 > - Structural pattern matching introduced in Python 3.10; matches value, type, sequence, mapping, and nested patterns; supports OR patterns (`|`), guard clauses (`if`), and variable binding; `_` is the wildcard catch-all
 > - Replaces long `if`/`elif` chains for multi-branch dispatch and type narrowing; reduces boilerplate for heterogeneous data structures
 >
-> - Warning: Bare variable names capture, not compare. In `case cmd:`, `cmd` captures the matched value — it does not compare against an existing variable named `cmd`. Use a literal (`case "start":`) or a guard (`case c if c == expected:`) for equality tests.
+> - Bare variable names capture, not compare. In `case cmd:`, `cmd` captures the matched value — it does not compare against an existing variable named `cmd`. Use a literal (`case "start":`) or a guard (`case c if c == expected:`) for equality tests.
 >
 >  ---
 >
@@ -100,7 +100,7 @@ status: complete
 > - Iterates over any object implementing the iterator protocol (`__iter__`/`__next__`): lists, tuples, strings, dicts, ranges, generators, files; no index-based C-style `for(;;)`
 > - Primary construct for processing every element in a collection; the backbone of ETL record-by-record processing
 >
-> - Warning: Never modify the iterable during iteration. Adding or removing items from a list inside the loop causes skipped elements or `RuntimeError` for dicts and sets. Iterate over `items.copy()` or build a new collection with a comprehension.
+> - Never modify the iterable during iteration. Adding or removing items from a list inside the loop causes skipped elements or `RuntimeError` for dicts and sets. Iterate over `items.copy()` or build a new collection with a comprehension.
 >
 >  ---
 >
@@ -109,7 +109,7 @@ status: complete
 > - Repeats the body while the condition is truthy; body may never execute if condition is falsy from the start; combine with `:=` (walrus) for read-and-test patterns; no `do-while` — use `while True: ... if cond: break`
 > - Used when the number of iterations is not known in advance: polling, retry logic, input validation
 >
-> - Warning: Condition must become falsy. Forgetting to update the loop variable creates an infinite loop. Always ensure the condition progresses toward falsy, or include an explicit `break` with a timeout counter.
+> - Condition must become falsy. Forgetting to update the loop variable creates an infinite loop. Always ensure the condition progresses toward falsy, or include an explicit `break` with a timeout counter.
 >
 >  ---
 >
@@ -118,7 +118,7 @@ status: complete
 > - Lazy integer sequence generator: `range(start, stop, step)`; `stop` is exclusive; negative step for countdown; membership test `n in range(...)` is O(1)
 > - Generates index sequences for counted loops, replaces C-style `for(i=0; i<n; i++)`
 >
-> - Tip: Stop is exclusive — remember the off-by-one. `range(5)` produces 0, 1, 2, 3, 4. To include 5, write `range(6)` or `range(1, 6)`.
+> - Stop is exclusive — remember the off-by-one. `range(5)` produces 0, 1, 2, 3, 4. To include 5, write `range(6)` or `range(1, 6)`.
 >
 >  ---
 >
@@ -127,7 +127,7 @@ status: complete
 > - Wraps an iterable to yield `(index, value)` tuples; optional `start` parameter shifts the index base; lazy
 > - Replaces manual counter variables and `range(len(items))` patterns; cleaner and immune to off-by-one errors
 >
-> - Tip: Always unpack the tuple. Use `for i, val in enumerate(items):` — not `for pair in enumerate(items): pair[0]`. Destructuring keeps the code readable and avoids tuple indexing noise.
+> - Always unpack the tuple. Use `for i, val in enumerate(items):` — not `for pair in enumerate(items): pair[0]`. Destructuring keeps the code readable and avoids tuple indexing noise.
 >
 >  ---
 >
@@ -136,7 +136,7 @@ status: complete
 > - Iterates over multiple iterables in parallel, yielding tuples of corresponding elements; stops at the shortest iterable; lazy; use `itertools.zip_longest(fillvalue=None)` to pad unequal lengths
 > - Pairs corresponding elements from parallel sequences without index arithmetic
 >
-> - Warning: Silent truncation on unequal lengths. `zip([1,2,3], [10,20])` silently drops the `3`. If equal-length input is not guaranteed, use `itertools.zip_longest` or assert lengths match before zipping.
+> - Silent truncation on unequal lengths. `zip([1,2,3], [10,20])` silently drops the `3`. If equal-length input is not guaranteed, use `itertools.zip_longest` or assert lengths match before zipping.
 >
 >  ---
 >
@@ -145,7 +145,7 @@ status: complete
 > - Exits the innermost enclosing loop immediately; does not affect outer loops; the `for...else` `else` block is skipped when `break` fires; Python has no labeled break
 > - Stops early when a search condition is met or a timeout is reached, avoiding unnecessary iterations
 >
-> - Tip: Multi-level exit via function return. Wrap nested loops in a function and use `return` to exit all levels at once — cleaner than flag variables.
+> - Multi-level exit via function return. Wrap nested loops in a function and use `return` to exit all levels at once — cleaner than flag variables.
 >
 >  ---
 >
@@ -154,7 +154,7 @@ status: complete
 > - Skips the remainder of the current loop body and jumps to the next iteration of the innermost loop
 > - Filters specific items inline without restructuring the loop body with nested `if`/`else` blocks
 >
-> - Tip: Prefer filtering the iterable. When skipping many items, replace `if cond: continue` with a filtered comprehension or `filter()` before the loop — the intent is clearer.
+> - Prefer filtering the iterable. When skipping many items, replace `if cond: continue` with a filtered comprehension or `filter()` before the loop — the intent is clearer.
 >
 >  ---
 >
@@ -163,7 +163,7 @@ status: complete
 > - No-op statement; required where Python syntax expects an indented block but no action is needed: empty functions, classes, `except` blocks, and loop stubs during development
 > - Allows syntactically complete but intentionally empty blocks — temporary scaffolding, not permanent code
 >
-> - Warning: Never use `pass` in production `except` blocks. `except Exception: pass` silently swallows all errors. At minimum log: `except Exception as e: logger.warning("Unhandled: %s", e)`.
+> - Never use `pass` in production `except` blocks. `except Exception: pass` silently swallows all errors. At minimum log: `except Exception as e: logger.warning("Unhandled: %s", e)`.
 >
 >  ---
 >
@@ -172,7 +172,7 @@ status: complete
 > - The `else` block appended to a `for` or `while` loop runs only if the loop completed without a `break`; the name is counterintuitive — think of it as "no break occurred"
 > - Clean idiom for "search completed without finding a match"; eliminates a separate boolean flag variable
 >
-> - Warning: `else` does not mean the loop body was falsy. `for...else` is not about the truth value of the loop body. The `else` block runs on normal completion — suppress it only with `break`.
+> - `else` does not mean the loop body was falsy. `for...else` is not about the truth value of the loop body. The `else` block runs on normal completion — suppress it only with `break`.
 >
 >  ---
 >
@@ -181,7 +181,7 @@ status: complete
 > - An object is an iterator if it implements `__iter__(self)` returning `self` and `__next__(self)` raising `StopIteration` when exhausted; iterators are single-pass — they cannot be rewound
 > - Makes any class usable in `for` loops, `list()`, `zip()`, and all iteration contexts; enables custom lazy traversal logic
 >
-> - Tip: Distinguish iterables from iterators. A list is *iterable* (has `__iter__`) but not an *iterator* (no `__next__`). Calling `iter(my_list)` returns a fresh list iterator. A generator is both — it is its own iterator.
+> - Distinguish iterables from iterators. A list is *iterable* (has `__iter__`) but not an *iterator* (no `__next__`). Calling `iter(my_list)` returns a fresh list iterator. A generator is both — it is its own iterator.
 >
 >  ---
 >
@@ -190,7 +190,7 @@ status: complete
 > - A function containing `yield` becomes a generator function; calling it returns a generator iterator without executing any body code; each `next()` call resumes execution until the next `yield`; state is preserved between calls; `StopIteration` signals exhaustion; single-pass
 > - Enables memory-efficient lazy pipelines for large or infinite sequences — only one value is held in memory at a time
 >
-> - Warning: Calling a generator function returns the object, not the first value. `gen = countdown(5)` does not start execution. The body runs only when `next(gen)` or a `for` loop consumes it.
+> - Calling a generator function returns the object, not the first value. `gen = countdown(5)` does not start execution. The body runs only when `next(gen)` or a `for` loop consumes it.
 >
 >  ---
 >
@@ -199,7 +199,7 @@ status: complete
 > - Delegates iteration to a sub-generator or iterable in a single expression; equivalent to `for item in sub: yield item` but also passes `.send()` / `.throw()` calls through; Python's equivalent of C#'s `foreach (var x in sub) yield return x`
 > - Composes generators and enables recursive traversal of nested structures without manual forwarding loops
 >
-> - Warning: `yield from` on a string yields individual characters. `yield from "hello"` yields `'h'`, `'e'`, `'l'`, `'l'`, `'o'` — not the string itself. Guard with `isinstance(item, str)` in recursive flatten functions.
+> - `yield from` on a string yields individual characters. `yield from "hello"` yields `'h'`, `'e'`, `'l'`, `'l'`, `'o'` — not the string itself. Guard with `isinstance(item, str)` in recursive flatten functions.
 >
 >  ---
 >
@@ -208,7 +208,7 @@ status: complete
 > - `(expr for x in iterable if condition)` — lazy comprehension producing values on demand; as a function argument, outer parentheses may be omitted: `sum(x**2 for x in range(n))`; single-pass
 > - Memory-efficient alternative to list comprehension when the full collection is not needed — eliminates upfront allocation
 >
-> - Tip: Use generators when you only need to iterate once. If you need indexing, `len()`, or multiple passes, use a list. If you only need to iterate once (e.g., `sum`, `max`, pipeline), a generator saves memory with no speed penalty for large inputs.
+> - Use generators when you only need to iterate once. If you need indexing, `len()`, or multiple passes, use a list. If you only need to iterate once (e.g., `sum`, `max`, pipeline), a generator saves memory with no speed penalty for large inputs.
 >
 >  ---
 >
@@ -217,7 +217,7 @@ status: complete
 > - `[expr for x in iterable if condition]` — creates a new list by transforming and optionally filtering; optimized at bytecode level; faster than equivalent `for` + `append`; supports nesting (outer loop first)
 > - Concise, readable collection construction; the idiomatic replacement for `for` + `append` patterns
 >
-> - Warning: Two-level nesting maximum. Beyond 2 `for` clauses the comprehension becomes harder to read than explicit loops. Extract inner logic into a named function.
+> - Two-level nesting maximum. Beyond 2 `for` clauses the comprehension becomes harder to read than explicit loops. Extract inner logic into a named function.
 >
 >  ---
 >
@@ -226,7 +226,7 @@ status: complete
 > - Dict: `{k: v for item in iterable if cond}` — builds a dict declaratively; Set: `{expr for item in iterable}` — builds a deduplicated set; both support `if` filtering; colon distinguishes dict from set
 > - Declarative construction of dicts and sets; replaces `for` + `d[k] = v` and `for` + `s.add(x)` patterns
 >
-> - Warning: Duplicate keys silently overwrite. In a dict comprehension, if two iterations produce the same key, the last value wins without any error. Ensure keys are unique or handle collisions explicitly.
+> - Duplicate keys silently overwrite. In a dict comprehension, if two iterations produce the same key, the last value wins without any error. Ensure keys are unique or handle collisions explicitly.
 >
 >  ---
 >
@@ -235,7 +235,7 @@ status: complete
 > - Assignment expression: `(var := expr)` assigns the value and returns it in the same expression; valid in `while` conditions, `if` conditions, and comprehension filters; introduced in Python 3.8
 > - Eliminates the "compute before the loop, test inside the loop" duplication common in `while` polling patterns
 >
-> - Tip: Use sparingly — simple assignment is clearer. Walrus is most valuable in `while (line := f.readline()):` and comprehension filter reuse: `[y for x in data if (y := f(x)) > 0]`. Avoid it in straightforward `if` statements where a regular assignment reads more clearly.
+> - Use sparingly — simple assignment is clearer. Walrus is most valuable in `while (line := f.readline()):` and comprehension filter reuse: `[y for x in data if (y := f(x)) > 0]`. Avoid it in straightforward `if` statements where a regular assignment reads more clearly.
 >
 >  ---
 >
@@ -244,7 +244,7 @@ status: complete
 > - Standard-library module providing lazy iterator building blocks: `chain` (join iterables end-to-end), `cycle` (infinite repetition), `repeat` (same value *n* times), `accumulate` (running totals), `product` (Cartesian product), `islice` (take first *n* from any iterator), `zip_longest` (zip with padding)
 > - Composable, memory-efficient primitives for building data pipelines without materializing intermediate collections
 >
-> - Danger: Never call `list()` on infinite itertools iterators. `list(cycle([1,2,3]))` hangs indefinitely. Always bound infinite iterators with `islice` or a `break` condition.
+> - Never call `list()` on infinite itertools iterators. `list(cycle([1,2,3]))` hangs indefinitely. Always bound infinite iterators with `islice` or a `break` condition.
 
 ### Shared example setup
 
@@ -252,14 +252,15 @@ Examples run top to bottom. Later snippets may reuse imports, helper functions, 
 
 The `collapse()` example requires `more-itertools`, and the `json_normalize()` example requires `pandas`. All other snippets use the standard library.
 
-*Shared imports for examples that rely on standard-library helpers and optional packages.*
+*Shared imports for examples that rely on standard-library helpers.*
 ```python
 from functools import reduce
 from itertools import accumulate, chain, islice, product, repeat
-from more_itertools import collapse
 import io
-import pandas as pd
 import sys
+```
+
+```text
 ```
 
 ## Conditional Statements
@@ -299,11 +300,6 @@ Basic conditional branching uses indentation-based blocks. Python supports truth
 
 #### if / elif / else — indentation-based branching
 
-**When to run:** Use this pattern when you need `if / elif / else — indentation-based branching`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Conditional Statements -> Branching with if / elif / else.
-**Purpose:** Show the code shape and observable result for `if / elif / else — indentation-based branching`.
-
 Python uses indentation (not braces) to define blocks. Conditions don't need parentheses. `elif` chains for multiple tiers — one keyword instead of `else if`, fewer nesting levels.
 
 Conditional chains check conditions top-to-bottom — the **first matching condition wins**, all subsequent branches are skipped. Put the most specific threshold first (`>=90` before `>=80` before `>=70`). Truthy/falsy: `False`, `0`, `""`, `[]`, `{}`, `None` are falsy; everything else is truthy. Chained comparisons: `10 < x < 20` means `10 < x and x < 20`.
@@ -340,11 +336,6 @@ Score 85 → Grade B
 
 #### Simple if — single condition without else
 
-**When to run:** Use this pattern when you need `Simple if — single condition without else`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Conditional Statements -> Branching with if / elif / else.
-**Purpose:** Show the code shape and observable result for `Simple if — single condition without else`.
-
 A standalone `if` with no `elif` or `else` — the body runs only when the condition is truthy. Python allows the body on the same line for single statements.
 
 *Runnable example for `Simple if — single condition without else`.*
@@ -358,11 +349,6 @@ if x > 0: print(f"{x} is positive")
 ```
 
 #### Ternary operator — inline conditional expression
-
-**When to run:** Use this pattern when you need `Ternary operator — inline conditional expression`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Conditional Statements -> Branching with if / elif / else.
-**Purpose:** Show the code shape and observable result for `Ternary operator — inline conditional expression`.
 
 Inline conditional: `value_if_true if condition else value_if_false`. Reads like natural English. Can nest, but readability drops fast — avoid nesting beyond 2 levels.
 
@@ -379,11 +365,6 @@ age=20 → adult
 
 #### Nested ternary — chained inline conditions
 
-**When to run:** Use this pattern when you need `Nested ternary — chained inline conditions`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Conditional Statements -> Branching with if / elif / else.
-**Purpose:** Show the code shape and observable result for `Nested ternary — chained inline conditions`.
-
 Ternary expressions can chain: `a if c1 else b if c2 else c`. Readability drops fast — avoid nesting beyond 2 levels. For 3+ tiers, use `if`/`elif`/`else` or `match`/`case`.
 
 *Runnable example for `Nested ternary — chained inline conditions`.*
@@ -398,11 +379,6 @@ val=15 → mid
 ```
 
 #### Truthy/falsy and chained comparisons
-
-**When to run:** Use this pattern when you need `Truthy/falsy and chained comparisons`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Conditional Statements -> Branching with if / elif / else.
-**Purpose:** Show the code shape and observable result for `Truthy/falsy and chained comparisons`.
 
 **Truthy/falsy**
 - `if items:` — `True` for non-empty collections
@@ -451,11 +427,6 @@ Python 3.10 introduced structural pattern matching with `match`/`case`. Unlike C
 
 #### match/case — pattern matching
 
-**When to run:** Use this pattern when you need `match/case — pattern matching`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Conditional Statements -> Pattern matching with match / case.
-**Purpose:** Show the code shape and observable result for `match/case — pattern matching`.
-
 **Pattern matching (Python 3.10+)**
 - `match`/`case` — tests against patterns, not just equality
 - `|` for OR, `_` for wildcard, `if` for guards, variable binding
@@ -490,11 +461,6 @@ Stopping...
 
 #### match with destructuring
 
-**When to run:** Use this pattern when you need `match with destructuring`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Conditional Statements -> Pattern matching with match / case.
-**Purpose:** Show the code shape and observable result for `match with destructuring`.
-
 `case (x, 0)` binds `x` from a 2-tuple where second is 0. `case {"key": val}` matches dict structure. Combines validation and extraction in one step — the shape IS the condition.
 
 *Runnable example for `match with destructuring`.*
@@ -516,11 +482,6 @@ On x-axis at 3
 ```
 
 #### match with type checking
-
-**When to run:** Use this pattern when you need `match with type checking`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Conditional Statements -> Pattern matching with match / case.
-**Purpose:** Show the code shape and observable result for `match with type checking`.
 
 **Type patterns**
 - `case int(n)` — matches integers and binds to `n`
@@ -594,11 +555,6 @@ The `for` loop iterates any object implementing the iterator protocol (`__iter__
 
 #### for loops — iteration over iterables
 
-**When to run:** Use this pattern when you need `for loops — iteration over iterables`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loops -> for loop and iterables.
-**Purpose:** Show the code shape and observable result for `for loops — iteration over iterables`.
-
 **Loop types**
 - `for` — iterates over any iterable (list, range, dict, generator)
 - `while` — repeats until the condition is false
@@ -631,11 +587,6 @@ for fruit in ["apple", "banana", "cherry"]:
 
 #### Generate sequences with range()
 
-**When to run:** Use this pattern when you need `Generate sequences with range()`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loops -> for loop and iterables.
-**Purpose:** Show the code shape and observable result for `Generate sequences with range()`.
-
 **range() forms**
 - `range(stop)`, `range(start, stop)`, `range(start, stop, step)`
 - Stop is exclusive; negative step for countdown
@@ -660,11 +611,6 @@ print()
 
 #### range() with step — custom stride and countdown
 
-**When to run:** Use this pattern when you need `range() with step — custom stride and countdown`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loops -> for loop and iterables.
-**Purpose:** Show the code shape and observable result for `range() with step — custom stride and countdown`.
-
 The third argument sets the step. Positive step for skipping forward, negative step for counting down. The stop value is always exclusive.
 
 *Runnable example for `range() with step — custom stride and countdown`.*
@@ -684,11 +630,6 @@ print()
 ```
 
 #### Iterating strings and dicts — .items(), .values(), .keys()
-
-**When to run:** Use this pattern when you need `Iterating strings and dicts — .items(), .values(), .keys()`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loops -> for loop and iterables.
-**Purpose:** Show the code shape and observable result for `Iterating strings and dicts — .items(), .values(), .keys()`.
 
 Strings yield characters one at a time. Dicts yield keys by default; `.items()` for `(key, value)`, `.values()` for values only. Don't use `for key in dict: dict[key]` — use `for k, v in dict.items()`.
 
@@ -718,11 +659,6 @@ for key, value in d.items():
 
 #### enumerate and zip
 
-**When to run:** Use this pattern when you need `enumerate and zip`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loops -> for loop and iterables.
-**Purpose:** Show the code shape and observable result for `enumerate and zip`.
-
 **Enumerate and zip**
 - `enumerate(iterable, start=0)` — yields `(index, element)`
 - `zip(a, b)` — yields `(a_i, b_i)`, stopping at the shortest
@@ -750,11 +686,6 @@ for i, fruit in enumerate(["apple", "banana"], start=1):
 
 #### Parallel iteration with zip
 
-**When to run:** Use this pattern when you need `Parallel iteration with zip`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loops -> for loop and iterables.
-**Purpose:** Show the code shape and observable result for `Parallel iteration with zip`.
-
 `zip(a, b)` yields `(a_i, b_i)` tuples, stopping at the shortest iterable. Use for lock-step iteration of parallel sequences — names with ages, keys with values, expected with actual.
 
 *Runnable example for `Parallel iteration with zip`.*
@@ -777,11 +708,6 @@ for name, age in zip(names, ages):
 
 #### while — condition-first loop
 
-**When to run:** Use this pattern when you need `while — condition-first loop`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loops -> while loops and for / else.
-**Purpose:** Show the code shape and observable result for `while — condition-first loop`.
-
 `while` repeats until the condition is false. The body may never execute if the condition is `false` from the start. Use for polling, retry, input validation, and any loop where the iteration count is not known in advance.
 
 *Runnable example for `while — condition-first loop`.*
@@ -801,11 +727,6 @@ while count < 5:
 ```
 
 #### for/else — search found/not found idiom
-
-**When to run:** Use this pattern when you need `for/else — search found/not found idiom`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loops -> while loops and for / else.
-**Purpose:** Show the code shape and observable result for `for/else — search found/not found idiom`.
 
 The `else` block runs only when no `break` occurred — it signals "search completed without finding a match." Use exclusively for search patterns.
 
@@ -829,11 +750,6 @@ else:
 
 #### do-while workaround — while True with break
 
-**When to run:** Use this pattern when you need `do-while workaround — while True with break`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loops -> while loops and for / else.
-**Purpose:** Show the code shape and observable result for `do-while workaround — while True with break`.
-
 Python has no `do-while`. Use `while True: body; if cond: break` to guarantee at least one execution before checking the exit condition.
 
 *Runnable example for `do-while workaround — while True with break`.*
@@ -850,11 +766,6 @@ while True:
 ```
 
 #### Nested loops — Cartesian iteration
-
-**When to run:** Use this pattern when you need `Nested loops — Cartesian iteration`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loops -> while loops and for / else.
-**Purpose:** Show the code shape and observable result for `Nested loops — Cartesian iteration`.
 
 Nested `for` loops produce the Cartesian product of two ranges. For deeper nesting, prefer `itertools.product()` to keep the code flat and readable.
 
@@ -882,11 +793,6 @@ Keywords that alter loop execution and flow: `break` exits immediately, `continu
 
 #### break — exit the innermost loop
 
-**When to run:** Use this pattern when you need `break — exit the innermost loop`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loop Control -> Control keywords.
-**Purpose:** Show the code shape and observable result for `break — exit the innermost loop`.
-
 **Loop control**
 - `break` — exits the innermost loop immediately (does NOT exit outer loops)
 - `continue` — skips to the next iteration
@@ -910,11 +816,6 @@ for i in range(10):
 
 #### continue — skip to the next iteration
 
-**When to run:** Use this pattern when you need `continue — skip to the next iteration`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loop Control -> Control keywords.
-**Purpose:** Show the code shape and observable result for `continue — skip to the next iteration`.
-
 `continue` jumps to the next iteration, skipping the remaining body. Use for filtering within a loop when a comprehension is not practical — avoids nested `if`/`else` blocks.
 
 *Runnable example for `continue — skip to the next iteration`.*
@@ -930,11 +831,6 @@ for i in range(10):
 ```
 
 #### pass — no-op placeholder
-
-**When to run:** Use this pattern when you need `pass — no-op placeholder`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loop Control -> Control keywords.
-**Purpose:** Show the code shape and observable result for `pass — no-op placeholder`.
 
 `pass` is a no-op statement for syntactically required but intentionally empty blocks: stubs, placeholder classes, and `except` blocks during development.
 
@@ -964,11 +860,6 @@ class Placeholder:
 
 #### Nested break behavior — only exits the innermost loop
 
-**When to run:** Use this pattern when you need `Nested break behavior — only exits the innermost loop`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loop Control -> Control keywords.
-**Purpose:** Show the code shape and observable result for `Nested break behavior — only exits the innermost loop`.
-
 In nested loops, `break` affects only the innermost loop — outer loops continue. Python has no labeled break. For multi-level exit, use a flag + break, or extract to a function and `return`.
 
 *Runnable example for `Nested break behavior — only exits the innermost loop`.*
@@ -988,11 +879,6 @@ for i in range(3):
 ```
 
 #### Breaking outer loops with a flag
-
-**When to run:** Use this pattern when you need `Breaking outer loops with a flag`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loop Control -> Control keywords.
-**Purpose:** Show the code shape and observable result for `Breaking outer loops with a flag`.
 
 Set a flag variable in the inner loop, then check it in the outer loop. Verbose but explicit — works when extraction to a function is not practical.
 
@@ -1015,11 +901,6 @@ print(f"  Broke at ({i},{j})")
 
 #### Breaking outer loops with return
 
-**When to run:** Use this pattern when you need `Breaking outer loops with return`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loop Control -> Control keywords.
-**Purpose:** Show the code shape and observable result for `Breaking outer loops with return`.
-
 Wrap nested loops in a function and use `return` to exit all loops at once. Cleaner and more Pythonic than flag variables.
 
 *Runnable example for `Breaking outer loops with return`.*
@@ -1039,11 +920,6 @@ print(find_pair())
 
 #### Walrus operator — :=
 
-**When to run:** Use this pattern when you need `Walrus operator — :=`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loop Control -> Control keywords.
-**Purpose:** Show the code shape and observable result for `Walrus operator — :=`.
-
 `(var := expr)` assigns and returns the value in one expression. Eliminates the "read-before-loop" duplication. Also works in comprehensions: `[y for x in data if (y := f(x)) > 0]`. Don't overuse — simple assignments are clearer with `=`.
 
 *Runnable example for `Walrus operator — :=`.*
@@ -1060,11 +936,6 @@ while (line := reader.readline()):
 ```
 
 #### Walrus in if conditions and comprehensions
-
-**When to run:** Use this pattern when you need `Walrus in if conditions and comprehensions`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Loop Control -> Control keywords.
-**Purpose:** Show the code shape and observable result for `Walrus in if conditions and comprehensions`.
 
 `:=` in an `if` condition assigns and tests in one expression — eliminates a separate assignment line. In comprehensions, it captures an intermediate computation for reuse in both the filter and the output expression.
 
@@ -1092,11 +963,6 @@ Generator functions use `yield` to produce values lazily — Python suspends exe
 `yield` turns a function into a generator. Generator expressions `(x for x in ...)` are the lazy counterpart to list comprehensions. Both are single-use — exhausted after one pass.
 
 #### Generator functions — yield for lazy sequences
-
-**When to run:** Use this pattern when you need `Generator functions — yield for lazy sequences`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Generator functions and expressions.
-**Purpose:** Show the code shape and observable result for `Generator functions — yield for lazy sequences`.
 
 A function with `yield` becomes a generator. Each `next()` call resumes execution until the next `yield` — state is preserved between calls. Values are computed lazily (on demand, not upfront). Generators are single-use — exhausted after one pass.
 
@@ -1132,11 +998,6 @@ for val in countdown(5):
 
 #### Manual iteration with next()
 
-**When to run:** Use this pattern when you need `Manual iteration with next()`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Generator functions and expressions.
-**Purpose:** Show the code shape and observable result for `Manual iteration with next()`.
-
 `next(gen)` returns the next yielded value. Raises `StopIteration` when exhausted — use `next(gen, default)` to return a default instead. Use for peeking at the first element or partial consumption.
 
 *Runnable example for `Manual iteration with next()`.*
@@ -1155,11 +1016,6 @@ print(next(gen))
 ```
 
 #### List vs generator expression
-
-**When to run:** Use this pattern when you need `List vs generator expression`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Generator functions and expressions.
-**Purpose:** Show the code shape and observable result for `List vs generator expression`.
 
 **List vs generator expression**
 - `[expr for x in iter]` — creates a list in memory (eager)
@@ -1180,11 +1036,6 @@ print(squares_list)
 
 #### Generator expression — lazy on-demand evaluation
 
-**When to run:** Use this pattern when you need `Generator expression — lazy on-demand evaluation`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Generator functions and expressions.
-**Purpose:** Show the code shape and observable result for `Generator expression — lazy on-demand evaluation`.
-
 `(expr for x in iter)` creates a generator that computes values on demand. As a function argument, outer parentheses can be omitted: `sum(x**2 for x in range(n))`. Generators are single-use — exhausted after one pass.
 
 *Runnable example for `Generator expression — lazy on-demand evaluation`.*
@@ -1200,11 +1051,6 @@ generator
 ```
 
 #### Memory comparison — list vs generator
-
-**When to run:** Use this pattern when you need `Memory comparison — list vs generator`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Generator functions and expressions.
-**Purpose:** Show the code shape and observable result for `Memory comparison — list vs generator`.
 
 The list stores all 100,000 values in memory (~800 KB), while the generator object uses a constant ~192 bytes regardless of how many values it will produce. Use generators for large or streaming data; lists when you need indexing, `len()`, or multiple passes.
 
@@ -1222,11 +1068,6 @@ Generator size:      192 bytes
 ```
 
 #### yield from
-
-**When to run:** Use this pattern when you need `yield from`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Generator functions and expressions.
-**Purpose:** Show the code shape and observable result for `yield from`.
 
 `yield from iterable` replaces `for item in iterable: yield item` in one line. Enables recursive generators (flatten) and delegation to sub-generators. Watch out: `yield from` on strings yields each character separately, and deep recursion may hit the limit.
 
@@ -1252,11 +1093,6 @@ print(list(flatten(nested)))
 Infinite generators use `while True` with `yield` to produce unbounded sequences. The `itertools` module provides composable, memory-efficient iterator building blocks. All are lazy — values are computed on demand.
 
 #### Infinite generator with yield
-
-**When to run:** Use this pattern when you need `Infinite generator with yield`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Infinite generators and itertools.
-**Purpose:** Show the code shape and observable result for `Infinite generator with yield`.
 
 `while True` with `yield` produces infinite values. Callers control consumption with `islice`, `break`, or `zip`. Zero storage — values computed on demand.
 
@@ -1287,11 +1123,6 @@ print(list(islice(naturals(10), 5)))
 
 #### Built-in lazy iterators — range, enumerate, zip, map, filter, reversed
 
-**When to run:** Use this pattern when you need `Built-in lazy iterators — range, enumerate, zip, map, filter, reversed`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Infinite generators and itertools.
-**Purpose:** Show the code shape and observable result for `Built-in lazy iterators — range, enumerate, zip, map, filter, reversed`.
-
 `range`, `enumerate`, `zip`, `map`, `filter`, and `reversed` are all lazy built-in iterators — wrap in `list()` to materialize. They consume constant memory regardless of input size.
 
 *Runnable example for `Built-in lazy iterators — range, enumerate, zip, map, filter, reversed`.*
@@ -1314,11 +1145,6 @@ print(list(reversed([1,2,3])))
 ```
 
 #### itertools — chain, cycle, repeat, accumulate, product
-
-**When to run:** Use this pattern when you need `itertools — chain, cycle, repeat, accumulate, product`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Infinite generators and itertools.
-**Purpose:** Show the code shape and observable result for `itertools — chain, cycle, repeat, accumulate, product`.
 
 **Key itertools functions (all lazy generators)**
 - `chain` — joins iterables end-to-end
@@ -1346,11 +1172,6 @@ print(list(product('ab', '12')))
 ```
 
 #### Iterator protocol — __iter__ and __next__
-
-**When to run:** Use this pattern when you need `Iterator protocol — __iter__ and __next__`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Infinite generators and itertools.
-**Purpose:** Show the code shape and observable result for `Iterator protocol — __iter__ and __next__`.
 
 Define `__iter__(self)` returning `self` and `__next__(self)` raising `StopIteration` when done. Makes any class usable in `for` loops, `list()`, and all iteration contexts. Use for complex stateful iteration — for simple sequences, generator functions are much less code.
 
@@ -1386,11 +1207,6 @@ Use `chain.from_iterable()` for one-level nested iterables. Use `collapse()` whe
 
 #### itertools chain.from_iterable and more_itertools collapse
 
-**When to run:** Use this pattern when you need `itertools chain.from_iterable and more_itertools collapse`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Flattening nested structures.
-**Purpose:** Show the code shape and observable result for `itertools chain.from_iterable and more_itertools collapse`.
-
 `chain.from_iterable` flattens exactly one level — inner lists stay nested. Stdlib, lazy, no external dependency. For arbitrary depth, use `more_itertools.collapse`.
 
 *Runnable example for `itertools chain.from_iterable and more_itertools collapse`.*
@@ -1405,15 +1221,12 @@ print(one_level)
 
 #### more_itertools collapse — arbitrary depth
 
-**When to run:** Use this pattern when you need `more_itertools collapse — arbitrary depth`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Flattening nested structures.
-**Purpose:** Show the code shape and observable result for `more_itertools collapse — arbitrary depth`.
-
 `collapse` from `more_itertools` flattens any depth of nesting in one call. External dependency, but the simplest solution for deeply nested structures.
 
 *Runnable example for `more_itertools collapse — arbitrary depth`.*
 ```python
+from more_itertools import collapse
+
 nested = [1, [2, 3], [4, [5, 6]], 7]
 print(list(collapse(nested)))
 ```
@@ -1423,11 +1236,6 @@ print(list(collapse(nested)))
 ```
 
 #### Iterative Flatten with Stack
-
-**When to run:** Use this pattern when you need `Iterative Flatten with Stack`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Flattening nested structures.
-**Purpose:** Show the code shape and observable result for `Iterative Flatten with Stack`.
 
 Stack-based iterative flatten — no recursion, no depth limits, handles arbitrarily deep nesting safely. Watch out: strings are iterable and cause infinite loops if not checked.
 
@@ -1455,15 +1263,12 @@ print(flatten_iter(nested))
 
 #### pandas json_normalize
 
-**When to run:** Use this pattern when you need `pandas json_normalize`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Iterators & Generators -> Flattening nested structures.
-**Purpose:** Show the code shape and observable result for `pandas json_normalize`.
-
 `pd.json_normalize` takes a list of nested dicts, flattens nested keys into dot-separated column names, and handles missing keys with NaN. One-line flatten for API responses and JSON files.
 
 *Runnable example for `pandas json_normalize`.*
 ```python
+import pandas as pd
+
 nested_records = [
     {"name": "Alice", "address": {"city": "NYC", "zip": "10001"}},
     {"name": "Bob", "address": {"city": "LA", "zip": "90001"}},
@@ -1497,11 +1302,6 @@ List, dict, and set comprehensions build new collections from iterables with opt
 
 #### List comprehension — concise collection building
 
-**When to run:** Use this pattern when you need `List comprehension — concise collection building`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Comprehensions.
-**Purpose:** Show the code shape and observable result for `List comprehension — concise collection building`.
-
 `[expr for item in iterable if condition]` — builds a new list by applying an expression to each element, optionally filtering with `if`. More readable than `map`/`filter`/`lambda` and faster than equivalent `for` loops (optimized at bytecode level).
 
 **Don't use comprehensions for side**
@@ -1524,11 +1324,6 @@ print(squares)
 
 #### List comprehension with filter — if clause
 
-**When to run:** Use this pattern when you need `List comprehension with filter — if clause`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Comprehensions.
-**Purpose:** Show the code shape and observable result for `List comprehension with filter — if clause`.
-
 Adding `if condition` filters elements before the expression is applied. Only elements satisfying the predicate appear in the output list.
 
 *Runnable example for `List comprehension with filter — if clause`.*
@@ -1542,11 +1337,6 @@ print(evens)
 ```
 
 #### List comprehension with filter and transform
-
-**When to run:** Use this pattern when you need `List comprehension with filter and transform`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Comprehensions.
-**Purpose:** Show the code shape and observable result for `List comprehension with filter and transform`.
 
 Combine `if` filtering with an expression transform in a single comprehension — the Pythonic equivalent of a `.Where().Select()` chain.
 
@@ -1562,11 +1352,6 @@ print(long_upper)
 ```
 
 #### Nested comprehensions
-
-**When to run:** Use this pattern when you need `Nested comprehensions`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Comprehensions.
-**Purpose:** Show the code shape and observable result for `Nested comprehensions`.
 
 `[expr for outer in iter1 for inner in iter2]` — outer loop first, then inner (same order as nested `for` loops). One-line flatten: `[n for row in matrix for n in row]`. Don't nest beyond 2 levels.
 
@@ -1586,11 +1371,6 @@ print(grid)
 ```
 
 #### Dict and set comprehensions
-
-**When to run:** Use this pattern when you need `Dict and set comprehensions`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Comprehensions.
-**Purpose:** Show the code shape and observable result for `Dict and set comprehensions`.
 
 **Dict and set comprehensions**
 - `{k: v for item in iterable}` — builds a dict
@@ -1623,11 +1403,6 @@ print(passed)
 
 #### Set comprehension — auto-deduplicated collection
 
-**When to run:** Use this pattern when you need `Set comprehension — auto-deduplicated collection`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Comprehensions.
-**Purpose:** Show the code shape and observable result for `Set comprehension — auto-deduplicated collection`.
-
 `{expr for item in iterable}` builds a `set` — automatically deduplicates. Use for extracting unique values from a sequence.
 
 *Runnable example for `Set comprehension — auto-deduplicated collection`.*
@@ -1646,11 +1421,6 @@ print(unique_lengths)
 `map`, `filter`, and `reduce` provide functional-style transformations. Built-in aggregations (`sum`, `max`, `min`, `any`, `all`) are preferred over `reduce` for common operations — they are implemented in C and short-circuit where applicable.
 
 #### map and filter
-
-**When to run:** Use this pattern when you need `map and filter`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Functional programming.
-**Purpose:** Show the code shape and observable result for `map and filter`.
 
 **Map and filter**
 - `map(func, iterable)` — applies `func` to every element
@@ -1676,11 +1446,6 @@ print(doubled2)
 
 #### filter — keep elements matching a predicate
 
-**When to run:** Use this pattern when you need `filter — keep elements matching a predicate`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Functional programming.
-**Purpose:** Show the code shape and observable result for `filter — keep elements matching a predicate`.
-
 `filter(pred, iterable)` keeps elements where `pred` returns `True`. Lazy — wrap in `list()` to materialize. With lambdas, a list comprehension with `if` is usually clearer.
 
 *Runnable example for `filter — keep elements matching a predicate`.*
@@ -1695,11 +1460,6 @@ print(evens)
 ```
 
 #### reduce — general-purpose fold
-
-**When to run:** Use this pattern when you need `reduce — general-purpose fold`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Functional programming.
-**Purpose:** Show the code shape and observable result for `reduce — general-purpose fold`.
 
 `reduce(func, iterable, initial)` applies `func` cumulatively, folding the sequence into a single value. The third argument is the initial accumulator. Use for custom reductions that built-in functions don't cover.
 
@@ -1719,11 +1479,6 @@ print(product)
 ```
 
 #### Built-in aggregations — sum, max, min, any, all
-
-**When to run:** Use this pattern when you need `Built-in aggregations — sum, max, min, any, all`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Functional programming.
-**Purpose:** Show the code shape and observable result for `Built-in aggregations — sum, max, min, any, all`.
 
 Prefer built-ins over `reduce` for common operations — they are implemented in C and short-circuit where applicable. `any()` stops on the first `True`; `all()` stops on the first `False`.
 
@@ -1746,11 +1501,6 @@ True
 ```
 
 #### sorted() with key function — custom sort order, multi-key, reverse
-
-**When to run:** Use this pattern when you need `sorted() with key function — custom sort order, multi-key, reverse`.
-**Trigger:** You need executable syntax for this control-flow case.
-**Context:** Comprehensions & Functional Tools -> Functional programming.
-**Purpose:** Show the code shape and observable result for `sorted() with key function — custom sort order, multi-key, reverse`.
 
 **Sorting**
 - `sorted(iterable, key=func)` — returns a new sorted list
@@ -1777,7 +1527,7 @@ print(sorted(names, key=lambda n: n[-1]))
 ['Diana', 'Bob', 'Charlie', 'Alice']
 ```
 
-#### Selecting the right iteration construct
+### Selecting the right iteration construct
 
 Use a comprehension when one expression transforms or filters data into a new collection. Keep it to one or two `for` clauses, and stop once the expression needs branching or side effects.
 
@@ -1789,22 +1539,22 @@ Use a generator when the result can stay lazy, the input is large, or downstream
 
 ### Common failure modes
 
-#### Syntax and indentation errors
+**Syntax and indentation errors.**
 
 `IndentationError` usually means tabs and spaces were mixed or the block depth changed unexpectedly. `SyntaxError: expected ':'` means a block opener such as `if`, `for`, `while`, `def`, or `match` is missing its trailing colon.
 
-#### Iterator and generator exhaustion
+**Iterator and generator exhaustion.**
 
 A generator raises `StopIteration` after its values are consumed. Re-call the generator function for a fresh iterator, or convert the generator to a list once when the data must be reused.
 
-#### Loop mutation and control-flow surprises
+**Loop mutation and control-flow surprises.**
 
 Modifying a list during iteration can skip elements, and mutating a dict or set during iteration can raise `RuntimeError`. Iterate over a copy or build a new collection instead. Remember that `for...else` runs its `else` block on normal completion, not when a loop condition becomes false, and ensure every `while` loop has a state change or explicit `break`.
 
-#### Readability, side effects, and exception scope
+**Readability, side effects, and exception scope.**
 
 `zip()` stops at the shortest iterable; use `itertools.zip_longest()` when uneven input lengths are expected. A comprehension that calls a side-effect function can produce `None` values or hide control flow, so use an explicit loop when readability or sequencing matters. Avoid bare `except` in loop-oriented code paths; catch specific exceptions so control flow does not mask defects. Once a comprehension needs more than two `for` clauses, move the inner logic into a function or a loop.
 
-#### Version and dependency boundaries
+**Version and dependency boundaries.**
 
 `match`/`case` requires Python 3.10 or newer. The arbitrary-depth flattening example requires `more-itertools`, and the JSON flattening example requires `pandas`; if those packages are unavailable, use the stack-based flattener or standard-library tools instead.

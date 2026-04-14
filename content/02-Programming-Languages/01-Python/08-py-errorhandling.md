@@ -10,7 +10,8 @@ status: complete
 
 # 08. Error Handling - Python
 
-> [!quote]
+> [!quote] Debugging and Bugs
+>
 > "If debugging is the process of removing software bugs, then programming must be the process of putting them in."
 >
 > — **Edsger W. Dijkstra**, attributed remark (c. 1970s)
@@ -18,188 +19,97 @@ status: complete
 > [!abstract]- Summary
 >
 > - Python uses `try`/`except`/`else`/`finally` for structured exception handling; `else` runs on success only, `finally` runs unconditionally.
-> - The exception hierarchy is rooted at `BaseException`; `Exception` is the correct broadest catch — it excludes `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit`.
+> - The exception hierarchy is rooted at `BaseException`; `Exception` is the correct broadest catch because it excludes `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit`.
 > - Multiple `except` clauses are evaluated top-to-bottom; place the most specific types first and a broad `except Exception` fallback last.
-> - `raise ... from e` chains exceptions explicitly (sets `__cause__`); bare `raise` re-raises with the original traceback intact; `raise ... from None` suppresses the chain.
-> - Custom exception classes inherit from `Exception` and carry structured diagnostic fields (`row_number`, `column_name`, `raw_value`) for domain-specific error reporting.
-> - The `with` statement (`__enter__`/`__exit__` protocol) guarantees resource cleanup — files, connections, locks — equivalent to C#'s `using`.
-> - `@contextlib.contextmanager` turns a generator function into a context manager; `yield` marks the boundary between setup and teardown.
-> - Safe parse helpers (`safe_int`, `safe_float`, `safe_date`) return a default instead of raising, enabling resilient CSV/JSON parsing in ETL pipelines.
-> - Error accumulation collects failures into a list so a batch pipeline processes all records before reporting; `ExceptionGroup` / `except*` (Python 3.11+) extends this to parallel multi-error scenarios.
-> - Retry with backoff wraps an operation in a loop with increasing delays; always cap retries and re-raise after exhaustion.
+> - `raise ... from e` chains exceptions explicitly by setting `__cause__`; bare `raise` re-raises with the original traceback intact; `raise ... from None` suppresses the chain.
+> - Custom exception classes inherit from `Exception` and carry structured diagnostic fields such as `row_number`, `column_name`, and `raw_value`.
+> - The `with` statement uses the `__enter__` / `__exit__` protocol to guarantee resource cleanup for files, connections, and locks.
+> - `@contextlib.contextmanager` turns a generator function into a context manager, with `yield` marking the boundary between setup and teardown.
+> - Safe parse helpers such as `safe_int`, `safe_float`, and `safe_date` return a default instead of raising, which is useful for resilient ETL parsing.
+> - Error accumulation collects failures into a list so a batch pipeline can process all rows before reporting; `ExceptionGroup` and `except*` extend that model to grouped failures in Python 3.11+.
+> - Retry with backoff wraps an operation in a bounded loop with increasing delays; production code should retry only specific transient exceptions and re-raise after exhaustion.
 
 > [!note]- Glossary
 >
 > **try / except**
-> - `try:` wraps code that may raise; `except ExceptionType as e:` catches matching exceptions by type, evaluated top-to-bottom — first match wins.
-> - Bare `except:` catches `BaseException` (including `KeyboardInterrupt`) and must never be used; always name the type.
->
-> > [!warning] Bare except blocks are a production hazard
-> >
-> > A bare `except:` silently swallows `KeyboardInterrupt` and `SystemExit`, making the process unkillable and masking all errors. Replace with `except Exception as e:` at the broadest.
->
->  ---
+> - `try:` wraps code that may raise; matching `except ExceptionType as e:` clauses are checked top-to-bottom and the first match wins.
+> - Use `except Exception as e:` at the broadest. Avoid bare `except:` because it also catches `KeyboardInterrupt` and `SystemExit`.
 >
 > **else**
-> - The `else` block executes only when no exception was raised in the `try` block — separating success-path logic from error-handling code.
-> - Code inside `else` is not protected by the preceding `except` clauses — exceptions raised there propagate normally up the call stack.
->
-> > [!info] else improves code clarity
-> >
-> > Moving success-only logic into `else` makes the `try` block narrower (only the risky call) and avoids accidentally catching errors produced by the post-success code.
->
->  ---
+> - `else` runs only when the `try` block succeeds with no exception.
+> - Put success-only logic in `else` so the `try` block stays narrow and the `except` clauses do not hide later failures.
 >
 > **finally**
-> - `finally` runs unconditionally — whether an exception occurred, was caught, or propagated — guaranteeing cleanup such as closing files and releasing locks.
-> - Executes even when a `return`, `break`, or `continue` exits the `try`; do not rely on control-flow statements to skip it.
->
-> > [!tip] Use finally for every resource acquired outside a context manager
-> >
-> > If the resource does not support the `with` protocol, wrap acquisition in `try` and place `resource.close()` in `finally`. This is the explicit fallback when `@contextmanager` is not available.
->
->  ---
+> - `finally` runs whether the `try` block succeeds, fails, returns early, or re-raises.
+> - Use it for deterministic cleanup when the resource does not support `with`.
 >
 > **raise**
-> - `raise` (bare) re-raises the current exception with the original traceback preserved; `raise ValueError("msg")` throws a new exception; `raise NewError("msg") from e` chains it explicitly.
-> - `raise e` (binding the exception to a variable first) resets the traceback to the `raise` line, losing the original origin — prefer bare `raise` when re-raising.
->
-> > [!warning] raise e discards the origin traceback
-> >
-> > Inside an `except` block, `raise e` creates a new traceback starting at that line. Use bare `raise` to preserve the full stack or `raise NewError() from e` to chain with context.
->
->  ---
+> - Bare `raise` re-raises the active exception with the original traceback preserved.
+> - `raise NewError("msg")` throws a new exception, and `raise NewError("msg") from e` records the wrapped exception in `__cause__`.
 >
 > **exception chaining**
-> - `raise NewError("msg") from original_error` sets `original_error` as `__cause__` on the new exception, making the full error chain visible in tracebacks and log parsers.
-> - `raise NewError("msg") from None` deliberately suppresses the chain — used to hide internal implementation details from callers (e.g., surfacing a database error as a public API error).
->
-> > [!info] __cause__ vs __context__
-> >
-> > `__cause__` is set explicitly via `raise ... from e`; `__context__` is set implicitly when one exception is raised while another is active. Debuggers and logging frameworks display both, but `__cause__` signals intentional wrapping.
->
->  ---
+> - `raise NewError("msg") from original_error` creates an explicit chain that debuggers and loggers can inspect through `__cause__`.
+> - `raise NewError("msg") from None` suppresses the lower-level cause when that detail should stay internal.
 >
 > **BaseException**
-> - The root of Python's entire exception hierarchy; `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit` are direct children alongside `Exception`.
-> - Catching `BaseException` intercepts process-termination signals and is almost never correct outside framework-level shutdown handlers.
->
-> > [!danger] Never catch BaseException in application code
-> >
-> > `except BaseException` blocks Ctrl+C, interpreter shutdown, and generator cleanup signals. Use `except Exception` as the broadest safe catch in all application and pipeline code.
->
->  ---
+> - `BaseException` is the root of Python's full exception tree.
+> - `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit` inherit directly from it, so application code should rarely catch it.
 >
 > **Exception**
-> - Subclass of `BaseException` and the base for all "normal" errors: `ValueError`, `TypeError`, `KeyError`, `IndexError`, `OSError`, and their subclasses.
-> - `except Exception as e:` is the safe broadest catch; it still covers too much for narrow handlers — prefer specific types like `except FileNotFoundError`.
->
-> > [!tip] Catch the most specific type possible
-> >
-> > `except FileNotFoundError` is more precise than `except OSError` is more precise than `except Exception`. Narrow catches prevent accidental suppression of unrelated errors and make intent explicit.
->
->  ---
+> - `Exception` is the base class for normal application failures such as `ValueError`, `TypeError`, `KeyError`, and `OSError`.
+> - It is the safe broadest catch for boundary handlers, although narrow handlers should still prefer a specific subtype such as `FileNotFoundError`.
 >
 > **custom exception**
-> - A user-defined class inheriting from `Exception` (or a more specific built-in) that adds structured diagnostic fields — `row_number`, `column_name`, `raw_value` — for domain-specific error reporting.
-> - Keep custom exceptions as simple data carriers; avoid putting business logic inside the class itself.
->
-> > [!info] When to create a custom exception
-> >
-> > Create a custom exception when the caller needs structured metadata beyond what a built-in message string provides, or when callers must distinguish pipeline-domain errors (`PipelineError`) from generic runtime errors in a type-safe `except` clause.
->
->  ---
+> - A custom exception inherits from `Exception` or another built-in subtype and adds structured context such as `row_number`, `column_name`, or `raw_value`.
+> - Keep the class focused on diagnostic data and type-safe catching rather than business logic.
 >
 > **context manager**
-> - An object implementing `__enter__` and `__exit__` (or decorated with `@contextmanager`), used with the `with` statement to guarantee deterministic resource cleanup.
-> - `__exit__` receives `(exc_type, exc_val, exc_tb)`; returning `True` suppresses the exception — correct only in narrow, deliberate cases such as `contextlib.suppress`.
->
-> > [!warning] Returning True from __exit__ silently suppresses exceptions
-> >
-> > A context manager that returns `True` from `__exit__` swallows any exception raised inside the `with` block. Return `False` (or `None`) to let exceptions propagate normally.
->
->  ---
+> - A context manager implements `__enter__` and `__exit__`, or is created with `@contextmanager`.
+> - Returning `True` from `__exit__` suppresses the active exception; most application context managers should return `False` or `None`.
 >
 > **`with` statement**
-> - `with resource as r:` calls `__enter__` at block entry and `__exit__` at block exit, even when an exception occurs — equivalent to C#'s `using`.
-> - Multiple resources can be stacked in one statement: `with open(src) as f1, open(dst, 'w') as f2:` — both are closed even if an exception fires inside the block.
->
-> > [!tip] Prefer with over manual try/finally for resources
-> >
-> > `with open(path) as f:` is shorter, safer, and harder to get wrong than a `try`/`finally` block that calls `f.close()`. Use it for files, database connections, locks, thread pools, and any object that supports the context manager protocol.
->
->  ---
+> - `with resource as r:` calls `__enter__` at block entry and `__exit__` at block exit, even when an exception occurs.
+> - Stack multiple resources in one statement when they share the same lifetime, such as `with open(src) as f1, open(dst, "w") as f2:`.
 >
 > **`@contextmanager`**
-> - Decorator from `contextlib` that converts a generator function into a context manager; code before `yield` is the setup phase, code after `yield` is the teardown phase.
-> - Exceptions raised inside the `with` block are re-raised at the `yield` point — use `try`/`finally` around the `yield` inside the generator to guarantee teardown runs.
->
-> > [!info] Generator-based vs class-based context managers
-> >
-> > `@contextmanager` is idiomatic for simple, single-resource patterns. Use a full `__enter__`/`__exit__` class when the manager needs state across multiple methods, must be subclassed, or requires fine-grained control over exception suppression logic.
->
->  ---
+> - `@contextmanager` converts a generator function into a context manager.
+> - Code before `yield` performs setup, and code after `yield` performs teardown, usually inside `try` / `finally`.
 >
 > **ExceptionGroup**
-> - Python 3.11+ construct that bundles multiple exceptions into a single raised object: `raise ExceptionGroup("label", [e1, e2, e3])`.
-> - Caught with `except*` syntax, which matches specific types within the group independently and lets unmatched exceptions propagate — equivalent to C#'s `AggregateException`.
->
-> > [!warning] ExceptionGroup requires Python 3.11+
-> >
-> > `ExceptionGroup` and `except*` are not available on Python 3.10 or earlier. Guard with `if sys.version_info >= (3, 11):` and fall back to the error-accumulation list pattern for older runtimes.
->
->  ---
+> - `ExceptionGroup` bundles multiple exceptions into one raised object and is handled with `except*`.
+> - It is available in Python 3.11+ and is useful when parallel work can fail in more than one way at once.
 >
 > **error accumulation**
-> - Pattern where each processing step appends errors to a list instead of raising immediately, so a batch pipeline completes all records before surfacing failures.
-> - Always check and act on the error list at the end of the batch; failing to do so silently swallows errors and allows corrupted data to pass downstream.
->
-> > [!tip] Partition results into valid and invalid at the end
-> >
-> > Store each row result in a typed dataclass (`ParseResult`) with an `is_valid` flag and an `error` field. After the loop, split on `is_valid` — send good records downstream, quarantine or log the bad ones, and raise if the rejection rate exceeds a threshold.
->
->  ---
+> - Error accumulation stores failures in a list or result object instead of failing immediately on the first bad row.
+> - The caller must inspect that collection at the end of the batch and decide whether to continue, quarantine, or fail.
 >
 > **retry with backoff**
-> - Pattern that retries a failing operation up to a fixed maximum, sleeping an increasing delay between attempts (`delay_s * attempt`) to handle transient failures such as network timeouts, rate limits, and connection resets.
-> - Always pass a specific tuple of retryable exception types to avoid retrying permanent failures like `ValueError` or `PermissionError`; re-raise after exhaustion.
->
-> > [!tip] Use tenacity or stamina in production
-> >
-> > Hand-rolled retry loops lack jitter, circuit-breaking, and dead-letter handling. In production pipelines, replace custom retry logic with `tenacity` (mature, flexible) or `stamina` (opinionated, typed) to get correct exponential-backoff-with-jitter out of the box.
+> - Retry with backoff repeats a transiently failing operation up to a fixed maximum and increases the delay between attempts.
+> - Limit retries to specific transient exceptions such as `ConnectionError` or `TimeoutError`; do not retry permanent validation failures such as `ValueError`.
 
 ## try / except / else / finally
 
-Python's `try`/`except` construct catches exceptions by type. `else` runs only on success (no exception), and `finally` guarantees cleanup regardless. Exception chaining via `raise ... from e` preserves the full cause chain for debugging. Unlike C#, Python has no `catch when` — use conditional logic inside the `except` block instead.
+Python uses exception types as the dispatch key for recovery logic. Keep the `try` block narrow, catch the most specific type that matches the failure boundary, and use chaining so wrapped exceptions remain diagnosable.
 
 ### Python | Exceptions | try, except, else, finally, raise
 
 #### Basic try / except
 
-Wrap risky code in `try:` and catch specific exception types with `except ExceptionType as e:`. Unmatched exceptions propagate up the call stack. Use for I/O operations, parsing external data, and network calls — not for expected conditions (use `if`/`else`, `.get()`, or LBYL checks instead).
+Use `except ValueError as e:` or another narrow type whenever the failure mode is known. Reserve `except Exception as e:` for boundary handlers that log with `logging.exception(...)` or re-raise, and avoid bare `except:` because it also intercepts `KeyboardInterrupt` and `SystemExit`.
 
-> [!warning] Anti-patterns
->
-> - **Bare `except:`** — catches everything including `KeyboardInterrupt`
-> - **`except Exception` with `pass`** — silently swallows all errors
-> - **Exceptions for flow control** — slow; use `if`/`else` instead
-
-> [!success] Always catch specific exception types and log with traceback
->
-> Use `except ValueError as e:` (never bare `except:`). Log with `logging.exception("msg")` or `logging.error("msg", exc_info=True)` to preserve the full stack trace. Reserve `except Exception` only for top-level handlers that re-raise or report.
-
+*This example imports the helpers used later in the note and catches a basic `IndexError` from an out-of-range list access.*
 ```python
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 import contextlib
 import os
 import sys
-import tempfile
 import time
+
 try:
     arr = [1, 2, 3]
-    print(arr[10])         # IndexError
+    print(arr[10])  # IndexError
 except IndexError as e:
     print(f"Caught: {e}")
 ```
@@ -208,52 +118,29 @@ except IndexError as e:
 Caught: list index out of range
 ```
 
-> [!danger] Bare except: catches everything
->
-> A bare `except:` (no exception type) catches *everything* including `KeyboardInterrupt` and `SystemExit`, making your program impossible to kill with Ctrl+C. Always catch `Exception` at broadest, and only when you re-raise or log.
-
-> [!success] Name the exception type in every except clause
->
-> Replace `except:` with `except Exception as e:` at a minimum. At narrow handlers, be even more specific: `except ValueError:`, `except FileNotFoundError:`. This allows `KeyboardInterrupt` and `SystemExit` to propagate normally.
-
-> [!warning] Always use exc_info=True
->
-> `logging.error(f"Failed: {e}")` loses the traceback. Use `logging.exception("msg")` or `logging.error("msg", exc_info=True)` to capture the full stack trace in logs. Without the traceback, production debugging is nearly impossible.
-
-> [!success] Use logging.exception() inside every except block
->
-> `logging.exception("Pipeline failed")` is the one-liner that logs the message AND the full stack trace automatically. Use it inside `except` blocks in all production code. It is equivalent to `logging.error("msg", exc_info=True)`.
-
 #### Multiple except clauses — handle different exception types differently
 
-Handle different exception types with different recovery strategies. Python evaluates except blocks top-to-bottom and executes the first match, so place the most specific types first and the broadest (`Exception`) last as a fallback.
+Order `except` clauses from most specific to most general. `except Exception:` belongs last because it matches almost every application failure and will hide narrower handlers if it appears first.
 
-> [!danger] Bare except catches everything
->
-> `except:` without a type catches ALL exceptions including `KeyboardInterrupt` and `SystemExit`, making your program impossible to kill. Always specify the exception type: `except ValueError:`. At broadest, use `except Exception:`.
-
-> [!success] Order except clauses from most specific to most general
->
-> Place `except ValueError:` before `except Exception:`. Python executes the first matching clause — if `Exception` comes first it swallows everything. End with `except Exception as e:` only as a fallback that logs and optionally re-raises.
-
+*This example shows `ValueError`, `TypeError`, and a broad `Exception` fallback dispatched in order.*
 ```python
 def parse_row(value, row_num):
     try:
         result = int(value)
         if result < 0:
             raise ValueError(f"Salary cannot be negative: {result}")
-        print(f"  Row {row_num}: parsed {result}")
+        print(f"Row {row_num}: parsed {result}")
     except ValueError as e:
-        print(f"  Row {row_num}: value error — {e}")
+        print(f"Row {row_num}: value error — {e}")
     except TypeError as e:
-        print(f"  Row {row_num}: type error — {e}")
+        print(f"Row {row_num}: type error — {e}")
     except Exception as e:
-        print(f"  Row {row_num}: unexpected {type(e).__name__}: {e}")
+        print(f"Row {row_num}: unexpected {type(e).__name__}: {e}")
 
-parse_row("42", 1)           # ok
-parse_row("not_a_number", 2) # ValueError
-parse_row(-100, 3)           # ValueError (negative)
-parse_row(None, 4)           # TypeError (int(None))
+parse_row("42", 1)
+parse_row("not_a_number", 2)
+parse_row(-100, 3)
+parse_row(None, 4)
 ```
 
 ```text
@@ -265,21 +152,22 @@ Row 4: type error — int() argument must be a string, a bytes-like object or a 
 
 #### else and finally — success-only code and guaranteed cleanup
 
-`else` runs only if no exception was raised in the `try` block — useful for code that should only execute on success (separating "risky" from "safe" logic). `finally` runs ALWAYS, whether an exception occurred or not, guaranteeing cleanup such as closing files and releasing locks.
+Use `else` for the work that should happen only after the risky call succeeds. Use `finally` for cleanup or audit logging that must run whether the operation succeeded, failed, or returned early.
 
+*This example keeps file I/O inside `try`, puts the success path in `else`, and prints a guaranteed audit line from `finally`.*
 ```python
 def load_config(path):
     try:
         with open(path) as f:
             data = f.read()
     except FileNotFoundError:
-        print(f"  Config not found: {path}")
+        print(f"Config not found: {path}")
         return None
     else:
-        print(f"  Config loaded: {len(data)} bytes")
+        print(f"Config loaded: {len(data)} bytes")
         return data
     finally:
-        print(f"  Attempt to load: {path} (always runs)")
+        print(f"Attempt to load: {path} (always runs)")
 
 load_config("missing.json")
 ```
@@ -291,18 +179,21 @@ Attempt to load: missing.json (always runs)
 
 #### finally — guaranteed cleanup even on exception
 
+Use `finally` when a resource does not provide `with` and you still need deterministic cleanup. It runs after normal completion and after a handled exception in the same function.
+
+*This example closes the simulated resource in `finally` whether the work succeeds or raises a `RuntimeError`.*
 ```python
 def process_with_cleanup(throw_error):
-    print("  Opening resource...")
+    print("Opening resource...")
     try:
-        print("  Processing...")
+        print("Processing...")
         if throw_error:
             raise RuntimeError("Something went wrong")
-        print("  Done.")
+        print("Done.")
     except RuntimeError as e:
-        print(f"  Error caught: {e}")
+        print(f"Error caught: {e}")
     finally:
-        print("  Closing resource (finally)")
+        print("Closing resource (finally)")
 
 process_with_cleanup(False)
 process_with_cleanup(True)
@@ -313,7 +204,6 @@ Opening resource...
 Processing...
 Done.
 Closing resource (finally)
-
 Opening resource...
 Processing...
 Error caught: Something went wrong
@@ -322,15 +212,9 @@ Closing resource (finally)
 
 #### raise vs raise from — exception chaining
 
-> [!warning] Use raise ... from for chaining
->
-> Always use `raise ... from e` when wrapping exceptions
-> Plain `raise NewException("msg")` inside an `except` block sets `__context__` (implicit chaining) but not `__cause__`. Use `raise NewException("msg") from e` to explicitly link the cause. Use `raise ... from None` to deliberately suppress the chain when internal details should be hidden from callers.
+Use bare `raise` when the caller should see the original traceback unchanged. Use `raise NewError(...) from e` when you want to wrap a low-level failure with domain context while keeping the original exception available in `__cause__`.
 
-> [!success] Use raise ... from e to preserve the root cause
->
-> `raise PipelineError("stage failed") from e` sets `e.__cause__` explicitly, giving debuggers and log parsers the full chain. When you want to hide implementation details from callers (e.g., database errors exposed as API errors), use `raise PublicError("msg") from None`.
-
+*This example wraps a `ValueError` in a `RuntimeError` and inspects the resulting `__cause__` chain.*
 ```python
 def wrapper():
     try:
@@ -341,8 +225,8 @@ def wrapper():
 try:
     wrapper()
 except RuntimeError as e:
-    print(f"  Outer: {e}")
-    print(f"  Caused by: {e.__cause__}")
+    print(f"Outer: {e}")
+    print(f"Caused by: {e.__cause__}")
 ```
 
 ```text
@@ -352,48 +236,39 @@ Caused by: invalid literal for int() with base 10: 'bad_value'
 
 ## Exception Types and Hierarchy
 
-Python's exception hierarchy starts at `BaseException`, not `Exception`. `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit` are direct children of `BaseException` — catching `Exception` correctly excludes them. Built-in exception types like `ValueError`, `TypeError`, `KeyError`, `OSError` (and its subclasses `FileNotFoundError`, `PermissionError`) cover most data engineering scenarios. Each exception carries `args` (tuple), `__cause__` (explicit chain via `raise from`), and `__context__` (implicit chain).
+Python's hierarchy starts at `BaseException`, not `Exception`. That distinction matters because `KeyboardInterrupt`, `SystemExit`, and `GeneratorExit` should usually bypass application recovery code so the process can stop cleanly.
 
 ### Python | Exceptions | types and properties
 
 #### Exception hierarchy — BaseException tree, args, __cause__
 
-> [!info] Exception hierarchy
->
-> - `BaseException` — root; `SystemExit` and `KeyboardInterrupt` are siblings of `Exception`
-> - Always catch `Exception`, not `BaseException`
-> - Properties: `args` (tuple), `__cause__` (`raise ... from`), `__context__` (implicit chaining)
-> - Hierarchical catching: `except OSError` catches all OS-related errors
+Catch `Exception`, not `BaseException`, unless you are writing framework-level shutdown logic. Built-ins such as `ValueError`, `TypeError`, `KeyError`, and `OSError` still remain catchable through their shared parents when that boundary is appropriate.
 
-> [!danger] Never Catch BaseException
->
-> The hierarchy shows why bare `except:` is dangerous — it catches `SystemExit` and `KeyboardInterrupt`. Always catch `Exception` (not `BaseException`) unless you specifically need system-level errors.
->
-> ```
-> BaseException
-> ├── SystemExit / KeyboardInterrupt   -- DON'T catch with bare except
-> └── Exception
->     ├── ValueError        (bad value format)
->     ├── TypeError         (wrong argument type)
->     ├── KeyError          (dict key missing)
->     ├── IndexError        (list index out of range)
->     ├── AttributeError    (attribute doesn't exist)
->     ├── RuntimeError      (general runtime error)
->     ├── ArithmeticError   (ZeroDivisionError, OverflowError)
->     └── OSError           (FileNotFoundError, PermissionError)
-> ```
+*This diagram shows the branch of the exception tree that matters most in application code.*
+```text
+BaseException
+├── SystemExit / KeyboardInterrupt   -- do not catch with bare except
+└── Exception
+    ├── ValueError        (bad value format)
+    ├── TypeError         (wrong argument type)
+    ├── KeyError          (dict key missing)
+    ├── IndexError        (list index out of range)
+    ├── AttributeError    (attribute does not exist)
+    ├── RuntimeError      (general runtime failure)
+    ├── ArithmeticError   (ZeroDivisionError, OverflowError)
+    └── OSError           (FileNotFoundError, PermissionError)
+```
 
-> [!success] Catch Exception, not BaseException
->
-> `except Exception as e:` is the safe broadest catch — it excludes `SystemExit`, `KeyboardInterrupt`, and `GeneratorExit`. This lets Ctrl+C and interpreter shutdown work normally. Use `except BaseException` only in frameworks that must intercept process termination signals.
+Each exception instance also carries `args`, and wrapped exceptions may additionally populate `__cause__` or `__context__`. Those fields are what make error logs and chained tracebacks inspectable after recovery code runs.
 
+*This example inspects a raised `ValueError` through `str(e)`, `e.args`, and `type(e).__name__`.*
 ```python
 try:
     raise ValueError("salary must be positive", -500)
 except ValueError as e:
-    print(f"  str(e):  {str(e)}")
-    print(f"  e.args:  {e.args}")
-    print(f"  type(e): {type(e).__name__}")
+    print(f"str(e):  {str(e)}")
+    print(f"e.args:  {e.args}")
+    print(f"type(e): {type(e).__name__}")
 ```
 
 ```text
@@ -404,22 +279,25 @@ type(e): ValueError
 
 #### Common exceptions in data engineering
 
+ETL code usually fails in three ways: coercion of raw strings, missing keys in partially populated records, and unexpected types passed into generic helpers. Treat those cases differently so the fallback is explicit and the surviving data stays inspectable.
+
+*This example handles a bad integer parse, avoids a missing-key `KeyError` with `.get()`, and catches a broad `TypeError` from invalid input.*
 ```python
 csv_row = ["Alice", "not_a_number", "2024-01-15"]
 try:
     salary = int(csv_row[1])
-except ValueError as e:
-    salary = int(csv_row[1]) if csv_row[1].lstrip('-').isdigit() else 0
-    print(f"  ValueError: safe fallback = {salary}")
+except ValueError:
+    salary = int(csv_row[1]) if csv_row[1].lstrip("-").isdigit() else 0
+    print(f"ValueError: safe fallback = {salary}")
 
 row = {"name": "Alice", "dept": "Engineering"}
 salary = row.get("salary", 0)
-print(salary)
+print(f"KeyError avoided: salary = {salary}")
 
 try:
-    total = sum("not_a_list")  # type: ignore
+    total = sum("not_a_list")  # type: ignore[arg-type]
 except TypeError as e:
-    print(f"  TypeError: {e}")
+    print(f"TypeError: {e}")
 ```
 
 ```text
@@ -430,13 +308,17 @@ TypeError: unsupported operand type(s) for +: 'int' and 'str'
 
 #### Common exceptions — AttributeError, ZeroDivisionError, FileNotFoundError
 
+Prefer narrow guards for expected absence and reserve exception handling for the actual failure boundary. In practice that often means checking `is not None`, using `if values` before division, and catching `FileNotFoundError` only around the file access itself.
+
+*This example avoids an `AttributeError`, avoids `ZeroDivisionError`, and catches a missing file with a narrow `FileNotFoundError` handler.*
 ```python
 optional_field = None
-safe = optional_field.upper() if optional_field is not None else ""  # type: ignore
-print(safe)
+safe = optional_field.upper() if optional_field is not None else ""  # type: ignore[union-attr]
+print(f"AttributeError avoided: {safe!r}")
 
 def safe_avg(values):
     return sum(values) / len(values) if values else None
+
 print(safe_avg([10, 20]))
 print(safe_avg([]))
 
@@ -444,7 +326,7 @@ try:
     with open("missing_data.csv") as f:
         data = f.read()
 except FileNotFoundError as e:
-    print(f"  FileNotFoundError: {e.filename} — {e.strerror}")
+    print(f"FileNotFoundError: {os.path.basename(e.filename)} — {e.strerror}")
 ```
 
 ```text
@@ -456,6 +338,9 @@ FileNotFoundError: missing_data.csv — No such file or directory
 
 #### Catching multiple exception types in one clause
 
+When the same recovery logic applies to several failure types, catch a tuple such as `(ValueError, TypeError)`. This is appropriate for parse helpers that collapse bad inputs to a shared default value.
+
+*This example collapses both `ValueError` and `TypeError` to `None` in a reusable numeric parser.*
 ```python
 def parse_numeric(value):
     try:
@@ -464,7 +349,7 @@ def parse_numeric(value):
         return None
 
 for v in ["3.14", "bad", None, "42"]:
-    print(f"  parse_numeric({str(v)!r:8}) = {parse_numeric(v)}")
+    print(f"parse_numeric({str(v)!r:8}) = {parse_numeric(v)}")
 ```
 
 ```text
@@ -476,14 +361,15 @@ parse_numeric('42'    ) = 42.0
 
 ## Custom Exceptions
 
-Custom exception classes inherit from `Exception` and add domain-specific attributes (`row_number`, `column_name`, `raw_value`) for structured error reporting. Use `raise CustomError("msg") from e` to chain causes. Only create custom exceptions when you need context beyond what `ValueError` or `FileNotFoundError` provide.
+Custom exceptions let callers catch failures at the domain boundary instead of reverse-engineering a built-in error string. They are most useful when the caller needs structured fields such as row number, stage, or failing column name.
 
 ### Python | Exceptions | custom exception classes
 
 #### Custom exception classes
 
-Custom exceptions add structured diagnostic fields (`row_number`, `column_name`, `raw_value`) that built-in types lack. Type-safe catching (`except CsvParseError`) is more precise than catching generic `Exception`. The `__cause__` chain preserves full error history. Only create custom exceptions when you need extra context — otherwise built-in types like `ValueError` or `FileNotFoundError` suffice.
+Keep custom exceptions small and data-oriented. The class should capture the fields that help the caller recover or log precisely, and the message should stay readable without hiding the original cause.
 
+*These class definitions create the typed exceptions used by the next examples.*
 ```python
 class CsvParseError(Exception):
     def __init__(self, row_number: int, column_name: str, raw_value: str,
@@ -508,8 +394,15 @@ class ConfigError(Exception):
     pass
 ```
 
+```text
+No output.
+```
+
 #### Using custom exceptions — catch, wrap, and re-raise with domain context
 
+Raise a custom subtype when the caller needs row-level metadata rather than a generic parse message. The caller can still inspect `__cause__` when the lower-level `ValueError` matters for diagnostics.
+
+*This example raises `CsvParseError` with row metadata and lets the caller decide whether to skip or quarantine the record.*
 ```python
 def parse_salary(value: str, row_num: int) -> int:
     try:
@@ -522,21 +415,24 @@ for i, row in enumerate(rows, start=1):
     parts = row.split(",")
     try:
         salary = parse_salary(parts[1], i)
-        print(f"  Row {i}: {parts[0]} salary={salary:,}")
+        print(f"Row {i}: {parts[0]} salary={salary:,}")
     except CsvParseError as e:
-        print(f"  SKIP row {e.row_number}: column '{e.column_name}' bad value {e.raw_value!r}")
-        print(f"         Caused by: {e.__cause__}")
+        print(f"SKIP row {e.row_number}: column '{e.column_name}' bad value {e.raw_value!r}")
+        print(f"Caused by: {e.__cause__}")
 ```
 
 ```text
 Row 1: Alice salary=95,000
 SKIP row 2: column 'salary' bad value 'not_a_number'
-       Caused by: invalid literal for int() with base 10: 'not_a_number'
+Caused by: invalid literal for int() with base 10: 'not_a_number'
 Row 3: Charlie salary=110,000
 ```
 
 #### Exception chaining and raise from None
 
+`raise ... from e` keeps the lower-level cause visible to the caller. `raise ... from None` is the opposite choice: it deliberately hides the internal source when the public boundary should expose only a domain-specific message.
+
+*This example wraps a `CsvParseError` in `PipelineError` and then suppresses a lower-level `FileNotFoundError` behind `ConfigError`.*
 ```python
 def run_pipeline(name):
     try:
@@ -547,11 +443,11 @@ def run_pipeline(name):
 try:
     run_pipeline("sales_etl")
 except PipelineError as e:
-    print(f"  Pipeline: {e.pipeline_name}")
-    print(f"  Stage:    {e.stage}")
+    print(f"Pipeline: {e.pipeline_name}")
+    print(f"Stage:    {e.stage}")
     if isinstance(e.__cause__, CsvParseError):
         csv_e = e.__cause__
-        print(f"  Root:     row {csv_e.row_number}, col '{csv_e.column_name}', value {csv_e.raw_value!r}")
+        print(f"Root:     row {csv_e.row_number}, col '{csv_e.column_name}', value {csv_e.raw_value!r}")
 
 def load_config(path):
     try:
@@ -563,8 +459,8 @@ def load_config(path):
 try:
     load_config("config.yaml")
 except ConfigError as e:
-    print(f"  {e}")
-    print(f"  __cause__: {e.__cause__}")  # None — suppressed
+    print(e)
+    print(f"__cause__: {e.__cause__}")
 ```
 
 ```text
@@ -577,43 +473,29 @@ __cause__: None
 
 ## Context Managers — with statement
 
-Python's `with` statement is the equivalent of C#'s `using` — it guarantees cleanup via the `__enter__`/`__exit__` protocol, even if an exception occurs. Custom context managers can be built with `@contextlib.contextmanager` (generator-based, lightweight) or by implementing the `__enter__`/`__exit__` methods on a class. Use `with` for all resource acquisition: files, database connections, locks, temporary directories, and network sockets.
+Use `with` whenever the resource supports it. The context-manager protocol is Python's standard way to make file handles, locks, sockets, temporary resources, and custom wrappers deterministic at block exit.
 
 ### Python | Context managers | with statement and protocols
 
 #### Basic with statement — guaranteed cleanup via context managers
 
-The `with` statement guarantees cleanup even if an exception occurs. `with open(f) as fh:` ensures the file is closed whether the block succeeds or raises. Custom context managers use `@contextmanager` (generator-based) or `__enter__`/`__exit__` (class-based). Prefer `with` over manual `try`/`finally` for any resource that needs cleanup.
+`with open(path) as f:` is the normal replacement for manual `try` / `finally` around a file handle. Stack multiple `with` resources in the same statement when they share a lifetime and should close together.
 
-> [!info] Context manager protocol
->
-> - `with open(path) as f:` — calls `__enter__` on start, `__exit__` on end (even on exception)
-> - No `finally` needed — cleanup is automatic
-> - Stack multiple: `with open(a) as f1, open(b) as f2:`
-> - Use for files, DB connections, locks, temp directories, network sockets
-
-> [!warning] Anti-patterns
->
-> - **Manual `try`/`finally`** when `with` is available — more verbose, easier to forget
-> - **Not closing** files, connections, or cursors — resource leaks
-
-> [!success] Use with for all resource acquisition
->
-> Any object with `__enter__`/`__exit__` (files, DB connections, locks, thread pools) should be opened with `with`. Nest multiple resources in one statement: `with open(src) as f1, open(dst, 'w') as f2:` — both are closed even if an exception occurs inside the block.
-
+*This example writes two CSV files under a temporary workspace, reads them back, and relies on `with` for deterministic file closure.*
 ```python
-tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
-tmp.write("name,salary,dept\nAlice,95000,Engineering\nBob,65000,Sales")
-tmp.close()
+workspace = os.path.join(os.getcwd(), "py-error-handling-demo")
+os.makedirs(workspace, exist_ok=True)
 
-with open(tmp.name) as f:
+tmp = os.path.join(workspace, "employees.csv")
+with open(tmp, "w") as f:
+    f.write("name,salary,dept\nAlice,95000,Engineering\nBob,65000,Sales")
+
+with open(tmp) as f:
     for line in f:
-        print(f"  {line.rstrip()}")
+        print(line.rstrip())
 
-out_tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
-out_tmp.close()
-
-with open(tmp.name) as src, open(out_tmp.name, 'w') as dst:
+out_tmp = os.path.join(workspace, "employees_with_tax.csv")
+with open(tmp) as src, open(out_tmp, "w") as dst:
     header = src.readline().rstrip()
     dst.write(header + ",tax\n")
     for line in src:
@@ -621,8 +503,8 @@ with open(tmp.name) as src, open(out_tmp.name, 'w') as dst:
         salary = int(parts[1])
         dst.write(f"{line.rstrip()},{salary * 0.3:.0f}\n")
 
-with open(out_tmp.name) as f:
-    print(f"  Output: {f.read().strip()}")
+with open(out_tmp) as f:
+    print(f"Output: {f.read().strip()}")
 ```
 
 ```text
@@ -636,12 +518,14 @@ Bob,65000,Sales,19500
 
 #### Custom context manager — @contextmanager
 
+Use `@contextmanager` when the resource lifecycle is simple enough to express as setup, `yield`, and teardown in one function. Put teardown after `yield` inside `try` / `finally` so it still runs when the `with` body fails.
+
+*This example implements a generator-based CSV writer that reports its cleanup and then removes the demo files created in the previous section.*
 ```python
 @contextlib.contextmanager
 def csv_writer(path: str, header: list[str]):
-    """Context manager that writes a CSV file, flushing on exit."""
     rows_written = 0
-    f = open(path, 'w')
+    f = open(path, "w")
     try:
         f.write(",".join(header) + "\n")
 
@@ -654,28 +538,34 @@ def csv_writer(path: str, header: list[str]):
     finally:
         f.flush()
         f.close()
-        print(f"  Closed: {path} ({rows_written} rows written)")
+        print(f"Closed: {os.path.basename(path)} ({rows_written} rows written)")
 
-out2 = tempfile.NamedTemporaryFile(suffix='.csv', delete=False).name
+out2 = os.path.join(workspace, "employees_written.csv")
 with csv_writer(out2, ["name", "salary", "dept"]) as write:
     write("Alice", 95000, "Engineering")
     write("Bob", 65000, "Sales")
 
-for f in [tmp.name, out_tmp.name, out2]:
+for path in [tmp, out_tmp, out2]:
     with contextlib.suppress(FileNotFoundError):
-        os.unlink(f)
-        print(f"  Deleted: {f}")
+        os.unlink(path)
+        print(f"Deleted: {os.path.basename(path)}")
+
+with contextlib.suppress(OSError):
+    os.rmdir(workspace)
 ```
 
 ```text
-Closed: C:\...\tmpkqxh9yf4.csv (2 rows written)
-Deleted: C:\...\tmp8z18xzfq.csv
-Deleted: C:\...\tmpxzwt778q.csv
-Deleted: C:\...\tmpkqxh9yf4.csv
+Closed: employees_written.csv (2 rows written)
+Deleted: employees.csv
+Deleted: employees_with_tax.csv
+Deleted: employees_written.csv
 ```
 
 #### Class-based context manager — __enter__ and __exit__ protocol
 
+Use a class-based context manager when the resource needs persistent state, multiple helper methods, or more explicit control over `__exit__`. Return `False` or `None` from `__exit__` unless suppression is an intentional part of the API.
+
+*This example opens a simulated database connection, runs one query, and lets `__exit__` close the resource on block exit.*
 ```python
 class DatabaseConnection:
     def __init__(self, conn_string: str):
@@ -683,19 +573,19 @@ class DatabaseConnection:
         self.connected = False
 
     def __enter__(self):
-        print(f"  Connecting to {self.conn_string}...")
+        print(f"Connecting to {self.conn_string}...")
         self.connected = True
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        print(f"  Disconnecting from {self.conn_string}")
+        print(f"Disconnecting from {self.conn_string}")
         self.connected = False
-        return False  # don't suppress exceptions
+        return False
 
     def execute(self, query: str):
         if not self.connected:
             raise RuntimeError("Not connected")
-        print(f"  Query: {query}")
+        print(f"Query: {query}")
 
 with DatabaseConnection("postgresql://localhost/mydb") as db:
     db.execute("SELECT * FROM employees LIMIT 3")
@@ -709,19 +599,15 @@ Disconnecting from postgresql://localhost/mydb
 
 ## Data Engineering — error accumulation and resilience patterns
 
-In data pipelines, throwing on the first bad row kills the entire batch. Use safe parse helpers (`safe_int`, `safe_float`) that return defaults instead of raising, result dataclasses to accumulate errors and valid records separately, and retry with backoff for transient failures. Python 3.11+ adds `ExceptionGroup` and `except*` for structured parallel error handling.
+Batch pipelines usually cannot stop on the first malformed row or transient network failure. Use parse helpers, typed result objects, grouped error reporting, and bounded retries so the pipeline can continue without losing the reason each failure occurred.
 
 ### Python | Error handling | result types and retry
 
 #### Safe parse helpers — return default on failure instead of raising
 
-> [!info] Safe parse pattern
->
-> - `safe_int(value, default=0)` — wraps `int()` in `try`/`except`, returns default on failure
-> - Composable in comprehensions and `map()` calls
-> - Use for parsing CSV/JSON fields where bad values are expected
-> - When invalid data should halt processing, raise explicitly instead
+Use small helpers such as `safe_int` and `safe_date` when bad input is an expected part of the dataset rather than an exceptional program state. The default value should make the downstream policy explicit: continue, quarantine, or reject the row.
 
+*This example converts invalid numbers and dates to `None` instead of raising into the calling loop.*
 ```python
 def safe_int(value, default=None):
     try:
@@ -743,7 +629,7 @@ def safe_date(value, fmt="%Y-%m-%d", default=None):
 
 values = ["42", "bad", None, "", "3.14", "2024-01-15"]
 for v in values:
-    print(f"  safe_int({str(v)!r:12}) = {str(safe_int(v))!r:6}  "
+    print(f"safe_int({str(v)!r:12}) = {str(safe_int(v))!r:6}  "
           f"safe_date({str(v)!r:12}) = {safe_date(str(v) if v else v)}")
 ```
 
@@ -758,8 +644,9 @@ safe_int('2024-01-15') = 'None'  safe_date('2024-01-15') = 2024-01-15 00:00:00
 
 #### Error accumulation — ETL pattern
 
-Instead of failing on the first error, collect all errors during processing and report them at the end. Essential for batch pipelines where one bad row should not halt 10,000 good ones. Append errors to a list, continue processing, then decide at the end whether to fail or quarantine the bad records.
+Accumulate row failures in a typed result object when the batch should finish before deciding whether to fail. A `ParseResult` record keeps the data and the failure reason in the same shape, which makes downstream partitioning straightforward.
 
+*These definitions create the `ParseResult` record and parser used by the next accumulation example.*
 ```python
 @dataclass
 class ParseResult:
@@ -780,8 +667,15 @@ def parse_employee(csv_line: str, row_num: int) -> ParseResult:
     return ParseResult(name=parts[0], salary=salary)
 ```
 
+```text
+No output.
+```
+
 #### Error accumulation — process all rows, partition valid/invalid
 
+After parsing, split the batch into `good` and `bad` results and keep the rejection reasons intact. That allows the pipeline to send valid rows forward while logging or quarantining invalid records with the exact failure context.
+
+*This example processes six rows, keeps the valid employees, and reports each rejected row without stopping the batch.*
 ```python
 input_rows = [
     "Alice, 95000", "Bob, not_a_number", "Charlie",
@@ -790,11 +684,13 @@ input_rows = [
 
 results = [parse_employee(row, i + 1) for i, row in enumerate(input_rows)]
 good = [r for r in results if r.is_valid]
-bad  = [r for r in results if not r.is_valid]
+bad = [r for r in results if not r.is_valid]
 
-print(f"  Processed: {len(results)} rows, Valid: {len(good)}, Rejected: {len(bad)}")
-for r in good: print(f"    {r.name:<10} ${r.salary:,}")
-for r in bad:  print(f"    ERROR: {r.error}")
+print(f"Processed: {len(results)} rows, Valid: {len(good)}, Rejected: {len(bad)}")
+for r in good:
+    print(f"  {r.name:<10} ${r.salary:,}")
+for r in bad:
+    print(f"  ERROR: {r.error}")
 ```
 
 ```text
@@ -809,10 +705,9 @@ Processed: 6 rows, Valid: 3, Rejected: 3
 
 #### Retry pattern for transient errors
 
-> [!tip] Only retry transient exceptions
->
-> Pass a specific tuple of retryable exceptions (e.g., `ConnectionError`, `TimeoutError`) to avoid retrying permanent failures like `ValueError` or `PermissionError`. In production, use `tenacity` or `stamina` libraries instead of hand-rolling retry logic.
+Retry only the exceptions that are plausibly transient, such as `ConnectionError` or `TimeoutError`. The loop must cap `max_attempts`, keep the delay policy explicit, and re-raise when the retry budget is exhausted.
 
+*This example retries a flaky loader three times and succeeds on the third attempt after two `ConnectionError` failures.*
 ```python
 def with_retry(operation, max_attempts=3, delay_s=0.1, exceptions=(Exception,)):
     for attempt in range(1, max_attempts + 1):
@@ -821,10 +716,11 @@ def with_retry(operation, max_attempts=3, delay_s=0.1, exceptions=(Exception,)):
         except exceptions as e:
             if attempt == max_attempts:
                 raise
-            print(f"  Attempt {attempt} failed: {e}. Retrying...")
+            print(f"Attempt {attempt} failed: {e}. Retrying...")
             time.sleep(delay_s * attempt)
 
 call_count = 0
+
 def flaky_load():
     global call_count
     call_count += 1
@@ -833,7 +729,7 @@ def flaky_load():
     return "data loaded successfully"
 
 result = with_retry(flaky_load, exceptions=(ConnectionError,))
-print(f"  Result after {call_count} attempts: {result}")
+print(f"Result after {call_count} attempts: {result}")
 ```
 
 ```text
@@ -844,16 +740,9 @@ Result after 3 attempts: data loaded successfully
 
 #### ExceptionGroup — parallel errors (Python 3.11+)
 
-An `ExceptionGroup` bundles multiple exceptions into a single object, raised with `raise ExceptionGroup("msg", [e1, e2, ...])`. Caught with `except*` which can match specific types within the group and let the rest propagate. This is Python's equivalent of `AggregateException` in C#, designed for concurrent and parallel error handling.
+Use `ExceptionGroup` and `except*` when independent work items can fail in different ways at the same time. Keep a version guard around the feature if the code must still run on Python 3.10 or earlier.
 
-> [!warning] except* is Python 3.11+ only
->
-> `ExceptionGroup` and `except*` syntax require Python 3.11 or later. On older versions, use a list of caught exceptions manually (the error accumulation pattern above).
-
-> [!success] Guard ExceptionGroup with a version check
->
-> Wrap `ExceptionGroup` usage in `if sys.version_info >= (3, 11):` to keep code backward compatible. For older runtimes, the error accumulation pattern (collect errors into a list, report at the end) achieves the same result without the 3.11 dependency.
-
+*This example raises one `ExceptionGroup`, handles the `ValueError` members separately from the `IOError` member, and reports each branch explicitly.*
 ```python
 if sys.version_info >= (3, 11):
     try:
@@ -863,13 +752,13 @@ if sys.version_info >= (3, 11):
             ValueError("Bad value in file C"),
         ])
     except* ValueError as eg:
-        print(f"  ValueError group ({len(eg.exceptions)} errors):")
+        print(f"ValueError group ({len(eg.exceptions)} errors):")
         for e in eg.exceptions:
-            print(f"    - {e}")
+            print(f"  - {e}")
     except* IOError as eg:
-        print(eg.exceptions[0])   # IOError group
+        print(f"IOError group: {eg.exceptions[0]}")
 else:
-    print("  ExceptionGroup requires Python 3.11+ (skipped)")
+    print("ExceptionGroup requires Python 3.11+ (skipped)")
 ```
 
 ```text
@@ -878,62 +767,3 @@ ValueError group (2 errors):
   - Bad value in file C
 IOError group: File B not found
 ```
-
-## Warnings
-
-> [!warning] Bare `except:` catches everything — including `KeyboardInterrupt`
->
-> `except:` with no type catches `BaseException`, which includes `KeyboardInterrupt` (Ctrl+C), `SystemExit`, and `GeneratorExit`. This makes the program impossible to interrupt and can mask critical system signals.
-
-> [!success] Correct pattern
->
-> Always catch specific types: `except ValueError as e:`. If you need a catch-all, use `except Exception as e:` — this excludes system-level exceptions.
-
-> [!warning] `raise e` resets the traceback
->
-> `raise e` inside an `except` block replaces the original traceback with a new one starting at the `raise` line — you lose the information about where the error actually originated.
-
-> [!success] Correct pattern
->
-> Use bare `raise` to re-raise with the original traceback preserved. Use `raise NewError("msg") from e` to chain exceptions while keeping the original cause.
-
-> [!warning] Swallowing exceptions silently
->
-> An empty `except` block (`except ValueError: pass`) hides errors. The failure is invisible — no log, no metric, no alert. Data corruption propagates silently downstream.
-
-> [!success] Correct pattern
->
-> At minimum, log the error: `except ValueError as e: logger.warning(f"Skipping bad record: {e}")`. In ETL pipelines, accumulate errors and report at the end.
-
-> [!warning] Using exceptions for expected control flow
->
-> Catching `KeyError` to check if a dict key exists is slower and less readable than `if key in d:` or `d.get(key, default)`.
-
-> [!success] Correct pattern
->
-> Use LBYL (Look Before You Leap) for expected conditions. Reserve EAFP (Easier to Ask Forgiveness than Permission) for truly exceptional situations — file access, network calls, parsing external data.
-
-## Recommendations
-
-- **Catch the most specific exception type** — `except FileNotFoundError` is better than `except OSError` is better than `except Exception`.
-- **Use `raise ... from e` for exception chaining** — preserves the original error context when wrapping low-level exceptions in domain-specific ones.
-- **Use `with` for all resource management** — files, database connections, locks, and network sessions. Never rely on manual `close()` calls.
-- **Use `@contextmanager` for simple cleanup patterns** — easier than writing a full `__enter__`/`__exit__` class.
-- **Accumulate errors in ETL pipelines** — process all records, collect failures in a list, report at the end. Don't stop on the first error.
-- **Use retry with backoff for transient failures** — network timeouts, rate limits, and connection resets are often temporary. Retry 3–5 times with exponential backoff.
-- **Define custom exception hierarchies for domain code** — `PipelineError` → `ExtractionError`, `TransformError`, `LoadError` lets callers catch at the right granularity.
-- **Use `ExceptionGroup` (Python 3.11+) for multi-error scenarios** — `except*` handles different error types from a group independently.
-
-## Troubleshooting
-
-| Problem | Cause | Fix |
-|---|---|---|
-| `KeyboardInterrupt` can't stop the program | Bare `except:` catches system-level exceptions | Use `except Exception:` instead of bare `except:` |
-| Traceback shows wrong line number | Used `raise e` instead of bare `raise` | Use bare `raise` to preserve original traceback |
-| `__cause__` is `None` on chained exception | Forgot `from e` in `raise NewError() from e` | Add `from original_error` to preserve the chain |
-| `TypeError: catching classes that do not inherit from BaseException` | Tried to catch a non-exception type | Ensure the caught type inherits from `Exception` |
-| Context manager `__exit__` not called | Exception in `__enter__` — `__exit__` only runs if `__enter__` succeeded | Handle `__enter__` failures separately |
-| `@contextmanager` generator doesn't clean up | Exception before `yield` — cleanup code after `yield` never runs | Use `try/finally` around the `yield` inside the generator |
-| Silent data corruption in ETL | Exceptions caught and swallowed without logging | Always log, count, or accumulate caught exceptions |
-| Retry loop runs forever | No maximum retry count | Always set `max_retries` and `raise` after exhaustion |
-

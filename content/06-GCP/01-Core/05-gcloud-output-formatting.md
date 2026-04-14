@@ -74,10 +74,7 @@ The built-in topic system is the fastest authoritative reference when you forget
 
 #### Read the format reference
 
-**When to run:** Before building a non-trivial `--format` expression or when you need the exact syntax of projections and attributes.
-**Trigger:** You remember that `table`, `json`, `csv`, or `value` exists, but not the exact expression grammar.
-**Context:** Read-only local help command. No API call is made against the project.
-**Purpose:** Show the formal `--format=NAME[ATTRIBUTES](PROJECTION)` syntax and point to related topic pages.
+Before building a non-trivial `--format` expression or when you need the exact syntax of projections and attributes. It is typically triggered by you remember that `table`, `json`, `csv`, or `value` exists, but not the exact expression grammar. Read-only local help command. No API call is made against the project. Show the formal `--format=NAME[ATTRIBUTES](PROJECTION)` syntax and point to related topic pages.
 
 *Print the opening section of the local output-format reference.*
 
@@ -122,10 +119,7 @@ The important line is the syntax model itself: `NAME[ATTRIBUTES](PROJECTION)`. T
 
 #### Read the projection reference
 
-**When to run:** When you know the resource exists but do not know the exact field path or transform syntax you need.
-**Trigger:** A command returns nested arrays, resource URIs, or repeated fields that the default table hides.
-**Context:** Read-only local help command. No project resource is changed or queried.
-**Purpose:** Show how projections select keys and how transform functions attach to those keys.
+When you know the resource exists but do not know the exact field path or transform syntax you need. It is typically triggered by A command returns nested arrays, resource URIs, or repeated fields that the default table hides. Read-only local help command. No project resource is changed or queried. Show how projections select keys and how transform functions attach to those keys.
 
 *Print the opening section of the projection reference.*
 
@@ -172,10 +166,7 @@ This topic is the authoritative explanation of the two most important concepts i
 
 #### Read the filter reference
 
-**When to run:** Before writing a compound filter expression with Boolean logic, pattern matching, or range comparisons.
-**Trigger:** You need to narrow a list command without downloading and parsing the full result set manually.
-**Context:** Read-only local help command. It documents the filter language; it does not query a project API.
-**Purpose:** Show the filter expression model and the important warning that filtering behavior depends on the server API.
+Before writing a compound filter expression with Boolean logic, pattern matching, or range comparisons. It is typically triggered by you need to narrow a list command without downloading and parsing the full result set manually. Read-only local help command. It documents the filter language; it does not query a project API. Show the filter expression model and the important warning that filtering behavior depends on the server API.
 
 *Print the opening section of the filter reference.*
 
@@ -250,10 +241,7 @@ The default table is fine for interactive reading, but it is a weak contract for
 
 #### Use the default table when a human is reading the result
 
-**When to run:** During ad-hoc inspection at the terminal when readability matters more than machine parsing.
-**Trigger:** You want a quick health check of resources and do not need to pipe the output into another tool.
-**Context:** Read-only list command against Compute Engine in project `bq-wh-nb`.
-**Purpose:** Show the built-in human-friendly table that `gcloud` prints when no explicit format is supplied.
+During ad-hoc inspection at the terminal when readability matters more than machine parsing. It is typically triggered by you want a quick health check of resources and do not need to pipe the output into another tool. Read-only list command against Compute Engine in project `bq-wh-nb`. Show the built-in human-friendly table that `gcloud` prints when no explicit format is supplied.
 
 *List the VM inventory using the command's built-in default table.*
 
@@ -270,10 +258,7 @@ This output is easy to read, but it is not ideal for scripts because the header 
 
 #### Build a custom table projection with transform functions
 
-**When to run:** When the default table is close to useful but you need to choose specific columns or clean up URI-based fields.
-**Trigger:** You need a human-readable inventory that includes labels, tags, or URI-derived values the default table does not expose clearly.
-**Context:** Read-only list command with a custom `table(...)` projection. The API response is unchanged; only the client-side rendering differs.
-**Purpose:** Produce a readable table that shows exactly the fields you care about and applies transforms inline.
+When the default table is close to useful but you need to choose specific columns or clean up URI-based fields. It is typically triggered by you need a human-readable inventory that includes labels, tags, or URI-derived values the default table does not expose clearly. Read-only list command with a custom `table(...)` projection. The API response is unchanged; only the client-side rendering differs. Produce a readable table that shows exactly the fields you care about and applies transforms inline.
 
 > [!info] Projection breakdown
 >
@@ -297,10 +282,7 @@ This is the practical form of projections and transforms working together. The A
 
 #### Emit projected JSON for downstream tools
 
-**When to run:** When the next consumer is `jq`, Python, PowerShell JSON parsing, or another programmatic tool.
-**Trigger:** You need structured machine-readable output instead of aligned columns or plain strings.
-**Context:** Read-only list command. JSON serialization happens client-side after the resource list is returned.
-**Purpose:** Produce a predictable JSON array containing only the requested fields.
+When the next consumer is `jq`, Python, PowerShell JSON parsing, or another programmatic tool. It is typically triggered by you need structured machine-readable output instead of aligned columns or plain strings. Read-only list command. JSON serialization happens client-side after the resource list is returned. Produce a predictable JSON array containing only the requested fields.
 
 *Project the instance list into a reduced JSON payload.*
 
@@ -328,10 +310,7 @@ Projected JSON keeps machine-readability without forcing you to accept the full 
 
 #### Extract scalar values for shell loops and tabular pipelines
 
-**When to run:** When a script needs one or more scalar fields per resource with no headers or formatting decoration.
-**Trigger:** You are feeding the output into a loop, `ForEach-Object`, `xargs`, or another CLI stage.
-**Context:** Read-only list command with the `value(...)` format.
-**Purpose:** Print a clean row-oriented stream that scripts can consume without stripping headers.
+When a script needs one or more scalar fields per resource with no headers or formatting decoration. It is typically triggered by you are feeding the output into a loop, `ForEach-Object`, `xargs`, or another CLI stage. Read-only list command with the `value(...)` format. Print a clean row-oriented stream that scripts can consume without stripping headers.
 
 *Emit the instance name and internal IP as a tab-separated value stream.*
 
@@ -347,10 +326,7 @@ stoxx-vm	10.132.0.8
 
 #### Export CSV for spreadsheets and inventory files
 
-**When to run:** When the result needs to move into a spreadsheet, CSV-aware import tool, or flat-file inventory.
-**Trigger:** A consumer outside the CLI expects comma-separated rows with a header line.
-**Context:** Read-only list command against IAM service accounts.
-**Purpose:** Serialize selected service account metadata as CSV.
+When the result needs to move into a spreadsheet, CSV-aware import tool, or flat-file inventory. It is typically triggered by A consumer outside the CLI expects comma-separated rows with a header line. Read-only list command against IAM service accounts. Serialize selected service account metadata as CSV.
 
 *Export the service account inventory as CSV.*
 
@@ -370,10 +346,7 @@ CSV is the simplest bridge into spreadsheets or ingestion utilities, but it is s
 
 #### Render YAML for configuration review
 
-**When to run:** When you want a compact, review-friendly representation of selected resource fields.
-**Trigger:** A human needs to compare resource configuration values or copy a concise configuration snapshot into a ticket or note.
-**Context:** Read-only describe command against one VM instance.
-**Purpose:** Serialize selected instance fields in a nested text format that remains easy to diff and read.
+When you want a compact, review-friendly representation of selected resource fields. It is typically triggered by A human needs to compare resource configuration values or copy a concise configuration snapshot into a ticket or note. Read-only describe command against one VM instance. Serialize selected instance fields in a nested text format that remains easy to diff and read.
 
 *Describe selected instance fields in YAML.*
 
@@ -398,10 +371,7 @@ YAML preserves nesting more readably than flattened text while remaining lighter
 
 #### Print resource URIs directly
 
-**When to run:** When another command or API call needs the canonical resource URI rather than a short display name.
-**Trigger:** You are chaining commands or documenting exact resource identities.
-**Context:** Read-only list command with the global `--uri` flag.
-**Purpose:** Emit only canonical resource URIs with no extra presentation formatting.
+When another command or API call needs the canonical resource URI rather than a short display name. It is typically triggered by you are chaining commands or documenting exact resource identities. Read-only list command with the global `--uri` flag. Emit only canonical resource URIs with no extra presentation formatting.
 
 *Print the instance URI rather than a table of display fields.*
 
@@ -444,10 +414,7 @@ Nested arrays and nested objects are where most `gcloud` formatting confusion st
 
 #### Flatten nested fields to learn the projection paths
 
-**When to run:** When you do not yet know the exact nested field path you need for `table(...)`, `json(...)`, or `value(...)`.
-**Trigger:** A default table hides nested labels, tags, service accounts, or list elements.
-**Context:** Read-only describe command with the `flattened(...)` format. It changes presentation only.
-**Purpose:** Reveal the concrete dot-path keys that later projections can reference directly.
+When you do not yet know the exact nested field path you need for `table(...)`, `json(...)`, or `value(...)`. It is typically triggered by A default table hides nested labels, tags, service accounts, or list elements. Read-only describe command with the `flattened(...)` format. It changes presentation only. Reveal the concrete dot-path keys that later projections can reference directly.
 
 *Flatten selected nested fields from the instance description.*
 
@@ -468,10 +435,7 @@ This is the most practical discovery output in the note. It exposes the exact pa
 
 #### Transform nested values after the paths are known
 
-**When to run:** After field discovery, when you need a short printable value rather than the raw nested URI or array element.
-**Trigger:** The projected value is technically correct but too verbose for terminal output or scripting.
-**Context:** Read-only describe command with a `value(...)` projection and an inline transform.
-**Purpose:** Show how discovered nested fields can be shortened into operationally useful scalar output.
+After field discovery, when you need a short printable value rather than the raw nested URI or array element. It is typically triggered by the projected value is technically correct but too verbose for terminal output or scripting. Read-only describe command with a `value(...)` projection and an inline transform. Show how discovered nested fields can be shortened into operationally useful scalar output.
 
 *Project the attached service account email and trim its OAuth scope URI to the final segment.*
 
@@ -515,10 +479,7 @@ Filtering and formatting solve different problems and should be combined deliber
 
 #### Filter the instance list to the running stoxx VM
 
-**When to run:** When you already know the resource family and want to reduce the result set before inspecting it.
-**Trigger:** The unfiltered list would include more resources than the current operational question needs.
-**Context:** Read-only Compute Engine list command with a filter expression.
-**Purpose:** Return only the instance rows that match the requested name pattern and runtime state.
+When you already know the resource family and want to reduce the result set before inspecting it. It is typically triggered by the unfiltered list would include more resources than the current operational question needs. Read-only Compute Engine list command with a filter expression. Return only the instance rows that match the requested name pattern and runtime state.
 
 *Filter the instance list to resources named like `stoxx` that are currently running.*
 
@@ -535,10 +496,7 @@ The filter kept only the one VM that matches both conditions. This is the same i
 
 #### Combine filtering with scalar output for automation
 
-**When to run:** When a script needs only the filtered subset and only a few scalar fields from that subset.
-**Trigger:** You are turning the filtered result into a downstream loop, SSH target list, or inventory file.
-**Context:** Read-only Compute Engine list command combining `--filter` with `value(...)`.
-**Purpose:** Produce the minimum viable machine-readable output for a filtered resource subset.
+When a script needs only the filtered subset and only a few scalar fields from that subset. It is typically triggered by you are turning the filtered result into a downstream loop, SSH target list, or inventory file. Read-only Compute Engine list command combining `--filter` with `value(...)`. Produce the minimum viable machine-readable output for a filtered resource subset.
 
 *Filter the running stoxx instance and emit only name, zone, and machine type.*
 
@@ -554,10 +512,7 @@ This is the stable scripting form of the same query. The resource selection happ
 
 #### Filter service accounts and format the reduced result
 
-**When to run:** When you need a targeted IAM inventory instead of the full account list.
-**Trigger:** You care about one subset of service accounts, such as CI identities or a specific application identity.
-**Context:** Read-only IAM service account list command. The filter expression is applied to the list result before formatting.
-**Purpose:** Narrow the service account inventory to matching identities and print only the requested metadata columns.
+When you need a targeted IAM inventory instead of the full account list. It is typically triggered by you care about one subset of service accounts, such as CI identities or a specific application identity. Read-only IAM service account list command. The filter expression is applied to the list result before formatting. Narrow the service account inventory to matching identities and print only the requested metadata columns.
 
 *Filter the service account list to the GitHub Actions and warehouse identities.*
 

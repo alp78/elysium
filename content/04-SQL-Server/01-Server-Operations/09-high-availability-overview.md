@@ -285,10 +285,7 @@ flowchart TD
 
 ### Linux | apt, gcloud, systemctl | AG prerequisites
 
-**When to run:** before touching any SQL Server configuration, during the host-provisioning stage of the deployment.
-**Trigger:** new AG cluster deployment, or adding a new replica to an existing AG.
-**Context:** Ubuntu Linux shell on each VM, requires `sudo`, changes persist across reboots, some steps require reboots.
-**Purpose:** make sure every node has the expected SQL Server version, the cluster packages, network reachability to the AG endpoint ports, and hostname resolution — before any HADR object is created.
+Before touching any SQL Server configuration, during the host-provisioning stage of the deployment. It is typically triggered by new AG cluster deployment, or adding a new replica to an existing AG. Ubuntu Linux shell on each VM, requires `sudo`, changes persist across reboots, some steps require reboots. Make sure every node has the expected SQL Server version, the cluster packages, network reachability to the AG endpoint ports, and hostname resolution — before any HADR object is created.
 
 Every node participating in the AG must satisfy the following conditions. Mismatches are the most common cause of failed endpoint handshakes and join-time errors.
 
@@ -312,10 +309,7 @@ Every node participating in the AG must satisfy the following conditions. Mismat
 
 ### SQL Server | ALTER SERVER CONFIGURATION | enable HADR on every instance
 
-**When to run:** once per instance, during initial HA bring-up, before any AG object exists.
-**Trigger:** the `mssql-conf` setting `MSSQL_ENABLE_HADR` is 0 or `SERVERPROPERTY('IsHadrEnabled')` returns 0.
-**Context:** runs on the Linux shell (`mssql-conf set hadr.hadrenabled 1`) then requires a `systemctl restart mssql-server` to take effect. `IsHadrEnabled` is a read-only server property sourced from `mssql-conf` — you cannot flip it from inside T-SQL.
-**Purpose:** allow the SQL Server instance to host AG replicas. Without this, `CREATE AVAILABILITY GROUP` fails with error 35237 "Always On Availability Groups is not enabled on this instance of SQL Server".
+Once per instance, during initial HA bring-up, before any AG object exists. It is typically triggered by the `mssql-conf` setting `MSSQL_ENABLE_HADR` is 0 or `SERVERPROPERTY('IsHadrEnabled')` returns 0. Runs on the Linux shell (`mssql-conf set hadr.hadrenabled 1`) then requires a `systemctl restart mssql-server` to take effect. `IsHadrEnabled` is a read-only server property sourced from `mssql-conf` — you cannot flip it from inside T-SQL. Allow the SQL Server instance to host AG replicas. Without this, `CREATE AVAILABILITY GROUP` fails with error 35237 "Always On Availability Groups is not enabled on this instance of SQL Server".
 
 *Enable HADR via `mssql-conf` then restart the service on every node.*
 
@@ -342,10 +336,7 @@ SELECT
 
 ### SQL Server | CREATE MASTER KEY, CREATE CERTIFICATE | create and export the AG endpoint certificate
 
-**When to run:** once, on the primary, after HADR is enabled.
-**Trigger:** initial AG setup or rotation of the endpoint certificate before it expires.
-**Context:** T-SQL in the `master` database on the primary. Requires `CONTROL SERVER` (sysadmin). The `BACKUP CERTIFICATE ... WITH PRIVATE KEY` step writes files the `mssql` service account owns — they must be readable only by the peer nodes' service account after transfer.
-**Purpose:** create a self-signed X.509 certificate used for mutual authentication between AG endpoints. Linux AGs cannot use Windows/Kerberos auth for the mirroring endpoint, so certificate auth is mandatory.
+Once, on the primary, after HADR is enabled. It is typically triggered by initial AG setup or rotation of the endpoint certificate before it expires. T-SQL in the `master` database on the primary. Requires `CONTROL SERVER` (sysadmin). The `BACKUP CERTIFICATE ... WITH PRIVATE KEY` step writes files the `mssql` service account owns — they must be readable only by the peer nodes' service account after transfer. Create a self-signed X.509 certificate used for mutual authentication between AG endpoints. Linux AGs cannot use Windows/Kerberos auth for the mirroring endpoint, so certificate auth is mandatory.
 
 > [!warning] Certificate expiry is a silent operational risk
 >
@@ -374,10 +365,7 @@ BACKUP CERTIFICATE dbm_cert
 
 ### Linux | scp, chown | distribute the endpoint certificate to every secondary
 
-**When to run:** immediately after exporting the certificate on the primary.
-**Trigger:** initial AG setup or certificate rotation.
-**Context:** Linux shell on the primary, requires `ssh` key-based access to every secondary and `sudo` on each target for the `chown` step. The `.cer` file is the public certificate; the `.pvk` file contains the private key encrypted by the export password and must be treated as secret material.
-**Purpose:** put a copy of the public certificate and the encrypted private key on every secondary so each secondary can import them and create a matching `dbm_cert`.
+Immediately after exporting the certificate on the primary. It is typically triggered by initial AG setup or certificate rotation. Linux shell on the primary, requires `ssh` key-based access to every secondary and `sudo` on each target for the `chown` step. The `.cer` file is the public certificate; the `.pvk` file contains the private key encrypted by the export password and must be treated as secret material. Put a copy of the public certificate and the encrypted private key on every secondary so each secondary can import them and create a matching `dbm_cert`.
 
 *Copy the certificate public and private key files to each secondary, then set ownership so the `mssql` service account can read them.*
 
@@ -393,10 +381,7 @@ done
 
 ### SQL Server | CREATE MASTER KEY, CREATE CERTIFICATE FROM FILE | import the endpoint certificate on each secondary
 
-**When to run:** on every secondary, after the primary has exported the certificate and the files have been copied over.
-**Trigger:** initial AG setup or certificate rotation.
-**Context:** T-SQL in the `master` database on each secondary, sysadmin privileges required.
-**Purpose:** reconstitute the same `dbm_cert` used by the primary on each secondary so the endpoints can authenticate each other via matching certificate thumbprints.
+On every secondary, after the primary has exported the certificate and the files have been copied over. It is typically triggered by initial AG setup or certificate rotation. T-SQL in the `master` database on each secondary, sysadmin privileges required. Reconstitute the same `dbm_cert` used by the primary on each secondary so the endpoints can authenticate each other via matching certificate thumbprints.
 
 *Create the master key and import the public certificate + decrypted private key from the files copied from the primary.*
 
@@ -413,10 +398,7 @@ CREATE CERTIFICATE dbm_cert
 
 ### SQL Server | CREATE ENDPOINT | create the database mirroring endpoint on every node
 
-**When to run:** once per node, after the certificate has been created (primary) or imported (secondaries).
-**Trigger:** initial AG setup.
-**Context:** T-SQL in the `master` database on each node. `ROLE = ALL` allows the endpoint to serve both primary and secondary traffic — required for automatic failover. `ENCRYPTION = REQUIRED ALGORITHM AES` forces transport-layer encryption for all inter-replica log shipping. Port 5022 is the SQL Server convention but is freely configurable; change it on both sides consistently.
-**Purpose:** expose a TCP endpoint on port 5022 that transports the compressed log stream between replicas, authenticated via `dbm_cert`.
+Once per node, after the certificate has been created (primary) or imported (secondaries). It is typically triggered by initial AG setup. T-SQL in the `master` database on each node. `ROLE = ALL` allows the endpoint to serve both primary and secondary traffic — required for automatic failover. `ENCRYPTION = REQUIRED ALGORITHM AES` forces transport-layer encryption for all inter-replica log shipping. Port 5022 is the SQL Server convention but is freely configurable; change it on both sides consistently. Expose a TCP endpoint on port 5022 that transports the compressed log stream between replicas, authenticated via `dbm_cert`.
 
 > [!info]- CREATE ENDPOINT clause breakdown
 >
@@ -462,10 +444,7 @@ WHERE e.name = N'Hadr_endpoint';
 
 ### SQL Server | CREATE AVAILABILITY GROUP | create the AG with flexible failover policy
 
-**When to run:** once, on the primary, after all endpoints and certificates are in place on every node.
-**Trigger:** initial AG setup.
-**Context:** T-SQL in `master` on the primary, requires `CREATE AVAILABILITY GROUP` permission or sysadmin. Atomic operation — either the whole AG is created or none of it. After creation, the primary is in `RESOLVING` state until at least one secondary joins.
-**Purpose:** define the AG topology (replicas, availability modes, failover modes, seeding modes, routing lists), the flexible failover policy (`FAILURE_CONDITION_LEVEL`, `HEALTH_CHECK_TIMEOUT`, `DB_FAILOVER`), and the commit-safety constraint (`REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT`).
+Once, on the primary, after all endpoints and certificates are in place on every node. It is typically triggered by initial AG setup. T-SQL in `master` on the primary, requires `CREATE AVAILABILITY GROUP` permission or sysadmin. Atomic operation — either the whole AG is created or none of it. After creation, the primary is in `RESOLVING` state until at least one secondary joins. Define the AG topology (replicas, availability modes, failover modes, seeding modes, routing lists), the flexible failover policy (`FAILURE_CONDITION_LEVEL`, `HEALTH_CHECK_TIMEOUT`, `DB_FAILOVER`), and the commit-safety constraint (`REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT`).
 
 > [!info]- CREATE AVAILABILITY GROUP option reference
 >
@@ -555,10 +534,7 @@ FOR REPLICA ON
 
 ### SQL Server | ALTER AVAILABILITY GROUP JOIN | join each secondary to the AG
 
-**When to run:** on every secondary, immediately after the AG is created on the primary.
-**Trigger:** initial AG setup or adding a new replica.
-**Context:** T-SQL in `master` on the secondary, requires `ALTER ANY AVAILABILITY GROUP` or sysadmin. The `GRANT CREATE ANY DATABASE` is the permission required by the automatic seeding worker thread — without it seeding silently fails.
-**Purpose:** transition the secondary from having an AG definition in metadata to actively replicating with the primary. After JOIN succeeds, the secondary begins receiving log records and (with automatic seeding) creates its local copies of the AG databases.
+On every secondary, immediately after the AG is created on the primary. It is typically triggered by initial AG setup or adding a new replica. T-SQL in `master` on the secondary, requires `ALTER ANY AVAILABILITY GROUP` or sysadmin. The `GRANT CREATE ANY DATABASE` is the permission required by the automatic seeding worker thread — without it seeding silently fails. Transition the secondary from having an AG definition in metadata to actively replicating with the primary. After JOIN succeeds, the secondary begins receiving log records and (with automatic seeding) creates its local copies of the AG databases.
 
 *Join the secondary to the AG with `CLUSTER_TYPE = EXTERNAL` and grant the automatic seeding thread permission to create databases.*
 
@@ -569,10 +545,7 @@ ALTER AVAILABILITY GROUP [project_ag] GRANT CREATE ANY DATABASE;
 
 ### SQL Server | ALTER AVAILABILITY GROUP ADD DATABASE | add user databases to the AG
 
-**When to run:** on the primary, after all secondaries have joined and are showing as `CONNECTED`.
-**Trigger:** initial AG setup or ongoing database onboarding.
-**Context:** T-SQL on the primary. The target database must be in FULL recovery model and must have at least one full backup in its history (the AG log chain extends from that backup). With automatic seeding, the secondaries create their local copies in the same file layout — if the data/log paths differ, seeding fails.
-**Purpose:** attach a user database to the AG so it replicates to every secondary.
+On the primary, after all secondaries have joined and are showing as `CONNECTED`. It is typically triggered by initial AG setup or ongoing database onboarding. T-SQL on the primary. The target database must be in FULL recovery model and must have at least one full backup in its history (the AG log chain extends from that backup). With automatic seeding, the secondaries create their local copies in the same file layout — if the data/log paths differ, seeding fails. Attach a user database to the AG so it replicates to every secondary.
 
 *Flip the database to FULL recovery, take a full backup to seed the log chain, then add the database to the AG.*
 
@@ -588,10 +561,7 @@ ALTER AVAILABILITY GROUP [project_ag] ADD DATABASE [analytics_db];
 
 ### Linux | apt, pcs, corosync | configure Pacemaker + Corosync on every node
 
-**When to run:** after the AG is fully functional with at least one database replicating, before exposing the cluster to production traffic.
-**Trigger:** initial cluster bring-up with `CLUSTER_TYPE = EXTERNAL`. Skip entirely for `CLUSTER_TYPE = NONE` (read-scale AG).
-**Context:** Linux shell, `sudo` on every node. Install step is per-node; cluster configuration is done from one node with `pcs cluster setup` and propagates to the others. Restarts Corosync and Pacemaker services.
-**Purpose:** give SQL Server an external cluster resource manager that detects node failure, enforces quorum, drives automatic failover of the AG primary, and manages the listener VIP (or equivalent ILB integration).
+After the AG is fully functional with at least one database replicating, before exposing the cluster to production traffic. It is typically triggered by initial cluster bring-up with `CLUSTER_TYPE = EXTERNAL`. Skip entirely for `CLUSTER_TYPE = NONE` (read-scale AG). Linux shell, `sudo` on every node. Install step is per-node; cluster configuration is done from one node with `pcs cluster setup` and propagates to the others. Restarts Corosync and Pacemaker services. Give SQL Server an external cluster resource manager that detects node failure, enforces quorum, drives automatic failover of the AG primary, and manages the listener VIP (or equivalent ILB integration).
 
 *Install the Pacemaker stack, the SQL Server HA resource agent package, and the GCP fencing agent on every node.*
 
@@ -624,10 +594,7 @@ sudo pcs cluster enable --all
 
 #### Linux | Pacemaker | SQL Server health-check login and credential file
 
-**When to run:** after the AG is created but before `pcs resource create ag_cluster`.
-**Trigger:** initial cluster bring-up.
-**Context:** T-SQL on every node + Linux shell on every node. The SQL login is the identity Pacemaker uses via `sp_server_diagnostics`. The credential file `/var/opt/mssql/secrets/passwd` is read by the `ocf:mssql:ag` resource agent and must be root-owned with `0400` permissions.
-**Purpose:** give Pacemaker a dedicated, least-privilege SQL login that can query `sp_server_diagnostics` and issue AG failover commands.
+After the AG is created but before `pcs resource create ag_cluster`. It is typically triggered by initial cluster bring-up. T-SQL on every node + Linux shell on every node. The SQL login is the identity Pacemaker uses via `sp_server_diagnostics`. The credential file `/var/opt/mssql/secrets/passwd` is read by the `ocf:mssql:ag` resource agent and must be root-owned with `0400` permissions. Give Pacemaker a dedicated, least-privilege SQL login that can query `sp_server_diagnostics` and issue AG failover commands.
 
 *Create a dedicated Pacemaker login on every replica and grant the minimal AG management permissions.*
 
@@ -671,10 +638,7 @@ Corosync cluster membership is configured via `/etc/corosync/corosync.conf`. `pc
 
 #### Linux | pcs resource create | register the AG resource and constraints in Pacemaker
 
-**When to run:** once, from any single node, after Corosync + Pacemaker are running and authenticated.
-**Trigger:** initial cluster bring-up. Pacemaker propagates the configuration to all members via Corosync.
-**Context:** Linux shell, `sudo`. Creates a promotable clone resource (the modern replacement for the legacy `master` keyword) so the AG primary role can move between nodes. The VIP resource colocation constraint ensures the floating IP always lives on the current primary.
-**Purpose:** hand control of the AG primary role to Pacemaker, including automatic failover on node failure, so SQL Server and the cluster manager agree on who is primary at all times.
+Once, from any single node, after Corosync + Pacemaker are running and authenticated. It is typically triggered by initial cluster bring-up. Pacemaker propagates the configuration to all members via Corosync. Linux shell, `sudo`. Creates a promotable clone resource (the modern replacement for the legacy `master` keyword) so the AG primary role can move between nodes. The VIP resource colocation constraint ensures the floating IP always lives on the current primary. Hand control of the AG primary role to Pacemaker, including automatic failover on node failure, so SQL Server and the cluster manager agree on who is primary at all times.
 
 > [!info]- ocf:mssql:ag resource options
 >
@@ -733,10 +697,7 @@ sudo pcs constraint order promote ag_cluster-clone then start ag_vip
 
 ### SQL Server | CREATE / ALTER AVAILABILITY GROUP | tuning HEALTH_CHECK_TIMEOUT, FAILURE_CONDITION_LEVEL, SESSION_TIMEOUT, DB_FAILOVER
 
-**When to run:** after initial deployment once baseline latency and CPU pressure under production load are measured; adjust on incident response when false-positive failovers or missed failovers are observed.
-**Trigger:** flapping replicas, false-positive automatic failovers, or a health-check-related incident.
-**Context:** T-SQL on the primary. `HEALTH_CHECK_TIMEOUT` and `FAILURE_CONDITION_LEVEL` are AG-level and only affect synchronous replicas with automatic failover. `SESSION_TIMEOUT` is per-replica. `DB_FAILOVER` is AG-level.
-**Purpose:** make the flexible failover policy match the actual behaviour of the underlying infrastructure (cross-zone network latency, CPU pressure, I/O burst patterns).
+After initial deployment once baseline latency and CPU pressure under production load are measured; adjust on incident response when false-positive failovers or missed failovers are observed. It is typically triggered by flapping replicas, false-positive automatic failovers, or a health-check-related incident. T-SQL on the primary. `HEALTH_CHECK_TIMEOUT` and `FAILURE_CONDITION_LEVEL` are AG-level and only affect synchronous replicas with automatic failover. `SESSION_TIMEOUT` is per-replica. `DB_FAILOVER` is AG-level. Make the flexible failover policy match the actual behaviour of the underlying infrastructure (cross-zone network latency, CPU pressure, I/O burst patterns).
 
 | Option | Scope | Default | Range | What it controls |
 |--------|-------|---------|-------|------------------|
@@ -791,10 +752,7 @@ ALTER AVAILABILITY GROUP [project_ag]
 
 ### SQL Server | sys.availability_groups | AG-level inventory and flexible failover policy
 
-**When to run:** during initial validation of a new AG, during an incident to confirm the AG-level settings have not drifted, or before scheduling maintenance.
-**Trigger:** new AG deployment, incident response, pre-failover drill.
-**Context:** read-only T-SQL on any replica, requires `VIEW ANY DEFINITION`. Returns one row per AG hosted by the local instance.
-**Purpose:** confirm the AG-level options (cluster type, backup preference, failure condition level, health check timeout, DB failover, required synchronized secondaries) are what you expect.
+During initial validation of a new AG, during an incident to confirm the AG-level settings have not drifted, or before scheduling maintenance. It is typically triggered by new AG deployment, incident response, pre-failover drill. Read-only T-SQL on any replica, requires `VIEW ANY DEFINITION`. Returns one row per AG hosted by the local instance. Confirm the AG-level options (cluster type, backup preference, failure condition level, health check timeout, DB failover, required synchronized secondaries) are what you expect.
 
 | Field | Source column | Type | Meaning |
 |-------|---------------|------|---------|
@@ -832,10 +790,7 @@ FROM sys.availability_groups;
 
 ### SQL Server | sys.availability_replicas | per-replica configuration inventory
 
-**When to run:** during validation, incident response, or when planning a topology change.
-**Trigger:** replica added/removed, sync-mode change, read-only routing change.
-**Context:** read-only T-SQL on any replica. Returns one row per replica in every AG on the instance.
-**Purpose:** enumerate every replica's endpoint URL, availability mode, failover mode, session timeout, backup priority, seeding mode, and role-based connection allowance.
+During validation, incident response, or when planning a topology change. It is typically triggered by replica added/removed, sync-mode change, read-only routing change. Read-only T-SQL on any replica. Returns one row per replica in every AG on the instance. Enumerate every replica's endpoint URL, availability mode, failover mode, session timeout, backup priority, seeding mode, and role-based connection allowance.
 
 | Field | Source column | Type | Meaning |
 |-------|---------------|------|---------|
@@ -874,10 +829,7 @@ ORDER BY replica_server_name;
 
 ### SQL Server | sys.dm_hadr_availability_replica_states | replica-level live health
 
-**When to run:** first query of every incident response, every few seconds during a failover, on a monitoring interval in steady state.
-**Trigger:** any AG health alert, connection loss, flapping replica.
-**Context:** read-only T-SQL on any replica. Returns one row per replica in every AG on the instance, with live state (as opposed to the configured state in `sys.availability_replicas`).
-**Purpose:** identify the current primary, detect disconnected replicas, spot unhealthy sync state, and surface the recovery-health rollup from all databases on each replica.
+First query of every incident response, every few seconds during a failover, on a monitoring interval in steady state. It is typically triggered by any AG health alert, connection loss, flapping replica. Read-only T-SQL on any replica. Returns one row per replica in every AG on the instance, with live state (as opposed to the configured state in `sys.availability_replicas`). Identify the current primary, detect disconnected replicas, spot unhealthy sync state, and surface the recovery-health rollup from all databases on each replica.
 
 | Field | Source column | Type | Value domain |
 |-------|---------------|------|--------------|
@@ -933,10 +885,7 @@ ORDER BY ars.role_desc DESC, ar.replica_server_name;
 
 ### SQL Server | sys.dm_hadr_database_replica_states | per-database synchronization, send queue, redo queue
 
-**When to run:** second query of every incident response. Poll every 10–30 seconds during an ongoing sync issue to watch queues grow or shrink.
-**Trigger:** log shipping alert, growing send or redo queue, suspended data movement.
-**Context:** read-only T-SQL on the primary for the most complete picture — secondary rows are accurate when queried from the primary. Returns one row per database per replica.
-**Purpose:** identify which specific database on which specific replica is falling behind, see send/redo queue magnitudes, detect suspended replication, and read the suspend reason if any.
+Second query of every incident response. Poll every 10–30 seconds during an ongoing sync issue to watch queues grow or shrink. It is typically triggered by log shipping alert, growing send or redo queue, suspended data movement. Read-only T-SQL on the primary for the most complete picture — secondary rows are accurate when queried from the primary. Returns one row per database per replica. Identify which specific database on which specific replica is falling behind, see send/redo queue magnitudes, detect suspended replication, and read the suspend reason if any.
 
 | Field | Source column | Type | Meaning / Units |
 |-------|---------------|------|-----------------|
@@ -1011,10 +960,7 @@ ORDER BY d.name, ar.replica_server_name;
 
 ### SQL Server | sys.dm_hadr_cluster, sys.dm_hadr_cluster_members | cluster membership
 
-**When to run:** during initial validation of `CLUSTER_TYPE = EXTERNAL` deployments, incident response when a replica is unreachable, or when the quorum state is suspect.
-**Trigger:** Pacemaker event, fenced node, new cluster member added.
-**Context:** read-only T-SQL. `sys.dm_hadr_cluster` returns cluster identity and quorum type; `sys.dm_hadr_cluster_members` returns one row per cluster member with state and voting information.
-**Purpose:** confirm which nodes are cluster members from SQL Server's perspective (independent of what Pacemaker reports) and read the quorum state.
+During initial validation of `CLUSTER_TYPE = EXTERNAL` deployments, incident response when a replica is unreachable, or when the quorum state is suspect. It is typically triggered by pacemaker event, fenced node, new cluster member added. Read-only T-SQL. `sys.dm_hadr_cluster` returns cluster identity and quorum type; `sys.dm_hadr_cluster_members` returns one row per cluster member with state and voting information. Confirm which nodes are cluster members from SQL Server's perspective (independent of what Pacemaker reports) and read the quorum state.
 
 *Read cluster identity and quorum type from SQL Server's local cache.*
 
@@ -1044,10 +990,7 @@ FROM sys.dm_hadr_cluster_members;
 
 ### SQL Server | sys.dm_hadr_automatic_seeding | seeding progress when adding a database or replica
 
-**When to run:** while adding a new database to the AG or bringing a new replica up with `SEEDING_MODE = AUTOMATIC`. Rows appear only while seeding is active; the view empties immediately after each seeding completes or fails.
-**Trigger:** `ALTER AVAILABILITY GROUP ... ADD DATABASE` with automatic seeding, or a freshly joined secondary automatically seeding from the primary.
-**Context:** T-SQL on the primary. Returns zero rows when no seeding is in progress.
-**Purpose:** monitor seeding progress and identify the exact failure reason if seeding stalls.
+While adding a new database to the AG or bringing a new replica up with `SEEDING_MODE = AUTOMATIC`. Rows appear only while seeding is active; the view empties immediately after each seeding completes or fails. It is typically triggered by `ALTER AVAILABILITY GROUP ... ADD DATABASE` with automatic seeding, or a freshly joined secondary automatically seeding from the primary. T-SQL on the primary. Returns zero rows when no seeding is in progress. Monitor seeding progress and identify the exact failure reason if seeding stalls.
 
 | Field | Source column | Type | Meaning |
 |-------|---------------|------|---------|
@@ -1083,10 +1026,7 @@ JOIN sys.availability_groups ag ON hadr_s.ag_id = ag.group_id;
 
 ### SQL Server | AG health dashboard | consolidated single-query snapshot
 
-**When to run:** primary query for dashboards, hourly monitoring, and incident-response first-look. Execute against the primary for the most authoritative view.
-**Trigger:** any routine AG health check, incident response, or monitoring cadence.
-**Context:** read-only T-SQL on the primary, joins 5 catalog + DMV views.
-**Purpose:** one-shot health snapshot that combines AG name, replica role, mode, health, connection state, per-database sync state, log and redo queue magnitudes, suspended flag, and staleness in seconds.
+Primary query for dashboards, hourly monitoring, and incident-response first-look. Execute against the primary for the most authoritative view. It is typically triggered by any routine AG health check, incident response, or monitoring cadence. Read-only T-SQL on the primary, joins 5 catalog + DMV views. One-shot health snapshot that combines AG name, replica role, mode, health, connection state, per-database sync state, log and redo queue magnitudes, suspended flag, and staleness in seconds.
 
 > [!info]- AG health dashboard clause-by-clause breakdown
 >
@@ -1190,10 +1130,7 @@ stateDiagram-v2
 
 ### SQL Server | ALTER AVAILABILITY GROUP FAILOVER | planned failover with zero data loss
 
-**When to run:** before OS patching, SQL Server upgrades, VM maintenance, hardware rotation, or any planned downtime of the current primary.
-**Trigger:** scheduled maintenance window; must be chosen proactively when the synchronous secondary is fully caught up.
-**Context:** run on the **target secondary** (not the primary), in a T-SQL session with `ALTER AVAILABILITY GROUP` permission or sysadmin. Only valid when the target secondary is in `SYNCHRONOUS_COMMIT` mode, is `CONNECTED`, and the per-database state is `SYNCHRONIZED`. Applications connected via the listener experience a brief disconnect (~10–30 s); open transactions on the old primary that have not committed are rolled back.
-**Purpose:** move the primary role without data loss so the old primary can be taken offline for maintenance.
+Before OS patching, SQL Server upgrades, VM maintenance, hardware rotation, or any planned downtime of the current primary. It is typically triggered by scheduled maintenance window; must be chosen proactively when the synchronous secondary is fully caught up. Run on the **target secondary** (not the primary), in a T-SQL session with `ALTER AVAILABILITY GROUP` permission or sysadmin. Only valid when the target secondary is in `SYNCHRONOUS_COMMIT` mode, is `CONNECTED`, and the per-database state is `SYNCHRONIZED`. Applications connected via the listener experience a brief disconnect (~10–30 s); open transactions on the old primary that have not committed are rolled back. Move the primary role without data loss so the old primary can be taken offline for maintenance.
 
 *Pre-flight check: confirm the target secondary has all databases in `SYNCHRONIZED` state before issuing the failover.*
 
@@ -1230,10 +1167,7 @@ After the command returns, the old primary becomes a secondary and starts receiv
 
 ### SQL Server | ALTER AVAILABILITY GROUP FORCE_FAILOVER_ALLOW_DATA_LOSS | emergency forced failover
 
-**When to run:** only when the primary is unreachable and cannot be recovered within RTO.
-**Trigger:** primary-side hard failure (node down, disk failure, extended network partition).
-**Context:** run on the secondary you want to promote. Requires sysadmin. This command does NOT wait for the original primary and may lose committed transactions not yet hardened on this secondary.
-**Purpose:** regain write availability when the primary is permanently lost or unreachable within the recovery window.
+Only when the primary is unreachable and cannot be recovered within RTO. It is typically triggered by primary-side hard failure (node down, disk failure, extended network partition). Run on the secondary you want to promote. Requires sysadmin. This command does NOT wait for the original primary and may lose committed transactions not yet hardened on this secondary. Regain write availability when the primary is permanently lost or unreachable within the recovery window.
 
 > [!danger] Forced failover may lose committed transactions
 >
@@ -1273,10 +1207,7 @@ ALTER AVAILABILITY GROUP [project_ag] FORCE_FAILOVER_ALLOW_DATA_LOSS;
 
 #### SQL Server | ALTER AVAILABILITY GROUP | post-forced-failover recovery sequence
 
-**When to run:** immediately after a forced failover completes and the old primary becomes reachable again.
-**Trigger:** recovery of the old primary following a forced failover.
-**Context:** T-SQL on the old primary (now a secondary candidate). Requires sysadmin.
-**Purpose:** reintegrate the old primary as a secondary under the new primary, either via rejoin (if the log chain is compatible) or via drop-and-reseed (if the databases diverged).
+Immediately after a forced failover completes and the old primary becomes reachable again. It is typically triggered by recovery of the old primary following a forced failover. T-SQL on the old primary (now a secondary candidate). Requires sysadmin. Reintegrate the old primary as a secondary under the new primary, either via rejoin (if the log chain is compatible) or via drop-and-reseed (if the databases diverged).
 
 1. Check for data inconsistencies between the new primary and the rejoined replicas.
 2. When the old primary comes back online, any transactions it committed after losing contact with the new primary are divergent and cannot be merged — they must be discarded or captured via logical extract.
@@ -1304,10 +1235,7 @@ ALTER AVAILABILITY GROUP [project_ag] GRANT CREATE ANY DATABASE;
 
 ### Linux | pcs status | Pacemaker-driven automatic failover
 
-**When to run:** after an incident response to confirm Pacemaker promoted the expected replica, or during routine observation to confirm the cluster is healthy.
-**Trigger:** automatic failover event, cluster health alert, or scheduled health check.
-**Context:** Linux shell on any cluster node, `sudo` required for `pcs resource failcount`. Read-only observations — nothing is changed by these commands.
-**Purpose:** confirm which node currently holds the promoted AG role, read the failcount for the AG resource, and tail recent Pacemaker logs for failover events.
+After an incident response to confirm Pacemaker promoted the expected replica, or during routine observation to confirm the cluster is healthy. It is typically triggered by automatic failover event, cluster health alert, or scheduled health check. Linux shell on any cluster node, `sudo` required for `pcs resource failcount`. Read-only observations — nothing is changed by these commands. Confirm which node currently holds the promoted AG role, read the failcount for the AG resource, and tail recent Pacemaker logs for failover events.
 
 *Read current cluster status: nodes online, promoted/unpromoted role assignment, resources running.*
 
@@ -1366,10 +1294,7 @@ sudo journalctl -u pacemaker --since "1 hour ago" | grep -iE "failover|promote|d
 
 ### SQL Server | ALTER AVAILABILITY GROUP | configure READ_ONLY_ROUTING_URL and READ_ONLY_ROUTING_LIST
 
-**When to run:** during initial AG setup, when adding a new readable secondary, or when adjusting the read-intent routing policy.
-**Trigger:** new AG deployment, new readable replica, policy change to offload reporting workload.
-**Context:** T-SQL on the primary, requires `ALTER AVAILABILITY GROUP` permission. Each `ALTER AVAILABILITY GROUP ... MODIFY REPLICA` call is transactional and takes effect immediately on the next new connection.
-**Purpose:** tell each replica what URL to advertise as a read-target (`READ_ONLY_ROUTING_URL`) and, for the primary role, what ordered or load-balanced list of replicas to redirect read-intent connections to (`READ_ONLY_ROUTING_LIST`).
+During initial AG setup, when adding a new readable secondary, or when adjusting the read-intent routing policy. It is typically triggered by new AG deployment, new readable replica, policy change to offload reporting workload. T-SQL on the primary, requires `ALTER AVAILABILITY GROUP` permission. Each `ALTER AVAILABILITY GROUP ... MODIFY REPLICA` call is transactional and takes effect immediately on the next new connection. Tell each replica what URL to advertise as a read-target (`READ_ONLY_ROUTING_URL`) and, for the primary role, what ordered or load-balanced list of replicas to redirect read-intent connections to (`READ_ONLY_ROUTING_LIST`).
 
 > [!info]- Routing list ordering vs load balancing syntax
 >
@@ -1443,10 +1368,7 @@ Server=project-ag.internal,1433;Database=analytics_db;ApplicationIntent=ReadOnly
 
 ### SQL Server | @@SERVERNAME, DATABASEPROPERTYEX | verify routing is working
 
-**When to run:** from a read-intent session after configuring read-only routing, during incident response when read workloads unexpectedly hit the primary, or as a periodic sanity check.
-**Trigger:** initial routing deployment, reporting workload pressure on primary, client-library upgrade.
-**Context:** T-SQL session opened with `ApplicationIntent=ReadOnly` against the listener. Requires only `CONNECT` permission to the database.
-**Purpose:** confirm the session was actually routed to a secondary and verify the database is in the read-only updateability state on that secondary.
+From a read-intent session after configuring read-only routing, during incident response when read workloads unexpectedly hit the primary, or as a periodic sanity check. It is typically triggered by initial routing deployment, reporting workload pressure on primary, client-library upgrade. T-SQL session opened with `ApplicationIntent=ReadOnly` against the listener. Requires only `CONNECT` permission to the database. Confirm the session was actually routed to a secondary and verify the database is in the read-only updateability state on that secondary.
 
 *Report the connected server name and the database's updateability mode (READ_ONLY vs READ_WRITE).*
 
@@ -1477,10 +1399,7 @@ SELECT @@SERVERNAME                                   AS connected_to,
 
 **Symptoms:** one or more rows in `sys.dm_hadr_database_replica_states` show `synchronization_state_desc = 'NOT SYNCHRONIZING'` for the database on the affected replica; the rollup `synchronization_health_desc` is `NOT_HEALTHY`; log send queue on the primary stops growing or stays at NULL.
 
-**When to run:** first incident-response query when an alert fires on sync state.
-**Trigger:** monitoring alert on `synchronization_health = NOT_HEALTHY` or `is_suspended = 1`.
-**Context:** T-SQL on the primary.
-**Purpose:** detect manual suspensions vs implicit suspensions caused by endpoint or transport issues.
+First incident-response query when an alert fires on sync state. It is typically triggered by monitoring alert on `synchronization_health = NOT_HEALTHY` or `is_suspended = 1`. T-SQL on the primary. Detect manual suspensions vs implicit suspensions caused by endpoint or transport issues.
 
 *Find databases with data movement suspended and read the suspend reason.*
 
@@ -1518,10 +1437,7 @@ WHERE drs.is_suspended = 1
 
 **Symptoms:** `redo_queue_size` on a secondary grows faster than `redo_rate` can drain it; readable secondary reports become stale; failover would take longer than RTO allows.
 
-**When to run:** during an alert on `redo_queue_size > 50 MB` or when secondary reporting lag is noticed.
-**Trigger:** monitoring alert on redo queue, slow report query complaints.
-**Context:** T-SQL on the primary; `iostat` and `top` on the secondary OS.
-**Purpose:** measure how long the secondary would need to catch up at current redo rate and diagnose whether the bottleneck is I/O, CPU, lock contention, or parallel redo thread exhaustion.
+During an alert on `redo_queue_size > 50 MB` or when secondary reporting lag is noticed. It is typically triggered by monitoring alert on redo queue, slow report query complaints. T-SQL on the primary; `iostat` and `top` on the secondary OS. Measure how long the secondary would need to catch up at current redo rate and diagnose whether the bottleneck is I/O, CPU, lock contention, or parallel redo thread exhaustion.
 
 *Measure estimated redo catchup time in seconds for every secondary with a nonzero redo queue.*
 
@@ -1553,10 +1469,7 @@ WHERE drs.redo_queue_size > 0;
 
 **Symptoms:** primary goes down but the expected secondary is not promoted; `sys.dm_hadr_availability_replica_states` on the surviving node does not show `role_desc = PRIMARY`.
 
-**When to run:** immediately after an expected automatic failover did not happen.
-**Trigger:** extended primary outage without promotion, stuck clients, alarm on AG availability.
-**Context:** Linux shell on any surviving node, `sudo` required for `pcs resource cleanup`.
-**Purpose:** identify why Pacemaker refused to promote and clear the blocker.
+Immediately after an expected automatic failover did not happen. It is typically triggered by extended primary outage without promotion, stuck clients, alarm on AG availability. Linux shell on any surviving node, `sudo` required for `pcs resource cleanup`. Identify why Pacemaker refused to promote and clear the blocker.
 
 *Check Pacemaker resource status, clear failure counts, and verify quorum.*
 
@@ -1595,10 +1508,7 @@ sudo crm_mon -1
 - Use an odd number of voting cluster members (3, 5) or a 2-data + 1-config-only topology. Even-node clusters are vulnerable to symmetric partitions.
 - Never set `no-quorum-policy = ignore` on a 2-node cluster — this explicitly allows both sides to run independently if they partition.
 
-**When to run:** from each reachable cluster node during a suspected split-brain event.
-**Trigger:** observed divergence in application state between supposedly synchronized replicas, or Pacemaker reporting multiple promoted members.
-**Context:** T-SQL on each cluster node directly (not via the listener). Requires login to each individual node.
-**Purpose:** confirm whether the cluster is actually in a split-brain state and identify which node has the most recent hardened LSN.
+From each reachable cluster node during a suspected split-brain event. It is typically triggered by observed divergence in application state between supposedly synchronized replicas, or Pacemaker reporting multiple promoted members. T-SQL on each cluster node directly (not via the listener). Requires login to each individual node. Confirm whether the cluster is actually in a split-brain state and identify which node has the most recent hardened LSN.
 
 *Run on every reachable node. If more than one node returns a row with `role_desc = PRIMARY`, the cluster is in a split-brain state.*
 
@@ -1636,10 +1546,7 @@ WHERE ars.role_desc = 'PRIMARY'
 >
 > At creation time, set `EXPIRY_DATE = '2036-04-11'` (10 years ahead) or similar. Independently, run the weekly scan query below as a SQL Agent job (or cron job executing sqlcmd) and alert on any row returning `days_remaining < 60`.
 
-**When to run:** weekly as a scheduled monitoring check, and on demand during any "suddenly disconnected" AG incident.
-**Trigger:** periodic monitoring cadence, or post-incident investigation.
-**Context:** T-SQL on any replica.
-**Purpose:** identify certificates nearing expiry before they break the AG.
+Weekly as a scheduled monitoring check, and on demand during any "suddenly disconnected" AG incident. It is typically triggered by periodic monitoring cadence, or post-incident investigation. T-SQL on any replica. Identify certificates nearing expiry before they break the AG.
 
 *Scan all certificates for upcoming expiry, including built-in signing certificates (filtered out of operational alerting) and user certificates like `dbm_cert`.*
 
@@ -1683,10 +1590,7 @@ ALTER ENDPOINT [Hadr_endpoint]
 
 ### SQL Server | sys.dm_hadr_database_replica_states | monitor log send, redo, and commit lag
 
-**When to run:** as a dashboard metric every 30–60 seconds, during load testing, or during capacity planning.
-**Trigger:** baseline measurement, performance regression investigation, latency alert.
-**Context:** T-SQL on the primary for accurate cross-replica values.
-**Purpose:** quantify the log transport pipeline at every hop to identify whether the bottleneck is network send throughput, secondary harden throughput, or secondary redo throughput.
+As a dashboard metric every 30–60 seconds, during load testing, or during capacity planning. It is typically triggered by baseline measurement, performance regression investigation, latency alert. T-SQL on the primary for accurate cross-replica values. Quantify the log transport pipeline at every hop to identify whether the bottleneck is network send throughput, secondary harden throughput, or secondary redo throughput.
 
 *Monitor log send and redo rates plus commit lag across all replicas in MB units. A persistent gap between `log_send_rate` and `redo_rate` indicates the secondary cannot replay log records as fast as they arrive.*
 
@@ -1715,10 +1619,7 @@ JOIN sys.availability_replicas ar ON drs.replica_id = ar.replica_id;
 
 ### SQL Server | sys.availability_groups | commit latency impact of synchronous commit
 
-**When to run:** during baseline measurement, when deciding whether to set a cross-region replica to sync or async, or during incident response on high `HADR_SYNC_COMMIT` waits.
-**Trigger:** latency regression, new cross-region replica deployment, or change to `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT`.
-**Context:** T-SQL on the primary, read-only.
-**Purpose:** confirm the current commit-safety setting and reason about its interaction with observed `HADR_SYNC_COMMIT` wait times.
+During baseline measurement, when deciding whether to set a cross-region replica to sync or async, or during incident response on high `HADR_SYNC_COMMIT` waits. It is typically triggered by latency regression, new cross-region replica deployment, or change to `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT`. T-SQL on the primary, read-only. Confirm the current commit-safety setting and reason about its interaction with observed `HADR_SYNC_COMMIT` wait times.
 
 Every write transaction on the primary in synchronous-commit mode waits for at least `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT` synchronous secondaries to confirm the log has been hardened. This adds one network round trip plus the secondary's disk-harden time to every commit. The wait appears as `HADR_SYNC_COMMIT` in `sys.dm_os_wait_stats` and holds all transaction locks until it clears — average wait time above ~5 ms directly contributes to blocking on the primary.
 
@@ -1779,10 +1680,7 @@ FROM sys.availability_groups ag;
 
 ### SQL Server | ALTER AVAILABILITY GROUP | configure backup preference and priority
 
-**When to run:** during initial AG setup and any time the topology changes (replica added, removed, or resized).
-**Trigger:** new deployment or backup strategy change.
-**Context:** T-SQL on the primary. `AUTOMATED_BACKUP_PREFERENCE` is AG-level; `BACKUP_PRIORITY` is per-replica and acts as a tiebreaker when multiple replicas share the same preference class.
-**Purpose:** tell backup scripts (via `sys.fn_hadr_backup_is_preferred_replica`) which replica should actually run the backup at any given moment.
+During initial AG setup and any time the topology changes (replica added, removed, or resized). It is typically triggered by new deployment or backup strategy change. T-SQL on the primary. `AUTOMATED_BACKUP_PREFERENCE` is AG-level; `BACKUP_PRIORITY` is per-replica and acts as a tiebreaker when multiple replicas share the same preference class. Tell backup scripts (via `sys.fn_hadr_backup_is_preferred_replica`) which replica should actually run the backup at any given moment.
 
 | Option | Value | Meaning |
 |--------|-------|---------|
@@ -1809,10 +1707,7 @@ ALTER AVAILABILITY GROUP [project_ag]
 
 ### SQL Server | sys.fn_hadr_backup_is_preferred_replica | runtime check for backup scripts
 
-**When to run:** inside every backup script step, as the first check before executing `BACKUP DATABASE`.
-**Trigger:** scheduled backup job execution.
-**Context:** read-only T-SQL, callable with only the `CONNECT` permission. Takes a database name argument; returns `1` if this replica is the currently-preferred backup target for that database, `0` otherwise. For databases not in any AG the function returns `1`.
-**Purpose:** allow the same backup script to be deployed identically on every AG node while ensuring only one node actually runs the backup at any given time. The preference check is evaluated at script execution time, so it automatically follows topology and role changes.
+Inside every backup script step, as the first check before executing `BACKUP DATABASE`. It is typically triggered by scheduled backup job execution. Read-only T-SQL, callable with only the `CONNECT` permission. Takes a database name argument; returns `1` if this replica is the currently-preferred backup target for that database, `0` otherwise. For databases not in any AG the function returns `1`. Allow the same backup script to be deployed identically on every AG node while ensuring only one node actually runs the backup at any given time. The preference check is evaluated at script execution time, so it automatically follows topology and role changes.
 
 *Check if the local replica is currently the preferred backup target for `analytics_db`.*
 
@@ -1829,10 +1724,7 @@ SELECT sys.fn_hadr_backup_is_preferred_replica('analytics_db') AS is_preferred_f
 
 ### Linux | sqlcmd, bash | wrapper script for preference-gated backup
 
-**When to run:** deploy the same script as a cron job (or SQL Agent job) on every AG node. At the scheduled time, every node evaluates the preference check and only the preferred replica proceeds to backup.
-**Trigger:** scheduled backup cadence.
-**Context:** Linux shell, typically runs as the SQL Server service account or a dedicated backup user. Requires sqlcmd and the `$SA_PASSWORD` (or a connection string using a dedicated SQL login with `VIEW ANY DEFINITION` and `BACKUP DATABASE` permissions).
-**Purpose:** make backup execution topology-aware and failover-safe so operators do not need to reconfigure scripts after an AG failover or reseed.
+Deploy the same script as a cron job (or SQL Agent job) on every AG node. At the scheduled time, every node evaluates the preference check and only the preferred replica proceeds to backup. It is typically triggered by scheduled backup cadence. Linux shell, typically runs as the SQL Server service account or a dedicated backup user. Requires sqlcmd and the `$SA_PASSWORD` (or a connection string using a dedicated SQL login with `VIEW ANY DEFINITION` and `BACKUP DATABASE` permissions). Make backup execution topology-aware and failover-safe so operators do not need to reconfigure scripts after an AG failover or reseed.
 
 *Wrapper script that checks preference then runs a COPY_ONLY full backup only on the preferred replica. Deploy identically on every AG node.*
 
@@ -1875,10 +1767,7 @@ fi
 
 ### GCP | gcloud compute | Internal Load Balancer as AG listener replacement
 
-**When to run:** once, during initial AG deployment on GCP, before cutting application traffic over to the listener address.
-**Trigger:** new AG deployment on GCP or migration from on-prem VIP-based AG to GCP.
-**Context:** `gcloud compute` commands from an administrative workstation or Cloud Shell, requires `compute.healthChecks.create`, `compute.instanceGroups.create`, `compute.backendServices.create`, and `compute.forwardingRules.create` IAM permissions. The forwarding rule IP becomes the AG listener VIP; every client connects to this IP (or to a Cloud DNS record pointing at it).
-**Purpose:** replace the traditional floating VIP with a GCP-native load balancer whose health check only passes on the current primary, so write traffic always lands on the current primary after failover without needing Gratuitous ARP.
+Once, during initial AG deployment on GCP, before cutting application traffic over to the listener address. It is typically triggered by new AG deployment on GCP or migration from on-prem VIP-based AG to GCP. `gcloud compute` commands from an administrative workstation or Cloud Shell, requires `compute.healthChecks.create`, `compute.instanceGroups.create`, `compute.backendServices.create`, and `compute.forwardingRules.create` IAM permissions. The forwarding rule IP becomes the AG listener VIP; every client connects to this IP (or to a Cloud DNS record pointing at it). Replace the traditional floating VIP with a GCP-native load balancer whose health check only passes on the current primary, so write traffic always lands on the current primary after failover without needing Gratuitous ARP.
 
 *Create a TCP health check, an unmanaged instance group containing all AG nodes, a backend service, and a forwarding rule. The forwarding rule IP becomes the AG listener address.*
 
@@ -1922,10 +1811,7 @@ gcloud compute forwarding-rules create project-ag-ilb \
 
 ### SQL Server | CREATE OR ALTER PROCEDURE | usp_ag_health_check for ILB
 
-**When to run:** once, during initial deployment of the GCP ILB listener pattern. After creation the stored procedure is called by the side-car health-probe daemon on every cluster node.
-**Trigger:** ILB listener setup.
-**Context:** T-SQL in the user database (not `master`) so the procedure is included in the AG and automatically exists on every replica. Requires sysadmin or `CREATE PROCEDURE` plus `VIEW SERVER STATE`.
-**Purpose:** return success only when the local replica is the current primary, so the ILB health check can route write traffic exclusively to that node.
+Once, during initial deployment of the GCP ILB listener pattern. After creation the stored procedure is called by the side-car health-probe daemon on every cluster node. It is typically triggered by ILB listener setup. T-SQL in the user database (not `master`) so the procedure is included in the AG and automatically exists on every replica. Requires sysadmin or `CREATE PROCEDURE` plus `VIEW SERVER STATE`. Return success only when the local replica is the current primary, so the ILB health check can route write traffic exclusively to that node.
 
 *Stored procedure returning 1 only when called on the current primary replica; raises error 50000 otherwise.*
 
@@ -1948,10 +1834,7 @@ END;
 
 ### GCP | fence_gce | STONITH fencing for Pacemaker on GCE
 
-**When to run:** during initial Pacemaker bring-up on GCP, before exposing the cluster to production traffic.
-**Trigger:** new Pacemaker cluster on GCP, or transition from `stonith-enabled=false` (lab configuration) to production.
-**Context:** Linux shell on any cluster node, `sudo`. The `fence_gce` agent is packaged in `fence-agents-gce` on Debian/Ubuntu. It fences by calling the GCP Compute Engine API to power-cycle the target instance — this requires the cluster nodes to have IAM permissions on each other's instances.
-**Purpose:** provide a working STONITH fencing device so Pacemaker can forcibly power-cycle a node that loses quorum, preventing split-brain. Pacemaker refuses to promote resources without working fencing in the default configuration.
+During initial Pacemaker bring-up on GCP, before exposing the cluster to production traffic. It is typically triggered by new Pacemaker cluster on GCP, or transition from `stonith-enabled=false` (lab configuration) to production. Linux shell on any cluster node, `sudo`. The `fence_gce` agent is packaged in `fence-agents-gce` on Debian/Ubuntu. It fences by calling the GCP Compute Engine API to power-cycle the target instance — this requires the cluster nodes to have IAM permissions on each other's instances. Provide a working STONITH fencing device so Pacemaker can forcibly power-cycle a node that loses quorum, preventing split-brain. Pacemaker refuses to promote resources without working fencing in the default configuration.
 
 *Create a `fence_gce` STONITH resource targeting the other cluster nodes.*
 
@@ -1983,10 +1866,7 @@ This topology tolerates one zone failure (any of b, c, d) without data loss: the
 
 ### GCP | gcloud compute disks snapshot | persistent disk snapshots as an additional safety net
 
-**When to run:** weekly or monthly, as a scheduled job from a bastion host or Cloud Function.
-**Trigger:** scheduled data-protection cadence orthogonal to the AG log chain.
-**Context:** administrative Linux shell with `compute.disks.createSnapshot` IAM permission. Snapshots are regional by default and take a crash-consistent picture of the persistent disk.
-**Purpose:** provide a recovery path that survives logical corruption (where an AG would replicate the corruption to every replica) — snapshots are taken from a secondary's disk so the backup/restore cost is isolated from the primary, and they can be restored to a fresh VM in any zone within the region.
+Weekly or monthly, as a scheduled job from a bastion host or Cloud Function. It is typically triggered by scheduled data-protection cadence orthogonal to the AG log chain. Administrative Linux shell with `compute.disks.createSnapshot` IAM permission. Snapshots are regional by default and take a crash-consistent picture of the persistent disk. Provide a recovery path that survives logical corruption (where an AG would replicate the corruption to every replica) — snapshots are taken from a secondary's disk so the backup/restore cost is isolated from the primary, and they can be restored to a fresh VM in any zone within the region.
 
 *Snapshot the secondary's data disk weekly and retain the most recent 4 snapshots (discard older ones via tail).*
 

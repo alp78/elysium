@@ -86,10 +86,7 @@ The `gcloud` help system is a tree. Top-level help shows major groups and standa
 
 #### Read the top-level help page
 
-**When to run:** At the start of a session with an unfamiliar workstation, or any time you need to re-orient yourself inside the overall `gcloud` command tree.
-**Trigger:** You know you need `gcloud`, but you do not yet know which command group contains the operation you want.
-**Context:** Read-only local help command. It does not call project APIs or modify the active configuration.
-**Purpose:** Show the top-level command grammar, global flags, major command groups, and built-in standalone commands.
+At the start of a session with an unfamiliar workstation, or any time you need to re-orient yourself inside the overall `gcloud` command tree. It is typically triggered by you know you need `gcloud`, but you do not yet know which command group contains the operation you want. Read-only local help command. It does not call project APIs or modify the active configuration. Show the top-level command grammar, global flags, major command groups, and built-in standalone commands.
 
 *Print the opening section of the top-level `gcloud` help page.*
 
@@ -166,10 +163,7 @@ The two most important clues are the `GROUP | COMMAND` grammar in the synopsis a
 
 #### Drill down from a product group to a resource subgroup
 
-**When to run:** After you know the product area but still need to discover the resource families and verbs available under it.
-**Trigger:** The top-level help confirms the right product group, but you still do not know the exact resource path.
-**Context:** Read-only group help command.
-**Purpose:** Show the next layer of the command tree so you can move from product area to a more specific resource collection.
+After you know the product area but still need to discover the resource families and verbs available under it. It is typically triggered by the top-level help confirms the right product group, but you still do not know the exact resource path. Read-only group help command. Show the next layer of the command tree so you can move from product area to a more specific resource collection.
 
 *List the Compute Engine subgroups and direct commands.*
 
@@ -232,10 +226,7 @@ At this level the structure becomes operational. `instances` is a subgroup becau
 
 #### Drill from a subgroup to the concrete verbs you can run
 
-**When to run:** After the group page tells you which resource collection you need.
-**Trigger:** You know the resource type, such as VM instances, but still need to discover the available verbs.
-**Context:** Read-only subgroup help command.
-**Purpose:** Show the resource-level verbs that can be executed directly, such as `list`, `describe`, `create`, and `delete`.
+After the group page tells you which resource collection you need. It is typically triggered by you know the resource type, such as VM instances, but still need to discover the available verbs. Read-only subgroup help command. Show the resource-level verbs that can be executed directly, such as `list`, `describe`, `create`, and `delete`.
 
 *List the verbs available under the Compute Engine instances subgroup.*
 
@@ -294,10 +285,7 @@ This is the point where tree navigation turns into command selection. If you are
 
 #### Open a full command help page directly
 
-**When to run:** When you already know the full command path and want the detailed manual page immediately.
-**Trigger:** You need the synopsis, positional arguments, flags, examples, and notes for one leaf command.
-**Context:** Read-only help command for a specific leaf command.
-**Purpose:** Print the full manual page for the exact operation you are about to run.
+When you already know the full command path and want the detailed manual page immediately. It is typically triggered by you need the synopsis, positional arguments, flags, examples, and notes for one leaf command. Read-only help command for a specific leaf command. Print the full manual page for the exact operation you are about to run.
 
 *Open the full help page for the instance-creation command without manually traversing every tree level.*
 
@@ -381,10 +369,7 @@ The direct help page is where execution details live. It defines the positional 
 
 #### Read the help output anatomy
 
-**When to run:** After opening any non-trivial command help page.
-**Trigger:** You need to parse the help page quickly instead of reading it top to bottom.
-**Context:** This is an interpretation of the live help structure shown above.
-**Purpose:** Turn the help page into a predictable checklist so you can find the relevant section immediately.
+After opening any non-trivial command help page. It is typically triggered by you need to parse the help page quickly instead of reading it top to bottom. This is an interpretation of the live help structure shown above. Turn the help page into a predictable checklist so you can find the relevant section immediately.
 
 The major help sections have stable jobs:
 
@@ -416,10 +401,7 @@ The topic system covers concepts that do not belong to one leaf command: filters
 
 #### See how the topic dispatcher behaves with no topic name
 
-**When to run:** When you are testing what `gcloud topic` itself does in the installed SDK.
-**Trigger:** You expect a list of topics and want to see the current no-argument behavior directly.
-**Context:** Read-only local help dispatcher invocation.
-**Purpose:** Show the actual SDK behavior when `gcloud topic` is run without a topic name.
+When you are testing what `gcloud topic` itself does in the installed SDK. It is typically triggered by you expect a list of topics and want to see the current no-argument behavior directly. Read-only local help dispatcher invocation. Show the actual SDK behavior when `gcloud topic` is run without a topic name.
 
 *Run the bare topic dispatcher with no topic operand.*
 
@@ -460,10 +442,7 @@ In SDK `563.0.0`, bare `gcloud topic` is a dispatcher, not a clean listing comma
 
 #### Read the filter language reference
 
-**When to run:** Before writing a non-trivial `--filter` expression.
-**Trigger:** You need authoritative syntax for Boolean operators, comparison operators, or server/client filtering behavior.
-**Context:** Read-only local supplementary help command.
-**Purpose:** Show the canonical filter-language reference used across `gcloud` list commands.
+Before writing a non-trivial `--filter` expression. It is typically triggered by you need authoritative syntax for Boolean operators, comparison operators, or server/client filtering behavior. Read-only local supplementary help command. Show the canonical filter-language reference used across `gcloud` list commands.
 
 *Print the opening section of the filter reference.*
 
@@ -501,10 +480,7 @@ This is the authoritative local reference for `--filter`. The most important ope
 
 #### Read the format language reference
 
-**When to run:** Before building a custom `--format` expression.
-**Trigger:** You remember that `table`, `json`, `value`, or `csv` exists, but not the exact projection grammar.
-**Context:** Read-only local supplementary help command.
-**Purpose:** Show the syntax model behind `--format` expressions.
+Before building a custom `--format` expression. It is typically triggered by you remember that `table`, `json`, `value`, or `csv` exists, but not the exact projection grammar. Read-only local supplementary help command. Show the syntax model behind `--format` expressions.
 
 *Print the opening section of the format reference.*
 
@@ -541,10 +517,7 @@ The key sentence is that a format expression has named parts. Once you understan
 
 #### Read the projection and transform reference
 
-**When to run:** When you know you need `--format`, but the missing piece is field-path selection or transform functions.
-**Trigger:** The resource contains nested objects, repeated arrays, or verbose URIs that need trimming.
-**Context:** Read-only local supplementary help command.
-**Purpose:** Show how projections pick fields and how transforms rewrite values before printing them.
+When you know you need `--format`, but the missing piece is field-path selection or transform functions. It is typically triggered by the resource contains nested objects, repeated arrays, or verbose URIs that need trimming. Read-only local supplementary help command. Show how projections pick fields and how transforms rewrite values before printing them.
 
 *Print the opening section of the projection reference.*
 
@@ -582,10 +555,7 @@ This is the command you want when you know the output language exists but cannot
 
 #### Keep the other useful topics in reach
 
-**When to run:** After you know that your question is cross-cutting rather than resource-specific.
-**Trigger:** The problem is about startup behavior, escaping, file inclusion, or configuration semantics instead of one cloud resource.
-**Context:** These are local supplementary help topics discoverable under `gcloud topic`.
-**Purpose:** Map the remaining high-value topic pages to the operational questions they answer.
+After you know that your question is cross-cutting rather than resource-specific. It is typically triggered by the problem is about startup behavior, escaping, file inclusion, or configuration semantics instead of one cloud resource. These are local supplementary help topics discoverable under `gcloud topic`. Map the remaining high-value topic pages to the operational questions they answer.
 
 The most useful follow-on topics from the dispatcher output are:
 
@@ -651,10 +621,7 @@ stateDiagram-v2
 
 #### Inspect the beta command tree
 
-**When to run:** When you suspect a needed feature exists only outside GA.
-**Trigger:** A GA command is missing a verb or flag that newer documentation or examples mention.
-**Context:** Read-only help command for the beta release track.
-**Purpose:** Show the beta root surface and confirm that the current SDK exposes a separate beta namespace.
+When you suspect a needed feature exists only outside GA. It is typically triggered by A GA command is missing a verb or flag that newer documentation or examples mention. Read-only help command for the beta release track. Show the beta root surface and confirm that the current SDK exposes a separate beta namespace.
 
 *Print the opening section of the beta release-track help page.*
 
@@ -680,10 +647,7 @@ The beta root makes the track explicit in two places: the `NAME` line and the `(
 
 #### Inspect the alpha command tree
 
-**When to run:** When a feature appears to exist only in the earliest preview surface.
-**Trigger:** GA and beta both lack the command shape you need, or documentation explicitly mentions an alpha command.
-**Context:** Read-only help command for the alpha release track.
-**Purpose:** Show the alpha root surface and confirm that the current SDK exposes an alpha namespace.
+When a feature appears to exist only in the earliest preview surface. It is typically triggered by GA and beta both lack the command shape you need, or documentation explicitly mentions an alpha command. Read-only help command for the alpha release track. Show the alpha root surface and confirm that the current SDK exposes an alpha namespace.
 
 *Print the opening section of the alpha release-track help page.*
 
@@ -709,10 +673,7 @@ Alpha is the strongest signal that the surface is preview-only. If a workflow de
 
 #### Recognize track markers inside command help
 
-**When to run:** Before you operationalize a command whose stability you have not yet verified.
-**Trigger:** You need to know whether the command page itself exposes GA/beta/alpha hints.
-**Context:** Read-only command help page under the beta surface, plus the earlier GA page's `NOTES` block.
-**Purpose:** Show how the installed SDK marks track information at the command-page level.
+Before you operationalize a command whose stability you have not yet verified. It is typically triggered by you need to know whether the command page itself exposes GA/beta/alpha hints. Read-only command help page under the beta surface, plus the earlier GA page's `NOTES` block. Show how the installed SDK marks track information at the command-page level.
 
 *Open the interactive-shell help page, which currently lives under the beta surface.*
 
@@ -763,10 +724,7 @@ When a `gcloud` command fails, the first question is often not "what is the righ
 
 #### Print the full local environment summary
 
-**When to run:** Before debugging an unexpected CLI behavior, and before filing a support ticket or internal incident note.
-**Trigger:** A command behaves differently on two machines, or a teammate needs your exact SDK context.
-**Context:** Read-only local diagnostic command.
-**Purpose:** Capture installation, component, configuration, account, and runtime-environment details in one place.
+Before debugging an unexpected CLI behavior, and before filing a support ticket or internal incident note. It is typically triggered by A command behaves differently on two machines, or a teammate needs your exact SDK context. Read-only local diagnostic command. Capture installation, component, configuration, account, and runtime-environment details in one place.
 
 *Print the current Cloud SDK environment summary.*
 
@@ -821,10 +779,7 @@ This output is the fastest diagnostic snapshot in the note. It answers five oper
 
 #### Print the exact component versions
 
-**When to run:** When the problem might be version-specific, or when another operator asks which components are installed.
-**Trigger:** You need a concise version block rather than the full environment dump from `gcloud info`.
-**Context:** Read-only local diagnostic command.
-**Purpose:** Print the SDK version and installed component versions in a compact support-friendly format.
+When the problem might be version-specific, or when another operator asks which components are installed. It is typically triggered by you need a concise version block rather than the full environment dump from `gcloud info`. Read-only local diagnostic command. Print the SDK version and installed component versions in a compact support-friendly format.
 
 *Print the Cloud SDK version and installed component versions.*
 
@@ -848,10 +803,7 @@ This is the version block you want in tickets, bug reports, and "works on my mac
 
 #### Print the active property set
 
-**When to run:** Before running any command that depends on implicit defaults such as project, account, region, or zone.
-**Trigger:** You suspect that the wrong configuration is active or that a hidden property is steering command behavior.
-**Context:** Read-only local configuration command.
-**Purpose:** Show the current configuration properties that `gcloud` will inherit when flags are omitted.
+Before running any command that depends on implicit defaults such as project, account, region, or zone. It is typically triggered by you suspect that the wrong configuration is active or that a hidden property is steering command behavior. Read-only local configuration command. Show the current configuration properties that `gcloud` will inherit when flags are omitted.
 
 *Print the currently active `gcloud` properties.*
 
@@ -876,10 +828,7 @@ This output confirms that the active named configuration is `default`, that the 
 
 #### Print the credentialed accounts and active principal
 
-**When to run:** When you need to prove which identity is currently active.
-**Trigger:** Authentication behavior looks wrong, or a command is failing with permission errors that might be tied to the wrong account.
-**Context:** Read-only local credential inventory command.
-**Purpose:** Show which accounts are credentialed locally and which one is currently active.
+When you need to prove which identity is currently active. It is typically triggered by authentication behavior looks wrong, or a command is failing with permission errors that might be tied to the wrong account. Read-only local credential inventory command. Show which accounts are credentialed locally and which one is currently active.
 
 *List the locally credentialed accounts and mark the active one.*
 
@@ -911,10 +860,7 @@ Interactive mode is a discovery shell, not a different API client. It wraps the 
 
 #### Inspect the interactive shell help page
 
-**When to run:** When you are evaluating whether the interactive shell is worth enabling on a workstation.
-**Trigger:** Tree navigation and repeated help lookups are slowing you down.
-**Context:** Read-only help command for the beta interactive shell. Launching the real shell would take over the terminal, so `--help` is the correct live capture for a documentation note.
-**Purpose:** Show the interactive shell's feature set, on-screen layout, and key bindings.
+When you are evaluating whether the interactive shell is worth enabling on a workstation. It is typically triggered by tree navigation and repeated help lookups are slowing you down. Read-only help command for the beta interactive shell. Launching the real shell would take over the terminal, so `--help` is the correct live capture for a documentation note. Show the interactive shell's feature set, on-screen layout, and key bindings.
 
 *Print the opening section of the interactive-shell help page.*
 
@@ -985,10 +931,7 @@ Help-tree traversal is best when you know the product area. Keyword search and t
 
 #### Search the help corpus by keyword
 
-**When to run:** When you know the concept or protocol but not the product group or exact command path.
-**Trigger:** You need all SSH-related commands, not just the first one that comes to mind.
-**Context:** Read-only help-search command. In this PowerShell terminal, pager suppression was required to keep search output non-blocking.
-**Purpose:** Search the local help corpus for commands whose documentation matches a search term.
+When you know the concept or protocol but not the product group or exact command path. It is typically triggered by you need all SSH-related commands, not just the first one that comes to mind. Read-only help-search command. In this PowerShell terminal, pager suppression was required to keep search output non-blocking. Search the local help corpus for commands whose documentation matches a search term.
 
 > [!info] Pager suppression in this shell
 >
@@ -1025,10 +968,7 @@ This search result is intentionally broad. It does not only search command names
 
 #### Search by resource type when the noun is all you know
 
-**When to run:** When you know the resource family but not the owning product group.
-**Trigger:** You want service-account commands, but do not remember whether they live under `auth`, `iam`, or a product-specific subgroup.
-**Context:** Read-only help-search command with the same pager-suppression workaround as above.
-**Purpose:** Discover commands related to a resource noun across the full CLI tree.
+When you know the resource family but not the owning product group. It is typically triggered by you want service-account commands, but do not remember whether they live under `auth`, `iam`, or a product-specific subgroup. Read-only help-search command with the same pager-suppression workaround as above. Discover commands related to a resource noun across the full CLI tree.
 
 *Search the help corpus for service-account-related commands.*
 
@@ -1063,10 +1003,7 @@ This is the practical answer to "I do not know where service-account commands li
 
 #### Use the built-in cheat sheet for quick recall
 
-**When to run:** When you need fast recall of common commands instead of exhaustive manual pages.
-**Trigger:** You remember the general workflow area, but not the exact everyday commands inside it.
-**Context:** Read-only quick-reference command.
-**Purpose:** Print a curated shortlist of common commands organized by operational task area.
+When you need fast recall of common commands instead of exhaustive manual pages. It is typically triggered by you remember the general workflow area, but not the exact everyday commands inside it. Read-only quick-reference command. Print a curated shortlist of common commands organized by operational task area.
 
 *Print the opening section of the built-in `gcloud` cheat sheet.*
 

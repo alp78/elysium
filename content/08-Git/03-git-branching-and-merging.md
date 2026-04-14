@@ -297,10 +297,7 @@ gitGraph TB:
 
 #### Create and switch to a new branch
 
-**When to run:** at the start of any new unit of work — a feature, bugfix, experiment, or spike.
-**Trigger:** a new task is assigned, a bug is reported, or you want to try something without affecting main.
-**Context:** runs locally, no network operation. Creates a branch pointer at the current HEAD commit and switches to it.
-**Purpose:** isolate your changes from the main branch so that incomplete work does not affect other team members.
+At the start of any new unit of work — a feature, bugfix, experiment, or spike. It is typically triggered by a new task is assigned, a bug is reported, or you want to try something without affecting main. Runs locally, no network operation. Creates a branch pointer at the current HEAD commit and switches to it. Isolate your changes from the main branch so that incomplete work does not affect other team members.
 
 *Create a new branch named `feature/esg-scoring` at the current HEAD commit and switch to it.*
 
@@ -326,10 +323,7 @@ Switched to a new branch 'feature/esg-scoring'
 
 #### Switch between existing branches
 
-**When to run:** when you need to move to a different branch — to review a colleague's work, apply a hotfix, or return to main.
-**Trigger:** context switch between tasks, or preparing to merge.
-**Context:** local operation. Updates the working tree and HEAD. If you have uncommitted changes that conflict with files on the target branch, the switch is rejected with an error.
-**Purpose:** change the active branch so that new commits go to the correct line of development.
+When you need to move to a different branch — to review a colleague's work, apply a hotfix, or return to main. It is typically triggered by context switch between tasks, or preparing to merge. Local operation. Updates the working tree and HEAD. If you have uncommitted changes that conflict with files on the target branch, the switch is rejected with an error. Change the active branch so that new commits go to the correct line of development.
 
 *Switch the working tree and HEAD to point at the `main` branch.*
 
@@ -344,10 +338,7 @@ Your branch is up to date with 'origin/main'.
 
 #### List local and remote branches
 
-**When to run:** to see which branches exist, which one is active, and what each branch's latest commit is.
-**Trigger:** orientation at the start of a session, before merging, or when cleaning up stale branches.
-**Context:** local operation, read-only.
-**Purpose:** identify the current branch (marked with `*`), see the latest commit on each branch, and discover remote-tracking branches.
+To see which branches exist, which one is active, and what each branch's latest commit is. It is typically triggered by orientation at the start of a session, before merging, or when cleaning up stale branches. Local operation, read-only. Identify the current branch (marked with `*`), see the latest commit on each branch, and discover remote-tracking branches.
 
 *List all local branches with their latest commit.*
 
@@ -382,10 +373,7 @@ git branch -a
 
 #### List merged and unmerged branches
 
-**When to run:** before cleaning up branches after a merge cycle, or to audit which feature branches still have outstanding work.
-**Trigger:** sprint cleanup, branch housekeeping, or pre-release audit.
-**Context:** local operation, read-only. Compares branch tips against the current branch.
-**Purpose:** identify which branches have been fully integrated (safe to delete) and which still contain unmerged commits.
+Before cleaning up branches after a merge cycle, or to audit which feature branches still have outstanding work. It is typically triggered by sprint cleanup, branch housekeeping, or pre-release audit. Local operation, read-only. Compares branch tips against the current branch. Identify which branches have been fully integrated (safe to delete) and which still contain unmerged commits.
 
 *Show branches whose commits are all reachable from the current branch (safe to delete).*
 
@@ -495,10 +483,7 @@ gitGraph TB:
 
 #### Save uncommitted changes to the stash
 
-**When to run:** when you need to switch branches but have uncommitted work that is not ready to commit.
-**Trigger:** a colleague asks for a code review, a hotfix is needed on main, or you want to `git pull` on a dirty working tree.
-**Context:** local operation. Saves staged and unstaged modifications to the stash stack, then resets the working tree to the last commit. The `-m` flag adds a descriptive message.
-**Purpose:** temporarily park incomplete work so the working tree is clean for other operations.
+When you need to switch branches but have uncommitted work that is not ready to commit. It is typically triggered by a colleague asks for a code review, a hotfix is needed on main, or you want to `git pull` on a dirty working tree. Local operation. Saves staged and unstaged modifications to the stash stack, then resets the working tree to the last commit. The `-m` flag adds a descriptive message. Temporarily park incomplete work so the working tree is clean for other operations.
 
 *Stash all modified tracked files with a descriptive message.*
 
@@ -512,10 +497,7 @@ Saved working directory and index state On feature/currency-converter: WIP: curr
 
 #### List all stash entries
 
-**When to run:** when you need to find a specific stash entry or see how many stashes are on the stack.
-**Trigger:** before popping or applying a stash, to confirm which entry you want.
-**Context:** local, read-only.
-**Purpose:** display all stash entries with their index, source branch, and message.
+When you need to find a specific stash entry or see how many stashes are on the stack. It is typically triggered before popping or applying a stash, to confirm which entry you want. Local, read-only. Display all stash entries with their index, source branch, and message.
 
 *View all entries on the stash stack.*
 
@@ -529,10 +511,7 @@ stash@{0}: On feature/currency-converter: WIP: currency convert function
 
 #### Restore and remove the most recent stash
 
-**When to run:** after switching back to the branch where you stashed your work, or after the interrupting task is complete.
-**Trigger:** returning to a paused task.
-**Context:** local operation. Applies the stash entry to the working tree and removes it from the stack. If the stash conflicts with current changes, the pop fails and the stash remains on the stack — resolve conflicts manually and then drop the stash with `git stash drop`.
-**Purpose:** resume work from where you left off.
+After switching back to the branch where you stashed your work, or after the interrupting task is complete. It is typically triggered by returning to a paused task. Local operation. Applies the stash entry to the working tree and removes it from the stack. If the stash conflicts with current changes, the pop fails and the stash remains on the stack — resolve conflicts manually and then drop the stash with `git stash drop`. Resume work from where you left off.
 
 *Pop the most recent stash entry back into the working tree.*
 
@@ -553,10 +532,7 @@ Dropped refs/stash@{0} (890150239f83f2ed99cc3fceec50ed1b3c1593e2)
 
 #### Apply a specific stash without removing it
 
-**When to run:** when you want to apply the same stash to multiple branches, or when you want to keep the stash as a backup.
-**Trigger:** applying a stash to a branch other than where it was created, or testing whether the stash applies cleanly before committing to the pop.
-**Context:** local operation. Applies the specified stash entry but does not remove it from the stack.
-**Purpose:** re-apply saved changes without consuming the stash entry.
+When you want to apply the same stash to multiple branches, or when you want to keep the stash as a backup. It is typically triggered by applying a stash to a branch other than where it was created, or testing whether the stash applies cleanly before committing to the pop. Local operation. Applies the specified stash entry but does not remove it from the stack. Re-apply saved changes without consuming the stash entry.
 
 *Apply stash entry at index 0 without removing it from the stack.*
 
@@ -596,10 +572,7 @@ After a branch is merged, it should be deleted to keep the branch list clean. Gi
 
 #### Safe delete a merged branch
 
-**When to run:** after a branch has been merged into the target branch and is no longer needed.
-**Trigger:** PR merged, feature complete, or sprint cleanup.
-**Context:** local operation. Git checks whether the branch's commits are reachable from the current branch or its upstream. If unmerged commits exist, the delete is rejected.
-**Purpose:** remove stale branch pointers without risk of losing unmerged work.
+After a branch has been merged into the target branch and is no longer needed. It is typically triggered by PR merged, feature complete, or sprint cleanup. Local operation. Git checks whether the branch's commits are reachable from the current branch or its upstream. If unmerged commits exist, the delete is rejected. Remove stale branch pointers without risk of losing unmerged work.
 
 *Delete a branch that has been fully merged.*
 
@@ -613,10 +586,7 @@ Deleted branch feature/esg-scoring (was 0cab331).
 
 #### Force-delete an unmerged branch
 
-**When to run:** when you intentionally want to discard an experimental or abandoned branch that was never merged.
-**Trigger:** experiment abandoned, spike completed, or duplicate branch identified.
-**Context:** local operation. Bypasses the merge check. If the branch has unmerged commits and has not been pushed to a remote, that work is only recoverable via `git reflog` for approximately 90 days.
-**Purpose:** remove a branch regardless of merge status.
+When you intentionally want to discard an experimental or abandoned branch that was never merged. It is typically triggered by experiment abandoned, spike completed, or duplicate branch identified. Local operation. Bypasses the merge check. If the branch has unmerged commits and has not been pushed to a remote, that work is only recoverable via `git reflog` for approximately 90 days. Remove a branch regardless of merge status.
 
 > [!danger] -D force-deletes without merge check
 >
@@ -651,10 +621,7 @@ Deleted branch feature/currency-converter (was 0a2cd39).
 
 #### Create a parallel working directory
 
-**When to run:** when you need to work on two branches simultaneously without stashing.
-**Trigger:** hotfix needed while mid-feature, or need to compare behavior across branches.
-**Context:** local operation. Creates a new directory linked to the same repository. You cannot check out a branch that is already checked out in another worktree.
-**Purpose:** work on multiple branches in parallel without losing context.
+When you need to work on two branches simultaneously without stashing. It is typically triggered by hotfix needed while mid-feature, or need to compare behavior across branches. Local operation. Creates a new directory linked to the same repository. You cannot check out a branch that is already checked out in another worktree. Work on multiple branches in parallel without losing context.
 
 *Create a new worktree directory for the `feature/currency-converter` branch.*
 
@@ -669,10 +636,7 @@ HEAD is now at 0a2cd39 feat: add currency converter skeleton
 
 #### List active worktrees
 
-**When to run:** to see which worktrees are active and which branches they have checked out.
-**Trigger:** before creating a new worktree (to avoid conflicts), or during cleanup.
-**Context:** local, read-only.
-**Purpose:** display all worktree paths and their checked-out branches.
+To see which worktrees are active and which branches they have checked out. It is typically triggered before creating a new worktree (to avoid conflicts), or during cleanup. Local, read-only. Display all worktree paths and their checked-out branches.
 
 *Show all worktrees linked to the current repository.*
 
@@ -687,10 +651,7 @@ C:/Users/aperi/DEV/git-lab-hotfix 0a2cd39 [feature/currency-converter]
 
 #### Remove a worktree
 
-**When to run:** after the work in the extra worktree is complete.
-**Trigger:** hotfix merged, comparison done, or worktree no longer needed.
-**Context:** local operation. Removes the worktree directory and its administrative files. The branch remains — only the extra working directory is deleted.
-**Purpose:** clean up worktree directories to avoid confusion and disk usage.
+After the work in the extra worktree is complete. It is typically triggered by hotfix merged, comparison done, or worktree no longer needed. Local operation. Removes the worktree directory and its administrative files. The branch remains — only the extra working directory is deleted. Clean up worktree directories to avoid confusion and disk usage.
 
 *Remove a worktree directory.*
 
@@ -744,10 +705,7 @@ gitGraph TB:
 
 #### Merge with fast-forward (default behavior)
 
-**When to run:** when you want to integrate a feature branch into main and main has not diverged.
-**Trigger:** feature complete and ready to merge, no conflicting work on main.
-**Context:** local operation. Requires switching to the target branch first (`git switch main`). The merge updates the branch pointer — no new commit is created.
-**Purpose:** integrate feature work into main with a clean linear history.
+When you want to integrate a feature branch into main and main has not diverged. It is typically triggered by feature complete and ready to merge, no conflicting work on main. Local operation. Requires switching to the target branch first (`git switch main`). The merge updates the branch pointer — no new commit is created. Integrate feature work into main with a clean linear history.
 
 *Switch to main and fast-forward merge the feature branch.*
 
@@ -803,10 +761,7 @@ gitGraph TB:
 
 #### Merge with three-way strategy
 
-**When to run:** when both your branch and the target branch have diverged — both received new commits since the fork point.
-**Trigger:** merging a feature branch after main has received other work (other features merged, hotfixes applied).
-**Context:** local operation. If the same lines were modified on both branches, Git raises a merge conflict that must be resolved manually before the merge commit can be created.
-**Purpose:** integrate diverged branches while preserving the complete history of both.
+When both your branch and the target branch have diverged — both received new commits since the fork point. It is typically triggered by merging a feature branch after main has received other work (other features merged, hotfixes applied). Local operation. If the same lines were modified on both branches, Git raises a merge conflict that must be resolved manually before the merge commit can be created. Integrate diverged branches while preserving the complete history of both.
 
 *Merge a feature branch that has diverged from main.*
 
@@ -871,10 +826,7 @@ gitGraph TB:
 
 #### Merge with explicit merge commit
 
-**When to run:** when you want to preserve the branch boundary in the commit history, even when a fast-forward is possible.
-**Trigger:** team policy requires visible merge commits, or you want the option to revert an entire feature with a single `git revert`.
-**Context:** local operation. Creates a merge commit with two parents.
-**Purpose:** maintain a visible record of when feature work was integrated.
+When you want to preserve the branch boundary in the commit history, even when a fast-forward is possible. It is typically triggered by team policy requires visible merge commits, or you want the option to revert an entire feature with a single `git revert`. Local operation. Creates a merge commit with two parents. Maintain a visible record of when feature work was integrated.
 
 *Force a merge commit even though fast-forward is possible.*
 
@@ -911,10 +863,7 @@ git log --oneline --graph -4
 
 #### Restrict to fast-forward only
 
-**When to run:** when you want the merge to succeed only if a fast-forward is possible — failing explicitly if the branches have diverged.
-**Trigger:** CI/CD pipelines that require linear history, or when you want to confirm that a rebase was done before merging.
-**Context:** local operation. The merge is aborted if fast-forward is not possible.
-**Purpose:** enforce linear history by rejecting merges that would create a merge commit.
+When you want the merge to succeed only if a fast-forward is possible — failing explicitly if the branches have diverged. It is typically triggered by CI/CD pipelines that require linear history, or when you want to confirm that a rebase was done before merging. Local operation. The merge is aborted if fast-forward is not possible. Enforce linear history by rejecting merges that would create a merge commit.
 
 *Attempt a fast-forward-only merge (fails if branches have diverged).*
 
@@ -930,10 +879,7 @@ The merge fails because `main` and `feature/risk-metrics` have diverged — both
 
 #### Cancel a merge in progress
 
-**When to run:** when a merge produces conflicts you do not want to resolve right now.
-**Trigger:** unexpected conflicts, wrong branch merged, or need to discuss with the team before resolving.
-**Context:** local operation. Restores the working tree and index to the state before the merge began. No merge commit is created.
-**Purpose:** cleanly back out of a merge without leaving the repository in a conflicted state.
+When a merge produces conflicts you do not want to resolve right now. It is typically triggered by unexpected conflicts, wrong branch merged, or need to discuss with the team before resolving. Local operation. Restores the working tree and index to the state before the merge began. No merge commit is created. Cleanly back out of a merge without leaving the repository in a conflicted state.
 
 *Abort a merge in progress and restore pre-merge state.*
 
@@ -1011,10 +957,7 @@ gitGraph TB:
 
 #### Rebase onto a new base
 
-**When to run:** before merging a feature branch, to ensure it applies cleanly on top of the latest main.
-**Trigger:** main has received new commits since you branched off, and you want linear history.
-**Context:** local operation that rewrites history. Must be on the feature branch. Each commit is replayed in order — if a conflict occurs, the rebase pauses and you must resolve it before continuing with `git rebase --continue`.
-**Purpose:** produce a linear history so the feature branch can be fast-forward merged into main.
+Before merging a feature branch, to ensure it applies cleanly on top of the latest main. It is typically triggered by main has received new commits since you branched off, and you want linear history. Local operation that rewrites history. Must be on the feature branch. Each commit is replayed in order — if a conflict occurs, the rebase pauses and you must resolve it before continuing with `git rebase --continue`. Produce a linear history so the feature branch can be fast-forward merged into main.
 
 *Rebase the feature branch onto the tip of main.*
 
@@ -1046,10 +989,7 @@ The commits now sit on top of `f280460` (the tip of main when the rebase ran), n
 
 #### Interactive rebase — clean up branch history before PR
 
-**When to run:** before opening or updating a PR, to clean up the commit history — squash fixup commits, reword messages, reorder commits, or drop accidental commits. This is the most common senior-engineer history-cleanup workflow.
-**Trigger:** branch has accumulated WIP commits, typo fixes, debug commits, or fixup commits that should be folded before review.
-**Context:** local operation that rewrites history. Opens an editor listing each commit with an action keyword. Never use interactive rebase on commits that have been pushed to a shared branch. After rebasing a pushed personal branch, use `git push --force-with-lease`.
-**Purpose:** produce a clean, reviewable commit history that tells a coherent story for reviewers.
+Before opening or updating a PR, to clean up the commit history — squash fixup commits, reword messages, reorder commits, or drop accidental commits. This is the most common senior-engineer history-cleanup workflow. It is typically triggered by branch has accumulated WIP commits, typo fixes, debug commits, or fixup commits that should be folded before review. Local operation that rewrites history. Opens an editor listing each commit with an action keyword. Never use interactive rebase on commits that have been pushed to a shared branch. After rebasing a pushed personal branch, use `git push --force-with-lease`. Produce a clean, reviewable commit history that tells a coherent story for reviewers.
 
 > [!info]- Interactive rebase action keywords
 >
@@ -1082,10 +1022,7 @@ The `fixup!` prefix on `4752f8d` signals that this commit should be absorbed int
 
 #### Autosquash fixup commits
 
-**When to run:** when your branch has commits prefixed with `fixup!` or `squash!` that match earlier commit messages.
-**Trigger:** you used `git commit --fixup=<SHA>` during development to create commits that should be folded into earlier work.
-**Context:** `--autosquash` automatically reorders and marks fixup/squash commits in the interactive editor. Requires the `-i` flag.
-**Purpose:** one-command cleanup of fixup commits without manual editor editing.
+When your branch has commits prefixed with `fixup!` or `squash!` that match earlier commit messages. It is typically triggered by you used `git commit --fixup=<SHA>` during development to create commits that should be folded into earlier work. `--autosquash` automatically reorders and marks fixup/squash commits in the interactive editor. Requires the `-i` flag. One-command cleanup of fixup commits without manual editor editing.
 
 *Run interactive rebase with autosquash to fold fixup commits.*
 
@@ -1129,10 +1066,7 @@ Three commits reduced to two: the fixup was folded into the feature commit. The 
 
 #### Cancel a rebase in progress
 
-**When to run:** when a rebase produces conflicts you do not want to resolve, or you realize you are rebasing the wrong branch.
-**Trigger:** unexpected conflicts, wrong base branch, or need to discuss with the team.
-**Context:** local operation. Restores the branch to its exact state before the rebase began. No commits are rewritten.
-**Purpose:** cleanly back out of a rebase without leaving the repository in a broken state.
+When a rebase produces conflicts you do not want to resolve, or you realize you are rebasing the wrong branch. It is typically triggered by unexpected conflicts, wrong base branch, or need to discuss with the team. Local operation. Restores the branch to its exact state before the rebase began. No commits are rewritten. Cleanly back out of a rebase without leaving the repository in a broken state.
 
 *Abort a rebase and restore the original branch state.*
 
@@ -1195,10 +1129,7 @@ gitGraph TB:
 
 #### Copy a commit to the current branch
 
-**When to run:** when you need a specific commit from another branch without merging the entire branch.
-**Trigger:** a critical bugfix is on a feature branch but the feature is not ready to merge, a specific commit needs to be backported to a release branch, or a single commit from an abandoned branch needs to be preserved.
-**Context:** local operation. Requires the target commit's SHA. If the cherry-picked changes conflict with the current branch, Git pauses and you must resolve conflicts before continuing.
-**Purpose:** selectively apply one commit's changes without bringing the full branch history.
+When you need a specific commit from another branch without merging the entire branch. It is typically triggered by a critical bugfix is on a feature branch but the feature is not ready to merge, a specific commit needs to be backported to a release branch, or a single commit from an abandoned branch needs to be preserved. Local operation. Requires the target commit's SHA. If the cherry-picked changes conflict with the current branch, Git pauses and you must resolve conflicts before continuing. Selectively apply one commit's changes without bringing the full branch history.
 
 *Cherry-pick a specific commit by SHA from the feature branch.*
 
@@ -1218,10 +1149,7 @@ The output shows that Git created a new commit `7dd85e2` on main with the same c
 
 #### Backport a hotfix to a release branch with traceability
 
-**When to run:** when a critical fix lands on `main` and must also be applied to an active release branch that cannot accept a full merge.
-**Trigger:** a production bug is fixed on `main`, and the fix must be backported to `release/2026-Q2` without merging unrelated features.
-**Context:** the `-x` flag appends "(cherry picked from commit ...)" to the message, documenting the source commit for auditability. This is critical for incident response — reviewers and on-call engineers can trace the backport to the original fix.
-**Purpose:** selectively apply one commit's changes to a release branch with full traceability.
+When a critical fix lands on `main` and must also be applied to an active release branch that cannot accept a full merge. It is typically triggered by a production bug is fixed on `main`, and the fix must be backported to `release/2026-Q2` without merging unrelated features. The `-x` flag appends "(cherry picked from commit ...)" to the message, documenting the source commit for auditability. This is critical for incident response — reviewers and on-call engineers can trace the backport to the original fix. Selectively apply one commit's changes to a release branch with full traceability.
 
 *Cherry-pick a hotfix from main to the release branch with source tracing.*
 
@@ -1386,10 +1314,7 @@ gitGraph TB:
 
 #### Undo commit, keep changes staged
 
-**When to run:** when you committed too early, with the wrong message, or want to combine the last commit's changes with additional work.
-**Trigger:** immediate realization that the last commit was premature or incorrect.
-**Context:** local operation. Moves the branch pointer back one commit. The changes from the undone commit remain in the staging area. Safe to use on unpushed commits.
-**Purpose:** undo the last commit while preserving all changes for recommitting.
+When you committed too early, with the wrong message, or want to combine the last commit's changes with additional work. It is typically triggered by immediate realization that the last commit was premature or incorrect. Local operation. Moves the branch pointer back one commit. The changes from the undone commit remain in the staging area. Safe to use on unpushed commits. Undo the last commit while preserving all changes for recommitting.
 
 *Move HEAD back one commit, keeping changes staged.*
 
@@ -1432,10 +1357,7 @@ The reflog records every HEAD movement — commits, checkouts, merges, rebases, 
 
 #### Find lost commits in the reflog
 
-**When to run:** after a destructive operation (reset, rebase, branch deletion) when you need to find the SHA of a commit that is no longer on any branch.
-**Trigger:** accidental `reset --hard`, force-deleted branch, botched rebase, or any situation where commits seem to have disappeared.
-**Context:** local operation, read-only. The reflog is local to your machine — it is not pushed to remotes and is not visible to other team members.
-**Purpose:** locate the SHA of a lost commit so it can be recovered.
+After a destructive operation (reset, rebase, branch deletion) when you need to find the SHA of a commit that is no longer on any branch. It is typically triggered by accidental `reset --hard`, force-deleted branch, botched rebase, or any situation where commits seem to have disappeared. Local operation, read-only. The reflog is local to your machine — it is not pushed to remotes and is not visible to other team members. Locate the SHA of a lost commit so it can be recovered.
 
 *Display the local history of HEAD movements.*
 
@@ -1460,10 +1382,7 @@ Each line shows: the commit SHA, the reflog index (`HEAD@{N}`), the action that 
 
 #### Restore a lost branch from the reflog
 
-**When to run:** after finding the target SHA in the reflog.
-**Trigger:** branch was deleted (`git branch -D`), commits were lost to a reset, or a rebase went wrong.
-**Context:** local operation. Creates a new branch pointer at the specified SHA.
-**Purpose:** attach a branch name to an orphaned commit, making it reachable and safe from garbage collection.
+After finding the target SHA in the reflog. It is typically triggered by branch was deleted (`git branch -D`), commits were lost to a reset, or a rebase went wrong. Local operation. Creates a new branch pointer at the specified SHA. Attach a branch name to an orphaned commit, making it reachable and safe from garbage collection.
 
 *Create a new branch pointing to a commit found in the reflog.*
 

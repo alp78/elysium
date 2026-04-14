@@ -307,10 +307,7 @@ This subsection validates four core workflows:
 
 #### List the current project bucket inventory
 
-**When to run:** During first access to a project or before creating a new bucket.
-**Trigger:** You need to understand what bucket estate already exists and whether a naming standard is already in use.
-**Context:** Runs from any shell with `storage.googleapis.com` enabled and permission to list project buckets. Read-only.
-**Purpose:** Establish the current bucket inventory and confirm the active project is the intended one.
+During first access to a project or before creating a new bucket. It is typically triggered by you need to understand what bucket estate already exists and whether a naming standard is already in use. Runs from any shell with `storage.googleapis.com` enabled and permission to list project buckets. Read-only. Establish the current bucket inventory and confirm the active project is the intended one.
 
 *List every bucket in `bq-wh-nb` with its location, default class, soft-delete window, and UBLA state.*
 
@@ -331,10 +328,7 @@ All live buckets in this project are regional `EUROPE-WEST1` buckets with `STAND
 
 #### Inspect an existing production bucket
 
-**When to run:** Before using an existing bucket for load, export, backup, or ingestion work.
-**Trigger:** A bucket already exists and you need to verify whether it is safe for the new workload.
-**Context:** Read-only bucket metadata lookup.
-**Purpose:** Confirm location, public-access posture, and recovery defaults on a real production bucket.
+Before using an existing bucket for load, export, backup, or ingestion work. It is typically triggered by A bucket already exists and you need to verify whether it is safe for the new workload. Read-only bucket metadata lookup. Confirm location, public-access posture, and recovery defaults on a real production bucket.
 
 *Describe the current production export bucket.*
 
@@ -356,10 +350,7 @@ uniform_bucket_level_access: true
 
 #### Create a flat namespace bucket with per-object retention enabled
 
-**When to run:** When one bucket must host objects with different retention deadlines and you still want a simple prefix-based namespace.
-**Trigger:** A compliance or delivery workflow needs object-specific `retain-until` timestamps.
-**Context:** State-changing bucket creation command. Requires bucket-create permission in the active project.
-**Purpose:** Create a regional flat bucket that supports per-object retention.
+When one bucket must host objects with different retention deadlines and you still want a simple prefix-based namespace. It is typically triggered by A compliance or delivery workflow needs object-specific `retain-until` timestamps. State-changing bucket creation command. Requires bucket-create permission in the active project. Create a regional flat bucket that supports per-object retention.
 
 > [!info] Why these flags matter
 >
@@ -401,10 +392,7 @@ The important field is `per_object_retention.mode: Enabled`. That is the bucket-
 
 #### Create a hierarchical namespace bucket
 
-**When to run:** When directory semantics matter operationally, not just visually.
-**Trigger:** Shared analytics areas, file-oriented ingest flows, or managed-folder IAM boundaries require real folder resources.
-**Context:** State-changing bucket creation command. HNS requires UBLA.
-**Purpose:** Create a bucket that supports first-class folders instead of prefix-only path illusions.
+When directory semantics matter operationally, not just visually. It is typically triggered by shared analytics areas, file-oriented ingest flows, or managed-folder IAM boundaries require real folder resources. State-changing bucket creation command. HNS requires UBLA. Create a bucket that supports first-class folders instead of prefix-only path illusions.
 
 *Create the HNS scratch bucket.*
 
@@ -471,10 +459,7 @@ This subsection shows the modern namespace tooling on a bucket that was created 
 
 #### Create nested folders in a hierarchical namespace bucket
 
-**When to run:** After creating an HNS bucket and before uploading structured content into it.
-**Trigger:** You need a folder tree that behaves like a directory hierarchy instead of a flat prefix filter.
-**Context:** State-changing HNS-only command. Fails on flat buckets.
-**Purpose:** Materialize a directory-style path for a bronze landing zone.
+After creating an HNS bucket and before uploading structured content into it. It is typically triggered by you need a folder tree that behaves like a directory hierarchy instead of a flat prefix filter. State-changing HNS-only command. Fails on flat buckets. Materialize a directory-style path for a bronze landing zone.
 
 *Create the nested folder path `raw/bronze/2026/04/13/` in the HNS bucket.*
 
@@ -488,10 +473,7 @@ Creating gs://bq-wh-nb-codex-gcs-hns-20260413-2288/raw/bronze/2026/04/13/...
 
 #### List the resulting folder tree
 
-**When to run:** Immediately after folder creation or when validating HNS path layout before access or ingestion changes.
-**Trigger:** You need to confirm that the folder path exists as resources, not just as object-name prefixes.
-**Context:** Read-only HNS folder listing.
-**Purpose:** Verify the exact folder hierarchy that now exists in the bucket.
+Immediately after folder creation or when validating HNS path layout before access or ingestion changes. It is typically triggered by you need to confirm that the folder path exists as resources, not just as object-name prefixes. Read-only HNS folder listing. Verify the exact folder hierarchy that now exists in the bucket.
 
 *List the current folder resources in the HNS bucket.*
 
@@ -522,10 +504,7 @@ This is the practical difference from a flat bucket: the directories themselves 
 
 #### Create and inspect a managed folder
 
-**When to run:** When one logical subtree in a shared bucket needs its own IAM boundary.
-**Trigger:** Several teams or pipelines share one bucket but should not share access to every path.
-**Context:** State-changing command against bucket namespace metadata. Requires permission to modify bucket resources.
-**Purpose:** Create a managed folder that can later hold path-scoped IAM rules.
+When one logical subtree in a shared bucket needs its own IAM boundary. It is typically triggered by several teams or pipelines share one bucket but should not share access to every path. State-changing command against bucket namespace metadata. Requires permission to modify bucket resources. Create a managed folder that can later hold path-scoped IAM rules.
 
 *Create a managed folder for a shared landing subtree and list it back.*
 
@@ -610,10 +589,7 @@ This subsection shows the two main automation patterns:
 
 #### Add labels to a bucket
 
-**When to run:** At bucket provisioning time or during cost-allocation cleanup.
-**Trigger:** Finance, ownership, or environment tagging is missing.
-**Context:** State-changing bucket metadata update.
-**Purpose:** Make the bucket queryable by owner or environment and easier to attribute in billing analysis.
+At bucket provisioning time or during cost-allocation cleanup. It is typically triggered by finance, ownership, or environment tagging is missing. State-changing bucket metadata update. Make the bucket queryable by owner or environment and easier to attribute in billing analysis.
 
 *Add two labels to the restore scratch bucket and inspect them.*
 
@@ -653,10 +629,7 @@ The labels are now part of the bucket metadata and can be used for filtering or 
 
 #### Enable Autoclass on a bucket
 
-**When to run:** When access frequency is unpredictable and manual storage-class policy would drift.
-**Trigger:** The bucket contains data that sometimes becomes hot again after sitting cold.
-**Context:** State-changing bucket update.
-**Purpose:** Let Cloud Storage move objects between classes based on observed reads instead of age-only rules.
+When access frequency is unpredictable and manual storage-class policy would drift. It is typically triggered by the bucket contains data that sometimes becomes hot again after sitting cold. State-changing bucket update. Let Cloud Storage move objects between classes based on observed reads instead of age-only rules.
 
 *Enable Autoclass and set `ARCHIVE` as the terminal class.*
 
@@ -674,10 +647,7 @@ The follow-up `describe` output above shows `autoclass.enabled: true` and `termi
 
 #### Define a lifecycle policy file
 
-**When to run:** Before applying lifecycle automation to prefixes that have a predictable aging curve.
-**Trigger:** Archive or staging data follows a known age-based retention path.
-**Context:** Local file definition plus a later bucket update. The file itself is not a Cloud resource.
-**Purpose:** Express deterministic bucket policy in JSON before attaching it to the bucket.
+Before applying lifecycle automation to prefixes that have a predictable aging curve. It is typically triggered by archive or staging data follows a known age-based retention path. Local file definition plus a later bucket update. The file itself is not a Cloud resource. Express deterministic bucket policy in JSON before attaching it to the bucket.
 
 *Define a lifecycle policy that moves `archive/` objects to `NEARLINE` after 30 days and deletes them after 365 days.*
 
@@ -698,10 +668,7 @@ The follow-up `describe` output above shows `autoclass.enabled: true` and `termi
 
 #### Apply the lifecycle policy to a bucket
 
-**When to run:** After the lifecycle JSON has been reviewed and the bucket is not using Autoclass for storage-class movement.
-**Trigger:** You need deterministic tiering or expiry for a specific prefix.
-**Context:** State-changing bucket update.
-**Purpose:** Attach the lifecycle rules to the flat scratch bucket.
+After the lifecycle JSON has been reviewed and the bucket is not using Autoclass for storage-class movement. It is typically triggered by you need deterministic tiering or expiry for a specific prefix. State-changing bucket update. Attach the lifecycle rules to the flat scratch bucket.
 
 *Apply the lifecycle policy file and inspect the resulting rules.*
 
@@ -774,10 +741,7 @@ This subsection covers the bucket-level controls that every downstream object op
 
 #### Enable object versioning on a bucket
 
-**When to run:** Before pipelines start overwriting objects that might need rollback.
-**Trigger:** A prefix contains mutable artifacts such as daily extracts, manifests, or state files.
-**Context:** State-changing bucket update.
-**Purpose:** Preserve older generations on overwrite instead of destroying them.
+Before pipelines start overwriting objects that might need rollback. It is typically triggered by A prefix contains mutable artifacts such as daily extracts, manifests, or state files. State-changing bucket update. Preserve older generations on overwrite instead of destroying them.
 
 *Enable versioning on the flat scratch bucket.*
 
@@ -793,10 +757,7 @@ The raw bucket metadata after the update showed `versioning.enabled: true`. That
 
 #### Enable and then clear default event-based hold
 
-**When to run:** Enable it when new objects must be explicitly released after validation; clear it when the bucket returns to ordinary ingestion.
-**Trigger:** Ingestion workflows need a deliberate release step before deletes are allowed.
-**Context:** State-changing bucket metadata update.
-**Purpose:** Show how bucket-level default hold affects future uploads without leaving the scratch bucket permanently frozen.
+Enable it when new objects must be explicitly released after validation; clear it when the bucket returns to ordinary ingestion. It is typically triggered by ingestion workflows need a deliberate release step before deletes are allowed. State-changing bucket metadata update. Show how bucket-level default hold affects future uploads without leaving the scratch bucket permanently frozen.
 
 *Enable the default event-based hold on the flat bucket.*
 
@@ -822,10 +783,7 @@ This is an operationally safe way to test the feature. You validate the control 
 
 #### Set and clear an unlocked bucket retention policy
 
-**When to run:** Before compliance or legal-retention enforcement is needed.
-**Trigger:** A bucket must not allow early deletion for a minimum period.
-**Context:** State-changing bucket policy update. Clearing is only possible while the policy remains unlocked.
-**Purpose:** Show the difference between a normal retention policy and an irreversible bucket lock.
+Before compliance or legal-retention enforcement is needed. It is typically triggered by A bucket must not allow early deletion for a minimum period. State-changing bucket policy update. Clearing is only possible while the policy remains unlocked. Show the difference between a normal retention policy and an irreversible bucket lock.
 
 *Set a one-day bucket retention period on the flat bucket.*
 
@@ -893,10 +851,7 @@ The restore workflow below uses the disposable bucket `bq-wh-nb-codex-gcs-restor
 
 #### Delete an empty scratch bucket
 
-**When to run:** Only on disposable or pre-approved buckets.
-**Trigger:** You are validating soft-delete recovery or intentionally decommissioning a scratch bucket.
-**Context:** Destructive command. `--recursive` removes all object versions and then the bucket itself.
-**Purpose:** Produce a real soft-deleted bucket that can be restored.
+Only on disposable or pre-approved buckets. It is typically triggered by you are validating soft-delete recovery or intentionally decommissioning a scratch bucket. Destructive command. `--recursive` removes all object versions and then the bucket itself. Produce a real soft-deleted bucket that can be restored.
 
 *Delete the empty restore bucket recursively.*
 
@@ -913,10 +868,7 @@ Removing gs://bq-wh-nb-codex-gcs-restore-20260413-4762/...
 
 #### Restore the soft-deleted bucket
 
-**When to run:** While the bucket is still within its soft-delete retention window.
-**Trigger:** A bucket was deleted accidentally or too early.
-**Context:** State-changing recovery command. For bucket restore, specifying the soft-deleted generation is the safest pattern.
-**Purpose:** Recover the deleted bucket with its original name and metadata.
+While the bucket is still within its soft-delete retention window. It is typically triggered by A bucket was deleted accidentally or too early. State-changing recovery command. For bucket restore, specifying the soft-deleted generation is the safest pattern. Recover the deleted bucket with its original name and metadata.
 
 *Restore the deleted bucket using its bucket generation.*
 

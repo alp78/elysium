@@ -335,10 +335,7 @@ Older guides often show stable commands like `gcloud monitoring metrics-descript
 
 #### Inspect the stable Monitoring command groups
 
-**When to run:** Before copying metric-descriptor or time-series commands from older notes.
-**Trigger:** A runbook assumes that stable `gcloud monitoring` exposes direct metric query subcommands.
-**Context:** Read-only. This command checks the installed SDK surface.
-**Purpose:** Confirm which stable Monitoring command groups actually exist.
+Before copying metric-descriptor or time-series commands from older notes. It is typically triggered by A runbook assumes that stable `gcloud monitoring` exposes direct metric query subcommands. Read-only. This command checks the installed SDK surface. Confirm which stable Monitoring command groups actually exist.
 
 *Ask the stable CLI which Monitoring groups it currently exposes.*
 
@@ -370,10 +367,7 @@ This is the most important live correction in the chapter. Stable `gcloud monito
 
 #### Inspect the existing Monitoring inventory
 
-**When to run:** Before building alerts or dashboards on top of assumed existing objects.
-**Trigger:** You need to know whether the project already has alerting and visualization state.
-**Context:** Read-only.
-**Purpose:** Show whether dashboards, policies, uptime checks, and notification channels already exist.
+Before building alerts or dashboards on top of assumed existing objects. It is typically triggered by you need to know whether the project already has alerting and visualization state. Read-only. Show whether dashboards, policies, uptime checks, and notification channels already exist.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -433,10 +427,7 @@ Notification channels and uptime checks are where Monitoring becomes operator-vi
 
 #### List supported notification channel descriptor types
 
-**When to run:** Before designing alert delivery.
-**Trigger:** You need to know whether email, Pub/Sub, PagerDuty, Slack, SMS, or webhook delivery is supported.
-**Context:** Read-only. Uses the beta descriptor surface because that is what exists in this SDK.
-**Purpose:** Show the channel families that can be instantiated in the project.
+Before designing alert delivery. It is typically triggered by you need to know whether email, Pub/Sub, PagerDuty, Slack, SMS, or webhook delivery is supported. Read-only. Uses the beta descriptor surface because that is what exists in this SDK. Show the channel families that can be instantiated in the project.
 
 *List the supported notification channel descriptor types.*
 
@@ -461,10 +452,7 @@ This output tells you what kinds of channels can exist. It does not mean any cha
 
 #### Inspect the Pub/Sub channel descriptor
 
-**When to run:** Before choosing Pub/Sub as a notification fan-out target.
-**Trigger:** You need to know which labels the descriptor requires.
-**Context:** Read-only.
-**Purpose:** Show that a channel descriptor is a schema, not a configured channel instance.
+Before choosing Pub/Sub as a notification fan-out target. It is typically triggered by you need to know which labels the descriptor requires. Read-only. Show that a channel descriptor is a schema, not a configured channel instance.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -498,10 +486,7 @@ The important operational point is that descriptors define the required configur
 
 #### List uptime probe source IPs
 
-**When to run:** Before firewalling an endpoint that an uptime check or synthetic monitor must reach.
-**Trigger:** The networking team needs the source ranges for Monitoring probes.
-**Context:** Read-only.
-**Purpose:** Show where uptime checks can originate from.
+Before firewalling an endpoint that an uptime check or synthetic monitor must reach. It is typically triggered by the networking team needs the source ranges for Monitoring probes. Read-only. Show where uptime checks can originate from.
 
 | Column | Meaning |
 |---|---|
@@ -542,10 +527,7 @@ Read the descriptor before you read the data. The descriptor tells you how many 
 
 #### Inspect logging billing metric descriptors
 
-**When to run:** Before charting or alerting on Logging-related ingestion or retention signals.
-**Trigger:** You need to know which logging metrics already exist natively in Monitoring.
-**Context:** PowerShell-only in this note because the workflow uses `Invoke-RestMethod`. Read-only.
-**Purpose:** Show the descriptor schema for built-in Logging billing metrics.
+Before charting or alerting on Logging-related ingestion or retention signals. It is typically triggered by you need to know which logging metrics already exist natively in Monitoring. PowerShell-only in this note because the workflow uses `Invoke-RestMethod`. Read-only. Show the descriptor schema for built-in Logging billing metrics.
 
 | Field | Meaning |
 |---|---|
@@ -638,10 +620,7 @@ This output is the bridge back to the Logging note. Cloud Logging already emits 
 
 #### Inspect Compute Engine CPU descriptors
 
-**When to run:** Before querying VM performance or alerting on CPU saturation.
-**Trigger:** You need to know which CPU metrics exist and how to interpret their units.
-**Context:** Read-only.
-**Purpose:** Show that metric descriptors carry the schema needed to interpret utilization, usage time, and reserved cores correctly.
+Before querying VM performance or alerting on CPU saturation. It is typically triggered by you need to know which CPU metrics exist and how to interpret their units. Read-only. Show that metric descriptors carry the schema needed to interpret utilization, usage time, and reserved cores correctly.
 
 *Query Compute Engine CPU descriptors through the Monitoring v3 API.*
 
@@ -714,10 +693,7 @@ Raw time series tell you what one labeled source did. Aggregated time series tel
 
 #### Read raw CPU utilization for one VM
 
-**When to run:** During host-level triage or right-sizing review.
-**Trigger:** You need to know whether one VM is actually saturated or idle.
-**Context:** Read-only.
-**Purpose:** Show an unaggregated VM metric with its resource labels and recent points.
+During host-level triage or right-sizing review. It is typically triggered by you need to know whether one VM is actually saturated or idle. Read-only. Show an unaggregated VM metric with its resource labels and recent points.
 
 | Field | Meaning |
 |---|---|
@@ -800,10 +776,7 @@ This is a raw per-instance series. The points show CPU rising from about `1.1%` 
 
 #### Read aligned and reduced CPU utilization
 
-**When to run:** During fleet-level health review, threshold design, or noisy-alert cleanup.
-**Trigger:** Raw per-instance series are too granular for the operational question.
-**Context:** Read-only.
-**Purpose:** Show how alignment and reduction change the meaning of the returned point.
+During fleet-level health review, threshold design, or noisy-alert cleanup. It is typically triggered by raw per-instance series are too granular for the operational question. Read-only. Show how alignment and reduction change the meaning of the returned point.
 
 *Query one aligned and reduced CPU series across the project's VM set.*
 
@@ -872,10 +845,7 @@ This result is not the same question as the raw series above. `ALIGN_MEAN` produ
 
 #### Read Logging ingestion as a Monitoring time series
 
-**When to run:** During cost review, retention review, or when log volume itself is the problem.
-**Trigger:** You need a numeric signal for logging ingestion rather than reading raw entries.
-**Context:** Read-only.
-**Purpose:** Show that Logging already emits Monitoring-native usage series.
+During cost review, retention review, or when log volume itself is the problem. It is typically triggered by you need a numeric signal for logging ingestion rather than reading raw entries. Read-only. Show that Logging already emits Monitoring-native usage series.
 
 *Query recent points for the Logging bytes-ingested metric.*
 

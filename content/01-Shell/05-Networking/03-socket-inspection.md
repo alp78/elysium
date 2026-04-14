@@ -117,10 +117,11 @@ Listener output answers the first question in most incidents: is anything bound 
 
 #### List listening TCP sockets
 
-Start here when a client cannot connect or when a service may be bound to the wrong address. On a Linux host, `ss -tlnp` gives a read-only listener inventory with bind addresses and any visible owning processes, which makes it the fastest way to separate listener absence from a bad bind.
+At first verification when a service may be down or misbound. It is typically triggered by A client cannot connect, or you need to confirm the listener address. Linux host with `ss`; add privilege if you need complete process ownership. Show TCP listeners, bind addresses, and visible owning processes in one capture.
 
-*List Linux TCP listeners with bind addresses and visible owning processes.*
+This capture came from the live Ubuntu WSL environment during the refactor pass. It shows loopback-only listeners, wildcard listeners, and interface-specific listeners in one view, which makes the bind-address differences easy to read.
 
+*Run the commands in this section to list listening TCP sockets.*
 ```bash
 ss -tlnp | sed -n '1,6p'
 ```
@@ -200,10 +201,11 @@ Established-session output answers a different question: who is connected right 
 
 #### Show established TCP sessions
 
-Use this after the listener check has confirmed the service exists and the next question is whether real clients are attached. Filtering to one known local port keeps the result on the server side of the conversation and shows the peer ephemeral ports that identify individual sessions.
+After you know a listener exists and need to prove active client traffic. It is typically triggered by you need to confirm who is connected right now. Linux host with a known local service port. Show server-side `ESTAB` rows and the client ephemeral ports attached to them.
 
-*Show established server-side TCP sessions for one listener port.*
+The capture below was taken against a temporary loopback listener on `127.0.0.1:45432` so the output stays real without pretending a specific database or web service existed locally. Filtering with `sport = :45432` keeps the server-side row and avoids counting both halves of the same loopback connection.
 
+*Run the commands in this section to show established TCP sessions.*
 ```bash
 ss -tnp state established '( sport = :45432 )'
 ```
@@ -217,10 +219,11 @@ The peer port `38258` is the client's ephemeral port. On a real service, repeate
 
 #### Count active sessions on a local port
 
-When the listener port is already known and you only need concurrency, reduce the established-session view to a count. This read-only Linux check answers how many live sessions are attached right now without forcing you to scan every row.
+When you need a quick concurrency count instead of a full session list. It is typically triggered by you already know the local listener port and only need the number. Linux host with a stable filter on the server-side port. Count live established sessions attached to one listener.
 
-*Count established sessions attached to one local listener port.*
+When you only need a count, hide the header with `-H` and let `wc -l` count the remaining rows. This is the quickest way to answer "how many live sessions are attached to this listener right now?"
 
+*Run the commands in this section to count active sessions on a local port.*
 ```bash
 ss -H -tn state established '( sport = :45432 )' | wc -l
 ```
@@ -231,10 +234,11 @@ ss -H -tn state established '( sport = :45432 )' | wc -l
 
 #### Count sessions by remote IP address
 
-Use this when a raw session list is too noisy and you need to know which client or proxy dominates the workload. The pipeline collapses established sessions by peer address so the busiest source stands out immediately.
+When one client or proxy may be consuming a disproportionate share of sessions. It is typically triggered by you need a per-client distribution instead of a raw connection list. Linux host with established sessions already filtered to one listener. Rank remote IP addresses by concurrent connection count.
 
-*Group established Linux sessions by remote IP address and rank them by count.*
+This pipeline extracts the peer address, strips the ephemeral port, and then counts identical client IPs. In a real incident, the IP with the largest count often deserves inspection first.
 
+*Run the commands in this section to count sessions by remote IP address.*
 ```bash
 ss -H -tn state established '( sport = :45432 )' | sed -E 's/.* +([^ ]+)$/\1/' | cut -d: -f1 | sort | uniq -c | sort -rn
 ```
@@ -245,10 +249,11 @@ ss -H -tn state established '( sport = :45432 )' | sed -E 's/.* +([^ ]+)$/\1/' |
 
 #### Check `TIME_WAIT` accumulation
 
-Run this when reconnect churn, ephemeral-port pressure, or unusually frequent short-lived sessions are more likely than a missing listener. The state filter isolates post-close sockets so you can judge whether connection turnover, not reachability, is the dominant symptom.
+When you suspect short-lived connection churn or ephemeral-port pressure. It is typically triggered by you see many reconnects, port exhaustion symptoms, or noisy close activity. Linux host handling repeated client connections. Measure post-close socket accumulation before changing client code or kernel settings.
 
-*List Linux `TIME_WAIT` sockets tied to one destination port.*
+`TIME_WAIT` is normal after connection teardown, but a large pile of sockets means the host is creating and destroying sessions faster than the application reuses them. The capture below came from repeated short loopback connects to a temporary listener on `127.0.0.1:45434`.
 
+*Run the commands in this section to check `TIME_WAIT` accumulation.*
 ```bash
 ss -tn state time-wait '( dport = :45434 )'
 ```
@@ -264,10 +269,11 @@ Connection pooling is the primary fix. If pooling is already in place and the sy
 
 #### Summarize TCP state on the host
 
-Use a host-wide state summary when it is still unclear whether the problem is isolated to one service or reflects broader TCP churn on the machine. `ss -s` is a read-only baseline that collapses active, closed, and post-close states into a single snapshot.
+When you need a fast host-wide baseline before drilling into one service. It is typically triggered by it is unclear whether the issue is isolated or system-wide. Any Linux host with `ss` available. Snapshot aggregate TCP state counts such as `estab` and `timewait`.
 
-*Print a host-wide summary of current Linux TCP state counts.*
+`ss -s` is the quickest system-wide snapshot. It does not explain a single service, but it tells you whether the machine is broadly accumulating `timewait`, sitting idle, or carrying many established sessions.
 
+*Run the commands in this section to summarize TCP state on the host.*
 ```bash
 ss -s
 ```
@@ -286,10 +292,11 @@ FRAG      0         0         0
 
 #### Poll a connection count once per second
 
-During a short verification window, sample the same established-session expression repeatedly so you can see whether concurrency is stable, rising, or dropping. The bounded loop is easier to capture in documentation than `watch`, but it serves the same operational purpose.
+During a short load test, deploy, or live verification window. It is typically triggered by you need to watch the connection count change over time. Linux shell where a bounded loop is easier to document than `watch`. Sample the same session-count expression repeatedly without leaving a static snapshot.
 
-*Sample the Linux established-session count for one listener once per second.*
+For documentation, a bounded loop is easier to capture cleanly than `watch`. In live work, the same expression can be wrapped with `watch -n 1` once you know the filter is correct.
 
+*Run the commands in this section to poll a connection count once per second.*
 ```bash
 for i in 1 2 3; do
   ss -H -tn state established '( sport = :45432 )' | wc -l
@@ -322,10 +329,11 @@ The error string tells you where to investigate next, but only if you distinguis
 
 #### Confirm a refused connection
 
-Use this when the client fails immediately and you need to prove the target answered with a reset rather than going silent on the network. The command is safe against an unused local port and demonstrates the failure mode that points back to listener state or bind address.
+When an application fails immediately with `Connection refused`. It is typically triggered by you need to prove the target answered with a reset rather than timing out. Safe against an unused local port where no listener exists. Demonstrate the fast failure mode that points back to listener state or bind address.
 
-*Attempt a TCP connection to an unused local port and confirm the refusal path.*
+This command targets an unused local port. The failure is immediate because the packet reaches the host and the kernel responds right away.
 
+*Run the commands in this section to confirm a refused connection.*
 ```bash
 nc -zv -w 2 127.0.0.1 45435
 ```
@@ -338,10 +346,11 @@ If you get an immediate refusal in production, check the listener table on the s
 
 #### Confirm a timed-out connection
 
-Use this when the client hangs before failing and the real question is whether packets are being dropped or never reaching the target. The short timeout keeps the test bounded while demonstrating the slower failure mode associated with routing, filtering, or host reachability loss.
+When a client hangs and then reports a timeout. It is typically triggered by you need to separate network-path loss from a missing listener. Safe against an unroutable target with a short explicit timeout. Demonstrate the slow failure mode associated with routing, filtering, or host reachability loss.
 
-*Attempt a TCP connection to an unroutable target and confirm the timeout path.*
+This command uses a short timeout against an unroutable target so the failure mode is safe to reproduce. The exact wording varies by `nc` build, but the important signal is that the command waits and then times out instead of failing immediately.
 
+*Run the commands in this section to confirm a timed-out connection.*
 ```bash
 nc -zv -w 2 10.255.255.1 45435
 ```
@@ -363,9 +372,7 @@ When the timeout case appears, investigate routing, security groups, `ufw`, `ipt
 
 ## PowerShell socket inspection tools
 
-`Get-NetTCPConnection` returns objects instead of plain text, so you can filter by `LocalPort`, `RemotePort`, `State`, or `OwningProcess` without reparsing terminal output.
-
-The Windows examples below use current host state so the result shapes reflect real listener and session objects rather than fabricated rows.
+`Get-NetTCPConnection` returns objects instead of plain text, so you can filter by `LocalPort`, `RemotePort`, `State`, or `OwningProcess` without shell pipelines. The examples below use live host state that already existed during the refactor pass instead of synthetic SQL Server output.
 
 ### PowerShell | `Get-NetTCPConnection` | inspect listeners
 
@@ -373,10 +380,11 @@ Listener objects answer the same first question as `ss -tlnp`: is anything liste
 
 #### List listening TCP sockets
 
-Start with listener inventory when a Windows client cannot connect or when the service may be bound only to loopback. `Get-NetTCPConnection` exposes the local address, port, and owning PID in object form, which makes it easy to distinguish a missing listener from a valid listener on the wrong interface.
+At first verification when a Windows service may be down or misbound. It is typically triggered by A client cannot connect, or you need the current listener inventory. Windows host with `Get-NetTCPConnection`; process names are resolved opportunistically. Show listening TCP endpoints with their local address, port, and owning PID.
 
-*List Windows TCP listeners with local addresses, ports, and owning processes.*
+The command below sorts listeners by port, resolves the owning PID to a process name when possible, and limits the capture to the first eight rows so the output remains readable.
 
+*Run the commands in this section to list listening TCP sockets.*
 ```powershell
 Get-NetTCPConnection -State Listen | Sort-Object LocalPort |
     Select-Object -First 8 LocalAddress, LocalPort, OwningProcess,
@@ -407,10 +415,11 @@ On Windows, the same object model works for outbound and inbound sessions. The e
 
 #### Show established HTTPS sessions
 
-Use this when you need a live example of established Windows sessions or when the host already carries stable HTTPS traffic that can stand in for a real service. The command stays read-only and shows the local ephemeral ports that identify concurrent outbound sessions.
+When you need a live example of established Windows TCP sessions. It is typically triggered by you want to confirm active client traffic on a stable service port. Windows host already carrying outbound HTTPS sessions. Show established connections and the local ephemeral ports attached to them.
 
-*Show established Windows TCP sessions filtered to remote port `443`.*
+Filtering on `RemotePort 443` is useful on workstations and jump hosts because HTTPS is often the busiest stable workload. Replace `443` with your application's port when you are inspecting a service listener instead of outbound client traffic.
 
+*Run the commands in this section to show established HTTPS sessions.*
 ```powershell
 Get-NetTCPConnection -RemotePort 443 -State Established |
     Select-Object -First 8 LocalAddress, LocalPort, RemoteAddress, RemotePort |
@@ -434,10 +443,11 @@ Repeated remote addresses with different local ephemeral ports indicate multiple
 
 #### Count sessions by remote address
 
-When the connection table is too noisy, aggregate by remote address so the busiest peer becomes obvious. This preserves PowerShell objects until the final display step, which makes the grouping safer than reparsing formatted text.
+When you need to know which peers dominate a workload. It is typically triggered by A raw session list is too noisy to identify the busiest remote endpoints. Windows host with established sessions already filtered to one service port. Aggregate concurrent connections by remote address without reparsing text manually.
 
-*Group established Windows sessions by remote address and rank them by count.*
+`Group-Object` is the PowerShell equivalent of the `sort | uniq -c` pattern on Linux. The result stays structured, so you can sort or filter again without reparsing text.
 
+*Run the commands in this section to count sessions by remote address.*
 ```powershell
 Get-NetTCPConnection -RemotePort 443 -State Established |
     Group-Object RemoteAddress | Sort-Object Count -Descending |
@@ -459,10 +469,11 @@ Count  Name
 
 #### Summarize TCP states for a workload
 
-Use a state distribution when you need to decide whether the workload is mostly healthy established traffic, post-close churn, or sockets that the application has not released. Grouping by `State` gives the fastest Windows-side baseline before you dive into individual rows.
+When you suspect churn, cleanup delay, or mixed connection states. It is typically triggered by you need to compare `Established`, `CloseWait`, and `TimeWait` counts quickly. Windows host with a workload filtered to a known service port. Collapse connection objects into a state distribution that is easy to judge operationally.
 
-*Summarize Windows TCP connections by state for one workload.*
+Grouping by state is the quickest way to decide whether you are looking at healthy established traffic, a large amount of post-close churn, or sockets that the application has not released cleanly.
 
+*Run the commands in this section to summarize TCP states for a workload.*
 ```powershell
 Get-NetTCPConnection -RemotePort 443 | Group-Object State |
     Select-Object Count, Name | Sort-Object Count -Descending |
@@ -481,10 +492,11 @@ Count  Name
 
 #### Poll a connection count once per second
 
-During a short monitoring window, repeat the same established-session count so a trend is visible without opening an external tool. The bounded loop keeps the note reproducible while still showing how to watch the metric live.
+During a short monitoring window when session counts may move quickly. It is typically triggered by you need a live count without opening an external monitoring tool. Windows PowerShell using a bounded loop instead of an infinite watcher. Sample established-session counts repeatedly so a trend is visible in the terminal.
 
-*Sample the Windows established-session count once per second.*
+PowerShell does not have a built-in `watch` command, but a short loop gives you the same live count. The bounded version below is easier to document cleanly than an infinite `while ($true)` loop.
 
+*Run the commands in this section to poll a connection count once per second.*
 ```powershell
 1..3 | ForEach-Object {
     (Get-NetTCPConnection -RemotePort 443 -State Established -ErrorAction SilentlyContinue).Count
@@ -511,18 +523,19 @@ During a short monitoring window, repeat the same established-session count so a
 
 ## Recommendations
 
-Use this section when the diagnostic question is already clear and you need the shortest command that answers it with minimal surrounding noise.
+These leaves replace the old recommendation matrix with runnable platform-specific shortcuts.
 
-### Linux | `ss` | quick service checks
+### Linux
 
-These Linux shortcuts answer common first-pass questions with the shortest reliable `ss` expression.
+Use these commands when you already know the question you need answered and want the shortest path to it.
 
 #### Find what listens on a port
 
-When one port is already suspected, narrow the listener table to that port instead of scanning the full inventory. This Linux check resolves the bind address and owning process quickly, which is the fastest confirmation after a service-specific failure report.
+When you already know the suspect port and want the fastest confirmation. It is typically triggered by one service or one port is under investigation. Linux host where the listener should already exist if the service is healthy. Resolve a single port to its bind address and owning process quickly.
 
-*Filter Linux listeners to one local port and show the owning process.*
+Replace `18080` with the port you care about. The filtered view is faster to read than a full listener table when you are checking one service.
 
+*Run the commands in this section to find what listens on a port.*
 ```bash
 ss -tlnp | grep :18080
 ```
@@ -533,10 +546,11 @@ LISTEN 0      5      0.0.0.0:18080      0.0.0.0:*    users:(("python3",pid=32037
 
 #### List all listening services
 
-Start broad when the failing port is unknown or when you need the current listener inventory before narrowing the search. A short slice of the full listener table makes wildcard, loopback, and interface-specific binds visible in one pass.
+When the failing port is unknown or you need broad listener context. It is typically triggered by you need a first-pass inventory before narrowing to one service. Linux host with multiple listeners and mixed bind addresses. Show the top of the listener table so obvious binds and omissions stand out quickly.
 
-*Show the first rows of the Linux listener table.*
+When you do not yet know which port matters, start broad. The full listener table shows wildcard, loopback, and interface-specific sockets in one pass.
 
+*Run the commands in this section to list all listening services.*
 ```bash
 ss -tlnp | sed -n '1,6p'
 ```
@@ -552,10 +566,11 @@ LISTEN 0      4096   *:1434             *:*
 
 #### Count connections to a service
 
-Use this when the service port is known and the immediate question is concurrency, not session details. Filtering to the server-side port keeps the result tied to the listener and returns a single number that is easy to sample over time.
+When you need a concurrency count tied to one known listener. It is typically triggered by the question is "how many live sessions are attached right now?". Linux host with the service port already identified. Count established server-side sessions without reviewing every row.
 
-*Count established sessions attached to one Linux service port.*
+Filtering on `sport = :45432` keeps the server-side rows only. Replace the example port after you confirm the real listener value for your service.
 
+*Run the commands in this section to count connections to a service.*
 ```bash
 ss -H -tn state established '( sport = :45432 )' | wc -l
 ```
@@ -566,10 +581,11 @@ ss -H -tn state established '( sport = :45432 )' | wc -l
 
 #### Diagnose `Address already in use`
 
-Run this immediately after a bind or startup failure that says the port is already occupied. The filtered listener view shows who already owns the port so you can investigate the conflicting process before restarting or killing anything.
+When a bind or startup action fails because a port is busy. It is typically triggered by the service reports `Address already in use` or equivalent. Linux host where another listener may already own the port. Identify the conflicting listener before you restart or kill anything.
 
-*Identify the Linux listener that already owns a specific port.*
+If a bind or startup step fails because the port is already occupied, identify the current owner before you restart anything. The last column tells you which process owns the listener.
 
+*Run the commands in this section to diagnose `Address already in use`.*
 ```bash
 ss -tlnp | grep :18080
 ```
@@ -580,10 +596,11 @@ LISTEN 0      5      0.0.0.0:18080      0.0.0.0:*    users:(("python3",pid=32037
 
 #### Diagnose `TIME_WAIT` buildup
 
-Use this when rapid connect-close cycles are a better fit for the symptom than listener absence. The state filter isolates post-close sockets so you can confirm connection churn before changing kernel or application settings.
+When short-lived connections may be exhausting ports or masking the real bottleneck. It is typically triggered by you see reconnect churn, port pressure, or a growing `TIME_WAIT` count. Linux host handling repeated client connects and closes. Verify whether post-close socket churn is the problem before tuning the kernel.
 
-*List Linux `TIME_WAIT` sockets for one destination port.*
+A short list is normal. A long list that keeps growing usually means the workload is churning through connections faster than it reuses them.
 
+*Run the commands in this section to diagnose `TIME_WAIT` buildup.*
 ```bash
 ss -tn state time-wait '( dport = :45434 )'
 ```
@@ -595,16 +612,17 @@ Recv-Q Send-Q Local Address:Port Peer Address:Port Process
 0      0      127.0.0.1:36752   127.0.0.1:45434
 ```
 
-### PowerShell | `Get-NetTCPConnection` | quick service checks
+### PowerShell
 
-These Windows shortcuts answer the same first-pass questions while keeping the data in PowerShell objects until the final display step.
+PowerShell works best when you filter aggressively and keep the output object-oriented until the final `Format-Table`.
 
 #### Find what listens on a port
 
-When one Windows port is already under suspicion, query that port directly instead of scanning the full listener set. This keeps the result narrow and immediately returns the PID you need for the next process lookup.
+When you know the suspect Windows port and need a direct lookup. It is typically triggered by one listener is failing, missing, or colliding with another process. Windows host with `Get-NetTCPConnection` available. Resolve one local port to its bound addresses and owning PID.
 
-*Filter Windows listeners to one local port and show the owning process.*
+Replace `135` with the port you are diagnosing. This pattern is the direct PowerShell equivalent of `ss -tlnp | grep :<port>`.
 
+*Run the commands in this section to find what listens on a port.*
 ```powershell
 Get-NetTCPConnection -LocalPort 135 -State Listen |
     Select-Object LocalAddress, LocalPort, OwningProcess,
@@ -621,10 +639,11 @@ LocalAddress  LocalPort  OwningProcess  Process
 
 #### List listening services
 
-Start broad when the suspect port is still unknown and you need a top-down listener inventory. Sorting and trimming the listener set keeps the Windows output readable while still exposing the current address and PID mix.
+When you do not yet know which Windows port matters. It is typically triggered by you need a top-down listener inventory before narrowing the search. Windows host with multiple TCP listeners. Show a readable slice of the listener table sorted by port.
 
-*Show the first rows of the Windows listener inventory.*
+When the failing port is unknown, sort the full listener set by port and inspect it top-down.
 
+*Run the commands in this section to list listening services.*
 ```powershell
 Get-NetTCPConnection -State Listen | Sort-Object LocalPort |
     Select-Object -First 8 LocalAddress, LocalPort, OwningProcess,
@@ -647,10 +666,11 @@ LocalAddress  LocalPort  OwningProcess  Process
 
 #### Count active HTTPS sessions
 
-Use this when you need a quick concurrency number from a stable Windows workload rather than a full established-session table. The single count is easy to compare across captures or feed into a short polling loop.
+When you need a quick live count from a stable Windows workload. It is typically triggered by you want a simple established-session count without inspecting every row. Windows host already carrying active HTTPS traffic. Return a single count that can be sampled or compared over time.
 
-*Count established Windows sessions filtered to remote port `443`.*
+For the live capture below, `443` was the stable remote service port already active on the workstation. In application troubleshooting, replace it with the service port your process is actually using.
 
+*Run the commands in this section to count active HTTPS sessions.*
 ```powershell
 (Get-NetTCPConnection -RemotePort 443 -State Established -ErrorAction SilentlyContinue).Count
 ```
@@ -661,10 +681,11 @@ Use this when you need a quick concurrency number from a stable Windows workload
 
 #### Diagnose `Address already in use`
 
-When a Windows service cannot bind because the address is already in use, resolve the existing listener first instead of stopping services blindly. The result gives you the bound address, port, and PID that own the conflict.
+When a Windows service cannot bind because the port is already occupied. It is typically triggered by startup or binding fails with an address-in-use error. Windows host where another process may already own the target port. Identify the conflicting listener and the PID that owns it.
 
-*Identify the Windows listener that already owns a specific port.*
+Windows surfaces the same underlying problem as Linux: another process already owns the port. Start by resolving that listener and its PID.
 
+*Run the commands in this section to diagnose `Address already in use`.*
 ```powershell
 Get-NetTCPConnection -LocalPort 135 -State Listen |
     Select-Object LocalAddress, LocalPort, OwningProcess,
@@ -681,10 +702,11 @@ LocalAddress  LocalPort  OwningProcess  Process
 
 #### Diagnose `TIME_WAIT` buildup
 
-Use this when rapid reconnects or possible ephemeral-port pressure make post-close churn the likely explanation. Inspecting `TimeWait` directly confirms whether the workload is cycling connections aggressively instead of holding steady sessions.
+When rapid connection churn may be exhausting resources on Windows. It is typically triggered by you need to verify whether `TimeWait` growth matches the symptom pattern. Windows host with repeated outbound or loopback connections. Inspect recent post-close sockets before changing global networking defaults.
 
-*List Windows `TimeWait` sockets to inspect connection churn.*
+`TimeWait` on Windows is still a connection-churn signal. Inspect it before you consider global networking changes.
 
+*Run the commands in this section to diagnose `TIME_WAIT` buildup.*
 ```powershell
 Get-NetTCPConnection -State TimeWait |
     Select-Object -First 8 LocalAddress, LocalPort, RemoteAddress, RemotePort |
@@ -706,18 +728,19 @@ LocalAddress                         LocalPort  RemoteAddress             Remote
 
 ## Troubleshooting
 
-Use this section when the symptom is already known and the goal is to confirm or disprove the most likely socket-level explanation.
+These leaves replace the old symptom/cause/fix table with runnable checks that preserve the same scenarios.
 
-### Linux | `ss` and `nc` | confirm common failure patterns
+### Linux
 
-Each Linux check below starts from a concrete symptom and narrows the command surface to the fastest confirming test.
+Each item below is framed as the shortest command sequence that proves or disproves the likely cause.
 
 #### `Address already in use`
 
-When a Linux service fails to start because the address is already in use, confirm the current owner before intervening. This check resolves the conflicting listener directly and prevents blind process restarts or kills.
+Immediately after a Linux service fails to bind or start on its target port. It is typically triggered by the startup error explicitly says the address or port is already in use. Linux host where another listener may already own the port. Prove which process holds the conflicting listener before you intervene.
 
-*Resolve the Linux process that already owns the target listener port.*
+If a service refuses to start because the port is busy, find the current owner first. Do not kill a process until you confirm it is the conflicting listener.
 
+*Run the commands in this section to `Address already in use`.*
 ```bash
 ss -tlnp | grep :18080
 ```
@@ -728,10 +751,11 @@ LISTEN 0      5      0.0.0.0:18080      0.0.0.0:*    users:(("python3",pid=32037
 
 #### Service is listening only on loopback
 
-Use this when local tests succeed but remote clients still fail. The bind address in the listener table tells you whether the service is restricted to loopback, which is a service-configuration problem rather than a generic firewall verdict.
+When local tests pass but remote clients still cannot connect. It is typically triggered by the service appears healthy on the host yet remains unreachable off-host. Linux listener check where bind address determines reachability. Confirm whether the service is restricted to `127.0.0.1`.
 
-*Show whether the Linux listener is bound only to loopback.*
+A loopback bind accepts local connections and rejects remote ones. That is a service-configuration problem, not a firewall pass/fail by itself.
 
+*Run the commands in this section to service is listening only on loopback.*
 ```bash
 ss -tlnp | grep :45432
 ```
@@ -744,10 +768,11 @@ If you expected remote access, change the service bind address to `0.0.0.0` or t
 
 #### `TIME_WAIT` grows faster than work completes
 
-When the service is reachable but short-lived sessions keep accumulating, verify the post-close state before blaming listener state or routing. This isolates churn on the service path and tells you whether connection reuse is the real issue.
+When the service is reachable but connection churn remains abnormally high. It is typically triggered by short-lived sessions are accumulating faster than the workload justifies. Linux host showing repeated closes on one service path. Confirm the symptom before you blame listener state or firewall rules.
 
-*Inspect Linux `TIME_WAIT` sockets to confirm connection churn.*
+This pattern points to short-lived connections rather than a missing listener. Fix the client or application connection pattern before you change kernel settings.
 
+*Run the commands in this section to `TIME_WAIT` grows faster than work completes.*
 ```bash
 ss -tn state time-wait '( dport = :45434 )'
 ```
@@ -761,10 +786,11 @@ Recv-Q Send-Q Local Address:Port Peer Address:Port Process
 
 #### Client reports `Connection refused`
 
-When the client fails immediately with `Connection refused`, confirm the refusal path before changing routing or firewall rules. A reset means the packet reached the host and no matching listener accepted it.
+When the client fails immediately with a refusal error. It is typically triggered by the reported symptom is `Connection refused`, not a timeout. Linux host or test target where you need to validate the refusal path. Demonstrate that the packet reached the host and no matching listener accepted it.
 
-*Attempt a TCP connection that should fail immediately with `Connection refused`.*
+An immediate refusal means the packet reached the target and the kernel sent back a reset (RST). Check the listener table on the target host before you investigate routing.
 
+*Run the commands in this section to client reports `Connection refused`.*
 ```bash
 nc -zv -w 2 127.0.0.1 45435
 ```
@@ -775,10 +801,11 @@ nc: connect to 127.0.0.1 port 45435 (tcp) failed: Connection refused
 
 #### Client reports `Connection timed out`
 
-When the client waits before failing, confirm the timeout path separately from listener checks. A timeout points to packet loss, filtering, or host reachability rather than an immediate listener mismatch.
+When the client waits and then fails without an immediate refusal. It is typically triggered by the reported symptom is `Connection timed out`. Linux host or test target where path loss is more likely than listener failure. Demonstrate the network-path failure mode before you restart the service.
 
-*Attempt a TCP connection that should fail by timing out rather than refusing immediately.*
+A timeout means the synchronize (SYN) did not produce a synchronize-acknowledgment (SYN-ACK) before the timeout expired. That usually points to routing, firewall, or host availability.
 
+*Run the commands in this section to client reports `Connection timed out`.*
 ```bash
 nc -zv -w 2 10.255.255.1 45435
 ```
@@ -787,16 +814,17 @@ nc -zv -w 2 10.255.255.1 45435
 nc: connect to 10.255.255.1 port 45435 (tcp) timed out: Operation now in progress
 ```
 
-### PowerShell | `Get-NetTCPConnection` | confirm common failure patterns
+### PowerShell
 
-The Windows checks below follow the same symptom-first approach, using object filters to confirm or rule out the likely socket-level cause.
+The Windows checks below use the same symptom set but rely on object filters instead of text parsing.
 
 #### `Address already in use`
 
-When a Windows service cannot reopen its port, resolve the existing listener to a PID before stopping services blindly. This confirms the conflict at the socket layer and gives you the process identity to inspect next.
+Immediately after a Windows service fails to bind or reopen its port. It is typically triggered by startup or configuration changes return an address-in-use error. Windows host where another process may already own the local port. Resolve the existing listener to a PID before you stop services blindly.
 
-*Resolve the Windows listener that already owns the target port.*
+On Windows, the first step is still to identify the listener that already owns the port. `OwningProcess` gives you the PID to inspect next.
 
+*Run the commands in this section to `Address already in use`.*
 ```powershell
 Get-NetTCPConnection -LocalPort 135 -State Listen |
     Select-Object LocalAddress, LocalPort, OwningProcess,
@@ -813,10 +841,11 @@ LocalAddress  LocalPort  OwningProcess  Process
 
 #### Service is listening only on loopback
 
-Use this when the application works locally on the host but remains unreachable from other machines. The `LocalAddress` column shows loopback-bound listeners directly, which lets you separate bind configuration from firewall policy.
+When Windows clients on the host can connect but remote clients cannot. It is typically triggered by the service appears healthy locally yet remains unreachable from other machines. Windows listener inventory where `LocalAddress` exposes loopback binds directly. Confirm whether the service is restricted to `127.0.0.1`.
 
-*List Windows loopback-only listeners and their owning processes.*
+Loopback-only listeners are visible directly in the `LocalAddress` column. If the service should accept remote traffic, `127.0.0.1` is the wrong bind address.
 
+*Run the commands in this section to service is listening only on loopback.*
 ```powershell
 Get-NetTCPConnection -State Listen | Where-Object LocalAddress -eq '127.0.0.1' |
     Select-Object -First 6 LocalAddress, LocalPort, OwningProcess,
@@ -837,10 +866,11 @@ LocalAddress  LocalPort  OwningProcess  Process
 
 #### `TIME_WAIT` keeps growing
 
-Use this when repeated reconnects or possible ephemeral-port pressure make post-close churn the likely explanation. The `TimeWait` view confirms whether the workload is cycling connections aggressively instead of holding steady sessions.
+When Windows shows heavy reconnect churn or possible ephemeral-port pressure. It is typically triggered by `TimeWait` counts keep climbing during otherwise simple traffic. Windows host with repeated connect-close behavior. Verify that the workload pattern, not listener absence, explains the symptom.
 
-*List Windows `TimeWait` sockets to inspect connection churn.*
+`TimeWait` is not a bug by itself, but a large growing set usually means the workload is cycling connections aggressively. Inspect the application behavior before you change global networking defaults.
 
+*Run the commands in this section to `TIME_WAIT` keeps growing.*
 ```powershell
 Get-NetTCPConnection -State TimeWait |
     Select-Object -First 8 LocalAddress, LocalPort, RemoteAddress, RemotePort |
@@ -862,10 +892,11 @@ LocalAddress                         LocalPort  RemoteAddress             Remote
 
 #### `CLOSE_WAIT` keeps growing
 
-Use this when sessions linger after the remote side has already closed and the question is whether local cleanup is broken. `CloseWait` points to an application-owned socket that has not been released yet, which is why it is more often a process-lifecycle problem than a network-path problem.
+When sessions appear stuck after the remote side has already closed. It is typically triggered by you need to decide whether the fault is in application cleanup. Windows host where long-lived services or agents may not release sockets promptly. Confirm that the local process still owns sockets the peer has already closed.
 
-*List Windows `CloseWait` sockets and the processes that still own them.*
+`CloseWait` means the remote side already closed and the local process has not. On Windows services and long-running agents, this is usually an application cleanup bug rather than a firewall or kernel-state problem.
 
+*Run the commands in this section to `CLOSE_WAIT` keeps growing.*
 ```powershell
 Get-NetTCPConnection -State CloseWait |
     Select-Object -First 5 LocalAddress, LocalPort, RemoteAddress, RemotePort, OwningProcess |

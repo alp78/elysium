@@ -358,10 +358,7 @@ gitGraph TB:
 
 #### Switch to the receiving branch
 
-**When to run:** Before any merge — you must be on the branch that will receive the changes.
-**Trigger:** Starting a branch integration workflow.
-**Context:** Local operation. Read-only (no commits created). Switches HEAD, working tree, and staging area.
-**Purpose:** Position HEAD on the target branch so the merge commit will be recorded there.
+Before any merge — you must be on the branch that will receive the changes. It is typically triggered by starting a branch integration workflow. Local operation. Read-only (no commits created). Switches HEAD, working tree, and staging area. Position HEAD on the target branch so the merge commit will be recorded there.
 
 *Switch to main before merging the feature branch.*
 
@@ -371,10 +368,7 @@ git checkout main
 
 #### Merge the feature branch
 
-**When to run:** After switching to the receiving branch, when the feature is complete and ready to integrate.
-**Trigger:** PR approval, feature completion, or scheduled integration.
-**Context:** Local state-changing operation. Creates a new merge commit on the current branch. Does not affect the remote until you push.
-**Purpose:** Integrate all commits from the feature branch into main, preserving the full commit history and branch topology.
+After switching to the receiving branch, when the feature is complete and ready to integrate. It is typically triggered by PR approval, feature completion, or scheduled integration. Local state-changing operation. Creates a new merge commit on the current branch. Does not affect the remote until you push. Integrate all commits from the feature branch into main, preserving the full commit history and branch topology.
 
 *Merge the feature branch into main using the default three-way merge strategy.*
 
@@ -476,10 +470,7 @@ gitGraph TB:
 
 #### Force a merge commit on a non-diverged branch
 
-**When to run:** When merging a feature branch that has not diverged from main, but you want to preserve the branch topology in the log.
-**Trigger:** Team policy requires merge commits for traceability, or you want `git log --graph` to show the feature as a distinct branch.
-**Context:** Local state-changing operation. Creates a merge commit even when fast-forward would produce the same tree content.
-**Purpose:** Record the integration point and preserve the visual grouping of feature commits in the graph.
+When merging a feature branch that has not diverged from main, but you want to preserve the branch topology in the log. It is typically triggered by team policy requires merge commits for traceability, or you want `git log --graph` to show the feature as a distinct branch. Local state-changing operation. Creates a merge commit even when fast-forward would produce the same tree content. Record the integration point and preserve the visual grouping of feature commits in the graph.
 
 *Force a merge commit for the holiday calendar branch, even though main has not diverged.*
 
@@ -500,10 +491,7 @@ The `--ff-only` flag tells Git to merge only if a fast-forward is possible. If t
 
 #### Reject a merge when branches have diverged
 
-**When to run:** In CI pipelines or scripts where you want to guarantee linear history — if the branch needs a three-way merge, the script should fail and require a rebase first.
-**Trigger:** Automated merge step in a deployment pipeline.
-**Context:** Local operation. If the merge cannot fast-forward, Git exits with code 128 and no changes are made.
-**Purpose:** Enforce linear history by refusing to create merge commits.
+In CI pipelines or scripts where you want to guarantee linear history — if the branch needs a three-way merge, the script should fail and require a rebase first. It is typically triggered by automated merge step in a deployment pipeline. Local operation. If the merge cannot fast-forward, Git exits with code 128 and no changes are made. Enforce linear history by refusing to create merge commits.
 
 *Attempt to fast-forward merge a branch that has diverged from main.*
 
@@ -611,10 +599,7 @@ gitGraph TB:
 
 #### Switch to the feature branch
 
-**When to run:** Before rebasing — rebase operates on the currently checked-out branch.
-**Trigger:** You want to update your feature branch with the latest changes from main before opening a PR.
-**Context:** Local operation. Switches HEAD, working tree, and staging area to the feature branch.
-**Purpose:** Position HEAD on the branch whose commits will be replayed.
+Before rebasing — rebase operates on the currently checked-out branch. It is typically triggered by you want to update your feature branch with the latest changes from main before opening a PR. Local operation. Switches HEAD, working tree, and staging area to the feature branch. Position HEAD on the branch whose commits will be replayed.
 
 *Switch to the feature branch that will be rebased.*
 
@@ -624,10 +609,7 @@ git checkout demo/rebase-strategy
 
 #### Rebase onto main
 
-**When to run:** After fetching the latest main and switching to your feature branch.
-**Trigger:** Main has advanced since you branched, and you want a linear history without a merge commit.
-**Context:** Local history-rewriting operation. Every commit on the feature branch gets a new SHA. If the branch was previously pushed, you must force-push after rebasing. Conflicts are resolved commit-by-commit.
-**Purpose:** Replay all feature commits on top of main's latest tip, producing a linear history.
+After fetching the latest main and switching to your feature branch. It is typically triggered by main has advanced since you branched, and you want a linear history without a merge commit. Local history-rewriting operation. Every commit on the feature branch gets a new SHA. If the branch was previously pushed, you must force-push after rebasing. Conflicts are resolved commit-by-commit. Replay all feature commits on top of main's latest tip, producing a linear history.
 
 *Rebase the feature branch onto the current tip of main.*
 
@@ -660,10 +642,7 @@ The reflog shows the branch was created from main at `11df7ed`, had two commits 
 
 #### Fast-forward merge after rebase
 
-**When to run:** After rebasing your feature branch, switch to main and merge. Because the feature is now a direct descendant, Git fast-forwards.
-**Trigger:** Rebase completed successfully — feature branch is ready to integrate.
-**Context:** Local state-changing operation. Moves main's pointer forward. No merge commit is created.
-**Purpose:** Integrate the rebased feature into main, producing a fully linear history.
+After rebasing your feature branch, switch to main and merge. Because the feature is now a direct descendant, Git fast-forwards. It is typically triggered by rebase completed successfully — feature branch is ready to integrate. Local state-changing operation. Moves main's pointer forward. No merge commit is created. Integrate the rebased feature into main, producing a fully linear history.
 
 *Switch to main and fast-forward merge the rebased feature branch.*
 
@@ -692,10 +671,7 @@ If you pushed your branch to the remote before rebasing, the remote still has th
 
 #### Force push a rebased branch safely
 
-**When to run:** After rebasing a branch that was previously pushed to the remote.
-**Trigger:** `git push` was rejected with "non-fast-forward" because the rebased SHAs differ from the remote's.
-**Context:** Remote state-changing operation. Overwrites the remote branch history. `--force-with-lease` provides a safety check against overwriting teammates' work.
-**Purpose:** Update the remote branch with the rebased history while verifying no one else has pushed to it.
+After rebasing a branch that was previously pushed to the remote. It is typically triggered by `git push` was rejected with "non-fast-forward" because the rebased SHAs differ from the remote's. Remote state-changing operation. Overwrites the remote branch history. `--force-with-lease` provides a safety check against overwriting teammates' work. Update the remote branch with the rebased history while verifying no one else has pushed to it.
 
 > [!danger] Never use --force on shared branches
 >
@@ -808,10 +784,7 @@ git checkout main
 
 #### Stage all feature commits as a single changeset
 
-**When to run:** When the feature branch is complete but its commit history is noisy — WIP commits, typo fixes, or iterative scaffolding that adds no value to main.
-**Trigger:** PR ready for merge, and the team policy is squash-merge for small features.
-**Context:** Local state-changing operation. Stages all changes from the feature branch but does not create a commit. HEAD is not updated until you commit manually.
-**Purpose:** Collapse all branch commits into a single staged changeset, ready for a descriptive commit message.
+When the feature branch is complete but its commit history is noisy — WIP commits, typo fixes, or iterative scaffolding that adds no value to main. It is typically triggered by PR ready for merge, and the team policy is squash-merge for small features. Local state-changing operation. Stages all changes from the feature branch but does not create a commit. HEAD is not updated until you commit manually. Collapse all branch commits into a single staged changeset, ready for a descriptive commit message.
 
 *Squash merge the feature branch — this stages all changes without committing.*
 
@@ -832,10 +805,7 @@ The output confirms `Squash commit -- not updating HEAD`. All changes are staged
 
 #### Create the squash commit
 
-**When to run:** Immediately after `git merge --squash` — the staging area has all changes ready.
-**Trigger:** Squash merge completed successfully.
-**Context:** Local state-changing operation. Creates a single commit on main. The commit message should summarize all work from the feature branch.
-**Purpose:** Record the feature as a single, well-described commit in main's history.
+Immediately after `git merge --squash` — the staging area has all changes ready. It is typically triggered by squash merge completed successfully. Local state-changing operation. Creates a single commit on main. The commit message should summarize all work from the feature branch. Record the feature as a single, well-described commit in main's history.
 
 *Commit the squashed changes with a descriptive message.*
 
@@ -851,10 +821,7 @@ git commit -m "feat: add GICS sector mapper with portfolio weight calculation"
 
 #### Delete the feature branch after squash
 
-**When to run:** After the squash commit is confirmed on main.
-**Trigger:** Squash merge workflow is complete.
-**Context:** Local operation. The feature branch pointer was not advanced by the squash merge — it still points to the last WIP commit. Deleting it prevents confusion.
-**Purpose:** Clean up the stale branch reference.
+After the squash commit is confirmed on main. It is typically triggered by squash merge workflow is complete. Local operation. The feature branch pointer was not advanced by the squash merge — it still points to the last WIP commit. Deleting it prevents confusion. Clean up the stale branch reference.
 
 *Delete the feature branch locally after squash merge.*
 
@@ -945,10 +912,7 @@ gitGraph TB:
 
 #### Squash messy commits with fixup
 
-**When to run:** Before opening a PR, when your branch has WIP, typo-fix, or iterative commits that should be combined.
-**Trigger:** Branch has multiple commits where only the combined result matters.
-**Context:** Local history-rewriting operation. Rewrites SHAs for all affected commits. If the branch was previously pushed, force-push is required after.
-**Purpose:** Present a clean, professional commit history for review.
+Before opening a PR, when your branch has WIP, typo-fix, or iterative commits that should be combined. It is typically triggered by branch has multiple commits where only the combined result matters. Local history-rewriting operation. Rewrites SHAs for all affected commits. If the branch was previously pushed, force-push is required after. Present a clean, professional commit history for review.
 
 > [!info]- How interactive rebase with fixup works
 >

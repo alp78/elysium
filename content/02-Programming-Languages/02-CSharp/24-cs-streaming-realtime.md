@@ -945,7 +945,7 @@ Architecture reference for large-scale data movement — MFT gateways, GCS Trans
 
 **What:** Managed service for scheduled transfers between GCS/S3/Azure/HTTP endpoints.
 
-**When to use:** Cross-cloud replication, TB-scale migration, on-prem NAS → GCS.
+Use GCS Transfer Service when the job is long-running, bandwidth-heavy, or operationally repetitive enough that retries, scheduling, and managed state tracking should move out of your own code. It fits cross-cloud replication, multi-terabyte migrations, and on-prem NAS ingestion where an agent-based transfer path is more reliable than ad hoc upload scripts.
 
 #### Transfer Acceleration & Cloud Interconnect
 

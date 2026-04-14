@@ -428,10 +428,7 @@ Git must be installed before any other step. The installation method depends on 
 
 #### Install Git for Windows
 
-**When to run:** on a new Windows machine or after a fresh OS install.
-**Trigger:** `git --version` returns "command not found" or the version is below 2.39.
-**Context:** requires administrator privileges for the default installer. No restart needed.
-**Purpose:** install the Git CLI, Git Bash shell, and optional GUI tools.
+On a new Windows machine or after a fresh OS install. It is typically triggered by `git --version` returns "command not found" or the version is below 2.39. Requires administrator privileges for the default installer. No restart needed. Install the Git CLI, Git Bash shell, and optional GUI tools.
 
 Download the installer from [git-scm.com/downloads/win](https://git-scm.com/downloads/win) and run it. Alternatively, use `winget` from a PowerShell terminal:
 
@@ -452,10 +449,7 @@ winget install --id Git.Git -e --source winget
 
 #### Install Git on macOS
 
-**When to run:** on a new Mac or after a major OS upgrade.
-**Trigger:** `git --version` returns the Apple-bundled version (often outdated) or "command not found."
-**Context:** no admin required for Homebrew install. Xcode Command Line Tools also provide a Git binary.
-**Purpose:** install a current Git version with full feature support.
+On a new Mac or after a major OS upgrade. It is typically triggered by `git --version` returns the Apple-bundled version (often outdated) or "command not found.". No admin required for Homebrew install. Xcode Command Line Tools also provide a Git binary. Install a current Git version with full feature support.
 
 macOS ships a Git binary as part of Xcode Command Line Tools, but it is often outdated. Install a current version via Homebrew:
 
@@ -483,10 +477,7 @@ If the output shows `/usr/bin/git`, the Xcode version is still taking precedence
 
 #### Install Git on Linux
 
-**When to run:** on a new Linux machine, container, or VM.
-**Trigger:** `git --version` returns "command not found."
-**Context:** requires `sudo` for package manager installation.
-**Purpose:** install the Git CLI.
+On a new Linux machine, container, or VM. It is typically triggered by `git --version` returns "command not found.". Requires `sudo` for package manager installation. Install the Git CLI.
 
 *Install Git on Debian/Ubuntu:*
 
@@ -510,10 +501,7 @@ apk add --no-cache git
 
 #### Install Git in WSL
 
-**When to run:** when using Windows Subsystem for Linux for development.
-**Trigger:** `git --version` inside the WSL distribution returns "command not found" or an outdated version.
-**Context:** WSL has its own filesystem and its own Git installation, separate from Git for Windows. Credentials, config, and hooks are independent.
-**Purpose:** install Git inside the Linux distribution running under WSL.
+When using Windows Subsystem for Linux for development. It is typically triggered by `git --version` inside the WSL distribution returns "command not found" or an outdated version. WSL has its own filesystem and its own Git installation, separate from Git for Windows. Credentials, config, and hooks are independent. Install Git inside the Linux distribution running under WSL.
 
 WSL distributions are standard Linux — use the `apt` or `dnf` commands above. Note that **Git for Windows and WSL Git are separate installations** with separate configurations. Setting `user.email` in Git for Windows does not affect WSL, and vice versa.
 
@@ -557,10 +545,7 @@ Git embeds an author name and email in every commit object. These values are man
 
 #### Set the global author name
 
-**When to run:** once on each new machine, before the first commit.
-**Trigger:** first-time Git setup or `git config --get user.name` returns empty.
-**Context:** `--global` writes to `~/.gitconfig`. Applies to all repos for the current user. Does not require admin.
-**Purpose:** set the display name that appears in `git log` output and GitHub commit attribution.
+Once on each new machine, before the first commit. It is typically triggered by first-time Git setup or `git config --get user.name` returns empty. `--global` writes to `~/.gitconfig`. Applies to all repos for the current user. Does not require admin. Set the display name that appears in `git log` output and GitHub commit attribution.
 
 *Set the author name for all repositories on this machine:*
 
@@ -570,10 +555,7 @@ git config --global user.name "alp78"
 
 #### Set the global author email
 
-**When to run:** immediately after setting `user.name`.
-**Trigger:** `git config --get user.email` returns empty or the wrong address.
-**Context:** the email must match a verified email on your GitHub account for commits to be attributed to your profile.
-**Purpose:** set the email that appears in every commit and links your work to your GitHub identity.
+Immediately after setting `user.name`. It is typically triggered by `git config --get user.email` returns empty or the wrong address. The email must match a verified email on your GitHub account for commits to be attributed to your profile. Set the email that appears in every commit and links your work to your GitHub identity.
 
 *Set the author email for all repositories:*
 
@@ -591,10 +573,7 @@ git config --global user.email "alexper.recovery@gmail.com"
 
 #### Use the GitHub noreply email for privacy
 
-**When to run:** when you want commits attributed to your GitHub profile without exposing your real email.
-**Trigger:** privacy policy, personal preference, or corporate guidance.
-**Context:** GitHub generates a unique noreply address for every account. Find it at GitHub → Settings → Emails → "Keep my email addresses private."
-**Purpose:** prevent your real email from appearing in public commit history while maintaining contribution attribution.
+When you want commits attributed to your GitHub profile without exposing your real email. It is typically triggered by privacy policy, personal preference, or corporate guidance. GitHub generates a unique noreply address for every account. Find it at GitHub → Settings → Emails → "Keep my email addresses private.". Prevent your real email from appearing in public commit history while maintaining contribution attribution.
 
 *Set the noreply email as your global author email:*
 
@@ -608,10 +587,7 @@ git config --global user.email "12345678+alp78@users.noreply.github.com"
 
 #### Use a different identity for a specific repository
 
-**When to run:** when you contribute to a repository that requires a different email (e.g., work vs. personal).
-**Trigger:** the repo belongs to a different organization or requires a different identity.
-**Context:** `--local` writes to `.git/config` inside the repository. Overrides `--global` for this repo only.
-**Purpose:** ensure commits in this repo use the correct identity without changing the global default.
+When you contribute to a repository that requires a different email (e.g., work vs. personal). It is typically triggered by the repo belongs to a different organization or requires a different identity. `--local` writes to `.git/config` inside the repository. Overrides `--global` for this repo only. Ensure commits in this repo use the correct identity without changing the global default.
 
 *Set a repo-specific email (local scope):*
 
@@ -677,10 +653,7 @@ HTTPS is the default protocol when you clone with a `https://github.com/...` URL
 
 #### Generate a Personal Access Token on GitHub
 
-**When to run:** before the first `git push` or `git clone` over HTTPS, or when an existing token expires.
-**Trigger:** Git prompts for a password or returns `Authentication failed`.
-**Context:** browser-based operation on GitHub.com. Tokens are scoped and have configurable expiry.
-**Purpose:** create a credential that Git can use to authenticate with GitHub over HTTPS.
+Before the first `git push` or `git clone` over HTTPS, or when an existing token expires. It is typically triggered by git prompts for a password or returns `Authentication failed`. Browser-based operation on GitHub.com. Tokens are scoped and have configurable expiry. Create a credential that Git can use to authenticate with GitHub over HTTPS.
 
 > [!todo] Generate a PAT (classic)
 >
@@ -703,10 +676,7 @@ HTTPS is the default protocol when you clone with a `https://github.com/...` URL
 
 #### Validate HTTPS authentication
 
-**When to run:** after configuring the PAT and credential helper, to confirm everything works.
-**Trigger:** initial setup or after a PAT rotation.
-**Context:** requires a valid PAT and network access to github.com.
-**Purpose:** confirm that Git can authenticate with GitHub over HTTPS.
+After configuring the PAT and credential helper, to confirm everything works. It is typically triggered by initial setup or after a PAT rotation. Requires a valid PAT and network access to github.com. Confirm that Git can authenticate with GitHub over HTTPS.
 
 *Test HTTPS authentication using the GitHub CLI:*
 
@@ -731,10 +701,7 @@ SSH authentication uses a cryptographic key pair. The private key stays on your 
 
 #### Generate an SSH key pair
 
-**When to run:** once per machine, or when rotating keys.
-**Trigger:** no SSH key exists yet, or `ssh -T git@github.com` returns "Permission denied."
-**Context:** runs locally. The private key is stored in `~/.ssh/`. Requires no network access.
-**Purpose:** create a cryptographic identity for SSH authentication.
+Once per machine, or when rotating keys. It is typically triggered by no SSH key exists yet, or `ssh -T git@github.com` returns "Permission denied.". Runs locally. The private key is stored in `~/.ssh/`. Requires no network access. Create a cryptographic identity for SSH authentication.
 
 *Generate an Ed25519 SSH key pair:*
 
@@ -750,10 +717,7 @@ ssh-keygen -t ed25519 -C "alexper.recovery@gmail.com"
 
 #### Add the public key to GitHub
 
-**When to run:** after generating the key pair.
-**Trigger:** `ssh -T git@github.com` returns "Permission denied (publickey)."
-**Context:** browser-based operation on GitHub.com, or via `gh ssh-key add`.
-**Purpose:** register your public key so GitHub recognizes your machine.
+After generating the key pair. It is typically triggered by `ssh -T git@github.com` returns "Permission denied (publickey).". Browser-based operation on GitHub.com, or via `gh ssh-key add`. Register your public key so GitHub recognizes your machine.
 
 > [!todo] Add the SSH key to GitHub
 >
@@ -769,10 +733,7 @@ ssh-keygen -t ed25519 -C "alexper.recovery@gmail.com"
 
 #### Start the SSH agent and add your key
 
-**When to run:** in every new terminal session where you need SSH authentication (or configure your shell profile to do it automatically).
-**Trigger:** `ssh -T git@github.com` returns "Could not open a connection to your authentication agent."
-**Context:** the SSH agent caches your decrypted private key in memory so you do not have to type the passphrase repeatedly.
-**Purpose:** make the private key available for SSH operations without repeated passphrase prompts.
+In every new terminal session where you need SSH authentication (or configure your shell profile to do it automatically). It is typically triggered by `ssh -T git@github.com` returns "Could not open a connection to your authentication agent.". The SSH agent caches your decrypted private key in memory so you do not have to type the passphrase repeatedly. Make the private key available for SSH operations without repeated passphrase prompts.
 
 *Start the SSH agent and add your key (Linux/macOS):*
 
@@ -796,10 +757,7 @@ ssh-add ~/.ssh/id_ed25519
 
 #### Test SSH connectivity to GitHub
 
-**When to run:** after adding the public key to GitHub and starting the agent.
-**Trigger:** first-time SSH setup or troubleshooting authentication failures.
-**Context:** requires network access to github.com on port 22. Some corporate networks block port 22.
-**Purpose:** verify that SSH authentication works end-to-end.
+After adding the public key to GitHub and starting the agent. It is typically triggered by first-time SSH setup or troubleshooting authentication failures. Requires network access to github.com on port 22. Some corporate networks block port 22. Verify that SSH authentication works end-to-end.
 
 *Test SSH authentication with GitHub:*
 
@@ -845,10 +803,7 @@ Many production teams require signed commits or signed tags to prove that commit
 
 #### Sign commits with SSH key (recommended)
 
-**When to run:** once per machine, as part of identity setup.
-**Trigger:** team policy requires signed commits, or you want the "Verified" badge on GitHub.
-**Context:** uses your existing SSH key — no GPG toolchain needed. Requires Git 2.34+.
-**Purpose:** cryptographically sign every commit with your SSH key.
+Once per machine, as part of identity setup. It is typically triggered by team policy requires signed commits, or you want the "Verified" badge on GitHub. Uses your existing SSH key — no GPG toolchain needed. Requires Git 2.34+. Cryptographically sign every commit with your SSH key.
 
 *Configure SSH-based commit signing:*
 
@@ -876,10 +831,7 @@ The three settings:
 
 #### Sign commits with GPG
 
-**When to run:** when your team or organization requires GPG signing specifically (common in regulated industries).
-**Trigger:** team policy mandates GPG-signed commits, or you need to sign tags with a GPG identity.
-**Context:** requires the GPG toolchain (`gpg` or `gpg2`) installed on the machine. More complex setup than SSH signing.
-**Purpose:** sign commits with a GPG key for organizations that require GPG-based verification.
+When your team or organization requires GPG signing specifically (common in regulated industries). It is typically triggered by team policy mandates GPG-signed commits, or you need to sign tags with a GPG identity. Requires the GPG toolchain (`gpg` or `gpg2`) installed on the machine. More complex setup than SSH signing. Sign commits with a GPG key for organizations that require GPG-based verification.
 
 *Configure GPG-based commit signing:*
 
@@ -942,10 +894,7 @@ Engineers often work with multiple GitHub accounts on the same machine — a per
 
 #### Configure SSH routing for multiple accounts
 
-**When to run:** when you have multiple GitHub accounts (personal + work) and use SSH authentication for both.
-**Trigger:** `git push` on a work repo authenticates as your personal account, or vice versa.
-**Context:** SSH uses the first matching key by default. Without explicit routing, the wrong key is offered for the wrong account.
-**Purpose:** ensure each repository authenticates with the correct GitHub account.
+When you have multiple GitHub accounts (personal + work) and use SSH authentication for both. It is typically triggered by `git push` on a work repo authenticates as your personal account, or vice versa. SSH uses the first matching key by default. Without explicit routing, the wrong key is offered for the wrong account. Ensure each repository authenticates with the correct GitHub account.
 
 > [!info]- Full multi-account SSH and Git identity setup
 >
@@ -1040,10 +989,7 @@ By default, Git prompts for credentials on every remote operation. A credential 
 
 #### Configure the recommended credential helper
 
-**When to run:** once per machine, as part of initial setup.
-**Trigger:** Git prompts for a password on every `push` or `pull`.
-**Context:** `--global` writes to `~/.gitconfig`. Credential helpers are OS-specific.
-**Purpose:** store authentication credentials in the OS secure keychain so Git never prompts again.
+Once per machine, as part of initial setup. It is typically triggered by git prompts for a password on every `push` or `pull`. `--global` writes to `~/.gitconfig`. Credential helpers are OS-specific. Store authentication credentials in the OS secure keychain so Git never prompts again.
 
 *Windows — use Git Credential Manager (included with Git for Windows 2.39+):*
 
@@ -1082,10 +1028,7 @@ git config --global credential.helper /usr/lib/git-core/git-credential-libsecret
 
 #### Credential helper plaintext storage (not recommended)
 
-**When to run:** only in ephemeral, single-user environments (CI containers, disposable VMs).
-**Trigger:** no OS keychain is available and you cannot install one.
-**Context:** writes credentials in plaintext to `~/.git-credentials`. Anyone with read access to your home directory can read them.
-**Purpose:** eliminate password prompts in environments where security is managed at a different layer.
+Only in ephemeral, single-user environments (CI containers, disposable VMs). It is typically triggered by no OS keychain is available and you cannot install one. Writes credentials in plaintext to `~/.git-credentials`. Anyone with read access to your home directory can read them. Eliminate password prompts in environments where security is managed at a different layer.
 
 *Store credentials in plaintext (insecure):*
 
@@ -1237,10 +1180,7 @@ alexper.recovery@gmail.com
 
 #### Unset a configuration value
 
-**When to run:** to remove a value from a specific scope without affecting other scopes.
-**Trigger:** a local override is no longer needed, or a misconfigured value must be removed.
-**Context:** `--unset` removes the key from the targeted scope only. Other scopes are unaffected.
-**Purpose:** clean up configuration without side effects.
+To remove a value from a specific scope without affecting other scopes. It is typically triggered by a local override is no longer needed, or a misconfigured value must be removed. `--unset` removes the key from the targeted scope only. Other scopes are unaffected. Clean up configuration without side effects.
 
 *Remove a local config override:*
 
@@ -1363,10 +1303,7 @@ When a Windows developer commits files with CRLF endings and a macOS developer o
 
 #### Create a `.gitattributes` file for line-ending normalization
 
-**When to run:** once per repository, committed to version control.
-**Trigger:** setting up a new repo or fixing line-ending churn in an existing one.
-**Context:** `.gitattributes` lives in the repo root. It overrides `core.autocrlf` for the patterns it covers.
-**Purpose:** enforce consistent line endings in the repository regardless of each developer's OS or local config.
+Once per repository, committed to version control. It is typically triggered by setting up a new repo or fixing line-ending churn in an existing one. `.gitattributes` lives in the repo root. It overrides `core.autocrlf` for the patterns it covers. Enforce consistent line endings in the repository regardless of each developer's OS or local config.
 
 *Create a `.gitattributes` file with standard normalization rules:*
 
@@ -1411,10 +1348,7 @@ Dockerfile text eol=lf
 
 #### Normalize an existing repository after adding `.gitattributes`
 
-**When to run:** after adding or modifying `.gitattributes` in a repo that already has mixed line endings.
-**Trigger:** `git diff` shows line-ending changes on files you did not edit.
-**Context:** this re-normalizes all tracked files. Produces a one-time diff that corrects all endings.
-**Purpose:** bring all existing files into compliance with the new `.gitattributes` policy.
+After adding or modifying `.gitattributes` in a repo that already has mixed line endings. It is typically triggered by `git diff` shows line-ending changes on files you did not edit. This re-normalizes all tracked files. Produces a one-time diff that corrects all endings. Bring all existing files into compliance with the new `.gitattributes` policy.
 
 *Re-normalize all files in the repository:*
 
@@ -1481,10 +1415,7 @@ Use `git init` to start a new repository from scratch, or `git clone` to downloa
 
 #### Create a new repository
 
-**When to run:** starting a brand-new project that has no remote yet.
-**Trigger:** `ls -la .git` returns "No such file or directory."
-**Context:** does not require network access. Creates `.git/` in the current directory with the default branch name from `init.defaultBranch`.
-**Purpose:** initialize Git tracking in an existing directory.
+Starting a brand-new project that has no remote yet. It is typically triggered by `ls -la .git` returns "No such file or directory.". Does not require network access. Creates `.git/` in the current directory with the default branch name from `init.defaultBranch`. Initialize Git tracking in an existing directory.
 
 *Initialize a new Git repository:*
 
@@ -1536,10 +1467,7 @@ refs
 
 #### Clone a repository
 
-**When to run:** when joining an existing project or setting up a new machine.
-**Trigger:** the repo exists on GitHub and you need a local copy.
-**Context:** requires network access and authentication (PAT or SSH key). Creates a new directory named after the repository.
-**Purpose:** get a complete, working copy of a remote repository with full history.
+When joining an existing project or setting up a new machine. It is typically triggered by the repo exists on GitHub and you need a local copy. Requires network access and authentication (PAT or SSH key). Creates a new directory named after the repository. Get a complete, working copy of a remote repository with full history.
 
 *Clone a repository over HTTPS:*
 
@@ -1626,10 +1554,7 @@ git clone --branch develop --single-branch https://github.com/org/repo.git
 
 #### Shallow clone — latest commit only
 
-**When to run:** in CI/CD pipelines, automated builds, or when you only need the latest code and not the history.
-**Trigger:** clone time or disk space is a concern, and full history is not required.
-**Context:** `--depth 1` fetches only the most recent commit. Some Git operations (`bisect`, `blame` across history) will not work without unshallowing.
-**Purpose:** minimize clone time and disk usage.
+In CI/CD pipelines, automated builds, or when you only need the latest code and not the history. It is typically triggered by clone time or disk space is a concern, and full history is not required. `--depth 1` fetches only the most recent commit. Some Git operations (`bisect`, `blame` across history) will not work without unshallowing. Minimize clone time and disk usage.
 
 *Create a shallow clone with depth 1:*
 
@@ -1681,10 +1606,7 @@ Together they enable a "clone the structure, check out only what you need" workf
 
 #### Partial clone with sparse checkout
 
-**When to run:** when joining a large monorepo or setting up a new machine for a repo where you only need a subset of directories.
-**Trigger:** standard `git clone` takes too long, uses too much disk, or downloads irrelevant code.
-**Context:** requires Git 2.25+ for sparse checkout, Git 2.19+ for partial clone. The remote must support partial clone (GitHub, GitLab, and Bitbucket all do). Full history is available — only blob downloads are deferred.
-**Purpose:** get a working checkout of a large repo in seconds, with only the directories you need on disk.
+When joining a large monorepo or setting up a new machine for a repo where you only need a subset of directories. It is typically triggered by standard `git clone` takes too long, uses too much disk, or downloads irrelevant code. Requires Git 2.25+ for sparse checkout, Git 2.19+ for partial clone. The remote must support partial clone (GitHub, GitLab, and Bitbucket all do). Full history is available — only blob downloads are deferred. Get a working checkout of a large repo in seconds, with only the directories you need on disk.
 
 *Step 1 — partial clone with sparse mode:*
 
@@ -1804,10 +1726,7 @@ The `pre-commit` framework manages hooks declaratively through a `.pre-commit-co
 
 #### Install the pre-commit framework
 
-**When to run:** once per machine (or once per virtual environment).
-**Trigger:** `pre-commit --version` returns "command not found."
-**Context:** requires Python and pip. Installs into the active Python environment.
-**Purpose:** make the `pre-commit` CLI available for configuring and running hooks.
+Once per machine (or once per virtual environment). It is typically triggered by `pre-commit --version` returns "command not found.". Requires Python and pip. Installs into the active Python environment. Make the `pre-commit` CLI available for configuring and running hooks.
 
 *Install pre-commit via pip:*
 
@@ -1827,10 +1746,7 @@ pre-commit 4.5.1
 
 #### Create the hook configuration file
 
-**When to run:** once per repository, committed to version control.
-**Trigger:** setting up a new repo or adding hooks to an existing one.
-**Context:** `.pre-commit-config.yaml` lives in the repo root. Each entry under `repos` points to a hook repository, a pinned revision, and hook IDs.
-**Purpose:** define which checks run before every commit.
+Once per repository, committed to version control. It is typically triggered by setting up a new repo or adding hooks to an existing one. `.pre-commit-config.yaml` lives in the repo root. Each entry under `repos` points to a hook repository, a pinned revision, and hook IDs. Define which checks run before every commit.
 
 *Example `.pre-commit-config.yaml` for a data engineering repository:*
 
@@ -1866,10 +1782,7 @@ repos:
 
 #### Install hooks in the local repository
 
-**When to run:** once per clone, after cloning a repo that has `.pre-commit-config.yaml`.
-**Trigger:** `.git/hooks/pre-commit` does not exist or is a sample file.
-**Context:** writes the hook script into `.git/hooks/`. After this, hooks run automatically before every `git commit`.
-**Purpose:** activate the pre-commit hooks for this repository.
+Once per clone, after cloning a repo that has `.pre-commit-config.yaml`. It is typically triggered by `.git/hooks/pre-commit` does not exist or is a sample file. Writes the hook script into `.git/hooks/`. After this, hooks run automatically before every `git commit`. Activate the pre-commit hooks for this repository.
 
 *Register hooks in the local repository:*
 
@@ -1883,10 +1796,7 @@ pre-commit installed at .git/hooks/pre-commit
 
 #### Run all hooks against the entire codebase
 
-**When to run:** on first setup (to validate the entire codebase), after adding new hooks, or in CI pipelines.
-**Trigger:** initial clone, new hook added, or CI pipeline step.
-**Context:** runs every configured hook against every file in the repository, not just staged changes.
-**Purpose:** verify the entire codebase passes all checks.
+On first setup (to validate the entire codebase), after adding new hooks, or in CI pipelines. It is typically triggered by initial clone, new hook added, or CI pipeline step. Runs every configured hook against every file in the repository, not just staged changes. Verify the entire codebase passes all checks.
 
 *Run all hooks on all files:*
 
@@ -1906,10 +1816,7 @@ ruff-format..............................................................Passed
 
 #### Update hooks to the latest versions
 
-**When to run:** periodically (monthly or quarterly) to pick up bug fixes and new rules.
-**Trigger:** scheduled maintenance or when a hook version is known to have a bug.
-**Context:** updates the `rev` field in `.pre-commit-config.yaml` to the latest tag for each repo. Commit the changes afterward.
-**Purpose:** keep hook implementations current without manual version tracking.
+Periodically (monthly or quarterly) to pick up bug fixes and new rules. It is typically triggered by scheduled maintenance or when a hook version is known to have a bug. Updates the `rev` field in `.pre-commit-config.yaml` to the latest tag for each repo. Commit the changes afterward. Keep hook implementations current without manual version tracking.
 
 *Auto-update all hook versions:*
 
@@ -1935,10 +1842,7 @@ pre-commit run gitleaks --all-files
 
 #### Debug a failing hook
 
-**When to run:** when a hook fails and the output is unclear.
-**Trigger:** `pre-commit run` exits non-zero with insufficient detail.
-**Context:** `--verbose` shows full hook output even for passing checks.
-**Purpose:** diagnose exactly what the hook is checking and why it failed.
+When a hook fails and the output is unclear. It is typically triggered by `pre-commit run` exits non-zero with insufficient detail. `--verbose` shows full hook output even for passing checks. Diagnose exactly what the hook is checking and why it failed.
 
 *Run hooks with verbose output:*
 
@@ -2023,16 +1927,13 @@ Data engineering repositories have specific setup concerns beyond standard softw
 
 Git LFS (Large File Storage) replaces large files in your repository with lightweight pointer files, while storing the actual file contents on a separate LFS server. This keeps clone times fast and repository sizes manageable. For data engineering teams handling Parquet files, serialized ML models, test fixtures, or large CSV datasets, LFS is an installation-day concern — not something to discover after the first 200 MB commit is rejected.
 
-**When to use:** files larger than 50 MB (GitHub's soft limit), binary assets (images, models, data files), or files that change frequently and are not diffable.
+Adopt Git LFS before the repository starts absorbing assets that Git handles poorly: files above roughly 50 MB, binary artifacts such as models and images, large data snapshots, and any file type whose revisions are expensive to diff but expensive to lose.
 
 **Cost:** Git LFS requires a paid plan on GitHub for storage and bandwidth beyond the free tier (1 GB storage, 1 GB/month bandwidth per account).
 
 ##### Install and verify Git LFS
 
-**When to run:** on every new machine, before cloning any repository that uses LFS-tracked files.
-**Trigger:** `git lfs version` returns "command not found," or cloned LFS files contain pointer text instead of actual data.
-**Context:** Git LFS is a separate binary that hooks into Git. On Windows, it is included with Git for Windows 2.39+. On macOS/Linux, it must be installed separately.
-**Purpose:** ensure LFS is available and initialized before touching any repository with large tracked files.
+On every new machine, before cloning any repository that uses LFS-tracked files. It is typically triggered by `git lfs version` returns "command not found," or cloned LFS files contain pointer text instead of actual data. Git LFS is a separate binary that hooks into Git. On Windows, it is included with Git for Windows 2.39+. On macOS/Linux, it must be installed separately. Ensure LFS is available and initialized before touching any repository with large tracked files.
 
 *Check if Git LFS is already installed:*
 
@@ -2073,10 +1974,7 @@ This registers the LFS clean/smudge filters in your global `~/.gitconfig` and in
 
 ##### Track file patterns with LFS
 
-**When to run:** when adding a new binary or large file type to a repository.
-**Trigger:** a new file type needs LFS tracking (e.g., adding Parquet fixtures to a test suite).
-**Context:** `git lfs track` adds patterns to `.gitattributes`. The `.gitattributes` file must be committed to share LFS tracking rules with all collaborators.
-**Purpose:** tell Git which file patterns should be stored in LFS instead of the regular object database.
+When adding a new binary or large file type to a repository. It is typically triggered by a new file type needs LFS tracking (e.g., adding Parquet fixtures to a test suite). `git lfs track` adds patterns to `.gitattributes`. The `.gitattributes` file must be committed to share LFS tracking rules with all collaborators. Tell Git which file patterns should be stored in LFS instead of the regular object database.
 
 *Track common data engineering file types:*
 
@@ -2113,10 +2011,7 @@ git commit -m "chore: track parquet, pkl, h5 files with Git LFS"
 
 ##### Verify LFS is working in a cloned repo
 
-**When to run:** after cloning a repository that uses LFS, to confirm actual file contents were downloaded — not just pointer files.
-**Trigger:** files look wrong (small text files where large binaries are expected), or `git lfs pull` was not triggered.
-**Context:** read-only check. If LFS was not initialized before the clone, files will contain pointer text.
-**Purpose:** confirm LFS files are fully downloaded and ready to use.
+After cloning a repository that uses LFS, to confirm actual file contents were downloaded — not just pointer files. It is typically triggered by files look wrong (small text files where large binaries are expected), or `git lfs pull` was not triggered. Read-only check. If LFS was not initialized before the clone, files will contain pointer text. Confirm LFS files are fully downloaded and ready to use.
 
 *Check LFS environment and endpoint:*
 
@@ -2155,10 +2050,7 @@ Enterprise environments introduce additional complexity beyond standard Git setu
 
 #### Corporate proxy configuration
 
-**When to run:** when Git operations hang or time out behind a corporate proxy.
-**Trigger:** `git clone` or `git push` fails with connection timeout or SSL errors.
-**Context:** corporate proxies intercept HTTPS traffic. Git needs to know the proxy address.
-**Purpose:** route Git HTTPS traffic through the corporate proxy.
+When Git operations hang or time out behind a corporate proxy. It is typically triggered by `git clone` or `git push` fails with connection timeout or SSL errors. Corporate proxies intercept HTTPS traffic. Git needs to know the proxy address. Route Git HTTPS traffic through the corporate proxy.
 
 *Configure Git to use a corporate proxy:*
 
@@ -2176,10 +2068,7 @@ git config --global --unset https.proxy
 
 #### Custom CA certificate (TLS interception)
 
-**When to run:** when Git returns SSL certificate errors behind a corporate firewall that performs TLS inspection.
-**Trigger:** `SSL certificate problem: unable to get local issuer certificate` or similar errors.
-**Context:** corporate firewalls often re-sign HTTPS traffic with an internal CA. Git does not trust this CA by default.
-**Purpose:** tell Git to trust the corporate CA certificate.
+When Git returns SSL certificate errors behind a corporate firewall that performs TLS inspection. It is typically triggered by `SSL certificate problem: unable to get local issuer certificate` or similar errors. Corporate firewalls often re-sign HTTPS traffic with an internal CA. Git does not trust this CA by default. Tell Git to trust the corporate CA certificate.
 
 *Point Git to the corporate CA bundle:*
 

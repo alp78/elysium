@@ -262,10 +262,7 @@ A remote is a named connection stored in `.git/config` that maps a short alias t
 
 #### List all remotes with fetch and push URLs
 
-**When to run:** When you need to verify which remotes are configured and where they point.
-**Trigger:** Start of work on a new clone, after adding or modifying remotes, or when diagnosing push/fetch failures.
-**Context:** Local read-only command. No network access, no state change.
-**Purpose:** Confirm the remote alias-to-URL mapping before running any network operations.
+When you need to verify which remotes are configured and where they point. It is typically triggered by start of work on a new clone, after adding or modifying remotes, or when diagnosing push/fetch failures. Local read-only command. No network access, no state change. Confirm the remote alias-to-URL mapping before running any network operations.
 
 *Print every configured remote with both its fetch URL (used by `git fetch`) and push URL (used by `git push`).*
 
@@ -284,10 +281,7 @@ origin	https://github.com/alp78/git-lab.git (push)
 
 #### Show detailed remote information
 
-**When to run:** When you need to see which branches are tracked, which local branches are configured for pull/push, and whether any refs are stale.
-**Trigger:** Diagnosing why `git pull` targets the wrong branch, or verifying branch tracking configuration after setup.
-**Context:** Requires network access to query the remote for HEAD and branch state. Read-only.
-**Purpose:** Full diagnostic of the remote connection including branch tracking, push targets, and stale-ref detection.
+When you need to see which branches are tracked, which local branches are configured for pull/push, and whether any refs are stale. It is typically triggered by diagnosing why `git pull` targets the wrong branch, or verifying branch tracking configuration after setup. Requires network access to query the remote for HEAD and branch state. Read-only. Full diagnostic of the remote connection including branch tracking, push targets, and stale-ref detection.
 
 *Display the fetch/push URLs, tracked remote branches, local pull/push configuration, and HEAD branch for a named remote.*
 
@@ -321,10 +315,7 @@ The output is divided into four sections: URLs, remote branches known to your lo
 
 #### Get the URL of a specific remote
 
-**When to run:** When you need the raw URL for scripting, CI configuration, or verifying the connection target.
-**Trigger:** Automating clone/push operations in CI, or confirming which server a remote points to.
-**Context:** Local read-only. No network access.
-**Purpose:** Retrieve the URL without the formatting overhead of `git remote -v`.
+When you need the raw URL for scripting, CI configuration, or verifying the connection target. It is typically triggered by automating clone/push operations in CI, or confirming which server a remote points to. Local read-only. No network access. Retrieve the URL without the formatting overhead of `git remote -v`.
 
 *Print only the URL for the named remote.*
 
@@ -338,10 +329,7 @@ https://github.com/alp78/git-lab.git
 
 #### List remote refs without cloning
 
-**When to run:** When you need to inspect what branches and tags exist on a remote without cloning or fetching the full repository.
-**Trigger:** Pre-clone inspection, CI branch existence checks, or verifying tag availability before a release.
-**Context:** Network read-only. Does not modify any local state. Works even outside a Git repository.
-**Purpose:** Enumerate all refs (branches, tags) on a remote server with their current commit SHAs.
+When you need to inspect what branches and tags exist on a remote without cloning or fetching the full repository. It is typically triggered by pre-clone inspection, CI branch existence checks, or verifying tag availability before a release. Network read-only. Does not modify any local state. Works even outside a Git repository. Enumerate all refs (branches, tags) on a remote server with their current commit SHAs.
 
 *Print all branch heads on the remote with their commit SHAs.*
 
@@ -379,10 +367,7 @@ Registering a remote tells Git where to find another copy of the repository. The
 
 #### Add an upstream remote for a fork
 
-**When to run:** Immediately after cloning your fork, before starting any work.
-**Trigger:** You forked a repository on GitHub and need to track the original project's changes.
-**Context:** Local config change only. No network access. No data downloaded.
-**Purpose:** Register the original repository so you can fetch its changes and keep your fork synchronized.
+Immediately after cloning your fork, before starting any work. It is typically triggered by you forked a repository on GitHub and need to track the original project's changes. Local config change only. No network access. No data downloaded. Register the original repository so you can fetch its changes and keep your fork synchronized.
 
 *Register the original repository as `upstream` so you can fetch and merge changes from the source project into your local copy.*
 
@@ -409,10 +394,7 @@ upstream	https://github.com/alp78/git-lab.git (push)
 
 #### Rename an existing remote
 
-**When to run:** When the current remote name is misleading or conflicts with team conventions.
-**Trigger:** Reorganizing remote names after inheriting a repository, or aligning with team standards (e.g., renaming `origin` to `fork` when adding the canonical repo as the new `origin`).
-**Context:** Local config change only. Updates all remote-tracking branch prefixes (e.g., `upstream/*` becomes `source/*`).
-**Purpose:** Change the alias without removing and re-adding the remote.
+When the current remote name is misleading or conflicts with team conventions. It is typically triggered by reorganizing remote names after inheriting a repository, or aligning with team standards (e.g., renaming `origin` to `fork` when adding the canonical repo as the new `origin`). Local config change only. Updates all remote-tracking branch prefixes (e.g., `upstream/*` becomes `source/*`). Change the alias without removing and re-adding the remote.
 
 *Rename the `upstream` remote to `source`. All remote-tracking branches under `upstream/` are automatically renamed to `source/`.*
 
@@ -433,10 +415,7 @@ source	https://github.com/alp78/git-lab.git (push)
 
 #### Change the URL of an existing remote
 
-**When to run:** When the remote repository has moved to a different server, organization, or protocol (e.g., HTTPS to SSH).
-**Trigger:** Organization migration, switching from HTTPS to SSH authentication, or correcting a typo in the URL.
-**Context:** Local config change only. No network access.
-**Purpose:** Update the connection target without removing the remote and losing tracking configuration.
+When the remote repository has moved to a different server, organization, or protocol (e.g., HTTPS to SSH). It is typically triggered by organization migration, switching from HTTPS to SSH authentication, or correcting a typo in the URL. Local config change only. No network access. Update the connection target without removing the remote and losing tracking configuration.
 
 *Change the URL for the `upstream` remote.*
 
@@ -456,10 +435,7 @@ https://github.com/alp78/git-lab-upstream.git
 
 #### Set a separate push URL (split fetch/push)
 
-**When to run:** When you need to fetch from one server but push to a different one — common in enterprise setups where engineers read from a canonical upstream but write to a fork or a different write endpoint.
-**Trigger:** Fork workflows where `upstream` should be read-only, mirror setups where a read replica serves fetches but writes go to the primary, or CI configurations where builds fetch from a cache but push artifacts to a different remote.
-**Context:** Local config change only. No network access. Modifies the `pushurl` entry in `.git/config` for the named remote. The fetch URL remains unchanged.
-**Purpose:** Route `git fetch` and `git push` to different servers through a single remote alias.
+When you need to fetch from one server but push to a different one — common in enterprise setups where engineers read from a canonical upstream but write to a fork or a different write endpoint. It is typically triggered by fork workflows where `upstream` should be read-only, mirror setups where a read replica serves fetches but writes go to the primary, or CI configurations where builds fetch from a cache but push artifacts to a different remote. Local config change only. No network access. Modifies the `pushurl` entry in `.git/config` for the named remote. The fetch URL remains unchanged. Route `git fetch` and `git push` to different servers through a single remote alias.
 
 By default, a remote has one URL used for both fetch and push. `git remote set-url --push` adds a separate `pushurl` entry, overriding only the push target while leaving the fetch URL intact.
 
@@ -507,10 +483,7 @@ The `upstream` remote now fetches from the canonical repo (`git-lab.git`) but pu
 
 #### Remove a remote
 
-**When to run:** When a remote is no longer needed — the fork relationship ended, the server was decommissioned, or the remote was added by mistake.
-**Trigger:** Cleanup after project restructuring, or removing a temporary deployment remote.
-**Context:** Local config change. Deletes the remote entry from `.git/config` and removes all remote-tracking branches under that name (e.g., all `upstream/*` refs). Does not affect the remote server.
-**Purpose:** Clean up local configuration and remove stale tracking refs.
+When a remote is no longer needed — the fork relationship ended, the server was decommissioned, or the remote was added by mistake. It is typically triggered by cleanup after project restructuring, or removing a temporary deployment remote. Local config change. Deletes the remote entry from `.git/config` and removes all remote-tracking branches under that name (e.g., all `upstream/*` refs). Does not affect the remote server. Clean up local configuration and remove stale tracking refs.
 
 *Remove the `upstream` remote and all its tracking branches.*
 
@@ -691,10 +664,7 @@ Use `git fetch` to inspect what has changed on the remote before deciding whethe
 
 #### Fetch all branches from a named remote
 
-**When to run:** Before any merge, rebase, or push — to ensure your remote-tracking branches reflect the current remote state.
-**Trigger:** Start of a work session, before integrating upstream changes, or before force-pushing.
-**Context:** Network read. Updates remote-tracking branches only. Working directory and local branches are untouched.
-**Purpose:** Bring your local view of the remote up to date without changing any of your own work.
+Before any merge, rebase, or push — to ensure your remote-tracking branches reflect the current remote state. It is typically triggered by start of a work session, before integrating upstream changes, or before force-pushing. Network read. Updates remote-tracking branches only. Working directory and local branches are untouched. Bring your local view of the remote up to date without changing any of your own work.
 
 *Download all new commits from `origin` and update remote-tracking branches.*
 
@@ -726,10 +696,7 @@ The line `06f13ca..102afc6  main -> origin/main` means: the remote-tracking bran
 
 #### Fetch from all configured remotes
 
-**When to run:** When you have multiple remotes (e.g., `origin` and `upstream`) and need to update all of them in one operation.
-**Trigger:** Start of a work session on a fork, or when synchronizing across multiple deployment remotes.
-**Context:** Network read to all configured remotes. Updates all remote-tracking branches.
-**Purpose:** Bring every remote-tracking branch up to date in a single command.
+When you have multiple remotes (e.g., `origin` and `upstream`) and need to update all of them in one operation. It is typically triggered by start of a work session on a fork, or when synchronizing across multiple deployment remotes. Network read to all configured remotes. Updates all remote-tracking branches. Bring every remote-tracking branch up to date in a single command.
 
 *Fetch from every configured remote.*
 
@@ -767,10 +734,7 @@ A tracking branch is a local branch configured to follow a specific remote-track
 
 #### Set upstream tracking on first push
 
-**When to run:** When pushing a new local branch to a remote for the first time.
-**Trigger:** You created a local branch (`git checkout -b feature/x`) and need to publish it to the remote.
-**Context:** Network write. Creates the branch on the remote and configures the local branch to track it.
-**Purpose:** Establish the bidirectional link between local and remote branches so future `git push` and `git pull` work without arguments.
+When pushing a new local branch to a remote for the first time. It is typically triggered by you created a local branch (`git checkout -b feature/x`) and need to publish it to the remote. Network write. Creates the branch on the remote and configures the local branch to track it. Establish the bidirectional link between local and remote branches so future `git push` and `git pull` work without arguments.
 
 *Push the branch and set it to track the remote counterpart.*
 
@@ -792,10 +756,7 @@ The `-u` (or `--set-upstream`) flag does two things: pushes the branch and confi
 
 #### Inspect branch tracking configuration
 
-**When to run:** When you need to see which local branches track which remote branches, and their sync status.
-**Trigger:** Diagnosing why `git push` or `git pull` fails with "no upstream configured", or auditing branch tracking after repository reorganization.
-**Context:** Local read-only. No network access.
-**Purpose:** See the full mapping of local branches to remote-tracking branches, including ahead/behind counts and `[gone]` markers for deleted remote branches.
+When you need to see which local branches track which remote branches, and their sync status. It is typically triggered by diagnosing why `git push` or `git pull` fails with "no upstream configured", or auditing branch tracking after repository reorganization. Local read-only. No network access. See the full mapping of local branches to remote-tracking branches, including ahead/behind counts and `[gone]` markers for deleted remote branches.
 
 *Show all local branches with their tracking information and sync status.*
 
@@ -847,10 +808,7 @@ Remote-tracking refs are snapshots of remote branches at last-fetch time. When t
 
 #### Fetch and prune stale remote-tracking branches
 
-**When to run:** Regularly — at least once per work session, or after learning that branches were deleted on the remote (e.g., after PR merges).
-**Trigger:** `git branch -r` shows branches you know were deleted, or `git remote show origin` reports stale refs.
-**Context:** Network read + local ref cleanup. Fetches new commits and simultaneously removes stale remote-tracking refs. Safe to run at any time.
-**Purpose:** Keep your local view of the remote accurate by removing references to branches that no longer exist on the server.
+Regularly — at least once per work session, or after learning that branches were deleted on the remote (e.g., after PR merges). It is typically triggered by `git branch -r` shows branches you know were deleted, or `git remote show origin` reports stale refs. Network read + local ref cleanup. Fetches new commits and simultaneously removes stale remote-tracking refs. Safe to run at any time. Keep your local view of the remote accurate by removing references to branches that no longer exist on the server.
 
 *Fetch new objects and remove remote-tracking refs for branches deleted on the remote.*
 
@@ -899,10 +857,7 @@ When a remote renames its default branch (e.g., `master` → `main`), your local
 
 #### Diagnose a stale default branch pointer
 
-**When to run:** After a `master` → `main` migration on the remote, or when `git remote show origin` reports a different HEAD branch than expected.
-**Trigger:** `git clone` checks out the wrong branch, CI scripts reference `origin/HEAD` and get the old name, or `git remote show origin` shows `HEAD branch: main` but `origin/HEAD` still points to `master`.
-**Context:** `git remote show origin` queries the remote (network read). `git symbolic-ref` is local only.
-**Purpose:** Identify whether the local `origin/HEAD` pointer matches the remote's actual default branch.
+After a `master` → `main` migration on the remote, or when `git remote show origin` reports a different HEAD branch than expected. It is typically triggered by `git clone` checks out the wrong branch, CI scripts reference `origin/HEAD` and get the old name, or `git remote show origin` shows `HEAD branch: main` but `origin/HEAD` still points to `master`. `git remote show origin` queries the remote (network read). `git symbolic-ref` is local only. Identify whether the local `origin/HEAD` pointer matches the remote's actual default branch.
 
 *Check what the remote considers its default branch.*
 
@@ -926,10 +881,7 @@ If this shows `refs/remotes/origin/master` while the remote's HEAD is `main`, th
 
 #### Auto-detect and update the remote HEAD pointer
 
-**When to run:** After the remote's default branch has been renamed.
-**Trigger:** The `HEAD branch` line in `git remote show origin` does not match `git symbolic-ref refs/remotes/origin/HEAD`.
-**Context:** Network read to query the remote, then local config change. No branches are modified.
-**Purpose:** Automatically update `origin/HEAD` to match the remote's current default branch.
+After the remote's default branch has been renamed. It is typically triggered by the `HEAD branch` line in `git remote show origin` does not match `git symbolic-ref refs/remotes/origin/HEAD`. Network read to query the remote, then local config change. No branches are modified. Automatically update `origin/HEAD` to match the remote's current default branch.
 
 *Let Git query the remote and update the local pointer automatically.*
 
@@ -988,10 +940,7 @@ When a feature branch is no longer needed on the remote (e.g., after a PR is mer
 
 #### Delete a remote branch
 
-**When to run:** After a PR is merged or a feature branch is abandoned and no one else needs it.
-**Trigger:** PR merged notification, end of a feature cycle, or repository cleanup.
-**Context:** Network write. Removes the branch from the remote server. Other developers will see it disappear on their next `git fetch --prune`. Does not affect local branches.
-**Purpose:** Remove a branch from the remote to keep the repository branch list clean and reduce clutter.
+After a PR is merged or a feature branch is abandoned and no one else needs it. It is typically triggered by PR merged notification, end of a feature cycle, or repository cleanup. Network write. Removes the branch from the remote server. Other developers will see it disappear on their next `git fetch --prune`. Does not affect local branches. Remove a branch from the remote to keep the repository branch list clean and reduce clutter.
 
 *Delete the `demo/remote-ops` branch from the remote.*
 
@@ -1025,10 +974,7 @@ Rebasing a feature branch rewrites its commit SHAs. After rebase, your local bra
 
 #### Rebase and force-push a feature branch
 
-**When to run:** After rebasing your feature branch onto the latest main to incorporate upstream changes.
-**Trigger:** PR review feedback requesting a rebase, or your feature branch has fallen behind main and you want a clean linear history before merging.
-**Context:** Network write. History-rewriting operation — the remote branch will have different commit SHAs after this push. Only safe on personal feature branches that no one else has checked out.
-**Purpose:** Update the remote branch to match your rebased local branch without risking overwriting a teammate's commits.
+After rebasing your feature branch onto the latest main to incorporate upstream changes. It is typically triggered by PR review feedback requesting a rebase, or your feature branch has fallen behind main and you want a clean linear history before merging. Network write. History-rewriting operation — the remote branch will have different commit SHAs after this push. Only safe on personal feature branches that no one else has checked out. Update the remote branch to match your rebased local branch without risking overwriting a teammate's commits.
 
 **Before rebase:**
 

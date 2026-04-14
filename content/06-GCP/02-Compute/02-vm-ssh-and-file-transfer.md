@@ -170,10 +170,7 @@ Connects to a Compute Engine VM over an IAP tunnel using your `gcloud` identity.
 
 #### Interactive SSH session
 
-**When to run:** when you need a shell on the VM for interactive debugging, package installation, or service inspection.
-**Trigger:** first access after VM creation, troubleshooting a running workload, or manual maintenance.
-**Context:** runs from a local terminal with `gcloud` authenticated. The `--tunnel-through-iap` flag routes the connection through Google's internal network. Read-only from the perspective of the tunnel — the SSH session itself is read-write on the VM.
-**Purpose:** establish an interactive shell on `stoxx-vm` without requiring the VM to have a public IP address.
+When you need a shell on the VM for interactive debugging, package installation, or service inspection. It is typically triggered by first access after VM creation, troubleshooting a running workload, or manual maintenance. Runs from a local terminal with `gcloud` authenticated. The `--tunnel-through-iap` flag routes the connection through Google's internal network. Read-only from the perspective of the tunnel — the SSH session itself is read-write on the VM. Establish an interactive shell on `stoxx-vm` without requiring the VM to have a public IP address.
 
 *Open an interactive SSH session on `stoxx-vm` through IAP.*
 
@@ -206,10 +203,7 @@ The banner shows Ubuntu 22.04.5 LTS running on a GCP-optimized kernel (`6.8.0-10
 
 #### Remote command execution
 
-**When to run:** when you need to inspect VM resources or run a health check without starting an interactive session.
-**Trigger:** automated monitoring scripts, CI/CD pipelines, or quick diagnostic one-liners.
-**Context:** the `--command` flag runs the string in a non-interactive shell and returns stdout to the caller. The session terminates after the command completes. Chain multiple commands with `&&` so each runs only if the previous succeeded.
-**Purpose:** retrieve system information, memory, disk layout, and block devices from `stoxx-vm` in a single invocation.
+When you need to inspect VM resources or run a health check without starting an interactive session. It is typically triggered by automated monitoring scripts, CI/CD pipelines, or quick diagnostic one-liners. The `--command` flag runs the string in a non-interactive shell and returns stdout to the caller. The session terminates after the command completes. Chain multiple commands with `&&` so each runs only if the previous succeeded. Retrieve system information, memory, disk layout, and block devices from `stoxx-vm` in a single invocation.
 
 *Run a chained diagnostic command on `stoxx-vm` to inspect hostname, kernel, memory, disk usage, and block device layout.*
 
@@ -248,10 +242,7 @@ The `e2-medium` machine type provides 3.8 GiB RAM with no swap configured. The 5
 
 #### Remote command with sudo
 
-**When to run:** when the diagnostic requires root privileges — inspecting running services, reading protected logs, or modifying system configuration.
-**Trigger:** service health verification, post-deployment smoke test, or investigating a failed startup script.
-**Context:** `sudo` inside `--command` runs the command as root on the VM. OS Login users with `roles/compute.osAdminLogin` have passwordless sudo; users with `roles/compute.osLogin` do not.
-**Purpose:** list all running systemd services on `stoxx-vm` to verify the expected baseline after boot.
+When the diagnostic requires root privileges — inspecting running services, reading protected logs, or modifying system configuration. It is typically triggered by service health verification, post-deployment smoke test, or investigating a failed startup script. `sudo` inside `--command` runs the command as root on the VM. OS Login users with `roles/compute.osAdminLogin` have passwordless sudo; users with `roles/compute.osLogin` do not. List all running systemd services on `stoxx-vm` to verify the expected baseline after boot.
 
 *List all active systemd services on `stoxx-vm` using sudo.*
 
@@ -291,10 +282,7 @@ gcloud compute ssh stoxx-vm --zone=europe-west1-b --tunnel-through-iap \
 
 #### SSH with project override
 
-**When to run:** when your active `gcloud` configuration points to a different project and you need to SSH into a VM in `bq-wh-nb` without switching configurations.
-**Trigger:** multi-project environments where VMs are spread across projects.
-**Context:** the `--project` flag overrides the active project for this command only. All other flags behave identically.
-**Purpose:** reach `stoxx-vm` from a session configured for a different project.
+When your active `gcloud` configuration points to a different project and you need to SSH into a VM in `bq-wh-nb` without switching configurations. It is typically triggered by multi-project environments where VMs are spread across projects. The `--project` flag overrides the active project for this command only. All other flags behave identically. Reach `stoxx-vm` from a session configured for a different project.
 
 *SSH into `stoxx-vm` with an explicit project override.*
 
@@ -341,10 +329,7 @@ Securely copies files between a local machine and a Compute Engine VM over the I
 
 #### Upload a single file
 
-**When to run:** when deploying a script, config, or data file to the VM for execution or processing.
-**Trigger:** initial provisioning, deploying updated SQL schemas, or uploading configuration files.
-**Context:** the source path is local, the destination is prefixed with the VM name. The destination directory must be writable by the OS Login user — use `/tmp/` when unsure.
-**Purpose:** copy `bronze_schema.sql` from the local `ESG/db/ddl/` directory to `/tmp/` on `stoxx-vm`.
+When deploying a script, config, or data file to the VM for execution or processing. It is typically triggered by initial provisioning, deploying updated SQL schemas, or uploading configuration files. The source path is local, the destination is prefixed with the VM name. The destination directory must be writable by the OS Login user — use `/tmp/` when unsure. Copy `bronze_schema.sql` from the local `ESG/db/ddl/` directory to `/tmp/` on `stoxx-vm`.
 
 *Upload `bronze_schema.sql` to `/tmp/` on `stoxx-vm`.*
 
@@ -361,10 +346,7 @@ The progress bar shows the file name, bytes transferred, transfer rate, and comp
 
 #### Download a file from VM
 
-**When to run:** when retrieving logs, configuration snapshots, or data files from the VM.
-**Trigger:** collecting diagnostics, backing up configuration before changes, or pulling processed output.
-**Context:** the source is prefixed with the VM name (remote), the destination is a local path. The file must be readable by the OS Login user on the VM.
-**Purpose:** download the `/etc/os-release` file from `stoxx-vm` to verify the OS version locally.
+When retrieving logs, configuration snapshots, or data files from the VM. It is typically triggered by collecting diagnostics, backing up configuration before changes, or pulling processed output. The source is prefixed with the VM name (remote), the destination is a local path. The file must be readable by the OS Login user on the VM. Download the `/etc/os-release` file from `stoxx-vm` to verify the OS version locally.
 
 *Download `/etc/os-release` from `stoxx-vm` to the local `/tmp/` directory.*
 
@@ -391,10 +373,7 @@ ID_LIKE=debian
 
 #### Upload multiple files
 
-**When to run:** when deploying several related files (e.g., a set of SQL DDL scripts) to the VM in a single invocation.
-**Trigger:** batch deployment of schema files, configuration updates, or multi-file patches.
-**Context:** list all source files sequentially before the destination. The destination must be a directory on the VM, not a file path.
-**Purpose:** copy `bronze_schema.sql` and `silver_schema.sql` to `/tmp/` on `stoxx-vm` in one command.
+When deploying several related files (e.g., a set of SQL DDL scripts) to the VM in a single invocation. It is typically triggered by batch deployment of schema files, configuration updates, or multi-file patches. List all source files sequentially before the destination. The destination must be a directory on the VM, not a file path. Copy `bronze_schema.sql` and `silver_schema.sql` to `/tmp/` on `stoxx-vm` in one command.
 
 *Upload two DDL scripts to `/tmp/` on `stoxx-vm` in a single invocation.*
 
@@ -412,10 +391,7 @@ Both files are transferred sequentially over the same IAP tunnel connection. Eac
 
 #### Recursive directory copy
 
-**When to run:** when deploying an entire directory tree (e.g., a DDL folder, a configuration directory) to the VM.
-**Trigger:** initial provisioning, full schema deployment, or syncing a local project directory.
-**Context:** the `--recurse` flag is required when the source is a directory — omitting it results in an error. The target directory must already exist on the VM.
-**Purpose:** copy the entire `db/ddl/` directory (4 SQL files) to `/tmp/ddl/` on `stoxx-vm`.
+When deploying an entire directory tree (e.g., a DDL folder, a configuration directory) to the VM. It is typically triggered by initial provisioning, full schema deployment, or syncing a local project directory. The `--recurse` flag is required when the source is a directory — omitting it results in an error. The target directory must already exist on the VM. Copy the entire `db/ddl/` directory (4 SQL files) to `/tmp/ddl/` on `stoxx-vm`.
 
 > [!warning] Target Directory Must Exist on the VM
 >
@@ -464,10 +440,7 @@ Files are owned by the OS Login user (`alexper_recovery_gmail_com`) with group-w
 
 #### Permission workaround — SCP to /tmp then sudo cp
 
-**When to run:** when the target directory on the VM is owned by root or a service user and your OS Login user does not have write access.
-**Trigger:** deploying files to `/opt/`, `/etc/`, or any directory not owned by your user.
-**Context:** `gcloud compute scp` authenticates as your OS Login user. Directories owned by root (e.g., `/opt/stoxx/ddl/`) will reject writes. The workaround is a two-step process: SCP to `/tmp/` (world-writable), then SSH with `sudo cp` to move the file and `sudo chown` to set ownership.
-**Purpose:** deploy `bronze_schema.sql` to `/opt/stoxx/ddl/` on `stoxx-vm`, a root-owned directory.
+When the target directory on the VM is owned by root or a service user and your OS Login user does not have write access. It is typically triggered by deploying files to `/opt/`, `/etc/`, or any directory not owned by your user. `gcloud compute scp` authenticates as your OS Login user. Directories owned by root (e.g., `/opt/stoxx/ddl/`) will reject writes. The workaround is a two-step process: SCP to `/tmp/` (world-writable), then SSH with `sudo cp` to move the file and `sudo chown` to set ownership. Deploy `bronze_schema.sql` to `/opt/stoxx/ddl/` on `stoxx-vm`, a root-owned directory.
 
 > [!warning] SCP Fails When Target Directory Is Not Owned by Your User
 >
@@ -561,10 +534,7 @@ The following must be in place before `--tunnel-through-iap` will work:
 
 ### Port forwarding for SQL Server
 
-**When to run:** when you need to connect a local application (e.g., SSMS, Azure Data Studio, `sqlcmd`) to a service running on the VM that has no public IP.
-**Trigger:** database management, query execution, or data loading against SQL Server on `stoxx-vm` (see [sql-server-on-compute-engine](https://alp78.github.io/elysium/06-GCP/Compute/sql-server-on-compute-engine)).
-**Context:** `gcloud compute start-iap-tunnel` maps a local TCP port to a remote port on the VM through IAP. The tunnel remains open until the process is terminated (Ctrl+C). The local application connects to `localhost:<local-port>` and the tunnel forwards traffic to the VM's `<remote-port>`.
-**Purpose:** map local port `1435` to SQL Server port `1433` on `stoxx-vm`, enabling local tools to connect to the database.
+When you need to connect a local application (e.g., SSMS, Azure Data Studio, `sqlcmd`) to a service running on the VM that has no public IP. It is typically triggered by database management, query execution, or data loading against SQL Server on `stoxx-vm` (see [sql-server-on-compute-engine](https://alp78.github.io/elysium/06-GCP/Compute/sql-server-on-compute-engine)). `gcloud compute start-iap-tunnel` maps a local TCP port to a remote port on the VM through IAP. The tunnel remains open until the process is terminated (Ctrl+C). The local application connects to `localhost:<local-port>` and the tunnel forwards traffic to the VM's `<remote-port>`. Map local port `1435` to SQL Server port `1433` on `stoxx-vm`, enabling local tools to connect to the database.
 
 *Start an IAP tunnel mapping local port 1435 to SQL Server port 1433 on `stoxx-vm`.*
 
@@ -606,10 +576,7 @@ OS Login maps IAM identities to POSIX accounts on VMs. When enabled, `gcloud com
 
 ### Enable OS Login at project level
 
-**When to run:** during initial project setup or when migrating from metadata-based SSH keys to OS Login.
-**Trigger:** first-time project configuration, security hardening, or compliance requirement.
-**Context:** `gcloud compute project-info add-metadata` sets metadata at the project level, which applies to all VMs in the project unless overridden by instance-level metadata. This is a state-changing command but does not require VM restarts — the change takes effect on the next SSH connection.
-**Purpose:** enable OS Login for all VMs in `bq-wh-nb` so that SSH access is bound to IAM identity.
+During initial project setup or when migrating from metadata-based SSH keys to OS Login. It is typically triggered by first-time project configuration, security hardening, or compliance requirement. `gcloud compute project-info add-metadata` sets metadata at the project level, which applies to all VMs in the project unless overridden by instance-level metadata. This is a state-changing command but does not require VM restarts — the change takes effect on the next SSH connection. Enable OS Login for all VMs in `bq-wh-nb` so that SSH access is bound to IAM identity.
 
 *Enable OS Login at the project level for `bq-wh-nb`.*
 
@@ -639,10 +606,7 @@ OS Login is now enabled at the project level. All VMs in `bq-wh-nb` will use OS 
 
 ### Verify OS Login profile
 
-**When to run:** after enabling OS Login to confirm your identity is correctly mapped to POSIX accounts across projects.
-**Trigger:** first SSH after enabling OS Login, troubleshooting authentication failures, or auditing cross-project access.
-**Context:** `gcloud compute os-login describe-profile` reads the OS Login profile for the authenticated identity. This is a read-only command.
-**Purpose:** inspect the POSIX account mapping and SSH public keys associated with the current `gcloud` identity.
+After enabling OS Login to confirm your identity is correctly mapped to POSIX accounts across projects. It is typically triggered by first SSH after enabling OS Login, troubleshooting authentication failures, or auditing cross-project access. `gcloud compute os-login describe-profile` reads the OS Login profile for the authenticated identity. This is a read-only command. Inspect the POSIX account mapping and SSH public keys associated with the current `gcloud` identity.
 
 *Describe the OS Login profile for the current authenticated user.*
 

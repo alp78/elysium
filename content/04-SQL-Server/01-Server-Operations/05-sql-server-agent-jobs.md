@@ -99,10 +99,7 @@ The `Agent XPs` instance setting is the feature flag that exposes the Agent exte
 
 #### Verify Agent XPs configuration value
 
-**When to run:** as the very first check on any new or inherited instance, before assuming Agent is or is not configured.
-**Trigger:** initial Agent audit, post-restart verification, post-migration check, or troubleshooting "why are my jobs not running".
-**Context:** runs in any database, read-only against `sys.configurations`, requires `VIEW SERVER STATE`. Cannot itself enable Agent — it only reports the current value.
-**Purpose:** establish whether the Agent feature flag is on. If `value_in_use = 0`, every other Agent query in this note will return empty regardless of whether you "see" jobs in SSMS.
+As the very first check on any new or inherited instance, before assuming Agent is or is not configured. It is typically triggered by initial Agent audit, post-restart verification, post-migration check, or troubleshooting "why are my jobs not running". Runs in any database, read-only against `sys.configurations`, requires `VIEW SERVER STATE`. Cannot itself enable Agent — it only reports the current value. Establish whether the Agent feature flag is on. If `value_in_use = 0`, every other Agent query in this note will return empty regardless of whether you "see" jobs in SSMS.
 
 > [!info]- `sys.configurations` columns (Agent XPs row)
 >
@@ -164,10 +161,7 @@ WHERE name = 'Agent XPs';
 
 #### Count Agent jobs
 
-**When to run:** immediately after the `Agent XPs` check, as the second step in any Agent audit.
-**Trigger:** initial Agent audit, post-migration verification, or "why is nothing scheduled" troubleshooting.
-**Context:** runs in any database, read-only against `msdb.dbo.sysjobs`, requires `SQLAgentReaderRole` on `msdb` (or sysadmin).
-**Purpose:** answer the simplest possible question — does this instance have any Agent jobs at all?
+Immediately after the `Agent XPs` check, as the second step in any Agent audit. It is typically triggered by initial Agent audit, post-migration verification, or "why is nothing scheduled" troubleshooting. Runs in any database, read-only against `msdb.dbo.sysjobs`, requires `SQLAgentReaderRole` on `msdb` (or sysadmin). Answer the simplest possible question — does this instance have any Agent jobs at all?
 
 > [!info]- `COUNT(*)` against `sysjobs`
 >
@@ -189,10 +183,7 @@ FROM msdb.dbo.sysjobs;
 
 #### List recent Agent jobs
 
-**When to run:** after `sysjobs` count returns non-zero, when you need to see what jobs actually exist and when each was last modified.
-**Trigger:** discovery on an inherited instance, or change-control review after a deployment.
-**Context:** runs in any database, read-only, requires `SQLAgentReaderRole` (or sysadmin).
-**Purpose:** see the most recent jobs by creation date, the description each job was given, and whether each job is currently enabled.
+After `sysjobs` count returns non-zero, when you need to see what jobs actually exist and when each was last modified. It is typically triggered by discovery on an inherited instance, or change-control review after a deployment. Runs in any database, read-only, requires `SQLAgentReaderRole` (or sysadmin). See the most recent jobs by creation date, the description each job was given, and whether each job is currently enabled.
 
 > [!info]- `sysjobs` projection for the discovery query
 >
@@ -242,10 +233,7 @@ ORDER BY date_created DESC;
 
 #### List registered Agent subsystems
 
-**When to run:** during initial Agent audit, after enabling Agent for the first time, or when a job step fails with a "subsystem not found" or "unable to load" error.
-**Trigger:** Agent enablement verification, subsystem-specific troubleshooting (e.g. why a `CmdExec` step fails on Linux).
-**Context:** runs in any database, read-only against `msdb.dbo.syssubsystems`, requires `SQLAgentReaderRole` (or sysadmin).
-**Purpose:** confirm the Agent surface is initialized, see which subsystems are nominally available on this instance, and detect at a glance which ones are non-functional Linux placeholders.
+During initial Agent audit, after enabling Agent for the first time, or when a job step fails with a "subsystem not found" or "unable to load" error. It is typically triggered by agent enablement verification, subsystem-specific troubleshooting (e.g. why a `CmdExec` step fails on Linux). Runs in any database, read-only against `msdb.dbo.syssubsystems`, requires `SQLAgentReaderRole` (or sysadmin). Confirm the Agent surface is initialized, see which subsystems are nominally available on this instance, and detect at a glance which ones are non-functional Linux placeholders.
 
 > [!info]- `syssubsystems` projection
 >
@@ -293,10 +281,7 @@ The Agent process writes its own log file separate from the SQL Server error log
 
 #### Tail the Agent log on Linux
 
-**When to run:** any time `sysjobhistory` does not contain the expected rows, when a job fires but produces no output, or when troubleshooting Agent service startup.
-**Trigger:** missing job history, missing job execution, Agent startup failure, or post-restart verification.
-**Context:** runs on the Linux host (or inside the `stoxx-db` Docker container via `docker exec`). Requires read access to `/var/opt/mssql/log/`, which is restricted to the `mssql` user and root by default.
-**Purpose:** see Agent service-level events that never reach `sysjobhistory` — cache population, subsystem load failures, mail dispatcher startup, scheduler initialization, idle CPU condition warnings.
+Any time `sysjobhistory` does not contain the expected rows, when a job fires but produces no output, or when troubleshooting Agent service startup. It is typically triggered by missing job history, missing job execution, Agent startup failure, or post-restart verification. Runs on the Linux host (or inside the `stoxx-db` Docker container via `docker exec`). Requires read access to `/var/opt/mssql/log/`, which is restricted to the `mssql` user and root by default. See Agent service-level events that never reach `sysjobhistory` — cache population, subsystem load failures, mail dispatcher startup, scheduler initialization, idle CPU condition warnings.
 
 > [!info]- Reading the UTF-16 log
 >
@@ -401,10 +386,7 @@ The `sqlagent.*` keys exposed by `mssql-conf list`:
 
 #### Enable Agent and restart the engine
 
-**When to run:** once, on a fresh SQL Server on Linux installation (or container) where Agent is needed. Also after any rebuild that resets the `mssql.conf` file.
-**Trigger:** initial Agent enablement, post-rebuild verification, or recovery after `sqlagent.enabled` was accidentally turned off.
-**Context:** runs on the Linux host shell as a privileged user (`sudo`), or inside the running container as root via `docker exec -u root`. The `mssql-conf set` command edits `/var/opt/mssql/mssql.conf` in place. The `systemctl restart mssql-server` (host) or `docker restart stoxx-db` (container) bounces the engine, which is a brief but real availability event — schedule it during a quiet window.
-**Purpose:** flip the Linux-side Agent service switch and bounce the engine so the `sqlagent` process actually starts at next launch and the `Agent XPs` feature flag auto-enables.
+Once, on a fresh SQL Server on Linux installation (or container) where Agent is needed. Also after any rebuild that resets the `mssql.conf` file. It is typically triggered by initial Agent enablement, post-rebuild verification, or recovery after `sqlagent.enabled` was accidentally turned off. Runs on the Linux host shell as a privileged user (`sudo`), or inside the running container as root via `docker exec -u root`. The `mssql-conf set` command edits `/var/opt/mssql/mssql.conf` in place. The `systemctl restart mssql-server` (host) or `docker restart stoxx-db` (container) bounces the engine, which is a brief but real availability event — schedule it during a quiet window. Flip the Linux-side Agent service switch and bounce the engine so the `sqlagent` process actually starts at next launch and the `Agent XPs` feature flag auto-enables.
 
 > [!warning] Engine restart required
 >
@@ -540,10 +522,7 @@ The remaining two procedures are simple binders.
 
 #### Create the job container
 
-**When to run:** as the first step of any new job creation. Always create the empty container before adding steps or attaching schedules.
-**Trigger:** new maintenance job, new ETL hand-off job, or any new scheduled work that fits Agent's responsibility (T-SQL only on Linux).
-**Context:** runs in any database (the procedure is fully qualified to `msdb`), requires `SQLAgentUserRole` (own jobs) or `SQLAgentOperatorRole` (cross-owner) on `msdb`. State-changing — inserts one row into `msdb.dbo.sysjobs`.
-**Purpose:** create the empty job row that subsequent `sp_add_jobstep`, `sp_attach_schedule`, and `sp_add_jobserver` calls will hang off.
+As the first step of any new job creation. Always create the empty container before adding steps or attaching schedules. It is typically triggered by new maintenance job, new ETL hand-off job, or any new scheduled work that fits Agent's responsibility (T-SQL only on Linux). Runs in any database (the procedure is fully qualified to `msdb`), requires `SQLAgentUserRole` (own jobs) or `SQLAgentOperatorRole` (cross-owner) on `msdb`. State-changing — inserts one row into `msdb.dbo.sysjobs`. Create the empty job row that subsequent `sp_add_jobstep`, `sp_attach_schedule`, and `sp_add_jobserver` calls will hang off.
 
 > [!info]- sp_add_job parameters used here
 >
@@ -567,10 +546,7 @@ EXEC msdb.dbo.sp_add_job
 
 #### Add a T-SQL job step
 
-**When to run:** immediately after `sp_add_job`, before attaching any schedule. A job with zero steps is a valid catalog state but Agent will refuse to run it.
-**Trigger:** building out a job that was just created with `sp_add_job`, or extending an existing job with another step.
-**Context:** runs in any database, requires `SQLAgentUserRole` (own jobs) or higher. State-changing — inserts one row into `msdb.dbo.sysjobsteps`.
-**Purpose:** define what the job actually does. For Linux Agent, this is almost always a `TSQL` step.
+Immediately after `sp_add_job`, before attaching any schedule. A job with zero steps is a valid catalog state but Agent will refuse to run it. It is typically triggered by building out a job that was just created with `sp_add_job`, or extending an existing job with another step. Runs in any database, requires `SQLAgentUserRole` (own jobs) or higher. State-changing — inserts one row into `msdb.dbo.sysjobsteps`. Define what the job actually does. For Linux Agent, this is almost always a `TSQL` step.
 
 > [!info]- sp_add_jobstep parameters used here
 >
@@ -599,10 +575,7 @@ EXEC msdb.dbo.sp_add_jobstep
 
 #### Define the schedule
 
-**When to run:** any time a recurring time pattern is needed. Schedules are reusable — define once and attach to many jobs if the same cadence applies to multiple workloads.
-**Trigger:** new job that needs to fire on a cadence, or refactoring multiple jobs to share a single schedule definition.
-**Context:** runs in any database, requires `SQLAgentUserRole` or higher. State-changing — inserts one row into `msdb.dbo.sysschedules`. **Does not** by itself attach the schedule to any job; that is `sp_attach_schedule`'s job.
-**Purpose:** create a standalone reusable schedule object.
+Any time a recurring time pattern is needed. Schedules are reusable — define once and attach to many jobs if the same cadence applies to multiple workloads. It is typically triggered by new job that needs to fire on a cadence, or refactoring multiple jobs to share a single schedule definition. Runs in any database, requires `SQLAgentUserRole` or higher. State-changing — inserts one row into `msdb.dbo.sysschedules`. **Does not** by itself attach the schedule to any job; that is `sp_attach_schedule`'s job. Create a standalone reusable schedule object.
 
 > [!info]- sp_add_schedule parameters used here
 >
@@ -627,10 +600,7 @@ EXEC msdb.dbo.sp_add_schedule
 
 #### Attach schedule and bind to local server
 
-**When to run:** immediately after both the job and the schedule exist. Both bindings are required for the job to fire — one without the other leaves the job in a "defined but inert" state.
-**Trigger:** completing the job creation sequence, or rewiring an existing job to a new schedule.
-**Context:** runs in any database, requires `SQLAgentUserRole` or higher. State-changing — inserts one row in `sysjobschedules` and one row in `sysjobservers`.
-**Purpose:** make the job actually runnable. After both calls succeed, Agent's scheduler will pick up the job at `next_run_date`/`next_run_time`.
+Immediately after both the job and the schedule exist. Both bindings are required for the job to fire — one without the other leaves the job in a "defined but inert" state. It is typically triggered by completing the job creation sequence, or rewiring an existing job to a new schedule. Runs in any database, requires `SQLAgentUserRole` or higher. State-changing — inserts one row in `sysjobschedules` and one row in `sysjobservers`. Make the job actually runnable. After both calls succeed, Agent's scheduler will pick up the job at `next_run_date`/`next_run_time`.
 
 > [!info]- The two bind procedures
 >
@@ -664,10 +634,7 @@ EXEC msdb.dbo.sp_add_jobserver
 
 #### Manually start the job
 
-**When to run:** for ad hoc execution outside the schedule — testing a newly created job, re-running after a fixed bug, or kicking off a maintenance pass on demand.
-**Trigger:** post-creation smoke test, post-fix re-run, or operator-initiated execution.
-**Context:** runs in any database, requires `SQLAgentUserRole` (own jobs) or `SQLAgentOperatorRole` (any job). The procedure returns immediately — Agent forks the execution into its scheduler thread and returns control. To wait for completion, poll `sysjobhistory` for the matching `instance_id`.
-**Purpose:** start the job right now, regardless of its schedule.
+For ad hoc execution outside the schedule — testing a newly created job, re-running after a fixed bug, or kicking off a maintenance pass on demand. It is typically triggered by post-creation smoke test, post-fix re-run, or operator-initiated execution. Runs in any database, requires `SQLAgentUserRole` (own jobs) or `SQLAgentOperatorRole` (any job). The procedure returns immediately — Agent forks the execution into its scheduler thread and returns control. To wait for completion, poll `sysjobhistory` for the matching `instance_id`. Start the job right now, regardless of its schedule.
 
 > [!info]- sp_start_job behavior
 >
@@ -723,10 +690,7 @@ If Agent owns production maintenance, `msdb` must be part of your observability 
 
 #### Inspect job step configuration
 
-**When to run:** during change-control review of an inherited job, when validating that a deployment did not accidentally change a step's command or branching, or when triaging "the job ran but did the wrong thing".
-**Trigger:** post-deployment verification, change-control audit, or "what does this job actually do" discovery.
-**Context:** runs in any database, read-only against `msdb.dbo.sysjobsteps`, requires `SQLAgentReaderRole` (or sysadmin).
-**Purpose:** see the static configuration of every step in every job — subsystem, target database, branching, retries, command excerpt — without running anything.
+During change-control review of an inherited job, when validating that a deployment did not accidentally change a step's command or branching, or when triaging "the job ran but did the wrong thing". It is typically triggered by post-deployment verification, change-control audit, or "what does this job actually do" discovery. Runs in any database, read-only against `msdb.dbo.sysjobsteps`, requires `SQLAgentReaderRole` (or sysadmin). See the static configuration of every step in every job — subsystem, target database, branching, retries, command excerpt — without running anything.
 
 > [!info]- sysjobsteps projection
 >
@@ -776,10 +740,7 @@ ORDER BY j.name, s.step_id;
 
 #### Inspect schedules
 
-**When to run:** when validating that a job's intended cadence matches its attached schedule, when adding a new schedule and wanting to see what already exists, or when investigating "why did this job fire at the wrong time".
-**Trigger:** schedule validation during change-control, schedule reuse discovery, or wrong-time-execution triage.
-**Context:** runs in any database, read-only, requires `SQLAgentReaderRole` (or sysadmin).
-**Purpose:** see every schedule defined on this instance, including built-in collector schedules and user-defined schedules.
+When validating that a job's intended cadence matches its attached schedule, when adding a new schedule and wanting to see what already exists, or when investigating "why did this job fire at the wrong time". It is typically triggered by schedule validation during change-control, schedule reuse discovery, or wrong-time-execution triage. Runs in any database, read-only, requires `SQLAgentReaderRole` (or sysadmin). See every schedule defined on this instance, including built-in collector schedules and user-defined schedules.
 
 > [!info]- sysschedules projection
 >
@@ -830,10 +791,7 @@ ORDER BY s.schedule_id;
 
 #### Inspect last run per server
 
-**When to run:** as the first daily-health check after Agent owns production maintenance. One row per job, one row per outcome.
-**Trigger:** morning-after health check, post-incident triage, or change-control review.
-**Context:** runs in any database, read-only, requires `SQLAgentReaderRole` (or sysadmin). The join to `sys.servers` resolves the server name from `server_id`; for standalone instances `server_id = 0` resolves to the local server name.
-**Purpose:** get the most recent run outcome of every job in one row per job — much faster than scanning `sysjobhistory`.
+As the first daily-health check after Agent owns production maintenance. One row per job, one row per outcome. It is typically triggered by morning-after health check, post-incident triage, or change-control review. Runs in any database, read-only, requires `SQLAgentReaderRole` (or sysadmin). The join to `sys.servers` resolves the server name from `server_id`; for standalone instances `server_id = 0` resolves to the local server name. Get the most recent run outcome of every job in one row per job — much faster than scanning `sysjobhistory`.
 
 > [!info]- sysjobservers projection with server name resolution
 >
@@ -893,10 +851,7 @@ ORDER BY j.name;
 
 #### Query recent job history
 
-**When to run:** as part of every Agent observability check — daily health, post-incident triage, or "did the deployment job actually finish".
-**Trigger:** morning health check, alert investigation, or operator-initiated audit.
-**Context:** runs in any database, read-only, requires `SQLAgentReaderRole` (or sysadmin). On busy instances `sysjobhistory` can have hundreds of thousands of rows; always cap with `TOP` or filter by `run_date` to avoid scanning the whole table.
-**Purpose:** see the most recent Agent executions with their outcome and a slice of the message text. The first column to scan is `run_status` (1 = success, 0 = failure); the second is `step_id` (0 = job summary, ≥1 = the actual step).
+As part of every Agent observability check — daily health, post-incident triage, or "did the deployment job actually finish". It is typically triggered by morning health check, alert investigation, or operator-initiated audit. Runs in any database, read-only, requires `SQLAgentReaderRole` (or sysadmin). On busy instances `sysjobhistory` can have hundreds of thousands of rows; always cap with `TOP` or filter by `run_date` to avoid scanning the whole table. See the most recent Agent executions with their outcome and a slice of the message text. The first column to scan is `run_status` (1 = success, 0 = failure); the second is `step_id` (0 = job summary, ≥1 = the actual step).
 
 > [!info]- sysjobhistory projection
 >
@@ -981,10 +936,7 @@ Each operator is a named contact with optional email, pager, and NET SEND addres
 
 #### Inspect existing operators
 
-**When to run:** before creating a new operator (to avoid name collisions), and as part of an Agent audit to confirm notifications can actually reach a human.
-**Trigger:** initial Agent setup, post-incident "why didn't anyone get paged" investigation, or operator team handover.
-**Context:** runs in any database, read-only against `msdb.dbo.sysoperators`, requires `SQLAgentReaderRole` (or sysadmin).
-**Purpose:** see every operator on the instance with their enabled state, email address, and most recent dispatch time.
+Before creating a new operator (to avoid name collisions), and as part of an Agent audit to confirm notifications can actually reach a human. It is typically triggered by initial Agent setup, post-incident "why didn't anyone get paged" investigation, or operator team handover. Runs in any database, read-only against `msdb.dbo.sysoperators`, requires `SQLAgentReaderRole` (or sysadmin). See every operator on the instance with their enabled state, email address, and most recent dispatch time.
 
 > [!info]- sysoperators projection
 >
@@ -1012,10 +964,7 @@ ORDER BY id;
 
 #### Create an operator
 
-**When to run:** when wiring up Agent notifications for the first time, or when a new on-call rotation needs its own operator entry.
-**Trigger:** initial notifications setup, or addition of a new on-call recipient.
-**Context:** runs in any database, requires `SQLAgentOperatorRole` or sysadmin. State-changing — inserts one row in `msdb.dbo.sysoperators`.
-**Purpose:** create a named recipient that subsequent `sp_add_notification` calls can target.
+When wiring up Agent notifications for the first time, or when a new on-call rotation needs its own operator entry. It is typically triggered by initial notifications setup, or addition of a new on-call recipient. Runs in any database, requires `SQLAgentOperatorRole` or sysadmin. State-changing — inserts one row in `msdb.dbo.sysoperators`. Create a named recipient that subsequent `sp_add_notification` calls can target.
 
 > [!info]- Minimal operator definition
 >
@@ -1070,10 +1019,7 @@ These two catalogs round out the Agent metadata surface but matter very differen
 
 #### List job categories
 
-**When to run:** when creating a new job and choosing a category, or when auditing how existing jobs are organized.
-**Trigger:** new job creation, audit of inherited jobs, or cleanup pass on category sprawl.
-**Context:** runs in any database, read-only against `msdb.dbo.syscategories`, requires `SQLAgentReaderRole` (or sysadmin).
-**Purpose:** see every category available for jobs (`category_class = 1`), including the SQL Server-shipped defaults.
+When creating a new job and choosing a category, or when auditing how existing jobs are organized. It is typically triggered by new job creation, audit of inherited jobs, or cleanup pass on category sprawl. Runs in any database, read-only against `msdb.dbo.syscategories`, requires `SQLAgentReaderRole` (or sysadmin). See every category available for jobs (`category_class = 1`), including the SQL Server-shipped defaults.
 
 > [!info]- syscategories projection filtered to job categories
 >
@@ -1122,10 +1068,7 @@ ORDER BY category_id;
 
 #### Confirm proxies are unused on Linux
 
-**When to run:** during initial Agent audit to confirm the proxy surface is empty (it should be), or when a Windows-trained operator asks why a job isn't running under a specific Windows account.
-**Trigger:** Agent audit, security review, or Windows-vs-Linux feature gap discussion.
-**Context:** runs in any database, read-only against `msdb.dbo.sysproxies`, requires `SQLAgentReaderRole` (or sysadmin).
-**Purpose:** confirm no proxies are defined and explain why they would have no effect even if they were.
+During initial Agent audit to confirm the proxy surface is empty (it should be), or when a Windows-trained operator asks why a job isn't running under a specific Windows account. It is typically triggered by agent audit, security review, or Windows-vs-Linux feature gap discussion. Runs in any database, read-only against `msdb.dbo.sysproxies`, requires `SQLAgentReaderRole` (or sysadmin). Confirm no proxies are defined and explain why they would have no effect even if they were.
 
 > [!info]- sysproxies columns
 >

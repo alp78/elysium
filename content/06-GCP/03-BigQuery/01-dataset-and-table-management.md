@@ -318,10 +318,7 @@ Listing operations require `roles/bigquery.metadataViewer` or `roles/bigquery.da
 
 #### List all datasets in the project
 
-**When to run:** after setting the active project with `gcloud config set project` or when confirming which datasets exist before creating tables or running queries.
-**Trigger:** beginning of any BigQuery operational session, or verifying that a Terraform-provisioned dataset landed correctly.
-**Context:** `bq ls` is a read-only CLI command. Requires `roles/bigquery.metadataViewer` on the project. No cost incurred — metadata operations are free.
-**Purpose:** enumerate all dataset IDs in the active project to confirm resource inventory before proceeding to table-level operations.
+After setting the active project with `gcloud config set project` or when confirming which datasets exist before creating tables or running queries. It is typically triggered by beginning of any BigQuery operational session, or verifying that a Terraform-provisioned dataset landed correctly. `bq ls` is a read-only CLI command. Requires `roles/bigquery.metadataViewer` on the project. No cost incurred — metadata operations are free. Enumerate all dataset IDs in the active project to confirm resource inventory before proceeding to table-level operations.
 
 `bq ls` without arguments returns all dataset IDs in the active project. Use `bq show` to inspect metadata for a specific dataset.
 
@@ -343,10 +340,7 @@ The output shows three datasets in the `bq-wh-nb` project, following a medallion
 
 #### List tables in a dataset
 
-**When to run:** after confirming datasets exist, or when investigating what tables are available for querying.
-**Trigger:** onboarding to a new dataset, verifying a pipeline loaded the expected tables, or auditing table types (TABLE vs VIEW vs MATERIALIZED_VIEW).
-**Context:** read-only, free metadata operation. Requires `roles/bigquery.metadataViewer` on the dataset.
-**Purpose:** enumerate all tables, views, and materialized views in a dataset along with their type, partitioning, and clustering configuration.
+After confirming datasets exist, or when investigating what tables are available for querying. It is typically triggered by onboarding to a new dataset, verifying a pipeline loaded the expected tables, or auditing table types (TABLE vs VIEW vs MATERIALIZED_VIEW). Read-only, free metadata operation. Requires `roles/bigquery.metadataViewer` on the dataset. Enumerate all tables, views, and materialized views in a dataset along with their type, partitioning, and clustering configuration.
 
 Passing a dataset ID lists all resources in that dataset. The `Time Partitioning` column shows the partition granularity and field; `Clustered Fields` shows the clustering key columns in priority order.
 
@@ -393,10 +387,7 @@ The `stoxx_gold` dataset contains three base tables and two views. None of these
 
 #### Retrieve column definitions only
 
-**When to run:** when validating that a table's schema matches the expected column names, types, and modes — before running data loads, building views, or writing application queries against the table.
-**Trigger:** pipeline onboarding, schema drift investigation, or verifying a `bq update` schema change was applied.
-**Context:** read-only, free metadata operation. Requires `roles/bigquery.metadataViewer`. The output is a JSON array — each entry contains `name`, `type`, `mode`, optionally `description`, and nested `fields` for `STRUCT` columns.
-**Purpose:** confirm the exact column definitions without the noise of full table metadata.
+When validating that a table's schema matches the expected column names, types, and modes — before running data loads, building views, or writing application queries against the table. It is typically triggered by pipeline onboarding, schema drift investigation, or verifying a `bq update` schema change was applied. Read-only, free metadata operation. Requires `roles/bigquery.metadataViewer`. The output is a JSON array — each entry contains `name`, `type`, `mode`, optionally `description`, and nested `fields` for `STRUCT` columns. Confirm the exact column definitions without the noise of full table metadata.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -481,10 +472,7 @@ The schema shows 12 columns, all `NULLABLE`. The `_ingested_at` DATETIME tracks 
 
 #### Retrieve full table metadata
 
-**When to run:** when investigating a table's physical layout (partitioning, clustering), storage footprint, or time travel retention — before making decisions about table migration, cost optimization, or deletion.
-**Trigger:** storage audit, cost investigation, verifying that partitioning/clustering was applied at creation, or checking `numRows` / `numBytes` for capacity planning.
-**Context:** read-only, free metadata operation. Requires `roles/bigquery.metadataViewer`. Returns the full BigQuery table resource as JSON.
-**Purpose:** confirm the table's physical configuration, storage size, row count, and time travel overhead in a single call.
+When investigating a table's physical layout (partitioning, clustering), storage footprint, or time travel retention — before making decisions about table migration, cost optimization, or deletion. It is typically triggered by storage audit, cost investigation, verifying that partitioning/clustering was applied at creation, or checking `numRows` / `numBytes` for capacity planning. Read-only, free metadata operation. Requires `roles/bigquery.metadataViewer`. Returns the full BigQuery table resource as JSON. Confirm the table's physical configuration, storage size, row count, and time travel overhead in a single call.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -540,10 +528,7 @@ This table contains 50 rows consuming 4,724 logical bytes (~4.6 KB). `numTimeTra
 
 #### Retrieve dataset metadata
 
-**When to run:** when verifying a dataset's region, access controls, or time travel configuration — especially after Terraform provisioning or manual creation.
-**Trigger:** data residency audit, IAM review, or confirming `maxTimeTravelHours` before relying on time travel for recovery.
-**Context:** read-only, free metadata operation. Requires `roles/bigquery.metadataViewer` on the dataset.
-**Purpose:** confirm dataset-level settings that are inherited by all tables within it.
+When verifying a dataset's region, access controls, or time travel configuration — especially after Terraform provisioning or manual creation. It is typically triggered by data residency audit, IAM review, or confirming `maxTimeTravelHours` before relying on time travel for recovery. Read-only, free metadata operation. Requires `roles/bigquery.metadataViewer` on the dataset. Confirm dataset-level settings that are inherited by all tables within it.
 
 *Return the full metadata for the `stoxx_bronze` dataset.*
 
@@ -605,10 +590,7 @@ A dataset is the top-level namespace for BigQuery tables within a project. It de
 
 #### Create a dataset with explicit location
 
-**When to run:** when setting up a new data layer (bronze, silver, gold) or isolating a workload into its own namespace with specific residency requirements.
-**Trigger:** project initialization, new pipeline onboarding, or Terraform plan requiring a manually provisioned dataset.
-**Context:** state-changing operation. Requires `roles/bigquery.dataOwner` or `roles/bigquery.admin`. The dataset is created immediately and is visible to all project members with appropriate IAM roles.
-**Purpose:** provision a dataset namespace with explicit region, description, and optional default table expiration.
+When setting up a new data layer (bronze, silver, gold) or isolating a workload into its own namespace with specific residency requirements. It is typically triggered by project initialization, new pipeline onboarding, or Terraform plan requiring a manually provisioned dataset. State-changing operation. Requires `roles/bigquery.dataOwner` or `roles/bigquery.admin`. The dataset is created immediately and is visible to all project members with appropriate IAM roles. Provision a dataset namespace with explicit region, description, and optional default table expiration.
 
 *Create a dataset in `europe-west1` with a descriptive label.*
 
@@ -689,10 +671,7 @@ flowchart TD
 
 #### Create a table with inline schema
 
-**When to run:** when provisioning a new table for development, prototyping, or small reference data that does not require partitioning.
-**Trigger:** pipeline development, manual table setup, or creating a staging area for ad-hoc loads.
-**Context:** state-changing operation. Requires `roles/bigquery.dataEditor` + `roles/bigquery.jobUser`. The table is created in the specified dataset and inherits the dataset's location.
-**Purpose:** create a table with an explicit column schema using the compact inline `column:TYPE` syntax.
+When provisioning a new table for development, prototyping, or small reference data that does not require partitioning. It is typically triggered by pipeline development, manual table setup, or creating a staging area for ad-hoc loads. State-changing operation. Requires `roles/bigquery.dataEditor` + `roles/bigquery.jobUser`. The table is created in the specified dataset and inherits the dataset's location. Create a table with an explicit column schema using the compact inline `column:TYPE` syntax.
 
 Inline schema uses `column_name:TYPE` pairs separated by commas. Use this for quick table creation in development; for production tables with many columns or `STRUCT`/`ARRAY` types, use a JSON schema file instead. Supported types in inline schema: `STRING`, `INTEGER`, `FLOAT`, `NUMERIC`, `BIGNUMERIC`, `BOOLEAN`, `DATE`, `DATETIME`, `TIMESTAMP`, `BYTES`, `JSON`, `GEOGRAPHY`.
 
@@ -708,10 +687,7 @@ Table 'bq-wh-nb:demo_staging.ohlcv_demo' successfully created.
 
 #### Create a partitioned and clustered table
 
-**When to run:** when creating a table that will hold time-series data exceeding ~1 million rows, where query patterns consistently filter on a date column and one or more categorical columns.
-**Trigger:** production table provisioning for OHLCV prices, signals, pipeline runs, or any dataset with a natural time dimension.
-**Context:** state-changing, immutable configuration. `--time_partitioning_field`, `--time_partitioning_type`, and `--clustering_fields` cannot be changed after creation — the only migration path is `CREATE TABLE ... AS SELECT` into a new table with the correct settings.
-**Purpose:** create a table with physical partitioning by date and within-partition clustering to minimize scanned bytes and query cost.
+When creating a table that will hold time-series data exceeding ~1 million rows, where query patterns consistently filter on a date column and one or more categorical columns. It is typically triggered by production table provisioning for OHLCV prices, signals, pipeline runs, or any dataset with a natural time dimension. State-changing, immutable configuration. `--time_partitioning_field`, `--time_partitioning_type`, and `--clustering_fields` cannot be changed after creation — the only migration path is `CREATE TABLE ... AS SELECT` into a new table with the correct settings. Create a table with physical partitioning by date and within-partition clustering to minimize scanned bytes and query cost.
 
 > [!info]- Clause-by-Clause Breakdown
 >
@@ -745,10 +721,7 @@ Table 'bq-wh-nb:demo_staging.ohlcv_partitioned' successfully created.
 
 #### Create a table with expiration
 
-**When to run:** when creating temporary staging, scratch, or intraday tables that should be automatically cleaned up after a fixed period.
-**Trigger:** ETL staging loads, temporary materialization for debugging, or short-lived demo tables.
-**Context:** state-changing. The `--expiration` flag sets a TTL in seconds from creation time. After expiration, BigQuery automatically deletes the table — no manual cleanup or scheduled job required.
-**Purpose:** provision a self-destructing table to avoid orphaned staging data and unnecessary storage costs.
+When creating temporary staging, scratch, or intraday tables that should be automatically cleaned up after a fixed period. It is typically triggered by ETL staging loads, temporary materialization for debugging, or short-lived demo tables. State-changing. The `--expiration` flag sets a TTL in seconds from creation time. After expiration, BigQuery automatically deletes the table — no manual cleanup or scheduled job required. Provision a self-destructing table to avoid orphaned staging data and unnecessary storage costs.
 
 *Create a scratch table that auto-deletes after 24 hours (86,400 seconds).*
 
@@ -762,10 +735,7 @@ Table 'bq-wh-nb:demo_staging.scratch_load' successfully created.
 
 #### Schema evolution with bq update
 
-**When to run:** when a pipeline or application requires new columns on an existing table, or when updating table metadata (description, labels, expiration).
-**Trigger:** schema change request, adding a new metric column, attaching labels for cost attribution, or extending/shortening a table's TTL.
-**Context:** state-changing but non-destructive for additive changes. `bq update` can add new `NULLABLE` columns (appended to the end of the schema) and modify table metadata. It cannot remove columns, change column types, or alter partitioning/clustering.
-**Purpose:** evolve a table's schema or metadata without recreating the table.
+When a pipeline or application requires new columns on an existing table, or when updating table metadata (description, labels, expiration). It is typically triggered by schema change request, adding a new metric column, attaching labels for cost attribution, or extending/shortening a table's TTL. State-changing but non-destructive for additive changes. `bq update` can add new `NULLABLE` columns (appended to the end of the schema) and modify table metadata. It cannot remove columns, change column types, or alter partitioning/clustering. Evolve a table's schema or metadata without recreating the table.
 
 Adding a nullable column requires providing a JSON schema file containing the full schema with the new column appended. The `bq` CLI does not support adding a single column inline — the entire schema must be specified. Removing columns or changing types requires a full table migration — `CREATE TABLE new_table AS SELECT ... FROM old_table`. Relaxing a column from `REQUIRED` to `NULLABLE` is also supported.
 
@@ -815,10 +785,7 @@ Table 'bq-wh-nb:demo_staging.ohlcv_demo' successfully updated.
 
 #### Copy a table to a backup
 
-**When to run:** before destructive operations (schema migration, table recreation, bulk deletes), or when creating point-in-time snapshots outside the time travel window.
-**Trigger:** pre-migration safety net, creating a test copy for development, or duplicating a table for a different consumer.
-**Context:** state-changing — creates a new table at the destination. The destination dataset must already exist and must be in the same region as the source. Requires `roles/bigquery.dataEditor` on the destination dataset. The copy job runs server-side and does not transfer data through the client.
-**Purpose:** create an independent copy of a table's data and schema for backup, testing, or migration purposes.
+Before destructive operations (schema migration, table recreation, bulk deletes), or when creating point-in-time snapshots outside the time travel window. It is typically triggered by pre-migration safety net, creating a test copy for development, or duplicating a table for a different consumer. State-changing — creates a new table at the destination. The destination dataset must already exist and must be in the same region as the source. Requires `roles/bigquery.dataEditor` on the destination dataset. The copy job runs server-side and does not transfer data through the client. Create an independent copy of a table's data and schema for backup, testing, or migration purposes.
 
 `bq cp` copies a table to a new destination within the same region. By default the command fails if the destination table already exists — use `-f` to overwrite or `-a` to append rows.
 
@@ -855,10 +822,7 @@ Deletion operations bypass the confirmation prompts used by the BigQuery Console
 
 #### Delete a single table
 
-**When to run:** when decommissioning a table that is no longer needed, cleaning up temporary staging data, or removing a table before recreating it with different partitioning/clustering.
-**Trigger:** pipeline cleanup, post-migration verification (old table confirmed unused), or removing orphaned scratch tables.
-**Context:** state-changing and destructive. The `-f` flag suppresses the interactive confirmation prompt. Without `-f`, the CLI prompts for `y/N` confirmation. The table remains recoverable within the time travel window.
-**Purpose:** permanently remove a table from the dataset.
+When decommissioning a table that is no longer needed, cleaning up temporary staging data, or removing a table before recreating it with different partitioning/clustering. It is typically triggered by pipeline cleanup, post-migration verification (old table confirmed unused), or removing orphaned scratch tables. State-changing and destructive. The `-f` flag suppresses the interactive confirmation prompt. Without `-f`, the CLI prompts for `y/N` confirmation. The table remains recoverable within the time travel window. Permanently remove a table from the dataset.
 
 *Delete the backup table created by the `bq cp` example.*
 
@@ -883,10 +847,7 @@ The `bq rm -f` command produces no output on success — the table is deleted si
 
 #### Delete a dataset recursively
 
-**When to run:** when decommissioning an entire data layer, tearing down a demo environment, or cleaning up after a failed migration.
-**Trigger:** environment teardown, project cleanup, or removing an entire dataset namespace that is confirmed unused.
-**Context:** state-changing and destructive. The `-r` flag removes all tables within the dataset before deleting the dataset itself. Combined with `-f` to skip confirmation. This operation is not individually reversible — each table within is subject to its own time travel window.
-**Purpose:** remove a dataset and all its contents in a single operation.
+When decommissioning an entire data layer, tearing down a demo environment, or cleaning up after a failed migration. It is typically triggered by environment teardown, project cleanup, or removing an entire dataset namespace that is confirmed unused. State-changing and destructive. The `-r` flag removes all tables within the dataset before deleting the dataset itself. Combined with `-f` to skip confirmation. This operation is not individually reversible — each table within is subject to its own time travel window. Remove a dataset and all its contents in a single operation.
 
 > [!info]- Clause-by-Clause Breakdown
 >
@@ -916,10 +877,7 @@ The `bq rm -r -f` command produces no output on success. Verify with `bq ls` —
 
 #### Preview rows from a table
 
-**When to run:** after a data load completes, or when investigating column content before writing a query.
-**Trigger:** post-load validation, data exploration, or confirming that a `bq cp` operation preserved data correctly.
-**Context:** read-only, free operation (no query job created). Requires `roles/bigquery.dataViewer`. Returns rows in a tabular format. Default row count is 100; use `-n` to limit.
-**Purpose:** quickly inspect actual data values without incurring query costs.
+After a data load completes, or when investigating column content before writing a query. It is typically triggered by post-load validation, data exploration, or confirming that a `bq cp` operation preserved data correctly. Read-only, free operation (no query job created). Requires `roles/bigquery.dataViewer`. Returns rows in a tabular format. Default row count is 100; use `-n` to limit. Quickly inspect actual data values without incurring query costs.
 
 *Preview the first 3 rows of `stoxx_bronze.eurostoxx50_ohlcv`.*
 
@@ -953,10 +911,7 @@ The output shows ASML, LVMH (MC.PA), and Hermès (RMS.PA) from the EURO STOXX 50
 
 #### List all datasets with location and creation time
 
-**When to run:** when auditing all datasets in a project for region compliance, or confirming that Terraform-provisioned datasets landed in the correct region.
-**Trigger:** data residency audit, project onboarding, or post-Terraform verification.
-**Context:** read-only GoogleSQL query against `region-<region>.INFORMATION_SCHEMA.SCHEMATA`. Requires `roles/bigquery.metadataViewer`. Must specify the region qualifier. Free — no bytes scanned.
-**Purpose:** enumerate all datasets in a region with their creation timestamps in a single tabular view.
+When auditing all datasets in a project for region compliance, or confirming that Terraform-provisioned datasets landed in the correct region. It is typically triggered by data residency audit, project onboarding, or post-Terraform verification. Read-only GoogleSQL query against `region-<region>.INFORMATION_SCHEMA.SCHEMATA`. Requires `roles/bigquery.metadataViewer`. Must specify the region qualifier. Free — no bytes scanned. Enumerate all datasets in a region with their creation timestamps in a single tabular view.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -986,10 +941,7 @@ All three medallion-layer datasets were created within 3 seconds of each other, 
 
 #### List tables with type and creation time
 
-**When to run:** when auditing a dataset's contents programmatically, or building an inventory of tables and views for documentation or monitoring.
-**Trigger:** dataset audit, identifying stale tables, or verifying that a pipeline created the expected resources.
-**Context:** read-only query against `dataset.INFORMATION_SCHEMA.TABLES`. Free — no bytes scanned.
-**Purpose:** enumerate all tables and views in a dataset with their types and creation timestamps.
+When auditing a dataset's contents programmatically, or building an inventory of tables and views for documentation or monitoring. It is typically triggered by dataset audit, identifying stale tables, or verifying that a pipeline created the expected resources. Read-only query against `dataset.INFORMATION_SCHEMA.TABLES`. Free — no bytes scanned. Enumerate all tables and views in a dataset with their types and creation timestamps.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -1021,10 +973,7 @@ The gold layer contains three base tables and two views. The views were created 
 
 #### Inspect column schema via INFORMATION_SCHEMA
 
-**When to run:** when comparing schemas across tables, auditing column types programmatically, or checking for partitioning and clustering metadata at the column level.
-**Trigger:** schema drift investigation, cross-table schema comparison, or verifying that a migration preserved column definitions.
-**Context:** read-only query against `dataset.INFORMATION_SCHEMA.COLUMNS`. Free — no bytes scanned. Returns canonical type names (`INT64`, `FLOAT64`) rather than the aliases (`INTEGER`, `FLOAT`) used by the `bq` CLI.
-**Purpose:** retrieve column-level metadata including data types, nullability, and partitioning/clustering status in a queryable format.
+When comparing schemas across tables, auditing column types programmatically, or checking for partitioning and clustering metadata at the column level. It is typically triggered by schema drift investigation, cross-table schema comparison, or verifying that a migration preserved column definitions. Read-only query against `dataset.INFORMATION_SCHEMA.COLUMNS`. Free — no bytes scanned. Returns canonical type names (`INT64`, `FLOAT64`) rather than the aliases (`INTEGER`, `FLOAT`) used by the `bq` CLI. Retrieve column-level metadata including data types, nullability, and partitioning/clustering status in a queryable format.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -1075,10 +1024,7 @@ Note that `INFORMATION_SCHEMA.COLUMNS` returns canonical type names (`INT64`, `F
 
 #### Estimate bytes scanned before execution
 
-**When to run:** before executing any query against large tables, especially when developing new queries or modifying existing ones.
-**Trigger:** writing a new query, changing filter conditions, or adding/removing columns from a SELECT.
-**Context:** read-only, free operation. The query is parsed and validated but not executed — no slot time consumed and no bytes billed. Requires `roles/bigquery.jobUser`.
-**Purpose:** determine the cost impact of a query before committing to execution.
+Before executing any query against large tables, especially when developing new queries or modifying existing ones. It is typically triggered by writing a new query, changing filter conditions, or adding/removing columns from a SELECT. Read-only, free operation. The query is parsed and validated but not executed — no slot time consumed and no bytes billed. Requires `roles/bigquery.jobUser`. Determine the cost impact of a query before committing to execution.
 
 *Estimate bytes scanned for a filtered query against the bronze OHLCV table.*
 

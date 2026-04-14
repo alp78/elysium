@@ -232,10 +232,7 @@ The first audit establishes a baseline: how many tables live in each of the four
 
 #### Inspect the schema footprint
 
-**When to run:** At the very start of any schema-design review, before deciding whether to keep, split, or consolidate existing schemas.
-**Trigger:** A new engineer joining the platform, a pre-migration audit, or a governance review triggered by growth of `dbo`.
-**Context:** Read-only T-SQL query against `sys.schemas`, `sys.tables`, `sys.partitions`, and `sys.database_permissions`. Requires `VIEW DEFINITION` on the database or membership in a role that implies it. No state change.
-**Purpose:** Produce a single-row-per-schema summary that exposes the layer structure, the workload scale in each layer, the governance risk (demo tables in `dbo`), and the current schema-level security posture in one output.
+At the very start of any schema-design review, before deciding whether to keep, split, or consolidate existing schemas. It is typically triggered by A new engineer joining the platform, a pre-migration audit, or a governance review triggered by growth of `dbo`. Read-only T-SQL query against `sys.schemas`, `sys.tables`, `sys.partitions`, and `sys.database_permissions`. Requires `VIEW DEFINITION` on the database or membership in a role that implies it. No state change. Produce a single-row-per-schema summary that exposes the layer structure, the workload scale in each layer, the governance risk (demo tables in `dbo`), and the current schema-level security posture in one output.
 
 The query touches four catalog views. Before running it, make sure the column semantics are clear: every field in the `SELECT` list either comes from a catalog view directly or is a computed aggregate derived from one.
 
@@ -319,10 +316,7 @@ The previous query aggregated by schema. The next query drops to the table level
 
 #### Inspect representative tables per layer
 
-**When to run:** Immediately after the schema footprint audit, when the aggregate numbers have raised a question about what actually lives in each layer.
-**Trigger:** A discussion about whether a table is in the wrong layer, or a cleanup review of `dbo`.
-**Context:** Read-only T-SQL query. Uses a CTE plus `TOP (20)` to keep the sample short enough to read without losing the cross-layer comparison. No state change.
-**Purpose:** Show that the live row counts align with the intended medallion semantics: small raw landings in `bronze`, larger cleaned history in `silver`, and compact presentation tables in `gold`.
+Immediately after the schema footprint audit, when the aggregate numbers have raised a question about what actually lives in each layer. It is typically triggered by A discussion about whether a table is in the wrong layer, or a cleanup review of `dbo`. Read-only T-SQL query. Uses a CTE plus `TOP (20)` to keep the sample short enough to read without losing the cross-layer comparison. No state change. Show that the live row counts align with the intended medallion semantics: small raw landings in `bronze`, larger cleaned history in `silver`, and compact presentation tables in `gold`.
 
 | Field | Source | Type / Unit | Meaning |
 |---|---|---|---|
@@ -412,10 +406,7 @@ The three DDL statements below each create one layer schema if it does not alrea
 
 #### Create the `bronze` schema idempotently
 
-**When to run:** Initial platform bootstrap, or when adopting schema-per-layer on an existing database that still has production objects in `dbo`.
-**Trigger:** A decision to stop creating new objects in `dbo` and start placing them in layer schemas.
-**Context:** T-SQL DDL against the current database. Requires `CREATE SCHEMA` permission. State-changing but idempotent: safe to re-run because the existence check guards the `CREATE`.
-**Purpose:** Guarantee that a schema named `bronze` exists before any downstream DDL references `bronze.<table>`.
+Initial platform bootstrap, or when adopting schema-per-layer on an existing database that still has production objects in `dbo`. It is typically triggered by A decision to stop creating new objects in `dbo` and start placing them in layer schemas. T-SQL DDL against the current database. Requires `CREATE SCHEMA` permission. State-changing but idempotent: safe to re-run because the existence check guards the `CREATE`. Guarantee that a schema named `bronze` exists before any downstream DDL references `bronze.<table>`.
 
 > [!info]- Why `EXEC('CREATE SCHEMA ...')` and not a direct statement
 >
@@ -435,10 +426,7 @@ GO
 
 #### Create the `silver` schema idempotently
 
-**When to run:** Immediately after `bronze` is in place, as part of the same bootstrap batch.
-**Trigger:** Same as `bronze` — a decision to adopt schema-per-layer.
-**Context:** T-SQL DDL, idempotent, same permission requirements as the `bronze` step.
-**Purpose:** Guarantee that a schema named `silver` exists for cleaned, deduplicated, conformed tables.
+Immediately after `bronze` is in place, as part of the same bootstrap batch. It is typically triggered by same as `bronze` — a decision to adopt schema-per-layer. T-SQL DDL, idempotent, same permission requirements as the `bronze` step. Guarantee that a schema named `silver` exists for cleaned, deduplicated, conformed tables.
 
 > [!info]- Identical idempotent wrapper
 >
@@ -458,10 +446,7 @@ GO
 
 #### Create the `gold` schema idempotently
 
-**When to run:** After `bronze` and `silver` are in place.
-**Trigger:** Same bootstrap — or, on an older database, the moment someone decides to build a published reporting surface.
-**Context:** T-SQL DDL, idempotent.
-**Purpose:** Guarantee that a schema named `gold` exists for published analytical tables.
+After `bronze` and `silver` are in place. It is typically triggered by same bootstrap — or, on an older database, the moment someone decides to build a published reporting surface. T-SQL DDL, idempotent. Guarantee that a schema named `gold` exists for published analytical tables.
 
 > [!info]- Why keep `gold` even if consumers currently read from `silver`
 >
@@ -481,10 +466,7 @@ GO
 
 #### Verify the three layer schemas exist
 
-**When to run:** Immediately after the three idempotent creates, to confirm the bootstrap was effective.
-**Trigger:** Completion of any schema bootstrap or restore.
-**Context:** Read-only query against `sys.schemas`. No state change.
-**Purpose:** Produce a three-row verification capture that proves the layer skeleton is in place and shows each schema's id and owner.
+Immediately after the three idempotent creates, to confirm the bootstrap was effective. It is typically triggered by completion of any schema bootstrap or restore. Read-only query against `sys.schemas`. No state change. Produce a three-row verification capture that proves the layer skeleton is in place and shows each schema's id and owner.
 
 | Field | Source | Type / Unit | Meaning |
 |---|---|---|---|
@@ -547,9 +529,7 @@ The most concrete and common reason to split layers across databases is **recove
 
 #### Set different recovery models per layer database
 
-**When to run:** During platform bootstrap of a database-per-layer design, after the layer databases have been created.
-**Trigger:** A decision to split layers across databases because the layers have materially different restore obligations.
-**Context:** T-SQL DDL against `master` or the instance level. Requires `ALTER` permission on each target database. State-changing. Changing recovery model affects log-chain behavior immediately; changes from `SIMPLE` to `FULL` require a subsequent full backup before point-in-time recovery becomes available. **Not executed against the live `stoxx` sandbox because this instance runs a single database for teaching purposes — changing its recovery model would break the Docker image's log-chain expectations.** The example below is presented as a reference pattern.
+Reach for this material when during platform bootstrap of a database-per-layer design, after the layer databases have been created. It usually becomes relevant when A decision to split layers across databases because the layers have materially different restore obligations. T-SQL DDL against `master` or the instance level. Requires `ALTER` permission on each target database. State-changing. Changing recovery model affects log-chain behavior immediately; changes from `SIMPLE` to `FULL` require a subsequent full backup before point-in-time recovery becomes available. **Not executed against the live `stoxx` sandbox because this instance runs a single database for teaching purposes — changing its recovery model would break the Docker image's log-chain expectations.** The example below is presented as a reference pattern.
 
 | Setting | What it controls | Possible values | Production guidance |
 |---|---|---|---|
@@ -591,10 +571,7 @@ The DDL below creates three domain schemas, each with an explicit owner via the 
 
 #### Create a finance-owned schema
 
-**When to run:** When a finance team is about to take ownership of its own data products and wants a namespace that reflects that ownership.
-**Trigger:** A reorganization that gives a team end-to-end responsibility for an area of data.
-**Context:** T-SQL DDL. Requires `CREATE SCHEMA` permission and `IMPERSONATE` permission on the owner principal (or membership in the target role, if the owner is a role). State-changing.
-**Purpose:** Establish a schema whose owner is the team responsible for the data that lives in it, so ownership, permissions, and object lifetimes align with the team boundary.
+When a finance team is about to take ownership of its own data products and wants a namespace that reflects that ownership. It is typically triggered by A reorganization that gives a team end-to-end responsibility for an area of data. T-SQL DDL. Requires `CREATE SCHEMA` permission and `IMPERSONATE` permission on the owner principal (or membership in the target role, if the owner is a role). State-changing. Establish a schema whose owner is the team responsible for the data that lives in it, so ownership, permissions, and object lifetimes align with the team boundary.
 
 | Setting | What it controls | Accepted values | Production guidance |
 |---|---|---|---|
@@ -618,10 +595,7 @@ CREATE SCHEMA demo_finance AUTHORIZATION dbo;
 
 #### Create an operations-owned schema
 
-**When to run:** Immediately after the finance schema, as part of the same bootstrap pass.
-**Trigger:** Same domain-ownership adoption.
-**Context:** T-SQL DDL, same permission requirements. State-changing.
-**Purpose:** Establish a second domain schema so the pattern is verifiable with multiple owners.
+Immediately after the finance schema, as part of the same bootstrap pass. It is typically triggered by same domain-ownership adoption. T-SQL DDL, same permission requirements. State-changing. Establish a second domain schema so the pattern is verifiable with multiple owners.
 
 > [!info]- Same pattern, different owner
 >
@@ -639,10 +613,7 @@ CREATE SCHEMA demo_operations AUTHORIZATION dbo;
 
 #### Create a research-owned schema
 
-**When to run:** Immediately after the operations schema.
-**Trigger:** Same domain-ownership adoption.
-**Context:** T-SQL DDL, same permission requirements. State-changing.
-**Purpose:** Establish a third domain schema so the verification query below returns a meaningful multi-row result.
+Immediately after the operations schema. It is typically triggered by same domain-ownership adoption. T-SQL DDL, same permission requirements. State-changing. Establish a third domain schema so the verification query below returns a meaningful multi-row result.
 
 > [!info]- Production naming
 >
@@ -660,10 +631,7 @@ CREATE SCHEMA demo_research AUTHORIZATION dbo;
 
 #### Verify the domain schemas and their owners
 
-**When to run:** Immediately after the three domain creates, to confirm the bootstrap was effective and the ownership is what was intended.
-**Trigger:** Any time a domain-ownership boundary is introduced or changed.
-**Context:** Read-only query against `sys.schemas`. No state change.
-**Purpose:** Show that each expected schema exists and is owned by the expected principal — the single place where ownership intent becomes verifiable live state.
+Immediately after the three domain creates, to confirm the bootstrap was effective and the ownership is what was intended. It is typically triggered by any time a domain-ownership boundary is introduced or changed. Read-only query against `sys.schemas`. No state change. Show that each expected schema exists and is owned by the expected principal — the single place where ownership intent becomes verifiable live state.
 
 | Field | Source | Type / Unit | Meaning |
 |---|---|---|---|
@@ -697,10 +665,7 @@ All three domain schemas were created successfully and received contiguous schem
 
 #### Clean up the demo domain schemas
 
-**When to run:** Immediately after the verification capture, so the sandbox does not accumulate demonstration-only schemas.
-**Trigger:** End of a demo or documentation run.
-**Context:** T-SQL DDL. Requires `CONTROL` on each schema (inherited from `dbo` ownership). State-changing — the schemas must be empty, or `DROP SCHEMA` fails.
-**Purpose:** Return the live instance to the pre-demo state so subsequent audits against `sys.schemas` are not polluted.
+Immediately after the verification capture, so the sandbox does not accumulate demonstration-only schemas. It is typically triggered by end of a demo or documentation run. T-SQL DDL. Requires `CONTROL` on each schema (inherited from `dbo` ownership). State-changing — the schemas must be empty, or `DROP SCHEMA` fails. Return the live instance to the pre-demo state so subsequent audits against `sys.schemas` are not polluted.
 
 > [!info]- Drop order does not matter for empty schemas
 >
@@ -743,10 +708,7 @@ The DDL below creates three staging schemas, one per upstream source. Each schem
 
 #### Create a staging schema for the yfinance source
 
-**When to run:** During the initial configuration of a new upstream source, before any ingestion job writes landing data.
-**Trigger:** A new upstream feed is about to be onboarded.
-**Context:** T-SQL DDL. Requires `CREATE SCHEMA` permission. State-changing.
-**Purpose:** Isolate the `yfinance` upstream's landing tables from every other source, so column renames, schema drift, and ingestion quirks from `yfinance` never collide with other upstreams.
+During the initial configuration of a new upstream source, before any ingestion job writes landing data. It is typically triggered by A new upstream feed is about to be onboarded. T-SQL DDL. Requires `CREATE SCHEMA` permission. State-changing. Isolate the `yfinance` upstream's landing tables from every other source, so column renames, schema drift, and ingestion quirks from `yfinance` never collide with other upstreams.
 
 > [!info]- Why a dedicated landing schema instead of a table-name prefix
 >
@@ -764,10 +726,7 @@ CREATE SCHEMA demo_stg_yfinance;
 
 #### Create a staging schema for the bloomberg source
 
-**When to run:** During onboarding of a second upstream source.
-**Trigger:** A new upstream feed is about to be onboarded.
-**Context:** T-SQL DDL, same permission requirements. State-changing.
-**Purpose:** Second staging schema to demonstrate multi-source isolation.
+During onboarding of a second upstream source. It is typically triggered by A new upstream feed is about to be onboarded. T-SQL DDL, same permission requirements. State-changing. Second staging schema to demonstrate multi-source isolation.
 
 > [!info]- Different sources, different table shapes
 >
@@ -785,10 +744,7 @@ CREATE SCHEMA demo_stg_bloomberg;
 
 #### Create a staging schema for manual uploads
 
-**When to run:** When a platform needs to accept occasional manual uploads (CSV drops, one-off spreadsheets, vendor deliveries) that are not tied to any automated feed.
-**Trigger:** Recognition that manual uploads are a recurring need and deserve their own boundary.
-**Context:** T-SQL DDL, same permission requirements. State-changing.
-**Purpose:** Capture manual uploads in a bounded namespace that can be cleaned up or audited separately from automated landings.
+When a platform needs to accept occasional manual uploads (CSV drops, one-off spreadsheets, vendor deliveries) that are not tied to any automated feed. It is typically triggered by recognition that manual uploads are a recurring need and deserve their own boundary. T-SQL DDL, same permission requirements. State-changing. Capture manual uploads in a bounded namespace that can be cleaned up or audited separately from automated landings.
 
 > [!info]- Why manual uploads deserve their own schema
 >
@@ -806,10 +762,7 @@ CREATE SCHEMA demo_stg_manual;
 
 #### Verify the source-scoped staging schemas
 
-**When to run:** Immediately after the three staging schemas are created.
-**Trigger:** Completion of source-schema bootstrap.
-**Context:** Read-only query against `sys.schemas`. No state change.
-**Purpose:** Confirm that each source schema exists and is owned by the expected principal, as a single verification capture.
+Immediately after the three staging schemas are created. It is typically triggered by completion of source-schema bootstrap. Read-only query against `sys.schemas`. No state change. Confirm that each source schema exists and is owned by the expected principal, as a single verification capture.
 
 | Field | Source | Type / Unit | Meaning |
 |---|---|---|---|
@@ -843,10 +796,7 @@ All three staging schemas exist with contiguous ids `9`, `10`, `11`. They reused
 
 #### Clean up the demo staging schemas
 
-**When to run:** Immediately after the verification capture, so the sandbox does not retain demonstration schemas.
-**Trigger:** End of the staging-schema demo.
-**Context:** T-SQL DDL. Requires `CONTROL` on each schema. State-changing — `DROP SCHEMA` fails if the schema contains any object.
-**Purpose:** Return the live instance to the pre-demo state.
+Immediately after the verification capture, so the sandbox does not retain demonstration schemas. It is typically triggered by end of the staging-schema demo. T-SQL DDL. Requires `CONTROL` on each schema. State-changing — `DROP SCHEMA` fails if the schema contains any object. Return the live instance to the pre-demo state.
 
 > [!info]- No objects means no transfer step
 >
@@ -887,10 +837,7 @@ The first step before adopting a control, audit, or contract schema is to find o
 
 #### Check whether control-plane schemas exist
 
-**When to run:** Before planning any control, audit, or contract schema adoption, or during a platform maturity audit.
-**Trigger:** Any initiative that wants to add watermark tables, run ledgers, or stable contract views to the platform.
-**Context:** Read-only query that calls `SCHEMA_ID()` once per candidate schema. Uses `CASE ... IS NULL` to produce a 0/1 readiness flag for each. No state change.
-**Purpose:** Produce a one-row readiness checklist for five common supporting schemas, so the reader knows at a glance which of them are already in place and which would be new adoptions.
+Before planning any control, audit, or contract schema adoption, or during a platform maturity audit. It is typically triggered by any initiative that wants to add watermark tables, run ledgers, or stable contract views to the platform. Read-only query that calls `SCHEMA_ID()` once per candidate schema. Uses `CASE ... IS NULL` to produce a 0/1 readiness flag for each. No state change. Produce a one-row readiness checklist for five common supporting schemas, so the reader knows at a glance which of them are already in place and which would be new adoptions.
 
 | Field | Source | Type / Unit | Meaning |
 |---|---|---|---|
@@ -934,10 +881,7 @@ The control plane of a data platform is not the same thing as the data layers. A
 
 #### Create a control-plane schema
 
-**When to run:** When the platform starts to need durable, queryable state about its own pipeline — typically the first time the operator needs to answer "did the last run succeed?" without reading logs.
-**Trigger:** Adoption of a run-ledger, watermark, or schema-contract table; or a governance requirement that the pipeline's operational state be queryable like any other dataset.
-**Context:** T-SQL DDL. Requires `CREATE SCHEMA` permission. State-changing.
-**Purpose:** Establish a dedicated namespace for control-plane tables so they do not mix with either business data (`bronze`/`silver`/`gold`) or ad-hoc objects (`dbo`).
+When the platform starts to need durable, queryable state about its own pipeline — typically the first time the operator needs to answer "did the last run succeed?" without reading logs. It is typically triggered by adoption of a run-ledger, watermark, or schema-contract table; or a governance requirement that the pipeline's operational state be queryable like any other dataset. T-SQL DDL. Requires `CREATE SCHEMA` permission. State-changing. Establish a dedicated namespace for control-plane tables so they do not mix with either business data (`bronze`/`silver`/`gold`) or ad-hoc objects (`dbo`).
 
 > [!info]- One control-plane schema, not many micro-schemas
 >
@@ -955,10 +899,7 @@ CREATE SCHEMA demo_meta;
 
 #### Verify the control-plane schema exists
 
-**When to run:** Immediately after the control-plane schema is created.
-**Trigger:** Completion of the control-plane bootstrap.
-**Context:** Read-only query against `sys.schemas`. No state change.
-**Purpose:** Confirm the schema exists with the expected name, id, and owner before any table is placed in it.
+Immediately after the control-plane schema is created. It is typically triggered by completion of the control-plane bootstrap. Read-only query against `sys.schemas`. No state change. Confirm the schema exists with the expected name, id, and owner before any table is placed in it.
 
 > [!info]- Same verification pattern as the layer schemas
 >
@@ -983,10 +924,7 @@ The schema was created successfully with `schema_id = 9`, matching the pattern o
 
 #### Clean up the control-plane demo schema
 
-**When to run:** After the verification capture, to leave the sandbox in its pre-demo state.
-**Trigger:** End of the control-plane demo.
-**Context:** T-SQL DDL. Requires `CONTROL` on the schema. State-changing.
-**Purpose:** Drop the demo schema so subsequent audits do not see it.
+After the verification capture, to leave the sandbox in its pre-demo state. It is typically triggered by end of the control-plane demo. T-SQL DDL. Requires `CONTROL` on the schema. State-changing. Drop the demo schema so subsequent audits do not see it.
 
 > *Drop the demo control-plane schema.*
 
@@ -1049,10 +987,7 @@ Financial OHLCV models routinely use column names that collide with T-SQL reserv
 
 #### Define a layer table with bracketed reserved-word columns
 
-**When to run:** When defining a new bronze-layer table whose upstream feed uses column names that collide with T-SQL reserved words.
-**Trigger:** A first load from a financial data source (yfinance, Bloomberg, Refinitiv) whose canonical column names include `date`, `open`, `high`, `low`, `close`.
-**Context:** T-SQL DDL against the `bronze` schema. Requires `CREATE TABLE` permission on the schema. State-changing. Runs inside the bronze schema to preserve the layer semantics — the schema name carries the layer, the table name stays business-oriented, and the column names stay faithful to upstream.
-**Purpose:** Create a table that preserves the familiar OHLCV column names (so downstream joins and the upstream feed stay readable) while remaining syntactically valid in every query that touches the table.
+When defining a new bronze-layer table whose upstream feed uses column names that collide with T-SQL reserved words. It is typically triggered by A first load from a financial data source (yfinance, Bloomberg, Refinitiv) whose canonical column names include `date`, `open`, `high`, `low`, `close`. T-SQL DDL against the `bronze` schema. Requires `CREATE TABLE` permission on the schema. State-changing. Runs inside the bronze schema to preserve the layer semantics — the schema name carries the layer, the table name stays business-oriented, and the column names stay faithful to upstream. Create a table that preserves the familiar OHLCV column names (so downstream joins and the upstream feed stay readable) while remaining syntactically valid in every query that touches the table.
 
 | Column | Data type | Nullability | Default | Reason |
 |---|---|---|---|---|
@@ -1093,10 +1028,7 @@ CREATE TABLE bronze.demo_ohlcv_reserved
 
 #### Verify the table's column definitions
 
-**When to run:** Immediately after the `CREATE TABLE`, to confirm every column landed with the intended type, nullability, and default.
-**Trigger:** Any new table creation where nullability or defaults matter — which in practice means most tables.
-**Context:** Read-only query against `sys.columns` joined to `sys.default_constraints` via `parent_object_id`/`parent_column_id`. Uses `OBJECT_ID()` to resolve the table name once and `TYPE_NAME()` to resolve the type id to a readable name. No state change.
-**Purpose:** Produce a single-table column reference that proves the reserved-word handling, the nullability, and the ingestion default all survived the DDL.
+Immediately after the `CREATE TABLE`, to confirm every column landed with the intended type, nullability, and default. It is typically triggered by any new table creation where nullability or defaults matter — which in practice means most tables. Read-only query against `sys.columns` joined to `sys.default_constraints` via `parent_object_id`/`parent_column_id`. Uses `OBJECT_ID()` to resolve the table name once and `TYPE_NAME()` to resolve the type id to a readable name. No state change. Produce a single-table column reference that proves the reserved-word handling, the nullability, and the ingestion default all survived the DDL.
 
 | Field | Source | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1150,10 +1082,7 @@ Two things to notice in the output. First, the `column_name` values are stored *
 
 #### Drop the reserved-word demo table
 
-**When to run:** Immediately after the verification capture.
-**Trigger:** End of the reserved-word demo.
-**Context:** T-SQL DDL. Requires `ALTER` on the schema or `CONTROL` on the object. State-changing.
-**Purpose:** Remove the demo table so it does not appear in later audit captures of `bronze`.
+Immediately after the verification capture. It is typically triggered by end of the reserved-word demo. T-SQL DDL. Requires `ALTER` on the schema or `CONTROL` on the object. State-changing. Remove the demo table so it does not appear in later audit captures of `bronze`.
 
 > *Drop the reserved-word demo table.*
 
@@ -1177,10 +1106,7 @@ Before adopting schema-level security, the first step is to check what is alread
 
 #### Inspect explicit schema-level permissions
 
-**When to run:** Before introducing any schema-level grants, to confirm the baseline is empty (or to document what is already in effect). Run again after every change.
-**Trigger:** A security audit, or the moment before or after any `GRANT`, `DENY`, or `REVOKE` at the schema class.
-**Context:** Read-only query against `sys.database_permissions` joined to `sys.schemas` on `major_id`. Filters on `class = 3` so only schema-class permissions are returned. No state change.
-**Purpose:** Produce one row per schema-level permission currently in force, resolving the grantee to a readable name so the output can be audited without cross-referencing ids.
+Before introducing any schema-level grants, to confirm the baseline is empty (or to document what is already in effect). Run again after every change. It is typically triggered by A security audit, or the moment before or after any `GRANT`, `DENY`, or `REVOKE` at the schema class. Read-only query against `sys.database_permissions` joined to `sys.schemas` on `major_id`. Filters on `class = 3` so only schema-class permissions are returned. No state change. Produce one row per schema-level permission currently in force, resolving the grantee to a readable name so the output can be audited without cross-referencing ids.
 
 | Field | Source | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1224,10 +1150,7 @@ This subsection applies the pattern to the live `stoxx` instance using demo role
 
 #### Create the ETL writer role
 
-**When to run:** During adoption of schema-level security, before any grants are issued.
-**Trigger:** The first pipeline service account that needs broad write access across the bronze and silver layers.
-**Context:** T-SQL DDL. Requires `CREATE ROLE` permission on the database. State-changing.
-**Purpose:** Establish a named container for the ETL service's permissions so membership can change without re-granting every schema.
+During adoption of schema-level security, before any grants are issued. It is typically triggered by the first pipeline service account that needs broad write access across the bronze and silver layers. T-SQL DDL. Requires `CREATE ROLE` permission on the database. State-changing. Establish a named container for the ETL service's permissions so membership can change without re-granting every schema.
 
 > [!info]- Why a role instead of granting directly to the service account
 >
@@ -1245,10 +1168,7 @@ CREATE ROLE demo_etl_writer;
 
 #### Create the dashboard reader role
 
-**When to run:** Immediately after the writer role, as part of the same bootstrap.
-**Trigger:** The first reporting account that needs read-only access to the gold layer.
-**Context:** T-SQL DDL. Requires `CREATE ROLE` permission. State-changing.
-**Purpose:** Establish a named container for dashboard and BI reader permissions.
+Immediately after the writer role, as part of the same bootstrap. It is typically triggered by the first reporting account that needs read-only access to the gold layer. T-SQL DDL. Requires `CREATE ROLE` permission. State-changing. Establish a named container for dashboard and BI reader permissions.
 
 > [!info]- Separate role from the writer
 >
@@ -1266,10 +1186,7 @@ CREATE ROLE demo_dashboard_reader;
 
 #### Grant bronze layer write access to the ETL role
 
-**When to run:** After both roles exist.
-**Trigger:** Giving the ETL pipeline the ability to land and correct raw data.
-**Context:** T-SQL DDL. Requires either `GRANT OPTION` on each permission at the schema class, or membership in `db_securityadmin`/`db_owner`. State-changing.
-**Purpose:** Cover every current and future table in `bronze` with full DML rights for the ETL role, in a single statement.
+After both roles exist. It is typically triggered by giving the ETL pipeline the ability to land and correct raw data. T-SQL DDL. Requires either `GRANT OPTION` on each permission at the schema class, or membership in `db_securityadmin`/`db_owner`. State-changing. Cover every current and future table in `bronze` with full DML rights for the ETL role, in a single statement.
 
 > [!info]- Why `SELECT, INSERT, UPDATE, DELETE` together
 >
@@ -1287,10 +1204,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::bronze TO demo_etl_writer;
 
 #### Grant silver layer write access to the ETL role
 
-**When to run:** After the bronze grant.
-**Trigger:** Same ETL adoption.
-**Context:** T-SQL DDL, same permissions as the bronze grant. State-changing.
-**Purpose:** Extend the same full DML coverage to `silver` so the ETL pipeline can land and transform cleaned rows.
+After the bronze grant. It is typically triggered by same ETL adoption. T-SQL DDL, same permissions as the bronze grant. State-changing. Extend the same full DML coverage to `silver` so the ETL pipeline can land and transform cleaned rows.
 
 > [!info]- Two separate statements, not one combined
 >
@@ -1308,10 +1222,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON SCHEMA::silver TO demo_etl_writer;
 
 #### Grant gold read access to the dashboard role
 
-**When to run:** After the ETL role is fully granted.
-**Trigger:** The first reader joining the platform.
-**Context:** T-SQL DDL. State-changing.
-**Purpose:** Give the dashboard role read-only access to every current and future table in `gold`, the published layer.
+After the ETL role is fully granted. It is typically triggered by the first reader joining the platform. T-SQL DDL. State-changing. Give the dashboard role read-only access to every current and future table in `gold`, the published layer.
 
 > [!info]- Why only `SELECT`
 >
@@ -1329,10 +1240,7 @@ GRANT SELECT ON SCHEMA::gold TO demo_dashboard_reader;
 
 #### Deny bronze read access to the dashboard role
 
-**When to run:** Immediately after the `gold` grant, so there is never a window where the dashboard role can read upstream layers.
-**Trigger:** The hard separation rule between published data and upstream raw data.
-**Context:** T-SQL DDL. State-changing. `DENY` takes precedence over any `GRANT` — this makes it an enforcement mechanism, not a preference.
-**Purpose:** Make it impossible for the dashboard role to read from `bronze`, even if a future grant accidentally includes it through another role.
+Immediately after the `gold` grant, so there is never a window where the dashboard role can read upstream layers. It is typically triggered by the hard separation rule between published data and upstream raw data. T-SQL DDL. State-changing. `DENY` takes precedence over any `GRANT` — this makes it an enforcement mechanism, not a preference. Make it impossible for the dashboard role to read from `bronze`, even if a future grant accidentally includes it through another role.
 
 > [!warning] `DENY` is coarse and hard to reverse
 >
@@ -1358,10 +1266,7 @@ DENY SELECT ON SCHEMA::bronze TO demo_dashboard_reader;
 
 #### Deny silver read access to the dashboard role
 
-**When to run:** Immediately after the bronze `DENY`.
-**Trigger:** Same hard-separation rule applied to the cleaned layer.
-**Context:** T-SQL DDL. State-changing.
-**Purpose:** Extend the bronze `DENY` to `silver` so the dashboard role cannot read the cleaned layer either.
+Immediately after the bronze `DENY`. It is typically triggered by same hard-separation rule applied to the cleaned layer. T-SQL DDL. State-changing. Extend the bronze `DENY` to `silver` so the dashboard role cannot read the cleaned layer either.
 
 > [!info]- Why both layers, not just one
 >
@@ -1379,10 +1284,7 @@ DENY SELECT ON SCHEMA::silver TO demo_dashboard_reader;
 
 #### Re-run the security-surface query against the live grants
 
-**When to run:** Immediately after all grants and denies are in place.
-**Trigger:** Verification of the adoption batch.
-**Context:** Same read-only query as the baseline above, now expected to return 11 rows (4 grants for the writer on bronze × 4 permission types + 4 grants for the writer on silver × 4 permission types + 1 grant for the reader on gold + 2 denies for the reader on bronze and silver).
-**Purpose:** Prove the grants took effect and present the live schema-level security surface for interpretation.
+Immediately after all grants and denies are in place. It is typically triggered by verification of the adoption batch. Same read-only query as the baseline above, now expected to return 11 rows (4 grants for the writer on bronze × 4 permission types + 4 grants for the writer on silver × 4 permission types + 1 grant for the reader on gold + 2 denies for the reader on bronze and silver). Prove the grants took effect and present the live schema-level security surface for interpretation.
 
 > *Inspect the schema-level permissions now in force on the live instance.*
 
@@ -1444,10 +1346,7 @@ After capturing the live security surface, every demo object created in this sec
 
 #### Revoke all demo grants and denies
 
-**When to run:** Immediately after the security-surface capture.
-**Trigger:** End of the security demo.
-**Context:** T-SQL DDL. `REVOKE` removes both `GRANT` and `DENY` rows. Requires the same permissions as the original grants. State-changing.
-**Purpose:** Remove every row in `sys.database_permissions` that the demo added.
+Immediately after the security-surface capture. It is typically triggered by end of the security demo. T-SQL DDL. `REVOKE` removes both `GRANT` and `DENY` rows. Requires the same permissions as the original grants. State-changing. Remove every row in `sys.database_permissions` that the demo added.
 
 > *Revoke every demo grant and deny on `bronze`, `silver`, and `gold`.*
 
@@ -1465,10 +1364,7 @@ REVOKE SELECT ON SCHEMA::silver FROM demo_dashboard_reader;
 
 #### Drop the demo ETL writer role
 
-**When to run:** After every grant held by the role has been revoked.
-**Trigger:** End of the demo.
-**Context:** T-SQL DDL. `DROP ROLE` fails if the role still owns objects or has members. State-changing.
-**Purpose:** Remove the role so it no longer appears in `sys.database_principals`.
+After every grant held by the role has been revoked. It is typically triggered by end of the demo. T-SQL DDL. `DROP ROLE` fails if the role still owns objects or has members. State-changing. Remove the role so it no longer appears in `sys.database_principals`.
 
 > *Drop the demo ETL writer role.*
 
@@ -1482,10 +1378,7 @@ DROP ROLE demo_etl_writer;
 
 #### Drop the demo dashboard reader role
 
-**When to run:** Immediately after dropping the ETL role.
-**Trigger:** Same demo cleanup.
-**Context:** T-SQL DDL. State-changing.
-**Purpose:** Remove the second demo role.
+Immediately after dropping the ETL role. It is typically triggered by same demo cleanup. T-SQL DDL. State-changing. Remove the second demo role.
 
 > *Drop the demo dashboard reader role.*
 
@@ -1499,10 +1392,7 @@ DROP ROLE demo_dashboard_reader;
 
 #### Verify the security surface is empty again
 
-**When to run:** After both roles are dropped.
-**Trigger:** Final cleanup check.
-**Context:** Read-only aggregate query against `sys.database_permissions`. No state change.
-**Purpose:** Prove that the demo introduced no permanent change to the live schema-level security surface.
+After both roles are dropped. It is typically triggered by final cleanup check. Read-only aggregate query against `sys.database_permissions`. No state change. Prove that the demo introduced no permanent change to the live schema-level security surface.
 
 > *Count remaining schema-level permissions after cleanup.*
 

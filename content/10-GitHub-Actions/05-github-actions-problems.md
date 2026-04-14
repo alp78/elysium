@@ -355,10 +355,7 @@ Trigger misconfiguration is the most common entry point for both security failur
 
 #### Detect pull_request_target misuse in the codebase
 
-**When to run:** During a security audit or after onboarding a workflow that handles fork PRs.
-**Trigger:** Periodic review of `.github/workflows/` or after any PR adding a new workflow file.
-**Context:** Local shell, read-only filesystem scan.
-**Purpose:** Identify all workflows using `pull_request_target` and assess whether any pair it with unsafe checkout.
+During a security audit or after onboarding a workflow that handles fork PRs. It is typically triggered by periodic review of `.github/workflows/` or after any PR adding a new workflow file. Local shell, read-only filesystem scan. Identify all workflows using `pull_request_target` and assess whether any pair it with unsafe checkout.
 
 *Scan all workflows for pull_request_target usage.*
 
@@ -474,10 +471,7 @@ grep -A 20 "pull_request_target" .github/workflows/<file>.yml | grep "ref:"
 
 #### Add merge_group trigger to required-check workflow
 
-**When to run:** When enabling the merge queue for a branch, or when diagnosing a frozen queue.
-**Trigger:** Merge queue configured but PRs not progressing; `gh run list` shows no merge_group runs.
-**Context:** Workflow YAML edit. Safe to apply to any CI workflow that gatekeeps merges.
-**Purpose:** Ensure the required status check fires on the `merge_group` event so the queue can proceed.
+When enabling the merge queue for a branch, or when diagnosing a frozen queue. It is typically triggered by merge queue configured but PRs not progressing; `gh run list` shows no merge_group runs. Workflow YAML edit. Safe to apply to any CI workflow that gatekeeps merges. Ensure the required status check fires on the `merge_group` event so the queue can proceed.
 
 The following workflow was committed to `alp78/git-lab` and triggered via push (run 24314561252, 6s).
 
@@ -1743,10 +1737,7 @@ Runner environment:
 
 ### GitHub Actions | diagnostics | gh CLI diagnostic commands
 
-**When to run:** Immediately when a workflow fails in CI and the job summary does not provide sufficient detail.
-**Trigger:** A required check fails; a deployment goes missing; a workflow appears to hang or never start.
-**Context:** Local shell with `gh` authenticated (`gh auth status`), read access to the repository.
-**Purpose:** Extract structured failure information without opening the GitHub web UI.
+Immediately when a workflow fails in CI and the job summary does not provide sufficient detail. It is typically triggered by A required check fails; a deployment goes missing; a workflow appears to hang or never start. Local shell with `gh` authenticated (`gh auth status`), read access to the repository. Extract structured failure information without opening the GitHub web UI.
 
 *View the summary of a specific run.*
 
@@ -1805,9 +1796,7 @@ gh api /repos/{owner}/{repo}/check-runs?head_sha=<sha> | jq '.check_runs[].outpu
 
 ### GitHub Actions | diagnostics | re-run semantics and their implications
 
-**When to run:** Before re-running a failed workflow, to understand what changes between a re-run and a fresh trigger.
-**Context:** Any re-run operation. Understanding re-run semantics is required before re-running production deploys or data processing workflows.
-**Purpose:** Avoid incorrect assumptions about what a re-run actually does.
+Review re-run semantics before restarting a failed workflow, especially for production deploys or data-processing pipelines. This applies to any re-run operation. The goal is to understand exactly what GitHub preserves, rebuilds, and reuses so a re-run is not mistaken for a fresh trigger.
 
 Re-run semantics differ significantly from a fresh workflow trigger:
 
@@ -1830,8 +1819,7 @@ Re-run semantics differ significantly from a fresh workflow trigger:
 
 ### GitHub Actions | diagnostics | runner image and tool version drift
 
-**When to run:** When CI fails after a period of no code changes; when `ubuntu-latest` behavior changes unexpectedly.
-**Purpose:** Identify whether the failure is environmental rather than code-related.
+Investigate runner image drift when CI starts failing despite no code changes or when `ubuntu-latest` behavior shifts unexpectedly. The goal is to determine whether the breakage is environmental rather than application-related.
 
 *Diagnose runner image version within a workflow.*
 

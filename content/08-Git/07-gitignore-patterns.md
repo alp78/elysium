@@ -320,10 +320,7 @@ The `.gitignore` file at the repository root is the primary ignore configuration
 
 #### View the current .gitignore
 
-**When to run:** when auditing which patterns are active for the repository.
-**Trigger:** onboarding to a new repository, reviewing what is excluded before adding files, troubleshooting why a file does not appear in `git status`.
-**Context:** runs in any shell. Read-only — displays the file contents.
-**Purpose:** inspect the active ignore rules so you know what Git will and will not track.
+When auditing which patterns are active for the repository. It is typically triggered by onboarding to a new repository, reviewing what is excluded before adding files, troubleshooting why a file does not appear in `git status`. Runs in any shell. Read-only — displays the file contents. Inspect the active ignore rules so you know what Git will and will not track.
 
 *Display the contents of the repository root `.gitignore`.*
 
@@ -393,10 +390,7 @@ The `.git/info/exclude` file works identically to `.gitignore` but is never comm
 
 #### View the local exclude file
 
-**When to run:** when you need to add a personal ignore rule that should not appear in the team's `.gitignore`.
-**Trigger:** you have a file (personal notes, local test output, scratch directory) that only exists on your machine and should be ignored without affecting collaborators.
-**Context:** the file is at `.git/info/exclude` inside the repository. Editing it is a local-only action — it is never committed or pushed.
-**Purpose:** keep personal working files out of `git status` without modifying the shared `.gitignore`.
+When you need to add a personal ignore rule that should not appear in the team's `.gitignore`. It is typically triggered by you have a file (personal notes, local test output, scratch directory) that only exists on your machine and should be ignored without affecting collaborators. The file is at `.git/info/exclude` inside the repository. Editing it is a local-only action — it is never committed or pushed. Keep personal working files out of `git status` without modifying the shared `.gitignore`.
 
 *Display the local exclude file with custom rules added.*
 
@@ -421,10 +415,7 @@ The global excludes file applies to every repository on the machine. Configure i
 
 #### Set the global excludes file path
 
-**When to run:** once during initial workstation setup, or when moving to a new machine.
-**Trigger:** first-time Git configuration.
-**Context:** runs `git config --global`, which writes to `~/.gitconfig`. The excludes file itself is a plain text file using the same pattern syntax as `.gitignore`.
-**Purpose:** configure a machine-wide ignore file that applies to all repositories.
+Once during initial workstation setup, or when moving to a new machine. It is typically triggered by first-time Git configuration. Runs `git config --global`, which writes to `~/.gitconfig`. The excludes file itself is a plain text file using the same pattern syntax as `.gitignore`. Configure a machine-wide ignore file that applies to all repositories.
 
 *Set `core.excludesfile` to point to `~/.gitignore_global`.*
 
@@ -472,10 +463,7 @@ When a file is unexpectedly hidden or unexpectedly visible in `git status`, use 
 
 #### Check which rule ignores a specific file
 
-**When to run:** when a file does not appear in `git status` and you need to know which rule is responsible.
-**Trigger:** unexpected behavior — a file you expect to see is hidden, or a file you expect to be ignored is showing up.
-**Context:** read-only diagnostic. Does not modify any files or state.
-**Purpose:** identify the exact `.gitignore` file, line number, and pattern that matches a given path.
+When a file does not appear in `git status` and you need to know which rule is responsible. It is typically triggered by unexpected behavior — a file you expect to see is hidden, or a file you expect to be ignored is showing up. Read-only diagnostic. Does not modify any files or state. Identify the exact `.gitignore` file, line number, and pattern that matches a given path.
 
 *Run `git check-ignore -v` against multiple paths to see which rules match.*
 
@@ -499,10 +487,7 @@ Each line shows: the ignore source file, the line number, the matching pattern, 
 
 #### Check ignore rules from standard input
 
-**When to run:** when you need to test many paths at once, or when piping paths from another command.
-**Trigger:** bulk auditing of ignore rules across a file list.
-**Context:** read-only. Accepts paths from standard input, one per line.
-**Purpose:** batch-test which files in a list are ignored and which are not.
+When you need to test many paths at once, or when piping paths from another command. It is typically triggered by bulk auditing of ignore rules across a file list. Read-only. Accepts paths from standard input, one per line. Batch-test which files in a list are ignored and which are not.
 
 > [!info]- Flag Breakdown
 >
@@ -528,10 +513,7 @@ printf '.env\ndata/raw/trades.csv\nsrc/pipeline.py\ninfra/terraform.tfstate\n.DS
 
 #### Verify a file is ignored by a global rule
 
-**When to run:** when you need to confirm that a global ignore rule (from `core.excludesfile`) is applying correctly.
-**Trigger:** debugging whether a machine-level ignore pattern is taking effect.
-**Context:** read-only. The output shows the full path to the global ignore file when the matching rule comes from there.
-**Purpose:** distinguish between local and global ignore sources.
+When you need to confirm that a global ignore rule (from `core.excludesfile`) is applying correctly. It is typically triggered by debugging whether a machine-level ignore pattern is taking effect. Read-only. The output shows the full path to the global ignore file when the matching rule comes from there. Distinguish between local and global ignore sources.
 
 *Check a `.pfx` file that is only covered by the global ignore file.*
 
@@ -560,10 +542,7 @@ The output shows the global file path (`C:/Users/aperi/.gitignore_global`) and l
 
 #### List all ignored files in the repository
 
-**When to run:** when auditing what is being excluded from version control.
-**Trigger:** periodic repository hygiene review, onboarding to a new project, verifying that sensitive files are properly ignored.
-**Context:** read-only. Shows the standard `git status` output plus an additional "Ignored files" section.
-**Purpose:** get a complete picture of what Git sees and what it hides.
+When auditing what is being excluded from version control. It is typically triggered by periodic repository hygiene review, onboarding to a new project, verifying that sensitive files are properly ignored. Read-only. Shows the standard `git status` output plus an additional "Ignored files" section. Get a complete picture of what Git sees and what it hides.
 
 *Run `git status --ignored` to see both tracked changes and ignored files.*
 
@@ -606,10 +585,7 @@ nothing to commit, working tree clean
 
 #### List all tracked files
 
-**When to run:** when you need to see exactly what Git is tracking in the current branch.
-**Trigger:** verifying that a file was successfully untracked, auditing repository contents.
-**Context:** read-only. Lists files in the index.
-**Purpose:** confirm which files are under version control.
+When you need to see exactly what Git is tracking in the current branch. It is typically triggered by verifying that a file was successfully untracked, auditing repository contents. Read-only. Lists files in the index. Confirm which files are under version control.
 
 *List all files currently tracked by Git.*
 
@@ -655,10 +631,7 @@ tests/test_pipeline.py
 
 #### List all ignored files with full paths
 
-**When to run:** when `git status --ignored` shows directories but you need to see the individual files inside them.
-**Trigger:** investigating exactly which files inside an ignored directory are being excluded, especially before a cleanup or migration.
-**Context:** read-only. `--others` shows untracked files, `--ignored` filters to only ignored ones, `--exclude-standard` applies all ignore sources.
-**Purpose:** get a file-by-file inventory of everything Git is ignoring.
+When `git status --ignored` shows directories but you need to see the individual files inside them. It is typically triggered by investigating exactly which files inside an ignored directory are being excluded, especially before a cleanup or migration. Read-only. `--others` shows untracked files, `--ignored` filters to only ignored ones, `--exclude-standard` applies all ignore sources. Get a file-by-file inventory of everything Git is ignoring.
 
 *List every individual ignored file, including files inside ignored directories.*
 
@@ -724,10 +697,7 @@ Once a file is committed to the repository, adding it to `.gitignore` has no eff
 
 #### Untrack a single file
 
-**When to run:** after discovering that a file that should be in `.gitignore` was accidentally committed.
-**Trigger:** seeing a secrets file, environment file, or generated artifact in `git ls-files` output.
-**Context:** `git rm --cached` modifies the index (staging area). The file remains on disk. You must commit the change and ensure the file is listed in `.gitignore` to prevent re-addition.
-**Purpose:** stop Git from tracking a specific file without deleting it from the working directory.
+After discovering that a file that should be in `.gitignore` was accidentally committed. It is typically triggered by seeing a secrets file, environment file, or generated artifact in `git ls-files` output. `git rm --cached` modifies the index (staging area). The file remains on disk. You must commit the change and ensure the file is listed in `.gitignore` to prevent re-addition. Stop Git from tracking a specific file without deleting it from the working directory.
 
 > [!todo] Untrack a Single File
 >
@@ -764,10 +734,7 @@ The output shows `delete mode 100644 .env` — this means the file was removed f
 
 #### Untrack an entire directory
 
-**When to run:** when an entire directory of files was committed by mistake (log directories, cache folders, build output).
-**Trigger:** discovering tracked files that match a directory-level `.gitignore` pattern.
-**Context:** the `-r` flag is required for recursive removal. `--cached` ensures files stay on disk. Preview with `-n` (dry run) first to verify what will be removed.
-**Purpose:** bulk-remove a directory from tracking without deleting its contents.
+When an entire directory of files was committed by mistake (log directories, cache folders, build output). It is typically triggered by discovering tracked files that match a directory-level `.gitignore` pattern. The `-r` flag is required for recursive removal. `--cached` ensures files stay on disk. Preview with `-n` (dry run) first to verify what will be removed. Bulk-remove a directory from tracking without deleting its contents.
 
 *Preview what would be removed (dry run).*
 
@@ -1029,10 +996,7 @@ Secrets that have been committed exist in Git history permanently until the hist
 
 #### Remove a file from all history
 
-**When to run:** after rotating an exposed credential, when you need to remove the file from every historical commit.
-**Trigger:** a secret file was found in the repository history via `git log --all -- <path>` or a secret scanner alert.
-**Context:** destructive operation. Rewrites all commits that touched the file, changing their SHAs. All collaborators must re-clone or hard-reset after force-push. Requires `git-filter-repo` to be installed (`pip install git-filter-repo`).
-**Purpose:** permanently remove a file from all historical commits so it cannot be recovered from the repository.
+After rotating an exposed credential, when you need to remove the file from every historical commit. It is typically triggered by a secret file was found in the repository history via `git log --all -- <path>` or a secret scanner alert. Destructive operation. Rewrites all commits that touched the file, changing their SHAs. All collaborators must re-clone or hard-reset after force-push. Requires `git-filter-repo` to be installed (`pip install git-filter-repo`). Permanently remove a file from all historical commits so it cannot be recovered from the repository.
 
 > [!info]- Flag Breakdown
 >
@@ -1058,10 +1022,7 @@ BFG is a separate Java tool designed specifically for history scrubbing. It is f
 
 #### Delete files with BFG
 
-**When to run:** when `git filter-repo` is too slow on a very large repository, or when you need to replace text strings (passwords, tokens) across all history.
-**Trigger:** same as `filter-repo` — secret exposure in repository history.
-**Context:** requires Java runtime. Operates on a bare clone. Rewrites all commit SHAs. Force-push and team re-clone required afterward.
-**Purpose:** remove files or replace text strings across all historical commits.
+When `git filter-repo` is too slow on a very large repository, or when you need to replace text strings (passwords, tokens) across all history. It is typically triggered by same as `filter-repo` — secret exposure in repository history. Requires Java runtime. Operates on a bare clone. Rewrites all commit SHAs. Force-push and team re-clone required afterward. Remove files or replace text strings across all historical commits.
 
 *Delete a specific file from all history using BFG.*
 
@@ -1087,10 +1048,7 @@ git push --force --all
 
 #### Remove a file with filter-branch
 
-**When to run:** only when `git filter-repo` and BFG are both unavailable.
-**Trigger:** legacy environment without Python or Java.
-**Context:** slow, error-prone, and deprecated. Rewrites commit SHAs. Force-push required.
-**Purpose:** last-resort history rewriting for environments with no alternative.
+Only when `git filter-repo` and BFG are both unavailable. It is typically triggered by legacy environment without Python or Java. Slow, error-prone, and deprecated. Rewrites commit SHAs. Force-push required. Last-resort history rewriting for environments with no alternative.
 
 *Remove a file from all history using the deprecated filter-branch.*
 
@@ -1188,10 +1146,7 @@ Git stores every version of every file as a complete snapshot in its object data
 
 #### Install LFS and track patterns
 
-**When to run:** during repository setup, before committing any large files.
-**Trigger:** the project will contain binary files (data samples, model artifacts, compiled assets) that exceed ~10 MB.
-**Context:** `git lfs install` is a one-time per-machine setup. `git lfs track` modifies `.gitattributes` in the working directory. You must commit `.gitattributes` before adding large files.
-**Purpose:** configure Git to route large files through LFS instead of the regular object database.
+During repository setup, before committing any large files. It is typically triggered by the project will contain binary files (data samples, model artifacts, compiled assets) that exceed ~10 MB. `git lfs install` is a one-time per-machine setup. `git lfs track` modifies `.gitattributes` in the working directory. You must commit `.gitattributes` before adding large files. Configure Git to route large files through LFS instead of the regular object database.
 
 > [!warning] LFS Must Be Configured Before First Commit of Large Files
 >
@@ -1225,10 +1180,7 @@ git commit -m "chore: configure Git LFS for data files"
 
 #### Migrate existing large files to LFS
 
-**When to run:** after discovering that large files were committed to the regular object database before LFS was configured.
-**Trigger:** slow clone times, large repository size, or `git lfs ls-files` showing no entries for files that should be in LFS.
-**Context:** `git lfs migrate import` rewrites history — all commits that touched the matching files get new SHAs. Force-push and team re-clone required.
-**Purpose:** retroactively move large files from the Git object database to LFS across all branches and tags.
+After discovering that large files were committed to the regular object database before LFS was configured. It is typically triggered by slow clone times, large repository size, or `git lfs ls-files` showing no entries for files that should be in LFS. `git lfs migrate import` rewrites history — all commits that touched the matching files get new SHAs. Force-push and team re-clone required. Retroactively move large files from the Git object database to LFS across all branches and tags.
 
 *Check which files LFS is currently managing.*
 

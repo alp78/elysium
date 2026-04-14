@@ -214,10 +214,7 @@ Python strings are sequences of Unicode code points. Single quotes and double qu
 
 `str` is Python's only text type — there is no separate `char` type. A single character is simply a string of length 1. Single quotes (`'...'`) and double quotes (`"..."`) produce identical `str` objects. Choose whichever avoids internal escaping.
 
-**When to run:** Use this when literal syntax or quote choice is the actual question.
-**Trigger:** Reach for it when embedded quotes or escapes make the spelling unclear.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show that single-quoted and double-quoted literals produce equal `str` values.
+Use this when literal syntax or quote choice is the actual question. It is typically triggered by reach for it when embedded quotes or escapes make the spelling unclear. Local Python REPL, script, or notebook cell. Show that single-quoted and double-quoted literals produce equal `str` values.
 
 *This example imports the modules used later in the note and declares equivalent single-quoted and double-quoted strings.*
 
@@ -244,10 +241,7 @@ True
 
 Triple-quoted strings (`"""..."""` or `'''...'''`) preserve embedded newlines. Raw strings (`r"..."`) treat backslashes as literal characters — essential for regex patterns and Windows file paths. Both can be combined (`r"""..."""`).
 
-**When to run:** Use this when you need multiline text or preserved backslashes.
-**Trigger:** Reach for it when writing regex patterns, Windows paths, or doc-like literals.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show newline preservation and raw-string escape handling.
+Use this when you need multiline text or preserved backslashes. It is typically triggered by reach for it when writing regex patterns, Windows paths, or doc-like literals. Local Python REPL, script, or notebook cell. Show newline preservation and raw-string escape handling.
 
 *This example creates triple-quoted multiline strings and raw strings, then prints their rendered values.*
 
@@ -286,10 +280,7 @@ Methods for converting other types to strings, assembling strings from parts, an
 
 `str()` calls the object's `__str__` method (or `__repr__` as fallback) to produce a human-readable string representation. Unlike C#'s `ToString()`, `str(None)` returns the string `"None"` rather than throwing.
 
-**When to run:** Use this when non-string values must cross into a text boundary.
-**Trigger:** Reach for it when numbers, booleans, containers, or `None` need display form.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show the default `str()` representations for common Python values.
+Use this when non-string values must cross into a text boundary. It is typically triggered by reach for it when numbers, booleans, containers, or `None` need display form. Local Python REPL, script, or notebook cell. Show the default `str()` representations for common Python values.
 
 *This example converts common Python values to strings and prints their quoted representations.*
 
@@ -313,10 +304,7 @@ print(repr(str(None)))
 
 The `*` operator repeats a string *n* times — a feature C# lacks. The `+` operator concatenates strings. The compiler does not optimize `+` in loops, so reserve it for small fixed concatenations.
 
-**When to run:** Use this when assembling a few fixed fragments or repeating a token.
-**Trigger:** Reach for it when literal repetition is simpler than a loop or `join()`.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show `*` repetition and small-scale `+` concatenation.
+Use this when assembling a few fixed fragments or repeating a token. It is typically triggered by reach for it when literal repetition is simpler than a loop or `join()`. Local Python REPL, script, or notebook cell. Show `*` repetition and small-scale `+` concatenation.
 
 *This example repeats a substring and concatenates a few fixed string literals with `+`.*
 
@@ -334,10 +322,7 @@ print(repr('hello' + ' ' + 'world'))
 
 Empty strings are falsy in Python — `bool('')` returns `False`. This means you can test for emptiness with `if not s:` instead of `if s == ""` or `if len(s) == 0`. Any non-empty string is truthy. Prefer `if not s:` as the default spelling; it is the idiomatic boolean test and also treats `None` as falsy when the surrounding API allows both `None` and `""`.
 
-**When to run:** Use this when control flow depends on whether text is present.
-**Trigger:** Reach for it when deciding between truthiness, equality, and length checks.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show the boolean behavior of empty and non-empty strings.
+Use this when control flow depends on whether text is present. It is typically triggered by reach for it when deciding between truthiness, equality, and length checks. Local Python REPL, script, or notebook cell. Show the boolean behavior of empty and non-empty strings.
 
 *This example checks an empty string by equality, length, and boolean truthiness.*
 
@@ -365,10 +350,7 @@ The single most important property of Python strings — every operation that ap
 Once a `str` is created, its character sequence cannot change. Item assignment (`s[0] = 'H'`) raises `TypeError`. Any transformation — `upper()`, `replace()`, slicing, or concatenation — allocates a new `str` on the heap. The original is unchanged and becomes eligible for garbage collection if no other reference points to it.
 Avoid `+=` as the default inside loops because repeated growth can force repeated copying of the accumulated text. For repeated assembly, use `"".join()` when fragments already exist in a collection and `io.StringIO` when text is emitted incrementally. Reserve `+` for a few fixed fragments.
 
-**When to run:** Use this when an in-place mutation instinct would be wrong.
-**Trigger:** Reach for it when translating from mutable-text APIs or debugging `TypeError`.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show that rewriting one character position creates a new string.
+Use this when an in-place mutation instinct would be wrong. It is typically triggered by reach for it when translating from mutable-text APIs or debugging `TypeError`. Local Python REPL, script, or notebook cell. Show that rewriting one character position creates a new string.
 
 *This example rebuilds a string by slicing because Python strings cannot be modified in place.*
 
@@ -423,10 +405,7 @@ Direct character access by position, substring extraction via slicing, and strid
 Python strings support 0-based indexing with `[]`, negative indexing from the end, and slice syntax `[start:stop:step]` with full stride support. Slicing never raises an exception — out-of-range indices are silently clamped.
 In practice, `s[i]` reads one character, `s[-1]` reads the last character, `s[a:b]` returns a right-exclusive slice, `s[::2]` applies a stride, and `s[::-1]` reverses the string. For structured extraction, prefer `split`, `partition`, or regex over manual index math.
 
-**When to run:** Use this when direct character access or fixed-position slices are appropriate.
-**Trigger:** Reach for it when index math is simpler than delimiter parsing or regex.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show zero-based indexing, negative indexing, and common slice forms.
+Use this when direct character access or fixed-position slices are appropriate. It is typically triggered by reach for it when index math is simpler than delimiter parsing or regex. Local Python REPL, script, or notebook cell. Show zero-based indexing, negative indexing, and common slice forms.
 
 *This example reads individual characters and common slices, including negative indices and reversed order.*
 
@@ -470,10 +449,7 @@ Python slicing silently clamps out-of-range indices — no exception is raised. 
 Slicing beyond the string length returns as many characters as available — `s[0:100]` returns the full string without error. Direct index access (`s[100]`) raises `IndexError`. Use `for ch in s` for simple iteration or `enumerate()` for index-value pairs (equivalent to C#'s LINQ `Select` with index).
 This mismatch is intentional: indexing requires a valid position, while slicing clamps bounds and returns the available span.
 
-**When to run:** Use this when a boundary might exceed the string length.
-**Trigger:** Reach for it when choosing between forgiving slicing and strict indexing.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show slice clamping and character iteration with `enumerate()`.
+Use this when a boundary might exceed the string length. It is typically triggered by reach for it when choosing between forgiving slicing and strict indexing. Local Python REPL, script, or notebook cell. Show slice clamping and character iteration with `enumerate()`.
 
 *This example shows slice clamping, iterates over characters, and prints indexes with `enumerate()`.*
 
@@ -510,10 +486,7 @@ Methods for changing letter case. Python provides `upper()`, `lower()`, `title()
 Python provides six case-conversion methods. `upper()` and `lower()` convert all characters. `title()` capitalizes the first letter of each word, while `capitalize()` only capitalizes the first character of the string. `swapcase()` inverts case, and `casefold()` performs aggressive Unicode-aware lowering for case-insensitive comparison.
 Use `casefold()` rather than `lower()` for caseless comparison, especially with non-ASCII text such as `"Straße"`. `title()` and `capitalize()` encode different word-boundary behavior, and all six methods apply Unicode casing rules without exposing locale-specific tuning through the `str` API.
 
-**When to run:** Use this when normalizing or presenting text with specific casing.
-**Trigger:** Reach for it when case-insensitive comparison or title casing is required.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show the main case-conversion methods and `casefold()` behavior.
+Use this when normalizing or presenting text with specific casing. It is typically triggered by reach for it when case-insensitive comparison or title casing is required. Local Python REPL, script, or notebook cell. Show the main case-conversion methods and `casefold()` behavior.
 
 *This example applies the main case-conversion methods, including Unicode-aware `casefold()`.*
 
@@ -545,10 +518,7 @@ Methods for stripping leading/trailing whitespace (or custom characters) and pad
 
 `strip()` removes whitespace from both ends; `lstrip()`/`rstrip()` from one side. Pass a string argument to strip specific characters. `ljust`/`rjust`/`center` pad to a target width — Python adds `center()` and `zfill()` which C# lacks natively.
 
-**When to run:** Use this when cleaning input or formatting fixed-width output.
-**Trigger:** Reach for it when whitespace, padding, or zero-fill behavior matters.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show trimming and width-filling helpers on representative text.
+Use this when cleaning input or formatting fixed-width output. It is typically triggered by reach for it when whitespace, padding, or zero-fill behavior matters. Local Python REPL, script, or notebook cell. Show trimming and width-filling helpers on representative text.
 
 *This example trims whitespace and pads strings with alignment and zero-fill helpers.*
 
@@ -586,10 +556,7 @@ Python provides built-in `str.isXxx()` methods — unlike C# where you must comb
 Python provides built-in `str.isXxx()` methods that return `True` if all characters satisfy the condition and the string is non-empty. Notable distinctions: `isnumeric()` is broader than `isdigit()` (it includes fractions like `½`), `isdecimal()` is the strictest (only `0-9`), and `isprintable()` returns `False` for control characters like `\n`.
 For parsing numbers, `isdecimal()` is the strictest choice; `isdigit()` also accepts superscripts and subscripts, while `isnumeric()` is broader still and includes values such as `½`.
 
-**When to run:** Use this when validating text before parsing or branching on it.
-**Trigger:** Reach for it when the code depends on digits, identifiers, whitespace, or printable text.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show the behavior of the common `isXxx()` predicates.
+Use this when validating text before parsing or branching on it. It is typically triggered by reach for it when the code depends on digits, identifiers, whitespace, or printable text. Local Python REPL, script, or notebook cell. Show the behavior of the common `isXxx()` predicates.
 
 *This example runs the common string content-check methods and prints their boolean results.*
 
@@ -637,10 +604,7 @@ Methods for finding substrings by position or existence.
 
 `find` returns the 0-based position of the first occurrence (or `-1` if not found). `index` is identical but raises `ValueError` instead of returning `-1`. `rfind`/`rindex` search from the right. `count` returns the number of non-overlapping occurrences. The `in` operator is the idiomatic way to check for substring existence.
 
-**When to run:** Use this when locating substrings or checking presence without regex.
-**Trigger:** Reach for it when you need positions, counts, or prefix/suffix tests.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Compare `find()`, `index()`, `count()`, `startswith()`, and `endswith()`.
+Use this when locating substrings or checking presence without regex. It is typically triggered by reach for it when you need positions, counts, or prefix/suffix tests. Local Python REPL, script, or notebook cell. Compare `find()`, `index()`, `count()`, `startswith()`, and `endswith()`.
 
 *This example searches for substrings, counts matches, and compares `find()` with `index()`.*
 
@@ -677,10 +641,7 @@ Python strings support direct comparison with `<`, `>`, `==` using lexicographic
 
 Python's comparison operators (`<`, `>`, `<=`, `>=`, `==`, `!=`) compare strings lexicographically by Unicode code point — equivalent to C#'s `StringComparison.Ordinal`. For locale-aware sorting (e.g., German ä near a), use `locale.strcoll`. For custom sort keys, use `functools.cmp_to_key`. Python has no built-in case-insensitive comparison operator, so normalize both sides with `casefold()` when equality must remain Unicode-correct.
 
-**When to run:** Use this when code depends on lexical order or equality semantics.
-**Trigger:** Reach for it when sorting text or comparing case-sensitive versus caseless values.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show default lexicographic ordering and `casefold()` equality.
+Use this when code depends on lexical order or equality semantics. It is typically triggered by reach for it when sorting text or comparing case-sensitive versus caseless values. Local Python REPL, script, or notebook cell. Show default lexicographic ordering and `casefold()` equality.
 
 *This example compares strings for lexical ordering, case sensitivity, and case-insensitive equality.*
 
@@ -708,10 +669,7 @@ Methods for substituting substrings, tokenizing strings into arrays, and reassem
 
 `replace` substitutes occurrences and accepts an optional max-count parameter (unlike C# which always replaces all). `split` tokenizes on a delimiter — with no arguments it splits on any whitespace and strips empties, equivalent to C#'s `Split(null, RemoveEmptyEntries)`. `rsplit` splits from the right. `splitlines` handles all line endings (`\n`, `\r\n`, `\r`). `partition`/`rpartition` split into exactly three parts `(before, sep, after)`.
 
-**When to run:** Use this when tokenizing or rewriting structured text without regex.
-**Trigger:** Reach for it when delimiter behavior matters more than arbitrary pattern matching.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show replacement, whitespace splitting, right splits, and partitions.
+Use this when tokenizing or rewriting structured text without regex. It is typically triggered by reach for it when delimiter behavior matters more than arbitrary pattern matching. Local Python REPL, script, or notebook cell. Show replacement, whitespace splitting, right splits, and partitions.
 
 *This example replaces substrings and splits text into lists and tuples with several string methods.*
 
@@ -754,10 +712,7 @@ print(csv.rpartition(','))
 
 `str.join(iterable)` is called on the separator string, not on the list — the opposite of C#'s `string.Join(separator, collection)`. `expandtabs` replaces tab characters with spaces aligned to tab stops.
 
-**When to run:** Use this when fragments already exist and need recomposition.
-**Trigger:** Reach for it when building display text from a list or expanding tabs for alignment.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show separator-driven `join()` and `expandtabs()`.
+Use this when fragments already exist and need recomposition. It is typically triggered by reach for it when building display text from a list or expanding tabs for alignment. Local Python REPL, script, or notebook cell. Show separator-driven `join()` and `expandtabs()`.
 
 *This example rejoins a list of strings with different separators and expands tab characters to spaces.*
 
@@ -788,10 +743,7 @@ Converting between strings and bytes, and performing character-level replacement
 
 `str.maketrans` builds a translation table mapping characters to replacements (or `None` for deletion). `translate` applies the table in a single pass — faster than chained `replace` calls for multiple substitutions. `encode` converts a `str` to `bytes` using a specified codec; `bytes.decode` reverses the process. C# has no direct equivalent of `str.translate` or `str.maketrans`; the closest options are `Regex.Replace` with a character class or a manual `StringBuilder` loop.
 
-**When to run:** Use this when applying character-level substitution or crossing the text/bytes boundary.
-**Trigger:** Reach for it when cleanup requires many single-character rewrites or explicit encoding.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show `maketrans()`, `translate()`, and basic encoding to bytes.
+Use this when applying character-level substitution or crossing the text/bytes boundary. It is typically triggered by reach for it when cleanup requires many single-character rewrites or explicit encoding. Local Python REPL, script, or notebook cell. Show `maketrans()`, `translate()`, and basic encoding to bytes.
 
 *This example translates characters with `maketrans()` and converts text to UTF-8 and ASCII bytes.*
 
@@ -827,10 +779,7 @@ f-strings (`f""`, Python 3.6+) are the preferred approach when the template is a
 
 Use `str.format()` when the template string is stored in a variable. Keep `%` formatting for legacy interfaces such as logging, where `logger.info("User %s logged in", username)` preserves lazy formatting. Do not build SQL or shell commands with f-strings or `.format()` from untrusted input; use parameterized queries and argument vectors instead.
 
-**When to run:** Use this when rendering values into human-readable strings.
-**Trigger:** Reach for it when choosing between f-strings, `.format()`, and legacy `%` formatting.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show the three interpolation mechanisms on the same values.
+Use this when rendering values into human-readable strings. It is typically triggered by reach for it when choosing between f-strings, `.format()`, and legacy `%` formatting. Local Python REPL, script, or notebook cell. Show the three interpolation mechanisms on the same values.
 
 *This example formats the same values with f-strings, `str.format()`, and the legacy `%` operator.*
 
@@ -868,10 +817,7 @@ Format specifiers inside f-string braces control numeric display: `{value:.2f}`,
 
 The table below summarizes the specifiers used in the examples and the output they produce.
 
-**When to run:** Use this when precision, grouping, radix, or percentage output matters.
-**Trigger:** Reach for it when a raw numeric value must be rendered for humans.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show the most common numeric format specifiers in one place.
+Use this when precision, grouping, radix, or percentage output matters. It is typically triggered by reach for it when a raw numeric value must be rendered for humans. Local Python REPL, script, or notebook cell. Show the most common numeric format specifiers in one place.
 
 | Specifier | Meaning | Example |
 |---|---|---|
@@ -932,10 +878,7 @@ Controlling field width for tabular output and formatting numbers according to l
 
 f-string alignment uses `<` (left), `>` (right), `^` (center) with an optional fill character. For locale-aware currency, Python's `locale` module depends on system locale availability and host-specific locale names. The `babel` library is more reliable and portable for production currency formatting.
 
-**When to run:** Use this when fixed-width output or locale-aware currency formatting is required.
-**Trigger:** Reach for it when alignment must be visible or a host locale may affect formatting.
-**Context:** Local Python REPL, script, or notebook cell; `locale` and `babel` behavior depends on host availability.
-**Purpose:** Show alignment specifiers and the environment-sensitive currency paths.
+Use this when fixed-width output or locale-aware currency formatting is required. It is typically triggered by reach for it when alignment must be visible or a host locale may affect formatting. Local Python REPL, script, or notebook cell; `locale` and `babel` behavior depends on host availability. Show alignment specifiers and the environment-sensitive currency paths.
 
 *This example aligns text inside fixed-width fields and formats currency through `locale` and `babel` when available.*
 
@@ -1015,10 +958,7 @@ Python's equivalents of C#'s `StringBuilder` and `string.Join`.
 
 The benchmark below demonstrates the difference: 50,000 `+=` operations are materially slower than a single `"".join()` call because `join` pre-calculates the final size and copies each part exactly once.
 
-**When to run:** Use this when a string-building hot path is suspected to be allocation-heavy.
-**Trigger:** Reach for it when loop-based concatenation starts to dominate runtime.
-**Context:** Local Python REPL, script, or notebook cell; timing is environment-sensitive but the direction should be stable.
-**Purpose:** Compare repeated `+=` against a single `join()` pass.
+Use this when a string-building hot path is suspected to be allocation-heavy. It is typically triggered by reach for it when loop-based concatenation starts to dominate runtime. Local Python REPL, script, or notebook cell; timing is environment-sensitive but the direction should be stable. Compare repeated `+=` against a single `join()` pass.
 
 *This example times repeated `+=` concatenation against `"".join()` and reports a deterministic faster/slower comparison.*
 
@@ -1047,10 +987,7 @@ join faster? True
 
 `io.StringIO` provides a file-like write interface for incremental string building — the Python equivalent of C#'s `StringBuilder`. Alternatively, accumulate parts in a `list` and call `"".join()` at the end. Generator expressions inside `join()` are the most concise pattern, and unlike C# there is no `ReadOnlySpan<char>`-style zero-allocation slice for text: every `str` slice allocates a new string, while `memoryview` applies only to bytes.
 
-**When to run:** Use this when text is emitted incrementally or fragments are accumulated first.
-**Trigger:** Reach for it when a loop or writer-style API produces many small pieces.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show `io.StringIO`, list accumulation, and generator-based `join()`.
+Use this when text is emitted incrementally or fragments are accumulated first. It is typically triggered by reach for it when a loop or writer-style API produces many small pieces. Local Python REPL, script, or notebook cell. Show `io.StringIO`, list accumulation, and generator-based `join()`.
 
 *This example builds strings with `io.StringIO`, a list plus `join()`, and a generator expression.*
 
@@ -1084,10 +1021,7 @@ print(repr(result))
 
 For 2–5 known parts, the `+` operator is perfectly readable and efficient. Python does not optimize `+` in loops, but for small fixed concatenations the overhead is negligible.
 
-**When to run:** Use this when only a few known fragments must be combined.
-**Trigger:** Reach for it when `join()` would add ceremony without reducing allocations materially.
-**Context:** Local Python REPL, script, or notebook cell.
-**Purpose:** Show the readable fixed-fragment case where `+` is appropriate.
+Use this when only a few known fragments must be combined. It is typically triggered by reach for it when `join()` would add ceremony without reducing allocations materially. Local Python REPL, script, or notebook cell. Show the readable fixed-fragment case where `+` is appropriate.
 
 *This example concatenates a few fixed string parts with `+`, which is appropriate for small constant assemblies.*
 
@@ -1114,10 +1048,7 @@ Finding patterns in text and extracting matched groups.
 
 `re.search` scans the entire string and returns the first match (or `None`). `re.findall` returns all non-overlapping matches as a list of strings. `re.finditer` yields match objects for iteration with position info. `re.match` only matches at the **start** of the string. `re.fullmatch` requires the **entire** string to match. When extracting structured tokens from prose, make the boundary explicit so trailing sentence punctuation is not consumed.
 
-**When to run:** Use this when pattern search must scan text rather than split on fixed delimiters.
-**Trigger:** Reach for it when you need first match, all matches, iterator-based matches, or full-string validation.
-**Context:** Local Python REPL, script, or notebook cell with the standard `re` module.
-**Purpose:** Compare `search()`, `findall()`, `finditer()`, `match()`, and `fullmatch()`.
+Use this when pattern search must scan text rather than split on fixed delimiters. It is typically triggered by reach for it when you need first match, all matches, iterator-based matches, or full-string validation. Local Python REPL, script, or notebook cell with the standard `re` module. Compare `search()`, `findall()`, `finditer()`, `match()`, and `fullmatch()`.
 
 *This example searches text with the main `re` matching functions and prints the matches they return.*
 
@@ -1158,10 +1089,7 @@ False
 
 Parentheses `(...)` create numbered capture groups accessible via `match.group(1)`, `match.group(2)`, etc. (`group(0)` is the full match). `match.groups()` returns all groups as a tuple. Named groups `(?P<name>...)` use the `P<>` syntax (unlike C#'s `<>`) and are accessed via `match.group('name')` or `match.groupdict()`.
 
-**When to run:** Use this when a regex must return structured subfields rather than just a whole match.
-**Trigger:** Reach for it when the pattern needs user, domain, area code, or other named components.
-**Context:** Local Python REPL, script, or notebook cell with the standard `re` module.
-**Purpose:** Show numbered capture groups and named-group access.
+Use this when a regex must return structured subfields rather than just a whole match. It is typically triggered by reach for it when the pattern needs user, domain, area code, or other named components. Local Python REPL, script, or notebook cell with the standard `re` module. Show numbered capture groups and named-group access.
 
 *This example extracts numbered and named regex capture groups from a phone number and an email address.*
 
@@ -1198,10 +1126,7 @@ Transforming text with pattern-based replacement, splitting on patterns, and pre
 
 `re.sub` substitutes matches — pass a string for static replacement, a lambda for dynamic transformation, or `\1`/`\2` backreferences for group rearrangement. `re.split` tokenizes on a pattern instead of a fixed delimiter. `re.compile` pre-compiles a pattern into a reusable object — the Python equivalent of C#'s `new Regex(..., Compiled)`.
 
-**When to run:** Use this when a regex must transform, tokenize, or be reused several times.
-**Trigger:** Reach for it when fixed-string methods no longer express the rule cleanly.
-**Context:** Local Python REPL, script, or notebook cell with the standard `re` module.
-**Purpose:** Show `sub()`, `split()`, and `compile()` on the same sample text.
+Use this when a regex must transform, tokenize, or be reused several times. It is typically triggered by reach for it when fixed-string methods no longer express the rule cleanly. Local Python REPL, script, or notebook cell with the standard `re` module. Show `sub()`, `split()`, and `compile()` on the same sample text.
 
 *This example replaces matches, splits text by regex, and reuses a compiled pattern.*
 
@@ -1284,10 +1209,7 @@ CHARACTER CLASSES
 
 `re.IGNORECASE` enables case-insensitive matching. `re.MULTILINE` makes `^` and `$` match line boundaries. `re.DOTALL` makes `.` match newline characters. `re.VERBOSE` allows formatting patterns with whitespace and inline `#` comments for readability — the Python equivalent of C#'s `IgnorePatternWhitespace`. Relative to C#, `re.compile()` is the closest analogue to `[GeneratedRegex]`, but compilation still happens at runtime rather than during the build.
 
-**When to run:** Use this when default regex behavior misses case, newline, or readability requirements.
-**Trigger:** Reach for it when anchors, dot matching, or commented patterns need to change.
-**Context:** Local Python REPL, script, or notebook cell with the standard `re` module.
-**Purpose:** Show the practical effect of `IGNORECASE`, `MULTILINE`, `DOTALL`, and `VERBOSE`.
+Use this when default regex behavior misses case, newline, or readability requirements. It is typically triggered by reach for it when anchors, dot matching, or commented patterns need to change. Local Python REPL, script, or notebook cell with the standard `re` module. Show the practical effect of `IGNORECASE`, `MULTILINE`, `DOTALL`, and `VERBOSE`.
 
 *This example applies common regex flags such as `IGNORECASE`, `MULTILINE`, `DOTALL`, and `VERBOSE`.*
 
@@ -1325,10 +1247,7 @@ Ready-to-use validation patterns for frequently matched formats.
 
 The table below collects compact patterns that are frequently reused in validation helpers and data-cleaning code.
 
-**When to run:** Use this when you need a compact starting point for common validation helpers.
-**Trigger:** Reach for it when scaffolding an email, URL, date, time, or password check.
-**Context:** Local Python REPL, script, or notebook cell; these are starter patterns, not full RFC validators.
-**Purpose:** Print the reusable pattern set so it is easy to compare or copy.
+Use this when you need a compact starting point for common validation helpers. It is typically triggered by reach for it when scaffolding an email, URL, date, time, or password check. Local Python REPL, script, or notebook cell; these are starter patterns, not full RFC validators. Print the reusable pattern set so it is easy to compare or copy.
 
 | Pattern | Regex |
 |---|---|

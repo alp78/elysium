@@ -103,10 +103,7 @@ Audit file targets on Linux require the directory to exist and be writable by th
 
 #### `xp_create_subdir` | create the audit directory
 
-**When to run:** before any `CREATE SERVER AUDIT ... TO FILE` statement the first time an instance is configured for audit, or after moving the audit target to a new filesystem path.
-**Trigger:** initial audit deployment, path change during capacity planning, or recovery after the audit directory was removed.
-**Context:** T-SQL session connected to the SQL Server instance with `ALTER SETTINGS` and filesystem-write privilege via the `mssql` service account. State-changing: creates a filesystem directory owned by `mssql:mssql`. No restart required.
-**Purpose:** guarantee the audit target path exists and is writable before the server audit object is defined, so audit startup does not fail silently at state change.
+Before any `CREATE SERVER AUDIT ... TO FILE` statement the first time an instance is configured for audit, or after moving the audit target to a new filesystem path. It is typically triggered by initial audit deployment, path change during capacity planning, or recovery after the audit directory was removed. T-SQL session connected to the SQL Server instance with `ALTER SETTINGS` and filesystem-write privilege via the `mssql` service account. State-changing: creates a filesystem directory owned by `mssql:mssql`. No restart required. Guarantee the audit target path exists and is writable before the server audit object is defined, so audit startup does not fail silently at state change.
 
 *Create the Linux audit target directory that the server audit will write into.*
 
@@ -130,10 +127,7 @@ The server audit defines where records are written and how SQL Server reacts if 
 
 #### `CREATE SERVER AUDIT` | create the file-backed audit target
 
-**When to run:** once per instance, as part of initial security baseline configuration, immediately after [03-sql-server-authentication](03-sql-server-authentication.md) has been hardened and before any audit specification is attached.
-**Trigger:** new instance onboarding, regulatory control requiring durable event capture, or investigation of an incident that was missed because no audit existed.
-**Context:** T-SQL session connected to `master` (the statement fails with error 33074 if run from a user database). Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`. State-changing: creates a server-scoped DDL object and, after the second statement, enables it. No restart required. The `CREATE SERVER AUDIT` statement is transactional and rolls back if its enclosing transaction rolls back.
-**Purpose:** establish the single instance-level audit target that every server and database audit specification will route events to, with a bounded-size rollover policy and a `CONTINUE` failure mode appropriate for an availability-first environment.
+Once per instance, as part of initial security baseline configuration, immediately after [03-sql-server-authentication](03-sql-server-authentication.md) has been hardened and before any audit specification is attached. It is typically triggered by new instance onboarding, regulatory control requiring durable event capture, or investigation of an incident that was missed because no audit existed. T-SQL session connected to `master` (the statement fails with error 33074 if run from a user database). Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`. State-changing: creates a server-scoped DDL object and, after the second statement, enables it. No restart required. The `CREATE SERVER AUDIT` statement is transactional and rolls back if its enclosing transaction rolls back. Establish the single instance-level audit target that every server and database audit specification will route events to, with a bounded-size rollover policy and a `CONTINUE` failure mode appropriate for an availability-first environment.
 
 > [!warning] ON_FAILURE = SHUTDOWN can halt the instance
 >
@@ -196,10 +190,7 @@ GO
 
 #### `sys.server_file_audits` + `sys.dm_server_audit_status` | verify the audit target
 
-**When to run:** immediately after `CREATE SERVER AUDIT ... WITH (STATE = ON)` to confirm the audit started, and periodically thereafter as part of production health checks. Also use this when `sys.fn_get_audit_file` returns no rows — this query proves whether the audit is running or stopped.
-**Trigger:** initial deployment verification, audit target move, volume fill alert, or routine health check after unexpected errors in the error log.
-**Context:** read-only T-SQL session. Requires `ALTER ANY SERVER AUDIT` or `VIEW ANY DEFINITION` for `sys.server_file_audits`, and `VIEW SERVER STATE` for `sys.dm_server_audit_status`. No restart impact.
-**Purpose:** return both the configured file-target properties (from the catalog view) and the live runtime state (from the DMV) in a single row, so an operator can distinguish between a misconfigured audit and a correctly configured but stopped audit.
+Immediately after `CREATE SERVER AUDIT ... WITH (STATE = ON)` to confirm the audit started, and periodically thereafter as part of production health checks. Also use this when `sys.fn_get_audit_file` returns no rows — this query proves whether the audit is running or stopped. It is typically triggered by initial deployment verification, audit target move, volume fill alert, or routine health check after unexpected errors in the error log. Read-only T-SQL session. Requires `ALTER ANY SERVER AUDIT` or `VIEW ANY DEFINITION` for `sys.server_file_audits`, and `VIEW SERVER STATE` for `sys.dm_server_audit_status`. No restart impact. Return both the configured file-target properties (from the catalog view) and the live runtime state (from the DMV) in a single row, so an operator can distinguish between a misconfigured audit and a correctly configured but stopped audit.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -287,10 +278,7 @@ Server audit specifications attach server-level action groups such as login succ
 
 #### `CREATE SERVER AUDIT SPECIFICATION` | capture logins and principal changes
 
-**When to run:** immediately after the server audit object is created and enabled, as the second step of initial audit deployment.
-**Trigger:** initial audit deployment, scope expansion (adding `SERVER_ROLE_MEMBER_CHANGE_GROUP` after a privilege-escalation finding), or regulatory review requiring additional identity-plane coverage.
-**Context:** T-SQL session connected to `master`. Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`. State-changing: creates a server-scoped DDL object bound to an existing server audit and enables it. The audit specification can only be modified while it is disabled (`ALTER SERVER AUDIT SPECIFICATION ... WITH (STATE = OFF)` first).
-**Purpose:** bind a minimal high-value set of identity and control-plane action groups to the server audit so failed-login detection, privileged-role changes, and audit tampering are captured from the moment the audit goes live.
+Immediately after the server audit object is created and enabled, as the second step of initial audit deployment. It is typically triggered by initial audit deployment, scope expansion (adding `SERVER_ROLE_MEMBER_CHANGE_GROUP` after a privilege-escalation finding), or regulatory review requiring additional identity-plane coverage. T-SQL session connected to `master`. Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`. State-changing: creates a server-scoped DDL object bound to an existing server audit and enables it. The audit specification can only be modified while it is disabled (`ALTER SERVER AUDIT SPECIFICATION ... WITH (STATE = OFF)` first). Bind a minimal high-value set of identity and control-plane action groups to the server audit so failed-login detection, privileged-role changes, and audit tampering are captured from the moment the audit goes live.
 
 > [!info]- Server-scope action group reference
 >
@@ -331,10 +319,7 @@ GO
 
 #### `sys.server_audit_specifications` | verify the specification header
 
-**When to run:** immediately after `CREATE SERVER AUDIT SPECIFICATION` to confirm the object exists and is enabled, and whenever audit coverage is being reviewed.
-**Trigger:** deployment verification, audit-change investigation after an `AUDIT_CHANGE_GROUP` event, or scheduled compliance review.
-**Context:** read-only T-SQL from any database. Requires `ALTER ANY SERVER AUDIT` or `VIEW ANY DEFINITION`. No runtime impact.
-**Purpose:** return the one-row header summary of the server audit specification, proving it is enabled and identifying which audit it is bound to.
+Immediately after `CREATE SERVER AUDIT SPECIFICATION` to confirm the object exists and is enabled, and whenever audit coverage is being reviewed. It is typically triggered by deployment verification, audit-change investigation after an `AUDIT_CHANGE_GROUP` event, or scheduled compliance review. Read-only T-SQL from any database. Requires `ALTER ANY SERVER AUDIT` or `VIEW ANY DEFINITION`. No runtime impact. Return the one-row header summary of the server audit specification, proving it is enabled and identifying which audit it is bound to.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -372,10 +357,7 @@ _The server audit specification exists and is enabled. `create_date` equals `mod
 
 #### `sys.server_audit_specification_details` | verify the action groups
 
-**When to run:** after every `CREATE` or `ALTER SERVER AUDIT SPECIFICATION` to confirm exactly which action groups are bound. Also during compliance review when the auditor asks "what exactly is this instance capturing".
-**Trigger:** post-deployment verification, audit scope change review, or investigation after an `AUDIT_CHANGE_GROUP` event.
-**Context:** read-only T-SQL. Requires `ALTER ANY SERVER AUDIT` or `VIEW ANY DEFINITION`. No runtime impact.
-**Purpose:** enumerate every action group (and any direct action) attached to the server audit specification, together with the internal 4-character `audit_action_id` code that appears in the audit file's `action_id` column, so the header row and the on-disk stream can be correlated.
+After every `CREATE` or `ALTER SERVER AUDIT SPECIFICATION` to confirm exactly which action groups are bound. Also during compliance review when the auditor asks "what exactly is this instance capturing". It is typically triggered by post-deployment verification, audit scope change review, or investigation after an `AUDIT_CHANGE_GROUP` event. Read-only T-SQL. Requires `ALTER ANY SERVER AUDIT` or `VIEW ANY DEFINITION`. No runtime impact. Enumerate every action group (and any direct action) attached to the server audit specification, together with the internal 4-character `audit_action_id` code that appears in the audit file's `action_id` column, so the header row and the on-disk stream can be correlated.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -432,10 +414,7 @@ Database audit specifications capture database-level actions. Use them for busin
 
 #### `CREATE DATABASE AUDIT SPECIFICATION` | capture schema reads, writes, and DDL
 
-**When to run:** after the server audit and server audit specification are in place, and only for databases that contain regulated or sensitive data.
-**Trigger:** scoping of a sensitive schema for compliance, investigation-driven addition of targeted object actions, or new-database onboarding to an existing audit framework.
-**Context:** T-SQL session connected to the target database (here, `stoxx`). Requires `ALTER ANY DATABASE AUDIT` or `ALTER`/`CONTROL` permission on the database, plus `CONNECT` to that database. State-changing: creates a database-scoped DDL object bound to the named server audit and enables it.
-**Purpose:** attach a tight, deliberate mix of direct object actions (`SELECT`/`UPDATE` on `SCHEMA::gold`) and database-level action groups (`SCHEMA_OBJECT_CHANGE_GROUP`, `DATABASE_PRINCIPAL_CHANGE_GROUP`, `DATABASE_ROLE_MEMBER_CHANGE_GROUP`) to the server audit, so sensitive-schema access and in-database identity changes flow through the same append-only file stream as the server-scope events.
+After the server audit and server audit specification are in place, and only for databases that contain regulated or sensitive data. It is typically triggered by scoping of a sensitive schema for compliance, investigation-driven addition of targeted object actions, or new-database onboarding to an existing audit framework. T-SQL session connected to the target database (here, `stoxx`). Requires `ALTER ANY DATABASE AUDIT` or `ALTER`/`CONTROL` permission on the database, plus `CONNECT` to that database. State-changing: creates a database-scoped DDL object bound to the named server audit and enables it. Attach a tight, deliberate mix of direct object actions (`SELECT`/`UPDATE` on `SCHEMA::gold`) and database-level action groups (`SCHEMA_OBJECT_CHANGE_GROUP`, `DATABASE_PRINCIPAL_CHANGE_GROUP`, `DATABASE_ROLE_MEMBER_CHANGE_GROUP`) to the server audit, so sensitive-schema access and in-database identity changes flow through the same append-only file stream as the server-scope events.
 
 > [!info]- Database-scope action syntax and the BY clause
 >
@@ -468,10 +447,7 @@ GO
 
 #### `sys.database_audit_specifications` | verify the specification header
 
-**When to run:** after `CREATE DATABASE AUDIT SPECIFICATION` to confirm the object is enabled, and during any scheduled compliance review of per-database audit coverage.
-**Trigger:** deployment verification, database onboarding, or follow-up on an `AUDIT_CHANGE_GROUP` event at the server scope.
-**Context:** read-only T-SQL connected to the target database. Requires `ALTER ANY DATABASE AUDIT` or `VIEW DEFINITION` on the database.
-**Purpose:** return the one-row header summary of the database audit specification to prove it is enabled and tied to the expected server audit.
+After `CREATE DATABASE AUDIT SPECIFICATION` to confirm the object is enabled, and during any scheduled compliance review of per-database audit coverage. It is typically triggered by deployment verification, database onboarding, or follow-up on an `AUDIT_CHANGE_GROUP` event at the server scope. Read-only T-SQL connected to the target database. Requires `ALTER ANY DATABASE AUDIT` or `VIEW DEFINITION` on the database. Return the one-row header summary of the database audit specification to prove it is enabled and tied to the expected server audit.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -512,10 +488,7 @@ _The database audit specification is active in `stoxx`. Like the server specific
 
 #### `sys.database_audit_specification_details` | verify the audited actions
 
-**When to run:** immediately after `CREATE DATABASE AUDIT SPECIFICATION` and any time the business needs to prove exactly which actions a given database is capturing.
-**Trigger:** post-deployment verification, regulatory review, or investigation after an `AUDIT_CHANGE_GROUP` event.
-**Context:** read-only T-SQL connected to the target database. Requires `ALTER ANY DATABASE AUDIT` or `VIEW DEFINITION`.
-**Purpose:** enumerate every action group and direct object action attached to the database audit specification, distinguishing grouped events (`is_group = True`) from direct object actions (`is_group = False`).
+Immediately after `CREATE DATABASE AUDIT SPECIFICATION` and any time the business needs to prove exactly which actions a given database is capturing. It is typically triggered by post-deployment verification, regulatory review, or investigation after an `AUDIT_CHANGE_GROUP` event. Read-only T-SQL connected to the target database. Requires `ALTER ANY DATABASE AUDIT` or `VIEW DEFINITION`. Enumerate every action group and direct object action attached to the database audit specification, distinguishing grouped events (`is_group = True`) from direct object actions (`is_group = False`).
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -573,10 +546,7 @@ When a server audit specification attaches a high-volume action group — `SCHEM
 
 #### `ALTER SERVER AUDIT ... WHERE` | apply a server-side predicate filter
 
-**When to run:** when the audit file target is growing faster than expected, when a specific principal or database is generating the bulk of events, or when a regulatory scope requires capturing only a named tenant's activity.
-**Trigger:** volume-based storage alert, expensive `sys.fn_get_audit_file` scan cost, or compliance request to scope audit to a single schema or database.
-**Context:** T-SQL session in `master`. Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`. State-changing: temporarily disables the audit, rewrites the predicate expression stored in `sys.server_audits.predicate`, and re-enables it. The audit emits `AUSC` rows for both the `STATE = OFF` and `STATE = ON` transitions, so the change is self-documenting.
-**Purpose:** reduce audit write volume at the source by only persisting events that match the predicate — here, restricting the audit to events attributed to the `sa` principal. In production this pattern is typically `database_name = 'target_db'`, `server_principal_name NOT LIKE 'svc_%'`, or `object_name = 'SensitiveData'`.
+When the audit file target is growing faster than expected, when a specific principal or database is generating the bulk of events, or when a regulatory scope requires capturing only a named tenant's activity. It is typically triggered by volume-based storage alert, expensive `sys.fn_get_audit_file` scan cost, or compliance request to scope audit to a single schema or database. T-SQL session in `master`. Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`. State-changing: temporarily disables the audit, rewrites the predicate expression stored in `sys.server_audits.predicate`, and re-enables it. The audit emits `AUSC` rows for both the `STATE = OFF` and `STATE = ON` transitions, so the change is self-documenting. Reduce audit write volume at the source by only persisting events that match the predicate — here, restricting the audit to events attributed to the `sa` principal. In production this pattern is typically `database_name = 'target_db'`, `server_principal_name NOT LIKE 'svc_%'`, or `object_name = 'SensitiveData'`.
 
 > [!warning] REMOVE WHERE still requires STATE = OFF
 >
@@ -635,10 +605,7 @@ The four-character `audit_action_id` values in `sys.server_audit_specification_d
 
 #### `sys.dm_audit_actions` | resolve action_id codes to action names
 
-**When to run:** any time you are staring at an `action_id` value in `sys.fn_get_audit_file` output that you do not recognize, or when building a custom audit dashboard that needs to display human-readable event names.
-**Trigger:** triage of an unfamiliar `action_id`, bootstrapping an audit analytics pipeline, or validating that a specific action group actually contains the events you expect.
-**Context:** read-only T-SQL. Visible to `public`.
-**Purpose:** produce a distinct `action_id → action_name` map for the most common operationally relevant audit codes, so downstream queries can join against the live catalog instead of a stale hardcoded list.
+Any time you are staring at an `action_id` value in `sys.fn_get_audit_file` output that you do not recognize, or when building a custom audit dashboard that needs to display human-readable event names. It is typically triggered by triage of an unfamiliar `action_id`, bootstrapping an audit analytics pipeline, or validating that a specific action group actually contains the events you expect. Read-only T-SQL. Visible to `public`. Produce a distinct `action_id → action_name` map for the most common operationally relevant audit codes, so downstream queries can join against the live catalog instead of a stale hardcoded list.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -699,10 +666,7 @@ A raw audit stream can be noisy. This query filters to the event types that most
 
 #### `sys.fn_get_audit_file` | inspect recent failed logins and audited data access
 
-**When to run:** during a security triage, after an alert fires on `LGIF` volume, or when the daily compliance review asks for the last hour of security-relevant audit activity.
-**Trigger:** security alert, incident investigation, or scheduled review.
-**Context:** read-only T-SQL from any database. Requires `VIEW SERVER SECURITY AUDIT` on SQL Server 2022 and later (previously `CONTROL SERVER`). The function physically reads the `.sqlaudit` files from the target directory, so it must run on the instance that owns the files or on a reporting instance where the files have been copied and the same GUID metadata is present.
-**Purpose:** return a small, time-ordered slice of the audit stream limited to high-value forensic codes (`LGIF`, `SL`, `AUSC`, `CR`), with enough columns to attribute each event to a principal, client IP, application, and target object.
+During a security triage, after an alert fires on `LGIF` volume, or when the daily compliance review asks for the last hour of security-relevant audit activity. It is typically triggered by security alert, incident investigation, or scheduled review. Read-only T-SQL from any database. Requires `VIEW SERVER SECURITY AUDIT` on SQL Server 2022 and later (previously `CONTROL SERVER`). The function physically reads the `.sqlaudit` files from the target directory, so it must run on the instance that owns the files or on a reporting instance where the files have been copied and the same GUID metadata is present. Return a small, time-ordered slice of the audit stream limited to high-value forensic codes (`LGIF`, `SL`, `AUSC`, `CR`), with enough columns to attribute each event to a principal, client IP, application, and target object.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -804,10 +768,7 @@ A raw event feed is too noisy to review manually. A per-action summary turns the
 
 #### `sys.fn_get_audit_file` | summarize the recent audit stream
 
-**When to run:** daily compliance review, shift handover, or the first query in any incident investigation to see which event types dominate the recent window.
-**Trigger:** scheduled review, shift handover, or alert follow-up.
-**Context:** read-only T-SQL. Same permission requirement as the detail query (`VIEW SERVER SECURITY AUDIT` in SQL Server 2022 and later). Filters by `event_time` on the read side (not in the audit predicate, which cannot filter on `event_time`).
-**Purpose:** collapse the audit stream into one row per `action_id`, counting events, distinct principals, distinct client IPs, and the earliest/latest timestamps — so both volume anomalies and temporal clustering are visible without scrolling through raw rows.
+Daily compliance review, shift handover, or the first query in any incident investigation to see which event types dominate the recent window. It is typically triggered by scheduled review, shift handover, or alert follow-up. Read-only T-SQL. Same permission requirement as the detail query (`VIEW SERVER SECURITY AUDIT` in SQL Server 2022 and later). Filters by `event_time` on the read side (not in the audit predicate, which cannot filter on `event_time`). Collapse the audit stream into one row per `action_id`, counting events, distinct principals, distinct client IPs, and the earliest/latest timestamps — so both volume anomalies and temporal clustering are visible without scrolling through raw rows.
 
 *Summarize recent audit activity by action code, count, principal spread, client-IP spread, and time range.*
 
@@ -860,10 +821,7 @@ A per-IP `LGIF` aggregate is the cheapest burst detector. Filter to the `LGIF` a
 
 #### `sys.fn_get_audit_file` | detect failed-login bursts
 
-**When to run:** on a schedule (every 5–15 minutes during business hours, every 30–60 minutes off-hours) as the primary intrusion-attempt detector. Also reactively after any alert fires on `LGIF` volume in the dashboard summary.
-**Trigger:** scheduled poll, manual investigation after the summary query shows an `LGIF` spike, or correlation from a perimeter IDS alert.
-**Context:** read-only T-SQL. Requires `VIEW SERVER SECURITY AUDIT` on SQL Server 2022 and later. Should be parameterized on a shared threshold constant so operators can raise or lower it without touching the alert.
-**Purpose:** produce one row per attacking source IP that exceeded the failure threshold in the last two hours, with enough columns (count, time window, distinct logins tried) to classify the burst as scripted brute-force, credential stuffing, or broken secret rotation before escalating.
+On a schedule (every 5–15 minutes during business hours, every 30–60 minutes off-hours) as the primary intrusion-attempt detector. Also reactively after any alert fires on `LGIF` volume in the dashboard summary. It is typically triggered by scheduled poll, manual investigation after the summary query shows an `LGIF` spike, or correlation from a perimeter IDS alert. Read-only T-SQL. Requires `VIEW SERVER SECURITY AUDIT` on SQL Server 2022 and later. Should be parameterized on a shared threshold constant so operators can raise or lower it without touching the alert. Produce one row per attacking source IP that exceeded the failure threshold in the last two hours, with enough columns (count, time window, distinct logins tried) to classify the burst as scripted brute-force, credential stuffing, or broken secret rotation before escalating.
 
 *Aggregate failed-logon audit events by client IP and isolate suspicious bursts above a 10-attempt threshold.*
 
@@ -909,10 +867,7 @@ An audit is only as trustworthy as the smallest set of principals who can tamper
 
 ### SQL Server | permissions | what each audit operation requires
 
-**When to run:** during initial audit deployment to assign the correct fixed server role or granular permissions to the audit administrator and the audit reader roles.
-**Trigger:** initial deployment, audit-administrator role creation, or incident review where the current permission set turned out to be too broad.
-**Context:** reference table (no code to run). Verify the permissions currently granted on the instance with the queries in [04-users-logins-roles-permissions](04-users-logins-roles-permissions.md).
-**Purpose:** name the minimum permission required by each audit-related operation so audit administration can be delegated without granting `CONTROL SERVER`.
+During initial audit deployment to assign the correct fixed server role or granular permissions to the audit administrator and the audit reader roles. It is typically triggered by initial deployment, audit-administrator role creation, or incident review where the current permission set turned out to be too broad. Reference table (no code to run). Verify the permissions currently granted on the instance with the queries in [04-users-logins-roles-permissions](04-users-logins-roles-permissions.md). Name the minimum permission required by each audit-related operation so audit administration can be delegated without granting `CONTROL SERVER`.
 
 | Operation | Required permission (SQL Server 2022+) | Required permission (SQL Server 2019 and earlier) | Notes |
 |---|---|---|---|
@@ -945,10 +900,7 @@ The teardown sequence is the exact reverse of the build sequence, and every laye
 
 #### `DROP DATABASE AUDIT SPECIFICATION` | disable and drop the database spec
 
-**When to run:** first step of any audit teardown, before the server audit specification and server audit are touched.
-**Trigger:** retirement of a database-specific audit, scope reduction, or full audit teardown.
-**Context:** T-SQL session connected to the database that owns the specification (here, `stoxx`). Requires `ALTER ANY DATABASE AUDIT` or `ALTER`/`CONTROL` on the database.
-**Purpose:** disable the specification so events stop flowing from the database, then remove the specification object — detaching it from the server audit so the server audit itself can later be dropped without error.
+First step of any audit teardown, before the server audit specification and server audit are touched. It is typically triggered by retirement of a database-specific audit, scope reduction, or full audit teardown. T-SQL session connected to the database that owns the specification (here, `stoxx`). Requires `ALTER ANY DATABASE AUDIT` or `ALTER`/`CONTROL` on the database. Disable the specification so events stop flowing from the database, then remove the specification object — detaching it from the server audit so the server audit itself can later be dropped without error.
 
 *Disable the database audit specification and drop it.*
 
@@ -966,10 +918,7 @@ GO
 
 #### `DROP SERVER AUDIT SPECIFICATION` | disable and drop the server spec
 
-**When to run:** after the database audit specification has been dropped and before the server audit itself is touched.
-**Trigger:** full audit teardown or scope reduction that removes server-scope coverage.
-**Context:** T-SQL session connected to `master`. Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`.
-**Purpose:** stop server-scope events from being captured and detach the specification from the server audit so the audit can be dropped cleanly.
+After the database audit specification has been dropped and before the server audit itself is touched. It is typically triggered by full audit teardown or scope reduction that removes server-scope coverage. T-SQL session connected to `master`. Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`. Stop server-scope events from being captured and detach the specification from the server audit so the audit can be dropped cleanly.
 
 *Disable the server audit specification and drop it.*
 
@@ -987,10 +936,7 @@ GO
 
 #### `DROP SERVER AUDIT` | disable and drop the server audit
 
-**When to run:** last step of the teardown, after both specifications have been dropped.
-**Trigger:** full audit retirement, re-creation with a different `ON_FAILURE` mode, or migration to a new target path.
-**Context:** T-SQL session connected to `master`. Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`. If the audit has a `WHERE` predicate, run `ALTER SERVER AUDIT ... REMOVE WHERE` first so any predicate state is cleaned up before the drop.
-**Purpose:** remove the top-level audit metadata from the instance. This stops writes and releases the file handle, but the existing `.sqlaudit` files on disk remain untouched — they must be archived or removed by the filesystem cleanup step below.
+Last step of the teardown, after both specifications have been dropped. It is typically triggered by full audit retirement, re-creation with a different `ON_FAILURE` mode, or migration to a new target path. T-SQL session connected to `master`. Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`. If the audit has a `WHERE` predicate, run `ALTER SERVER AUDIT ... REMOVE WHERE` first so any predicate state is cleaned up before the drop. Remove the top-level audit metadata from the instance. This stops writes and releases the file handle, but the existing `.sqlaudit` files on disk remain untouched — they must be archived or removed by the filesystem cleanup step below.
 
 > [!warning] Dropping specifications is not reversible
 >
@@ -1016,10 +962,7 @@ GO
 
 #### `rm` | remove stale audit files from disk
 
-**When to run:** after `DROP SERVER AUDIT` has completed, once any off-host archive or evidence-retention requirement has been satisfied.
-**Trigger:** final teardown step, or periodic filesystem hygiene when a retention policy is in place but `MAX_ROLLOVER_FILES` alone does not delete files that a replaced audit left behind.
-**Context:** shell command inside the SQL Server container, run as a privileged user (root in most containers). Requires write permission on the audit directory. Not reversible — preserve off-host copies first if the files are evidence.
-**Purpose:** `DROP SERVER AUDIT` removes the metadata and stops writes, but the `.sqlaudit` files themselves are not deleted by the engine — a replaced audit with a different GUID would leave the old files in place forever. This step is the explicit filesystem cleanup that removes them.
+After `DROP SERVER AUDIT` has completed, once any off-host archive or evidence-retention requirement has been satisfied. It is typically triggered by final teardown step, or periodic filesystem hygiene when a retention policy is in place but `MAX_ROLLOVER_FILES` alone does not delete files that a replaced audit left behind. Shell command inside the SQL Server container, run as a privileged user (root in most containers). Requires write permission on the audit directory. Not reversible — preserve off-host copies first if the files are evidence. `DROP SERVER AUDIT` removes the metadata and stops writes, but the `.sqlaudit` files themselves are not deleted by the engine — a replaced audit with a different GUID would leave the old files in place forever. This step is the explicit filesystem cleanup that removes them.
 
 *Remove the `.sqlaudit` files left behind after the server audit was dropped.*
 
@@ -1047,10 +990,7 @@ Security logging is only useful if the storage path and retention behavior are o
 
 #### `ls -lh` | inspect the Linux audit directory
 
-**When to run:** during initial deployment verification, during investigation when `sys.dm_server_audit_status.audit_file_size` does not match expectations, or as part of a host-level health check.
-**Trigger:** initial verification, suspected audit stoppage, or storage alert on the audit volume.
-**Context:** shell command executed inside the container (`docker exec`) or on the VM. No SQL Server privileges needed; just filesystem read access to the audit directory.
-**Purpose:** confirm that the active `.sqlaudit` file exists, is owned by `mssql:mssql`, has mode `0640`, and reports a size consistent with recent audit traffic.
+During initial deployment verification, during investigation when `sys.dm_server_audit_status.audit_file_size` does not match expectations, or as part of a host-level health check. It is typically triggered by initial verification, suspected audit stoppage, or storage alert on the audit volume. Shell command executed inside the container (`docker exec`) or on the VM. No SQL Server privileges needed; just filesystem read access to the audit directory. Confirm that the active `.sqlaudit` file exists, is owned by `mssql:mssql`, has mode `0640`, and reports a size consistent with recent audit traffic.
 
 *Inspect the Linux audit directory listing immediately after `CREATE SERVER AUDIT` has been enabled and events have been generated.*
 
@@ -1067,10 +1007,7 @@ _The audit file exists on disk, is owned by the `mssql` service account (`mssql:
 
 #### `stat` | verify audit file ownership and mode
 
-**When to run:** during initial security baseline verification and whenever audit permission concerns arise.
-**Trigger:** suspected tampering, unusual audit-file ACL, or compliance attestation.
-**Context:** shell command inside the container or on the VM. No SQL Server privileges needed.
-**Purpose:** confirm that the active audit files are owned by `mssql:mssql` with mode `0640` and no surprise ACLs — narrow enough that only the engine and the audit reader group can touch them.
+During initial security baseline verification and whenever audit permission concerns arise. It is typically triggered by suspected tampering, unusual audit-file ACL, or compliance attestation. Shell command inside the container or on the VM. No SQL Server privileges needed. Confirm that the active audit files are owned by `mssql:mssql` with mode `0640` and no surprise ACLs — narrow enough that only the engine and the audit reader group can touch them.
 
 *Verify ownership, group, mode, and path of every current `.sqlaudit` file.*
 
@@ -1095,10 +1032,7 @@ On Linux, the SQL Server Audit binary format is not a text log — the Ops Agent
 
 #### Ops Agent | tail a structured export of the audit stream
 
-**When to run:** once, at host provisioning, to configure the agent's file-tail pipeline. Re-run on agent upgrades or when the audit export format changes.
-**Trigger:** new VM onboarding, audit scope change, or transition from local-only audit to externally forwarded audit.
-**Context:** Ops Agent config file (`/etc/google-cloud-ops-agent/config.yaml`). Requires root on the VM. State-changing — the Ops Agent must be restarted after the config is written so the new pipeline takes effect.
-**Purpose:** forward a structured (CSV/JSON) audit export from the local host to Cloud Logging, so security staff can query recent events without SSH access to the VM, and so alerting can be wired to the standard Cloud Monitoring or Chronicle pipeline.
+Once, at host provisioning, to configure the agent's file-tail pipeline. Re-run on agent upgrades or when the audit export format changes. It is typically triggered by new VM onboarding, audit scope change, or transition from local-only audit to externally forwarded audit. Ops Agent config file (`/etc/google-cloud-ops-agent/config.yaml`). Requires root on the VM. State-changing — the Ops Agent must be restarted after the config is written so the new pipeline takes effect. Forward a structured (CSV/JSON) audit export from the local host to Cloud Logging, so security staff can query recent events without SSH access to the VM, and so alerting can be wired to the standard Cloud Monitoring or Chronicle pipeline.
 
 *Add an Ops Agent receiver and pipeline that tails the structured audit export file and ships it to Cloud Logging under the `sql_server_audit` log name.*
 
@@ -1132,10 +1066,7 @@ _The receiver tails every `.jsonl` file under `/var/opt/mssql/log/audit_export/`
 
 #### `gcloud storage cp` | archive the binary `.sqlaudit` files to GCS
 
-**When to run:** on a schedule (e.g., via a cron job or systemd timer) so the binary audit artifacts are copied off the host before `MAX_ROLLOVER_FILES` rolls them off. Also manually after any incident as an evidence-preservation step.
-**Trigger:** scheduled archival, regulatory evidence capture, or incident response.
-**Context:** shell command running on the VM with a service account that holds `roles/storage.objectCreator` on the target bucket. The bucket should have object versioning and a retention lock matching the compliance retention period.
-**Purpose:** preserve the raw binary audit artifacts off-host so they can be read back with `sys.fn_get_audit_file` from a separate reporting instance if the source VM is lost or compromised.
+On a schedule (e.g., via a cron job or systemd timer) so the binary audit artifacts are copied off the host before `MAX_ROLLOVER_FILES` rolls them off. Also manually after any incident as an evidence-preservation step. It is typically triggered by scheduled archival, regulatory evidence capture, or incident response. Shell command running on the VM with a service account that holds `roles/storage.objectCreator` on the target bucket. The bucket should have object versioning and a retention lock matching the compliance retention period. Preserve the raw binary audit artifacts off-host so they can be read back with `sys.fn_get_audit_file` from a separate reporting instance if the source VM is lost or compromised.
 
 *Copy every new `.sqlaudit` file to a versioned GCS bucket with deterministic object naming.*
 

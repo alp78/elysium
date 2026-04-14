@@ -456,10 +456,7 @@ BigQuery dry-run validates SQL syntax and resolves table references, column name
 
 #### Validate all SQL files with BigQuery dry-run
 
-**When to run:** On every push that modifies SQL files.
-**Trigger:** `push` event with path filter on `sql/**`.
-**Context:** GitHub-hosted runner, GCP OIDC authentication with read-only BigQuery access. No data is read or billed.
-**Purpose:** Catch SQL syntax errors, missing table/column references, and type mismatches before code review.
+On every push that modifies SQL files. It is typically triggered by `push` event with path filter on `sql/**`. GitHub-hosted runner, GCP OIDC authentication with read-only BigQuery access. No data is read or billed. Catch SQL syntax errors, missing table/column references, and type mismatches before code review.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -561,10 +558,7 @@ SQL Server's `SET PARSEONLY ON` checks SQL syntax without compiling or executing
 
 #### Validate T-SQL migrations with PARSEONLY
 
-**When to run:** On every push that modifies migration files.
-**Trigger:** `push` event with path filter on `migrations/**`.
-**Context:** GitHub-hosted runner with a SQL Server 2022 service container. No external credentials required.
-**Purpose:** Catch T-SQL syntax errors in migration scripts before they reach a staging or production database.
+On every push that modifies migration files. It is typically triggered by `push` event with path filter on `migrations/**`. GitHub-hosted runner with a SQL Server 2022 service container. No external credentials required. Catch T-SQL syntax errors in migration scripts before they reach a staging or production database.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -652,10 +646,7 @@ The lightest dbt CI workflow: parse the project to verify model compilation and 
 
 #### Parse dbt project and lint SQL models
 
-**When to run:** On every push that modifies dbt model files.
-**Trigger:** `push` event with path filter on `dbt_project/**`.
-**Context:** GitHub-hosted runner. No warehouse credentials needed for parse. SQLFluff runs locally.
-**Purpose:** Catch dbt compilation errors and SQL style violations before code review.
+On every push that modifies dbt model files. It is typically triggered by `push` event with path filter on `dbt_project/**`. GitHub-hosted runner. No warehouse credentials needed for parse. SQLFluff runs locally. Catch dbt compilation errors and SQL style violations before code review.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -828,10 +819,7 @@ The Airflow DAG import check loads every Python file in the `dags/` directory in
 
 #### Validate Airflow DAGs on push
 
-**When to run:** On every push that modifies DAG files.
-**Trigger:** `push` event with path filter on `dags/**`.
-**Context:** GitHub-hosted runner with Airflow installed from PyPI (constrained). No connection to production Airflow.
-**Purpose:** Catch DAG import errors, missing dependencies, and invalid task definitions before deployment.
+On every push that modifies DAG files. It is typically triggered by `push` event with path filter on `dags/**`. GitHub-hosted runner with Airflow installed from PyPI (constrained). No connection to production Airflow. Catch DAG import errors, missing dependencies, and invalid task definitions before deployment.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -971,10 +959,7 @@ PySpark tests run with a local `SparkSession` on the GitHub runner — no cluste
 
 #### Run PySpark tests in a matrix
 
-**When to run:** On every push that modifies analytics code.
-**Trigger:** `push` event with path filter on `analytics/**`.
-**Context:** GitHub-hosted runner with Java 17 (required by Spark) and PySpark installed via pip. No Spark cluster needed.
-**Purpose:** Validate Spark transformations, schema expectations, and business logic with fast local tests.
+On every push that modifies analytics code. It is typically triggered by `push` event with path filter on `analytics/**`. GitHub-hosted runner with Java 17 (required by Spark) and PySpark installed via pip. No Spark cluster needed. Validate Spark transformations, schema expectations, and business logic with fast local tests.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1060,10 +1045,7 @@ The Terraform plan workflow runs `terraform init`, `validate`, and `plan` on eve
 
 #### Run Terraform plan on push
 
-**When to run:** On every push that modifies infrastructure files.
-**Trigger:** `push` event with path filter on `infra/**`.
-**Context:** GitHub-hosted runner with Terraform installed. GCP OIDC authentication for state access.
-**Purpose:** Preview infrastructure changes before they are applied. No resources are created or destroyed.
+On every push that modifies infrastructure files. It is typically triggered by `push` event with path filter on `infra/**`. GitHub-hosted runner with Terraform installed. GCP OIDC authentication for state access. Preview infrastructure changes before they are applied. No resources are created or destroyed.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1157,10 +1139,7 @@ Terraform apply runs only via manual dispatch with explicit confirmation and a p
 
 #### Apply Terraform changes with manual confirmation
 
-**When to run:** Only when an operator explicitly triggers the workflow and types "apply" to confirm.
-**Trigger:** `workflow_dispatch` with a confirmation input.
-**Context:** GitHub-hosted runner with Terraform. Production environment requires reviewer approval.
-**Purpose:** Apply reviewed infrastructure changes with human-in-the-loop confirmation at two levels: dispatch input and environment gate.
+Only when an operator explicitly triggers the workflow and types "apply" to confirm. It is typically triggered by `workflow_dispatch` with a confirmation input. GitHub-hosted runner with Terraform. Production environment requires reviewer approval. Apply reviewed infrastructure changes with human-in-the-loop confirmation at two levels: dispatch input and environment gate.
 
 *Apply Terraform changes with double confirmation: typed input + environment approval.*
 
@@ -1240,10 +1219,7 @@ Data quality assertions are boolean checks on data properties: row counts, null 
 
 #### Run data quality assertions against BigQuery
 
-**When to run:** After deployments, on schedule, or on push to configuration files.
-**Trigger:** `push` event or `workflow_dispatch`.
-**Context:** GitHub-hosted runner with GCP OIDC. Read-only BigQuery access. Results written to a JSON report artifact.
-**Purpose:** Validate data integrity across critical tables and produce an auditable report.
+After deployments, on schedule, or on push to configuration files. It is typically triggered by `push` event or `workflow_dispatch`. GitHub-hosted runner with GCP OIDC. Read-only BigQuery access. Results written to a JSON report artifact. Validate data integrity across critical tables and produce an auditable report.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1375,10 +1351,7 @@ Event schemas define the contract between producers and consumers in streaming p
 
 #### Validate event schemas and detect breaking changes
 
-**When to run:** On every push that modifies schema files.
-**Trigger:** `push` event with path filter on `schemas/**`.
-**Context:** GitHub-hosted runner. No external services required.
-**Purpose:** Enforce schema contracts for event pipelines. Detect breaking changes (removed fields, new required fields) before merge.
+On every push that modifies schema files. It is typically triggered by `push` event with path filter on `schemas/**`. GitHub-hosted runner. No external services required. Enforce schema contracts for event pipelines. Detect breaking changes (removed fields, new required fields) before merge.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1478,10 +1451,7 @@ The notebook hygiene workflow inspects every `.ipynb` file for committed outputs
 
 #### Check notebooks for committed outputs
 
-**When to run:** On every push that modifies notebook files.
-**Trigger:** `push` event with path filter on `notebooks/**`.
-**Context:** GitHub-hosted runner. No external services required.
-**Purpose:** Prevent committed outputs (data, plots, credentials) from entering version control.
+On every push that modifies notebook files. It is typically triggered by `push` event with path filter on `notebooks/**`. GitHub-hosted runner. No external services required. Prevent committed outputs (data, plots, credentials) from entering version control.
 
 *Check all notebooks for committed outputs and validate structure.*
 
@@ -1609,10 +1579,7 @@ The backfill workflow uses `workflow_dispatch` inputs to accept date ranges, tar
 
 #### Run a controlled backfill with typed dispatch inputs
 
-**When to run:** Only when an operator explicitly triggers the workflow via the GitHub UI or CLI.
-**Trigger:** `workflow_dispatch` with five typed inputs.
-**Context:** GitHub-hosted runner with GCP OIDC. Dry-run mode validates without writing. Production mode requires environment approval.
-**Purpose:** Provide a controlled, auditable mechanism for data backfills with input validation, cost preview, and approval gates.
+Only when an operator explicitly triggers the workflow via the GitHub UI or CLI. It is typically triggered by `workflow_dispatch` with five typed inputs. GitHub-hosted runner with GCP OIDC. Dry-run mode validates without writing. Production mode requires environment approval. Provide a controlled, auditable mechanism for data backfills with input validation, cost preview, and approval gates.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1791,10 +1758,7 @@ Pipeline Docker images are built and pushed to GHCR on every push to source or d
 
 #### Build and push a pipeline image to GHCR
 
-**When to run:** On every push that modifies source code, dependencies, or the Dockerfile.
-**Trigger:** `push` event with path filter on `src/**`, `requirements.txt`, `Dockerfile`.
-**Context:** GitHub-hosted runner with Docker Buildx. GHCR authentication uses the built-in `GITHUB_TOKEN`.
-**Purpose:** Build an immutable, SHA-tagged container image for pipeline deployments.
+On every push that modifies source code, dependencies, or the Dockerfile. It is typically triggered by `push` event with path filter on `src/**`, `requirements.txt`, `Dockerfile`. GitHub-hosted runner with Docker Buildx. GHCR authentication uses the built-in `GITHUB_TOKEN`. Build an immutable, SHA-tagged container image for pipeline deployments.
 
 > [!info]- Workflow YAML breakdown
 >

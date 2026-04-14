@@ -225,10 +225,7 @@ This subsection establishes the current global-secret state and the CMEK relatio
 
 #### List the global secret inventory
 
-**When to run:** At the start of secret review, rotation planning, or incident response.
-**Trigger:** You need to see what secret containers are visible on the default Secret Manager endpoint.
-**Context:** Read-only Secret Manager inventory lookup.
-**Purpose:** Establish the current set of globally addressed secrets before reviewing versions or IAM.
+At the start of secret review, rotation planning, or incident response. It is typically triggered by you need to see what secret containers are visible on the default Secret Manager endpoint. Read-only Secret Manager inventory lookup. Establish the current set of globally addressed secrets before reviewing versions or IAM.
 
 ```bash
 gcloud secrets list \
@@ -245,10 +242,7 @@ This does not mean the project only has one secret. It means the default endpoin
 
 #### Confirm the Secret Manager service agent used for CMEK
 
-**When to run:** Before wiring Secret Manager to a Cloud KMS key.
-**Trigger:** You need to know which Google-managed principal must be granted KMS rights.
-**Context:** Service Identity API call.
-**Purpose:** Surface the exact Secret Manager service agent email for the project.
+Before wiring Secret Manager to a Cloud KMS key. It is typically triggered by you need to know which Google-managed principal must be granted KMS rights. Service Identity API call. Surface the exact Secret Manager service agent email for the project.
 
 ```bash
 gcloud beta services identity create \
@@ -264,10 +258,7 @@ Even when the service agent already exists, this command is useful because it su
 
 #### Inspect the CMEK-backed automatic secret
 
-**When to run:** Before rotation, alias changes, or secret-scope IAM changes.
-**Trigger:** You need to understand the secret's metadata, CMEK key, rotation schedule, and aliases.
-**Context:** Read-only secret metadata lookup.
-**Purpose:** Show the full control plane attached to the secret container.
+Before rotation, alias changes, or secret-scope IAM changes. It is typically triggered by you need to understand the secret's metadata, CMEK key, rotation schedule, and aliases. Read-only secret metadata lookup. Show the full control plane attached to the secret container.
 
 ```bash
 gcloud secrets describe \
@@ -319,10 +310,7 @@ This one object already tells you most of the operational story:
 
 #### Confirm that the Secret Manager service agent can use the KMS key
 
-**When to run:** Immediately after enabling CMEK or when a secret create/access call fails around encryption.
-**Trigger:** You need to verify the KMS side of the dependency.
-**Context:** Read-only IAM policy lookup on the crypto key.
-**Purpose:** Prove that Secret Manager's service agent has encrypt/decrypt access to the key.
+Immediately after enabling CMEK or when a secret create/access call fails around encryption. It is typically triggered by you need to verify the KMS side of the dependency. Read-only IAM policy lookup on the crypto key. Prove that Secret Manager's service agent has encrypt/decrypt access to the key.
 
 ```bash
 gcloud kms keys get-iam-policy \
@@ -367,10 +355,7 @@ This subsection shows the exact failure mode without the regional endpoint overr
 
 #### Try to describe the regional secret without the regional endpoint override
 
-**When to run:** Only as a diagnosis step when a regional secret command unexpectedly fails.
-**Trigger:** You used `--location` but the command still returned an argument-format error.
-**Context:** Read-only regional secret lookup against the default endpoint.
-**Purpose:** Show the exact error that indicates the endpoint override is missing.
+Only as a diagnosis step when a regional secret command unexpectedly fails. It is typically triggered by you used `--location` but the command still returned an argument-format error. Read-only regional secret lookup against the default endpoint. Show the exact error that indicates the endpoint override is missing.
 
 ```bash
 gcloud secrets describe \
@@ -392,10 +377,7 @@ This is not an IAM denial. It is a control-plane routing problem.
 
 #### Point the CLI at the regional Secret Manager endpoint
 
-**When to run:** Before regional `list`, `describe`, `versions list`, and similar operational commands.
-**Trigger:** You need to operate on regional secrets from the CLI.
-**Context:** Local `gcloud` configuration change.
-**Purpose:** Route Secret Manager CLI calls to the correct regional endpoint.
+Before regional `list`, `describe`, `versions list`, and similar operational commands. It is typically triggered by you need to operate on regional secrets from the CLI. Local `gcloud` configuration change. Route Secret Manager CLI calls to the correct regional endpoint.
 
 ```bash
 gcloud config set \
@@ -409,10 +391,7 @@ Updated property [api_endpoint_overrides/secretmanager].
 
 #### List and describe the regional secret
 
-**When to run:** After the regional endpoint override is in place.
-**Trigger:** You need to confirm regional secret metadata or inspect version state.
-**Context:** Read-only Secret Manager calls against the regional endpoint.
-**Purpose:** Prove that the secret exists and is region-bound to `europe-west1`.
+After the regional endpoint override is in place. It is typically triggered by you need to confirm regional secret metadata or inspect version state. Read-only Secret Manager calls against the regional endpoint. Prove that the secret exists and is region-bound to `europe-west1`.
 
 ```bash
 gcloud secrets list \
@@ -469,10 +448,7 @@ The resource name itself proves the regional boundary: `locations/europe-west1/s
 
 #### Return the CLI to the default Secret Manager endpoint
 
-**When to run:** Immediately after a regional secret operation.
-**Trigger:** You are done with the regional commands and do not want to surprise later global commands.
-**Context:** Local `gcloud` configuration change.
-**Purpose:** Prevent the workstation from accidentally staying pinned to a regional endpoint.
+Immediately after a regional secret operation. It is typically triggered by you are done with the regional commands and do not want to surprise later global commands. Local `gcloud` configuration change. Prevent the workstation from accidentally staying pinned to a regional endpoint.
 
 ```bash
 gcloud config unset api_endpoint_overrides/secretmanager
@@ -496,10 +472,7 @@ This subsection shows how alias changes interact with disabled versions and sche
 
 #### List the current versions of the automatic secret
 
-**When to run:** Before any alias move, disable, destroy, or incident-response change.
-**Trigger:** You need to know the current version states.
-**Context:** Read-only version inventory lookup.
-**Purpose:** Show which versions are enabled, disabled, and scheduled for destruction.
+Before any alias move, disable, destroy, or incident-response change. It is typically triggered by you need to know the current version states. Read-only version inventory lookup. Show which versions are enabled, disabled, and scheduled for destruction.
 
 ```bash
 gcloud secrets versions list \
@@ -550,10 +523,7 @@ This is the healthy rotation picture:
 
 #### Recreate a stale alias and prove the access failure
 
-**When to run:** During alias troubleshooting or runbook validation.
-**Trigger:** A consumer still references an alias that points to an old disabled version.
-**Context:** Safe metadata change followed by a read attempt.
-**Purpose:** Show what a broken alias looks like in practice.
+During alias troubleshooting or runbook validation. It is typically triggered by A consumer still references an alias that points to an old disabled version. Safe metadata change followed by a read attempt. Show what a broken alias looks like in practice.
 
 ```bash
 gcloud secrets update \
@@ -580,10 +550,7 @@ This is the exact stale-alias failure mode. The alias exists, but it points to a
 
 #### Remove the stale alias and confirm the steady-state metadata
 
-**When to run:** Immediately after confirming the stale alias problem.
-**Trigger:** The old alias should no longer be used by any consumer.
-**Context:** State-changing secret metadata update, followed by read-only inspection.
-**Purpose:** Return the secret to a clean state where only `current` remains.
+Immediately after confirming the stale alias problem. It is typically triggered by the old alias should no longer be used by any consumer. State-changing secret metadata update, followed by read-only inspection. Return the secret to a clean state where only `current` remains.
 
 ```bash
 gcloud secrets update \
@@ -656,10 +623,7 @@ This subsection proves that the disposable lab service account can read the payl
 
 #### Inspect the secret-level IAM policy
 
-**When to run:** Before granting or troubleshooting secret access.
-**Trigger:** A workload should read one secret and nothing else.
-**Context:** Read-only IAM policy lookup on the secret container.
-**Purpose:** Confirm the binding exists at secret scope.
+Before granting or troubleshooting secret access. It is typically triggered by A workload should read one secret and nothing else. Read-only IAM policy lookup on the secret container. Confirm the binding exists at secret scope.
 
 ```bash
 gcloud secrets get-iam-policy \
@@ -687,10 +651,7 @@ This is the least-privilege pattern. The lab principal can access this secret be
 
 #### List visible secrets as the impersonated lab service account
 
-**When to run:** After granting access and before trusting that the workload can enumerate the intended container.
-**Trigger:** You need to validate effective access as the workload identity itself.
-**Context:** Secret Manager call executed through service-account impersonation.
-**Purpose:** Confirm the principal can see the target secret.
+After granting access and before trusting that the workload can enumerate the intended container. It is typically triggered by you need to validate effective access as the workload identity itself. Secret Manager call executed through service-account impersonation. Confirm the principal can see the target secret.
 
 ```bash
 gcloud secrets list \
@@ -708,10 +669,7 @@ WARNING: This command is using service account impersonation. All API calls will
 
 #### Read the current secret value as the impersonated lab service account
 
-**When to run:** After the metadata listing succeeds and you need to prove payload access.
-**Trigger:** You want a direct end-to-end proof that the binding actually permits version reads.
-**Context:** Secret Manager access call executed through service-account impersonation.
-**Purpose:** Validate the exact runtime path a workload would use.
+After the metadata listing succeeds and you need to prove payload access. It is typically triggered by you want a direct end-to-end proof that the binding actually permits version reads. Secret Manager access call executed through service-account impersonation. Validate the exact runtime path a workload would use.
 
 ```bash
 gcloud secrets versions access current \
@@ -729,10 +687,7 @@ The value was returned through a short-lived token, not a JSON key file.
 
 #### Troubleshoot the permission against the secret resource
 
-**When to run:** When the caller and the binding look correct but the request still fails.
-**Trigger:** You need IAM's current answer for `secretmanager.versions.access`.
-**Context:** Read-only Policy Troubleshooter call.
-**Purpose:** Prove whether the secret access path is currently granted or denied.
+When the caller and the binding look correct but the request still fails. It is typically triggered by you need IAM's current answer for `secretmanager.versions.access`. Read-only Policy Troubleshooter call. Prove whether the secret access path is currently granted or denied.
 
 ```bash
 gcloud policy-intelligence troubleshoot-policy iam \

@@ -265,10 +265,7 @@ These commands establish whether the project has a real budgeting and automation
 
 #### Attempt to list billing budgets
 
-**When to run:** Run this before claiming budgets exist or before troubleshooting a missing budget notification.
-**Trigger:** Use it when building a cost control note, budget automation, or runbook for the current billing account.
-**Context:** This is a read-only command against the billing account, but it still depends on the Cloud Billing Budget API being enabled for the consumer project.
-**Purpose:** Verify whether budgets are queryable from the current project context.
+Run this before claiming budgets exist or before troubleshooting a missing budget notification. It is typically triggered by use it when building a cost control note, budget automation, or runbook for the current billing account. This is a read-only command against the billing account, but it still depends on the Cloud Billing Budget API being enabled for the consumer project. Verify whether budgets are queryable from the current project context.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -296,10 +293,7 @@ This is not evidence of zero budgets. It is evidence that the current project ca
 
 #### Check whether Pub/Sub topics exist for programmatic notifications
 
-**When to run:** Run this before describing budget-to-Pub/Sub or anomaly-to-Pub/Sub automation as if it already exists.
-**Trigger:** Use it when validating notification plumbing.
-**Context:** This is a read-only project inventory call against Pub/Sub.
-**Purpose:** Confirm whether the project currently has a message bus that could receive billing notifications.
+Run this before describing budget-to-Pub/Sub or anomaly-to-Pub/Sub automation as if it already exists. It is typically triggered by use it when validating notification plumbing. This is a read-only project inventory call against Pub/Sub. Confirm whether the project currently has a message bus that could receive billing notifications.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -319,10 +313,7 @@ No topics means there is currently no destination for budget or anomaly notifica
 
 #### Check whether Pub/Sub subscriptions exist
 
-**When to run:** Run this after checking topics and before assuming any downstream consumer exists.
-**Trigger:** Use it when a workflow claims a Cloud Run service, function, or worker consumes billing events.
-**Context:** This is a read-only Pub/Sub inventory lookup.
-**Purpose:** Confirm whether any subscriber exists to process cost-control messages.
+Run this after checking topics and before assuming any downstream consumer exists. It is typically triggered by use it when a workflow claims a Cloud Run service, function, or worker consumes billing events. This is a read-only Pub/Sub inventory lookup. Confirm whether any subscriber exists to process cost-control messages.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -342,10 +333,7 @@ This confirms there is no current consumer path for cost notifications.
 
 #### Check whether Cloud Scheduler exists for automation
 
-**When to run:** Run this before documenting scheduled anomaly checks or budget-validation jobs.
-**Trigger:** Use it when a chapter or runbook mentions scheduled Slack, Cloud Run, or cleanup actions.
-**Context:** This read-only command still depends on the Cloud Scheduler API being enabled on the project.
-**Purpose:** Verify whether the project can enumerate scheduler jobs today.
+Run this before documenting scheduled anomaly checks or budget-validation jobs. It is typically triggered by use it when a chapter or runbook mentions scheduled Slack, Cloud Run, or cleanup actions. This read-only command still depends on the Cloud Scheduler API being enabled on the project. Verify whether the project can enumerate scheduler jobs today.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -371,10 +359,7 @@ Scheduled cost automation is not available until the API is enabled.
 
 #### Check whether recommendations are available
 
-**When to run:** Run this before describing FinOps hub or recommendation-driven optimization as an active workflow.
-**Trigger:** Use it when a review depends on rightsizing or idle-resource recommendations.
-**Context:** This is a read-only Recommender API call scoped to the project and zone.
-**Purpose:** Verify whether recommendation-backed optimization is queryable today.
+Run this before describing FinOps hub or recommendation-driven optimization as an active workflow. It is typically triggered by use it when a review depends on rightsizing or idle-resource recommendations. This is a read-only Recommender API call scoped to the project and zone. Verify whether recommendation-backed optimization is queryable today.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -425,10 +410,7 @@ Without billing export, the safest temporary cost proxy is workload telemetry. B
 
 #### Query BigQuery jobs by user for the last 30 days
 
-**When to run:** Run this when billing export is missing but you still need to understand which principals drive query activity.
-**Trigger:** Use it during spend reviews, sudden query spikes, or TCO work.
-**Context:** This is a read-only SQL query against `region-europe-west1.INFORMATION_SCHEMA.JOBS_BY_PROJECT`.
-**Purpose:** Rank users and service accounts by query count, bytes processed, and slot consumption.
+Run this when billing export is missing but you still need to understand which principals drive query activity. It is typically triggered by use it during spend reviews, sudden query spikes, or TCO work. This is a read-only SQL query against `region-europe-west1.INFORMATION_SCHEMA.JOBS_BY_PROJECT`. Rank users and service accounts by query count, bytes processed, and slot consumption.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -464,10 +446,7 @@ The current query volume is small in absolute terms, but the service account con
 
 #### Query the most-referenced tables by bytes processed
 
-**When to run:** Run this when you need to find which datasets or tables are most likely to drive analytical cost.
-**Trigger:** Use it after a spike, before designing budgets, or during TCO modeling.
-**Context:** This is a read-only SQL query that unnests `referenced_tables` from `JOBS_BY_PROJECT`.
-**Purpose:** Identify the tables and metadata surfaces most often touched by recent queries.
+Run this when you need to find which datasets or tables are most likely to drive analytical cost. It is typically triggered by use it after a spike, before designing budgets, or during TCO modeling. This is a read-only SQL query that unnests `referenced_tables` from `JOBS_BY_PROJECT`. Identify the tables and metadata surfaces most often touched by recent queries.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -518,10 +497,7 @@ When billing export is absent, resource telemetry still helps isolate likely cos
 
 #### Read recent Cloud NAT flow logs
 
-**When to run:** Run this when network egress or NAT gateway usage is suspected to be part of a cost increase.
-**Trigger:** Use it during TCO reviews or after seeing unexplained internet-facing traffic.
-**Context:** This is a read-only Cloud Logging query over NAT gateway flow logs.
-**Purpose:** Confirm whether a VM is actively using Cloud NAT and where the traffic is going.
+Run this when network egress or NAT gateway usage is suspected to be part of a cost increase. It is typically triggered by use it during TCO reviews or after seeing unexplained internet-facing traffic. This is a read-only Cloud Logging query over NAT gateway flow logs. Confirm whether a VM is actively using Cloud NAT and where the traffic is going.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -566,10 +542,7 @@ This does not quantify the bill, but it proves that `stoxx-vm` is actively using
 
 #### Query Cloud Logging billing bytes via the Monitoring API
 
-**When to run:** Run this when you need to know whether logging volume is drifting upward before it becomes a billed ingestion issue.
-**Trigger:** Use it during weekly FinOps review or after noisy service changes.
-**Context:** This is a read-only Monitoring API call using the active `gcloud` access token.
-**Purpose:** Retrieve recent points for `logging.googleapis.com/billing/bytes_ingested`.
+Run this when you need to know whether logging volume is drifting upward before it becomes a billed ingestion issue. It is typically triggered by use it during weekly FinOps review or after noisy service changes. This is a read-only Monitoring API call using the active `gcloud` access token. Retrieve recent points for `logging.googleapis.com/billing/bytes_ingested`.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|

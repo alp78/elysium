@@ -131,10 +131,7 @@ Before choosing a change-capture design, inspect what the database already has e
 
 #### Inspect the current engine-managed change-capture state
 
-**When to run:** before designing or enabling any change-capture mechanism on the database.
-**Trigger:** first audit of a new database, or before proposing CDC, CT, or temporal tables in a design review.
-**Context:** read-only T-SQL query against `sys.databases`, `sys.change_tracking_databases`, `sys.tables`, and `sys.change_tracking_tables`. No permissions beyond `VIEW DATABASE STATE` required.
-**Purpose:** determine which engine-managed change-capture features are currently enabled so the team does not build on assumptions about features that are actually off.
+Before designing or enabling any change-capture mechanism on the database. It is typically triggered by first audit of a new database, or before proposing CDC, CT, or temporal tables in a design review. Read-only T-SQL query against `sys.databases`, `sys.change_tracking_databases`, `sys.tables`, and `sys.change_tracking_tables`. No permissions beyond `VIEW DATABASE STATE` required. Determine which engine-managed change-capture features are currently enabled so the team does not build on assumptions about features that are actually off.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -227,10 +224,7 @@ The current `stoxx` warehouse already uses the classic SCD2 columns on `silver.i
 
 #### Measure the live SCD2 state of `silver.index_dim`
 
-**When to run:** when validating whether the SCD2 pattern on a dimension table is actively producing history or is still in initial-load state.
-**Trigger:** first audit of the dimension, or after an ETL pipeline run that should have closed and reopened versions.
-**Context:** read-only T-SQL query against `silver.index_dim`. No special permissions required.
-**Purpose:** determine whether the pipeline has exercised a real version rollover or the table is still a current-state-only dimension.
+When validating whether the SCD2 pattern on a dimension table is actively producing history or is still in initial-load state. It is typically triggered by first audit of the dimension, or after an ETL pipeline run that should have closed and reopened versions. Read-only T-SQL query against `silver.index_dim`. No special permissions required. Determine whether the pipeline has exercised a real version rollover or the table is still a current-state-only dimension.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -272,10 +266,7 @@ _`silver.index_dim` is structurally an SCD2 table, but operationally it is still
 
 #### Preview the newest live dimension rows
 
-**When to run:** after the SCD2 state query confirms the table has rows, to inspect the actual content and version boundaries.
-**Trigger:** dimension audit, or verifying that a recent ETL load batch landed correctly.
-**Context:** read-only T-SQL query against `silver.index_dim`. No special permissions required.
-**Purpose:** confirm the shape and content of the latest dimension load batch, including the SCD2 control columns.
+After the SCD2 state query confirms the table has rows, to inspect the actual content and version boundaries. It is typically triggered by dimension audit, or verifying that a recent ETL load batch landed correctly. Read-only T-SQL query against `silver.index_dim`. No special permissions required. Confirm the shape and content of the latest dimension load batch, including the SCD2 control columns.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -315,10 +306,7 @@ _These rows confirm the table is currently storing only active versions. The `va
 
 #### Inspect the filtered unique index that enforces one active row per key
 
-**When to run:** when verifying that an SCD2 table has the critical uniqueness constraint on active rows.
-**Trigger:** new SCD2 table design review, or troubleshooting duplicate-current-row bugs.
-**Context:** read-only T-SQL query against `sys.indexes`. Requires `VIEW DEFINITION` or ownership on the table.
-**Purpose:** confirm that a filtered unique index exists on the active-row predicate (`is_current = 1`), preventing two simultaneous current versions for the same business key.
+When verifying that an SCD2 table has the critical uniqueness constraint on active rows. It is typically triggered by new SCD2 table design review, or troubleshooting duplicate-current-row bugs. Read-only T-SQL query against `sys.indexes`. Requires `VIEW DEFINITION` or ownership on the table. Confirm that a filtered unique index exists on the active-row predicate (`is_current = 1`), preventing two simultaneous current versions for the same business key.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -448,10 +436,7 @@ It is the wrong fit when:
 
 #### Inspect whether the current database already exposes any `rowversion` columns
 
-**When to run:** when auditing whether any tables in the database already use `rowversion` as a change token.
-**Trigger:** initial change-capture audit, or before proposing `rowversion` for a new table contract.
-**Context:** read-only T-SQL query against `sys.columns`. No special permissions beyond `VIEW DEFINITION` required.
-**Purpose:** determine whether any tables already carry a `rowversion` column, which would indicate an existing delta-scan pattern.
+When auditing whether any tables in the database already use `rowversion` as a change token. It is typically triggered by initial change-capture audit, or before proposing `rowversion` for a new table contract. Read-only T-SQL query against `sys.columns`. No special permissions beyond `VIEW DEFINITION` required. Determine whether any tables already carry a `rowversion` column, which would indicate an existing delta-scan pattern.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -485,10 +470,7 @@ _`stoxx` does not currently use `rowversion` in any table, which is consistent w
 
 #### Demonstrate how a `rowversion` token changes after one update
 
-**When to run:** when evaluating whether `rowversion` is suitable as a delta token for a specific table.
-**Trigger:** design review for a new incremental-load pattern, or when explaining rowversion behavior to the team.
-**Context:** state-changing T-SQL batch that creates and drops a disposable `dbo.demo_rowversion_delta` table. Requires `CREATE TABLE` permission in `dbo`.
-**Purpose:** show that `rowversion` tokens change automatically on update and demonstrate the before-vs-after comparison pattern that a consumer would use.
+When evaluating whether `rowversion` is suitable as a delta token for a specific table. It is typically triggered by design review for a new incremental-load pattern, or when explaining rowversion behavior to the team. State-changing T-SQL batch that creates and drops a disposable `dbo.demo_rowversion_delta` table. Requires `CREATE TABLE` permission in `dbo`. Show that `rowversion` tokens change automatically on update and demonstrate the before-vs-after comparison pattern that a consumer would use.
 
 > [!warning] `rowversion` is not business time and does not capture deletes
 >
@@ -595,10 +577,7 @@ Manual SCD2 is especially strong when:
 
 #### Demonstrate a real SCD2 version rollover on a disposable table
 
-**When to run:** when building or validating a manual SCD2 pattern on a new dimension table.
-**Trigger:** new dimension design, or when demonstrating the close-and-insert rollover sequence to the team.
-**Context:** state-changing T-SQL batch that creates and drops a disposable `dbo.demo_scd2_company` table. Requires `SET ANSI_NULLS ON` and `SET QUOTED_IDENTIFIER ON` for filtered-index creation.
-**Purpose:** demonstrate a complete version rollover — closing the old row and inserting the new current row — and verify the filtered unique index prevents duplicate active rows.
+When building or validating a manual SCD2 pattern on a new dimension table. It is typically triggered by new dimension design, or when demonstrating the close-and-insert rollover sequence to the team. State-changing T-SQL batch that creates and drops a disposable `dbo.demo_scd2_company` table. Requires `SET ANSI_NULLS ON` and `SET QUOTED_IDENTIFIER ON` for filtered-index creation. Demonstrate a complete version rollover — closing the old row and inserting the new current row — and verify the filtered unique index prevents duplicate active rows.
 
 > [!warning] Filtered unique index requires correct session `SET` options
 >
@@ -710,10 +689,7 @@ Temporal tables are strongest when:
 
 #### Demonstrate `FOR SYSTEM_TIME ALL` on a disposable temporal table
 
-**When to run:** when evaluating temporal tables as a history mechanism or demonstrating `FOR SYSTEM_TIME` queries.
-**Trigger:** design review for row-level auditability, or team training on temporal-table behavior.
-**Context:** state-changing T-SQL batch that creates and drops `dbo.demo_temporal_security` with `SYSTEM_VERSIONING = ON`. Requires `CREATE TABLE` in `dbo`.
-**Purpose:** show that SQL Server automatically moves old row versions to the history table on update, and that `FOR SYSTEM_TIME ALL` returns the combined current-plus-history view.
+When evaluating temporal tables as a history mechanism or demonstrating `FOR SYSTEM_TIME` queries. It is typically triggered by design review for row-level auditability, or team training on temporal-table behavior. State-changing T-SQL batch that creates and drops `dbo.demo_temporal_security` with `SYSTEM_VERSIONING = ON`. Requires `CREATE TABLE` in `dbo`. Show that SQL Server automatically moves old row versions to the history table on update, and that `FOR SYSTEM_TIME ALL` returns the combined current-plus-history view.
 
 > [!warning] Temporal tables are not free history
 >
@@ -853,10 +829,7 @@ CDC is the right fit when:
 
 #### Enable CDC at the database and table level
 
-**When to run:** when a downstream consumer requires row-level change events (inserts, updates, deletes) from a source table.
-**Trigger:** architecture decision to replicate data changes to a secondary system, streaming pipeline, or audit trail.
-**Context:** state-changing T-SQL using `sys.sp_cdc_enable_db` and `sys.sp_cdc_enable_table`. Requires `db_owner` membership. Creates CDC metadata objects, a capture job, and a cleanup job via SQL Server Agent. First enablement on the database auto-creates both jobs.
-**Purpose:** enable CDC at the database level and enroll one source table with net-change support.
+When a downstream consumer requires row-level change events (inserts, updates, deletes) from a source table. It is typically triggered by architecture decision to replicate data changes to a secondary system, streaming pipeline, or audit trail. State-changing T-SQL using `sys.sp_cdc_enable_db` and `sys.sp_cdc_enable_table`. Requires `db_owner` membership. Creates CDC metadata objects, a capture job, and a cleanup job via SQL Server Agent. First enablement on the database auto-creates both jobs. Enable CDC at the database level and enroll one source table with net-change support.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -924,10 +897,7 @@ EXEC sys.sp_cdc_scan;
 
 #### Read CDC rows between two LSN boundaries
 
-**When to run:** after CDC is enabled and changes have been committed to the tracked source table.
-**Trigger:** scheduled CDC consumer poll, incremental load cycle, or manual inspection of recent changes.
-**Context:** read-only T-SQL query using CDC table-valued functions. Requires membership in the CDC gating role (if one was set) or `db_owner`.
-**Purpose:** retrieve all captured change images between two LSN boundaries for downstream processing.
+After CDC is enabled and changes have been committed to the tracked source table. It is typically triggered by scheduled CDC consumer poll, incremental load cycle, or manual inspection of recent changes. Read-only T-SQL query using CDC table-valued functions. Requires membership in the CDC gating role (if one was set) or `db_owner`. Retrieve all captured change images between two LSN boundaries for downstream processing.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -972,10 +942,7 @@ _The three rows map directly to the three DML statements: `__$operation = 4` is 
 
 #### Compare all-changes vs net-changes output
 
-**When to run:** when evaluating whether the consumer needs every intermediate change image or only the final net state per key.
-**Trigger:** design decision about CDC consumption strategy — replay-style vs net-state-style.
-**Context:** read-only T-SQL query using `cdc.fn_cdc_get_net_changes_*`. Requires `@supports_net_changes = 1` at enablement.
-**Purpose:** show that net-changes collapses multiple changes per key into one row with the final operation and values.
+When evaluating whether the consumer needs every intermediate change image or only the final net state per key. It is typically triggered by design decision about CDC consumption strategy — replay-style vs net-state-style. Read-only T-SQL query using `cdc.fn_cdc_get_net_changes_*`. Requires `@supports_net_changes = 1` at enablement. Show that net-changes collapses multiple changes per key into one row with the final operation and values.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -1059,10 +1026,7 @@ CT is strongest when:
 
 #### Enable Change Tracking for the database and one table
 
-**When to run:** when a consumer needs lightweight key-level sync without the overhead of CDC.
-**Trigger:** architecture decision for pull-based synchronization — the consumer periodically asks "which keys changed since my last sync".
-**Context:** state-changing T-SQL using `ALTER DATABASE` and `ALTER TABLE`. Requires `ALTER` permission on the database and table. Enables CT metadata tracking and cleanup.
-**Purpose:** enable Change Tracking at the database level with a defined retention window, and enroll one source table with column-update metadata.
+When a consumer needs lightweight key-level sync without the overhead of CDC. It is typically triggered by architecture decision for pull-based synchronization — the consumer periodically asks "which keys changed since my last sync". State-changing T-SQL using `ALTER DATABASE` and `ALTER TABLE`. Requires `ALTER` permission on the database and table. Enables CT metadata tracking and cleanup. Enable Change Tracking at the database level with a defined retention window, and enroll one source table with column-update metadata.
 
 > [!warning] CT cleanup can invalidate old sync windows
 >
@@ -1123,10 +1087,7 @@ WHERE symbol = 'TTE.PA';
 
 #### Read changed keys since the last sync version
 
-**When to run:** during each sync cycle, after validating that the stored sync version is still within the retention window.
-**Trigger:** scheduled or event-driven sync poll from the consuming application or ETL process.
-**Context:** read-only T-SQL query using `CHANGETABLE(CHANGES ...)`. Requires `SELECT` on the base table and access to CT metadata. Use `FORCESEEK` hint (available from SQL Server 2016 SP2 CU16, 2017 CU24, 2019 CU11+) when only a small fraction of rows changed to avoid a table scan.
-**Purpose:** retrieve the set of primary keys that changed since the last sync version, along with operation metadata.
+During each sync cycle, after validating that the stored sync version is still within the retention window. It is typically triggered by scheduled or event-driven sync poll from the consuming application or ETL process. Read-only T-SQL query using `CHANGETABLE(CHANGES ...)`. Requires `SELECT` on the base table and access to CT metadata. Use `FORCESEEK` hint (available from SQL Server 2016 SP2 CU16, 2017 CU24, 2019 CU11+) when only a small fraction of rows changed to avoid a table scan. Retrieve the set of primary keys that changed since the last sync version, along with operation metadata.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -1166,10 +1127,7 @@ _CT returns one row per changed primary key with the operation code but no row d
 
 #### Join changed keys back to the base table for the current row image
 
-**When to run:** immediately after reading `CHANGETABLE(CHANGES ...)`, as part of the sync cycle.
-**Trigger:** the consumer needs the actual row data, not just the keys and operation codes.
-**Context:** read-only T-SQL query joining `CHANGETABLE` output to the base table via `LEFT JOIN`. The `LEFT JOIN` is required because deleted keys (`D`) have no matching row in the base table.
-**Purpose:** produce the complete sync payload: operation metadata plus the current row image for inserts and updates, and `NULL` values for deletes.
+Immediately after reading `CHANGETABLE(CHANGES ...)`, as part of the sync cycle. It is typically triggered by the consumer needs the actual row data, not just the keys and operation codes. Read-only T-SQL query joining `CHANGETABLE` output to the base table via `LEFT JOIN`. The `LEFT JOIN` is required because deleted keys (`D`) have no matching row in the base table. Produce the complete sync payload: operation metadata plus the current row image for inserts and updates, and `NULL` values for deletes.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -1208,10 +1166,7 @@ _The joined output shows the core CT consumption pattern. For the update (`U`) a
 
 #### Validate the retained sync window before trusting `CHANGETABLE`
 
-**When to run:** at the start of every sync cycle, before calling `CHANGETABLE(CHANGES ...)`.
-**Trigger:** consumer reads its stored `last_sync_version` from the sync version table and needs to verify it is still within the CT retention window.
-**Context:** read-only T-SQL query using `CHANGE_TRACKING_CURRENT_VERSION()` and `CHANGE_TRACKING_MIN_VALID_VERSION()`. No special permissions beyond `SELECT` access.
-**Purpose:** detect whether the consumer has lagged past the CT retention window, in which case incremental sync must be abandoned and a full reinitialization performed.
+At the start of every sync cycle, before calling `CHANGETABLE(CHANGES ...)`. It is typically triggered by consumer reads its stored `last_sync_version` from the sync version table and needs to verify it is still within the CT retention window. Read-only T-SQL query using `CHANGE_TRACKING_CURRENT_VERSION()` and `CHANGE_TRACKING_MIN_VALID_VERSION()`. No special permissions beyond `SELECT` access. Detect whether the consumer has lagged past the CT retention window, in which case incremental sync must be abandoned and a full reinitialization performed.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|

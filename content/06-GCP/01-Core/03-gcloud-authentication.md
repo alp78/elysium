@@ -454,10 +454,7 @@ The pool is the top-level trust boundary. Listing and describing it answers thre
 
 #### List workload identity pools
 
-**When to run:** When auditing an existing project before creating another pool or troubleshooting a failed federation setup.
-**Trigger:** First WIF inventory of a project, or confirmation after enabling `iam.googleapis.com`.
-**Context:** Read-only IAM control-plane command. Requires permission to list workload identity pools in the project.
-**Purpose:** Return every pool in `bq-wh-nb` with its canonical resource name, display name, state, and description.
+When auditing an existing project before creating another pool or troubleshooting a failed federation setup. It is typically triggered by first WIF inventory of a project, or confirmation after enabling `iam.googleapis.com`. Read-only IAM control-plane command. Requires permission to list workload identity pools in the project. Return every pool in `bq-wh-nb` with its canonical resource name, display name, state, and description.
 
 | Output column | Source field | Type | Meaning |
 |---|---|---|---|
@@ -484,10 +481,7 @@ The live project currently has one pool, `github-actions`, and it is active. Tha
 
 #### Describe the `github-actions` pool
 
-**When to run:** After discovering the pool ID and before you bind workloads or create additional providers.
-**Trigger:** You need the exact canonical resource name, description, or lifecycle state of one known pool.
-**Context:** Read-only IAM control-plane command scoped to one pool resource.
-**Purpose:** Return the authoritative metadata for the `github-actions` pool.
+After discovering the pool ID and before you bind workloads or create additional providers. It is typically triggered by you need the exact canonical resource name, description, or lifecycle state of one known pool. Read-only IAM control-plane command scoped to one pool resource. Return the authoritative metadata for the `github-actions` pool.
 
 | Output field | Type | Meaning |
 |---|---|---|
@@ -532,10 +526,7 @@ The provider is where Google validates the upstream issuer and translates extern
 
 #### List providers in the `github-actions` pool
 
-**When to run:** After confirming the pool exists and before reusing or editing a provider.
-**Trigger:** You need to see which issuers are already trusted inside the pool and whether they are active.
-**Context:** Read-only IAM control-plane command against one pool.
-**Purpose:** Return each provider in the `github-actions` pool with its issuer and admission condition.
+After confirming the pool exists and before reusing or editing a provider. It is typically triggered by you need to see which issuers are already trusted inside the pool and whether they are active. Read-only IAM control-plane command against one pool. Return each provider in the `github-actions` pool with its issuer and admission condition.
 
 | Output column | Source field | Type | Meaning |
 |---|---|---|---|
@@ -564,10 +555,7 @@ The live pool currently trusts one provider, `github`. The provider is active, i
 
 #### Describe the `github` provider
 
-**When to run:** After finding the provider ID and before writing a `principalSet` binding or generating a credential configuration file.
-**Trigger:** You need the exact claim mappings, issuer, and provider condition for one known provider.
-**Context:** Read-only IAM control-plane command against one provider resource.
-**Purpose:** Return the effective issuer, attribute mappings, and condition used by the `github` provider.
+After finding the provider ID and before writing a `principalSet` binding or generating a credential configuration file. It is typically triggered by you need the exact claim mappings, issuer, and provider condition for one known provider. Read-only IAM control-plane command against one provider resource. Return the effective issuer, attribute mappings, and condition used by the `github` provider.
 
 | Output field | Type | Meaning |
 |---|---|---|
@@ -623,10 +611,7 @@ Creating WIF is a two-step control-plane operation. First you create the pool th
 
 #### Create a new workload identity pool
 
-**When to run:** When a project needs a new trust boundary for one external platform or environment.
-**Trigger:** Initial WIF bootstrap, new CI/CD platform onboarding, or separation of dev and prod trust domains.
-**Context:** State-changing IAM control-plane command. Requires permission to create workload identity pools in the target project.
-**Purpose:** Create the container resource that will own one or more external identity providers.
+When a project needs a new trust boundary for one external platform or environment. It is typically triggered by initial WIF bootstrap, new CI/CD platform onboarding, or separation of dev and prod trust domains. State-changing IAM control-plane command. Requires permission to create workload identity pools in the target project. Create the container resource that will own one or more external identity providers.
 
 *Create a new workload identity pool that will later host one or more external OIDC providers.*
 
@@ -646,10 +631,7 @@ The pool ID is the stable resource name you reference later in provider creation
 
 #### Create an OIDC provider inside the pool
 
-**When to run:** After the pool exists and you know the issuer URI, claim mapping, and admission criteria for the external platform.
-**Trigger:** WIF bootstrap for a new IdP or a new environment-specific trust boundary.
-**Context:** State-changing IAM control-plane command. Requires permission to create providers inside the target pool.
-**Purpose:** Define which OIDC issuer is trusted, which claims become Google attributes, and which tokens are rejected before service-account impersonation is considered.
+After the pool exists and you know the issuer URI, claim mapping, and admission criteria for the external platform. It is typically triggered by WIF bootstrap for a new IdP or a new environment-specific trust boundary. State-changing IAM control-plane command. Requires permission to create providers inside the target pool. Define which OIDC issuer is trusted, which claims become Google attributes, and which tokens are rejected before service-account impersonation is considered.
 
 | Mapping target | Live mapping | Why it matters |
 |---|---|---|
@@ -719,10 +701,7 @@ Provider trust and service-account authorization are separate. Even if the provi
 
 #### Grant repository-scoped impersonation to the service account
 
-**When to run:** After the provider exists and you know which external identities should impersonate the target service account.
-**Trigger:** WIF bootstrap for a repository, workload, or environment that now needs Google API access.
-**Context:** State-changing IAM policy command against a service account resource. Requires permission to modify the service account IAM policy.
-**Purpose:** Grant the `github-actions` pool identities for repository `alp78/git-lab` permission to impersonate `github-actions-sa`.
+After the provider exists and you know which external identities should impersonate the target service account. It is typically triggered by WIF bootstrap for a repository, workload, or environment that now needs Google API access. State-changing IAM policy command against a service account resource. Requires permission to modify the service account IAM policy. Grant the `github-actions` pool identities for repository `alp78/git-lab` permission to impersonate `github-actions-sa`.
 
 | Output field | Type | Meaning |
 |---|---|---|
@@ -786,10 +765,7 @@ External workloads do not store a service account private key when using WIF. In
 
 #### Generate the `external_account` credential file
 
-**When to run:** After the provider and service-account binding exist and you know how the external workload will expose its OIDC token.
-**Trigger:** Initial bootstrap of a CI runner, another cloud workload, or an on-premises process that needs keyless Google authentication.
-**Context:** Local file-generation command. It does not create an IAM resource; it writes a JSON configuration file for ADC or `gcloud`.
-**Purpose:** Generate the JSON file that tells auth libraries how to exchange an external OIDC token for Google credentials.
+After the provider and service-account binding exist and you know how the external workload will expose its OIDC token. It is typically triggered by initial bootstrap of a CI runner, another cloud workload, or an on-premises process that needs keyless Google authentication. Local file-generation command. It does not create an IAM resource; it writes a JSON configuration file for ADC or `gcloud`. Generate the JSON file that tells auth libraries how to exchange an external OIDC token for Google credentials.
 
 *Create a WIF credential configuration file that reads the subject token from a local file and impersonates `github-actions-sa`.*
 
@@ -809,10 +785,7 @@ The first positional argument is the provider audience, not the project ID. The 
 
 #### Inspect the generated JSON structure
 
-**When to run:** Immediately after generating the file, or when auditing a credential file supplied to a deployment system.
-**Trigger:** You need to verify that the file points to the intended provider, token source, and service account impersonation endpoint.
-**Context:** Local file inspection. Read-only against the generated JSON file.
-**Purpose:** Confirm that the file is an `external_account` configuration and not a service account key.
+Immediately after generating the file, or when auditing a credential file supplied to a deployment system. It is typically triggered by you need to verify that the file points to the intended provider, token source, and service account impersonation endpoint. Local file inspection. Read-only against the generated JSON file. Confirm that the file is an `external_account` configuration and not a service account key.
 
 | JSON field | Type | Meaning |
 |---|---|---|
@@ -879,10 +852,7 @@ WIF changes ADC behavior at the first search step. `GOOGLE_APPLICATION_CREDENTIA
 
 #### Point `GOOGLE_APPLICATION_CREDENTIALS` at the WIF file in PowerShell
 
-**When to run:** When code on Windows must use a WIF credential configuration file instead of local user ADC or a key file.
-**Trigger:** CI runner setup, local reproduction of an external workload, or scripted testing of an `external_account` configuration.
-**Context:** Session-local environment variable assignment in PowerShell. This is read by Google auth libraries in the current process and child processes.
-**Purpose:** Make ADC choose the WIF credential configuration file at the first search-order step.
+When code on Windows must use a WIF credential configuration file instead of local user ADC or a key file. It is typically triggered by CI runner setup, local reproduction of an external workload, or scripted testing of an `external_account` configuration. Session-local environment variable assignment in PowerShell. This is read by Google auth libraries in the current process and child processes. Make ADC choose the WIF credential configuration file at the first search-order step.
 
 *Set the PowerShell environment variable so ADC resolves the WIF credential configuration file first.*
 
@@ -892,10 +862,7 @@ $env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\wif-cred-config.json"
 
 #### Point `GOOGLE_APPLICATION_CREDENTIALS` at the WIF file in Linux
 
-**When to run:** When code on Linux or macOS must use a WIF credential configuration file instead of local user ADC or a key file.
-**Trigger:** Container bootstrap, shell session setup, or CI runner initialization outside Google Cloud.
-**Context:** Session-local shell environment variable assignment. Read by Google auth libraries in the current process and child processes.
-**Purpose:** Make ADC choose the WIF credential configuration file at the first search-order step.
+When code on Linux or macOS must use a WIF credential configuration file instead of local user ADC or a key file. It is typically triggered by container bootstrap, shell session setup, or CI runner initialization outside Google Cloud. Session-local shell environment variable assignment. Read by Google auth libraries in the current process and child processes. Make ADC choose the WIF credential configuration file at the first search-order step.
 
 *Set the shell environment variable so ADC resolves the WIF credential configuration file first.*
 

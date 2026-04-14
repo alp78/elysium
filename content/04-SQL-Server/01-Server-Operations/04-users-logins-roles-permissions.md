@@ -1119,10 +1119,7 @@ GRANT EXECUTE ON OBJECT::support.usp_collect_diagnostics TO vendor_support_reade
 
 This is the canonical pattern for creating a non-interactive identity used by service runtimes, ETL tools, and applications. Creating the login without the mapped user leaves the identity unable to `USE` the database — the pattern must be completed with the second `CREATE USER` statement in the target database. Role membership and object permissions are still missing after this pair of statements and must be assigned separately.
 
-**When to run:** onboarding a new service runtime, pipeline, or application that needs SQL authentication.
-**Trigger:** new pipeline deployment, new application environment, or vendor integration setup.
-**Context:** T-SQL session as `securityadmin` (or member of `##MS_LoginManager##`) for the login and `db_owner` / `db_accessadmin` for the user; state-changing; no downtime.
-**Purpose:** create a server-level login and its corresponding database-level user so the identity can both authenticate to the instance and be referenced inside the database.
+Onboarding a new service runtime, pipeline, or application that needs SQL authentication. It is typically triggered by new pipeline deployment, new application environment, or vendor integration setup. T-SQL session as `securityadmin` (or member of `##MS_LoginManager##`) for the login and `db_owner` / `db_accessadmin` for the user; state-changing; no downtime. Create a server-level login and its corresponding database-level user so the identity can both authenticate to the instance and be referenced inside the database.
 
 *Create the server login first, then the database user mapped to it.*
 
@@ -1180,10 +1177,7 @@ The verification output confirms the complete pair: a `SQL_LOGIN` at server scop
 
 Contained users decouple the identity from instance-level login management. Use this pattern when the identity needs only one database, when portability across instances matters, and when you want to avoid `master`-level login dependency. The connection string must target the database explicitly — `Database=analytics_serving` — otherwise authentication fails because the contained user does not exist in `master`.
 
-**When to run:** onboarding a single-database workload where database portability matters and the identity should not depend on an instance-level login.
-**Trigger:** new dashboard connection, single-database analytics workload, or a database that will be frequently backed up and restored across instances.
-**Context:** T-SQL session in the target database as `db_owner`; the instance must have contained database authentication enabled with `sp_configure 'contained database authentication', 1` and the database must be set to `CONTAINMENT = PARTIAL`; state-changing.
-**Purpose:** create a database user that authenticates at the database level, with no corresponding server login.
+Onboarding a single-database workload where database portability matters and the identity should not depend on an instance-level login. It is typically triggered by new dashboard connection, single-database analytics workload, or a database that will be frequently backed up and restored across instances. T-SQL session in the target database as `db_owner`; the instance must have contained database authentication enabled with `sp_configure 'contained database authentication', 1` and the database must be set to `CONTAINMENT = PARTIAL`; state-changing. Create a database user that authenticates at the database level, with no corresponding server login.
 
 *Create a contained user with an explicit default schema.*
 
@@ -1231,10 +1225,7 @@ In a database with contained authentication enabled, the same `CREATE USER ... W
 
 A custom role scoped to a single schema is the cleanest building block for read-only access design. The role grants `SELECT` on every object in the schema — existing and future — so adding a new gold table later does not require updating the role.
 
-**When to run:** when designing access for a new team, workload, or data layer that needs broad read access within a single schema.
-**Trigger:** new analytics team onboarding, new reporting workload, or schema refactor.
-**Context:** T-SQL in the target database as `db_securityadmin` or `db_owner`; state-changing.
-**Purpose:** separate the capability (SELECT on gold) from identity (which users hold the role) so the access model survives personnel churn.
+When designing access for a new team, workload, or data layer that needs broad read access within a single schema. It is typically triggered by new analytics team onboarding, new reporting workload, or schema refactor. T-SQL in the target database as `db_securityadmin` or `db_owner`; state-changing. Separate the capability (SELECT on gold) from identity (which users hold the role) so the access model survives personnel churn.
 
 *Create the role and grant schema-scoped SELECT.*
 
@@ -1271,10 +1262,7 @@ The role is now ready to receive members. Adding a user to the role (next patter
 
 Membership is assigned via `ALTER ROLE ... ADD MEMBER`. The legacy `sp_addrolemember` still works but is deprecated and should not be used in new code.
 
-**When to run:** onboarding a new member to an existing role; never for creating a new access pattern (create a role instead).
-**Trigger:** new team member, new pipeline identity, or contractor needing temporary access.
-**Context:** T-SQL in the target database as `db_securityadmin` or a member of the role being modified; state-changing.
-**Purpose:** grant a principal all the permissions held by the role without issuing any direct grants.
+Onboarding a new member to an existing role; never for creating a new access pattern (create a role instead). It is typically triggered by new team member, new pipeline identity, or contractor needing temporary access. T-SQL in the target database as `db_securityadmin` or a member of the role being modified; state-changing. Grant a principal all the permissions held by the role without issuing any direct grants.
 
 *Add multiple existing database users to their custom roles in one batch.*
 
@@ -1356,10 +1344,7 @@ This pattern is useful when consumers should use procedures as the supported acc
 
 `REVOKE` and `DENY` sound similar but behave differently. `REVOKE` removes an earlier explicit permission — if the principal still has the permission through another grant (e.g., a role membership), the principal retains it. `DENY` actively blocks the permission even if it is inherited through a role. The rule of thumb is to prefer clean role scoping so `DENY` is rarely needed; use `DENY` only for true exceptions on individual sensitive objects.
 
-**When to run:** only for documented exceptions where a principal must be explicitly blocked from a specific schema or object that it would otherwise reach via role membership.
-**Trigger:** compliance requirement to exclude a specific identity from specific data, a misconfiguration rollback, or a legal hold.
-**Context:** T-SQL in the target database as `db_owner` or with explicit `CONTROL` on the securable; state-changing.
-**Purpose:** remove any prior explicit grant with `REVOKE`, then block inherited permissions with `DENY` to create an exception override.
+Only for documented exceptions where a principal must be explicitly blocked from a specific schema or object that it would otherwise reach via role membership. It is typically triggered by compliance requirement to exclude a specific identity from specific data, a misconfiguration rollback, or a legal hold. T-SQL in the target database as `db_owner` or with explicit `CONTROL` on the securable; state-changing. Remove any prior explicit grant with `REVOKE`, then block inherited permissions with `DENY` to create an exception override.
 
 *Revoke an explicit grant, then apply a DENY to actively block the permission.*
 
@@ -1540,11 +1525,7 @@ These topics matter because principals do not always need direct table permissio
 
 If a procedure and the underlying table share the same owner, SQL Server can allow the procedure to access the table without requiring direct table permission for the caller. This is the mechanism that makes the stored-procedure-as-API pattern work — consumers get `EXECUTE` on the procedure and the ownership chain grants transitive access to the underlying data.
 
-**When to demonstrate:** when validating the stored-procedure-as-API design, or when debugging why a procedure succeeds even though the caller has no direct permissions on the underlying table.
-**Trigger:** designing a new API schema, reviewing permissions for a procedure, or teaching the concept to a new team member.
-**Context:** T-SQL in a demo database with `CREATE PROCEDURE` permission and a user to impersonate via `EXECUTE AS USER`.
-**Purpose:** show empirically that ownership chaining lets a procedure read a table its caller cannot read directly, and show what breaks when the chain is broken.
-
+Use this demonstration to validate the stored-procedure-as-API pattern or to explain why a procedure can succeed even when the caller has no direct permission on the underlying table. It becomes relevant during API-schema design, permission review, and team onboarding. The demo runs in T-SQL against a sandbox database, requires `CREATE PROCEDURE`, and uses `EXECUTE AS USER` for impersonation. The goal is to show exactly how ownership chaining grants transitive access and what breaks when the ownership boundary changes.
 *Set up a table with sensitive data and a stored procedure that reads it. Both are owned by `dbo`.*
 
 ```sql
@@ -1626,10 +1607,7 @@ Recommendation:
 
 An **orphaned user** is a database user whose mapped login no longer exists or whose SID no longer matches. This commonly occurs after restoring a database to a different instance.
 
-**When to run:** immediately after every database restore to a different instance, every major migration, and whenever a pipeline reports "login exists but cannot connect to the database".
-**Trigger:** post-restore verification checklist, login-to-user SID mismatch error, or audit of a recently migrated database.
-**Context:** T-SQL in the restored database as `db_owner` or `securityadmin`; read-only detection; `ALTER USER` for the repair step requires `ALTER ANY USER` or database ownership.
-**Purpose:** identify every database user whose mapped login is missing on the current instance, then re-map each orphaned user to its current login so authentication works again.
+Immediately after every database restore to a different instance, every major migration, and whenever a pipeline reports "login exists but cannot connect to the database". It is typically triggered by post-restore verification checklist, login-to-user SID mismatch error, or audit of a recently migrated database. T-SQL in the restored database as `db_owner` or `securityadmin`; read-only detection; `ALTER USER` for the repair step requires `ALTER ANY USER` or database ownership. Identify every database user whose mapped login is missing on the current instance, then re-map each orphaned user to its current login so authentication works again.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -1751,11 +1729,7 @@ RLS is relevant when:
 - regulatory requirements mandate row-level access control beyond schema or view boundaries
 - the access boundary cannot be achieved by schema separation alone
 
-**When to demonstrate:** when validating a multi-tenant isolation design, or when the architecture requires per-row access control within a single shared table.
-**Trigger:** new multi-tenant application, compliance requirement for row-level isolation, or security review of an existing shared table.
-**Context:** T-SQL in a demo database as `db_owner`; creates an inline TVF, a security policy, and test data; requires two or more users to demonstrate the filter effect.
-**Purpose:** show empirically that RLS filters rows transparently based on the executing principal, and that the filter predicate must be defined with `WITH SCHEMABINDING` and should include an admin bypass clause.
-
+Use this demonstration to validate a multi-tenant isolation design when row-level access control must be enforced inside a shared table. It becomes relevant during new application design, compliance review, and security reassessment of an existing tenant model. The demo runs as `db_owner`, creates the inline TVF and security policy, and needs at least two users so the filter effect is visible. The goal is to show that RLS applies transparently based on the executing principal and that the predicate must be schema-bound, with an explicit administrative bypass when the design requires one.
 *Create a demo table with two tenants, grant SELECT to both, and insert representative rows.*
 
 ```sql
@@ -1854,11 +1828,7 @@ DDM is relevant when:
 - the masking requirement is presentation-level, not storage-level
 - column-level `DENY` is too restrictive because the user needs to query the table
 
-**When to demonstrate:** when validating a DDM design, or when debugging why masked columns appear as real values (the caller silently has `UNMASK` or is a `db_owner`).
-**Trigger:** new PII protection requirement, reporting-layer design review, or DDM behavior investigation.
-**Context:** T-SQL in a demo database as `db_owner`; creates a masked table, a low-privilege user, and demonstrates the mask effect and the `UNMASK` grant.
-**Purpose:** show empirically that DDM produces masked output for users without `UNMASK` and real output after `GRANT UNMASK`.
-
+Use this demonstration to validate a Dynamic Data Masking design or to troubleshoot why masked columns are still showing real values. It becomes relevant when a new PII requirement appears, a reporting layer is being reviewed, or DDM behavior is under investigation. The demo runs as `db_owner`, creates a masked table and a low-privilege user, and then shows both the masked and unmasked execution paths. The goal is to prove that DDM masks data for principals without `UNMASK` and that `GRANT UNMASK` immediately changes what the caller can see.
 *Create a table with two masked columns and grant SELECT to a non-privileged user.*
 
 ```sql
@@ -1924,10 +1894,7 @@ After `GRANT UNMASK`, the same user querying the same table sees the real values
 
 This query is the first thing to run during any security review. It lists every SQL login, Windows login, and Windows group on the instance and shows the password-policy configuration for SQL logins specifically. Stale service accounts, SQL logins with `is_policy_checked = 0`, and logins with very old `password_last_set` timestamps are the most common findings.
 
-**When to run:** at the start of every quarterly security review, after any principal-management operation, and before declaring a restore complete.
-**Trigger:** quarterly audit cadence, post-incident principal review, or suspicion of an unexpected login being created.
-**Context:** T-SQL session as a member of `securityadmin` or with `VIEW ANY LOGIN` server permission; read-only; no locks held beyond the DMV snapshot.
-**Purpose:** produce an authoritative inventory of every non-internal server principal with its password-policy configuration, so stale or non-compliant logins can be identified and remediated.
+At the start of every quarterly security review, after any principal-management operation, and before declaring a restore complete. It is typically triggered by quarterly audit cadence, post-incident principal review, or suspicion of an unexpected login being created. T-SQL session as a member of `securityadmin` or with `VIEW ANY LOGIN` server permission; read-only; no locks held beyond the DMV snapshot. Produce an authoritative inventory of every non-internal server principal with its password-policy configuration, so stale or non-compliant logins can be identified and remediated.
 
 The field definitions below cover every column the query reads or returns. `LOGINPROPERTY` returns a `sql_variant` that must be cast to `datetime2` before `CONVERT(varchar(19), ..., 120)` to avoid the pyodbc `sql_variant` handling limitation — the pattern is the same for production clients that need deterministic type handling.
 
@@ -1988,10 +1955,7 @@ The live output above is captured against the local `stoxx` SQL Server 2022 inst
 
 Every member of `sysadmin` can do anything on the instance. The only defensible state is one where every member is a named DBA or break-glass identity, and the list is short. This query produces the list in a form that can be saved to a security audit repository for quarterly review.
 
-**When to run:** quarterly as part of the sysadmin-membership review, and immediately after any security incident or suspected privilege escalation.
-**Trigger:** periodic audit, post-incident review, or a report of unexpected `sysadmin`-level actions in an audit log.
-**Context:** T-SQL session as a member of `securityadmin` or `sysadmin`; read-only; completes in milliseconds.
-**Purpose:** produce the authoritative list of principals with full instance control, so unjustified memberships can be removed.
+Quarterly as part of the sysadmin-membership review, and immediately after any security incident or suspected privilege escalation. It is typically triggered by periodic audit, post-incident review, or a report of unexpected `sysadmin`-level actions in an audit log. T-SQL session as a member of `securityadmin` or `sysadmin`; read-only; completes in milliseconds. Produce the authoritative list of principals with full instance control, so unjustified memberships can be removed.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -2036,10 +2000,7 @@ The live result from `stoxx` shows the three default members in a freshly-instal
 
 This is the per-database equivalent of the server-principals inventory. It lists every non-built-in user, role, and application role in the current database. Contained users (`authentication_type_desc = 'DATABASE'`) appear here but not in `sys.server_principals`, which makes this query essential for auditing databases that use containment.
 
-**When to run:** per database as part of the quarterly security audit, and after every major restore or migration to confirm the user list is clean.
-**Trigger:** quarterly audit, post-restore verification, or investigation of a specific database's access model.
-**Context:** T-SQL session in the target database context with `VIEW DEFINITION` on the database or membership in `db_securityadmin` / `db_owner`; read-only.
-**Purpose:** produce the authoritative list of every non-built-in principal in the database (users, roles, application roles), distinguishing login-mapped users from contained users.
+Per database as part of the quarterly security audit, and after every major restore or migration to confirm the user list is clean. It is typically triggered by quarterly audit, post-restore verification, or investigation of a specific database's access model. T-SQL session in the target database context with `VIEW DEFINITION` on the database or membership in `db_securityadmin` / `db_owner`; read-only. Produce the authoritative list of every non-built-in principal in the database (users, roles, application roles), distinguishing login-mapped users from contained users.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -2092,10 +2053,7 @@ The live output exhibits every `type_desc` and `authentication_type_desc` combin
 
 This query produces the full role-to-member mapping in the current database. The output should be scanned for unjustified memberships in `db_owner`, `db_securityadmin`, and `db_ddladmin` — these three fixed roles are the highest-risk database-level privileges.
 
-**When to run:** alongside the database-principals inventory; also run before any deployment that changes role membership.
-**Trigger:** audit cadence, change-management verification, or investigation of an unexpected permission grant.
-**Context:** T-SQL in the target database; `VIEW DEFINITION` or `db_securityadmin` required; read-only.
-**Purpose:** expose every role-to-member edge so over-privileged memberships can be traced back to an operational justification.
+Alongside the database-principals inventory; also run before any deployment that changes role membership. It is typically triggered by audit cadence, change-management verification, or investigation of an unexpected permission grant. T-SQL in the target database; `VIEW DEFINITION` or `db_securityadmin` required; read-only. Expose every role-to-member edge so over-privileged memberships can be traced back to an operational justification.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -2137,10 +2095,7 @@ The live result shows the canonical data-platform role design: one pipeline iden
 
 This query lists every schema-level permission that was explicitly granted or denied in the current database. Permissions inherited through fixed roles do not appear here — only explicit DDL. The output is the authoritative source for understanding "who can touch what schema" outside of role membership.
 
-**When to run:** after any permission-granting change, as part of the quarterly audit, and before any decommissioning or schema refactor.
-**Trigger:** audit cadence, permission change review, or architecture decisions about schema scope.
-**Context:** T-SQL in the target database; `VIEW DEFINITION` or `db_securityadmin`; read-only.
-**Purpose:** enumerate every schema-level grant and deny so the authorization model can be validated end-to-end.
+After any permission-granting change, as part of the quarterly audit, and before any decommissioning or schema refactor. It is typically triggered by audit cadence, permission change review, or architecture decisions about schema scope. T-SQL in the target database; `VIEW DEFINITION` or `db_securityadmin`; read-only. Enumerate every schema-level grant and deny so the authorization model can be validated end-to-end.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -2190,10 +2145,7 @@ The live output shows three `GRANT` rows on the three data-layer schemas and one
 
 The `guest` principal exists in every database but is disabled by default. Any explicit grant on `guest` means any login that can connect to the instance can also read from or execute against the database, bypassing the normal user-creation flow. A healthy result returns zero rows.
 
-**When to run:** once per database during the quarterly audit; also run immediately after a database restore.
-**Trigger:** audit cadence, post-restore verification, or suspicion that a database was restored from an instance with `guest` enabled.
-**Context:** T-SQL in the target database; any read permission on `sys.database_permissions` is sufficient.
-**Purpose:** confirm `guest` holds no explicit permissions in the database — a zero-row result is the healthy state.
+Once per database during the quarterly audit; also run immediately after a database restore. It is typically triggered by audit cadence, post-restore verification, or suspicion that a database was restored from an instance with `guest` enabled. T-SQL in the target database; any read permission on `sys.database_permissions` is sufficient. Confirm `guest` holds no explicit permissions in the database — a zero-row result is the healthy state.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -2231,10 +2183,7 @@ The inventory queries above describe state — "what does the permission model l
 
 `fn_my_permissions` is a dynamic management function that returns every permission the current caller holds on a given securable. It can be called on any scope (`SERVER`, `DATABASE`, `SCHEMA`, `OBJECT`, etc.) and wrapped in `EXECUTE AS USER` to check permissions for a specific principal.
 
-**When to run:** to verify a user has exactly the permissions expected after a role or direct grant change; to troubleshoot "why is this query failing?"; to produce a permission delta before and after a deployment.
-**Trigger:** permission troubleshooting, post-deployment verification, or self-service access check.
-**Context:** T-SQL as any user (returns the current user's permissions) or wrapped in `EXECUTE AS USER = 'target'` to return a different user's permissions; requires `IMPERSONATE` on the target user for the `EXECUTE AS` form.
-**Purpose:** produce the authoritative effective-permission list for a principal on a securable, including permissions inherited through role membership.
+To verify a user has exactly the permissions expected after a role or direct grant change; to troubleshoot "why is this query failing?"; to produce a permission delta before and after a deployment. It is typically triggered by permission troubleshooting, post-deployment verification, or self-service access check. T-SQL as any user (returns the current user's permissions) or wrapped in `EXECUTE AS USER = 'target'` to return a different user's permissions; requires `IMPERSONATE` on the target user for the `EXECUTE AS` form. Produce the authoritative effective-permission list for a principal on a securable, including permissions inherited through role membership.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -2311,10 +2260,7 @@ REVERT;
 
 `HAS_PERMS_BY_NAME` is a scalar function that returns `1` if the current caller holds a specific permission on a specific securable, `0` otherwise. It is the canonical function for scripted permission checks inside stored procedures, functions, and validation scripts.
 
-**When to run:** inside application code, stored procedures, or deployment scripts that need to conditionally take action based on whether a permission is held.
-**Trigger:** programmatic permission check in an automated workflow.
-**Context:** any T-SQL context; the function takes the securable name, class, and permission name as parameters.
-**Purpose:** a single boolean check per permission, suitable for inline use in `IF` branches and `WHERE` clauses.
+Inside application code, stored procedures, or deployment scripts that need to conditionally take action based on whether a permission is held. It is typically triggered by programmatic permission check in an automated workflow. Any T-SQL context; the function takes the securable name, class, and permission name as parameters. A single boolean check per permission, suitable for inline use in `IF` branches and `WHERE` clauses.
 
 *Check multiple server-, schema-, and object-scoped permissions in one call.*
 
@@ -2336,10 +2282,7 @@ Every permission returned `1` because the capture was done as `sa`. In productio
 
 `sys.fn_builtin_permissions` returns the complete catalog of every permission SQL Server recognizes at every scope. It is the authoritative reference for "what permissions exist?" and "what is the parent permission that covers this one?".
 
-**When to run:** when building a permission-inventory tool, validating a new role design, or learning the permission hierarchy.
-**Trigger:** architectural review, tool development, or training.
-**Context:** any T-SQL context; read-only; returns a static catalog.
-**Purpose:** enumerate every permission known to SQL Server at every scope, with its covering (parent) permission.
+When building a permission-inventory tool, validating a new role design, or learning the permission hierarchy. It is typically triggered by architectural review, tool development, or training. Any T-SQL context; read-only; returns a static catalog. Enumerate every permission known to SQL Server at every scope, with its covering (parent) permission.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -2379,10 +2322,7 @@ The `covering_permission_name` column is the key insight: `CONTROL ON SCHEMA` im
 
 The basic server-principals inventory surfaces `is_policy_checked`, but production password hygiene needs more — lockout state, bad-password counts, expiration state, and the last password change time. This query extends the inventory with the `LOGINPROPERTY` family of functions for full password hygiene triage.
 
-**When to run:** weekly as part of password hygiene monitoring, and immediately after a brute-force alert.
-**Trigger:** password-hygiene audit cadence, suspected credential-stuffing attack, or post-incident forensics.
-**Context:** T-SQL as `securityadmin` or with `VIEW ANY LOGIN`; read-only.
-**Purpose:** produce a per-SQL-login view of lockout, expiration, and complexity state in one query.
+Weekly as part of password hygiene monitoring, and immediately after a brute-force alert. It is typically triggered by password-hygiene audit cadence, suspected credential-stuffing attack, or post-incident forensics. T-SQL as `securityadmin` or with `VIEW ANY LOGIN`; read-only. Produce a per-SQL-login view of lockout, expiration, and complexity state in one query.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|

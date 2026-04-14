@@ -318,10 +318,7 @@ During a conflict, Git's index (the staging area) stores three versions of each 
 
 #### Inspect the three index stages during a conflict
 
-**When to run:** After Git reports a conflict and before you begin editing.
-**Trigger:** You want to understand exactly what each side contributed before deciding how to resolve.
-**Context:** Runs in any Git shell. Read-only — inspects the index without modifying anything.
-**Purpose:** See the exact blob SHA and stage number for each version of the conflicted file.
+After Git reports a conflict and before you begin editing. It is typically triggered by you want to understand exactly what each side contributed before deciding how to resolve. Runs in any Git shell. Read-only — inspects the index without modifying anything. See the exact blob SHA and stage number for each version of the conflicted file.
 
 *List the unmerged index entries showing all three stages for each conflicted file.*
 
@@ -374,10 +371,7 @@ The most common conflict scenario: merging a feature branch into main when both 
 
 #### Trigger the merge and observe the conflict
 
-**When to run:** When integrating a feature branch into the target branch.
-**Trigger:** Running `git merge` when both branches have diverged and modified the same file regions.
-**Context:** Local operation. The merge pauses without creating a commit. Working directory and index enter the "merging" state.
-**Purpose:** Combine the changes from two branches into a single branch.
+When integrating a feature branch into the target branch. It is typically triggered by running `git merge` when both branches have diverged and modified the same file regions. Local operation. The merge pauses without creating a commit. Working directory and index enter the "merging" state. Combine the changes from two branches into a single branch.
 
 *Merge the demo/conflict-merge branch into main, triggering a content conflict in config.py.*
 
@@ -395,10 +389,7 @@ Git tried to auto-merge config.py but found that both branches changed the `CACH
 
 #### Identify conflicted files
 
-**When to run:** Immediately after Git reports a conflict.
-**Trigger:** The "Automatic merge failed" message.
-**Context:** Read-only status check.
-**Purpose:** See exactly which files need resolution and confirm the repository is in a merge state.
+Immediately after Git reports a conflict. It is typically triggered by the "Automatic merge failed" message. Read-only status check. See exactly which files need resolution and confirm the repository is in a merge state.
 
 *List all files with unresolved conflicts.*
 
@@ -471,10 +462,7 @@ The `diff --cc` format uses two columns of `+`/`-` markers (one per parent). Lin
 
 #### Resolve the conflict and complete the merge
 
-**When to run:** After editing the file to contain the correct final version with all markers removed.
-**Trigger:** You have decided which version (or combination) to keep.
-**Context:** `git add` moves the file from stages 1–3 to stage 0. `git commit` creates the merge commit.
-**Purpose:** Finalize the merge by recording the resolved state.
+After editing the file to contain the correct final version with all markers removed. It is typically triggered by you have decided which version (or combination) to keep. `git add` moves the file from stages 1–3 to stage 0. `git commit` creates the merge commit. Finalize the merge by recording the resolved state.
 
 Edit the file to remove all conflict markers and keep the desired value:
 
@@ -510,10 +498,7 @@ When you know in advance that one entire version of a file is correct and the ot
 
 #### Accept the current branch version for a specific file
 
-**When to run:** During an active merge conflict when you want to keep your branch's version of a file wholesale.
-**Trigger:** The incoming branch's changes to this file are not wanted or are superseded by yours.
-**Context:** Replaces the conflicted working-tree file with the stage-2 (ours) version. You still need to `git add` afterward.
-**Purpose:** Quickly resolve a single file by choosing one side without manual editing.
+During an active merge conflict when you want to keep your branch's version of a file wholesale. It is typically triggered by the incoming branch's changes to this file are not wanted or are superseded by yours. Replaces the conflicted working-tree file with the stage-2 (ours) version. You still need to `git add` afterward. Quickly resolve a single file by choosing one side without manual editing.
 
 *Replace the conflicted file with the current branch (HEAD) version.*
 
@@ -586,10 +571,7 @@ A rename/delete conflict occurs when one branch renames a file while the other b
 
 #### Detect and resolve a rename/delete conflict
 
-**When to run:** When merging a branch that renamed a file against a branch that deleted it.
-**Trigger:** Git reports `CONFLICT (rename/delete)` during merge.
-**Context:** The renamed file appears in the working directory. The index marks it as unmerged with `deleted by us` or `deleted by them`.
-**Purpose:** Decide whether the file should exist (under its new name) or be removed.
+When merging a branch that renamed a file against a branch that deleted it. It is typically triggered by git reports `CONFLICT (rename/delete)` during merge. The renamed file appears in the working directory. The index marks it as unmerged with `deleted by us` or `deleted by them`. Decide whether the file should exist (under its new name) or be removed.
 
 *Merge a branch that renamed config.py to pipeline_config.py into main, where config.py was deleted.*
 
@@ -655,10 +637,7 @@ When conflicts are too complex to resolve immediately, or when you realize your 
 
 #### Abort an in-progress merge
 
-**When to run:** When you have started a merge that produced conflicts and want to cancel it entirely.
-**Trigger:** Conflicts are too numerous or complex, or you want to rebase instead of merge, or you need to coordinate with the teammate who made the conflicting changes first.
-**Context:** Restores the working directory and index to the exact state before `git merge` was run. Completely safe — no data is lost.
-**Purpose:** Return to a clean pre-merge state so you can choose a different approach.
+When you have started a merge that produced conflicts and want to cancel it entirely. It is typically triggered by conflicts are too numerous or complex, or you want to rebase instead of merge, or you need to coordinate with the teammate who made the conflicting changes first. Restores the working directory and index to the exact state before `git merge` was run. Completely safe — no data is lost. Return to a clean pre-merge state so you can choose a different approach.
 
 *Abort the in-progress merge and restore the pre-merge state.*
 
@@ -699,10 +678,7 @@ Text-based conflict marker editing works for simple conflicts. For complex multi
 
 #### Open the visual merge tool for all conflicted files
 
-**When to run:** During an active merge or rebase conflict when you prefer a GUI over editing markers manually.
-**Trigger:** Multiple files with complex conflicts, or conflicts involving rearranged code blocks where markers are hard to read.
-**Context:** Opens an external application. Git prompts for each conflicted file in sequence.
-**Purpose:** Resolve conflicts visually with side-by-side comparison of all three versions.
+During an active merge or rebase conflict when you prefer a GUI over editing markers manually. It is typically triggered by multiple files with complex conflicts, or conflicts involving rearranged code blocks where markers are hard to read. Opens an external application. Git prompts for each conflicted file in sequence. Resolve conflicts visually with side-by-side comparison of all three versions.
 
 *Launch the configured merge tool for every conflicted file.*
 
@@ -712,10 +688,7 @@ git mergetool
 
 #### Configure VS Code as the default merge tool
 
-**When to run:** Once, as part of initial Git configuration.
-**Trigger:** You want VS Code's built-in three-way merge editor as your default conflict resolution tool.
-**Context:** Writes to `~/.gitconfig` (global). Applies to all repositories for the current user.
-**Purpose:** Ensure `git mergetool` always opens VS Code.
+Once, as part of initial Git configuration. It is typically triggered by you want VS Code's built-in three-way merge editor as your default conflict resolution tool. Writes to `~/.gitconfig` (global). Applies to all repositories for the current user. Ensure `git mergetool` always opens VS Code.
 
 *Set VS Code as the global merge tool.*
 
@@ -808,10 +781,7 @@ gitGraph TB:
 
 #### Trigger a rebase conflict
 
-**When to run:** When you need to replay your branch's commits on top of an updated base branch.
-**Trigger:** Your branch has diverged from main and you want a linear history before merging.
-**Context:** Rebase rewrites commit history — every replayed commit gets a new SHA. If your branch was already pushed, you will need `--force-with-lease` afterward.
-**Purpose:** Create a clean linear history by replaying your commits on top of the latest base.
+When you need to replay your branch's commits on top of an updated base branch. It is typically triggered by your branch has diverged from main and you want a linear history before merging. Rebase rewrites commit history — every replayed commit gets a new SHA. If your branch was already pushed, you will need `--force-with-lease` afterward. Create a clean linear history by replaying your commits on top of the latest base.
 
 *Rebase the feature branch onto the updated main.*
 
@@ -896,10 +866,7 @@ The correct resolution keeps both changes — the higher retry count from the fe
 
 #### Resolve and continue the rebase
 
-**When to run:** After editing the conflicted file to contain the correct final version.
-**Trigger:** All conflict markers removed, file saved.
-**Context:** `git add` marks resolution, `git rebase --continue` applies the resolution and moves to the next commit.
-**Purpose:** Complete the current commit's replay and proceed to the next one (if any).
+After editing the conflicted file to contain the correct final version. It is typically triggered by all conflict markers removed, file saved. `git add` marks resolution, `git rebase --continue` applies the resolution and moves to the next commit. Complete the current commit's replay and proceed to the next one (if any).
 
 *Stage the resolved file and continue the rebase.*
 
@@ -921,10 +888,7 @@ When a rebase cannot proceed as planned, use these commands to cancel the entire
 
 #### Abort the entire rebase
 
-**When to run:** When the rebase conflicts are too complex, or you realize you should merge instead of rebase.
-**Trigger:** You want to abandon the rebase entirely and return to the pre-rebase state.
-**Context:** Completely safe. Restores the branch to its exact state before `git rebase` was run.
-**Purpose:** Cancel the rebase without any side effects.
+When the rebase conflicts are too complex, or you realize you should merge instead of rebase. It is typically triggered by you want to abandon the rebase entirely and return to the pre-rebase state. Completely safe. Restores the branch to its exact state before `git rebase` was run. Cancel the rebase without any side effects.
 
 *Cancel the rebase and restore the original branch state.*
 
@@ -934,10 +898,7 @@ git rebase --abort
 
 #### Skip the current commit during rebase
 
-**When to run:** When the commit being replayed is entirely redundant — its changes were already incorporated into the base branch.
-**Trigger:** The conflict exists only because the same change was already applied upstream.
-**Context:** Permanently discards the current commit's changes. The remaining commits continue to replay.
-**Purpose:** Drop a redundant commit from the rebased history.
+When the commit being replayed is entirely redundant — its changes were already incorporated into the base branch. It is typically triggered by the conflict exists only because the same change was already applied upstream. Permanently discards the current commit's changes. The remaining commits continue to replay. Drop a redundant commit from the rebased history.
 
 *Skip the current conflicting commit and continue with the rest.*
 
@@ -972,10 +933,7 @@ Conflicts during `git cherry-pick` follow the same resolution mechanics as merge
 
 #### Trigger a cherry-pick conflict
 
-**When to run:** When applying a single commit from another branch and the target file has diverged.
-**Trigger:** The cherry-picked commit modifies lines that were also changed on the current branch since the commit's parent.
-**Context:** Local operation. The cherry-pick pauses at the conflicting commit.
-**Purpose:** Port a specific change from one branch to another.
+When applying a single commit from another branch and the target file has diverged. It is typically triggered by the cherry-picked commit modifies lines that were also changed on the current branch since the commit's parent. Local operation. The cherry-pick pauses at the conflicting commit. Port a specific change from one branch to another.
 
 *Cherry-pick a version bump commit that conflicts with a hotfix already on main.*
 
@@ -1047,10 +1005,7 @@ git cherry-pick --continue --no-edit
 
 #### Trigger a stash pop conflict
 
-**When to run:** When re-applying stashed changes to a branch that has diverged since the stash was created.
-**Trigger:** Running `git stash pop` when the stashed changes touch lines that have been modified since the stash was saved.
-**Context:** The stash entry is preserved (not dropped) when conflicts occur. Your work is safe until you explicitly `git stash drop`.
-**Purpose:** Re-apply shelved work onto a branch that has moved forward.
+When re-applying stashed changes to a branch that has diverged since the stash was created. It is typically triggered by running `git stash pop` when the stashed changes touch lines that have been modified since the stash was saved. The stash entry is preserved (not dropped) when conflicts occur. Your work is safe until you explicitly `git stash drop`. Re-apply shelved work onto a branch that has moved forward.
 
 *Pop a stash that conflicts with committed changes.*
 
@@ -1087,10 +1042,7 @@ requests==2.31.0
 
 #### Resolve and clean up the stash
 
-**When to run:** After editing the conflicted file to include both dependencies.
-**Trigger:** Conflict markers removed, file saved.
-**Context:** Because the pop conflicted, the stash entry was not auto-dropped — you must drop it manually.
-**Purpose:** Complete the stash re-application and remove the stash entry.
+After editing the conflicted file to include both dependencies. It is typically triggered by conflict markers removed, file saved. Because the pop conflicted, the stash entry was not auto-dropped — you must drop it manually. Complete the stash re-application and remove the stash entry.
 
 The correct resolution keeps both additions (they are independent packages):
 

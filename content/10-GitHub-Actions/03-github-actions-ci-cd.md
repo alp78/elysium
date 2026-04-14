@@ -419,10 +419,7 @@ CI validates every code change before it reaches the main branch. The CI pipelin
 
 #### Run lint and tests on every push and PR
 
-**When to run:** On every push to `main` and on every pull request targeting `main`.
-**Trigger:** `push` and `pull_request` events with path filters limiting to source and test files.
-**Context:** GitHub-hosted runner (`ubuntu-latest`), read-only `GITHUB_TOKEN`. No cloud credentials needed.
-**Purpose:** Catch formatting issues and test failures before code reaches the main branch.
+On every push to `main` and on every pull request targeting `main`. It is typically triggered by `push` and `pull_request` events with path filters limiting to source and test files. GitHub-hosted runner (`ubuntu-latest`), read-only `GITHUB_TOKEN`. No cloud credentials needed. Catch formatting issues and test failures before code reaches the main branch.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -575,10 +572,7 @@ The build stage produces an immutable artifact — a Docker image, compiled bina
 
 #### Build and tag a Docker image with the commit SHA
 
-**When to run:** After CI passes on a push to `main`, or manually via `workflow_dispatch`.
-**Trigger:** `push` to `main` with path filters on source files, `Dockerfile`, and dependency files.
-**Context:** GitHub-hosted runner, no cloud credentials for the build itself. Push to registry requires authentication.
-**Purpose:** Produce a single immutable Docker image tagged with the commit SHA, ready for promotion through environments.
+After CI passes on a push to `main`, or manually via `workflow_dispatch`. It is typically triggered by `push` to `main` with path filters on source files, `Dockerfile`, and dependency files. GitHub-hosted runner, no cloud credentials for the build itself. Push to registry requires authentication. Produce a single immutable Docker image tagged with the commit SHA, ready for promotion through environments.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -729,10 +723,7 @@ Different deployment strategies trade off between speed, safety, and complexity.
 
 #### Deploy through staging and production with an approval gate
 
-**When to run:** On every push to `main` that modifies source or Docker files.
-**Trigger:** `push` event on `main` with path filters.
-**Context:** Three-job pipeline: `build` → `deploy-staging` → `deploy-production`. The production job requires reviewer approval on the `production` environment.
-**Purpose:** Demonstrate the build-once/promote-many pattern with an approval gate separating staging from production.
+On every push to `main` that modifies source or Docker files. It is typically triggered by `push` event on `main` with path filters. Three-job pipeline: `build` → `deploy-staging` → `deploy-production`. The production job requires reviewer approval on the `production` environment. Demonstrate the build-once/promote-many pattern with an approval gate separating staging from production.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -883,10 +874,7 @@ The pipeline built the artifact once (tag `03c544c`), deployed it to staging aut
 
 #### Deploy on release publication
 
-**When to run:** When a new GitHub Release is published (via UI or `gh release create`).
-**Trigger:** `release: types: [published]` event, or manually via `workflow_dispatch` with a version input.
-**Context:** Checks out the code at the release tag. Deploys to the `production` environment with approval gate.
-**Purpose:** Map formal releases (e.g., `v2.0.0`) to production deployments, creating an auditable version→deploy link.
+When a new GitHub Release is published (via UI or `gh release create`). It is typically triggered by `release: types: [published]` event, or manually via `workflow_dispatch` with a version input. Checks out the code at the release tag. Deploys to the `production` environment with approval gate. Map formal releases (e.g., `v2.0.0`) to production deployments, creating an auditable version→deploy link.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -961,10 +949,7 @@ The release `v2.0.0` was created with `gh release create v2.0.0 --title "v2.0.0 
 
 #### Trigger a rollback to a known-good commit SHA
 
-**When to run:** When a production deployment has failed and needs to be reverted to a previously verified version.
-**Trigger:** `workflow_dispatch` with three typed inputs: target SHA, environment, and reason.
-**Context:** Two-job pipeline: `validate` checks the SHA exists in the repository, `rollback` deploys it to the target environment (with environment protection rules).
-**Purpose:** Provide a repeatable, auditable rollback procedure that validates the target before deploying.
+When a production deployment has failed and needs to be reverted to a previously verified version. It is typically triggered by `workflow_dispatch` with three typed inputs: target SHA, environment, and reason. Two-job pipeline: `validate` checks the SHA exists in the repository, `rollback` deploys it to the target environment (with environment protection rules). Provide a repeatable, auditable rollback procedure that validates the target before deploying.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1079,10 +1064,7 @@ The rollback first validated that commit `03c544c` exists in the repository, ext
 
 #### Deploy a preview environment for each pull request
 
-**When to run:** When a pull request is opened, updated with new commits, or reopened.
-**Trigger:** `pull_request: types: [opened, synchronize, reopened]`.
-**Context:** Generates a unique preview URL per PR number. Deploys the PR head commit to an isolated namespace.
-**Purpose:** Allow reviewers to see changes in a live environment before merging.
+When a pull request is opened, updated with new commits, or reopened. It is typically triggered by `pull_request: types: [opened, synchronize, reopened]`. Generates a unique preview URL per PR number. Deploys the PR head commit to an isolated namespace. Allow reviewers to see changes in a live environment before merging.
 
 *Deploy a preview environment for PR #11.*
 
@@ -1181,10 +1163,7 @@ Concurrency groups prevent parallel deployments from racing. Without a concurren
 
 #### Demonstrate serialized deployments with a concurrency group
 
-**When to run:** When multiple deployments are triggered in rapid succession.
-**Trigger:** `workflow_dispatch` with a `deploy_id` input to distinguish concurrent runs.
-**Context:** The `deploy-production` concurrency group ensures only one run executes at a time. `cancel-in-progress: false` queues the second run rather than canceling the first.
-**Purpose:** Demonstrate that the second deployment waits for the first to complete before starting.
+When multiple deployments are triggered in rapid succession. It is typically triggered by `workflow_dispatch` with a `deploy_id` input to distinguish concurrent runs. The `deploy-production` concurrency group ensures only one run executes at a time. `cancel-in-progress: false` queues the second run rather than canceling the first. Demonstrate that the second deployment waits for the first to complete before starting.
 
 *Two deployments triggered in rapid succession — the second waits for the first.*
 
@@ -1322,10 +1301,7 @@ Always declare explicit `permissions:` at the workflow level with the minimum re
 
 #### Run a smoke test after deployment
 
-**When to run:** Immediately after a deployment completes, before declaring the deployment successful.
-**Trigger:** `workflow_dispatch` with target URL and expected version inputs, or called as a reusable workflow from a deploy pipeline.
-**Context:** Runs on a GitHub-hosted runner. Tests the deployed service over HTTP.
-**Purpose:** Verify the deployment is healthy and serving the expected version before routing production traffic.
+Immediately after a deployment completes, before declaring the deployment successful. It is typically triggered by `workflow_dispatch` with target URL and expected version inputs, or called as a reusable workflow from a deploy pipeline. Runs on a GitHub-hosted runner. Tests the deployed service over HTTP. Verify the deployment is healthy and serving the expected version before routing production traffic.
 
 *Run post-deploy smoke tests against the deployed service.*
 
@@ -1429,10 +1405,7 @@ Pinning actions to version tags (`@v4`) trusts the maintainer not to push malici
 
 #### Build with provenance tracking
 
-**When to run:** On every push to `main` that produces a deployable artifact.
-**Trigger:** `push` to `main`.
-**Context:** SHA-pinned actions, artifact upload with 90-day retention, provenance record generation.
-**Purpose:** Create a verifiable chain from source commit to deployed artifact.
+On every push to `main` that produces a deployable artifact. It is typically triggered by `push` to `main`. SHA-pinned actions, artifact upload with 90-day retention, provenance record generation. Create a verifiable chain from source commit to deployed artifact.
 
 *Build an artifact with provenance metadata and SHA-pinned actions.*
 
@@ -1555,10 +1528,7 @@ gh secret delete OLD_SECRET
 
 #### Authenticate to GCP via OIDC and run BigQuery validation
 
-**When to run:** In any workflow that needs to access GCP resources (BigQuery, GCS, Cloud Run, Terraform).
-**Trigger:** `workflow_dispatch` for this demo; in production, embedded in deploy pipelines.
-**Context:** Uses Workload Identity Federation to exchange a GitHub OIDC token for a short-lived GCP access token. No service account key stored as a secret.
-**Purpose:** Demonstrate keyless authentication to GCP — the modern pattern that eliminates long-lived credentials.
+In any workflow that needs to access GCP resources (BigQuery, GCS, Cloud Run, Terraform). It is typically triggered by `workflow_dispatch` for this demo; in production, embedded in deploy pipelines. Uses Workload Identity Federation to exchange a GitHub OIDC token for a short-lived GCP access token. No service account key stored as a secret. Demonstrate keyless authentication to GCP — the modern pattern that eliminates long-lived credentials.
 
 > [!info]- Workflow YAML breakdown
 >

@@ -230,10 +230,7 @@ flowchart TD
 
 #### Listing the demo_jx objects
 
-**When to run:** Any time a reader wants to confirm the setup is in place before running the examples below.
-**Trigger:** First execution of this note on a new machine, or after a `DROP SCHEMA` / container rebuild.
-**Context:** Read-only T-SQL session. Any login with `CONNECT` on `stoxx` can list the catalog views.
-**Purpose:** Confirm the five demo tables and one XML schema collection that back the live examples.
+Any time a reader wants to confirm the setup is in place before running the examples below. It is typically triggered by first execution of this note on a new machine, or after a `DROP SCHEMA` / container rebuild. Read-only T-SQL session. Any login with `CONNECT` on `stoxx` can list the catalog views. Confirm the five demo tables and one XML schema collection that back the live examples.
 
 *Enumerate the demo_jx tables and their row counts.*
 
@@ -277,10 +274,7 @@ Before extracting a single value, the first question is where the JSON document 
 
 #### ISJSON default mode
 
-**When to run:** As part of a `CHECK` constraint or a validation step at the ingestion boundary, where you want to reject text that is not parseable as an object or array.
-**Trigger:** A new JSON-bearing column is being added, or an existing column is being hardened with a new constraint, or a diagnostic query needs to count how many rows in a dirty column are actually valid JSON.
-**Context:** Read-only T-SQL; available in every supported SQL Server version since 2016. No permissions beyond `SELECT` on the source column.
-**Purpose:** Classify a string as either "valid JSON object or array" (returns 1) or "everything else" (returns 0) — the default mode is the RFC 4627 check, which rejects bare scalars.
+As part of a `CHECK` constraint or a validation step at the ingestion boundary, where you want to reject text that is not parseable as an object or array. It is typically triggered by A new JSON-bearing column is being added, or an existing column is being hardened with a new constraint, or a diagnostic query needs to count how many rows in a dirty column are actually valid JSON. Read-only T-SQL; available in every supported SQL Server version since 2016. No permissions beyond `SELECT` on the source column. Classify a string as either "valid JSON object or array" (returns 1) or "everything else" (returns 0) — the default mode is the RFC 4627 check, which rejects bare scalars.
 
 *`ISJSON` without a second argument returns 1 only for well-formed objects or arrays; bare scalars return 0 even though they are legal JSON under RFC 8259.*
 
@@ -300,10 +294,7 @@ The fourth column is the important one: `"scalar"` is valid JSON under RFC 8259,
 
 #### ISJSON with the 2022 type constraint
 
-**When to run:** When you need to validate that a payload is specifically an object, an array, a scalar, or any JSON value — not just any of them.
-**Trigger:** A producer claims "this column is always an object", or "the actions key is always an array", and you want a `CHECK` constraint that proves it at insert time.
-**Context:** SQL Server 2022 (16.x) or later. Available on Azure SQL and SQL database in Fabric. The second argument is an unquoted keyword — the runtime rejects `'OBJECT'` as a string literal with error 1023.
-**Purpose:** Narrow `ISJSON` from "is this any JSON?" to "is this specifically a JSON `OBJECT` / `ARRAY` / `SCALAR` / `VALUE`?".
+When you need to validate that a payload is specifically an object, an array, a scalar, or any JSON value — not just any of them. It is typically triggered by A producer claims "this column is always an object", or "the actions key is always an array", and you want a `CHECK` constraint that proves it at insert time. SQL Server 2022 (16.x) or later. Available on Azure SQL and SQL database in Fabric. The second argument is an unquoted keyword — the runtime rejects `'OBJECT'` as a string literal with error 1023. Narrow `ISJSON` from "is this any JSON?" to "is this specifically a JSON `OBJECT` / `ARRAY` / `SCALAR` / `VALUE`?".
 
 *The keyword form validates against a specific JSON shape; notice how `true` is a valid `VALUE` and a valid `SCALAR` but not a scalar number — a subtle distinction worth knowing.*
 
@@ -347,10 +338,7 @@ The canonical boundary-store pattern on any pre-2025 SQL Server is a wide `nvarc
 
 #### Auditing the ISJSON CHECK constraints on demo_jx
 
-**When to run:** During a schema review, or before adding a new scalar `JSON_VALUE` lookup — you want to confirm the source column is actually guaranteed valid before wiring a computed column to it.
-**Trigger:** A new JSON column is about to be created, or a suspicious row has appeared and you want to confirm whether the constraint is real or aspirational.
-**Context:** Read-only query against the `sys.check_constraints` catalog view. No permissions beyond `VIEW DEFINITION` on the objects.
-**Purpose:** List every `CHECK` constraint on the `demo_jx` schema and show which ones are calling `ISJSON` — the ones that are actually enforcing validity.
+During a schema review, or before adding a new scalar `JSON_VALUE` lookup — you want to confirm the source column is actually guaranteed valid before wiring a computed column to it. It is typically triggered by A new JSON column is about to be created, or a suspicious row has appeared and you want to confirm whether the constraint is real or aspirational. Read-only query against the `sys.check_constraints` catalog view. No permissions beyond `VIEW DEFINITION` on the objects. List every `CHECK` constraint on the `demo_jx` schema and show which ones are calling `ISJSON` — the ones that are actually enforcing validity.
 
 *Every row returned shows a constraint that guarantees the downstream `JSON_VALUE` / `OPENJSON` calls will never see garbage.*
 
@@ -373,10 +361,7 @@ Both demo tables have the constraint. Any `INSERT` of malformed text into either
 
 #### Counting valid vs invalid rows in an already-populated column
 
-**When to run:** On a legacy column that was created without a CHECK constraint — you want to know how many rows would have to be cleaned before the constraint could be added retroactively.
-**Trigger:** Planning to add `ALTER TABLE ... ADD CONSTRAINT ... CHECK (ISJSON(payload) = 1)` to an existing table.
-**Context:** Read-only. On a 100-million-row table this will be a full scan and can take minutes — run it on an off-peak replica if possible.
-**Purpose:** Separate rows that would pass the constraint from rows that would break the `ALTER TABLE` so you can fix the offenders first.
+On a legacy column that was created without a CHECK constraint — you want to know how many rows would have to be cleaned before the constraint could be added retroactively. It is typically triggered by planning to add `ALTER TABLE ... ADD CONSTRAINT ... CHECK (ISJSON(payload) = 1)` to an existing table. Read-only. On a 100-million-row table this will be a full scan and can take minutes — run it on an off-peak replica if possible. Separate rows that would pass the constraint from rows that would break the `ALTER TABLE` so you can fix the offenders first.
 
 *`CASE` + `ISJSON` gives you a quick valid/invalid histogram without touching the rows themselves.*
 
@@ -396,10 +381,7 @@ Every row in `demo_jx.raw_event_json` is valid (expected — the CHECK rejects i
 
 #### Previewing the payloads in raw_event_json
 
-**When to run:** At the start of any section that references `demo_jx.raw_event_json` — to remind the reader which four documents are in the table.
-**Trigger:** Writing or reviewing a query that reads from the table and wanting to confirm the content.
-**Context:** Read-only; no permissions beyond `SELECT`.
-**Purpose:** Show the four rows, their source tags, and a truncated preview so the reader can correlate the later `JSON_VALUE` / `OPENJSON` queries with concrete data.
+At the start of any section that references `demo_jx.raw_event_json` — to remind the reader which four documents are in the table. It is typically triggered by writing or reviewing a query that reads from the table and wanting to confirm the content. Read-only; no permissions beyond `SELECT`. Show the four rows, their source tags, and a truncated preview so the reader can correlate the later `JSON_VALUE` / `OPENJSON` queries with concrete data.
 
 *One row per document, with `LEN()` reporting the full character count and `LEFT(...,60)` showing the first 60 characters of each payload.*
 
@@ -470,10 +452,7 @@ Three scalar functions extract data from a JSON text: `JSON_VALUE` returns a sin
 
 #### Extracting scalar fields from a price tick
 
-**When to run:** Any time a small scalar value (a string, number, boolean, date-as-text) needs to be pulled out of a JSON document and materialized as a SQL column in a `SELECT`, `WHERE`, `JOIN`, or `ORDER BY`.
-**Trigger:** Building a report that reads from a JSON column, or wiring a computed column for indexing, or filtering on a JSON property.
-**Context:** Read-only T-SQL. Available in SQL Server 2016 and later. Returns `nvarchar(4000)` — explicit `CAST` if you need a non-string SQL type.
-**Purpose:** Pick out the scalar values inside the `price_tick` payloads (`$.symbol`, `$.last`, `$.tick_time`, `$.volume`) and present them as ordinary columns.
+Any time a small scalar value (a string, number, boolean, date-as-text) needs to be pulled out of a JSON document and materialized as a SQL column in a `SELECT`, `WHERE`, `JOIN`, or `ORDER BY`. It is typically triggered by building a report that reads from a JSON column, or wiring a computed column for indexing, or filtering on a JSON property. Read-only T-SQL. Available in SQL Server 2016 and later. Returns `nvarchar(4000)` — explicit `CAST` if you need a non-string SQL type. Pick out the scalar values inside the `price_tick` payloads (`$.symbol`, `$.last`, `$.tick_time`, `$.volume`) and present them as ordinary columns.
 
 > [!info]- How the path expressions resolve
 >
@@ -509,10 +488,7 @@ Each extracted column is a `nvarchar(4000)` even though `$.last` is a JSON numbe
 
 #### The 4000-character truncation limit
 
-**When to run:** Any time a JSON key might hold a long string (a description, an error message, a dumped exception, a base64 blob) longer than 4000 UTF-16 characters.
-**Trigger:** A `JSON_VALUE` call starts returning `NULL` on rows where the key is present and non-null.
-**Context:** Read-only demonstration; the underlying limit is a property of `JSON_VALUE`'s return type, not the engine version.
-**Purpose:** Prove that `JSON_VALUE` silently returns `NULL` when the matched value exceeds 4000 characters, and show the documented workaround.
+Any time a JSON key might hold a long string (a description, an error message, a dumped exception, a base64 blob) longer than 4000 UTF-16 characters. It is typically triggered by A `JSON_VALUE` call starts returning `NULL` on rows where the key is present and non-null. Read-only demonstration; the underlying limit is a property of `JSON_VALUE`'s return type, not the engine version. Prove that `JSON_VALUE` silently returns `NULL` when the matched value exceeds 4000 characters, and show the documented workaround.
 
 *A short value extracts cleanly.*
 
@@ -566,10 +542,7 @@ SELECT LEN(JSON_VALUE(@big, '$.description')) AS extracted_len;
 
 #### Pulling nested objects and arrays from the rebalance event
 
-**When to run:** When you need to forward a JSON sub-document to a client, to another query, or to `OPENJSON` for shredding.
-**Trigger:** The path you want points at an object or an array rather than a scalar.
-**Context:** Read-only. Available in all supported versions.
-**Purpose:** Extract the top-level `$.index` object, the full `$.actions` array, and the first element `$.actions[0]` from the rebalance event.
+When you need to forward a JSON sub-document to a client, to another query, or to `OPENJSON` for shredding. It is typically triggered by the path you want points at an object or an array rather than a scalar. Read-only. Available in all supported versions. Extract the top-level `$.index` object, the full `$.actions` array, and the first element `$.actions[0]` from the rebalance event.
 
 *`JSON_QUERY` returns the raw fragment text, unparsed.*
 
@@ -591,10 +564,7 @@ The `actions_arr` and `index_obj` fragments preserve whatever whitespace the pro
 
 #### JSON_VALUE vs JSON_QUERY on the same document
 
-**When to run:** Any time you need to decide which function to reach for, or to diagnose an unexpected `NULL`.
-**Trigger:** A `JSON_VALUE` call is returning `NULL` for a path that exists, or a `JSON_QUERY` call is returning `NULL` for a scalar.
-**Context:** Read-only, documentation demo.
-**Purpose:** Show the exact disjoint behavior of the two functions on a document with both scalar and structured values.
+Any time you need to decide which function to reach for, or to diagnose an unexpected `NULL`. It is typically triggered by A `JSON_VALUE` call is returning `NULL` for a path that exists, or a `JSON_QUERY` call is returning `NULL` for a scalar. Read-only, documentation demo. Show the exact disjoint behavior of the two functions on a document with both scalar and structured values.
 
 *Flip each path through both functions. Exactly one of the two returns a non-NULL result for each path.*
 
@@ -621,10 +591,7 @@ SQL Server 2022 added `JSON_PATH_EXISTS`, which returns `1` when the path resolv
 
 #### Finding rows that contain a specific path
 
-**When to run:** When the schema of the JSON column is heterogeneous — some rows have a key, others do not — and you want to filter or count by presence alone.
-**Trigger:** The payload comes from a polymorphic producer (different event types, different shapes) and you need to route or filter based on which keys are present.
-**Context:** Read-only. SQL Server 2022 (16.x) or later.
-**Purpose:** For each row in `demo_jx.raw_event_json`, report whether the document contains `$.symbol`, `$.index.code`, or `$.actions`.
+When the schema of the JSON column is heterogeneous — some rows have a key, others do not — and you want to filter or count by presence alone. It is typically triggered by the payload comes from a polymorphic producer (different event types, different shapes) and you need to route or filter based on which keys are present. Read-only. SQL Server 2022 (16.x) or later. For each row in `demo_jx.raw_event_json`, report whether the document contains `$.symbol`, `$.index.code`, or `$.actions`.
 
 *The bit output lets you use the function directly in `WHERE` or `HAVING` clauses without a `NULL` dance.*
 
@@ -654,10 +621,7 @@ Every JSON path in SQL Server is evaluated in either `lax` mode (the default) or
 
 #### Lax mode is the default
 
-**When to run:** When missing keys are an expected part of the polymorphism and you want to present them as SQL `NULL` rather than as a query error.
-**Trigger:** A consumer query that reads optional keys and cannot assume every document has them.
-**Context:** Read-only demo.
-**Purpose:** Show that both the explicit `lax $.price` and the implicit `$.price` return `NULL` when the key is missing.
+When missing keys are an expected part of the polymorphism and you want to present them as SQL `NULL` rather than as a query error. It is typically triggered by A consumer query that reads optional keys and cannot assume every document has them. Read-only demo. Show that both the explicit `lax $.price` and the implicit `$.price` return `NULL` when the key is missing.
 
 *Writing `lax` explicitly is equivalent to omitting it — it is the default mode.*
 
@@ -674,10 +638,7 @@ SELECT
 
 #### Strict mode raises error 13608 on a missing key
 
-**When to run:** When the producer has sworn every row has a specific key and you want the query to fail loudly if that promise is broken, so the violation surfaces instead of silently materializing as `NULL`.
-**Trigger:** Populating a `NOT NULL` downstream column where a missing value is a hard bug, not a data variant.
-**Context:** Read-only demo; the error is raised at execution time, not at compile time.
-**Purpose:** Prove that the same path under `strict` raises error 13608 so the caller can fail fast.
+When the producer has sworn every row has a specific key and you want the query to fail loudly if that promise is broken, so the violation surfaces instead of silently materializing as `NULL`. It is typically triggered by populating a `NOT NULL` downstream column where a missing value is a hard bug, not a data variant. Read-only demo; the error is raised at execution time, not at compile time. Prove that the same path under `strict` raises error 13608 so the caller can fail fast.
 
 *`strict` mode turns a missing path into a runtime error instead of a silent `NULL`.*
 
@@ -713,10 +674,7 @@ Three families of writers cover most real workloads: `JSON_MODIFY` edits an exis
 
 #### Set, add, append, and delete in one shot
 
-**When to run:** When an ingestion step needs to enrich or cleanse an inbound JSON document before storing it.
-**Trigger:** A producer sends a mostly-correct document that needs a small mutation (status flag, timestamp, tag list) before it becomes the canonical record.
-**Context:** Read-only demo; `JSON_MODIFY` is a pure function that returns the new document — to persist, wrap in `UPDATE ... SET payload = JSON_MODIFY(payload, ...)`.
-**Purpose:** Illustrate the four common `JSON_MODIFY` operations (replace, add, append to array, delete) in a single projection.
+When an ingestion step needs to enrich or cleanse an inbound JSON document before storing it. It is typically triggered by A producer sends a mostly-correct document that needs a small mutation (status flag, timestamp, tag list) before it becomes the canonical record. Read-only demo; `JSON_MODIFY` is a pure function that returns the new document — to persist, wrap in `UPDATE ... SET payload = JSON_MODIFY(payload, ...)`. Illustrate the four common `JSON_MODIFY` operations (replace, add, append to array, delete) in a single projection.
 
 > [!info]- How each mutation resolves
 >
@@ -744,10 +702,7 @@ Each column is a complete document — `JSON_MODIFY` never mutates in place on p
 
 #### Updating a value inside an array element
 
-**When to run:** When the mutation target is nested inside an array (for example, "update the weight of the first action in the rebalance event").
-**Trigger:** Reapplying a correction to a specific element identified by its index in the source document.
-**Context:** Read-only demo. Array indexing in `JSON_MODIFY` is zero-based and uses bracket notation.
-**Purpose:** Show that `$.actions[0].weight` is a legal path and `JSON_MODIFY` replaces only that single leaf.
+When the mutation target is nested inside an array (for example, "update the weight of the first action in the rebalance event"). It is typically triggered by reapplying a correction to a specific element identified by its index in the source document. Read-only demo. Array indexing in `JSON_MODIFY` is zero-based and uses bracket notation. Show that `$.actions[0].weight` is a legal path and `JSON_MODIFY` replaces only that single leaf.
 
 *Bracket notation walks into a specific array element, then dot notation picks a key inside it.*
 
@@ -766,10 +721,7 @@ The SQL Server 2022 `JSON_OBJECT` / `JSON_ARRAY` builder functions construct a n
 
 #### Building a JSON object per row from relational columns
 
-**When to run:** Any time a downstream consumer wants per-row JSON built from SQL columns — for a REST API response, a message bus payload, or a serialization step.
-**Trigger:** A stored procedure or a view needs to return JSON objects instead of columns.
-**Context:** SQL Server 2022 and later. Read-only here, but the output of `JSON_OBJECT` can be inserted into a JSON column directly.
-**Purpose:** Assemble a JSON object per row from the `symbol`, `sector`, and `beta` columns of `demo_jx.indexed_json_events`, with `ABSENT ON NULL` suppressing the `note` key because it is always `NULL`.
+Any time a downstream consumer wants per-row JSON built from SQL columns — for a REST API response, a message bus payload, or a serialization step. It is typically triggered by A stored procedure or a view needs to return JSON objects instead of columns. SQL Server 2022 and later. Read-only here, but the output of `JSON_OBJECT` can be inserted into a JSON column directly. Assemble a JSON object per row from the `symbol`, `sector`, and `beta` columns of `demo_jx.indexed_json_events`, with `ABSENT ON NULL` suppressing the `note` key because it is always `NULL`.
 
 > [!info]- Anatomy of the JSON_OBJECT call
 >
@@ -806,10 +758,7 @@ ORDER BY symbol;
 
 #### Constructing a simple JSON array from literals
 
-**When to run:** Any time a downstream projection needs a small constant array inside a larger query.
-**Trigger:** Building a dimension table of tags, regions, or option lists that feeds into a report or an API.
-**Context:** SQL Server 2022 and later.
-**Purpose:** Show the compact `JSON_ARRAY` call that takes a list of expressions and returns a single JSON array literal.
+Any time a downstream projection needs a small constant array inside a larger query. It is typically triggered by building a dimension table of tags, regions, or option lists that feeds into a report or an API. SQL Server 2022 and later. Show the compact `JSON_ARRAY` call that takes a list of expressions and returns a single JSON array literal.
 
 *`JSON_ARRAY` takes a variadic list of values and wraps them in `[...]`.*
 
@@ -827,10 +776,7 @@ SELECT JSON_ARRAY('EU','US','APAC','OIL') AS regions_array;
 
 #### JSON_ARRAYAGG on SQL 2022 raises error 195
 
-**When to run:** Never on SQL 2022 — the call fails. This cell is kept to make the version boundary explicit.
-**Trigger:** A reader copies an aggregation pattern from the SQL 2025 docs and tries it on an older engine.
-**Context:** SQL 2025 only. Error 195 on anything older.
-**Purpose:** Document the exact error so it is unambiguous which version the function requires.
+Never on SQL 2022 — the call fails. This cell is kept to make the version boundary explicit. It is typically triggered by A reader copies an aggregation pattern from the SQL 2025 docs and tries it on an older engine. SQL 2025 only. Error 195 on anything older. Document the exact error so it is unambiguous which version the function requires.
 
 *Calling a SQL 2025 function on a 2022 engine surfaces as "not a recognized built-in function name".*
 
@@ -880,10 +826,7 @@ FROM demo_jx.indexed_json_events;
 
 #### OPENJSON over a JSON array returns numeric keys
 
-**When to run:** Rarely in production — this is an introspection mode most useful for ad-hoc "what's in this document" queries at the SSMS prompt.
-**Trigger:** Debugging an unfamiliar JSON document, or writing a generic tool that does not know the shape in advance.
-**Context:** Read-only.
-**Purpose:** Show the default shape for a JSON array — keys become the zero-based array indices, types are the `OPENJSON` type enum.
+Rarely in production — this is an introspection mode most useful for ad-hoc "what's in this document" queries at the SSMS prompt. It is typically triggered by debugging an unfamiliar JSON document, or writing a generic tool that does not know the shape in advance. Read-only. Show the default shape for a JSON array — keys become the zero-based array indices, types are the `OPENJSON` type enum.
 
 *For a JSON array, the default schema emits the index as `key`, the element as `value`, and the enum type.*
 
@@ -903,10 +846,7 @@ Every element is a string, so `type` is `1` (string) for every row. The `key` co
 
 #### OPENJSON over a JSON object returns the enum-typed values
 
-**When to run:** When the input is a JSON object whose keys you do not know up front, and you want one row per top-level key.
-**Trigger:** Validating or introspecting a polymorphic document.
-**Context:** Read-only.
-**Purpose:** Show every distinct value of the `type` enum: string, number, boolean, null, array, and object.
+When the input is a JSON object whose keys you do not know up front, and you want one row per top-level key. It is typically triggered by validating or introspecting a polymorphic document. Read-only. Show every distinct value of the `type` enum: string, number, boolean, null, array, and object.
 
 *The seven rows cover all six values of the OPENJSON type enum.*
 
@@ -948,10 +888,7 @@ The `type` column is a small integer enum with exactly six values. Every consume
 
 #### Typed projection of a JSON array of objects
 
-**When to run:** Any time the input has a known shape and you want a strongly typed rowset to flow into a join, `INSERT`, or `SELECT` list.
-**Trigger:** An ingestion step that reads a JSON array and pushes it into a relational table.
-**Context:** Read-only demo; the same pattern appears in `INSERT INTO target SELECT ... FROM OPENJSON(@doc) WITH (...)`.
-**Purpose:** Show the canonical `OPENJSON WITH (...)` form — one column per field, each with its SQL type and optional JSON path.
+Any time the input has a known shape and you want a strongly typed rowset to flow into a join, `INSERT`, or `SELECT` list. It is typically triggered by an ingestion step that reads a JSON array and pushes it into a relational table. Read-only demo; the same pattern appears in `INSERT INTO target SELECT ... FROM OPENJSON(@doc) WITH (...)`. Show the canonical `OPENJSON WITH (...)` form — one column per field, each with its SQL type and optional JSON path.
 
 > [!info]- How the WITH clause resolves
 >
@@ -987,10 +924,7 @@ The result is indistinguishable from a regular `SELECT` against a real three-col
 
 #### Strict mode on a missing WITH column raises error 13608
 
-**When to run:** When you want the shredding step to fail fast if a required key is missing from any row.
-**Trigger:** Ingestion of a contract-stable payload where a missing key indicates upstream bug.
-**Context:** Read-only demo; the same error also comes from bare `JSON_VALUE(..., 'strict $.x')`.
-**Purpose:** Prove that `strict` prefix on a `WITH` column path turns "missing" into a hard error.
+When you want the shredding step to fail fast if a required key is missing from any row. It is typically triggered by ingestion of a contract-stable payload where a missing key indicates upstream bug. Read-only demo; the same error also comes from bare `JSON_VALUE(..., 'strict $.x')`. Prove that `strict` prefix on a `WITH` column path turns "missing" into a hard error.
 
 *A `WITH` clause column with `strict` prefix raises error 13608 on the first row that lacks the key.*
 
@@ -1012,10 +946,7 @@ WITH (
 
 #### Pulling a nested object and a nested array as JSON fragments
 
-**When to run:** When the result set should include raw sub-documents that will be re-parsed by the next pipeline step or returned to the caller as-is.
-**Trigger:** A caller needs both scalar columns and complete sub-documents in one query.
-**Context:** Read-only. `AS JSON` columns must be declared `nvarchar(max)`; any other type raises a compile-time error.
-**Purpose:** Show the `AS JSON` flag that makes an `OPENJSON WITH` column return a JSON fragment instead of a scalar.
+When the result set should include raw sub-documents that will be re-parsed by the next pipeline step or returned to the caller as-is. It is typically triggered by A caller needs both scalar columns and complete sub-documents in one query. Read-only. `AS JSON` columns must be declared `nvarchar(max)`; any other type raises a compile-time error. Show the `AS JSON` flag that makes an `OPENJSON WITH` column return a JSON fragment instead of a scalar.
 
 *Without `AS JSON`, these columns would return `NULL` because the target paths are an object and an array, not scalars.*
 
@@ -1041,10 +972,7 @@ The most common real-world pattern is a document with a top-level object plus an
 
 #### Shredding the actions array of the rebalance event
 
-**When to run:** Ingesting an event document whose payload contains a nested array of items that should become their own rows.
-**Trigger:** Classic header/detail ingestion pattern — one event, many actions.
-**Context:** Read-only demo. `OPENJSON(@doc, '$.actions')` anchors at the array and iterates each element.
-**Purpose:** Flatten the rebalance event into one row per action, carrying the index code from the parent object on every row.
+Ingesting an event document whose payload contains a nested array of items that should become their own rows. It is typically triggered by classic header/detail ingestion pattern — one event, many actions. Read-only demo. `OPENJSON(@doc, '$.actions')` anchors at the array and iterates each element. Flatten the rebalance event into one row per action, carrying the index code from the parent object on every row.
 
 > [!info]- How the CROSS APPLY shreds
 >
@@ -1113,10 +1041,7 @@ flowchart LR
 
 #### Controlled nested output with PATH mode
 
-**When to run:** When a stored procedure or a view has to return JSON with a specific shape — nested objects, particular key names, optional root element.
-**Trigger:** Building a REST-style endpoint or a message bus payload from relational columns.
-**Context:** Read-only. `FOR JSON` always wraps the output in an array unless `WITHOUT_ARRAY_WRAPPER` is specified.
-**Purpose:** Project the most recent Euro Stoxx 50 daily performance row as a nested object, with the index code at the top level and a nested `metrics` object holding `date`, `return`, and `vol30`.
+When a stored procedure or a view has to return JSON with a specific shape — nested objects, particular key names, optional root element. It is typically triggered by building a REST-style endpoint or a message bus payload from relational columns. Read-only. `FOR JSON` always wraps the output in an array unless `WITHOUT_ARRAY_WRAPPER` is specified. Project the most recent Euro Stoxx 50 daily performance row as a nested object, with the index code at the top level and a nested `metrics` object holding `date`, `return`, and `vol30`.
 
 > [!info]- How FOR JSON PATH uses column aliases
 >
@@ -1149,10 +1074,7 @@ The outer `latest` object wraps the array (single element here), and inside it t
 
 #### WITHOUT_ARRAY_WRAPPER for a single-row object
 
-**When to run:** When you want a single JSON object, not an array containing one object.
-**Trigger:** A single-row query whose consumer expects `{...}` rather than `[{...}]`.
-**Context:** Read-only. The option is safe on single-row results and dangerous on multi-row results — without the wrapper, multiple rows produce concatenated invalid JSON.
-**Purpose:** Produce a bare JSON object from a one-row `SELECT` with dot-separated aliases.
+When you want a single JSON object, not an array containing one object. It is typically triggered by A single-row query whose consumer expects `{...}` rather than `[{...}]`. Read-only. The option is safe on single-row results and dangerous on multi-row results — without the wrapper, multiple rows produce concatenated invalid JSON. Produce a bare JSON object from a one-row `SELECT` with dot-separated aliases.
 
 *Without the wrapper, the single row collapses to a bare object literal.*
 
@@ -1175,10 +1097,7 @@ FOR JSON PATH, WITHOUT_ARRAY_WRAPPER;
 
 #### INCLUDE_NULL_VALUES shows explicit nulls
 
-**When to run:** When a downstream consumer needs to distinguish "key is missing" from "key is explicitly null".
-**Trigger:** An API contract that requires null keys to be present (common in strongly typed languages that deserialize to a class with nullable fields).
-**Context:** Read-only.
-**Purpose:** Show the effect of `INCLUDE_NULL_VALUES` on a row with a genuinely null column.
+When a downstream consumer needs to distinguish "key is missing" from "key is explicitly null". It is typically triggered by an API contract that requires null keys to be present (common in strongly typed languages that deserialize to a class with nullable fields). Read-only. Show the effect of `INCLUDE_NULL_VALUES` on a row with a genuinely null column.
 
 *Without `INCLUDE_NULL_VALUES`, the `currency` key would be omitted; with it, the key appears with a literal null value.*
 
@@ -1200,10 +1119,7 @@ FOR JSON PATH, INCLUDE_NULL_VALUES;
 
 #### FOR JSON AUTO nests by table
 
-**When to run:** On an ad-hoc exploratory query where you want JSON out quickly and do not care about the exact shape.
-**Trigger:** A spike or a prototype where the shape will be iterated before it ships.
-**Context:** Read-only. In AUTO mode the nesting is driven by the table order in the `FROM` / `JOIN` tree.
-**Purpose:** Show how `FOR JSON AUTO` nests the `signals_daily` columns under the parent `index_dim` row — the single parent row has a nested array of its signal measurements.
+On an ad-hoc exploratory query where you want JSON out quickly and do not care about the exact shape. It is typically triggered by A spike or a prototype where the shape will be iterated before it ships. Read-only. In AUTO mode the nesting is driven by the table order in the `FROM` / `JOIN` tree. Show how `FOR JSON AUTO` nests the `signals_daily` columns under the parent `index_dim` row — the single parent row has a nested array of its signal measurements.
 
 *The two-table join produces one parent object with a nested `s` array for the `signals_daily` columns.*
 
@@ -1245,10 +1161,7 @@ The `nvarchar(max)` JSON pattern cannot be indexed directly — a b-tree can onl
 
 #### Listing the indexes on indexed_json_events
 
-**When to run:** As part of a schema review, or after adding a new computed column, to confirm the indexes are in place.
-**Trigger:** Verifying the expected indexes exist before running a performance test.
-**Context:** Read-only. Uses `sys.indexes` + `sys.index_columns` + `sys.columns` joined by object id.
-**Purpose:** Enumerate every index on `demo_jx.indexed_json_events` with its type and key columns.
+As part of a schema review, or after adding a new computed column, to confirm the indexes are in place. It is typically triggered by verifying the expected indexes exist before running a performance test. Read-only. Uses `sys.indexes` + `sys.index_columns` + `sys.columns` joined by object id. Enumerate every index on `demo_jx.indexed_json_events` with its type and key columns.
 
 *The primary key and two JSON-backed indexes are visible — each nonclustered index is keyed on a computed column whose expression is a `JSON_VALUE` call.*
 
@@ -1283,10 +1196,7 @@ Two nonclustered indexes — one on the computed `symbol` column, one on the com
 
 #### Looking up a symbol via the indexed computed column
 
-**When to run:** The normal production lookup pattern — a user of the table filters on a JSON key and expects an index seek.
-**Trigger:** An API endpoint or a report that reads the payload filtered on one scalar property.
-**Context:** Read-only. The `WHERE symbol = ...` predicate is resolvable against `ix_indexed_json_events_symbol` because `symbol` is a real column (computed + persisted).
-**Purpose:** Execute the production lookup against the indexed column.
+The normal production lookup pattern — a user of the table filters on a JSON key and expects an index seek. It is typically triggered by an API endpoint or a report that reads the payload filtered on one scalar property. Read-only. The `WHERE symbol = ...` predicate is resolvable against `ix_indexed_json_events_symbol` because `symbol` is a real column (computed + persisted). Execute the production lookup against the indexed column.
 
 *Filter on the computed column directly; the plan uses an index seek.*
 
@@ -1304,10 +1214,7 @@ The row returns from `ix_indexed_json_events_symbol`, not from the base table's 
 
 #### Aggregating on a computed column
 
-**When to run:** When a report groups by a JSON-derived category.
-**Trigger:** "Count of constituents per sector" style reports where the sector lives inside the JSON payload.
-**Context:** Read-only. The `GROUP BY` on a persisted computed column is as fast as a `GROUP BY` on a real column.
-**Purpose:** Show that a `GROUP BY sector` works against the persisted `sector` column and benefits from `ix_indexed_json_events_sector`, which includes `beta` so the query is covered.
+When a report groups by a JSON-derived category. It is typically triggered by "Count of constituents per sector" style reports where the sector lives inside the JSON payload. Read-only. The `GROUP BY` on a persisted computed column is as fast as a `GROUP BY` on a real column. Show that a `GROUP BY sector` works against the persisted `sector` column and benefits from `ix_indexed_json_events_sector`, which includes `beta` so the query is covered.
 
 *Both `sector` and `beta` are persisted computed columns — the `GROUP BY` and `AVG` both read directly from the b-tree, never touching `JSON_VALUE` at query time.*
 
@@ -1333,10 +1240,7 @@ The point of the computed column is that it lets the optimizer resolve a JSON-de
 
 #### Non-sargable lookup via JSON_VALUE on payload
 
-**When to run:** The anti-pattern — never intentionally in production, but often by mistake when a query is copied from a legacy system or refactored from a literal JSON path to a column name and back.
-**Trigger:** A new developer writes the "obvious" filter on the raw payload.
-**Context:** Read-only demo. The correct result still comes back — the issue is the plan, not the row.
-**Purpose:** Show the query that bypasses the computed column.
+The anti-pattern — never intentionally in production, but often by mistake when a query is copied from a legacy system or refactored from a literal JSON path to a column name and back. It is typically triggered by A new developer writes the "obvious" filter on the raw payload. Read-only demo. The correct result still comes back — the issue is the plan, not the row. Show the query that bypasses the computed column.
 
 *`WHERE JSON_VALUE(payload, '$.symbol') = 'ASML.AS'` should always match the computed column — but when it does not (on older CUs, with different cast types, or with a computed column that is not `PERSISTED`), the optimizer falls back to a full scan.*
 
@@ -1380,10 +1284,7 @@ An untyped `xml` column accepts any well-formed XML document or fragment. It is 
 
 #### Inspecting the untyped xml column in raw_event_xml
 
-**When to run:** At the start of any XML section, to confirm the source documents and their approximate sizes.
-**Trigger:** First query against the table, or a review of its storage footprint.
-**Context:** Read-only. `DATALENGTH(payload)` returns the number of bytes the binary XML representation occupies; `LEN(CAST(payload AS nvarchar(max)))` returns the character count of the serialized form.
-**Purpose:** Show that XML storage is binary, that the stored byte count is usually smaller than the serialized text character count (because SQL Server tokenizes element/attribute names), and that the four demo documents are wildly different sizes.
+At the start of any XML section, to confirm the source documents and their approximate sizes. It is typically triggered by first query against the table, or a review of its storage footprint. Read-only. `DATALENGTH(payload)` returns the number of bytes the binary XML representation occupies; `LEN(CAST(payload AS nvarchar(max)))` returns the character count of the serialized form. Show that XML storage is binary, that the stored byte count is usually smaller than the serialized text character count (because SQL Server tokenizes element/attribute names), and that the four demo documents are wildly different sizes.
 
 *`DATALENGTH` shows the tokenized binary bytes; `LEN` of the cast-to-text form shows what the round-tripped string looks like.*
 
@@ -1420,10 +1321,7 @@ Binding an `xml` column to an XML schema collection makes it **typed XML**. The 
 
 #### Inspecting the demo_jx.constituent_collection schema collection
 
-**When to run:** When you need to confirm that a typed-xml column's schema collection exists and what namespaces it covers.
-**Trigger:** Reviewing or writing code that assigns to a typed xml column.
-**Context:** Read-only. `sys.xml_schema_collections` plus `xml_schema_namespaces` give the collection metadata.
-**Purpose:** List the schema collection(s) in `demo_jx` and their declared namespaces.
+When you need to confirm that a typed-xml column's schema collection exists and what namespaces it covers. It is typically triggered by reviewing or writing code that assigns to a typed xml column. Read-only. `sys.xml_schema_collections` plus `xml_schema_namespaces` give the collection metadata. List the schema collection(s) in `demo_jx` and their declared namespaces.
 
 *Every schema collection in the database registers one or more XSD namespaces; `XML_SCHEMA_NAMESPACE` lets you retrieve the schema text itself.*
 
@@ -1470,10 +1368,7 @@ The five XML methods live on the `xml` data type itself. Every call has the shap
 
 #### Pulling scalar attributes and element values out of a document
 
-**When to run:** The normal projection pattern — extracting a handful of named values from an XML column to fill a relational result set.
-**Trigger:** Reading a single-document bag column for a report or a downstream consumer.
-**Context:** Read-only. Every `value()` call is a scalar subexpression and runs independently.
-**Purpose:** Show the two `value()` idioms — attribute access via `@name` and element value access via `(/element/text())[1]`.
+The normal projection pattern — extracting a handful of named values from an XML column to fill a relational result set. It is typically triggered by reading a single-document bag column for a report or a downstream consumer. Read-only. Every `value()` call is a scalar subexpression and runs independently. Show the two `value()` idioms — attribute access via `@name` and element value access via `(/element/text())[1]`.
 
 > [!info]- How each XQuery path resolves
 >
@@ -1507,10 +1402,7 @@ Each extracted column has the SQL type declared in the `.value()` second argumen
 
 #### Extracting the first three bars as an xml fragment
 
-**When to run:** When the caller needs a sub-document — an object, an array, or a slice of the original — not a single scalar.
-**Trigger:** A consumer that will re-parse the fragment, or an intermediate pipeline step that passes the fragment to a second `xml` operation.
-**Context:** Read-only. `.query()` returns `xml`, not a text column — cast to `nvarchar(max)` if you need to inspect the string form.
-**Purpose:** Pull out the first three `<bar>` elements as one XML fragment using XPath's `position()` function.
+When the caller needs a sub-document — an object, an array, or a slice of the original — not a single scalar. It is typically triggered by A consumer that will re-parse the fragment, or an intermediate pipeline step that passes the fragment to a second `xml` operation. Read-only. `.query()` returns `xml`, not a text column — cast to `nvarchar(max)` if you need to inspect the string form. Pull out the first three `<bar>` elements as one XML fragment using XPath's `position()` function.
 
 *`position() <= 3` filters the matches to the first three; the result is returned as an `xml` fragment with three siblings.*
 
@@ -1534,10 +1426,7 @@ The three `<bar>` elements are concatenated inside a single `xml` fragment. If y
 
 #### Filtering rows by an XQuery predicate
 
-**When to run:** Any time a query needs to filter rows by a condition inside the XML payload.
-**Trigger:** Report that selects only documents matching a structural or value predicate.
-**Context:** Read-only. `.exist()` is the **only** method you should use in a `WHERE` clause that filters by XML content — `.value() = ...` works but defeats any secondary XML index.
-**Purpose:** Return every row in `raw_event_xml` whose payload either contains a `<bar>` with `close > 845` or a `<index code="SX5E">` element.
+Any time a query needs to filter rows by a condition inside the XML payload. It is typically triggered by report that selects only documents matching a structural or value predicate. Read-only. `.exist()` is the **only** method you should use in a `WHERE` clause that filters by XML content — `.value() = ...` works but defeats any secondary XML index. Return every row in `raw_event_xml` whose payload either contains a `<bar>` with `close > 845` or a `<index code="SX5E">` element.
 
 *An `OR` of two `.exist()` calls catches documents from either shape.*
 
@@ -1567,10 +1456,7 @@ Two rows match: the EuroStoxx daily bars (which contain bars with close > 845) a
 
 #### Shredding the daily bars into rows
 
-**When to run:** The fundamental pattern for turning an XML document with a repeating child into a relational rowset.
-**Trigger:** Need to query, aggregate, or join XML data at the row level instead of the document level.
-**Context:** Read-only. `CROSS APPLY` is required because the right side (`d.bars.nodes(...)`) is a correlated table expression that depends on the left side row.
-**Purpose:** Turn the 10-bar OHLCV document in `demo_jx.daily_bars_xml` into a relational rowset with one row per `<bar>`.
+The fundamental pattern for turning an XML document with a repeating child into a relational rowset. It is typically triggered by need to query, aggregate, or join XML data at the row level instead of the document level. Read-only. `CROSS APPLY` is required because the right side (`d.bars.nodes(...)`) is a correlated table expression that depends on the left side row. Turn the 10-bar OHLCV document in `demo_jx.daily_bars_xml` into a relational rowset with one row per `<bar>`.
 
 > [!info]- How nodes() + value() compose
 >
@@ -1606,10 +1492,7 @@ The output is indistinguishable from a `SELECT` against a real `daily_bars` tabl
 
 #### Shredding element values vs attributes
 
-**When to run:** When the source document uses child elements (`<symbol>ASML.AS</symbol>`) rather than attributes (`<item symbol="ASML.AS">`).
-**Trigger:** Source format is element-centric, as is common in XML from legacy systems or XSD-generated schemas that prefer elements for every field.
-**Context:** Read-only. The syntax is slightly different from the attribute form.
-**Purpose:** Show the `(element/text())[1]` idiom that is the element-centric equivalent of `@attribute`.
+When the source document uses child elements (`<symbol>ASML.AS</symbol>`) rather than attributes (`<item symbol="ASML.AS">`). It is typically triggered by source format is element-centric, as is common in XML from legacy systems or XSD-generated schemas that prefer elements for every field. Read-only. The syntax is slightly different from the attribute form. Show the `(element/text())[1]` idiom that is the element-centric equivalent of `@attribute`.
 
 > [!info]- Why the (element/text())[1] shape
 >
@@ -1654,10 +1537,7 @@ Any XML document with a namespace on the root element forces every XQuery expres
 
 #### Shredding the namespaced constituents document
 
-**When to run:** Any time the source XML uses XML namespaces (almost always the case with typed XML, enterprise ESB payloads, or W3C-derived formats).
-**Trigger:** A query returns zero rows and the document clearly contains the expected elements — usually a missing namespace declaration.
-**Context:** Read-only. `WITH XMLNAMESPACES` is a statement-level clause that sets namespace prefixes for the rest of the statement; it must come before the `SELECT`.
-**Purpose:** Shred the `constituents_namespaced` document into rows, declaring the `idx` and `cst` namespaces that the document uses.
+Any time the source XML uses XML namespaces (almost always the case with typed XML, enterprise ESB payloads, or W3C-derived formats). It is typically triggered by A query returns zero rows and the document clearly contains the expected elements — usually a missing namespace declaration. Read-only. `WITH XMLNAMESPACES` is a statement-level clause that sets namespace prefixes for the rest of the statement; it must come before the `SELECT`. Shred the `constituents_namespaced` document into rows, declaring the `idx` and `cst` namespaces that the document uses.
 
 > [!info]- How the namespace prefixes thread through the XQuery
 >
@@ -1712,10 +1592,7 @@ The XQuery expression itself must be a string literal — you cannot pass it as 
 
 #### Filtering bars by a SQL-side threshold
 
-**When to run:** When a parameterized query needs to filter XML content by a value that the caller supplies at runtime.
-**Trigger:** A stored procedure or user-defined function that takes a scalar parameter and needs to push it into an XQuery predicate.
-**Context:** Read-only. `sql:variable()` only works inside XQuery expressions on the `xml` type; `sql:column()` is the sibling function for column references.
-**Purpose:** Declare a SQL variable `@min` and use it to filter `<bar>` elements with `close > @min` at the XQuery level.
+When a parameterized query needs to filter XML content by a value that the caller supplies at runtime. It is typically triggered by A stored procedure or user-defined function that takes a scalar parameter and needs to push it into an XQuery predicate. Read-only. `sql:variable()` only works inside XQuery expressions on the `xml` type; `sql:column()` is the sibling function for column references. Declare a SQL variable `@min` and use it to filter `<bar>` elements with `close > @min` at the XQuery level.
 
 *The `sql:variable("@min")` call lets the XQuery predicate read the T-SQL variable directly.*
 
@@ -1774,10 +1651,7 @@ flowchart LR
 
 #### One row per bar, column-to-element with ELEMENTS
 
-**When to run:** A quick-and-dirty serialization when you just need one element per row without caring about the wrapper or the sub-structure.
-**Trigger:** Exporting a small rowset to an XML consumer that will parse it with XPath.
-**Context:** Read-only. Without `ELEMENTS`, columns become attributes; with `ELEMENTS`, they become child elements.
-**Purpose:** Serialize three ASML.AS daily rows as `<bar>` elements wrapped in a `<bars>` root.
+A quick-and-dirty serialization when you just need one element per row without caring about the wrapper or the sub-structure. It is typically triggered by exporting a small rowset to an XML consumer that will parse it with XPath. Read-only. Without `ELEMENTS`, columns become attributes; with `ELEMENTS`, they become child elements. Serialize three ASML.AS daily rows as `<bar>` elements wrapped in a `<bars>` root.
 
 > [!info]- What each FOR XML clause does
 >
@@ -1805,10 +1679,7 @@ The `close` column serializes as `1.113800000000000e+003` because the underlying
 
 #### Controlled nested shape with column aliases
 
-**When to run:** When the output needs a specific shape — attributes at one level, elements at another, nested children for related fields.
-**Trigger:** A consumer that expects a specific XML schema and will validate against it.
-**Context:** Read-only. Column aliases starting with `@` become attributes; names with `/` create nested elements.
-**Purpose:** Produce one `<bar>` per row with `symbol` as an attribute and a nested `<prices>` element holding the price attributes.
+When the output needs a specific shape — attributes at one level, elements at another, nested children for related fields. It is typically triggered by A consumer that expects a specific XML schema and will validate against it. Read-only. Column aliases starting with `@` become attributes; names with `/` create nested elements. Produce one `<bar>` per row with `symbol` as an attribute and a nested `<prices>` element holding the price attributes.
 
 > [!info]- How FOR XML PATH column aliases map to shapes
 >
@@ -1840,10 +1711,7 @@ Each `<bar>` has a `symbol` attribute at the top level and one nested `<prices>`
 
 #### Join tree drives nesting
 
-**When to run:** Exploratory use, similar to `FOR JSON AUTO`.
-**Trigger:** Quick export where the shape is not critical.
-**Context:** Read-only. The nesting reflects the join tree left-to-right; alias names become the element tags.
-**Purpose:** Show how a two-table join produces an XML tree where the parent table wraps the child table.
+Exploratory use, similar to `FOR JSON AUTO`. It is typically triggered by quick export where the shape is not critical. Read-only. The nesting reflects the join tree left-to-right; alias names become the element tags. Show how a two-table join produces an XML tree where the parent table wraps the child table.
 
 *`AUTO` mode plus `ELEMENTS` plus `XSINIL` generates a namespaced output where null columns become explicit `xsi:nil="true"` elements.*
 

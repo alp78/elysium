@@ -176,10 +176,7 @@ The `sys.databases` catalog view carries the authoritative `is_encrypted` flag f
 
 #### `sys.databases` | verify whether `stoxx` is already encrypted
 
-**When to run:** Before planning any TDE rollout on a target database and at the start of any DR runbook.
-**Trigger:** Pre-rollout audit, incident triage on encryption state, quarterly compliance review.
-**Context:** Read-only T-SQL query against `master.sys.databases`. Requires `VIEW ANY DATABASE` permission, which every login has by default. Safe on production.
-**Purpose:** Confirm whether TDE is already enabled for the target database, and identify the current owner so a second-order review can check owner sanity.
+Before planning any TDE rollout on a target database and at the start of any DR runbook. It is typically triggered by pre-rollout audit, incident triage on encryption state, quarterly compliance review. Read-only T-SQL query against `master.sys.databases`. Requires `VIEW ANY DATABASE` permission, which every login has by default. Safe on production. Confirm whether TDE is already enabled for the target database, and identify the current owner so a second-order review can check owner sanity.
 
 *Return the current owner and TDE flag for the `stoxx` database.*
 
@@ -224,10 +221,7 @@ Before creating any certificate in `master`, the `master` database must already 
 
 #### `sys.symmetric_keys` | verify the `master` Database Master Key exists
 
-**When to run:** Immediately before creating the TDE server certificate, or as part of a new-instance validation checklist.
-**Trigger:** First TDE rollout on a brand-new instance, post-restore validation of `master`, pre-rollout audit.
-**Context:** Read-only T-SQL query against `master.sys.symmetric_keys`. Requires `VIEW DEFINITION` on the key (granted to `sysadmin` by default).
-**Purpose:** Confirm the DMK exists and uses a modern symmetric algorithm before proceeding with certificate creation.
+Immediately before creating the TDE server certificate, or as part of a new-instance validation checklist. It is typically triggered by first TDE rollout on a brand-new instance, post-restore validation of `master`, pre-rollout audit. Read-only T-SQL query against `master.sys.symmetric_keys`. Requires `VIEW DEFINITION` on the key (granted to `sysadmin` by default). Confirm the DMK exists and uses a modern symmetric algorithm before proceeding with certificate creation.
 
 *Return the Database Master Key metadata from `master`.*
 
@@ -280,10 +274,7 @@ The server certificate is the object whose private key protects the Database Enc
 
 #### `CREATE CERTIFICATE` | create the TDE server certificate
 
-**When to run:** After confirming the `master` DMK exists and before creating any Database Encryption Key that will reference this certificate.
-**Trigger:** Initial TDE rollout on an instance that has no existing TDE certificate, or certificate rotation (covered later).
-**Context:** T-SQL `CREATE CERTIFICATE` in `master`. Requires `CREATE CERTIFICATE` permission on the database; `sysadmin` has it by default. State-changing DDL — adds a row to `sys.certificates`.
-**Purpose:** Create a self-signed X.509 certificate whose private key will be protected by the `master` DMK and will in turn protect a Database Encryption Key.
+After confirming the `master` DMK exists and before creating any Database Encryption Key that will reference this certificate. It is typically triggered by initial TDE rollout on an instance that has no existing TDE certificate, or certificate rotation (covered later). T-SQL `CREATE CERTIFICATE` in `master`. Requires `CREATE CERTIFICATE` permission on the database; `sysadmin` has it by default. State-changing DDL — adds a row to `sys.certificates`. Create a self-signed X.509 certificate whose private key will be protected by the `master` DMK and will in turn protect a Database Encryption Key.
 
 > [!warning] Certificate is useless without a backup
 >
@@ -309,10 +300,7 @@ Note that the `EXPIRY_DATE` is advisory for TDE: SQL Server **does not enforce e
 
 #### `sys.certificates` | verify the server certificate
 
-**When to run:** Immediately after `CREATE CERTIFICATE`, and as an audit step whenever investigating a TDE-related restore failure.
-**Trigger:** Post-creation verification, DR triage, compliance audit, certificate rotation planning.
-**Context:** Read-only T-SQL against `master.sys.certificates`. Requires `VIEW DEFINITION` on the certificate (granted to `sysadmin` by default).
-**Purpose:** Confirm the certificate exists, its private key is protected by the DMK, its thumbprint is known for later matching in `sys.dm_database_encryption_keys`, and its backup date (initially `NULL` before `BACKUP CERTIFICATE`).
+Immediately after `CREATE CERTIFICATE`, and as an audit step whenever investigating a TDE-related restore failure. It is typically triggered by post-creation verification, DR triage, compliance audit, certificate rotation planning. Read-only T-SQL against `master.sys.certificates`. Requires `VIEW DEFINITION` on the certificate (granted to `sysadmin` by default). Confirm the certificate exists, its private key is protected by the DMK, its thumbprint is known for later matching in `sys.dm_database_encryption_keys`, and its backup date (initially `NULL` before `BACKUP CERTIFICATE`).
 
 *Return the full certificate metadata the DBA needs to track a TDE encryptor.*
 
@@ -364,10 +352,7 @@ TDE becomes active only after four things exist together: the certificate in `ma
 
 #### `CREATE DATABASE` | create the disposable user database
 
-**When to run:** At the start of any TDE walkthrough on a fresh example database. Not part of a production rollout on an existing database — for that, skip this step and use the existing database directly.
-**Trigger:** Lab demonstration, reproducing a DR runbook, validating a cumulative update's TDE behavior.
-**Context:** T-SQL `CREATE DATABASE` against `master`. Requires `CREATE DATABASE` or `CREATE ANY DATABASE` permission.
-**Purpose:** Provide an isolated, disposable target database that can be encrypted, backed up, dropped, and restored without touching the real `stoxx` production data.
+At the start of any TDE walkthrough on a fresh example database. Not part of a production rollout on an existing database — for that, skip this step and use the existing database directly. It is typically triggered by lab demonstration, reproducing a DR runbook, validating a cumulative update's TDE behavior. T-SQL `CREATE DATABASE` against `master`. Requires `CREATE DATABASE` or `CREATE ANY DATABASE` permission. Provide an isolated, disposable target database that can be encrypted, backed up, dropped, and restored without touching the real `stoxx` production data.
 
 *Create a minimal empty database named `codex_tde_demo` on the default data and log paths.*
 
@@ -381,10 +366,7 @@ GO
 
 #### `CREATE TABLE` + `INSERT` | seed a minimal demo row
 
-**When to run:** Immediately after creating the disposable database, before enabling encryption.
-**Trigger:** Lab setup only. Production databases already contain data, so this step is skipped for real rollouts.
-**Context:** Standard DDL + DML inside the newly created database. Requires `db_owner` or equivalent.
-**Purpose:** Give the demo database one real row so later cells can prove that TDE is transparent to ordinary `SELECT` semantics.
+Immediately after creating the disposable database, before enabling encryption. It is typically triggered by lab setup only. Production databases already contain data, so this step is skipped for real rollouts. Standard DDL + DML inside the newly created database. Requires `db_owner` or equivalent. Give the demo database one real row so later cells can prove that TDE is transparent to ordinary `SELECT` semantics.
 
 *Create a single-table demo schema and insert one row to prove queries remain readable after TDE is enabled.*
 
@@ -406,10 +388,7 @@ GO
 
 #### `CREATE DATABASE ENCRYPTION KEY` | create the DEK protected by the server certificate
 
-**When to run:** Only after the server certificate exists in `master` and the target user database is the active database context.
-**Trigger:** TDE enablement on a new database, or replacement of an existing DEK during full key replacement.
-**Context:** T-SQL `CREATE DATABASE ENCRYPTION KEY` inside the user database (not `master`). Requires `CONTROL` permission on the database. State-changing DDL — creates a new symmetric key in the database boot page.
-**Purpose:** Create the symmetric key that will actually encrypt every page of the database, protected by the server certificate created in the previous step.
+Only after the server certificate exists in `master` and the target user database is the active database context. It is typically triggered by TDE enablement on a new database, or replacement of an existing DEK during full key replacement. T-SQL `CREATE DATABASE ENCRYPTION KEY` inside the user database (not `master`). Requires `CONTROL` permission on the database. State-changing DDL — creates a new symmetric key in the database boot page. Create the symmetric key that will actually encrypt every page of the database, protected by the server certificate created in the previous step.
 
 > [!warning] DEK creation triggers the mandatory backup warning
 >
@@ -446,10 +425,7 @@ That message is the only protection the engine offers against the most common TD
 
 #### `ALTER DATABASE ... SET ENCRYPTION ON` | enable the TDE encryption scan
 
-**When to run:** Immediately after `CREATE DATABASE ENCRYPTION KEY` and before the certificate is backed up, if the operator is confident the backup will follow in the same runbook.
-**Trigger:** Final step of a TDE enablement runbook.
-**Context:** T-SQL `ALTER DATABASE SET ENCRYPTION ON` against the user database. Requires `CONTROL` permission. State-changing — starts a background encryption scanner that reads every page, encrypts it, and writes it back.
-**Purpose:** Activate TDE for the user database. On the first database to enable TDE on an instance, this also causes `tempdb` to be encrypted.
+Immediately after `CREATE DATABASE ENCRYPTION KEY` and before the certificate is backed up, if the operator is confident the backup will follow in the same runbook. It is typically triggered by final step of a TDE enablement runbook. T-SQL `ALTER DATABASE SET ENCRYPTION ON` against the user database. Requires `CONTROL` permission. State-changing — starts a background encryption scanner that reads every page, encrypts it, and writes it back. Activate TDE for the user database. On the first database to enable TDE on an instance, this also causes `tempdb` to be encrypted.
 
 > [!warning] Enabling TDE triggers a log rewrite and a page-level scan
 >
@@ -473,10 +449,7 @@ After this command returns, the background scan begins. On a 3 MB demo database 
 
 #### `sys.dm_database_encryption_keys` | verify database encryption state
 
-**When to run:** After every TDE enablement to confirm the scan completed, periodically as a health check, or immediately after restoring a TDE-protected backup on another instance.
-**Trigger:** Post-enablement verification, scheduled monitoring, DR triage, compliance audit.
-**Context:** Read-only T-SQL query joining `sys.databases`, `sys.dm_database_encryption_keys`, and `sys.certificates`. Requires `VIEW SERVER STATE` for the DMV. Safe on production.
-**Purpose:** Report per-database TDE status, encryptor mapping, and scan progress, including the SQL Server 2019+ `encryption_scan_state` and `encryption_scan_state_desc` columns that expose the suspend/resume state machine.
+After every TDE enablement to confirm the scan completed, periodically as a health check, or immediately after restoring a TDE-protected backup on another instance. It is typically triggered by post-enablement verification, scheduled monitoring, DR triage, compliance audit. Read-only T-SQL query joining `sys.databases`, `sys.dm_database_encryption_keys`, and `sys.certificates`. Requires `VIEW SERVER STATE` for the DMV. Safe on production. Report per-database TDE status, encryptor mapping, and scan progress, including the SQL Server 2019+ `encryption_scan_state` and `encryption_scan_state_desc` columns that expose the suspend/resume state machine.
 
 > [!info]- Why the LEFT JOINs and why `tempdb` has no cert name
 >
@@ -562,10 +535,7 @@ _Three things are happening in this result and all of them matter:_
 
 #### `COUNT(*)` | confirm the encrypted database is still readable
 
-**When to run:** Immediately after `ALTER DATABASE SET ENCRYPTION ON` completes, and after any DR restore.
-**Trigger:** Post-enablement or post-restore smoke test.
-**Context:** Ordinary `SELECT` inside the user database. No special permission needed beyond `SELECT` on the table.
-**Purpose:** Prove that TDE is transparent to ordinary query semantics — the reader should see the same row counts and values before and after encryption.
+Immediately after `ALTER DATABASE SET ENCRYPTION ON` completes, and after any DR restore. It is typically triggered by post-enablement or post-restore smoke test. Ordinary `SELECT` inside the user database. No special permission needed beyond `SELECT` on the table. Prove that TDE is transparent to ordinary query semantics — the reader should see the same row counts and values before and after encryption.
 
 *Count the rows in `dbo.demo_payload` to confirm the encrypted database is still readable through normal query paths.*
 
@@ -590,10 +560,7 @@ Certificate backup is the non-negotiable step in any TDE rollout. Without the ce
 
 #### `BACKUP CERTIFICATE` | export the certificate and private key to Linux files
 
-**When to run:** Immediately after `CREATE CERTIFICATE` and, absolutely always, before the end of the same change window that enabled TDE.
-**Trigger:** Initial TDE enablement, certificate rotation, post-restore re-export (when the certificate was just re-imported on a different instance and should be re-exported for that instance's backup store).
-**Context:** T-SQL `BACKUP CERTIFICATE` in `master`. Requires `CONTROL` permission on the certificate. The target files are written as the SQL Server service account — on Linux that is typically `mssql:mssql` with `0640` permissions. The SQL Server service account must have write permission to the target directory.
-**Purpose:** Produce the recovery artifacts (`.cer` + `.pvk`) required to import this certificate on another SQL Server instance and restore a TDE-protected backup there.
+Immediately after `CREATE CERTIFICATE` and, absolutely always, before the end of the same change window that enabled TDE. It is typically triggered by initial TDE enablement, certificate rotation, post-restore re-export (when the certificate was just re-imported on a different instance and should be re-exported for that instance's backup store). T-SQL `BACKUP CERTIFICATE` in `master`. Requires `CONTROL` permission on the certificate. The target files are written as the SQL Server service account — on Linux that is typically `mssql:mssql` with `0640` permissions. The SQL Server service account must have write permission to the target directory. Produce the recovery artifacts (`.cer` + `.pvk`) required to import this certificate on another SQL Server instance and restore a TDE-protected backup there.
 
 > [!danger] Lost certificate = permanently unrecoverable encrypted backups
 >
@@ -624,10 +591,7 @@ The password `CodexBackupPassword!2026` used here is a demo value. In production
 
 #### `xp_fileexist` | verify the exported certificate from SQL Server
 
-**When to run:** Immediately after `BACKUP CERTIFICATE` to confirm the file landed at the expected path.
-**Trigger:** Post-backup verification inside an automated runbook or a manual sanity check.
-**Context:** Extended stored procedure `sys.xp_fileexist`. Requires `sysadmin`. Read-only from the filesystem perspective.
-**Purpose:** Confirm the certificate file exists at the intended path and is a regular file, not a directory or a broken symlink, from SQL Server's own filesystem view.
+Immediately after `BACKUP CERTIFICATE` to confirm the file landed at the expected path. It is typically triggered by post-backup verification inside an automated runbook or a manual sanity check. Extended stored procedure `sys.xp_fileexist`. Requires `sysadmin`. Read-only from the filesystem perspective. Confirm the certificate file exists at the intended path and is a regular file, not a directory or a broken symlink, from SQL Server's own filesystem view.
 
 *Check from SQL Server that the `.cer` file landed at the expected Linux path.*
 
@@ -649,10 +613,7 @@ _The certificate file exists at the expected path, the path is a file (not a dir
 
 #### `xp_fileexist` | verify the exported private key from SQL Server
 
-**When to run:** Same change window as the `.cer` verification — both files are required for restore.
-**Trigger:** Post-backup verification.
-**Context:** Same as above.
-**Purpose:** Confirm the private key file exists at the intended path.
+Same change window as the `.cer` verification — both files are required for restore. It is typically triggered by post-backup verification. Same as above. Confirm the private key file exists at the intended path.
 
 *Check from SQL Server that the `.pvk` file landed at the expected Linux path.*
 
@@ -677,10 +638,7 @@ _The private key file exists at the expected path. Both halves of the recovery a
 
 #### `ls -lh` | verify the exported files from the Linux host
 
-**When to run:** After `xp_fileexist` confirms SQL Server sees the files, as a second-source check from outside the SQL Server process.
-**Trigger:** Post-backup verification — paranoid confirmation that the files exist with the expected ownership and non-zero sizes.
-**Context:** Shell command via `docker exec` against the `stoxx-db` container. Requires Docker CLI access to the container host.
-**Purpose:** Confirm file sizes, ownership (`mssql:mssql`), and permissions (`0640`) match expectations — proof the export produced real artifacts rather than empty placeholders.
+After `xp_fileexist` confirms SQL Server sees the files, as a second-source check from outside the SQL Server process. It is typically triggered by post-backup verification — paranoid confirmation that the files exist with the expected ownership and non-zero sizes. Shell command via `docker exec` against the `stoxx-db` container. Requires Docker CLI access to the container host. Confirm file sizes, ownership (`mssql:mssql`), and permissions (`0640`) match expectations — proof the export produced real artifacts rather than empty placeholders.
 
 *List the TDE export directory inside the container to verify sizes and ownership of the exported files.*
 
@@ -707,10 +665,7 @@ Once TDE is enabled, every `BACKUP DATABASE` produces an encrypted backup file. 
 
 #### `BACKUP DATABASE` | take a compressed full backup of the encrypted database
 
-**When to run:** After TDE enablement completes (`encryption_state = 3`, `encryption_scan_state = 4`) and the certificate has been backed up.
-**Trigger:** Routine full-backup schedule or ad-hoc backup for DR rehearsal.
-**Context:** T-SQL `BACKUP DATABASE` from `master`. Requires `BACKUP DATABASE` permission (granted to `db_owner` and `sysadmin`). Writes to the filesystem as the SQL Server service account.
-**Purpose:** Capture a point-in-time full backup of the TDE-protected database. Because the database is TDE-enabled, the backup file is encrypted automatically — the backup process does not need `WITH ENCRYPTION` to protect the data, though that option exists for a separate layer of backup-level encryption.
+After TDE enablement completes (`encryption_state = 3`, `encryption_scan_state = 4`) and the certificate has been backed up. It is typically triggered by routine full-backup schedule or ad-hoc backup for DR rehearsal. T-SQL `BACKUP DATABASE` from `master`. Requires `BACKUP DATABASE` permission (granted to `db_owner` and `sysadmin`). Writes to the filesystem as the SQL Server service account. Capture a point-in-time full backup of the TDE-protected database. Because the database is TDE-enabled, the backup file is encrypted automatically — the backup process does not need `WITH ENCRYPTION` to protect the data, though that option exists for a separate layer of backup-level encryption.
 
 > [!info]- `WITH COMPRESSION` behavior on TDE databases since SQL Server 2019 CU5
 >
@@ -747,10 +702,7 @@ _The backup processed 386 pages (384 data + 2 log) in 44 milliseconds at 68 MB/s
 
 #### `msdb.dbo.backupset` | read compression and encryption metadata from backup history
 
-**When to run:** After any `BACKUP DATABASE` to verify compression ratio and confirm how the backup was protected.
-**Trigger:** Backup audit, compression-efficiency check, post-rollout validation.
-**Context:** Read-only T-SQL against `msdb.dbo.backupset`. Requires `VIEW DEFINITION` on `msdb` or membership in `db_owner` on `msdb`. `sysadmin` has it by default.
-**Purpose:** Prove the compression actually ran and that the backup inherited TDE protection from the database rather than adding a separate backup-encryption layer.
+After any `BACKUP DATABASE` to verify compression ratio and confirm how the backup was protected. It is typically triggered by backup audit, compression-efficiency check, post-rollout validation. Read-only T-SQL against `msdb.dbo.backupset`. Requires `VIEW DEFINITION` on `msdb` or membership in `db_owner` on `msdb`. `sysadmin` has it by default. Prove the compression actually ran and that the backup inherited TDE protection from the database rather than adding a separate backup-encryption layer.
 
 *Return the most recent backup set metadata for `codex_tde_demo`, including raw/compressed sizes and the encryptor columns.*
 
@@ -788,10 +740,7 @@ _The 3.16 MB logical backup compressed to 0.48 MB — a 6.62× compression ratio
 
 #### `RESTORE FILELISTONLY` | inspect the backup's file layout and TDE thumbprint
 
-**When to run:** Before any restore, especially when the target instance does not yet have the source database, to discover the logical and physical file names and the TDE thumbprint the backup was protected with.
-**Trigger:** Pre-restore planning, DR triage, forensic investigation of an unknown backup.
-**Context:** Read-only T-SQL `RESTORE FILELISTONLY` against a backup file on disk. Does not require the TDE certificate to be present — this operation reads the backup header only.
-**Purpose:** Surface the `TDEThumbprint` column so an operator can identify which certificate is needed to restore this backup. Also surfaces logical and physical file names for `MOVE` planning.
+Before any restore, especially when the target instance does not yet have the source database, to discover the logical and physical file names and the TDE thumbprint the backup was protected with. It is typically triggered by pre-restore planning, DR triage, forensic investigation of an unknown backup. Read-only T-SQL `RESTORE FILELISTONLY` against a backup file on disk. Does not require the TDE certificate to be present — this operation reads the backup header only. Surface the `TDEThumbprint` column so an operator can identify which certificate is needed to restore this backup. Also surfaces logical and physical file names for `MOVE` planning.
 
 *Read the backup header to discover file names and the TDE thumbprint required for restore.*
 
@@ -831,10 +780,7 @@ The certificate cannot be dropped while a DEK references it, so the database mus
 
 #### `DROP DATABASE` + `DROP CERTIFICATE` | simulate a total loss on the source instance
 
-**When to run:** Only as part of a DR rehearsal, never in production. This step exists solely to let the rest of the walkthrough demonstrate the Msg 33111 failure mode and the subsequent recovery.
-**Trigger:** DR rehearsal, lab demonstration.
-**Context:** T-SQL DDL in `master`. Requires `CONTROL SERVER` or appropriate database-level permissions. Irreversibly destructive on the demo objects.
-**Purpose:** Produce the same engine state that a fresh SQL Server instance would have when a DR runbook first touches it — no demo database, no demo certificate, only the `master` DMK and the backup files.
+Only as part of a DR rehearsal, never in production. This step exists solely to let the rest of the walkthrough demonstrate the Msg 33111 failure mode and the subsequent recovery. It is typically triggered by DR rehearsal, lab demonstration. T-SQL DDL in `master`. Requires `CONTROL SERVER` or appropriate database-level permissions. Irreversibly destructive on the demo objects. Produce the same engine state that a fresh SQL Server instance would have when a DR runbook first touches it — no demo database, no demo certificate, only the `master` DMK and the backup files.
 
 > [!danger] Never run this pattern on a production database
 >
@@ -880,10 +826,7 @@ This is the failure path most DR runbooks discover the hard way. Without the cer
 
 #### `RESTORE DATABASE` | attempt to restore without the TDE certificate
 
-**When to run:** Never intentionally — this is the failure mode the next step fixes. This cell exists to document the error text so an operator can recognize it in a real incident.
-**Trigger:** DR restore attempted before importing the certificate. Often caused by an incomplete runbook, missed step, or misordered steps.
-**Context:** T-SQL `RESTORE DATABASE` from the backup file. Requires `CREATE DATABASE` or `sysadmin`. Writes to the filesystem as the SQL Server service account (or would, if the restore reached that stage).
-**Purpose:** Demonstrate the Msg 33111 failure mode so an operator knows exactly what "missing certificate" looks like and what to do about it.
+Never intentionally — this is the failure mode the next step fixes. This cell exists to document the error text so an operator can recognize it in a real incident. It is typically triggered by DR restore attempted before importing the certificate. Often caused by an incomplete runbook, missed step, or misordered steps. T-SQL `RESTORE DATABASE` from the backup file. Requires `CREATE DATABASE` or `sysadmin`. Writes to the filesystem as the SQL Server service account (or would, if the restore reached that stage). Demonstrate the Msg 33111 failure mode so an operator knows exactly what "missing certificate" looks like and what to do about it.
 
 *Attempt to restore `codex_tde_demo` from the backup file while the TDE certificate is missing.*
 
@@ -922,10 +865,7 @@ The fix for Msg 33111 is straightforward: import the certificate from the export
 
 #### `CREATE CERTIFICATE ... FROM FILE` | import the certificate on the target instance
 
-**When to run:** After Msg 33111 (or preemptively, on any new target instance, before attempting a TDE-protected restore).
-**Trigger:** Pre-restore setup on a target instance, DR failover runbook, database migration to a new host.
-**Context:** T-SQL `CREATE CERTIFICATE FROM FILE` in `master`. Requires `CREATE CERTIFICATE` permission in the target `master` database. The SQL Server service account must be able to read the `.cer` and `.pvk` files — on Linux, verify file ownership with `chown mssql:mssql` if the files were copied in as a different user.
-**Purpose:** Re-establish the certificate in `sys.certificates` so its thumbprint matches the TDE thumbprint stored in the backup file, allowing the subsequent restore to decrypt data pages.
+After Msg 33111 (or preemptively, on any new target instance, before attempting a TDE-protected restore). It is typically triggered by pre-restore setup on a target instance, DR failover runbook, database migration to a new host. T-SQL `CREATE CERTIFICATE FROM FILE` in `master`. Requires `CREATE CERTIFICATE` permission in the target `master` database. The SQL Server service account must be able to read the `.cer` and `.pvk` files — on Linux, verify file ownership with `chown mssql:mssql` if the files were copied in as a different user. Re-establish the certificate in `sys.certificates` so its thumbprint matches the TDE thumbprint stored in the backup file, allowing the subsequent restore to decrypt data pages.
 
 *Import the certificate and its private key from the exported files on the Linux host.*
 
@@ -946,10 +886,7 @@ The `DECRYPTION BY PASSWORD` value must be the password that was used with `ENCR
 
 #### `RESTORE DATABASE` | retry the restore with the certificate present
 
-**When to run:** Immediately after `CREATE CERTIFICATE ... FROM FILE` has succeeded.
-**Trigger:** Continuation of the DR runbook after the certificate import step.
-**Context:** T-SQL `RESTORE DATABASE` from `master`. Uses `REPLACE` because any residual database object with the target name must be overwritten, and `MOVE` to pin the physical file locations to the standard Linux data directory on this host.
-**Purpose:** Restore the encrypted database from the backup file using the freshly imported certificate.
+Immediately after `CREATE CERTIFICATE ... FROM FILE` has succeeded. It is typically triggered by continuation of the DR runbook after the certificate import step. T-SQL `RESTORE DATABASE` from `master`. Uses `REPLACE` because any residual database object with the target name must be overwritten, and `MOVE` to pin the physical file locations to the standard Linux data directory on this host. Restore the encrypted database from the backup file using the freshly imported certificate.
 
 *Restore `codex_tde_demo` with explicit file placement on the Linux host.*
 
@@ -977,10 +914,7 @@ _The restore reads the same 386 pages written during the backup and decrypts the
 
 #### `SELECT` | verify the restored database is readable
 
-**When to run:** Immediately after every TDE-protected restore.
-**Trigger:** Post-restore smoke test in a DR runbook.
-**Context:** Ordinary `SELECT` inside the restored database. Requires `SELECT` on the table.
-**Purpose:** Confirm that the restore produced a fully readable database — proof that the certificate was correct, the DEK was re-opened, and the encrypted pages decrypted successfully.
+Immediately after every TDE-protected restore. It is typically triggered by post-restore smoke test in a DR runbook. Ordinary `SELECT` inside the restored database. Requires `SELECT` on the table. Confirm that the restore produced a fully readable database — proof that the certificate was correct, the DEK was re-opened, and the encrypted pages decrypted successfully.
 
 *Read the demo row from the restored `codex_tde_demo` database.*
 
@@ -1008,10 +942,7 @@ Two distinct rotation operations exist and they are often confused:
 
 #### `CREATE CERTIFICATE` | create the replacement TDE certificate
 
-**When to run:** As the first step of a certificate rotation runbook, before changing any DEK protection.
-**Trigger:** Scheduled rotation (e.g., annual), suspected compromise of the current cert, key-custody review, regulatory deadline.
-**Context:** T-SQL `CREATE CERTIFICATE` in `master`. Requires `CREATE CERTIFICATE` permission.
-**Purpose:** Produce a new self-signed certificate with a distinct name and fresh key material that will replace the current TDE encryptor on the DEK.
+As the first step of a certificate rotation runbook, before changing any DEK protection. It is typically triggered by scheduled rotation (e.g., annual), suspected compromise of the current cert, key-custody review, regulatory deadline. T-SQL `CREATE CERTIFICATE` in `master`. Requires `CREATE CERTIFICATE` permission. Produce a new self-signed certificate with a distinct name and fresh key material that will replace the current TDE encryptor on the DEK.
 
 *Create a new server certificate `codex_tde_demo_cert_v2` with a fresh name, subject, and expiry date.*
 
@@ -1029,10 +960,7 @@ The replacement cert has a different name (`_v2` suffix) — this matters becaus
 
 #### `BACKUP CERTIFICATE` | back up the new cert immediately
 
-**When to run:** Immediately after `CREATE CERTIFICATE`, before `ALTER DATABASE ENCRYPTION KEY` rotates the DEK protection.
-**Trigger:** Part of the rotation runbook.
-**Context:** T-SQL `BACKUP CERTIFICATE` in `master`. Same permission and filesystem requirements as the initial certificate backup.
-**Purpose:** Produce the `.cer` / `.pvk` recovery artifacts for the new certificate so that the DR path remains intact throughout the rotation window.
+Immediately after `CREATE CERTIFICATE`, before `ALTER DATABASE ENCRYPTION KEY` rotates the DEK protection. It is typically triggered by part of the rotation runbook. T-SQL `BACKUP CERTIFICATE` in `master`. Same permission and filesystem requirements as the initial certificate backup. Produce the `.cer` / `.pvk` recovery artifacts for the new certificate so that the DR path remains intact throughout the rotation window.
 
 > [!warning] Rotation without backup leaves DR in a worse state than before
 >
@@ -1059,10 +987,7 @@ GO
 
 #### `ALTER DATABASE ENCRYPTION KEY` | rotate the DEK to the new certificate
 
-**When to run:** After the new cert exists and has been backed up.
-**Trigger:** Certificate rotation runbook.
-**Context:** T-SQL `ALTER DATABASE ENCRYPTION KEY ENCRYPTION BY SERVER CERTIFICATE` inside the user database. Requires `CONTROL` permission on the database.
-**Purpose:** Change the DEK's encryptor from the old certificate to the new one. This does not re-encrypt the database — it only re-encrypts the DEK itself, which is a millisecond operation.
+After the new cert exists and has been backed up. It is typically triggered by certificate rotation runbook. T-SQL `ALTER DATABASE ENCRYPTION KEY ENCRYPTION BY SERVER CERTIFICATE` inside the user database. Requires `CONTROL` permission on the database. Change the DEK's encryptor from the old certificate to the new one. This does not re-encrypt the database — it only re-encrypts the DEK itself, which is a millisecond operation.
 
 *Re-encrypt the `codex_tde_demo` DEK with the new certificate.*
 
@@ -1079,10 +1004,7 @@ GO
 
 #### `ALTER DATABASE ENCRYPTION KEY REGENERATE` | regenerate the DEK with AES-256
 
-**When to run:** When the DEK's symmetric key material should be replaced — suspected compromise, cryptographic agility exercise, or upgrading from AES-128/192 to AES-256.
-**Trigger:** Scheduled DEK rotation, migration off a deprecated algorithm, incident response.
-**Context:** T-SQL `ALTER DATABASE ENCRYPTION KEY REGENERATE WITH ALGORITHM` inside the user database. Requires `CONTROL` permission. State-changing — triggers a full page-level re-encryption scan similar to initial enablement.
-**Purpose:** Replace the DEK symmetric key bytes with fresh key material, optionally changing the algorithm at the same time.
+When the DEK's symmetric key material should be replaced — suspected compromise, cryptographic agility exercise, or upgrading from AES-128/192 to AES-256. It is typically triggered by scheduled DEK rotation, migration off a deprecated algorithm, incident response. T-SQL `ALTER DATABASE ENCRYPTION KEY REGENERATE WITH ALGORITHM` inside the user database. Requires `CONTROL` permission. State-changing — triggers a full page-level re-encryption scan similar to initial enablement. Replace the DEK symmetric key bytes with fresh key material, optionally changing the algorithm at the same time.
 
 > [!warning] REGENERATE is a full re-encryption scan
 >
@@ -1107,10 +1029,7 @@ The command completes quickly on the 3 MB demo database. On a production databas
 
 #### `sys.dm_database_encryption_keys` + `sys.certificates` | verify the rotation took effect
 
-**When to run:** After cert rotation, DEK rotation, or both.
-**Trigger:** Post-rotation verification.
-**Context:** Read-only T-SQL joining `sys.databases`, `sys.dm_database_encryption_keys`, and `sys.certificates`. Requires `VIEW SERVER STATE`.
-**Purpose:** Confirm the DEK's `encryptor_thumbprint` now matches the new certificate's thumbprint, and `dek_regenerate_date` is populated after REGENERATE.
+After cert rotation, DEK rotation, or both. It is typically triggered by post-rotation verification. Read-only T-SQL joining `sys.databases`, `sys.dm_database_encryption_keys`, and `sys.certificates`. Requires `VIEW SERVER STATE`. Confirm the DEK's `encryptor_thumbprint` now matches the new certificate's thumbprint, and `dek_regenerate_date` is populated after REGENERATE.
 
 *Return the post-rotation DEK state with both the new cert thumbprint and the regenerate date.*
 
@@ -1152,10 +1071,7 @@ The original certificate is still present in `master` after rotation. Keep it. O
 
 #### `sys.certificates` | confirm both certs exist after rotation
 
-**When to run:** After cert rotation, and periodically as a cert-inventory check.
-**Trigger:** Rotation verification, cert-lifecycle audit, log-backup chain validation.
-**Context:** Read-only T-SQL against `master.sys.certificates`.
-**Purpose:** Prove both certificates exist and capture their backup dates to confirm each one has a current `.cer` + `.pvk` pair on disk.
+After cert rotation, and periodically as a cert-inventory check. It is typically triggered by rotation verification, cert-lifecycle audit, log-backup chain validation. Read-only T-SQL against `master.sys.certificates`. Prove both certificates exist and capture their backup dates to confirm each one has a current `.cer` + `.pvk` pair on disk.
 
 *List every `codex_tde_demo_cert*` certificate on the instance.*
 
@@ -1188,10 +1104,7 @@ An operator running TDE at scale needs a single query that can be scheduled agai
 
 #### `sys.dm_database_encryption_keys` | scheduled TDE health check
 
-**When to run:** On a schedule (e.g., every 15 minutes via SQL Agent, every run of a Grafana/Prometheus exporter, or as part of the DBA morning checklist).
-**Trigger:** Scheduled monitoring job, ad-hoc triage, post-rollout validation.
-**Context:** Read-only T-SQL joining `sys.databases`, `sys.dm_database_encryption_keys`, and `sys.certificates`. Requires `VIEW SERVER STATE`. Filters to user databases and `tempdb`, skipping the other system databases.
-**Purpose:** Return one row per database with a `health_flag` column that is either `OK`, `not encrypted`, `WARNING: ...`, or `CRITICAL: ...`. The operator can alert on any row where `health_flag LIKE 'CRITICAL:%'`.
+On a schedule (e.g., every 15 minutes via SQL Agent, every run of a Grafana/Prometheus exporter, or as part of the DBA morning checklist). It is typically triggered by scheduled monitoring job, ad-hoc triage, post-rollout validation. Read-only T-SQL joining `sys.databases`, `sys.dm_database_encryption_keys`, and `sys.certificates`. Requires `VIEW SERVER STATE`. Filters to user databases and `tempdb`, skipping the other system databases. Return one row per database with a `health_flag` column that is either `OK`, `not encrypted`, `WARNING: ...`, or `CRITICAL: ...`. The operator can alert on any row where `health_flag LIKE 'CRITICAL:%'`.
 
 > [!info]- Why the `health_flag` expression looks the way it does
 >

@@ -186,10 +186,7 @@ Assign a unique sequential number within each partition. The classic pattern for
 
 #### Pick the latest price per stock with ROW_NUMBER
 
-**When to run:** When you need the most recent row per stock — the standard deduplication pattern for point-in-time snapshots.
-**Trigger:** Building a current-state view, dashboard refresh, or deduplicating a table after a load that may have introduced duplicates.
-**Context:** GoogleSQL subquery with `ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date DESC)` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Scans the table once, assigns ranks, then the outer query filters to `rn = 1`.
-**Purpose:** Retrieve exactly one row per stock — the most recent trading day — using ROW_NUMBER deduplication.
+When you need the most recent row per stock — the standard deduplication pattern for point-in-time snapshots. It is typically triggered by building a current-state view, dashboard refresh, or deduplicating a table after a load that may have introduced duplicates. GoogleSQL subquery with `ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date DESC)` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Scans the table once, assigns ranks, then the outer query filters to `rn = 1`. Retrieve exactly one row per stock — the most recent trading day — using ROW_NUMBER deduplication.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -265,10 +262,7 @@ Use case: "ASML is in the 90th percentile of composite scores."
 
 #### Compute percentile rank and cumulative distribution
 
-**When to run:** When building relative performance metrics — "where does this stock sit vs its peers?"
-**Trigger:** Scoring pipeline output review, quantile-based signal construction, or performance attribution reporting.
-**Context:** GoogleSQL window functions `PERCENT_RANK()` and `CUME_DIST()` against `stoxx_gold.scores_daily`. Read-only. Both functions compute relative position within the ordered set. `PERCENT_RANK` returns 0 to 1 (0 = best rank). `CUME_DIST` returns the fraction of rows with value ≤ current.
-**Purpose:** Compute percentile ranking and cumulative distribution for each stock's composite score — enables statements like "ASML is in the 90th percentile."
+When building relative performance metrics — "where does this stock sit vs its peers?". It is typically triggered by scoring pipeline output review, quantile-based signal construction, or performance attribution reporting. GoogleSQL window functions `PERCENT_RANK()` and `CUME_DIST()` against `stoxx_gold.scores_daily`. Read-only. Both functions compute relative position within the ordered set. `PERCENT_RANK` returns 0 to 1 (0 = best rank). `CUME_DIST` returns the fraction of rows with value ≤ current. Compute percentile ranking and cumulative distribution for each stock's composite score — enables statements like "ASML is in the 90th percentile.".
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -353,10 +347,7 @@ Use case: compare every day's close to the first close of the year (YTD return).
 
 #### Anchor YTD return to the first close with FIRST_VALUE
 
-**When to run:** When computing a running YTD return series where every day's return is measured against the year's opening price.
-**Trigger:** Building a YTD performance chart, or comparing how far each stock has moved since the start of the year on any given day.
-**Context:** GoogleSQL window function `FIRST_VALUE(close) OVER (PARTITION BY symbol ORDER BY date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The explicit `ROWS` frame ensures `FIRST_VALUE` always returns the partition's first row.
-**Purpose:** Compute daily YTD return by anchoring to the first trading day's close of the current year — produces a running return series for performance charting.
+When computing a running YTD return series where every day's return is measured against the year's opening price. It is typically triggered by building a YTD performance chart, or comparing how far each stock has moved since the start of the year on any given day. GoogleSQL window function `FIRST_VALUE(close) OVER (PARTITION BY symbol ORDER BY date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The explicit `ROWS` frame ensures `FIRST_VALUE` always returns the partition's first row. Compute daily YTD return by anchoring to the first trading day's close of the current year — produces a running return series for performance charting.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -446,10 +437,7 @@ Use case: cumulative volume, cumulative return, running P&L.
 
 #### Compute cumulative volume with SUM OVER and ROWS UNBOUNDED PRECEDING
 
-**When to run:** When building running total series for volume, P&L, or any additive metric.
-**Trigger:** Need to visualize cumulative activity over time, or to detect inflection points where cumulative volume accelerates.
-**Context:** GoogleSQL window function `SUM(volume) OVER (PARTITION BY symbol ORDER BY date ROWS UNBOUNDED PRECEDING)` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. `ROWS UNBOUNDED PRECEDING` means from the first row in the partition to the current row.
-**Purpose:** Compute cumulative trading volume from the start of 2025 — useful for tracking total market activity and detecting volume regime changes.
+When building running total series for volume, P&L, or any additive metric. It is typically triggered by need to visualize cumulative activity over time, or to detect inflection points where cumulative volume accelerates. GoogleSQL window function `SUM(volume) OVER (PARTITION BY symbol ORDER BY date ROWS UNBOUNDED PRECEDING)` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. `ROWS UNBOUNDED PRECEDING` means from the first row in the partition to the current row. Compute cumulative trading volume from the start of 2025 — useful for tracking total market activity and detecting volume regime changes.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -534,10 +522,7 @@ The query below demonstrates three frame variants side by side: `sma_5_rows` use
 
 #### Compare three window frame variants side by side
 
-**When to run:** When studying frame clause behavior or when building technical indicators that require different window sizes.
-**Trigger:** Need to understand how `ROWS BETWEEN`, no-frame, and `STDDEV` windows produce different results on the same data.
-**Context:** GoogleSQL three window functions with different frame clauses against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Always use `ROWS` (not `RANGE`) for moving averages to get a precise row count.
-**Purpose:** Demonstrate three frame variants side by side — 5-row SMA, full-partition average, and 30-day rolling volatility — to illustrate how the frame clause controls what each window function sees.
+When studying frame clause behavior or when building technical indicators that require different window sizes. It is typically triggered by need to understand how `ROWS BETWEEN`, no-frame, and `STDDEV` windows produce different results on the same data. GoogleSQL three window functions with different frame clauses against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Always use `ROWS` (not `RANGE`) for moving averages to get a precise row count. Demonstrate three frame variants side by side — 5-row SMA, full-partition average, and 30-day rolling volatility — to illustrate how the frame clause controls what each window function sees.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -647,10 +632,7 @@ Classic use: generate a continuous date sequence to detect missing trading days.
 
 #### Generate a date series with a recursive CTE and detect missing trading days
 
-**When to run:** When auditing a time series for missing dates, or when building a complete calendar spine to LEFT JOIN against fact data.
-**Trigger:** Investigating gaps in the OHLCV data, or preparing a date-complete dataset for visualization tools that require every date in the range.
-**Context:** GoogleSQL recursive CTE (`WITH RECURSIVE`) generating dates from March 1–31, then LEFT JOINed to `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The recursion iterates once per day (31 iterations for one month — well within the 500-iteration default limit).
-**Purpose:** Generate a continuous date series and detect missing trading days — dates where the LEFT JOIN returns NULL indicate the stock had no data for that date (weekend, holiday, or data gap).
+When auditing a time series for missing dates, or when building a complete calendar spine to LEFT JOIN against fact data. It is typically triggered by investigating gaps in the OHLCV data, or preparing a date-complete dataset for visualization tools that require every date in the range. GoogleSQL recursive CTE (`WITH RECURSIVE`) generating dates from March 1–31, then LEFT JOINed to `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The recursion iterates once per day (31 iterations for one month — well within the 500-iteration default limit). Generate a continuous date series and detect missing trading days — dates where the LEFT JOIN returns NULL indicate the stock had no data for that date (weekend, holiday, or data gap).
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -740,10 +722,7 @@ BigQuery supports `CROSS JOIN` for Cartesian products but does not support SQL S
 
 #### Build a complete symbol x date grid with CROSS JOIN
 
-**When to run:** When performing comprehensive gap detection across all symbols simultaneously — not just one stock.
-**Trigger:** Post-load validation to verify that every symbol has data for every expected trading date, or investigating systematic data gaps.
-**Context:** GoogleSQL CROSS JOIN between a `DISTINCT symbol` set (50 rows) and a trading calendar CTE (limited date range). Read-only. The CROSS JOIN is safe because both sides are small (50 × ~15 dates = 750 combinations). The LEFT JOIN to OHLCV detects missing data.
-**Purpose:** Build a complete (symbol, date) grid and flag missing data — ensures that every stock has a row for every expected trading date.
+When performing comprehensive gap detection across all symbols simultaneously — not just one stock. It is typically triggered by post-load validation to verify that every symbol has data for every expected trading date, or investigating systematic data gaps. GoogleSQL CROSS JOIN between a `DISTINCT symbol` set (50 rows) and a trading calendar CTE (limited date range). Read-only. The CROSS JOIN is safe because both sides are small (50 × ~15 dates = 750 combinations). The LEFT JOIN to OHLCV detects missing data. Build a complete (symbol, date) grid and flag missing data — ensures that every stock has a row for every expected trading date.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -821,10 +800,7 @@ In SQL Server, `CROSS APPLY` runs a correlated subquery for each outer row — a
 
 #### Top-N per group with ROW_NUMBER (CROSS APPLY equivalent)
 
-**When to run:** When you need the top N rows per group — the standard replacement for SQL Server's `CROSS APPLY (SELECT TOP N ...)` in BigQuery.
-**Trigger:** Building a per-stock analysis that needs the N most significant events (highest volume, biggest moves, etc.) per stock.
-**Context:** GoogleSQL subquery with `ROW_NUMBER() OVER (PARTITION BY d.symbol ORDER BY o.volume DESC)` joining `stoxx_silver.index_dim` and `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The table is scanned once; the window function partitions across slots in parallel.
-**Purpose:** Find the top 3 highest-volume trading days per stock — BigQuery's idiomatic replacement for SQL Server's CROSS APPLY pattern.
+When you need the top N rows per group — the standard replacement for SQL Server's `CROSS APPLY (SELECT TOP N ...)` in BigQuery. It is typically triggered by building a per-stock analysis that needs the N most significant events (highest volume, biggest moves, etc.) per stock. GoogleSQL subquery with `ROW_NUMBER() OVER (PARTITION BY d.symbol ORDER BY o.volume DESC)` joining `stoxx_silver.index_dim` and `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The table is scanned once; the window function partitions across slots in parallel. Find the top 3 highest-volume trading days per stock — BigQuery's idiomatic replacement for SQL Server's CROSS APPLY pattern.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -906,10 +882,7 @@ SQL Server's `OUTER APPLY` keeps the outer row even when the correlated subquery
 
 #### Optional lateral join with LEFT JOIN + ROW_NUMBER (OUTER APPLY equivalent)
 
-**When to run:** When you need to join the best/latest match per key but must preserve outer rows that have no match — the replacement for SQL Server's `OUTER APPLY`.
-**Trigger:** Building a report that shows all index members even if some lack scores (e.g., newly added stocks before the first scoring run).
-**Context:** GoogleSQL LEFT JOIN on a subquery with `ROW_NUMBER() OVER (PARTITION BY symbol, _index ORDER BY score_date DESC)` filtered to `rn = 1`. Read-only. Outer rows with no match retain NULLs for the joined columns.
-**Purpose:** Join the latest gold score per stock while preserving all dimension rows — stocks without scores appear with NULL score columns instead of being dropped.
+When you need to join the best/latest match per key but must preserve outer rows that have no match — the replacement for SQL Server's `OUTER APPLY`. It is typically triggered by building a report that shows all index members even if some lack scores (e.g., newly added stocks before the first scoring run). GoogleSQL LEFT JOIN on a subquery with `ROW_NUMBER() OVER (PARTITION BY symbol, _index ORDER BY score_date DESC)` filtered to `rn = 1`. Read-only. Outer rows with no match retain NULLs for the joined columns. Join the latest gold score per stock while preserving all dimension rows — stocks without scores appear with NULL score columns instead of being dropped.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1007,10 +980,7 @@ Turn row values into column headers. Classic use: monthly close prices as column
 
 #### Pivot monthly average close prices with native PIVOT
 
-**When to run:** When downstream consumers (dashboards, reports) need wide-format data with months as columns.
-**Trigger:** Building a monthly performance matrix or feeding a visualization tool that expects one column per month.
-**Context:** GoogleSQL native `PIVOT` operator against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Requires a static, compile-time column list (`IN (1 AS Jan, 2 AS Feb, ...)`). Dynamic column lists require procedural SQL or client-side reshaping.
-**Purpose:** Transform monthly average close prices from rows into columns using BigQuery's native PIVOT syntax.
+When downstream consumers (dashboards, reports) need wide-format data with months as columns. It is typically triggered by building a monthly performance matrix or feeding a visualization tool that expects one column per month. GoogleSQL native `PIVOT` operator against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Requires a static, compile-time column list (`IN (1 AS Jan, 2 AS Feb, ...)`). Dynamic column lists require procedural SQL or client-side reshaping. Transform monthly average close prices from rows into columns using BigQuery's native PIVOT syntax.
 
 *Use BigQuery's native PIVOT syntax to turn monthly average close prices into columns.*
 
@@ -1056,10 +1026,7 @@ The portable equivalent uses `CASE` inside aggregate functions — this works in
 
 #### Portable CASE-based pivot without PIVOT syntax
 
-**When to run:** When you need a pivot that works across BigQuery, SQL Server, and PostgreSQL without engine-specific syntax.
-**Trigger:** Building a cross-engine dbt model or a query that must run on multiple databases.
-**Context:** GoogleSQL conditional aggregation using `CASE WHEN EXTRACT(MONTH FROM date) = N THEN close END` inside `AVG()`. Read-only. This pattern is ANSI SQL and works in any engine.
-**Purpose:** Demonstrate the portable alternative to native PIVOT — conditional aggregation with CASE expressions inside aggregate functions.
+When you need a pivot that works across BigQuery, SQL Server, and PostgreSQL without engine-specific syntax. It is typically triggered by building a cross-engine dbt model or a query that must run on multiple databases. GoogleSQL conditional aggregation using `CASE WHEN EXTRACT(MONTH FROM date) = N THEN close END` inside `AVG()`. Read-only. This pattern is ANSI SQL and works in any engine. Demonstrate the portable alternative to native PIVOT — conditional aggregation with CASE expressions inside aggregate functions.
 
 *Portable CASE-based pivot: compute monthly averages without BigQuery PIVOT syntax.*
 
@@ -1109,10 +1076,7 @@ The reverse — turn multiple score columns into rows for easier comparison/char
 
 #### Unpivot score columns into rows for per-component analysis
 
-**When to run:** When charting or analyzing individual score components — wide-format columns need to become rows for faceted visualizations.
-**Trigger:** Building a score component breakdown chart, or feeding a visualization tool that expects long-format data.
-**Context:** GoogleSQL native `UNPIVOT` operator against `stoxx_gold.scores_daily`. Read-only. Converts three score columns into (score_type, score_value) rows.
-**Purpose:** Transform score component columns (value, momentum, sentiment) into rows for per-component comparison and charting.
+When charting or analyzing individual score components — wide-format columns need to become rows for faceted visualizations. It is typically triggered by building a score component breakdown chart, or feeding a visualization tool that expects long-format data. GoogleSQL native `UNPIVOT` operator against `stoxx_gold.scores_daily`. Read-only. Converts three score columns into (score_type, score_value) rows. Transform score component columns (value, momentum, sentiment) into rows for per-component comparison and charting.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1192,10 +1156,7 @@ BigQuery MERGE works on permanent tables only — it cannot target temp tables o
 
 #### MERGE upsert syntax — reference pattern
 
-**When to run:** During incremental pipeline loads — the standard pattern for upserting new/changed data into a target table.
-**Trigger:** Staging table loaded with fresh data — need to merge it into the production target table.
-**Context:** GoogleSQL DML (`MERGE ... USING ... ON ... WHEN MATCHED ... WHEN NOT MATCHED`). State-changing — modifies the target table. Each execution counts as one DML operation against the 1,500/day quota. Works on permanent tables only — cannot target temp tables or CTEs in jupysql.
-**Purpose:** Reference syntax for the MERGE upsert pattern — INSERT new rows and UPDATE existing rows in a single atomic operation.
+During incremental pipeline loads — the standard pattern for upserting new/changed data into a target table. It is typically triggered by staging table loaded with fresh data — need to merge it into the production target table. GoogleSQL DML (`MERGE ... USING ... ON ... WHEN MATCHED ... WHEN NOT MATCHED`). State-changing — modifies the target table. Each execution counts as one DML operation against the 1,500/day quota. Works on permanent tables only — cannot target temp tables or CTEs in jupysql. Reference syntax for the MERGE upsert pattern — INSERT new rows and UPDATE existing rows in a single atomic operation.
 
 *Reference MERGE syntax for upserting a source table into a target — illustrates the WHEN MATCHED / WHEN NOT MATCHED pattern.*
 
@@ -1224,10 +1185,7 @@ The demo below shows staging-like data that would be the source for a MERGE oper
 
 #### Show MERGE staging source data
 
-**When to run:** When preparing or inspecting the staging data that will feed a MERGE operation.
-**Trigger:** Verifying that the staging table or CTE contains the expected rows before executing the MERGE.
-**Context:** GoogleSQL SELECT with `UNION ALL` literals to simulate staging data. Read-only. In production, this would be a `SELECT` from an actual staging table loaded via batch or streaming.
-**Purpose:** Show what the staging source data looks like before it feeds the MERGE — two rows of demo OHLCV data.
+When preparing or inspecting the staging data that will feed a MERGE operation. It is typically triggered by verifying that the staging table or CTE contains the expected rows before executing the MERGE. GoogleSQL SELECT with `UNION ALL` literals to simulate staging data. Read-only. In production, this would be a `SELECT` from an actual staging table loaded via batch or streaming. Show what the staging source data looks like before it feeds the MERGE — two rows of demo OHLCV data.
 
 *Show staging-like source data that would feed a MERGE operation.*
 
@@ -1274,10 +1232,7 @@ Stops at the first match (efficient). Use for "does a related row exist?" questi
 
 #### Find index members with at least one matching score (semi-join)
 
-**When to run:** When filtering a parent table to only those rows that have related data in a child table — without duplicating rows from the child.
-**Trigger:** Need to identify which index members have been scored (i.e., have at least one row in `scores_daily`), excluding any newly added members that haven't been scored yet.
-**Context:** GoogleSQL `WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` semi-join pattern. Read-only. `EXISTS` short-circuits at the first match — efficient even on large child tables.
-**Purpose:** Find Euro Stoxx 50 dimension members that have at least one corresponding gold-layer score — a semi-join that returns parent rows without duplicating them.
+When filtering a parent table to only those rows that have related data in a child table — without duplicating rows from the child. It is typically triggered by need to identify which index members have been scored (i.e., have at least one row in `scores_daily`), excluding any newly added members that haven't been scored yet. GoogleSQL `WHERE EXISTS (SELECT 1 FROM ... WHERE ...)` semi-join pattern. Read-only. `EXISTS` short-circuits at the first match — efficient even on large child tables. Find Euro Stoxx 50 dimension members that have at least one corresponding gold-layer score — a semi-join that returns parent rows without duplicating them.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -1343,10 +1298,7 @@ Find rows in A that have **no match** in B. More efficient than `LEFT JOIN WHERE
 
 #### Find Euro Stoxx 50 members not in Oil & Gas 20 (anti-join)
 
-**When to run:** When identifying rows in one set that are absent from another — the standard anti-join pattern.
-**Trigger:** Cross-index analysis, universe filtering, or identifying stocks exclusive to one index.
-**Context:** GoogleSQL `WHERE NOT EXISTS (SELECT 1 FROM ... WHERE ...)` anti-join. Read-only. `NOT EXISTS` is NULL-safe (unlike `NOT IN`, which silently returns zero rows if the subquery contains a NULL). Always prefer `NOT EXISTS` over `NOT IN` for anti-joins.
-**Purpose:** Find Euro Stoxx 50 members that are not also in the Oil & Gas 20 index — the set difference between two index universes.
+When identifying rows in one set that are absent from another — the standard anti-join pattern. It is typically triggered by cross-index analysis, universe filtering, or identifying stocks exclusive to one index. GoogleSQL `WHERE NOT EXISTS (SELECT 1 FROM ... WHERE ...)` anti-join. Read-only. `NOT EXISTS` is NULL-safe (unlike `NOT IN`, which silently returns zero rows if the subquery contains a NULL). Always prefer `NOT EXISTS` over `NOT IN` for anti-joins. Find Euro Stoxx 50 members that are not also in the Oil & Gas 20 index — the set difference between two index universes.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -1416,10 +1368,7 @@ Run multiple GROUP BY queries in one pass. Instead of UNION ALL of separate aggr
 
 #### Aggregate by sector, by country, and overall with GROUPING SETS
 
-**When to run:** When you need multiple aggregation levels from a single table scan instead of running separate `UNION ALL` queries.
-**Trigger:** Building a multi-level summary report (e.g., by sector, by country, and overall total) for a dashboard or presentation.
-**Context:** GoogleSQL `GROUP BY GROUPING SETS ((sector), (country), ())` joining `stoxx_gold.scores_daily` with `stoxx_silver.index_dim`. Read-only. BigQuery reads the source table once and computes all grouping combinations in parallel. `GROUPING(col)` returns 1 for subtotal rows (where the column is aggregated away) and 0 for detail rows.
-**Purpose:** Produce per-sector, per-country, and grand-total aggregations in a single query pass — more efficient than three separate GROUP BY queries unioned together.
+When you need multiple aggregation levels from a single table scan instead of running separate `UNION ALL` queries. It is typically triggered by building a multi-level summary report (e.g., by sector, by country, and overall total) for a dashboard or presentation. GoogleSQL `GROUP BY GROUPING SETS ((sector), (country), ())` joining `stoxx_gold.scores_daily` with `stoxx_silver.index_dim`. Read-only. BigQuery reads the source table once and computes all grouping combinations in parallel. `GROUPING(col)` returns 1 for subtotal rows (where the column is aggregated away) and 0 for detail rows. Produce per-sector, per-country, and grand-total aggregations in a single query pass — more efficient than three separate GROUP BY queries unioned together.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -1505,10 +1454,7 @@ LIMIT 15
 
 #### Hierarchical subtotals per sector with ROLLUP
 
-**When to run:** When building a hierarchical summary with subtotals that roll up from most to least granular.
-**Trigger:** Creating a sector volume report with a grand-total row, or any report that needs hierarchical subtotals.
-**Context:** GoogleSQL `GROUP BY ROLLUP(d.sector)` with a three-table join. Read-only. `ROLLUP(sector)` generates two grouping levels: per-sector and grand total. `GROUPING(d.sector)` returns 1 for the grand-total row.
-**Purpose:** Produce per-sector volume totals with a grand-total row — the standard hierarchical subtotal pattern using ROLLUP.
+When building a hierarchical summary with subtotals that roll up from most to least granular. It is typically triggered by creating a sector volume report with a grand-total row, or any report that needs hierarchical subtotals. GoogleSQL `GROUP BY ROLLUP(d.sector)` with a three-table join. Read-only. `ROLLUP(sector)` generates two grouping levels: per-sector and grand total. `GROUPING(d.sector)` returns 1 for the grand-total row. Produce per-sector volume totals with a grand-total row — the standard hierarchical subtotal pattern using ROLLUP.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1590,10 +1536,7 @@ Use case: list all tickers in a sector as one field.
 
 #### Concatenate ticker symbols per sector with STRING_AGG
 
-**When to run:** When building a compact sector summary that lists all tickers in a single field — useful for reports, emails, or dashboard tooltips.
-**Trigger:** Need to display all stocks in a sector as a comma-separated list rather than as separate rows.
-**Context:** GoogleSQL `STRING_AGG(symbol, ', ' ORDER BY symbol)` with GROUP BY against `stoxx_silver.index_dim`. Read-only. The `ORDER BY` inside `STRING_AGG` ensures consistent ordering across runs.
-**Purpose:** Concatenate all ticker symbols per sector into a single comma-separated string — a compact representation for summary views.
+When building a compact sector summary that lists all tickers in a single field — useful for reports, emails, or dashboard tooltips. It is typically triggered by need to display all stocks in a sector as a comma-separated list rather than as separate rows. GoogleSQL `STRING_AGG(symbol, ', ' ORDER BY symbol)` with GROUP BY against `stoxx_silver.index_dim`. Read-only. The `ORDER BY` inside `STRING_AGG` ensures consistent ordering across runs. Concatenate all ticker symbols per sector into a single comma-separated string — a compact representation for summary views.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1659,10 +1602,7 @@ Extract exchange suffix from ticker symbols (e.g., 'AS' from 'ASML.AS').
 
 #### Parse tickers into ticker code and exchange suffix
 
-**When to run:** When decomposing composite identifiers into their components for grouping, filtering, or joining against exchange-level data.
-**Trigger:** Need to extract the exchange suffix from ticker symbols (e.g., `AS` from `ASML.AS`) for exchange-level analysis or when building lookup mappings.
-**Context:** GoogleSQL string functions `STRPOS`, `LEFT`, `SUBSTR`, `CONCAT`, `UPPER`, `LOWER` against `stoxx_silver.index_dim`. Read-only.
-**Purpose:** Decompose ticker symbols into their component parts — ticker code and exchange suffix — and demonstrate proper-case formatting for display.
+When decomposing composite identifiers into their components for grouping, filtering, or joining against exchange-level data. It is typically triggered by need to extract the exchange suffix from ticker symbols (e.g., `AS` from `ASML.AS`) for exchange-level analysis or when building lookup mappings. GoogleSQL string functions `STRPOS`, `LEFT`, `SUBSTR`, `CONCAT`, `UPPER`, `LOWER` against `stoxx_silver.index_dim`. Read-only. Decompose ticker symbols into their component parts — ticker code and exchange suffix — and demonstrate proper-case formatting for display.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1758,10 +1698,7 @@ The query demonstrates three patterns: `COALESCE` provides a default display val
 
 #### Demonstrate COALESCE, NULLIF, and COUNT NULL behavior
 
-**When to run:** When working with data that may contain NULLs — understanding NULL handling is essential for correct financial calculations.
-**Trigger:** Need to display NULL-safe defaults, perform division where the denominator may be zero, or understand the difference between `COUNT(*)` and `COUNT(column)`.
-**Context:** GoogleSQL `COALESCE`, `NULLIF`, and `COUNT` window functions against `stoxx_silver.signals_daily`. Read-only. Demonstrates three NULL handling patterns in a single query.
-**Purpose:** Demonstrate three essential NULL handling patterns: `COALESCE` for display defaults, `NULLIF` for safe division, and `COUNT(*)` vs `COUNT(column)` for distinguishing total rows from non-null rows.
+When working with data that may contain NULLs — understanding NULL handling is essential for correct financial calculations. It is typically triggered by need to display NULL-safe defaults, perform division where the denominator may be zero, or understand the difference between `COUNT(*)` and `COUNT(column)`. GoogleSQL `COALESCE`, `NULLIF`, and `COUNT` window functions against `stoxx_silver.signals_daily`. Read-only. Demonstrates three NULL handling patterns in a single query. Demonstrate three essential NULL handling patterns: `COALESCE` for display defaults, `NULLIF` for safe division, and `COUNT(*)` vs `COUNT(column)` for distinguishing total rows from non-null rows.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1869,10 +1806,7 @@ Set operations combine the result sets of multiple queries. `UNION ALL` stacks r
 
 #### Find index difference with EXCEPT DISTINCT
 
-**When to run:** When computing the set difference between two result sets — which rows are in A but not in B.
-**Trigger:** Cross-index comparison, universe filtering, or identifying stocks exclusive to one index.
-**Context:** GoogleSQL `EXCEPT DISTINCT` between two SELECT statements. Read-only. BigQuery requires the explicit `DISTINCT` keyword (unlike SQL Server where `EXCEPT` is implicitly distinct). Both SELECTs must have the same number of columns and compatible types.
-**Purpose:** Find Euro Stoxx 50 symbols that do not appear in the Asia 50 index — the set difference between two index universes.
+When computing the set difference between two result sets — which rows are in A but not in B. It is typically triggered by cross-index comparison, universe filtering, or identifying stocks exclusive to one index. GoogleSQL `EXCEPT DISTINCT` between two SELECT statements. Read-only. BigQuery requires the explicit `DISTINCT` keyword (unlike SQL Server where `EXCEPT` is implicitly distinct). Both SELECTs must have the same number of columns and compatible types. Find Euro Stoxx 50 symbols that do not appear in the Asia 50 index — the set difference between two index universes.
 
 *EXCEPT DISTINCT: find Euro Stoxx 50 symbols that are not in the Asia 50 index.*
 
@@ -1924,10 +1858,7 @@ For BigQuery infrastructure details on how this table is loaded and maintained, 
 
 #### Count trading days vs calendar days per exchange
 
-**When to run:** When verifying the trading calendar for a specific quarter, or when computing the ratio of trading days to calendar days per exchange.
-**Trigger:** Calendar setup validation, pre-computation of annualization factors, or investigating why a gap-detection query flagged unexpected dates.
-**Context:** GoogleSQL GROUP BY against `stoxx_bronze.trading_calendar`. Read-only. The `trading_calendar` table is a precomputed dimension holding every calendar date with exchange-specific `is_trading_day` flags.
-**Purpose:** Count trading days vs calendar days per exchange in Q1 2026 — verifies calendar completeness and shows the trading-day density (typically ~70% for European exchanges).
+When verifying the trading calendar for a specific quarter, or when computing the ratio of trading days to calendar days per exchange. It is typically triggered by calendar setup validation, pre-computation of annualization factors, or investigating why a gap-detection query flagged unexpected dates. GoogleSQL GROUP BY against `stoxx_bronze.trading_calendar`. Read-only. The `trading_calendar` table is a precomputed dimension holding every calendar date with exchange-specific `is_trading_day` flags. Count trading days vs calendar days per exchange in Q1 2026 — verifies calendar completeness and shows the trading-day density (typically ~70% for European exchanges).
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|

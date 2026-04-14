@@ -230,10 +230,7 @@ Establishes the Firestore client using a service account key file and verifies c
 
 #### Initialize client and list top-level collections
 
-**When to run:** At the start of any notebook session that interacts with Firestore.
-**Trigger:** Opening a new Jupyter session or verifying the environment is configured correctly.
-**Context:** Local development machine; requires a service account key file and the `google-cloud-firestore` package.
-**Purpose:** Establish an authenticated Firestore client and confirm connectivity by listing top-level collections.
+At the start of any notebook session that interacts with Firestore. It is typically triggered by opening a new Jupyter session or verifying the environment is configured correctly. Local development machine; requires a service account key file and the `google-cloud-firestore` package. Establish an authenticated Firestore client and confirm connectivity by listing top-level collections.
 
 This cell:
 
@@ -292,10 +289,7 @@ Called automatically before queries that need an index (no manual setup required
 
 #### Initialize Firestore Admin API client
 
-**When to run:** Once per session, immediately after the Firestore client is initialized.
-**Trigger:** Any notebook session that will run queries requiring composite or collection-group indexes.
-**Context:** Local development; requires service account credentials with Firestore Admin permissions (`roles/datastore.owner` or `roles/firebase.admin`).
-**Purpose:** Instantiate the Admin API client and define the project database path prefix used by all subsequent `ensure_index()` calls.
+Once per session, immediately after the Firestore client is initialized. It is typically triggered by any notebook session that will run queries requiring composite or collection-group indexes. Local development; requires service account credentials with Firestore Admin permissions (`roles/datastore.owner` or `roles/firebase.admin`). Instantiate the Admin API client and define the project database path prefix used by all subsequent `ensure_index()` calls.
 
 The Admin API client creates composite indexes. `_project_db` is the path prefix for all index operations throughout `ensure_index()`.
 
@@ -315,10 +309,7 @@ _project_db = "projects/bq-wh-nb/databases/(default)"
 
 #### ensure_index() — route to composite or field exemption index
 
-**When to run:** Before the first execution of any query that requires a composite or collection-group index.
-**Trigger:** Preparing to run a multi-field filter, a multi-field ordering, or a `collection_group()` query.
-**Context:** Read-write; calls Firestore Admin API to create indexes. Idempotent — safe to call on every run.
-**Purpose:** Transparently create the required index (composite or field exemption) and block until it is ready, so the subsequent query succeeds without a `FAILED_PRECONDITION` error.
+Before the first execution of any query that requires a composite or collection-group index. It is typically triggered by preparing to run a multi-field filter, a multi-field ordering, or a `collection_group()` query. Read-write; calls Firestore Admin API to create indexes. Idempotent — safe to call on every run. Transparently create the required index (composite or field exemption) and block until it is ready, so the subsequent query succeeds without a `FAILED_PRECONDITION` error.
 
 The function inspects `scope` and field count to decide which creation path to take. Single-field collection group queries need a REST field exemption; everything else uses the Admin API composite path.
 
@@ -349,10 +340,7 @@ def ensure_index(collection: str, fields: list[dict],
 
 #### Poll the long-running create_index() operation until ready
 
-**When to run:** Automatically as the continuation of `ensure_index()` — not called independently.
-**Trigger:** `create_index()` returns a long-running operation that has not yet completed.
-**Context:** Runs inline within `ensure_index()`; blocks the calling thread until the index leaves the `CREATING` state.
-**Purpose:** Wait for the asynchronous index build to finish before returning control, guaranteeing the index is queryable.
+Automatically as the continuation of `ensure_index()` — not called independently. It is typically triggered by `create_index()` returns a long-running operation that has not yet completed. Runs inline within `ensure_index()`; blocks the calling thread until the index leaves the `CREATING` state. Wait for the asynchronous index build to finish before returning control, guaranteeing the index is queryable.
 
 `create_index()` is asynchronous. This continuation polls the returned operation object, sleeping 5 seconds between checks, and falls through to the `already exists` handler if the index was previously created.
 
@@ -398,10 +386,7 @@ def ensure_index(collection: str, fields: list[dict],
 
 #### _ensure_field_exemption() — authenticate and prepare REST headers
 
-**When to run:** Automatically called by `ensure_index()` for single-field `COLLECTION_GROUP` indexes — not called independently.
-**Trigger:** `ensure_index()` detects `scope == "COLLECTION_GROUP"` with a single field.
-**Context:** Local dev; performs REST API calls against `firestore.googleapis.com` using service account credentials.
-**Purpose:** Authenticate and prepare the bearer-token headers required for all subsequent REST calls to the Firestore field config endpoint.
+Automatically called by `ensure_index()` for single-field `COLLECTION_GROUP` indexes — not called independently. It is typically triggered by `ensure_index()` detects `scope == "COLLECTION_GROUP"` with a single field. Local dev; performs REST API calls against `firestore.googleapis.com` using service account credentials. Authenticate and prepare the bearer-token headers required for all subsequent REST calls to the Firestore field config endpoint.
 
 This fragment authenticates via service account credentials and builds the bearer-token headers used for all subsequent REST calls against the Firestore field config endpoint.
 
@@ -430,10 +415,7 @@ def _ensure_field_exemption(collection: str, field: dict) -> None:
 
 #### Check if collection group exemption already exists
 
-**When to run:** Automatically within `_ensure_field_exemption()` — not called independently.
-**Trigger:** After authentication headers are prepared, before attempting to create a new exemption.
-**Context:** Read-only REST call to the Firestore field config endpoint; idempotent check.
-**Purpose:** Return early if the exemption already exists (or poll until it leaves `CREATING`), avoiding duplicate index creation errors.
+Automatically within `_ensure_field_exemption()` — not called independently. It is typically triggered after authentication headers are prepared, before attempting to create a new exemption. Read-only REST call to the Firestore field config endpoint; idempotent check. Return early if the exemption already exists (or poll until it leaves `CREATING`), avoiding duplicate index creation errors.
 
 GETs the current field config and returns early if a `COLLECTION_GROUP`-scoped index is already present. If it's still building, polls until it reaches a non-`CREATING` state.
 
@@ -478,10 +460,7 @@ GETs the current field config and returns early if a `COLLECTION_GROUP`-scoped i
 
 #### PATCH field config to add COLLECTION_GROUP exemption and poll until ready
 
-**When to run:** Automatically within `_ensure_field_exemption()` when no exemption exists yet — not called independently.
-**Trigger:** The GET check confirms no `COLLECTION_GROUP` exemption is present for the field.
-**Context:** State-changing REST PATCH call; merges existing `COLLECTION`-scoped entries to avoid deleting them.
-**Purpose:** Create ascending and descending `COLLECTION_GROUP` exemptions for the field and poll until both leave the `CREATING` state.
+Automatically within `_ensure_field_exemption()` when no exemption exists yet — not called independently. It is typically triggered by the GET check confirms no `COLLECTION_GROUP` exemption is present for the field. State-changing REST PATCH call; merges existing `COLLECTION`-scoped entries to avoid deleting them. Create ascending and descending `COLLECTION_GROUP` exemptions for the field and poll until both leave the `CREATING` state.
 
 Merges existing `COLLECTION`-scoped index entries with two new `COLLECTION_GROUP` entries (ascending + descending), then PATCHes the field config. Polls every 5 seconds until all `COLLECTION_GROUP` indexes leave the `CREATING` state or a 5-minute timeout is reached.
 
@@ -545,10 +524,7 @@ A quick health check that confirms the client is connected and that the expected
 
 #### Count documents in every top-level collection
 
-**When to run:** After initializing the Firestore client, or as a periodic health check.
-**Trigger:** Verifying that the database is populated and all expected collections are present.
-**Context:** Read-only; uses server-side `count()` aggregation — no documents are downloaded.
-**Purpose:** Print a collection inventory with document counts to confirm connectivity and detect empty or missing collections.
+After initializing the Firestore client, or as a periodic health check. It is typically triggered by verifying that the database is populated and all expected collections are present. Read-only; uses server-side `count()` aggregation — no documents are downloaded. Print a collection inventory with document counts to confirm connectivity and detect empty or missing collections.
 
 This cell:
 
@@ -602,10 +578,7 @@ Retrieves a specific document by its collection path and document ID using `.doc
 
 #### Fetch a document by ID and read flat, nested, and array fields
 
-**When to run:** When you know a specific document ID and need its full content in one call.
-**Trigger:** Displaying a stock detail page, verifying a document was written correctly, or retrieving config values.
-**Context:** Read-only; single document lookup charged as 1 read operation regardless of field count.
-**Purpose:** Retrieve a complete document and demonstrate safe access to flat fields, nested maps, and array fields.
+When you know a specific document ID and need its full content in one call. It is typically triggered by displaying a stock detail page, verifying a document was written correctly, or retrieving config values. Read-only; single document lookup charged as 1 read operation regardless of field count. Retrieve a complete document and demonstrate safe access to flat fields, nested maps, and array fields.
 
 This cell:
 
@@ -651,10 +624,7 @@ Streams every document in a collection as a lazy iterator. Always combine with `
 
 #### Stream all documents and print a formatted table
 
-**When to run:** When you need to inspect all documents in a small collection (≤ a few thousand) or produce a full export.
-**Trigger:** Auditing the full stocks universe, generating a report, or debugging data quality issues.
-**Context:** Read-only; downloads every document — each document costs 1 read. Use `.limit(N)` in production.
-**Purpose:** Demonstrate how to stream an entire collection and format it as a summary table with rank, symbol, and price.
+When you need to inspect all documents in a small collection (≤ a few thousand) or produce a full export. It is typically triggered by auditing the full stocks universe, generating a report, or debugging data quality issues. Read-only; downloads every document — each document costs 1 read. Use `.limit(N)` in production. Demonstrate how to stream an entire collection and format it as a summary table with rank, symbol, and price.
 
 This cell:
 
@@ -709,10 +679,7 @@ Total: 10 documents
 
 #### Fetch multiple documents in a single round-trip with get_all()
 
-**When to run:** When you have a known list of document IDs to retrieve (e.g., from a watchlist or a query result).
-**Trigger:** Loading a multi-stock comparison view, resolving a list of references, or batch-verifying document existence.
-**Context:** Read-only; fetches all references in one network round-trip, charged as N reads (one per document).
-**Purpose:** Show that `get_all()` is dramatically faster than N individual `.get()` calls for multi-document lookups.
+When you have a known list of document IDs to retrieve (e.g., from a watchlist or a query result). It is typically triggered by loading a multi-stock comparison view, resolving a list of references, or batch-verifying document existence. Read-only; fetches all references in one network round-trip, charged as N reads (one per document). Show that `get_all()` is dramatically faster than N individual `.get()` calls for multi-document lookups.
 
 This cell:
 
@@ -771,10 +738,7 @@ Filters documents using `==`, `!=`, `<`, `>`, `<=`, `>=`. Single-field equality 
 
 #### Filter documents by an exact field value
 
-**When to run:** When you need a subset of documents matching a single field value.
-**Trigger:** Showing all stocks from a specific country, filtering alerts by severity, or looking up documents by category.
-**Context:** Read-only; server-side filtering — only matching documents are transferred and billed.
-**Purpose:** Demonstrate equality filtering with `FieldFilter` using the auto-created single-field index.
+When you need a subset of documents matching a single field value. It is typically triggered by showing all stocks from a specific country, filtering alerts by severity, or looking up documents by category. Read-only; server-side filtering — only matching documents are transferred and billed. Demonstrate equality filtering with `FieldFilter` using the auto-created single-field index.
 
 > [!warning] Reads Billed per Document Returned
 >
@@ -829,10 +793,7 @@ Combines a range filter and `order_by` on the same field — covered by the auto
 
 #### Filter by range and sort results descending
 
-**When to run:** When you need documents falling within a numeric or temporal range, ordered by that same field.
-**Trigger:** Building a high-price watchlist, finding recent pipeline runs, or generating a leaderboard by score.
-**Context:** Read-only; range filter on the same field as `order_by` is covered by the auto-created single-field index — no composite index needed.
-**Purpose:** Show how to combine a range filter with descending ordering to return the top-N results by value.
+When you need documents falling within a numeric or temporal range, ordered by that same field. It is typically triggered by building a high-price watchlist, finding recent pipeline runs, or generating a leaderboard by score. Read-only; range filter on the same field as `order_by` is covered by the auto-created single-field index — no composite index needed. Show how to combine a range filter with descending ordering to return the top-N results by value.
 
 This cell:
 
@@ -874,10 +835,7 @@ Chaining multiple `.where()` calls applies AND logic. Each unique multi-field co
 
 #### Combine multiple where() filters for AND queries
 
-**When to run:** When you need documents that satisfy two or more independent conditions simultaneously.
-**Trigger:** Screener queries such as "French stocks under 200 EUR" or "high-severity unacknowledged alerts".
-**Context:** Read-only; multi-field compound queries require a composite index — `ensure_index()` creates it automatically on first run.
-**Purpose:** Demonstrate chaining multiple `where()` calls for AND logic, including the composite index setup needed to make the query work.
+When you need documents that satisfy two or more independent conditions simultaneously. It is typically triggered by screener queries such as "French stocks under 200 EUR" or "high-severity unacknowledged alerts". Read-only; multi-field compound queries require a composite index — `ensure_index()` creates it automatically on first run. Demonstrate chaining multiple `where()` calls for AND logic, including the composite index setup needed to make the query work.
 
 This cell:
 
@@ -931,10 +889,7 @@ for doc in docs:
 
 #### Match documents where a field equals one of several values
 
-**When to run:** When you need documents matching a finite set of discrete values on a single field.
-**Trigger:** Sector-based filtering, multi-country selection, or any "one of these values" query.
-**Context:** Read-only; auto-indexed for `in` with up to 30 values — no composite index needed unless combined with `order_by` on a different field.
-**Purpose:** Demonstrate the `in` operator as a concise alternative to chaining multiple OR-equivalent `==` filters.
+When you need documents matching a finite set of discrete values on a single field. It is typically triggered by sector-based filtering, multi-country selection, or any "one of these values" query. Read-only; auto-indexed for `in` with up to 30 values — no composite index needed unless combined with `order_by` on a different field. Demonstrate the `in` operator as a concise alternative to chaining multiple OR-equivalent `==` filters.
 
 This cell:
 
@@ -975,10 +930,7 @@ for doc in results:
 
 #### Filter documents where an array field contains a specific value
 
-**When to run:** When you need documents where a specific value appears anywhere in an array field.
-**Trigger:** Tag-based filtering, checking for membership in a categorical array, or querying indexed attribute lists.
-**Context:** Read-only; auto-indexed — only one `array_contains` filter is permitted per query.
-**Purpose:** Demonstrate single-value array membership filtering as an alternative to full-document download and client-side filtering.
+When you need documents where a specific value appears anywhere in an array field. It is typically triggered by tag-based filtering, checking for membership in a categorical array, or querying indexed attribute lists. Read-only; auto-indexed — only one `array_contains` filter is permitted per query. Demonstrate single-value array membership filtering as an alternative to full-document download and client-side filtering.
 
 This cell:
 
@@ -1024,10 +976,7 @@ for doc in docs:
 
 #### Filter documents where an array field contains any of several values
 
-**When to run:** When you need documents whose array field contains at least one value from a provided list.
-**Trigger:** Multi-country or multi-tag OR-style filtering where documents may carry any of several classification values.
-**Context:** Read-only; auto-indexed; supports up to 30 values — only one `array_contains_any` filter per query.
-**Purpose:** Demonstrate OR-style array membership filtering across multiple values in a single query call.
+When you need documents whose array field contains at least one value from a provided list. It is typically triggered by multi-country or multi-tag OR-style filtering where documents may carry any of several classification values. Read-only; auto-indexed; supports up to 30 values — only one `array_contains_any` filter per query. Demonstrate OR-style array membership filtering across multiple values in a single query call.
 
 This cell:
 
@@ -1083,10 +1032,7 @@ for doc in docs:
 
 #### Sort by a nested field and take the top N results
 
-**When to run:** When building ranked lists or leaderboards using a computed score stored in a nested map.
-**Trigger:** Generating a top-N ranking by composite score, momentum, or any nested numeric field.
-**Context:** Read-only; `order_by` on a nested field via dot notation uses the auto-created single-field index — no composite index required when no `where()` filter is applied.
-**Purpose:** Show how dot notation enables ordering on fields inside nested maps, limiting transferred data to just the top N results.
+When building ranked lists or leaderboards using a computed score stored in a nested map. It is typically triggered by generating a top-N ranking by composite score, momentum, or any nested numeric field. Read-only; `order_by` on a nested field via dot notation uses the auto-created single-field index — no composite index required when no `where()` filter is applied. Show how dot notation enables ordering on fields inside nested maps, limiting transferred data to just the top N results.
 
 This cell:
 
@@ -1131,10 +1077,7 @@ Dot notation (`"scores.momentum"`) works in `where()`, `order_by()`, and field p
 
 #### Filter and sort using dot notation on nested map fields
 
-**When to run:** When screening stocks by a numeric sub-score stored inside a nested map field.
-**Trigger:** Momentum-based screening, value filtering, or any query combining a nested range filter with ordering on the same nested path.
-**Context:** Read-only; range filter and `order_by` on the same dot-notation path are covered by the auto-created single-field index.
-**Purpose:** Demonstrate that dot notation (`"scores.momentum"`) works identically in both `where()` and `order_by()` for nested maps up to 20 levels deep.
+When screening stocks by a numeric sub-score stored inside a nested map field. It is typically triggered by momentum-based screening, value filtering, or any query combining a nested range filter with ordering on the same nested path. Read-only; range filter and `order_by` on the same dot-notation path are covered by the auto-created single-field index. Demonstrate that dot notation (`"scores.momentum"`) works identically in both `where()` and `order_by()` for nested maps up to 20 levels deep.
 
 This cell:
 
@@ -1193,10 +1136,7 @@ Firestore nested maps are returned as Python dicts by `to_dict()`. Use `.get(key
 
 #### Access nested map fields from streamed documents
 
-**When to run:** When inspecting the contents of nested map fields returned by a streamed query.
-**Trigger:** Debugging alert metadata, verifying pipeline run context, or building reports that require fields from embedded maps.
-**Context:** Read-only; nested maps are returned as Python dicts by `to_dict()` — no special SDK calls needed.
-**Purpose:** Show the safe `.get(key, {}).get(subkey)` access pattern for nested maps to avoid `KeyError` on missing fields.
+When inspecting the contents of nested map fields returned by a streamed query. It is typically triggered by debugging alert metadata, verifying pipeline run context, or building reports that require fields from embedded maps. Read-only; nested maps are returned as Python dicts by `to_dict()` — no special SDK calls needed. Show the safe `.get(key, {}).get(subkey)` access pattern for nested maps to avoid `KeyError` on missing fields.
 
 This cell:
 
@@ -1247,10 +1187,7 @@ Navigate to a subcollection by chaining `.document(id).collection(name)` off the
 
 #### Stream price history from a stock's prices subcollection
 
-**When to run:** When you need OHLCV price history for a single known stock.
-**Trigger:** Building a price chart, computing returns, or validating that the price loader wrote the expected data.
-**Context:** Read-only; scoped to one parent document's subcollection — does not search other stocks' price data.
-**Purpose:** Show the `.document(id).collection(name)` navigation pattern for accessing subcollection data under a specific parent.
+When you need OHLCV price history for a single known stock. It is typically triggered by building a price chart, computing returns, or validating that the price loader wrote the expected data. Read-only; scoped to one parent document's subcollection — does not search other stocks' price data. Show the `.document(id).collection(name)` navigation pattern for accessing subcollection data under a specific parent.
 
 This cell:
 
@@ -1292,10 +1229,7 @@ for doc in prices:
 
 #### Apply where() and order_by() within a single stock's subcollection
 
-**When to run:** When filtering and sorting a single stock's price history by a numeric threshold.
-**Trigger:** Identifying trading days above a price level, validating data quality within a subcollection, or generating single-stock event history.
-**Context:** Read-only; query is scoped to one subcollection — for cross-stock queries use `collection_group()` instead.
-**Purpose:** Confirm that standard `where()` and `order_by()` operators work identically on subcollection references as on top-level collections.
+When filtering and sorting a single stock's price history by a numeric threshold. It is typically triggered by identifying trading days above a price level, validating data quality within a subcollection, or generating single-stock event history. Read-only; query is scoped to one subcollection — for cross-stock queries use `collection_group()` instead. Confirm that standard `where()` and `order_by()` operators work identically on subcollection references as on top-level collections.
 
 This cell:
 
@@ -1350,10 +1284,7 @@ Covers full document creation with `set()`, partial updates with `update()` and 
 
 #### Create a document and merge-update specific fields
 
-**When to run:** When creating a new document or overwriting an existing one, and optionally merging specific fields without touching others.
-**Trigger:** First-time document creation, full document refresh, or a targeted field update where you need upsert semantics.
-**Context:** State-changing; `set()` costs 1 write operation. `merge=True` does NOT issue a read before writing — it merges at the field level server-side.
-**Purpose:** Demonstrate the difference between full-replace `set()` and selective-merge `set(merge=True)`, and show how atomic field-level transforms avoid read-modify-write races.
+When creating a new document or overwriting an existing one, and optionally merging specific fields without touching others. It is typically triggered by first-time document creation, full document refresh, or a targeted field update where you need upsert semantics. State-changing; `set()` costs 1 write operation. `merge=True` does NOT issue a read before writing — it merges at the field level server-side. Demonstrate the difference between full-replace `set()` and selective-merge `set(merge=True)`, and show how atomic field-level transforms avoid read-modify-write races.
 
 > [!danger] Document write boundaries — size and throughput
 >
@@ -1414,10 +1345,7 @@ Result: {'is_public': False, 'created_at': DatetimeWithNanoseconds(2026, 3, 22, 
 
 #### Apply atomic field transforms with ArrayUnion, ArrayRemove, and Increment
 
-**When to run:** When modifying specific fields of a known document without reading its current state.
-**Trigger:** Adding or removing symbols from a watchlist, incrementing a counter, or stamping a server-side timestamp.
-**Context:** State-changing; atomic field transforms are server-executed — no client-side read is required and no race conditions are possible.
-**Purpose:** Show `ArrayUnion`, `ArrayRemove`, and `Increment` as the safe alternative to read-modify-write patterns for array and numeric fields.
+When modifying specific fields of a known document without reading its current state. It is typically triggered by adding or removing symbols from a watchlist, incrementing a counter, or stamping a server-side timestamp. State-changing; atomic field transforms are server-executed — no client-side read is required and no race conditions are possible. Show `ArrayUnion`, `ArrayRemove`, and `Increment` as the safe alternative to read-modify-write patterns for array and numeric fields.
 
 This cell:
 
@@ -1456,10 +1384,7 @@ Updated: symbols=['ASML.AS', 'SAP.DE', 'TTE.PA'], count=4, modified=2026-03-22 1
 
 #### Delete a document and verify it no longer exists
 
-**When to run:** When permanently removing a document and its data from a collection.
-**Trigger:** Cleanup after a test run, decommissioning a watchlist, or removing superseded configuration entries.
-**Context:** State-changing (irreversible); note that deletion does NOT cascade to subcollections — orphaned subcollection documents remain accessible by path.
-**Purpose:** Demonstrate the `.delete()` call and the importance of verifying deletion by checking `doc.exists`.
+When permanently removing a document and its data from a collection. It is typically triggered by cleanup after a test run, decommissioning a watchlist, or removing superseded configuration entries. State-changing (irreversible); note that deletion does NOT cascade to subcollections — orphaned subcollection documents remain accessible by path. Demonstrate the `.delete()` call and the importance of verifying deletion by checking `doc.exists`.
 
 This cell:
 
@@ -1503,10 +1428,7 @@ A batch groups up to 500 write operations into a single commit — all succeed o
 
 #### Commit multiple writes atomically in a single batch
 
-**When to run:** When you need to write multiple documents atomically — all succeed or all fail — in a single network round-trip.
-**Trigger:** Bulk alert creation, multi-stock status updates, or any pipeline step that must not partially succeed.
-**Context:** State-changing; write-only — no reads permitted inside a batch. Maximum 500 operations per batch commit.
-**Purpose:** Show how `db.batch()` replaces N separate writes with one atomic commit, reducing both latency and failure surface.
+When you need to write multiple documents atomically — all succeed or all fail — in a single network round-trip. It is typically triggered by bulk alert creation, multi-stock status updates, or any pipeline step that must not partially succeed. State-changing; write-only — no reads permitted inside a batch. Maximum 500 operations per batch commit. Show how `db.batch()` replaces N separate writes with one atomic commit, reducing both latency and failure surface.
 
 This cell:
 
@@ -1556,10 +1478,7 @@ Transactions wrap a read and a conditional write in an atomic unit. Firestore re
 
 #### Use a transactional function to prevent duplicate acknowledgments
 
-**When to run:** When a write must be conditioned on the current state of a document and concurrent clients may race to update it.
-**Trigger:** Acknowledging an alert, adjusting a counter, or any read-then-write pattern that must be atomic.
-**Context:** State-changing; Firestore retries the transaction automatically on write conflict — guarantees exactly-once semantics for the conditional write.
-**Purpose:** Demonstrate the `@firestore.transactional` decorator pattern for conditional read-modify-write operations without a race condition.
+When a write must be conditioned on the current state of a document and concurrent clients may race to update it. It is typically triggered by acknowledging an alert, adjusting a counter, or any read-then-write pattern that must be atomic. State-changing; Firestore retries the transaction automatically on write conflict — guarantees exactly-once semantics for the conditional write. Demonstrate the `@firestore.transactional` decorator pattern for conditional read-modify-write operations without a race condition.
 
 This cell:
 
@@ -1620,10 +1539,7 @@ Firestore maintains a persistent WebSocket connection and pushes document change
 
 #### Register a listener and trigger it with a document update
 
-**When to run:** When building live dashboards, alert watchers, or any component that must react to Firestore document changes in real time.
-**Trigger:** Starting a live monitoring session or demo of the push-notification pattern.
-**Context:** Persistent gRPC connection; always call `listener.unsubscribe()` when done — forgetting it leaks connections and accumulates read costs.
-**Purpose:** Show the full `on_snapshot` lifecycle: register callback → trigger a write → receive the MODIFIED event → clean up the listener.
+When building live dashboards, alert watchers, or any component that must react to Firestore document changes in real time. It is typically triggered by starting a live monitoring session or demo of the push-notification pattern. Persistent gRPC connection; always call `listener.unsubscribe()` when done — forgetting it leaks connections and accumulates read costs. Show the full `on_snapshot` lifecycle: register callback → trigger a write → receive the MODIFIED event → clean up the listener.
 
 This cell:
 
@@ -1706,10 +1622,7 @@ Firestore added server-side `COUNT`, `SUM`, and `AVG` aggregation queries in 202
 
 #### Run a server-side count() per country
 
-**When to run:** When you need document counts grouped by a field value without downloading any document data.
-**Trigger:** Generating a collection summary, verifying data distribution, or checking for under-represented categories.
-**Context:** Read-only; each `count()` call is charged as 1 read regardless of collection size — dramatically cheaper than streaming.
-**Purpose:** Demonstrate that `count()` runs entirely server-side and returns a single `AggregationResult`, with no document transfer to the client.
+When you need document counts grouped by a field value without downloading any document data. It is typically triggered by generating a collection summary, verifying data distribution, or checking for under-represented categories. Read-only; each `count()` call is charged as 1 read regardless of collection size — dramatically cheaper than streaming. Demonstrate that `count()` runs entirely server-side and returns a single `AggregationResult`, with no document transfer to the client.
 
 This cell:
 
@@ -1744,10 +1657,7 @@ for country in ["Germany", "France", "Netherlands", "Italy", "Spain"]:
 
 #### Compute sum(), avg(), and count() in a single pass
 
-**When to run:** When you need multiple numeric aggregates over the same collection in one operation.
-**Trigger:** Validating that all index weights sum to 1.0, computing average stock price, or confirming total document count.
-**Context:** Read-only; all three aggregations run server-side in one request — no documents are downloaded to the client.
-**Purpose:** Show that `sum()`, `avg()`, and `count()` can be chained on the same query object, each returning a single scalar result.
+When you need multiple numeric aggregates over the same collection in one operation. It is typically triggered by validating that all index weights sum to 1.0, computing average stock price, or confirming total document count. Read-only; all three aggregations run server-side in one request — no documents are downloaded to the client. Show that `sum()`, `avg()`, and `count()` can be chained on the same query object, each returning a single scalar result.
 
 This cell:
 
@@ -1797,10 +1707,7 @@ Collection group queries search across all subcollections with the same name in 
 
 #### Order all prices subcollections by close price across every stock
 
-**When to run:** When finding the top-N price records across all stocks without knowing which parent documents they belong to.
-**Trigger:** Building a cross-stock price leaderboard or verifying that data was loaded correctly across all subcollections.
-**Context:** Read-only; requires a `COLLECTION_GROUP` field exemption index on the ordered field — `ensure_index()` creates it automatically on first run.
-**Purpose:** Show `collection_group()` as a single query that replaces 50 individual per-stock subcollection queries.
+When finding the top-N price records across all stocks without knowing which parent documents they belong to. It is typically triggered by building a cross-stock price leaderboard or verifying that data was loaded correctly across all subcollections. Read-only; requires a `COLLECTION_GROUP` field exemption index on the ordered field — `ensure_index()` creates it automatically on first run. Show `collection_group()` as a single query that replaces 50 individual per-stock subcollection queries.
 
 This cell:
 
@@ -1862,10 +1769,7 @@ Adds a `where()` filter to a collection group query, reducing the result set to 
 
 #### Filter all prices subcollections to a single trading date
 
-**When to run:** When generating a cross-stock snapshot for a specific trading date.
-**Trigger:** End-of-day reporting, replication checks, or verifying all 50 stocks have price records for a given date.
-**Context:** Read-only; requires a `COLLECTION_GROUP` field exemption on the `date` field — `ensure_index()` handles this automatically.
-**Purpose:** Combine a collection group query with a `where()` filter to replicate a `SELECT … WHERE date = @target` pattern across all subcollections.
+When generating a cross-stock snapshot for a specific trading date. It is typically triggered by end-of-day reporting, replication checks, or verifying all 50 stocks have price records for a given date. Read-only; requires a `COLLECTION_GROUP` field exemption on the `date` field — `ensure_index()` handles this automatically. Combine a collection group query with a `where()` filter to replicate a `SELECT … WHERE date = @target` pattern across all subcollections.
 
 This cell:
 
@@ -1942,10 +1846,7 @@ Pass the last document snapshot from each page to `.start_after()` on the next q
 
 #### Paginate results using the last document as a start_after cursor
 
-**When to run:** When iterating a large collection page-by-page without loading all documents at once.
-**Trigger:** Building a paginated UI, exporting data in chunks, or resuming from a known position after an interruption.
-**Context:** Read-only; cursor-based pagination is O(1) at any depth — unlike SQL `OFFSET` which scans all skipped rows.
-**Purpose:** Show how to pass the last document snapshot from each page to `.start_after()` to fetch the next page without an offset scan.
+When iterating a large collection page-by-page without loading all documents at once. It is typically triggered by building a paginated UI, exporting data in chunks, or resuming from a known position after an interruption. Read-only; cursor-based pagination is O(1) at any depth — unlike SQL `OFFSET` which scans all skipped rows. Show how to pass the last document snapshot from each page to `.start_after()` to fetch the next page without an offset scan.
 
 This cell:
 
@@ -2035,10 +1936,7 @@ A quick health check that enumerates all top-level collections and their documen
 
 #### Run a server-side count() on every top-level collection
 
-**When to run:** As a post-deployment health check or periodic data quality gate.
-**Trigger:** Verifying that all expected collections exist and are populated after a pipeline run.
-**Context:** Read-only; uses server-side `count()` — no documents are downloaded.
-**Purpose:** Enumerate all top-level collections and print their document counts to detect empty or missing collections.
+As a post-deployment health check or periodic data quality gate. It is typically triggered by verifying that all expected collections exist and are populated after a pipeline run. Read-only; uses server-side `count()` — no documents are downloaded. Enumerate all top-level collections and print their document counts to detect empty or missing collections.
 
 This cell:
 
@@ -2074,10 +1972,7 @@ for coll in db.collections():
 
 #### Discover and count subcollections under a specific document
 
-**When to run:** When exploring an unfamiliar Firestore schema or verifying that a document's subcollections were written correctly.
-**Trigger:** Schema discovery, debugging missing data, or confirming that the price loader populated subcollections.
-**Context:** Read-only; `doc_ref.collections()` lists subcollection names only — documents are not downloaded until explicitly queried.
-**Purpose:** Demonstrate schema discovery in a schema-less Firestore database where different documents can have different subcollections.
+When exploring an unfamiliar Firestore schema or verifying that a document's subcollections were written correctly. It is typically triggered by schema discovery, debugging missing data, or confirming that the price loader populated subcollections. Read-only; `doc_ref.collections()` lists subcollection names only — documents are not downloaded until explicitly queried. Demonstrate schema discovery in a schema-less Firestore database where different documents can have different subcollections.
 
 This cell:
 
@@ -2109,10 +2004,7 @@ A range query on a timestamp field identifies documents that have not been updat
 
 #### Query documents older than a time threshold
 
-**When to run:** As a scheduled freshness check or post-pipeline data quality assertion.
-**Trigger:** A monitoring job or notebook cell verifying that recent pipeline runs exist within the expected window.
-**Context:** Read-only; range filter on a timestamp field uses the auto-created single-field index.
-**Purpose:** Show how to compute a cutoff timestamp and filter documents whose `started_at` predates it — the basis for data freshness alerts.
+As a scheduled freshness check or post-pipeline data quality assertion. It is typically triggered by A monitoring job or notebook cell verifying that recent pipeline runs exist within the expected window. Read-only; range filter on a timestamp field uses the auto-created single-field index. Show how to compute a cutoff timestamp and filter documents whose `started_at` predates it — the basis for data freshness alerts.
 
 This cell:
 
@@ -2164,10 +2056,7 @@ The `steps` field is an array of maps — inspect it client-side to identify whi
 
 #### Find failed runs and identify which step failed
 
-**When to run:** After a pipeline run, as part of an incident response or post-run audit.
-**Trigger:** A monitoring alert, a failed Cloud Scheduler job, or a manual post-mortem investigation.
-**Context:** Read-only; equality filter on `status` uses the auto-created single-field index. Step inspection is done client-side from the `steps` array of maps.
-**Purpose:** Show how to filter for failed pipeline runs and identify the specific step that broke using client-side array inspection.
+After a pipeline run, as part of an incident response or post-run audit. It is typically triggered by A monitoring alert, a failed Cloud Scheduler job, or a manual post-mortem investigation. Read-only; equality filter on `status` uses the auto-created single-field index. Step inspection is done client-side from the `steps` array of maps. Show how to filter for failed pipeline runs and identify the specific step that broke using client-side array inspection.
 
 This cell:
 
@@ -2207,10 +2096,7 @@ A compound filter on two fields (`severity` + `acknowledged`) requires a composi
 
 #### Query high-severity unacknowledged alerts requiring action
 
-**When to run:** As a dashboard refresh or pipeline post-run check to surface alerts that need immediate attention.
-**Trigger:** A monitoring job, an on-call notification, or manual review of the alert backlog.
-**Context:** Read-only; compound `severity` + `acknowledged` filter requires a composite index — `ensure_index()` builds it automatically on first run.
-**Purpose:** Demonstrate a compound filter that surfaces only the highest-priority unacknowledged alerts, suitable for feeding a PagerDuty/Slack integration.
+As a dashboard refresh or pipeline post-run check to surface alerts that need immediate attention. It is typically triggered by A monitoring job, an on-call notification, or manual review of the alert backlog. Read-only; compound `severity` + `acknowledged` filter requires a composite index — `ensure_index()` builds it automatically on first run. Demonstrate a compound filter that surfaces only the highest-priority unacknowledged alerts, suitable for feeding a PagerDuty/Slack integration.
 
 This cell:
 
@@ -2256,10 +2142,7 @@ Config documents are singletons — one document per config type. Updating a con
 
 #### Read pipeline and display singleton config documents
 
-**When to run:** When inspecting or auditing the current application configuration values.
-**Trigger:** Pre-run validation, debugging unexpected pipeline behavior, or verifying a configuration change took effect.
-**Context:** Read-only; single document lookup charged as 1 read per config document retrieved.
-**Purpose:** Show how to read singleton config documents and enumerate all key-value pairs, demonstrating that config changes are instantly visible across all clients.
+When inspecting or auditing the current application configuration values. It is typically triggered by pre-run validation, debugging unexpected pipeline behavior, or verifying a configuration change took effect. Read-only; single document lookup charged as 1 read per config document retrieved. Show how to read singleton config documents and enumerate all key-value pairs, demonstrating that config changes are instantly visible across all clients.
 
 This cell:
 

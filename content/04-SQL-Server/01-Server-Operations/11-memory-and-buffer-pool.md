@@ -121,10 +121,7 @@ Every SQL Server memory investigation starts at `sys.configurations`, which expo
 
 #### Check the six memory-related configuration values
 
-**When to run:** at the start of any memory investigation, during initial host validation, and after any `sp_configure` change that touches a memory tunable.
-**Trigger:** first configuration audit, post-install validation, post-restart verification, or a user complaint about query memory grants timing out.
-**Context:** read-only T-SQL against `sys.configurations`. Runs from any session with default permissions. No restart required; safe to run at any time.
-**Purpose:** produce a single baseline row per memory-related setting so that later "is this explained by configuration?" questions have an authoritative answer.
+At the start of any memory investigation, during initial host validation, and after any `sp_configure` change that touches a memory tunable. It is typically triggered by first configuration audit, post-install validation, post-restart verification, or a user complaint about query memory grants timing out. Read-only T-SQL against `sys.configurations`. Runs from any session with default permissions. No restart required; safe to run at any time. Produce a single baseline row per memory-related setting so that later "is this explained by configuration?" questions have an authoritative answer.
 
 > [!info]- Field definitions for sys.configurations
 >
@@ -191,10 +188,7 @@ After the configuration audit, the next question is external: does the operating
 
 #### Inspect host RAM, available memory, and the memory state description
 
-**When to run:** any time the host might be under external memory pressure — user reports of SQL Server trimming, OOM-killer events, or a new workload being collocated on the host.
-**Trigger:** an OOM incident, a suspected noisy-neighbor on the host, or routine health verification.
-**Context:** read-only T-SQL. Requires `VIEW SERVER STATE` (or `VIEW SERVER PERFORMANCE STATE` in SQL 2022+). Safe on production.
-**Purpose:** confirm whether the host is currently tight on physical memory so later symptoms can be blamed on (or cleared from) external pressure.
+Any time the host might be under external memory pressure — user reports of SQL Server trimming, OOM-killer events, or a new workload being collocated on the host. It is typically triggered by an OOM incident, a suspected noisy-neighbor on the host, or routine health verification. Read-only T-SQL. Requires `VIEW SERVER STATE` (or `VIEW SERVER PERFORMANCE STATE` in SQL 2022+). Safe on production. Confirm whether the host is currently tight on physical memory so later symptoms can be blamed on (or cleared from) external pressure.
 
 > [!info]- Field definitions for sys.dm_os_sys_memory
 >
@@ -242,10 +236,7 @@ _This is a healthy external-memory snapshot. The instance sees about `24.7 GB` o
 
 #### Inspect process memory and the two low-memory flags
 
-**When to run:** after the OS view looks healthy but SQL Server is still behaving as if memory is constrained, or after a suspected leak inside a loaded assembly (CLR, Full-Text, MDS, PolyBase).
-**Trigger:** unexpected cache trimming, low PLE with no obvious workload cause, or `MEMORYCLERK_SQLCLR` growth.
-**Context:** read-only T-SQL. Requires `VIEW SERVER STATE` or `VIEW SERVER PERFORMANCE STATE`.
-**Purpose:** determine whether the `sqlservr` process itself thinks it is under physical or virtual memory pressure, independent of what the host reports.
+After the OS view looks healthy but SQL Server is still behaving as if memory is constrained, or after a suspected leak inside a loaded assembly (CLR, Full-Text, MDS, PolyBase). It is typically triggered by unexpected cache trimming, low PLE with no obvious workload cause, or `MEMORYCLERK_SQLCLR` growth. Read-only T-SQL. Requires `VIEW SERVER STATE` or `VIEW SERVER PERFORMANCE STATE`. Determine whether the `sqlservr` process itself thinks it is under physical or virtual memory pressure, independent of what the host reports.
 
 > [!info]- Field definitions for sys.dm_os_process_memory
 >
@@ -307,10 +298,7 @@ The last baseline view, `sys.dm_os_sys_info`, is how SQL Server reports its own 
 
 #### Compare committed versus target memory and confirm the memory model
 
-**When to run:** immediately after the `sys.dm_os_process_memory` capture, so internal and process views can be interpreted side by side.
-**Trigger:** routine baseline, a suspected leak, or an "is SQL Server still growing?" question.
-**Context:** read-only T-SQL, `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`.
-**Purpose:** show whether SQL Server's committed memory is still climbing toward its target (growth phase), has stabilised near the target (steady state), or is fighting the target (pressure).
+Immediately after the `sys.dm_os_process_memory` capture, so internal and process views can be interpreted side by side. It is typically triggered by routine baseline, a suspected leak, or an "is SQL Server still growing?" question. Read-only T-SQL, `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Show whether SQL Server's committed memory is still climbing toward its target (growth phase), has stabilised near the target (steady state), or is fighting the target (pressure).
 
 > [!info]- Field definitions for sys.dm_os_sys_info
 >
@@ -377,10 +365,7 @@ The container's view of host memory is the ground truth everything else derives 
 
 #### Read /proc/meminfo from inside the stoxx container
 
-**When to run:** during initial host validation, after any change to Docker's `--memory` flag or a Kubernetes `resources.limits.memory` value, or when `sys.dm_os_sys_memory` reports a `total_ram_mb` that does not match the host you expected.
-**Trigger:** unexpected `total_ram_mb` in `sys.dm_os_sys_memory`, a new container deployment, or suspected noisy-neighbor pressure.
-**Context:** Linux shell via `docker exec`, runs as root inside the container. Read-only.
-**Purpose:** confirm the physical memory the container actually sees, independently of what SQL Server reports.
+During initial host validation, after any change to Docker's `--memory` flag or a Kubernetes `resources.limits.memory` value, or when `sys.dm_os_sys_memory` reports a `total_ram_mb` that does not match the host you expected. It is typically triggered by unexpected `total_ram_mb` in `sys.dm_os_sys_memory`, a new container deployment, or suspected noisy-neighbor pressure. Linux shell via `docker exec`, runs as root inside the container. Read-only. Confirm the physical memory the container actually sees, independently of what SQL Server reports.
 
 *Read the first ten lines of `/proc/meminfo` from inside the running `stoxx-db` container.*
 
@@ -417,10 +402,7 @@ Below `/proc/meminfo`, the next ceiling is the kernel's cgroup accounting. On cg
 
 #### Read memory.max and memory.current from the cgroup v2 hierarchy
 
-**When to run:** at container deployment, after a Docker/Kubernetes memory-limit change, or during an OOM post-mortem.
-**Trigger:** OOM event, Kubernetes OOMKilled pod, or a mismatch between `/proc/meminfo` and `sys.dm_os_sys_info.physical_memory_mb`.
-**Context:** Linux shell via `docker exec`. Read-only access to `/sys/fs/cgroup/memory.*`. Works on cgroup v2 only — use `/sys/fs/cgroup/memory/memory.limit_in_bytes` on cgroup v1 hosts.
-**Purpose:** confirm the kernel-enforced upper bound on container memory and the container's current consumption.
+At container deployment, after a Docker/Kubernetes memory-limit change, or during an OOM post-mortem. It is typically triggered by OOM event, Kubernetes OOMKilled pod, or a mismatch between `/proc/meminfo` and `sys.dm_os_sys_info.physical_memory_mb`. Linux shell via `docker exec`. Read-only access to `/sys/fs/cgroup/memory.*`. Works on cgroup v2 only — use `/sys/fs/cgroup/memory/memory.limit_in_bytes` on cgroup v1 hosts. Confirm the kernel-enforced upper bound on container memory and the container's current consumption.
 
 *Read `memory.max` (the hard cap) and `memory.current` (current usage) from the cgroup v2 filesystem.*
 
@@ -456,10 +438,7 @@ _The first line is `max`, which means the container is running without a hard cg
 
 #### Check the current mssql-conf memory configuration
 
-**When to run:** during initial host validation, after a container rebuild, or when `sys.dm_os_sys_info.physical_memory_mb` does not match the expected host RAM.
-**Trigger:** first host audit, suspected memory leak, post-upgrade drift check.
-**Context:** Linux shell as root inside the container. Reads `/var/opt/mssql/mssql.conf`. Read-only.
-**Purpose:** confirm whether `memory.memorylimitmb` is at its default (80% of host) or has been set to an explicit value.
+During initial host validation, after a container rebuild, or when `sys.dm_os_sys_info.physical_memory_mb` does not match the expected host RAM. It is typically triggered by first host audit, suspected memory leak, post-upgrade drift check. Linux shell as root inside the container. Reads `/var/opt/mssql/mssql.conf`. Read-only. Confirm whether `memory.memorylimitmb` is at its default (80% of host) or has been set to an explicit value.
 
 *Query `mssql-conf` for the current `memory` configuration. An empty response means the default is in effect.*
 
@@ -482,10 +461,7 @@ _The `stoxx` instance has no explicit `memory.*` settings in `mssql.conf`, so ev
 
 #### Set an explicit mssql-conf memory.memorylimitmb (pattern)
 
-**When to run:** during controlled host provisioning — a planned maintenance window with exclusive access to the SQL Server service.
-**Trigger:** initial host setup, a change to the cgroup or host memory, or remediation after an OOM incident.
-**Context:** Linux shell as root. Modifies `/var/opt/mssql/mssql.conf`. Requires a `systemctl restart mssql-server` (or `docker restart` for containers) to take effect. This pattern is **not** executed against `stoxx` in this note — it is shown as a remediation reference.
-**Purpose:** bound total SQL Server process memory at a value that leaves explicit headroom for the OS and other host processes.
+During controlled host provisioning — a planned maintenance window with exclusive access to the SQL Server service. It is typically triggered by initial host setup, a change to the cgroup or host memory, or remediation after an OOM incident. Linux shell as root. Modifies `/var/opt/mssql/mssql.conf`. Requires a `systemctl restart mssql-server` (or `docker restart` for containers) to take effect. This pattern is **not** executed against `stoxx` in this note — it is shown as a remediation reference. Bound total SQL Server process memory at a value that leaves explicit headroom for the OS and other host processes.
 
 > [!info]- Step-by-step pattern for setting memory.memorylimitmb
 >
@@ -520,10 +496,7 @@ Page Life Expectancy is the number of seconds a newly cached page would live in 
 
 #### Retrieve PLE at the Buffer Manager and Buffer Node granularity
 
-**When to run:** during any buffer pool health check, when a user complaint mentions slow reads, or when `sys.dm_os_buffer_descriptors` output shows an incidental database dominating cache.
-**Trigger:** routine health check, post-restart warm-up verification, or investigation of read latency spikes.
-**Context:** read-only T-SQL. Requires `VIEW SERVER STATE` or `VIEW SERVER PERFORMANCE STATE`.
-**Purpose:** confirm how long cached pages are surviving in the buffer pool and whether the aggregate number hides NUMA-local skew.
+During any buffer pool health check, when a user complaint mentions slow reads, or when `sys.dm_os_buffer_descriptors` output shows an incidental database dominating cache. It is typically triggered by routine health check, post-restart warm-up verification, or investigation of read latency spikes. Read-only T-SQL. Requires `VIEW SERVER STATE` or `VIEW SERVER PERFORMANCE STATE`. Confirm how long cached pages are surviving in the buffer pool and whether the aggregate number hides NUMA-local skew.
 
 > [!info]- Field definitions for sys.dm_os_performance_counters (PLE)
 >
@@ -570,10 +543,7 @@ The buffer cache hit ratio is published as a Perfmon fraction counter, meaning i
 
 #### Compute the buffer cache hit ratio from its numerator and base
 
-**When to run:** as a secondary buffer-pool signal, alongside PLE, during any memory or I/O investigation.
-**Trigger:** user complaint about read latency, suspected cache churn, or routine health check.
-**Context:** read-only T-SQL, `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. The counter is cumulative since SQL Server startup.
-**Purpose:** produce the actual buffer cache hit ratio as a percentage, not the raw fraction counter that Perfmon publishes.
+As a secondary buffer-pool signal, alongside PLE, during any memory or I/O investigation. It is typically triggered by user complaint about read latency, suspected cache churn, or routine health check. Read-only T-SQL, `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. The counter is cumulative since SQL Server startup. Produce the actual buffer cache hit ratio as a percentage, not the raw fraction counter that Perfmon publishes.
 
 > [!info]- Clause-by-clause breakdown of the hit-ratio computation
 >
@@ -627,10 +597,7 @@ Once PLE and the hit ratio confirm whether the buffer pool is healthy overall, t
 
 #### List the top ten databases by buffer pool footprint with dirty/clean breakdown
 
-**When to run:** when PLE collapses without an obvious external cause, when an ETL or backup job is suspected of evicting production pages, or when the hit ratio drops.
-**Trigger:** cache-churn investigation, post-incident review, or workload validation after a new pipeline is deployed.
-**Context:** read-only T-SQL against `sys.dm_os_buffer_descriptors`. Requires `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Expensive on large buffer pools — do not run it in a tight monitoring loop.
-**Purpose:** identify which databases currently own the buffer pool and whether an incidental database is dominating it.
+When PLE collapses without an obvious external cause, when an ETL or backup job is suspected of evicting production pages, or when the hit ratio drops. It is typically triggered by cache-churn investigation, post-incident review, or workload validation after a new pipeline is deployed. Read-only T-SQL against `sys.dm_os_buffer_descriptors`. Requires `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Expensive on large buffer pools — do not run it in a tight monitoring loop. Identify which databases currently own the buffer pool and whether an incidental database is dominating it.
 
 > [!info]- Clause-by-clause breakdown of the buffer-pool-by-database query
 >
@@ -714,10 +681,7 @@ Every allocation SQL Server makes goes through a memory clerk. The DMV exposes a
 
 #### List the top ten memory clerks with page, VAS reserved, and VAS committed columns
 
-**When to run:** whenever the baseline shows committed memory growing unexpectedly, when `sys.dm_os_sys_info.committed_mb` approaches the target, or during any routine memory audit.
-**Trigger:** suspected memory leak, post-incident review, or cache-bloat investigation.
-**Context:** read-only T-SQL. Requires `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Cheap to run.
-**Purpose:** identify which memory clerks hold most of the page-based memory, and confirm the ratio of reserved-to-committed VAS for each.
+Whenever the baseline shows committed memory growing unexpectedly, when `sys.dm_os_sys_info.committed_mb` approaches the target, or during any routine memory audit. It is typically triggered by suspected memory leak, post-incident review, or cache-bloat investigation. Read-only T-SQL. Requires `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Cheap to run. Identify which memory clerks hold most of the page-based memory, and confirm the ratio of reserved-to-committed VAS for each.
 
 > [!info]- Clause-by-clause breakdown of the top-clerks query and field definitions
 >
@@ -796,10 +760,7 @@ _The buffer pool is correctly dominant at about `53.60%` of clerk pages. That sh
 
 #### Aggregate cached plans by object type with size and use counts
 
-**When to run:** after `CACHESTORE_SQLCP` appears in the top clerks, or when the user reports spikes in compile time or plan-cache memory.
-**Trigger:** plan-cache bloat suspicion, a workload migration that changed query patterns, or a regular hygiene check.
-**Context:** read-only T-SQL, `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Cheap.
-**Purpose:** produce a one-row-per-object-type summary of plan cache occupancy and reuse.
+After `CACHESTORE_SQLCP` appears in the top clerks, or when the user reports spikes in compile time or plan-cache memory. It is typically triggered by plan-cache bloat suspicion, a workload migration that changed query patterns, or a regular hygiene check. Read-only T-SQL, `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Cheap. Produce a one-row-per-object-type summary of plan cache occupancy and reuse.
 
 > [!info]- Field definitions for sys.dm_exec_cached_plans aggregation
 >
@@ -866,10 +827,7 @@ The direct follow-up to the composition query is: how many of those ad hoc plans
 
 #### Count single-use ad hoc plans and sum the wasted memory
 
-**When to run:** immediately after the plan-cache composition query when `Adhoc` is dominant.
-**Trigger:** ad hoc category occupying a large share of plan cache, user complaints about compile time.
-**Context:** read-only T-SQL, `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Cheap.
-**Purpose:** produce a single row summarising the count and memory of plans that will never be reused.
+Immediately after the plan-cache composition query when `Adhoc` is dominant. It is typically triggered by ad hoc category occupying a large share of plan cache, user complaints about compile time. Read-only T-SQL, `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Cheap. Produce a single row summarising the count and memory of plans that will never be reused.
 
 *Count plans where `usecounts = 1` and `objtype = 'Adhoc'`, and sum their `size_in_bytes` as wasted megabytes.*
 
@@ -905,10 +863,7 @@ _There are `399` single-use ad hoc plans occupying about `53.78 MB`. That is alm
 
 #### List the top ten cache stores by total pages
 
-**When to run:** whenever the clerk view shows a plan-cache clerk growing and you want to identify the specific cache store driving the growth.
-**Trigger:** `CACHESTORE_*` clerk climbing, `USERSTORE_TOKENPERM` suspected bloat, or a cache-entry leak investigation.
-**Context:** read-only T-SQL, `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Cheap.
-**Purpose:** show the largest cache stores with their total memory, active (in-use) subset, entry count, and the percentage of entries currently in use.
+Whenever the clerk view shows a plan-cache clerk growing and you want to identify the specific cache store driving the growth. It is typically triggered by `CACHESTORE_*` clerk climbing, `USERSTORE_TOKENPERM` suspected bloat, or a cache-entry leak investigation. Read-only T-SQL, `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Cheap. Show the largest cache stores with their total memory, active (in-use) subset, entry count, and the percentage of entries currently in use.
 
 > [!info]- Field definitions for sys.dm_os_memory_cache_counters
 >
@@ -973,10 +928,7 @@ _The top rows reproduce the picture from `sys.dm_os_memory_clerks` but at one mo
 
 #### Capture DBCC MEMORYSTATUS via docker exec sqlcmd
 
-**When to run:** during any low-memory or OOM investigation, when Microsoft Support asks for it, or when a single DMV query is not enough to explain a memory anomaly.
-**Trigger:** OOM incident, error 701 (insufficient memory), error 802 (insufficient buffer pool), `MEMORYCLERK_*` clerks growing inexplicably.
-**Context:** runs from `sqlcmd` — either a T-SQL session (but `pyodbc` and some ORMs cannot walk the 30+ result sets) or a shell command via `docker exec stoxx-db`. Read-only. Cheap to run.
-**Purpose:** collect a single, comprehensive memory-state artifact that covers every clerk and every memory component in one output.
+During any low-memory or OOM investigation, when Microsoft Support asks for it, or when a single DMV query is not enough to explain a memory anomaly. It is typically triggered by OOM incident, error 701 (insufficient memory), error 802 (insufficient buffer pool), `MEMORYCLERK_*` clerks growing inexplicably. Runs from `sqlcmd` — either a T-SQL session (but `pyodbc` and some ORMs cannot walk the 30+ result sets) or a shell command via `docker exec stoxx-db`. Read-only. Cheap to run. Collect a single, comprehensive memory-state artifact that covers every clerk and every memory component in one output.
 
 *Run `DBCC MEMORYSTATUS` inside the `stoxx-db` container via `sqlcmd`, suppress info messages, and render as plain text.*
 
@@ -1047,10 +999,7 @@ _The first result set is `Process/System Counts`: `Available Physical Memory = 2
 
 #### Inspect currently active and waiting memory grants
 
-**When to run:** during any memory-grant pressure investigation, whenever `RESOURCE_SEMAPHORE` appears in `sys.dm_os_wait_stats`, or when batch jobs complain about query timeouts.
-**Trigger:** `RESOURCE_SEMAPHORE` waits, user complaint about slow sorts/hashes, OOM suspected from huge grants.
-**Context:** read-only T-SQL. Requires `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Cheap.
-**Purpose:** list every query that currently holds or is waiting for workspace memory, with the requested/granted/used columns that diagnose over-estimation, under-estimation, and pool exhaustion.
+During any memory-grant pressure investigation, whenever `RESOURCE_SEMAPHORE` appears in `sys.dm_os_wait_stats`, or when batch jobs complain about query timeouts. It is typically triggered by `RESOURCE_SEMAPHORE` waits, user complaint about slow sorts/hashes, OOM suspected from huge grants. Read-only T-SQL. Requires `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Cheap. List every query that currently holds or is waiting for workspace memory, with the requested/granted/used columns that diagnose over-estimation, under-estimation, and pool exhaustion.
 
 > [!info]- Clause-by-clause breakdown and field definitions for sys.dm_exec_query_memory_grants
 >
@@ -1129,10 +1078,7 @@ The upstream view for memory grants is the semaphore. A resource semaphore is th
 
 #### List every resource semaphore with target memory and current state
 
-**When to run:** as the upstream check after `sys.dm_exec_query_memory_grants` shows waiters, or when `RESOURCE_SEMAPHORE` / `RESOURCE_SEMAPHORE_SMALL_QUERY` waits appear in `sys.dm_os_wait_stats`.
-**Trigger:** `RESOURCE_SEMAPHORE` wait accumulation, Resource Governor pool tuning, workspace memory configuration change.
-**Context:** read-only T-SQL. Requires `VIEW SERVER PERFORMANCE STATE` (SQL 2022+) or `VIEW SERVER STATE` (older).
-**Purpose:** confirm the target and available workspace memory per pool and per semaphore, and detect whether waiters are present or forced grants have been issued.
+As the upstream check after `sys.dm_exec_query_memory_grants` shows waiters, or when `RESOURCE_SEMAPHORE` / `RESOURCE_SEMAPHORE_SMALL_QUERY` waits appear in `sys.dm_os_wait_stats`. It is typically triggered by `RESOURCE_SEMAPHORE` wait accumulation, Resource Governor pool tuning, workspace memory configuration change. Read-only T-SQL. Requires `VIEW SERVER PERFORMANCE STATE` (SQL 2022+) or `VIEW SERVER STATE` (older). Confirm the target and available workspace memory per pool and per semaphore, and detect whether waiters are present or forced grants have been issued.
 
 > [!info]- Field definitions for sys.dm_exec_query_resource_semaphores
 >
@@ -1253,10 +1199,7 @@ flowchart TD
 
 #### Set an explicit max server memory cap (pattern)
 
-**When to run:** during controlled maintenance — the value change is dynamic (no restart required) but it can cause an immediate trim if the new value is well below current consumption, which evicts cached pages and temporarily degrades performance.
-**Trigger:** post-install hardening, post-migration baseline, remediation after an OOM or host-pressure incident.
-**Context:** T-SQL session with `ALTER SETTINGS` server-level permission (`sysadmin` or `serveradmin`). State-changing command — the new value is persisted in `sys.configurations` and takes effect on `RECONFIGURE`. No restart required.
-**Purpose:** bound SQL Server's buffer pool growth so the host and other in-process components have guaranteed headroom.
+During controlled maintenance — the value change is dynamic (no restart required) but it can cause an immediate trim if the new value is well below current consumption, which evicts cached pages and temporarily degrades performance. It is typically triggered by post-install hardening, post-migration baseline, remediation after an OOM or host-pressure incident. T-SQL session with `ALTER SETTINGS` server-level permission (`sysadmin` or `serveradmin`). State-changing command — the new value is persisted in `sys.configurations` and takes effect on `RECONFIGURE`. No restart required. Bound SQL Server's buffer pool growth so the host and other in-process components have guaranteed headroom.
 
 > [!warning] The default max server memory is effectively unlimited
 >
@@ -1275,10 +1218,7 @@ RECONFIGURE;
 
 #### Verify the new max server memory cap is in effect
 
-**When to run:** immediately after the previous command, to confirm the `RECONFIGURE` was successful.
-**Trigger:** follow-up verification of any `sp_configure` change.
-**Context:** read-only T-SQL, any session. Cheap.
-**Purpose:** confirm that `value` and `value_in_use` now both reflect the new cap.
+Immediately after the previous command, to confirm the `RECONFIGURE` was successful. It is typically triggered by follow-up verification of any `sp_configure` change. Read-only T-SQL, any session. Cheap. Confirm that `value` and `value_in_use` now both reflect the new cap.
 
 *Re-read `sys.configurations` for `max server memory (MB)` after the `RECONFIGURE`. The live capture below is from the `stoxx` instance, which is still at the unlimited default because the preceding `sp_configure` pattern is not executed here.*
 
@@ -1303,10 +1243,7 @@ _Both columns still show the unlimited default of `2,147,483,647`. On a producti
 
 #### Enable optimize for ad hoc workloads (pattern)
 
-**When to run:** on any instance where single-use ad hoc plans occupy a meaningful share of plan cache and the workload cannot be re-parameterised at the client.
-**Trigger:** single-use ad hoc waste > ~20 MB on small instances or > ~100 MB on large instances, with ad hoc plans dominating `CACHESTORE_SQLCP`.
-**Context:** T-SQL session with `ALTER SETTINGS`. State-changing, dynamic, no restart. Existing plans are unaffected — the new behavior applies to new cache entries.
-**Purpose:** stop one-shot ad hoc statements from wasting plan cache memory on first execution.
+On any instance where single-use ad hoc plans occupy a meaningful share of plan cache and the workload cannot be re-parameterised at the client. It is typically triggered by single-use ad hoc waste > ~20 MB on small instances or > ~100 MB on large instances, with ad hoc plans dominating `CACHESTORE_SQLCP`. T-SQL session with `ALTER SETTINGS`. State-changing, dynamic, no restart. Existing plans are unaffected — the new behavior applies to new cache entries. Stop one-shot ad hoc statements from wasting plan cache memory on first execution.
 
 > [!warning] Do not enable on genuinely parameterised workloads
 >
@@ -1336,10 +1273,7 @@ Four secondary memory-related settings are useful mostly to recognise when someo
 
 #### Raise min memory per query (pattern)
 
-**When to run:** after observing many small queries consistently spilling to tempdb with `hash_warning` or `sort_warning` events and when indexing is not a viable fix.
-**Trigger:** high `sort_warning` / `hash_warning` counters with small-grant queries.
-**Context:** T-SQL, `ALTER SETTINGS`, dynamic. State-changing.
-**Purpose:** give every query at least 4 MB of workspace memory instead of the 1 MB default.
+After observing many small queries consistently spilling to tempdb with `hash_warning` or `sort_warning` events and when indexing is not a viable fix. It is typically triggered by high `sort_warning` / `hash_warning` counters with small-grant queries. T-SQL, `ALTER SETTINGS`, dynamic. State-changing. Give every query at least 4 MB of workspace memory instead of the 1 MB default.
 
 *Raise `min memory per query (KB)` from `1024` to `4096`. Pattern.*
 
@@ -1350,10 +1284,7 @@ RECONFIGURE;
 
 #### Raise index create memory (pattern)
 
-**When to run:** before a planned offline rebuild of a very large table when the current auto-sized grant is spilling.
-**Trigger:** `CREATE INDEX` taking hours longer than expected with `tempdb` spill in the actual plan.
-**Context:** T-SQL, `ALTER SETTINGS`, dynamic. State-changing.
-**Purpose:** give `CREATE INDEX` a fixed grant instead of the default auto-sized grant.
+Before a planned offline rebuild of a very large table when the current auto-sized grant is spilling. It is typically triggered by `CREATE INDEX` taking hours longer than expected with `tempdb` spill in the actual plan. T-SQL, `ALTER SETTINGS`, dynamic. State-changing. Give `CREATE INDEX` a fixed grant instead of the default auto-sized grant.
 
 *Raise `index create memory (KB)` to `2097152` (2 GB). Pattern — reset to `0` after the rebuild to restore auto-sizing.*
 
@@ -1372,10 +1303,7 @@ Memory grant feedback is the SQL 2017/2019/2022 adaptive query processing featur
 
 #### Check the current memory grant feedback database-scoped configuration
 
-**When to run:** as the first step when investigating query memory grants on SQL 2019+, before assuming the optimizer is over-estimating.
-**Trigger:** user complaint about over-grants, oscillating workloads, or pre-migration compatibility audit.
-**Context:** read-only T-SQL against `sys.database_scoped_configurations`. Requires `VIEW DATABASE STATE`.
-**Purpose:** confirm whether the current database has memory grant feedback enabled and which of the three waves (batch/row/persistence/percentile) are active.
+As the first step when investigating query memory grants on SQL 2019+, before assuming the optimizer is over-estimating. It is typically triggered by user complaint about over-grants, oscillating workloads, or pre-migration compatibility audit. Read-only T-SQL against `sys.database_scoped_configurations`. Requires `VIEW DATABASE STATE`. Confirm whether the current database has memory grant feedback enabled and which of the three waves (batch/row/persistence/percentile) are active.
 
 *Read the four memory-grant-feedback scoped configuration options from `sys.database_scoped_configurations` in the current database context (`stoxx`).*
 
@@ -1412,10 +1340,7 @@ _All four memory-grant-feedback options are enabled on the `stoxx` database at d
 
 #### Disable memory grant feedback for a specific query (pattern)
 
-**When to run:** when a single known-bad plan is being repeatedly adjusted in the wrong direction by memory grant feedback and the fix is to force the optimizer's initial estimate instead.
-**Trigger:** `memory_grant_updated_by_feedback` extended event firing repeatedly on one plan with poor outcome.
-**Context:** T-SQL, anyone with `EXECUTE` permission on the query can add the hint. Changes the specific query only — no configuration change. Non-state-changing at the server level.
-**Purpose:** bypass the adaptive feedback for one problematic plan while leaving it active for everything else.
+When a single known-bad plan is being repeatedly adjusted in the wrong direction by memory grant feedback and the fix is to force the optimizer's initial estimate instead. It is typically triggered by `memory_grant_updated_by_feedback` extended event firing repeatedly on one plan with poor outcome. T-SQL, anyone with `EXECUTE` permission on the query can add the hint. Changes the specific query only — no configuration change. Non-state-changing at the server level. Bypass the adaptive feedback for one problematic plan while leaving it active for everything else.
 
 *Add the `DISABLE_ROW_MODE_MEMORY_GRANT_FEEDBACK` hint to a specific query. The hint is a single-query override that takes precedence over database-scoped and instance-wide settings.*
 
@@ -1428,10 +1353,7 @@ OPTION (USE HINT('DISABLE_ROW_MODE_MEMORY_GRANT_FEEDBACK'));
 
 #### Disable memory grant feedback persistence for an entire database (pattern)
 
-**When to run:** when a whole workload is oscillating badly under percentile feedback and the per-query hint is not practical.
-**Trigger:** widespread oscillation across many plans; percentile is making grants worse rather than better.
-**Context:** T-SQL in the target database context. Requires `ALTER DATABASE SCOPED CONFIGURATION`. State-changing.
-**Purpose:** stop persisting feedback to Query Store while still allowing in-memory per-plan feedback.
+When a whole workload is oscillating badly under percentile feedback and the per-query hint is not practical. It is typically triggered by widespread oscillation across many plans; percentile is making grants worse rather than better. T-SQL in the target database context. Requires `ALTER DATABASE SCOPED CONFIGURATION`. State-changing. Stop persisting feedback to Query Store while still allowing in-memory per-plan feedback.
 
 *Disable `MEMORY_GRANT_FEEDBACK_PERSISTENCE` for the current database. Disabling persistence also drops any feedback already collected.*
 
@@ -1459,10 +1381,7 @@ The `DBCC FREEPROCCACHE` family of commands drops cached plans from memory. They
 
 #### Clear one cached plan by plan_handle (safest)
 
-**When to run:** when one specific problematic plan has been identified (from `sys.dm_exec_query_stats` or an execution-plan review) and needs to be recompiled on next execution.
-**Trigger:** parameter-sniffing issue, stale plan after statistics update, post-schema-change.
-**Context:** T-SQL, `ALTER SERVER STATE` permission. State-changing. Minimum blast radius.
-**Purpose:** force recompilation of one specific statement without disturbing any other cached plan.
+When one specific problematic plan has been identified (from `sys.dm_exec_query_stats` or an execution-plan review) and needs to be recompiled on next execution. It is typically triggered by parameter-sniffing issue, stale plan after statistics update, post-schema-change. T-SQL, `ALTER SERVER STATE` permission. State-changing. Minimum blast radius. Force recompilation of one specific statement without disturbing any other cached plan.
 
 *Drop one specific plan by handle. Replace `<plan_handle>` with the actual `varbinary(64)` value from `sys.dm_exec_query_stats.plan_handle`.*
 
@@ -1472,10 +1391,7 @@ DBCC FREEPROCCACHE(<plan_handle>);
 
 #### Clear only the current database's procedure cache
 
-**When to run:** when a database-scoped workload has gone pathological and the operator wants to force all plans for that database to recompile without touching other databases on the same instance.
-**Trigger:** mass statistics update, ETL load, database-scoped parameter sniffing issue.
-**Context:** T-SQL in the target database. Requires `ALTER DATABASE SCOPED CONFIGURATION`. State-changing. Affects only the current database.
-**Purpose:** recompile everything in one database without affecting the other databases on the instance.
+When a database-scoped workload has gone pathological and the operator wants to force all plans for that database to recompile without touching other databases on the same instance. It is typically triggered by mass statistics update, ETL load, database-scoped parameter sniffing issue. T-SQL in the target database. Requires `ALTER DATABASE SCOPED CONFIGURATION`. State-changing. Affects only the current database. Recompile everything in one database without affecting the other databases on the instance.
 
 *Clear the procedure cache for the current database only.*
 
@@ -1485,10 +1401,7 @@ ALTER DATABASE SCOPED CONFIGURATION CLEAR PROCEDURE_CACHE;
 
 #### Clear one database's procedure cache from any session
 
-**When to run:** same scenarios as the scoped-configuration variant, but when the operator is not in the target database context and does not want to `USE` it.
-**Trigger:** cross-database remediation from a DBA utility session.
-**Context:** T-SQL, `ALTER SERVER STATE`. State-changing. Affects only the specified database.
-**Purpose:** drop one database's cache from any session via `DB_ID()`.
+Same scenarios as the scoped-configuration variant, but when the operator is not in the target database context and does not want to `USE` it. It is typically triggered by cross-database remediation from a DBA utility session. T-SQL, `ALTER SERVER STATE`. State-changing. Affects only the specified database. Drop one database's cache from any session via `DB_ID()`.
 
 *Drop the cached plans for `stoxx` only.*
 
@@ -1498,10 +1411,7 @@ DBCC FLUSHPROCINDB(DB_ID('stoxx'));
 
 #### Clear the entire instance plan cache (last resort)
 
-**When to run:** only in lab environments, during scheduled maintenance windows, or when no narrower alternative works and the operator has accepted the latency spike.
-**Trigger:** controlled cold-cache benchmark, a post-incident cleanup where the whole cache is suspect.
-**Context:** T-SQL, `ALTER SERVER STATE`. State-changing. **Maximum blast radius — every plan in cache is dropped**.
-**Purpose:** reset the plan cache entirely. Every subsequent query will recompile.
+Only in lab environments, during scheduled maintenance windows, or when no narrower alternative works and the operator has accepted the latency spike. It is typically triggered by controlled cold-cache benchmark, a post-incident cleanup where the whole cache is suspect. T-SQL, `ALTER SERVER STATE`. State-changing. **Maximum blast radius — every plan in cache is dropped**. Reset the plan cache entirely. Every subsequent query will recompile.
 
 > [!danger] Never run on busy production without a maintenance window
 >
@@ -1527,10 +1437,7 @@ Dropping clean pages from the buffer pool is how SQL Server simulates a cold cac
 
 #### Checkpoint dirty pages then drop clean buffer pool pages
 
-**When to run:** only in benchmark or lab environments where cold-cache behavior needs to be reproduced reliably.
-**Trigger:** controlled benchmark or test of a specific query's first-read performance.
-**Context:** T-SQL, `sysadmin`. `CHECKPOINT` is state-changing (flushes dirty pages); `DBCC DROPCLEANBUFFERS` drops clean pages. Kept as one atomic operation because the `DROPCLEANBUFFERS` without a prior `CHECKPOINT` would leave dirty pages in memory and skew the benchmark.
-**Purpose:** produce a cold buffer pool so the next query read comes from disk.
+Only in benchmark or lab environments where cold-cache behavior needs to be reproduced reliably. It is typically triggered by controlled benchmark or test of a specific query's first-read performance. T-SQL, `sysadmin`. `CHECKPOINT` is state-changing (flushes dirty pages); `DBCC DROPCLEANBUFFERS` drops clean pages. Kept as one atomic operation because the `DROPCLEANBUFFERS` without a prior `CHECKPOINT` would leave dirty pages in memory and skew the benchmark. Produce a cold buffer pool so the next query read comes from disk.
 
 *Checkpoint dirty pages to disk, then drop all clean pages from the buffer pool. Lab / benchmark only.*
 
@@ -1551,10 +1458,7 @@ On Windows, the expected value of `sql_memory_model_desc` after granting LPIM an
 
 #### Inspect sql_memory_model and sql_memory_model_desc
 
-**When to run:** on Windows, immediately after granting LPIM and restarting the SQL Server service, to verify the privilege has taken effect. On Linux, as a quick confirmation that the memory model is the expected `CONVENTIONAL`.
-**Trigger:** post-install verification on Windows, or a report that LPIM does not appear to be active.
-**Context:** read-only T-SQL against `sys.dm_os_sys_info`. `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`.
-**Purpose:** confirm which memory model SQL Server is currently using.
+On Windows, immediately after granting LPIM and restarting the SQL Server service, to verify the privilege has taken effect. On Linux, as a quick confirmation that the memory model is the expected `CONVENTIONAL`. It is typically triggered by post-install verification on Windows, or a report that LPIM does not appear to be active. Read-only T-SQL against `sys.dm_os_sys_info`. `VIEW SERVER STATE` / `VIEW SERVER PERFORMANCE STATE`. Confirm which memory model SQL Server is currently using.
 
 *Return the numeric memory model and its text description.*
 

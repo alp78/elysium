@@ -124,8 +124,7 @@ flowchart LR
 
 #### Understand NORECOVERY, RECOVERY, and STANDBY
 
-**When to run:** Decision happens at every restore command, not a separate invocation. **Trigger:** Every step of a restore chain. **Context:** Conceptual — no separate command. **Purpose:** Choose the right recovery state for each step so the chain stays restorable and the final step brings the database online in a clean state.
-
+Reach for this material when decision happens at every restore command, not a separate invocation. It usually becomes relevant when every step of a restore chain. Conceptual — no separate command. The operational goal is to choose the right recovery state for each step so the chain stays restorable and the final step brings the database online in a clean state.
 | Option | What it does | Use when |
 |---|---|---|
 | `NORECOVERY` | Leaves the database in `RESTORING` state and ready to accept more backup sets | Any intermediate restore step — between full and diff, or between diff and first log, or between successive logs |
@@ -182,8 +181,7 @@ Every restore against the instance creates one row in `msdb.dbo.restorehistory`.
 
 #### Query the recent restore history for a database
 
-**When to run:** After every restore drill, as part of restore audit, or when investigating why a database is in an unexpected state. **Trigger:** Post-restore verification, compliance audit, or forensic investigation. **Context:** Read-only query against `msdb`. Requires membership in `db_backupoperator` in `msdb` or higher. **Purpose:** Produce an authoritative ordered list of every RESTORE command that touched a specific database, including the source backup set and the final recovery state.
-
+Reach for this material when after every restore drill, as part of restore audit, or when investigating why a database is in an unexpected state. It usually becomes relevant when post-restore verification, compliance audit, or forensic investigation. Read-only query against `msdb`. Requires membership in `db_backupoperator` in `msdb` or higher. The operational goal is to produce an authoritative ordered list of every RESTORE command that touched a specific database, including the source backup set and the final recovery state.
 > [!info]- restorehistory columns that matter
 >
 > `msdb.dbo.restorehistory` records one row per restore step, not per restore sequence. A four-step PITR restore (full + diff + 2 logs) produces four rows with ascending `restore_history_id`.
@@ -269,8 +267,7 @@ A side-by-side restore creates a new database from a backup file. The key option
 
 #### Restore a full backup to a new database with WITH MOVE
 
-**When to run:** For every restore drill, for every migration between instances, for every investigative restore of historical data, and for the first step of every PITR chain. **Trigger:** Drill cadence, migration plan, incident requiring data recovery, or validation before overwriting an existing database. **Context:** T-SQL `RESTORE DATABASE`. Requires `CREATE DATABASE` permission on the instance. Writes new `.mdf` / `.ldf` files on the target volume. **Purpose:** Produce a live, queryable database with a new name that contains the exact state captured in the backup file, without disturbing any existing database.
-
+Reach for this material when for every restore drill, for every migration between instances, for every investigative restore of historical data, and for the first step of every PITR chain. It usually becomes relevant when drill cadence, migration plan, incident requiring data recovery, or validation before overwriting an existing database. T-SQL `RESTORE DATABASE`. Requires `CREATE DATABASE` permission on the instance. Writes new `.mdf` / `.ldf` files on the target volume. The operational goal is to produce a live, queryable database with a new name that contains the exact state captured in the backup file, without disturbing any existing database.
 > [!info]- The MOVE clause and logical-vs-physical file names
 >
 > Every file inside a SQL Server backup has a logical name (stable, set at `CREATE DATABASE` time) and a physical path (where the file lived on the source instance). On restore, the default behavior is to use the original physical paths — which is only correct if the backup is being restored to the exact same instance and those paths are free. The `MOVE 'logical_name' TO 'new_physical_path'` clause remaps each file.
@@ -336,8 +333,7 @@ A restore is not complete until the restored database has been proven usable. Va
 
 #### Validate the restored data before production use
 
-**When to run:** Immediately after a restore completes with `RECOVERY`. **Trigger:** End of any restore drill or any recovery event. **Context:** Read-only queries against the restored database. **Purpose:** Confirm that the restored database is online, that the expected tables exist with expected row counts, and that application-critical data is present.
-
+Reach for this material when immediately after a restore completes with `RECOVERY`. It usually becomes relevant when end of any restore drill or any recovery event. Read-only queries against the restored database. The operational goal is to confirm that the restored database is online, that the expected tables exist with expected row counts, and that application-critical data is present.
 *This query runs a three-part smoke test: confirm the database is online, count the main fact table, and verify that demo markers survived the restore.*
 
 ```sql
@@ -377,8 +373,7 @@ After a full restore with `NORECOVERY`, the next step is to apply the latest dif
 
 #### Apply a differential and a log chain with NORECOVERY
 
-**When to run:** After the full restore, as part of the same restore batch. **Trigger:** Scheduled drill, DR event, or historical data recovery. **Context:** Each `RESTORE` command runs in the context of the instance hosting the `RESTORING`-state database. **Purpose:** Replay the differential and the log chain up to (but not including) the final step, keeping the database in `RESTORING` state so additional backups can be applied.
-
+Reach for this material when after the full restore, as part of the same restore batch. It usually becomes relevant when scheduled drill, DR event, or historical data recovery. Each `RESTORE` command runs in the context of the instance hosting the `RESTORING`-state database. The operational goal is to replay the differential and the log chain up to (but not including) the final step, keeping the database in `RESTORING` state so additional backups can be applied.
 > [!warning] Log order matters and must be contiguous
 >
 > Log restores must be applied in LSN order. Applying `stoxx_log_002.trn` before `stoxx_log_001.trn` fails with "The log in this backup set begins at LSN ... which is too recent to apply to the database". If the chain is not contiguous (a gap in `msdb.dbo.backupset.first_lsn` / `last_lsn`), the restore can proceed only up to the last pre-gap log.
@@ -427,8 +422,7 @@ RESTORE LOG successfully processed 32 pages in 0.012 seconds (20.507 MB/sec).
 
 #### Apply the final log with WITH STOPAT and RECOVERY
 
-**When to run:** As the last step of a PITR restore chain. **Trigger:** PITR target time identified; all preceding backup sets have been restored with NORECOVERY. **Context:** T-SQL `RESTORE LOG ... WITH STOPAT`. **Purpose:** Stop the log replay precisely at the target timestamp, roll back any uncommitted transactions past that point, and bring the database online.
-
+Reach for this material when as the last step of a PITR restore chain. It usually becomes relevant when PITR target time identified; all preceding backup sets have been restored with NORECOVERY. T-SQL `RESTORE LOG ... WITH STOPAT`. The operational goal is to stop the log replay precisely at the target timestamp, roll back any uncommitted transactions past that point, and bring the database online.
 > [!info]- STOPAT, STOPATMARK, and STOPBEFOREMARK
 >
 > SQL Server offers three ways to express a PITR stop point:
@@ -508,8 +502,7 @@ The `RESTORE DATABASE ... FROM URL = '...'` command accepts the same options as 
 
 #### Restore the GCS backup side-by-side into stoxx_backup_check
 
-**When to run:** As a validation that the URL backup actually landed in the bucket and is readable via the same credential that wrote it, or during a real restore operation when the only surviving backup is the off-instance copy in object storage. **Trigger:** Scheduled URL-restore drill, loss of local backup files, or cross-region recovery. **Context:** T-SQL on the `stoxx-db` container. Requires the SQL Server credential for the URL prefix. Requires outbound HTTPS to `storage.googleapis.com:443`. **Purpose:** Produce a complete, queryable database from a backup stored entirely on GCS, proving the URL backup pipeline is restore-ready.
-
+Reach for this material when as a validation that the URL backup actually landed in the bucket and is readable via the same credential that wrote it, or during a real restore operation when the only surviving backup is the off-instance copy in object storage. It usually becomes relevant when scheduled URL-restore drill, loss of local backup files, or cross-region recovery. T-SQL on the `stoxx-db` container. Requires the SQL Server credential for the URL prefix. Requires outbound HTTPS to `storage.googleapis.com:443`. The operational goal is to produce a complete, queryable database from a backup stored entirely on GCS, proving the URL backup pipeline is restore-ready.
 > [!warning] URL restore depends on the same credential as URL backup
 >
 > A URL backup succeeds only if `sys.credentials` contains a credential whose name is a prefix of the URL. URL restore has the same requirement. If the credential was rotated or dropped after the backup was taken, the URL restore will fail with the same "Operating system error 50 (The request is not supported.)" signal until the credential is recreated.
@@ -575,8 +568,7 @@ A tail-log backup is structurally identical to any other log backup except for t
 
 #### Take a tail-log backup with NORECOVERY
 
-**When to run:** Only during disaster recovery, when the source database is about to be replaced from backup and the final few seconds of committed transactions must be captured. **Trigger:** Data corruption, ransomware event, or any failure scenario where the source is being overwritten from backup. **Context:** T-SQL `BACKUP LOG ... WITH NORECOVERY`. Requires the database to still be online (or at least accessible) at the moment the tail-log is taken. **Purpose:** Capture the log records since the previous log backup and close the chain, so a subsequent restore sequence can replay up to the moment of failure rather than up to the last scheduled log backup.
-
+Reach for this material when only during disaster recovery, when the source database is about to be replaced from backup and the final few seconds of committed transactions must be captured. It usually becomes relevant when data corruption, ransomware event, or any failure scenario where the source is being overwritten from backup. T-SQL `BACKUP LOG ... WITH NORECOVERY`. Requires the database to still be online (or at least accessible) at the moment the tail-log is taken. The operational goal is to capture the log records since the previous log backup and close the chain, so a subsequent restore sequence can replay up to the moment of failure rather than up to the last scheduled log backup.
 > [!danger] A tail-log backup leaves the source database in RESTORING state
 >
 > `BACKUP LOG ... WITH NORECOVERY` puts the source database into `RESTORING` state and blocks all user access until a `RESTORE DATABASE ... WITH RECOVERY` completes. This is by design — it prevents any further transactions from landing in a database that is about to be replaced. **Do not run this command on a production database unless you are committed to the restore that follows.**
@@ -644,8 +636,7 @@ WITH RECOVERY;
 
 #### Check for active recovery, restore, or backup commands
 
-**When to run:** During any long-running restore to monitor progress, or after a restart to watch crash recovery complete, or during incident response to determine whether a blocking command is backup/restore or application workload. **Trigger:** Restore takes longer than expected, database stays in `RECOVERING` state after a restart, or unexpected session activity. **Context:** Read-only DMV query. Requires `VIEW SERVER STATE`. **Purpose:** Identify which sessions are running backup, restore, or recovery commands, and how far along they are.
-
+Reach for this material when during any long-running restore to monitor progress, or after a restart to watch crash recovery complete, or during incident response to determine whether a blocking command is backup/restore or application workload. It usually becomes relevant when restore takes longer than expected, database stays in `RECOVERING` state after a restart, or unexpected session activity. Read-only DMV query. Requires `VIEW SERVER STATE`. The operational goal is to identify which sessions are running backup, restore, or recovery commands, and how far along they are.
 > [!info]- Filtering the DMV for real user operations
 >
 > `sys.dm_exec_requests` always contains some background system sessions — the most relevant is `RECOVERY WRITER`, a persistent background task that runs in the `master` database and has nothing to do with user restore operations. Filter it out by matching on `command` text or by filtering to `session_id >= 50` (user-session boundary).
@@ -703,8 +694,7 @@ WHERE command IN ('RESTORE DATABASE','RESTORE LOG','BACKUP DATABASE','BACKUP LOG
 
 #### Inspect VLF count and active log size
 
-**When to run:** After any restore, after any instance restart, or when investigating slow recovery. **Trigger:** Recovery-slow symptom, log-growth investigation, or post-restore health check. **Context:** DMV query. Requires `VIEW DATABASE STATE` on the target database. **Purpose:** Measure VLF fragmentation and the active log size, both of which affect recovery time and log-backup efficiency.
-
+Reach for this material when after any restore, after any instance restart, or when investigating slow recovery. It usually becomes relevant when recovery-slow symptom, log-growth investigation, or post-restore health check. DMV query. Requires `VIEW DATABASE STATE` on the target database. The operational goal is to measure VLF fragmentation and the active log size, both of which affect recovery time and log-backup efficiency.
 > [!info]- VLF health thresholds
 >
 > SQL Server divides the transaction log into chunks called Virtual Log Files. Each VLF is a unit of space reuse and of recovery work. An over-fragmented log (hundreds or thousands of small VLFs) extends recovery time because SQL Server scans every VLF during redo/undo phases.
@@ -751,8 +741,7 @@ A documented restore drill runs end-to-end through the full chain and produces a
 
 #### Run a monthly restore drill
 
-**When to run:** Monthly at minimum for production databases; weekly for the highest-value systems. **Trigger:** Scheduled calendar event, or any change to the backup or restore configuration. **Context:** Drill procedure, not a single command. **Purpose:** Prove end-to-end that the backup chain is restorable, the credentials still work, the team knows the sequence, and the restored database passes validation.
-
+Reach for this material when monthly at minimum for production databases; weekly for the highest-value systems. It usually becomes relevant when scheduled calendar event, or any change to the backup or restore configuration. Drill procedure, not a single command. The operational goal is to prove end-to-end that the backup chain is restorable, the credentials still work, the team knows the sequence, and the restored database passes validation.
 | Step | Action | Success criterion |
 |---|---|---|
 | 1 | Pick a disposable target database name (e.g., `stoxx_drill_2026_04`) | Target does not already exist |

@@ -370,10 +370,7 @@ BigQuery uses columnar storage (Capacitor format) and charges $6.25 per TB scann
 
 ##### Enforce partition filter requirement
 
-**When to run:** immediately after creating any partitioned table, or retroactively on existing production tables missing this guard.
-**Trigger:** table creation or audit reveals `require_partition_filter` is not set.
-**Context:** DDL statement in a BigQuery SQL session. State-changing — alters table metadata. Requires `bigquery.tables.update` permission.
-**Purpose:** reject any query that omits a partition column predicate at execution time, before scanning a single byte.
+Immediately after creating any partitioned table, or retroactively on existing production tables missing this guard. It is typically triggered by table creation or audit reveals `require_partition_filter` is not set. DDL statement in a BigQuery SQL session. State-changing — alters table metadata. Requires `bigquery.tables.update` permission. Reject any query that omits a partition column predicate at execution time, before scanning a single byte.
 
 *Alter the table to require a partition filter on every query.*
 
@@ -406,10 +403,7 @@ resource "google_bigquery_table" "daily_prices" {
 
 ##### Set maximum_bytes_billed in dbt profiles
 
-**When to run:** during initial dbt project setup or after a cost incident reveals uncontrolled query costs.
-**Trigger:** dbt configuration review or runaway query incident.
-**Context:** dbt `profiles.yml` configuration. Read-only at config time — enforced at query execution time by BigQuery.
-**Purpose:** hard-cap the bytes any single dbt query can scan, causing it to fail before billing if the estimate exceeds the limit.
+During initial dbt project setup or after a cost incident reveals uncontrolled query costs. It is typically triggered by dbt configuration review or runaway query incident. Dbt `profiles.yml` configuration. Read-only at config time — enforced at query execution time by BigQuery. Hard-cap the bytes any single dbt query can scan, causing it to fail before billing if the estimate exceeds the limit.
 
 ```yaml
 # profiles.yml
@@ -426,10 +420,7 @@ production:
 
 ##### Use dry-run to check cost before executing
 
-**When to run:** before deploying any query to a production dashboard, scheduled query, or dbt model.
-**Trigger:** new query development, dashboard configuration, or pre-deployment validation.
-**Context:** `bq query --dry_run` from any shell with gcloud credentials. Read-only — no data is scanned, no cost is incurred.
-**Purpose:** estimate the bytes BigQuery will bill for the query, allowing cost validation before execution.
+Before deploying any query to a production dashboard, scheduled query, or dbt model. It is typically triggered by new query development, dashboard configuration, or pre-deployment validation. `bq query --dry_run` from any shell with gcloud credentials. Read-only — no data is scanned, no cost is incurred. Estimate the bytes BigQuery will bill for the query, allowing cost validation before execution.
 
 *Dry-run a full-table scan on `stoxx_silver.eurostoxx50_ohlcv` to see the full cost.*
 
@@ -469,10 +460,7 @@ Query successfully validated. Assuming the tables are not modified, running this
 
 ##### Monitor top-cost queries daily using INFORMATION_SCHEMA
 
-**When to run:** daily as a scheduled cost-monitoring sweep, or immediately after a cost spike alert.
-**Trigger:** routine daily review, or Cloud Billing budget alert at 80% of monthly expected spend.
-**Context:** SQL query against `region-<location>.INFORMATION_SCHEMA.JOBS`. Read-only. Requires `bigquery.jobs.list` permission at the project level. The region must match the dataset location (e.g., `region-europe-west1` for datasets in `europe-west1`, `region-eu` for EU multi-region).
-**Purpose:** identify the most expensive queries in the last 7 days by bytes processed, enabling targeted cost reduction.
+Daily as a scheduled cost-monitoring sweep, or immediately after a cost spike alert. It is typically triggered by routine daily review, or Cloud Billing budget alert at 80% of monthly expected spend. SQL query against `region-<location>.INFORMATION_SCHEMA.JOBS`. Read-only. Requires `bigquery.jobs.list` permission at the project level. The region must match the dataset location (e.g., `region-europe-west1` for datasets in `europe-west1`, `region-eu` for EU multi-region). Identify the most expensive queries in the last 7 days by bytes processed, enabling targeted cost reduction.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -613,10 +601,7 @@ BigQuery enforces a hard project-level quota of **20 concurrent interactive DML 
 
 ##### Inspect the current DML queue
 
-**When to run:** before launching any parallelized DML pipeline (e.g., Airflow DAG with 10+ MERGE tasks).
-**Trigger:** pre-flight check before batch DML execution, or during a quota-exceeded incident.
-**Context:** SQL query against `region-<location>.INFORMATION_SCHEMA.JOBS`. Read-only. Requires `bigquery.jobs.list`.
-**Purpose:** determine how many DML slots are currently occupied project-wide before adding more.
+Before launching any parallelized DML pipeline (e.g., Airflow DAG with 10+ MERGE tasks). It is typically triggered by pre-flight check before batch DML execution, or during a quota-exceeded incident. SQL query against `region-<location>.INFORMATION_SCHEMA.JOBS`. Read-only. Requires `bigquery.jobs.list`. Determine how many DML slots are currently occupied project-wide before adding more.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -760,10 +745,7 @@ BigQuery executes queries in a distributed shuffle-based execution engine. Large
 
 ##### Inspect query execution stats to find the shuffle bottleneck
 
-**When to run:** after a query fails with `Resources exceeded` to identify which stage spilled.
-**Trigger:** query execution failure with resource exhaustion error.
-**Context:** SQL query against `region-<location>.INFORMATION_SCHEMA.JOBS`. Read-only.
-**Purpose:** identify which query stage spilled shuffle data to disk, pinpointing the bottleneck join or aggregation.
+After a query fails with `Resources exceeded` to identify which stage spilled. It is typically triggered by query execution failure with resource exhaustion error. SQL query against `region-<location>.INFORMATION_SCHEMA.JOBS`. Read-only. Identify which query stage spilled shuffle data to disk, pinpointing the bottleneck join or aggregation.
 
 *Retrieve shuffle spill details for a specific failed job.*
 
@@ -1360,10 +1342,7 @@ FROM analytics.index_weights;
 
 ##### Identify all FLOAT64 columns in production tables
 
-**When to run:** during a data type audit, or after discovering precision-related failures in validation checks.
-**Trigger:** audit validation failure, or proactive schema review for financial correctness.
-**Context:** SQL query against `INFORMATION_SCHEMA.COLUMNS`. Read-only.
-**Purpose:** enumerate all FLOAT64 columns that may need migration to NUMERIC for financial accuracy.
+During a data type audit, or after discovering precision-related failures in validation checks. It is typically triggered by audit validation failure, or proactive schema review for financial correctness. SQL query against `INFORMATION_SCHEMA.COLUMNS`. Read-only. Enumerate all FLOAT64 columns that may need migration to NUMERIC for financial accuracy.
 
 *List all FLOAT64 columns in the stoxx_gold analytics dataset.*
 
@@ -1501,10 +1480,7 @@ WHERE _PARTITIONDATE BETWEEN '2026-01-01' AND '2026-03-31'
 
 ##### Verify partition pruning via job stats
 
-**When to run:** after deploying a query to validate that pruning is working as expected.
-**Trigger:** post-deployment validation or cost review.
-**Context:** SQL query against `region-<location>.INFORMATION_SCHEMA.JOBS`. Read-only.
-**Purpose:** compare bytes processed against expected partition size — a mismatch indicates pruning failure.
+After deploying a query to validate that pruning is working as expected. It is typically triggered by post-deployment validation or cost review. SQL query against `region-<location>.INFORMATION_SCHEMA.JOBS`. Read-only. Compare bytes processed against expected partition size — a mismatch indicates pruning failure.
 
 *Check bytes processed for a specific job to verify pruning.*
 
@@ -1639,10 +1615,7 @@ GROUP BY instrument_isin;
 
 ##### Identify tables missing clustering
 
-**When to run:** during a quarterly cost optimization review, or after observing high bytes-processed on filtered queries.
-**Trigger:** cost review or performance investigation.
-**Context:** SQL query against `INFORMATION_SCHEMA.COLUMNS`. Read-only.
-**Purpose:** enumerate all tables without clustering and identify candidates by checking which columns are commonly used in WHERE clauses.
+During a quarterly cost optimization review, or after observing high bytes-processed on filtered queries. It is typically triggered by cost review or performance investigation. SQL query against `INFORMATION_SCHEMA.COLUMNS`. Read-only. Enumerate all tables without clustering and identify candidates by checking which columns are commonly used in WHERE clauses.
 
 > [!info] TABLE_STORAGE not available on all project configurations
 >
@@ -2213,10 +2186,7 @@ models:
 
 ##### Find all views referencing a specific column before renaming
 
-**When to run:** before any column rename in a source table.
-**Trigger:** planned schema change in the upstream data model.
-**Context:** SQL query against `INFORMATION_SCHEMA.VIEWS`. Read-only.
-**Purpose:** enumerate all views that reference the column being renamed, preventing silent breakage.
+Before any column rename in a source table. It is typically triggered by planned schema change in the upstream data model. SQL query against `INFORMATION_SCHEMA.VIEWS`. Read-only. Enumerate all views that reference the column being renamed, preventing silent breakage.
 
 *Search view definitions for references to a column name across a dataset.*
 
@@ -2303,10 +2273,7 @@ BigQuery scheduled queries run under a service account and log results to INFORM
 
 ##### Monitor scheduled query failures with a daily INFORMATION_SCHEMA check
 
-**When to run:** daily as a scheduled sweep, or immediately after discovering stale data.
-**Trigger:** routine monitoring or data freshness complaint.
-**Context:** SQL query against `region-<location>.INFORMATION_SCHEMA.JOBS`. Read-only.
-**Purpose:** enumerate all failed jobs in the last 24 hours to detect silent scheduled query failures.
+Daily as a scheduled sweep, or immediately after discovering stale data. It is typically triggered by routine monitoring or data freshness complaint. SQL query against `region-<location>.INFORMATION_SCHEMA.JOBS`. Read-only. Enumerate all failed jobs in the last 24 hours to detect silent scheduled query failures.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -3435,10 +3402,7 @@ BigQuery views store the view definition as a SQL string and validate it only at
 
 ##### Enumerate all views referencing a table before renaming
 
-**When to run:** before any table rename, drop, or major schema change.
-**Trigger:** planned schema refactoring or table migration.
-**Context:** SQL query against `region-<location>.INFORMATION_SCHEMA.VIEWS`. Read-only.
-**Purpose:** identify all views that will break when the source table is renamed or dropped.
+Before any table rename, drop, or major schema change. It is typically triggered by planned schema refactoring or table migration. SQL query against `region-<location>.INFORMATION_SCHEMA.VIEWS`. Read-only. Identify all views that will break when the source table is renamed or dropped.
 
 *Find all views referencing a specific table across all datasets.*
 

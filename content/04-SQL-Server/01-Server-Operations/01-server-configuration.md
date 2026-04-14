@@ -218,10 +218,7 @@ The query in the next subsection reads these nine settings from `sys.configurati
 
 #### Current configuration values for the settings that matter first
 
-**When to run:** on any new or inherited SQL Server instance, immediately after the first successful login.
-**Trigger:** first configuration audit, post-migration review, post-patch verification, or incident response when an unexpected behavior suggests a misconfiguration.
-**Context:** runs in any database, read-only against `sys.configurations`, no special permission beyond `VIEW SERVER STATE`.
-**Purpose:** surface the nine most commonly misconfigured instance settings in one pass so the reviewer can decide which ones require a follow-up `sp_configure` change.
+On any new or inherited SQL Server instance, immediately after the first successful login. It is typically triggered by first configuration audit, post-migration review, post-patch verification, or incident response when an unexpected behavior suggests a misconfiguration. Runs in any database, read-only against `sys.configurations`, no special permission beyond `VIEW SERVER STATE`. Surface the nine most commonly misconfigured instance settings in one pass so the reviewer can decide which ones require a follow-up `sp_configure` change.
 
 > [!info]- `sys.configurations` columns explained
 >
@@ -303,10 +300,7 @@ Configuration values are not meaningful without the host context they run in. A 
 
 #### CPU count and current committed versus target memory
 
-**When to run:** any time a memory-related decision is on the table — sizing `max server memory (MB)`, reviewing `MAXDOP`, investigating an OOM incident, or planning a workload migration.
-**Trigger:** sizing exercise, capacity planning, incident triage, or post-restart verification.
-**Context:** runs in any database, read-only against `sys.dm_os_sys_info`, requires `VIEW SERVER STATE`.
-**Purpose:** provide the engine-side view of host CPU and memory so that `sp_configure` values in the rest of the note have operational scale. Without this query, a memory cap is just a number.
+Any time a memory-related decision is on the table — sizing `max server memory (MB)`, reviewing `MAXDOP`, investigating an OOM incident, or planning a workload migration. It is typically triggered by sizing exercise, capacity planning, incident triage, or post-restart verification. Runs in any database, read-only against `sys.dm_os_sys_info`, requires `VIEW SERVER STATE`. Provide the engine-side view of host CPU and memory so that `sp_configure` values in the rest of the note have operational scale. Without this query, a memory cap is just a number.
 
 > [!info]- `sys.dm_os_sys_info` columns explained
 >
@@ -359,10 +353,7 @@ The current baseline calls for a small number of concrete changes before this in
 
 #### Set a memory cap, backup compression, and ad hoc plan protection
 
-**When to run:** after the audit query above has confirmed that `max server memory (MB)` is at the default `2147483647`, that `backup compression default` is `0`, and that `optimize for ad hoc workloads` is `0`. Do not run blindly — first verify the current state.
-**Trigger:** initial production hardening of a new instance, post-migration cleanup, or remediation following an OOM incident or plan-cache bloat investigation.
-**Context:** runs in any database, requires `ALTER SETTINGS` server-level permission (held by `sysadmin` and `serveradmin`). All three settings here are dynamic, so no restart is required after `RECONFIGURE`. The numeric memory value must be adjusted for the actual host before running — never copy verbatim between servers.
-**Purpose:** apply the three lowest-risk, highest-value `sp_configure` changes in a single batch: cap memory growth, enable backup compression, and protect the plan cache from ad hoc bloat.
+After the audit query above has confirmed that `max server memory (MB)` is at the default `2147483647`, that `backup compression default` is `0`, and that `optimize for ad hoc workloads` is `0`. Do not run blindly — first verify the current state. It is typically triggered by initial production hardening of a new instance, post-migration cleanup, or remediation following an OOM incident or plan-cache bloat investigation. Runs in any database, requires `ALTER SETTINGS` server-level permission (held by `sysadmin` and `serveradmin`). All three settings here are dynamic, so no restart is required after `RECONFIGURE`. The numeric memory value must be adjusted for the actual host before running — never copy verbatim between servers. Apply the three lowest-risk, highest-value `sp_configure` changes in a single batch: cap memory growth, enable backup compression, and protect the plan cache from ad hoc bloat.
 
 > [!warning] Memory cap values do not transfer between servers
 >
@@ -403,10 +394,7 @@ RECONFIGURE;
 
 #### Set parallelism defaults deliberately
 
-**When to run:** after the audit query has confirmed `max degree of parallelism = 0` and `cost threshold for parallelism = 5` (the shipped defaults), and after a deliberate decision about MAXDOP based on the host's CPU and NUMA layout.
-**Trigger:** initial production hardening, evidence of `CXPACKET` or `CXCONSUMER` waits in the wait stats, or workload migration to a host with a different CPU topology.
-**Context:** runs in any database, requires `ALTER SETTINGS` server-level permission. Both settings are dynamic; no restart required. The MAXDOP value chosen here (`8`) is suitable only for hosts with at least 8 visible logical CPUs and a single NUMA node; multi-NUMA hosts and very small VMs need different values.
-**Purpose:** replace two of the most consistently misconfigured defaults — unbounded MAXDOP and cost threshold `5` — with deliberate starting values that can then be tuned against real workload telemetry.
+After the audit query has confirmed `max degree of parallelism = 0` and `cost threshold for parallelism = 5` (the shipped defaults), and after a deliberate decision about MAXDOP based on the host's CPU and NUMA layout. It is typically triggered by initial production hardening, evidence of `CXPACKET` or `CXCONSUMER` waits in the wait stats, or workload migration to a host with a different CPU topology. Runs in any database, requires `ALTER SETTINGS` server-level permission. Both settings are dynamic; no restart required. The MAXDOP value chosen here (`8`) is suitable only for hosts with at least 8 visible logical CPUs and a single NUMA node; multi-NUMA hosts and very small VMs need different values. Replace two of the most consistently misconfigured defaults — unbounded MAXDOP and cost threshold `5` — with deliberate starting values that can then be tuned against real workload telemetry.
 
 > [!warning] These values are starting points, not constants
 >
@@ -465,10 +453,7 @@ This subsection verifies the number of TempDB files, their size parity, and thei
 
 #### Current TempDB data-file and log-file layout
 
-**When to run:** during initial production hardening, immediately after a TempDB-related incident (PAGELATCH contention on `2:1:1`, `2:1:3`, or `2:1:128/129`), or whenever a new instance is inherited.
-**Trigger:** initial baseline check, contention investigation, or post-migration verification that TempDB layout was not lost during the move.
-**Context:** runs against `tempdb`, read-only, requires `VIEW DEFINITION` on the database. Safe to run at any time on any workload.
-**Purpose:** confirm whether TempDB has the expected number of equally sized data files with fixed-size autogrowth, which is the standard baseline for avoiding allocation contention.
+During initial production hardening, immediately after a TempDB-related incident (PAGELATCH contention on `2:1:1`, `2:1:3`, or `2:1:128/129`), or whenever a new instance is inherited. It is typically triggered by initial baseline check, contention investigation, or post-migration verification that TempDB layout was not lost during the move. Runs against `tempdb`, read-only, requires `VIEW DEFINITION` on the database. Safe to run at any time on any workload. Confirm whether TempDB has the expected number of equally sized data files with fixed-size autogrowth, which is the standard baseline for avoiding allocation contention.
 
 > [!info]- `tempdb.sys.database_files` columns explained
 >
@@ -517,10 +502,7 @@ ORDER BY file_id;
 
 #### Add TempDB files when the layout is undersized
 
-**When to run:** only after the audit query has shown that the current TempDB data-file count is below the threshold suggested by the host's CPU count, or after measured allocation contention (`PAGELATCH_UP` waits on TempDB GAM/SGAM/PFS pages) has confirmed that more files are warranted.
-**Trigger:** observed PAGELATCH contention on TempDB system pages, an undersized inherited instance, or a planned scale-up that adds CPUs to the host.
-**Context:** runs in any database, requires `ALTER` on `tempdb` (held by `sysadmin`). The new file is created online with no service interruption, but allocations into it are gradual until proportional fill rebalances usage. The new file's size and growth must match the existing data files exactly.
-**Purpose:** add one additional TempDB data file that is parity-aligned with the existing files so the engine can spread allocations across one more parallel allocation surface.
+Only after the audit query has shown that the current TempDB data-file count is below the threshold suggested by the host's CPU count, or after measured allocation contention (`PAGELATCH_UP` waits on TempDB GAM/SGAM/PFS pages) has confirmed that more files are warranted. It is typically triggered by observed PAGELATCH contention on TempDB system pages, an undersized inherited instance, or a planned scale-up that adds CPUs to the host. Runs in any database, requires `ALTER` on `tempdb` (held by `sysadmin`). The new file is created online with no service interruption, but allocations into it are gradual until proportional fill rebalances usage. The new file's size and growth must match the existing data files exactly. Add one additional TempDB data file that is parity-aligned with the existing files so the engine can spread allocations across one more parallel allocation surface.
 
 > [!warning] Do not over-provision TempDB files
 >
@@ -574,10 +556,7 @@ These commands must be run on the Linux host that runs SQL Server, not from SSMS
 
 #### Verify Linux memory and I/O settings on the SQL Server host
 
-**When to run:** during initial host validation of a new Linux SQL Server deployment, after a kernel upgrade, or during latency-spike investigation when buffer-pool or storage behavior is suspect.
-**Trigger:** new build, post-upgrade verification, OOM event, latency spike with no obvious query-side cause, or compliance check against the platform standard.
-**Context:** runs on the Linux host shell (SSH session), not in SSMS or `sqlcmd`. Read-only — these `cat` commands cannot change anything. No privilege escalation required for read.
-**Purpose:** record the current value of three kernel knobs that most often affect SQL Server latency on Linux, so the operator can decide whether the host matches the platform standard before changing anything.
+During initial host validation of a new Linux SQL Server deployment, after a kernel upgrade, or during latency-spike investigation when buffer-pool or storage behavior is suspect. It is typically triggered by new build, post-upgrade verification, OOM event, latency spike with no obvious query-side cause, or compliance check against the platform standard. Runs on the Linux host shell (SSH session), not in SSMS or `sqlcmd`. Read-only — these `cat` commands cannot change anything. No privilege escalation required for read. Record the current value of three kernel knobs that most often affect SQL Server latency on Linux, so the operator can decide whether the host matches the platform standard before changing anything.
 
 > [!warning] Host-level commands, not T-SQL
 >
@@ -624,10 +603,7 @@ always [madvise] never
 
 #### Configure the Linux host baseline when needed
 
-**When to run:** only after the verification commands above have shown that the host does not match the platform standard, and only after the change has been validated against the configuration-management path for the fleet.
-**Trigger:** drift from the platform standard, new host build before SQL Server is put under load, or remediation following a documented latency or OOM incident traced to one of these settings.
-**Context:** runs on the Linux host shell as a privileged user (`sudo`). The `sysctl` change is live-applied to the running kernel; the `tee` writes to `/sys` are also live but do not survive reboot unless persisted. Ad hoc changes drift quickly — always persist through the configuration-management tool that controls the host (Ansible, Puppet, cloud-init, kickstart, etc.).
-**Purpose:** apply the Microsoft-recommended Linux host baseline for SQL Server on Linux: minimal swappiness, THP disabled, and the no-op I/O scheduler on SSD-backed storage.
+Only after the verification commands above have shown that the host does not match the platform standard, and only after the change has been validated against the configuration-management path for the fleet. It is typically triggered by drift from the platform standard, new host build before SQL Server is put under load, or remediation following a documented latency or OOM incident traced to one of these settings. Runs on the Linux host shell as a privileged user (`sudo`). The `sysctl` change is live-applied to the running kernel; the `tee` writes to `/sys` are also live but do not survive reboot unless persisted. Ad hoc changes drift quickly — always persist through the configuration-management tool that controls the host (Ansible, Puppet, cloud-init, kickstart, etc.). Apply the Microsoft-recommended Linux host baseline for SQL Server on Linux: minimal swappiness, THP disabled, and the no-op I/O scheduler on SSD-backed storage.
 
 > [!warning] Changes affect the host globally
 >

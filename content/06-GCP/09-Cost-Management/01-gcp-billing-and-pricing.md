@@ -242,10 +242,7 @@ Use these commands to prove that a project can spend money and to confirm who ca
 
 #### List accessible billing accounts
 
-**When to run:** Run this before any budget, export, or billing-link change.
-**Trigger:** Use it during initial billing validation or when an operator is unsure which account funds the project.
-**Context:** Run from any authenticated shell with `gcloud` configured. This is read-only.
-**Purpose:** Establish the canonical billing account ID, display name, and account status.
+Run this before any budget, export, or billing-link change. It is typically triggered by use it during initial billing validation or when an operator is unsure which account funds the project. Run from any authenticated shell with `gcloud` configured. This is read-only. Establish the canonical billing account ID, display name, and account status.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -283,10 +280,7 @@ The important result is not just the ID. It is that only one visible account is 
 
 #### Verify the project-to-billing link
 
-**When to run:** Run this before enabling paid APIs, creating exports, or investigating "billing disabled" service failures.
-**Trigger:** Use it whenever a project is new, recently moved, or suspected to be linked to the wrong payer.
-**Context:** This is a read-only `gcloud billing` lookup against one project.
-**Purpose:** Confirm that the project is linked to the expected billing account and that billing is enabled.
+Run this before enabling paid APIs, creating exports, or investigating "billing disabled" service failures. It is typically triggered by use it whenever a project is new, recently moved, or suspected to be linked to the wrong payer. This is a read-only `gcloud billing` lookup against one project. Confirm that the project is linked to the expected billing account and that billing is enabled.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -313,10 +307,7 @@ This is the minimum condition for paid services to work, but it says nothing abo
 
 #### Inspect billing-account IAM
 
-**When to run:** Run this before any export, budget, or account-level billing change that requires billing-account permissions.
-**Trigger:** Use it when a command fails with `PERMISSION_DENIED` and you need to separate missing IAM from missing API enablement.
-**Context:** This reads the billing-account IAM policy. It requires access to read billing IAM.
-**Purpose:** Verify which principals can administer billing-account resources.
+Run this before any export, budget, or account-level billing change that requires billing-account permissions. It is typically triggered by use it when a command fails with `PERMISSION_DENIED` and you need to separate missing IAM from missing API enablement. This reads the billing-account IAM policy. It requires access to read billing IAM. Verify which principals can administer billing-account resources.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -355,10 +346,7 @@ Billing exports and commitment metadata do not appear automatically just because
 
 #### List datasets in the active project
 
-**When to run:** Run this before assuming billing export tables exist.
-**Trigger:** Use it when a note, query, or dashboard references `gcp_billing_export_*` and you need to verify the dataset first.
-**Context:** This is a read-only BigQuery metadata listing in the active project.
-**Purpose:** Confirm whether a billing-export dataset, pricing export, or CUD metadata export already exists.
+Run this before assuming billing export tables exist. It is typically triggered by use it when a note, query, or dashboard references `gcp_billing_export_*` and you need to verify the dataset first. This is a read-only BigQuery metadata listing in the active project. Confirm whether a billing-export dataset, pricing export, or CUD metadata export already exists.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -396,10 +384,7 @@ There is no billing-export dataset here. That means there is no live `gcp_billin
 
 #### Check for Compute Engine commitments
 
-**When to run:** Run this before attributing savings to commitments or writing about effective VM pricing.
-**Trigger:** Use it when planning rightsizing or when cost analysis assumes committed-use discounts exist.
-**Context:** This is a read-only inventory query against Compute Engine commitments.
-**Purpose:** Confirm whether resource-based commitments are active in the project.
+Run this before attributing savings to commitments or writing about effective VM pricing. It is typically triggered by use it when planning rightsizing or when cost analysis assumes committed-use discounts exist. This is a read-only inventory query against Compute Engine commitments. Confirm whether resource-based commitments are active in the project.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -419,10 +404,7 @@ The empty result means there are no visible Compute Engine commitments in `bq-wh
 
 #### Check for BigQuery capacity commitments
 
-**When to run:** Run this before discussing BigQuery editions, slot commitments, or reservation-backed spend.
-**Trigger:** Use it when a warehouse-heavy TCO model assumes dedicated slot capacity.
-**Context:** This is a read-only BigQuery reservation inventory lookup in `europe-west1`.
-**Purpose:** Confirm whether the project has any active capacity commitments for BigQuery.
+Run this before discussing BigQuery editions, slot commitments, or reservation-backed spend. It is typically triggered by use it when a warehouse-heavy TCO model assumes dedicated slot capacity. This is a read-only BigQuery reservation inventory lookup in `europe-west1`. Confirm whether the project has any active capacity commitments for BigQuery.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -452,10 +434,7 @@ The Pricing API is the live list-price source when billing export is absent. It 
 
 #### Query Compute Engine and disk list prices for `europe-west1`
 
-**When to run:** Run this when you need a current public rate for a SKU that actually exists in the environment.
-**Trigger:** Use it during TCO modeling, rightsizing, or when a stale price table would be unsafe.
-**Context:** This is a read-only REST call against the Cloud Billing Catalog API using an access token from the active `gcloud` identity.
-**Purpose:** Retrieve live list prices for E2 core and RAM time plus the persistent disk types used by the current VMs.
+Run this when you need a current public rate for a SKU that actually exists in the environment. It is typically triggered by use it during TCO modeling, rightsizing, or when a stale price table would be unsafe. This is a read-only REST call against the Cloud Billing Catalog API using an access token from the active `gcloud` identity. Retrieve live list prices for E2 core and RAM time plus the persistent disk types used by the current VMs.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -533,10 +512,7 @@ These values are live public list prices. They are suitable for forward modeling
 
 #### Query BigQuery analysis and storage price tiers for `europe-west1`
 
-**When to run:** Run this when you need current query or storage list prices for BigQuery in the project region.
-**Trigger:** Use it during TCO work or when validating whether current BigQuery usage is still inside the free tier.
-**Context:** This is a read-only Pricing API lookup against the BigQuery service catalog.
-**Purpose:** Retrieve the current analysis and storage tiers that apply to on-demand BigQuery usage in `europe-west1`.
+Run this when you need current query or storage list prices for BigQuery in the project region. It is typically triggered by use it during TCO work or when validating whether current BigQuery usage is still inside the free tier. This is a read-only Pricing API lookup against the BigQuery service catalog. Retrieve the current analysis and storage tiers that apply to on-demand BigQuery usage in `europe-west1`.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|

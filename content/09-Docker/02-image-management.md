@@ -198,10 +198,7 @@ These excerpts are the real build inputs in the repo and on the Airflow VM. Read
 
 #### Local | Dockerfile | read the Python pipeline image definition
 
-**When to run:** Before rebuilding the pipeline image or diagnosing local/runtime package behavior.
-**Trigger:** The pipeline needs a new dependency, ODBC connectivity is failing, or Cloud Run behavior differs from local expectations.
-**Context:** This is a file inspection of `C:\Users\aperi\DEV\ESG\docker\pipeline.Dockerfile`. It is read-only.
-**Purpose:** Show how the project builds the Python pipeline image, installs SQL Server ODBC dependencies, and sets the runtime entrypoint.
+Before rebuilding the pipeline image or diagnosing local/runtime package behavior. It is typically triggered by the pipeline needs a new dependency, ODBC connectivity is failing, or Cloud Run behavior differs from local expectations. This is a file inspection of `C:\Users\aperi\DEV\ESG\docker\pipeline.Dockerfile`. It is read-only. Show how the project builds the Python pipeline image, installs SQL Server ODBC dependencies, and sets the runtime entrypoint.
 
 The pipeline image is intentionally single-stage because the runtime itself needs the ODBC driver and Python dependencies. It installs Microsoft ODBC Driver 18, copies the pipeline code, sets a non-root user, and starts with `ddtrace-run python utils/run_pipeline.py`.
 
@@ -242,10 +239,7 @@ CMD ["ddtrace-run", "python", "utils/run_pipeline.py"]
 
 #### Local | Dockerfile | read the dashboard image definition
 
-**When to run:** Before rebuilding the dashboard image, before changing its base runtime, or when publish size matters.
-**Trigger:** A dashboard dependency changed, a build is slow, or you need to understand why the runtime image is smaller than the SDK image.
-**Context:** This is a file inspection of `C:\Users\aperi\DEV\ESG\docker\dashboard.Dockerfile`. It is read-only.
-**Purpose:** Show how the project compiles the Blazor app in one stage and runs it from a smaller ASP.NET runtime stage.
+Before rebuilding the dashboard image, before changing its base runtime, or when publish size matters. It is typically triggered by A dashboard dependency changed, a build is slow, or you need to understand why the runtime image is smaller than the SDK image. This is a file inspection of `C:\Users\aperi\DEV\ESG\docker\dashboard.Dockerfile`. It is read-only. Show how the project compiles the Blazor app in one stage and runs it from a smaller ASP.NET runtime stage.
 
 The dashboard image uses a proper multi-stage build. The heavy SDK layer never ships in the final runtime image, and the runtime stage adds a container healthcheck on `/healthz`.
 
@@ -280,10 +274,7 @@ ENTRYPOINT ["dotnet", "ESG.Dashboard.dll"]
 
 #### Linux | Dockerfile | read the live Airflow VM image extension
 
-**When to run:** Before modifying the Airflow runtime on the VM or when a DAG needs an extra Python package or Airflow provider.
-**Trigger:** Airflow imports fail, provider packages are missing, or you need to understand what was added on top of the official Airflow image.
-**Context:** This is a live file inspection from `/home/alexper_recovery_gmail_com/app` on `stoxx-airflow`. It is read-only.
-**Purpose:** Show how the running VM extends `apache/airflow:3.2.0` with provider packages while staying pinned to the matching Airflow constraints file.
+Before modifying the Airflow runtime on the VM or when a DAG needs an extra Python package or Airflow provider. It is typically triggered by airflow imports fail, provider packages are missing, or you need to understand what was added on top of the official Airflow image. This is a live file inspection from `/home/alexper_recovery_gmail_com/app` on `stoxx-airflow`. It is read-only. Show how the running VM extends `apache/airflow:3.2.0` with provider packages while staying pinned to the matching Airflow constraints file.
 
 The VM does not run the stock `apache/airflow:3.2.0` image unchanged. It builds `stoxx-airflow:3.2.0` locally on the host and layers in Google provider support using the official Airflow constraints URL pattern.
 
@@ -323,10 +314,7 @@ The local builds are not abstract examples. They are the exact commands used to 
 
 #### PowerShell | docker build | rebuild the local pipeline image
 
-**When to run:** After changing `ingestion/`, `utils/`, `db/`, `data/definitions/`, `requirements.txt`, or `docker/pipeline-entrypoint.sh`.
-**Trigger:** A pipeline dependency or runtime behavior changed and you need a fresh local image.
-**Context:** PowerShell on the Windows host in `C:\Users\aperi\DEV\ESG`. This is a state-changing build that creates a new local image tag.
-**Purpose:** Produce a fresh pipeline image and confirm that the ODBC and Python dependency layers still build successfully.
+After changing `ingestion/`, `utils/`, `db/`, `data/definitions/`, `requirements.txt`, or `docker/pipeline-entrypoint.sh`. It is typically triggered by A pipeline dependency or runtime behavior changed and you need a fresh local image. PowerShell on the Windows host in `C:\Users\aperi\DEV\ESG`. This is a state-changing build that creates a new local image tag. Produce a fresh pipeline image and confirm that the ODBC and Python dependency layers still build successfully.
 
 *Rebuilds the local Python pipeline image with plain BuildKit progress output.*
 
@@ -352,10 +340,7 @@ The build used BuildKit on the `desktop-linux` builder, sent a small `524.43kB` 
 
 #### PowerShell | docker build | rebuild the local dashboard image
 
-**When to run:** After changing the dashboard project, the dashboard Dockerfile, or runtime health endpoint behavior.
-**Trigger:** The Blazor application changed and you need a fresh local runtime image.
-**Context:** PowerShell on the Windows host in `C:\Users\aperi\DEV\ESG`. This is a state-changing build that creates a new local image tag.
-**Purpose:** Prove that the multi-stage dashboard build still restores, publishes, and exports cleanly.
+After changing the dashboard project, the dashboard Dockerfile, or runtime health endpoint behavior. It is typically triggered by the Blazor application changed and you need a fresh local runtime image. PowerShell on the Windows host in `C:\Users\aperi\DEV\ESG`. This is a state-changing build that creates a new local image tag. Prove that the multi-stage dashboard build still restores, publishes, and exports cleanly.
 
 *Rebuilds the local dashboard image with plain BuildKit progress output.*
 
@@ -409,10 +394,7 @@ This section combines three views: local image inventory, live Artifact Registry
 
 #### PowerShell | docker images | list the local image inventory
 
-**When to run:** Before a rebuild, before cleanup, or when confirming which historical images are still cached on the workstation.
-**Trigger:** You need to know what the local Docker host can run immediately without pulling.
-**Context:** PowerShell on the Windows host. This is a read-only inventory command.
-**Purpose:** Show which project images and historical registry-tagged images are still present locally.
+Before a rebuild, before cleanup, or when confirming which historical images are still cached on the workstation. It is typically triggered by you need to know what the local Docker host can run immediately without pulling. PowerShell on the Windows host. This is a read-only inventory command. Show which project images and historical registry-tagged images are still present locally.
 
 *Lists the current local image inventory that matters to this project.*
 
@@ -432,10 +414,7 @@ The local Docker host still carries images tagged for the older `stoxx-index-int
 
 #### PowerShell / Linux | gcloud artifacts docker images list | list the live Artifact Registry tags
 
-**When to run:** Before a rollout, during incident response, or when a job is using a newer tag than expected.
-**Trigger:** You need to know which images actually exist in the live registry today.
-**Context:** PowerShell or Linux shell with `gcloud` authenticated to the live project. This is a read-only registry query.
-**Purpose:** Show the real image tags and digests in the current Artifact Registry repository.
+Before a rollout, during incident response, or when a job is using a newer tag than expected. It is typically triggered by you need to know which images actually exist in the live registry today. PowerShell or Linux shell with `gcloud` authenticated to the live project. This is a read-only registry query. Show the real image tags and digests in the current Artifact Registry repository.
 
 *Lists the live registry tags in the current project.*
 
@@ -455,10 +434,7 @@ This is the authoritative current registry path. The live project is `bq-wh-nb`,
 
 #### PowerShell / Linux | gcloud run jobs list | list the Cloud Run jobs currently bound to those images
 
-**When to run:** After a push, during rollback planning, or when a job appears to be using the wrong code version.
-**Trigger:** The registry contains several tags and you need to know which one the platform is actually executing.
-**Context:** PowerShell or Linux shell with `gcloud`. This is a read-only control-plane query.
-**Purpose:** Bind each live Cloud Run job to its current image reference and latest execution state.
+After a push, during rollback planning, or when a job appears to be using the wrong code version. It is typically triggered by the registry contains several tags and you need to know which one the platform is actually executing. PowerShell or Linux shell with `gcloud`. This is a read-only control-plane query. Bind each live Cloud Run job to its current image reference and latest execution state.
 
 *Shows the current image-to-job bindings in Cloud Run.*
 
@@ -477,7 +453,7 @@ stoxx-transforms   europe-west1-docker.pkg.dev/bq-wh-nb/stoxx-demo/stoxx-transfo
 This output closes the loop. The registry and the runtime agree on the `bq-wh-nb/stoxx-demo` path, and the currently running `stoxx-serving` job is pinned to `20260413-6`, not to any older repo-era `stoxx-index-intelligence` path.
 
 **Problem:** The repo still contains deployment references to `stoxx-index-intelligence`, but the live deployment estate on April 13, 2026 uses `bq-wh-nb`.
-**Context:** Relying on the repo value would point operators at the wrong registry and the wrong deployment project.
+Relying on the repo value would point operators at the wrong registry and the wrong deployment project.
 **Diagnosis:** The codebase contains stale infrastructure and workflow references from an earlier project identifier.
 **Resolution:** This chapter uses the live `bq-wh-nb` registry and job bindings as the current operational truth and treats the repo value as historical drift.
 **Validation:** The registry output and the Cloud Run job output both resolve to `europe-west1-docker.pkg.dev/bq-wh-nb/stoxx-demo/...`.
@@ -500,10 +476,7 @@ The Airflow VM did not need a completely new image from scratch. It extended the
 
 #### Linux | docker history | inspect the live Airflow image history
 
-**When to run:** After changing the VM Dockerfile, after a failed provider import, or when you need to know whether the custom layer is broad or narrowly scoped.
-**Trigger:** The running Airflow containers behave differently from the stock base image and you need to identify what was actually added.
-**Context:** Linux shell on `stoxx-airflow`. This is a read-only image inspection.
-**Purpose:** Measure the real custom layer on top of the official Airflow base image.
+After changing the VM Dockerfile, after a failed provider import, or when you need to know whether the custom layer is broad or narrowly scoped. It is typically triggered by the running Airflow containers behave differently from the stock base image and you need to identify what was actually added. Linux shell on `stoxx-airflow`. This is a read-only image inspection. Measure the real custom layer on top of the official Airflow base image.
 
 *Shows the top of the live Airflow image history on the VM.*
 
@@ -522,10 +495,7 @@ This is a compact and healthy customization pattern. The meaningful project-spec
 
 #### Local | .dockerignore | verify the real build-context boundary on the local host
 
-**When to run:** Before enlarging the build context or after a suspiciously slow local build.
-**Trigger:** Build time grows unexpectedly or files appear in the image that should never have been part of the context.
-**Context:** File inspection of `C:\Users\aperi\DEV\ESG\.dockerignore`. This is read-only.
-**Purpose:** Show which files are intentionally kept out of local builds.
+Before enlarging the build context or after a suspiciously slow local build. It is typically triggered by build time grows unexpectedly or files appear in the image that should never have been part of the context. File inspection of `C:\Users\aperi\DEV\ESG\.dockerignore`. This is read-only. Show which files are intentionally kept out of local builds.
 
 The local `.dockerignore` is doing real work. It excludes Git metadata, Python caches, local data directories, logs, markdown docs, and environment files, which is why the live local build contexts above stayed below one megabyte.
 

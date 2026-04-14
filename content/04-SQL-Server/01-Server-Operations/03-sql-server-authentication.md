@@ -208,10 +208,7 @@ The engine-level properties show whether the instance is Windows-auth-only or mi
 
 #### Return engine identity and authentication mode
 
-**When to run:** at the very start of any authentication audit, before changing logins, TLS, or role membership.
-**Trigger:** new instance onboarding, security review, post-upgrade verification, or any question of the form "what edition, build, and auth mode is this server?".
-**Context:** T-SQL session, `VIEW SERVER STATE` is not required (all columns come from constant property functions), read-only, no downtime.
-**Purpose:** establish the engine fingerprint and mixed-mode vs Windows-only authentication boundary so every subsequent audit step is calibrated to the correct engine family.
+At the very start of any authentication audit, before changing logins, TLS, or role membership. It is typically triggered by new instance onboarding, security review, post-upgrade verification, or any question of the form "what edition, build, and auth mode is this server?". T-SQL session, `VIEW SERVER STATE` is not required (all columns come from constant property functions), read-only, no downtime. Establish the engine fingerprint and mixed-mode vs Windows-only authentication boundary so every subsequent audit step is calibrated to the correct engine family.
 
 `SERVERPROPERTY` returns scalar instance metadata. Each call takes a property name and returns a `sql_variant`, so the safer pattern is to `CAST` to the expected concrete type. The two security-relevant keys are `EngineEdition` (which engine family is running) and `IsIntegratedSecurityOnly` (is this instance Windows-authentication-only or mixed-mode).
 
@@ -255,10 +252,7 @@ A secure authentication model needs an explicit inventory of every server princi
 
 #### Inventory server logins with password-policy flags
 
-**When to run:** during the initial baseline of a new instance, and periodically thereafter to detect new or drifting logins.
-**Trigger:** security audit, onboarding, post-incident forensics, or any suspicion that unapproved logins have been created.
-**Context:** T-SQL session, requires `VIEW ANY DEFINITION` (or higher) to see all principals — `sysadmin` or `securityadmin` see everything, regular logins only see themselves. Read-only.
-**Purpose:** produce the authoritative list of every login-capable principal, distinguish Windows-mapped from SQL-authenticated, and surface password-policy enforcement for SQL logins.
+During the initial baseline of a new instance, and periodically thereafter to detect new or drifting logins. It is typically triggered by security audit, onboarding, post-incident forensics, or any suspicion that unapproved logins have been created. T-SQL session, requires `VIEW ANY DEFINITION` (or higher) to see all principals — `sysadmin` or `securityadmin` see everything, regular logins only see themselves. Read-only. Produce the authoritative list of every login-capable principal, distinguish Windows-mapped from SQL-authenticated, and surface password-policy enforcement for SQL logins.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -321,10 +315,7 @@ The single most dangerous authentication outcome is not merely having many login
 
 #### List sysadmin members via sys.server_role_members
 
-**When to run:** immediately after the login inventory and again on every scheduled audit cycle.
-**Trigger:** security review, suspicion of privilege sprawl, investigation of an unauthorized change, or any report that someone "can see everything".
-**Context:** T-SQL session, `VIEW ANY DEFINITION` required to resolve principal names; read-only.
-**Purpose:** enumerate every principal that inherits full instance-wide administrative authority so the blast radius is immediately visible.
+Immediately after the login inventory and again on every scheduled audit cycle. It is typically triggered by security review, suspicion of privilege sprawl, investigation of an unauthorized change, or any report that someone "can see everything". T-SQL session, `VIEW ANY DEFINITION` required to resolve principal names; read-only. Enumerate every principal that inherits full instance-wide administrative authority so the blast radius is immediately visible.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -389,10 +380,7 @@ The `sysadmin` role dominates the authentication discussion because it is the br
 
 #### List fixed server roles and member counts
 
-**When to run:** during the instance baseline, and any time a privilege-sprawl audit is required beyond `sysadmin`.
-**Trigger:** security review, post-restore audit, any report of "elevated permissions" outside `sysadmin`.
-**Context:** T-SQL session, `VIEW ANY DEFINITION` required, read-only.
-**Purpose:** enumerate every fixed server role with current member counts so broad roles other than `sysadmin` (especially `securityadmin` and `dbcreator`) are not overlooked.
+During the instance baseline, and any time a privilege-sprawl audit is required beyond `sysadmin`. It is typically triggered by security review, post-restore audit, any report of "elevated permissions" outside `sysadmin`. T-SQL session, `VIEW ANY DEFINITION` required, read-only. Enumerate every fixed server role with current member counts so broad roles other than `sysadmin` (especially `securityadmin` and `dbcreator`) are not overlooked.
 
 *Return the nine user-facing fixed server roles with the count of direct members for each.*
 
@@ -449,10 +437,7 @@ The combination `CHECK_POLICY = OFF` with `CHECK_EXPIRATION = ON` is invalid and
 
 #### Create a SQL login with strict policy enforcement
 
-**When to run:** when provisioning a new SQL-authenticated login for an application or a named DBA.
-**Trigger:** new application onboarding, rotation of a legacy shared login, replacement of `sa` usage.
-**Context:** T-SQL session, requires `ALTER ANY LOGIN` or `sysadmin`, state-changing (creates a new row in `sys.server_principals`).
-**Purpose:** stand up a SQL login with all available policy flags engaged and a safe default database, so the login lands in the intended context and carries the strongest enforcement Linux supports.
+When provisioning a new SQL-authenticated login for an application or a named DBA. It is typically triggered by new application onboarding, rotation of a legacy shared login, replacement of `sa` usage. T-SQL session, requires `ALTER ANY LOGIN` or `sysadmin`, state-changing (creates a new row in `sys.server_principals`). Stand up a SQL login with all available policy flags engaged and a safe default database, so the login lands in the intended context and carries the strongest enforcement Linux supports.
 
 *Create a SQL-authenticated application login with all policy flags engaged and a safe default database.*
 
@@ -467,10 +452,7 @@ CREATE LOGIN [svc_etl_app]
 
 #### Create a login from an existing password hash for migration
 
-**When to run:** when moving an application login from one instance to another without forcing an application password reset.
-**Trigger:** database restore onto a new instance, DR failover, standing up a reporting replica that needs the same login SID.
-**Context:** T-SQL session, requires `ALTER ANY LOGIN`, state-changing. The source hash must come from `sys.sql_logins.password_hash` on the original instance.
-**Purpose:** recreate the login with identical credentials and SID so the application continues to work and `sys.database_principals.sid` on the restored database still matches (no orphan remediation required).
+When moving an application login from one instance to another without forcing an application password reset. It is typically triggered by database restore onto a new instance, DR failover, standing up a reporting replica that needs the same login SID. T-SQL session, requires `ALTER ANY LOGIN`, state-changing. The source hash must come from `sys.sql_logins.password_hash` on the original instance. Recreate the login with identical credentials and SID so the application continues to work and `sys.database_principals.sid` on the restored database still matches (no orphan remediation required).
 
 *Create a login using an already-hashed password and a pinned SID to match an existing database user.*
 
@@ -501,10 +483,7 @@ CREATE LOGIN [svc_etl_app]
 
 #### Rename sa and disable it
 
-**When to run:** immediately after a named sysadmin login has been provisioned, tested, and confirmed working.
-**Trigger:** post-install hardening, compliance remediation, CIS SQL Server benchmark requirement.
-**Context:** T-SQL session as a non-sa sysadmin, state-changing. Does not require downtime; existing sessions authenticated as `sa` are not killed — use `KILL` for that.
-**Purpose:** remove the default account name as an attack vector (no more username-guessing against `sa`) and make the login unusable entirely so even a leaked `sa` password cannot authenticate.
+Immediately after a named sysadmin login has been provisioned, tested, and confirmed working. It is typically triggered by post-install hardening, compliance remediation, CIS SQL Server benchmark requirement. T-SQL session as a non-sa sysadmin, state-changing. Does not require downtime; existing sessions authenticated as `sa` are not killed — use `KILL` for that. Remove the default account name as an attack vector (no more username-guessing against `sa`) and make the login unusable entirely so even a leaked `sa` password cannot authenticate.
 
 *Rename the `sa` login to an unguessable name, then disable it entirely.*
 
@@ -531,10 +510,7 @@ Not every privilege is expressed as a role. Many of the most dangerous grants ar
 
 #### Inventory explicit grants of broad server permissions
 
-**When to run:** during the instance baseline audit, and on any schedule that reviews permission drift.
-**Trigger:** security review, post-incident, new observability or backup tool onboarding (which often asks for `VIEW SERVER STATE`).
-**Context:** T-SQL session, `VIEW ANY DEFINITION` required, read-only.
-**Purpose:** surface every direct (non-role-mediated) grant of a high-impact server permission so reviews can distinguish intentional monitoring grants from accidental privilege sprawl.
+During the instance baseline audit, and on any schedule that reviews permission drift. It is typically triggered by security review, post-incident, new observability or backup tool onboarding (which often asks for `VIEW SERVER STATE`). T-SQL session, `VIEW ANY DEFINITION` required, read-only. Surface every direct (non-role-mediated) grant of a high-impact server permission so reviews can distinguish intentional monitoring grants from accidental privilege sprawl.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -594,10 +570,7 @@ Instance logins are only half of the story. A login can connect to the instance 
 
 #### Return database owner and encryption state
 
-**When to run:** once per database during the initial audit, again whenever ownership or TDE state is expected to have changed.
-**Trigger:** new database created, database attach/restore from a different instance, post-TDE-rollout verification, or ownership-chaining review.
-**Context:** T-SQL session, `VIEW ANY DEFINITION` or `VIEW ANY DATABASE` needed to see non-owned databases; read-only.
-**Purpose:** confirm who owns the database and whether it is encrypted at rest, because ownership anchors ownership chaining and TDE state dictates backup certificate requirements.
+Once per database during the initial audit, again whenever ownership or TDE state is expected to have changed. It is typically triggered by new database created, database attach/restore from a different instance, post-TDE-rollout verification, or ownership-chaining review. T-SQL session, `VIEW ANY DEFINITION` or `VIEW ANY DATABASE` needed to see non-owned databases; read-only. Confirm who owns the database and whether it is encrypted at rest, because ownership anchors ownership chaining and TDE state dictates backup certificate requirements.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -631,10 +604,7 @@ _`stoxx` is still owned by `sa`, and it is not encrypted with TDE. The owner its
 
 #### Inventory non-system database principals in stoxx
 
-**When to run:** during the database-level security audit, after the instance-level login inventory is complete.
-**Trigger:** a login has been added or removed, a database has been restored from a different instance, or the application team reports permission problems.
-**Context:** T-SQL session scoped to the target database (`USE stoxx;` or connection-level database), requires `VIEW DEFINITION` on the database; read-only.
-**Purpose:** expose the direct database principals (users and custom roles) that exist on top of the fixed roles, so least-privilege review can distinguish built-in scaffolding from application-defined grants.
+During the database-level security audit, after the instance-level login inventory is complete. It is typically triggered by a login has been added or removed, a database has been restored from a different instance, or the application team reports permission problems. T-SQL session scoped to the target database (`USE stoxx;` or connection-level database), requires `VIEW DEFINITION` on the database; read-only. Expose the direct database principals (users and custom roles) that exist on top of the fixed roles, so least-privilege review can distinguish built-in scaffolding from application-defined grants.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -688,10 +658,7 @@ _There are currently no custom users in `stoxx`; the principal surface is only t
 
 #### Verify the guest user has no explicit permissions in stoxx
 
-**When to run:** after the database-principal inventory, to confirm the guest user surface in every user database.
-**Trigger:** database restore from an unknown source, compliance audit, or any report of "users that aren't supposed to be there can read data".
-**Context:** T-SQL session, requires `VIEW DEFINITION` on the database, read-only. Must be run once per user database — this script targets `stoxx` only.
-**Purpose:** confirm that the `guest` fallback user has no direct grants in `stoxx`, so any login that reaches the instance cannot fall through to `guest` to read or modify data.
+After the database-principal inventory, to confirm the guest user surface in every user database. It is typically triggered by database restore from an unknown source, compliance audit, or any report of "users that aren't supposed to be there can read data". T-SQL session, requires `VIEW DEFINITION` on the database, read-only. Must be run once per user database — this script targets `stoxx` only. Confirm that the `guest` fallback user has no direct grants in `stoxx`, so any login that reaches the instance cannot fall through to `guest` to read or modify data.
 
 The `guest` user is a built-in database principal with `principal_id = 2`. When a login connects to a database where no matching user exists, SQL Server attempts to map the login to `guest` as a fallback. In user databases `guest` is disabled by default (no `CONNECT` permission), so the fallback fails — but any direct grant to `guest` re-opens the hole for every authenticated login on the instance.
 
@@ -720,10 +687,7 @@ _No rows is the desired result here. `guest` has no explicit permissions in `sto
 
 #### Contrast with the master database where guest has CONNECT
 
-**When to run:** immediately after the `stoxx` check, to see what a live non-empty grant to `guest` looks like.
-**Trigger:** understanding the baseline difference between system databases (`master`, `msdb`) and user databases for the `guest` fallback.
-**Context:** T-SQL session, `USE master` context switch required, read-only.
-**Purpose:** demonstrate the canonical case where `guest` does have a permission (CONNECT in `master`), which is why every login on the instance can enter `master` even without an explicit user.
+Immediately after the `stoxx` check, to see what a live non-empty grant to `guest` looks like. It is typically triggered by understanding the baseline difference between system databases (`master`, `msdb`) and user databases for the `guest` fallback. T-SQL session, `USE master` context switch required, read-only. Demonstrate the canonical case where `guest` does have a permission (CONNECT in `master`), which is why every login on the instance can enter `master` even without an explicit user.
 
 *Return the explicit grants held by the `guest` user in `master` for contrast.*
 
@@ -768,10 +732,7 @@ _In `master`, `guest` holds `GRANT CONNECT`. That is deliberate: every login on 
 
 #### Detect orphaned users by SID mismatch
 
-**When to run:** after any database restore from a different instance, after a login drop, or when an application reports "Cannot open user default database" errors.
-**Trigger:** post-restore, post-migration, post-DR failover, compliance audit.
-**Context:** T-SQL session scoped to the target database, `VIEW DEFINITION` on the database, read-only. The join against `sys.server_principals` must run on the destination instance, not the source.
-**Purpose:** identify database users whose `sid` no longer matches any server login, so they can be remapped (via `ALTER USER`) or recreated (via `CREATE LOGIN ... SID = ...`) before they block application connections.
+After any database restore from a different instance, after a login drop, or when an application reports "Cannot open user default database" errors. It is typically triggered by post-restore, post-migration, post-DR failover, compliance audit. T-SQL session scoped to the target database, `VIEW DEFINITION` on the database, read-only. The join against `sys.server_principals` must run on the destination instance, not the source. Identify database users whose `sid` no longer matches any server login, so they can be remapped (via `ALTER USER`) or recreated (via `CREATE LOGIN ... SID = ...`) before they block application connections.
 
 A database user is considered orphaned when its `sid` (stored in `sys.database_principals`) does not correspond to any row in `sys.server_principals` on the current instance. This happens most commonly when a database is restored onto a new instance that does not have the same logins, or when the matching login is dropped while the database user is left behind.
 
@@ -851,10 +812,7 @@ Failover cluster instances are not supported for Entra authentication; only sing
 
 #### Create an Entra-backed login on Linux
 
-**When to run:** after the instance has been Azure Arc-onboarded and the Entra admin has been configured via the portal.
-**Trigger:** production identity consolidation, removing SQL-login password sprawl, integrating with Conditional Access and MFA.
-**Context:** T-SQL session as a sysadmin (typically the Entra admin configured at onboarding), state-changing. Requires the Arc extension and Entra admin pre-configured — this is prerequisite work, not something the T-SQL session alone can do.
-**Purpose:** create an externally-authenticated login so an Entra user, group, or managed identity can authenticate to the instance using its Entra credential instead of a SQL password.
+After the instance has been Azure Arc-onboarded and the Entra admin has been configured via the portal. It is typically triggered by production identity consolidation, removing SQL-login password sprawl, integrating with Conditional Access and MFA. T-SQL session as a sysadmin (typically the Entra admin configured at onboarding), state-changing. Requires the Arc extension and Entra admin pre-configured — this is prerequisite work, not something the T-SQL session alone can do. Create an externally-authenticated login so an Entra user, group, or managed identity can authenticate to the instance using its Entra credential instead of a SQL password.
 
 *Create an Entra-backed login for a user, an Entra group, and a service principal / managed identity.*
 
@@ -883,10 +841,7 @@ Active Directory authentication on SQL Server Linux uses Kerberos via a keytab f
 
 #### Provision AD-backed SQL Server with adutil
 
-**When to run:** during first-time setup of an AD-integrated Linux SQL Server host, before any `CREATE LOGIN ... FROM WINDOWS` statement.
-**Trigger:** production deployment that needs integrated Windows auth, migration of an existing AD-auth application onto a Linux host.
-**Context:** OS shell with `sudo` on the Linux host; requires an AD-privileged user (for `kinit`), the `mssql-tools` / `adutil` packages installed, and the host's clock within 5 minutes of the domain controller. State-changing and requires an `mssql-server` restart to load the keytab.
-**Purpose:** create the SQL Server AD service account, register the SPNs, generate the Kerberos keytab, and point `mssql-conf` at the keytab so Kerberos authentication works from Windows clients.
+During first-time setup of an AD-integrated Linux SQL Server host, before any `CREATE LOGIN ... FROM WINDOWS` statement. It is typically triggered by production deployment that needs integrated Windows auth, migration of an existing AD-auth application onto a Linux host. OS shell with `sudo` on the Linux host; requires an AD-privileged user (for `kinit`), the `mssql-tools` / `adutil` packages installed, and the host's clock within 5 minutes of the domain controller. State-changing and requires an `mssql-server` restart to load the keytab. Create the SQL Server AD service account, register the SPNs, generate the Kerberos keytab, and point `mssql-conf` at the keytab so Kerberos authentication works from Windows clients.
 
 > [!warning] Clock skew over 5 minutes breaks Kerberos
 >
@@ -935,10 +890,7 @@ sudo /opt/mssql/bin/mssql-conf validate-ad-config
 
 #### Create an AD-backed SQL Server login
 
-**When to run:** after `mssql-conf validate-ad-config` reports success and the host can resolve AD users via `id <DOMAIN\user>`.
-**Trigger:** first AD login provisioning, onboarding additional AD users or groups.
-**Context:** T-SQL session as sysadmin, state-changing. Requires the `FROM WINDOWS` clause; no password is stored in SQL Server.
-**Purpose:** map an Active Directory user or group to a SQL Server login so the user can authenticate with their AD Kerberos credential from a Windows client.
+After `mssql-conf validate-ad-config` reports success and the host can resolve AD users via `id <DOMAIN\user>`. It is typically triggered by first AD login provisioning, onboarding additional AD users or groups. T-SQL session as sysadmin, state-changing. Requires the `FROM WINDOWS` clause; no password is stored in SQL Server. Map an Active Directory user or group to a SQL Server login so the user can authenticate with their AD Kerberos credential from a Windows client.
 
 *Create a Windows/AD-backed login for a user and an AD group.*
 
@@ -961,10 +913,7 @@ The first question is not whether TLS has been configured in theory. It is wheth
 
 #### Summarize user-process encryption state
 
-**When to run:** whenever you need a one-shot view of the current encryption posture — during audits, after a TLS config change, or when investigating unexpected plaintext traffic.
-**Trigger:** TLS enforcement rollout, suspected plaintext leakage, compliance review.
-**Context:** T-SQL session, `VIEW SERVER STATE` required to see other sessions, read-only. Observer session is included in the counts unless you filter by `c.session_id <> @@SPID`.
-**Purpose:** aggregate all live user-process connections into a single pivot by `encrypt_option × auth_scheme × net_transport` to make unencrypted traffic immediately visible.
+Whenever you need a one-shot view of the current encryption posture — during audits, after a TLS config change, or when investigating unexpected plaintext traffic. It is typically triggered by TLS enforcement rollout, suspected plaintext leakage, compliance review. T-SQL session, `VIEW SERVER STATE` required to see other sessions, read-only. Observer session is included in the counts unless you filter by `c.session_id <> @@SPID`. Aggregate all live user-process connections into a single pivot by `encrypt_option × auth_scheme × net_transport` to make unencrypted traffic immediately visible.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -1011,10 +960,7 @@ _Every live user-process session on the instance (excluding the observer) is une
 
 #### Inspect per-session connection detail
 
-**When to run:** after the summary query flags unencrypted traffic, or any time you need to identify a specific session by login, host, or program.
-**Trigger:** unexpected plaintext row in the summary, forensics on a specific login, hunting an unauthorized client tool.
-**Context:** T-SQL session, `VIEW SERVER STATE` required, read-only. Client network address can be the gateway or proxy IP rather than the real client when a middle-box is in the path.
-**Purpose:** resolve aggregate encryption counts into individual sessions with login, host, and program identity so the noisy rows can be traced directly.
+After the summary query flags unencrypted traffic, or any time you need to identify a specific session by login, host, or program. It is typically triggered by unexpected plaintext row in the summary, forensics on a specific login, hunting an unauthorized client tool. T-SQL session, `VIEW SERVER STATE` required, read-only. Client network address can be the gateway or proxy IP rather than the real client when a middle-box is in the path. Resolve aggregate encryption counts into individual sessions with login, host, and program identity so the noisy rows can be traced directly.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -1095,10 +1041,7 @@ The full `network.*` setting space governs every transport-level aspect of the s
 
 #### Read current mssql-conf network settings
 
-**When to run:** during the initial instance baseline and before any TLS hardening change, to confirm whether the current posture is implicit (defaults) or explicit (set values).
-**Trigger:** new container or VM onboarding, compliance audit, upgrade verification, post-restore drift check.
-**Context:** OS shell inside the container (`docker exec ... mssql-conf get <key>`) or on the host if running directly. Read-only, no restart needed.
-**Purpose:** report the effective value for each TLS-related `network.*` key so implicit defaults can be made explicit and documented.
+During the initial instance baseline and before any TLS hardening change, to confirm whether the current posture is implicit (defaults) or explicit (set values). It is typically triggered by new container or VM onboarding, compliance audit, upgrade verification, post-restore drift check. OS shell inside the container (`docker exec ... mssql-conf get <key>`) or on the host if running directly. Read-only, no restart needed. Report the effective value for each TLS-related `network.*` key so implicit defaults can be made explicit and documented.
 
 `mssql-conf get <key>` prints the stored value for a single configuration key, or `not set` when no value has been written to `/var/opt/mssql/mssql.conf`. A `not set` result does not mean the server has no value — it means the server is falling back to its hard-coded default. For TLS keys on Linux, the default for `forceencryption` is `0` (not enforced) and the default for `tlscert`/`tlskey` is a self-signed certificate generated at first startup.
 
@@ -1136,10 +1079,7 @@ On Linux, explicit TLS hardening is done entirely through `mssql-conf`. This is 
 
 #### Configure cert paths, restrict protocols, and force encryption
 
-**When to run:** during a planned maintenance window, after the certificate and private key have been provisioned, validated, and tested against at least one client.
-**Trigger:** TLS hardening rollout, rotation of an expiring server certificate, post-audit remediation.
-**Context:** OS shell with `sudo` on the Linux host (or `docker exec -u root` on a containerized instance), **requires a `systemctl restart mssql-server`** — this causes a service interruption for every connected client.
-**Purpose:** move from implicit defaults to explicit TLS enforcement so remote clients can verify the server identity and plaintext connections are rejected at the server boundary.
+During a planned maintenance window, after the certificate and private key have been provisioned, validated, and tested against at least one client. It is typically triggered by TLS hardening rollout, rotation of an expiring server certificate, post-audit remediation. OS shell with `sudo` on the Linux host (or `docker exec -u root` on a containerized instance), **requires a `systemctl restart mssql-server`** — this causes a service interruption for every connected client. Move from implicit defaults to explicit TLS enforcement so remote clients can verify the server identity and plaintext connections are rejected at the server boundary.
 
 These commands set the certificate path, private-key path, allowed TLS protocol versions, and forced-encryption behavior.
 
@@ -1178,10 +1118,7 @@ sudo systemctl restart mssql-server
 
 #### Require encryption and cert validation in client connection strings
 
-**When to run:** every time an application's connection string is being authored, rolled out, or reviewed — not after the server is already hardened.
-**Trigger:** new application deployment, audit of existing connection strings, migration away from `TrustServerCertificate=yes`.
-**Context:** client-side application or driver configuration, not T-SQL. Applies equivalently to `.NET SqlClient`, `Microsoft.Data.SqlClient`, `pyodbc`, `mssql-jdbc`, `Go mssql`, and `ODBC Driver for SQL Server`.
-**Purpose:** guarantee the client enforces TLS and actually validates the server certificate instead of blindly trusting whatever cert the server presents, closing the identity-impersonation gap that `TrustServerCertificate=yes` leaves open.
+Every time an application's connection string is being authored, rolled out, or reviewed — not after the server is already hardened. It is typically triggered by new application deployment, audit of existing connection strings, migration away from `TrustServerCertificate=yes`. Client-side application or driver configuration, not T-SQL. Applies equivalently to `.NET SqlClient`, `Microsoft.Data.SqlClient`, `pyodbc`, `mssql-jdbc`, `Go mssql`, and `ODBC Driver for SQL Server`. Guarantee the client enforces TLS and actually validates the server certificate instead of blindly trusting whatever cert the server presents, closing the identity-impersonation gap that `TrustServerCertificate=yes` leaves open.
 
 Clients should request encryption explicitly and validate the server certificate rather than bypass trust checks. `Encrypt=yes` tells the driver to negotiate TLS; `TrustServerCertificate=no` tells it to actually verify the chain against the OS trust store instead of accepting any cert the server presents.
 
@@ -1209,10 +1146,7 @@ Authentication hardening without audit is blind. Disabling `sa`, forcing TLS, an
 
 ### SQL Server | sys.server_audits | inventory existing audits
 
-**When to run:** as the first step of any audit-related task, to confirm whether audit is already configured on this instance.
-**Trigger:** instance onboarding, compliance review, incident forensics, verifying a documented audit rollout.
-**Context:** T-SQL session, `VIEW SERVER STATE` required, read-only.
-**Purpose:** enumerate any existing `CREATE SERVER AUDIT` objects with their file target, failure behavior, and current enabled state.
+As the first step of any audit-related task, to confirm whether audit is already configured on this instance. It is typically triggered by instance onboarding, compliance review, incident forensics, verifying a documented audit rollout. T-SQL session, `VIEW SERVER STATE` required, read-only. Enumerate any existing `CREATE SERVER AUDIT` objects with their file target, failure behavior, and current enabled state.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -1269,10 +1203,7 @@ The audit object controls where events are written, how the rollover works, what
 
 #### Create a file-target server audit
 
-**When to run:** as the first step of any audit rollout, before any audit specification references it.
-**Trigger:** compliance requirement, security baseline, post-audit remediation, CIS SQL Server benchmark implementation.
-**Context:** T-SQL session as sysadmin (required for `CREATE SERVER AUDIT`), state-changing. The `FILEPATH` directory must exist and be owned by `mssql` on Linux; create it with `mkdir -p /var/opt/mssql/audit && chown mssql:mssql /var/opt/mssql/audit` before running.
-**Purpose:** stand up a durable file-target audit sink that will later be linked to one or more audit specifications, with rollover limits that match the expected disk budget.
+As the first step of any audit rollout, before any audit specification references it. It is typically triggered by compliance requirement, security baseline, post-audit remediation, CIS SQL Server benchmark implementation. T-SQL session as sysadmin (required for `CREATE SERVER AUDIT`), state-changing. The `FILEPATH` directory must exist and be owned by `mssql` on Linux; create it with `mkdir -p /var/opt/mssql/audit && chown mssql:mssql /var/opt/mssql/audit` before running. Stand up a durable file-target audit sink that will later be linked to one or more audit specifications, with rollover limits that match the expected disk budget.
 
 *Create a 10-file rolling file-target audit with 512 MB per file and fail-operation on write failure.*
 
@@ -1309,10 +1240,7 @@ The audit object is just the sink. The audit specification is what actually tell
 
 #### Capture authentication and principal-change events
 
-**When to run:** immediately after the audit sink is created, before any application traffic exists, so the baseline is established from a known-empty state.
-**Trigger:** compliance rollout, security baseline, audit-trail gap remediation.
-**Context:** T-SQL session as sysadmin, state-changing. The audit specification must reference an existing audit object by name. The spec is created disabled and must be enabled explicitly with `STATE = ON`.
-**Purpose:** create the server-level audit specification that covers every authentication event and every principal lifecycle event so the audit file captures the full account-management and login trail.
+Immediately after the audit sink is created, before any application traffic exists, so the baseline is established from a known-empty state. It is typically triggered by compliance rollout, security baseline, audit-trail gap remediation. T-SQL session as sysadmin, state-changing. The audit specification must reference an existing audit object by name. The spec is created disabled and must be enabled explicitly with `STATE = ON`. Create the server-level audit specification that covers every authentication event and every principal lifecycle event so the audit file captures the full account-management and login trail.
 
 > [!info] Source: Microsoft Learn — audit action groups and actions
 >
@@ -1354,10 +1282,7 @@ Audit files are binary `.sqlaudit` rolling files under the configured `FILEPATH`
 
 #### Query recent login success and failure events
 
-**When to run:** during incident investigation, routine audit review, or to confirm that the audit pipeline is capturing the events the spec was created for.
-**Trigger:** suspected brute-force activity, compliance report generation, post-rollout validation.
-**Context:** T-SQL session with `VIEW SERVER SECURITY AUDIT` (SQL 2022+) or `CONTROL SERVER` (SQL 2019-), read-only. The function reads from the filesystem path configured on the audit object.
-**Purpose:** surface recent login events (success and failure) from the audit file so an operator can see who authenticated, from where, and when.
+During incident investigation, routine audit review, or to confirm that the audit pipeline is capturing the events the spec was created for. It is typically triggered by suspected brute-force activity, compliance report generation, post-rollout validation. T-SQL session with `VIEW SERVER SECURITY AUDIT` (SQL 2022+) or `CONTROL SERVER` (SQL 2019-), read-only. The function reads from the filesystem path configured on the audit object. Surface recent login events (success and failure) from the audit file so an operator can see who authenticated, from where, and when.
 
 *Return the most recent successful and failed login events from the audit file.*
 

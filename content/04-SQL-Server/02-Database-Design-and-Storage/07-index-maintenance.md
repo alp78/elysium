@@ -166,10 +166,7 @@ flowchart TD
 
 #### Confirm database context and statistics defaults
 
-**When to run:** at the start of any index-maintenance session, before trusting DMV output or running state-changing operations.
-**Trigger:** opening a new SSMS or sqlcmd session against the target instance.
-**Context:** T-SQL read-only query against `sys.databases`. No elevated permissions required beyond `VIEW DATABASE STATE`.
-**Purpose:** verify that the session is scoped to the intended database, that compatibility level matches the engine version, and that automatic statistics creation and update are enabled.
+At the start of any index-maintenance session, before trusting DMV output or running state-changing operations. It is typically triggered by opening a new SSMS or sqlcmd session against the target instance. T-SQL read-only query against `sys.databases`. No elevated permissions required beyond `VIEW DATABASE STATE`. Verify that the session is scoped to the intended database, that compatibility level matches the engine version, and that automatic statistics creation and update are enabled.
 
 | Field | Source Column | Type | Meaning |
 |---|---|---|---|
@@ -219,10 +216,7 @@ _The baseline matches the rest of the note. The session is in `stoxx`, SQL Serve
 
 #### Verify engine uptime before trusting usage and missing-index DMVs
 
-**When to run:** before referencing `sys.dm_db_index_usage_stats`, `sys.dm_db_missing_index_*`, or any DMV whose counters reset on restart.
-**Trigger:** beginning an index-discovery or unused-index review session.
-**Context:** T-SQL read-only query against `sys.dm_os_sys_info`. Requires `VIEW SERVER STATE`.
-**Purpose:** determine whether the instance has been running long enough for usage and missing-index counters to represent a meaningful business cycle.
+Before referencing `sys.dm_db_index_usage_stats`, `sys.dm_db_missing_index_*`, or any DMV whose counters reset on restart. It is typically triggered by beginning an index-discovery or unused-index review session. T-SQL read-only query against `sys.dm_os_sys_info`. Requires `VIEW SERVER STATE`. Determine whether the instance has been running long enough for usage and missing-index counters to represent a meaningful business cycle.
 
 | Field | Source Column | Type | Meaning |
 |---|---|---|---|
@@ -260,10 +254,7 @@ _This instance restarted on `2026-04-08 08:42:34.510`. Any usage or missing-inde
 
 #### Inspect fragmentation and density for a single table
 
-**When to run:** when a specific table has been flagged by monitoring, user reports, or a broad inventory pass as a potential maintenance candidate.
-**Trigger:** slow scan performance, elevated buffer-pool usage on a known table, or a routine post-load check.
-**Context:** T-SQL read-only DMV query. Requires `VIEW DATABASE STATE`. The `SAMPLED` scan mode reads a sample of leaf pages — cheaper than `DETAILED`, but more informative than `LIMITED` because it populates `avg_page_space_used_in_percent`.
-**Purpose:** retrieve fragmentation percentage, page count, page density, and fragment count for every index on the target table so maintenance decisions can be made per-index.
+When a specific table has been flagged by monitoring, user reports, or a broad inventory pass as a potential maintenance candidate. It is typically triggered by slow scan performance, elevated buffer-pool usage on a known table, or a routine post-load check. T-SQL read-only DMV query. Requires `VIEW DATABASE STATE`. The `SAMPLED` scan mode reads a sample of leaf pages — cheaper than `DETAILED`, but more informative than `LIMITED` because it populates `avg_page_space_used_in_percent`. Retrieve fragmentation percentage, page count, page density, and fragment count for every index on the target table so maintenance decisions can be made per-index.
 
 | Field | Source Column | Type / Unit | Meaning |
 |---|---|---|---|
@@ -351,10 +342,7 @@ These are rowstore heuristics, not hard SQL Server laws. Columnstore maintenance
 
 #### Scan all rowstore indexes for fragmentation candidates
 
-**When to run:** during a scheduled maintenance review or after a large data-movement operation that may have degraded multiple indexes.
-**Trigger:** weekly/biweekly maintenance cycle, post-migration verification, or elevated I/O on scan-heavy workloads.
-**Context:** T-SQL read-only DMV query with `LIMITED` scan mode. Requires `VIEW DATABASE STATE`. The `LIMITED` mode inspects only non-leaf pages, making it cheap enough for a full-database sweep, but `avg_page_space_used_in_percent` will be `NULL`.
-**Purpose:** rank all rowstore indexes in the current database by fragmentation and size so maintenance effort targets the highest-value candidates first.
+During a scheduled maintenance review or after a large data-movement operation that may have degraded multiple indexes. It is typically triggered by weekly/biweekly maintenance cycle, post-migration verification, or elevated I/O on scan-heavy workloads. T-SQL read-only DMV query with `LIMITED` scan mode. Requires `VIEW DATABASE STATE`. The `LIMITED` mode inspects only non-leaf pages, making it cheap enough for a full-database sweep, but `avg_page_space_used_in_percent` will be `NULL`. Rank all rowstore indexes in the current database by fragmentation and size so maintenance effort targets the highest-value candidates first.
 
 | Field | Source Column | Type / Unit | Meaning |
 |---|---|---|---|
@@ -415,10 +403,7 @@ _All three candidates are real nonclustered indexes in `stoxx`, and all three ar
 
 #### Compare LIMITED, SAMPLED, and DETAILED scan modes on the same index
 
-**When to run:** when choosing which scan mode to use for a specific maintenance pass and the cost-vs-accuracy trade-off is unclear.
-**Trigger:** first-time setup of a maintenance script, or when `LIMITED` has returned `NULL` density and the operator needs to decide whether `SAMPLED` or `DETAILED` is warranted.
-**Context:** T-SQL read-only DMV query. Runs three separate calls against the same index. `DETAILED` reads the full leaf level and can be expensive on very large indexes.
-**Purpose:** show exactly which metrics each scan mode populates and whether they converge on a given index size.
+When choosing which scan mode to use for a specific maintenance pass and the cost-vs-accuracy trade-off is unclear. It is typically triggered by first-time setup of a maintenance script, or when `LIMITED` has returned `NULL` density and the operator needs to decide whether `SAMPLED` or `DETAILED` is warranted. T-SQL read-only DMV query. Runs three separate calls against the same index. `DETAILED` reads the full leaf level and can be expensive on very large indexes. Show exactly which metrics each scan mode populates and whether they converge on a given index size.
 
 | Field | Source Column | Type / Unit | Meaning |
 |---|---|---|---|
@@ -540,10 +525,7 @@ _This output shows the operational trade-off precisely. `LIMITED` is enough for 
 
 #### Reorganize a specific rowstore index
 
-**When to run:** when a targeted index shows moderate fragmentation (`5–30%`) on a large enough page count, and online access must be preserved.
-**Trigger:** fragmentation inventory identifies a candidate where density or fragmentation warrants compaction but not a full rewrite.
-**Context:** T-SQL state-changing DDL. Requires `ALTER` permission on the table. Online — holds only intent-shared locks. Generates transaction-log activity proportional to the amount of leaf-page reordering.
-**Purpose:** compact and reorder leaf pages of the target index without rebuilding the entire B-tree, resetting fill factor, or updating statistics.
+When a targeted index shows moderate fragmentation (`5–30%`) on a large enough page count, and online access must be preserved. It is typically triggered by fragmentation inventory identifies a candidate where density or fragmentation warrants compaction but not a full rewrite. T-SQL state-changing DDL. Requires `ALTER` permission on the table. Online — holds only intent-shared locks. Generates transaction-log activity proportional to the amount of leaf-page reordering. Compact and reorder leaf pages of the target index without rebuilding the entire B-tree, resetting fill factor, or updating statistics.
 
 *Reorganize a specific rowstore index without rebuilding the entire B-tree or resetting fill factor.*
 
@@ -564,10 +546,7 @@ REORGANIZE;
 
 #### Create the disposable rowstore demo table
 
-**When to run:** once, at the start of the maintenance walkthrough, to provision the demo object used by subsequent `REORGANIZE` and `REBUILD` examples.
-**Trigger:** starting a hands-on index-maintenance lab session.
-**Context:** T-SQL state-changing DDL and DML. Creates `dbo.demo_idxmaint_rowstore` in `stoxx`, inserts ~134 K rows across ten batches with randomized GUID keys and a wide filler column, then builds a clustered and a nonclustered index at fill factor `100`. The second insert wave uses `ORDER BY NEWID()` to scatter rows and force page splits.
-**Purpose:** produce a rowstore table with deliberately poor fragmentation and low page density so that `REORGANIZE` and `REBUILD` effects are measurable.
+Once, at the start of the maintenance walkthrough, to provision the demo object used by subsequent `REORGANIZE` and `REBUILD` examples. It is typically triggered by starting a hands-on index-maintenance lab session. T-SQL state-changing DDL and DML. Creates `dbo.demo_idxmaint_rowstore` in `stoxx`, inserts ~134 K rows across ten batches with randomized GUID keys and a wide filler column, then builds a clustered and a nonclustered index at fill factor `100`. The second insert wave uses `ORDER BY NEWID()` to scatter rows and force page splits. Produce a rowstore table with deliberately poor fragmentation and low page density so that `REORGANIZE` and `REBUILD` effects are measurable.
 
 *Create the disposable rowstore demo object and seed it with enough randomized insert activity to generate visible fragmentation and low page density.*
 
@@ -663,10 +642,7 @@ GO
 
 #### Inspect the demo table before maintenance
 
-**When to run:** immediately after creating the demo table, before any maintenance operation.
-**Trigger:** need a pre-maintenance baseline to compare against post-REORGANIZE and post-REBUILD states.
-**Context:** T-SQL read-only DMV query in `SAMPLED` mode. The `fill_factor` column from `sys.indexes` is included so the reader can see the build-time setting alongside the current physical state.
-**Purpose:** capture fragmentation, page density, page count, and fill factor for both indexes as the "before" snapshot.
+Immediately after creating the demo table, before any maintenance operation. It is typically triggered by need a pre-maintenance baseline to compare against post-REORGANIZE and post-REBUILD states. T-SQL read-only DMV query in `SAMPLED` mode. The `fill_factor` column from `sys.indexes` is included so the reader can see the build-time setting alongside the current physical state. Capture fragmentation, page density, page count, and fill factor for both indexes as the "before" snapshot.
 
 | Field | Source Column | Type / Unit | Meaning |
 |---|---|---|---|
@@ -720,10 +696,7 @@ _This is a deliberately bad rowstore state. The clustered index is badly scatter
 
 #### Reorganize the nonclustered demo index and measure the result
 
-**When to run:** after the pre-maintenance baseline has been captured and the nonclustered index shows moderate-to-high fragmentation.
-**Trigger:** decision to apply leaf-level compaction to a specific index while preserving online access.
-**Context:** T-SQL state-changing DDL. Online operation — concurrent reads and writes continue. Only the targeted index is affected; sibling indexes remain untouched.
-**Purpose:** demonstrate that `REORGANIZE` fixes fragmentation and density on the targeted index without altering any other index on the same table.
+After the pre-maintenance baseline has been captured and the nonclustered index shows moderate-to-high fragmentation. It is typically triggered by decision to apply leaf-level compaction to a specific index while preserving online access. T-SQL state-changing DDL. Online operation — concurrent reads and writes continue. Only the targeted index is affected; sibling indexes remain untouched. Demonstrate that `REORGANIZE` fixes fragmentation and density on the targeted index without altering any other index on the same table.
 
 *Reorganize only the nonclustered demo index to show what a targeted online operation fixes and what it leaves untouched.*
 
@@ -792,10 +765,7 @@ _`REORGANIZE` fixed exactly one thing: the targeted nonclustered index. Fragment
 
 #### Rebuild a specific index online
 
-**When to run:** when fragmentation is severe (`> 30%`) on a large index, page density is materially low, or fill factor / compression settings must change.
-**Trigger:** fragmentation inventory shows a candidate exceeding the `REBUILD` threshold, or a storage-layout change is required.
-**Context:** T-SQL state-changing DDL. `ONLINE = ON` holds only intent-shared locks during the rebuild (Enterprise / Developer edition or Azure SQL). Offline rebuilds take a schema-modification lock (`Sch-M`) and block all access. Requires `ALTER` permission on the table.
-**Purpose:** drop and recreate the target index, producing a fully defragmented structure with refreshed index statistics.
+When fragmentation is severe (`> 30%`) on a large index, page density is materially low, or fill factor / compression settings must change. It is typically triggered by fragmentation inventory shows a candidate exceeding the `REBUILD` threshold, or a storage-layout change is required. T-SQL state-changing DDL. `ONLINE = ON` holds only intent-shared locks during the rebuild (Enterprise / Developer edition or Azure SQL). Offline rebuilds take a schema-modification lock (`Sch-M`) and block all access. Requires `ALTER` permission on the table. Drop and recreate the target index, producing a fully defragmented structure with refreshed index statistics.
 
 *Rebuild a specific production index with the online option when the engine and index type support it.*
 
@@ -808,10 +778,7 @@ WITH (ONLINE = ON);
 
 #### Rebuild with explicit fill factor, SORT_IN_TEMPDB, and MAXDOP
 
-**When to run:** when the rebuild must also reset the fill factor or when `tempdb` offloading and parallelism control are operationally relevant.
-**Trigger:** measured page-split pressure on the target index, or a maintenance window where `tempdb` I/O isolation is preferred.
-**Context:** same as above. `SORT_IN_TEMPDB = ON` moves intermediate sort results to `tempdb`, reducing contention on user-database files. `MAXDOP = 2` caps parallelism to limit resource use during busy periods.
-**Purpose:** rebuild with precise control over leaf-page fill, sort placement, and degree of parallelism.
+When the rebuild must also reset the fill factor or when `tempdb` offloading and parallelism control are operationally relevant. It is typically triggered by measured page-split pressure on the target index, or a maintenance window where `tempdb` I/O isolation is preferred. Same as above. `SORT_IN_TEMPDB = ON` moves intermediate sort results to `tempdb`, reducing contention on user-database files. `MAXDOP = 2` caps parallelism to limit resource use during busy periods. Rebuild with precise control over leaf-page fill, sort placement, and degree of parallelism.
 
 *Rebuild a specific index with explicit maintenance options such as fill factor, `SORT_IN_TEMPDB`, and `MAXDOP`.*
 
@@ -847,10 +814,7 @@ WITH (
 
 #### Rebuild only the clustered demo index with a lower fill factor
 
-**When to run:** when a specific index needs a full rewrite and the fill factor must change at the same time.
-**Trigger:** the pre-maintenance baseline showed severe fragmentation and low density on the clustered index, and the GUID key pattern justifies a lower fill factor.
-**Context:** T-SQL state-changing DDL. Only the targeted clustered index is rebuilt; sibling nonclustered indexes remain untouched.
-**Purpose:** demonstrate that a targeted `REBUILD` fixes the specified index without affecting other indexes on the same table, and that the new fill factor is applied.
+When a specific index needs a full rewrite and the fill factor must change at the same time. It is typically triggered by the pre-maintenance baseline showed severe fragmentation and low density on the clustered index, and the GUID key pattern justifies a lower fill factor. T-SQL state-changing DDL. Only the targeted clustered index is rebuilt; sibling nonclustered indexes remain untouched. Demonstrate that a targeted `REBUILD` fixes the specified index without affecting other indexes on the same table, and that the new fill factor is applied.
 
 *Rebuild only the clustered demo index and lower its fill factor to `90` so the effect on the target index and the untouched sibling index is visible.*
 
@@ -901,10 +865,7 @@ _The clustered index is now healthy: fragmentation is almost zero and page densi
 
 #### Rebuild all indexes on a table
 
-**When to run:** when every index on a table needs a full rewrite, typically after a major data operation or when consolidating maintenance into a single pass.
-**Trigger:** all indexes on the table show poor fragmentation and density, and the maintenance window is wide enough for a full rebuild.
-**Context:** T-SQL state-changing DDL. `ALTER INDEX ALL` rebuilds every index on the table. The `ONLINE = ON` option applies to all eligible indexes; ineligible ones (e.g., XML, spatial) fall back to offline.
-**Purpose:** demonstrate the difference between a targeted single-index rebuild and a table-wide rebuild.
+When every index on a table needs a full rewrite, typically after a major data operation or when consolidating maintenance into a single pass. It is typically triggered by all indexes on the table show poor fragmentation and density, and the maintenance window is wide enough for a full rebuild. T-SQL state-changing DDL. `ALTER INDEX ALL` rebuilds every index on the table. The `ONLINE = ON` option applies to all eligible indexes; ineligible ones (e.g., XML, spatial) fall back to offline. Demonstrate the difference between a targeted single-index rebuild and a table-wide rebuild.
 
 *Rebuild every index on the rowstore demo table to show the difference between a targeted rebuild and a table-wide rebuild.*
 
@@ -975,10 +936,7 @@ Columnstore maintenance is a different problem. The relevant questions are not B
 
 #### Create the disposable columnstore demo table
 
-**When to run:** once, at the start of the columnstore maintenance walkthrough.
-**Trigger:** starting a hands-on columnstore maintenance lab session.
-**Context:** T-SQL state-changing DDL and DML. Creates `dbo.demo_idxmaint_columnstore` in `stoxx`, inserts two full batches (~134 K rows), builds a clustered columnstore index, deletes ~7% of batch 1 to create deleted-row pressure, then inserts a small batch 3 (5,000 rows) to leave an open delta rowgroup.
-**Purpose:** produce a columnstore table with one compressed rowgroup carrying deleted-row burden and one open delta rowgroup so both `REORGANIZE` and `REBUILD` effects are observable.
+Once, at the start of the columnstore maintenance walkthrough. It is typically triggered by starting a hands-on columnstore maintenance lab session. T-SQL state-changing DDL and DML. Creates `dbo.demo_idxmaint_columnstore` in `stoxx`, inserts two full batches (~134 K rows), builds a clustered columnstore index, deletes ~7% of batch 1 to create deleted-row pressure, then inserts a small batch 3 (5,000 rows) to leave an open delta rowgroup. Produce a columnstore table with one compressed rowgroup carrying deleted-row burden and one open delta rowgroup so both `REORGANIZE` and `REBUILD` effects are observable.
 
 *Create the disposable columnstore demo object and seed it with rowgroup states that make `REORGANIZE` and `REBUILD` observable.*
 
@@ -1033,10 +991,7 @@ GO
 
 #### Inspect columnstore rowgroup state before maintenance
 
-**When to run:** before any columnstore maintenance operation, to capture the baseline rowgroup distribution.
-**Trigger:** need to understand how many rowgroups are compressed, how many are open or closed delta stores, and what deleted-row pressure exists.
-**Context:** T-SQL read-only DMV query against `sys.dm_db_column_store_row_group_physical_stats`. Requires `VIEW DATABASE STATE`.
-**Purpose:** capture rowgroup counts, total and deleted rows, and size per state so post-maintenance results can be compared.
+Before any columnstore maintenance operation, to capture the baseline rowgroup distribution. It is typically triggered by need to understand how many rowgroups are compressed, how many are open or closed delta stores, and what deleted-row pressure exists. T-SQL read-only DMV query against `sys.dm_db_column_store_row_group_physical_stats`. Requires `VIEW DATABASE STATE`. Capture rowgroup counts, total and deleted rows, and size per state so post-maintenance results can be compared.
 
 | Field | Source Column | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1078,10 +1033,7 @@ _This is a classic columnstore maintenance target. One compressed rowgroup alrea
 
 #### Reorganize the columnstore index and force delta compression
 
-**When to run:** when open or closed delta rowgroups need to be compressed into columnstore format without taking the index offline.
-**Trigger:** inspection shows `OPEN` or `CLOSED` delta rowgroups that should be compressed, or routine columnstore maintenance cycle.
-**Context:** T-SQL state-changing DDL. Online operation. `COMPRESS_ALL_ROW_GROUPS = ON` forces both open and closed delta rowgroups into compressed format.
-**Purpose:** compress pending delta rowgroups into columnstore storage without a full rebuild.
+When open or closed delta rowgroups need to be compressed into columnstore format without taking the index offline. It is typically triggered by inspection shows `OPEN` or `CLOSED` delta rowgroups that should be compressed, or routine columnstore maintenance cycle. T-SQL state-changing DDL. Online operation. `COMPRESS_ALL_ROW_GROUPS = ON` forces both open and closed delta rowgroups into compressed format. Compress pending delta rowgroups into columnstore storage without a full rebuild.
 
 *Reorganize the columnstore demo object and force compression of all eligible rowgroups.*
 
@@ -1116,10 +1068,7 @@ _`REORGANIZE` did exactly what it should do here: the open delta rowgroup was fo
 
 #### Rebuild the columnstore index to eliminate deleted-row burden
 
-**When to run:** when `REORGANIZE` alone cannot resolve significant deleted-row pressure, or when rowgroup quality has degraded enough to justify a full rewrite.
-**Trigger:** post-REORGANIZE inspection still shows high deleted-row ratios in compressed rowgroups, or storage layout must be reset.
-**Context:** T-SQL state-changing DDL. `REBUILD` drops and recreates the entire columnstore, merging all data into new optimally-sized rowgroups with zero deleted rows.
-**Purpose:** produce the cleanest possible columnstore state by rewriting all data into fresh compressed rowgroups.
+When `REORGANIZE` alone cannot resolve significant deleted-row pressure, or when rowgroup quality has degraded enough to justify a full rewrite. It is typically triggered by post-REORGANIZE inspection still shows high deleted-row ratios in compressed rowgroups, or storage layout must be reset. T-SQL state-changing DDL. `REBUILD` drops and recreates the entire columnstore, merging all data into new optimally-sized rowgroups with zero deleted rows. Produce the cleanest possible columnstore state by rewriting all data into fresh compressed rowgroups.
 
 *Rebuild the columnstore demo index when a full rewrite is justified.*
 
@@ -1172,10 +1121,7 @@ Resumable rebuilds exist for cases where an online rebuild is correct but the op
 
 #### Start a resumable online rebuild and pause it
 
-**When to run:** when the maintenance window may not be long enough to complete the entire rebuild in one pass.
-**Trigger:** a large index needs `REBUILD`, but the operation must be interruptible without losing progress.
-**Context:** T-SQL state-changing DDL. `RESUMABLE = ON` requires `ONLINE = ON`. The operation can be paused with `ALTER INDEX ... PAUSE`, resumed later, or aborted. While paused, both index versions coexist and DML maintains both.
-**Purpose:** demonstrate the lifecycle of a resumable rebuild: start, pause, inspect paused state, resume to completion.
+When the maintenance window may not be long enough to complete the entire rebuild in one pass. It is typically triggered by a large index needs `REBUILD`, but the operation must be interruptible without losing progress. T-SQL state-changing DDL. `RESUMABLE = ON` requires `ONLINE = ON`. The operation can be paused with `ALTER INDEX ... PAUSE`, resumed later, or aborted. While paused, both index versions coexist and DML maintains both. Demonstrate the lifecycle of a resumable rebuild: start, pause, inspect paused state, resume to completion.
 
 *Start a resumable online rebuild against the rowstore demo object.*
 
@@ -1200,10 +1146,7 @@ PAUSE;
 
 #### Inspect the paused resumable operation
 
-**When to run:** after pausing a resumable rebuild, or during a monitoring sweep to detect forgotten paused operations.
-**Trigger:** need to verify the current state, completion percentage, and storage overhead of a paused resumable rebuild.
-**Context:** T-SQL read-only DMV query against `sys.index_resumable_operations`. Requires `VIEW DATABASE STATE`.
-**Purpose:** confirm that the operation is paused, check how far it has progressed, and assess the storage cost of the in-progress replacement structure.
+After pausing a resumable rebuild, or during a monitoring sweep to detect forgotten paused operations. It is typically triggered by need to verify the current state, completion percentage, and storage overhead of a paused resumable rebuild. T-SQL read-only DMV query against `sys.index_resumable_operations`. Requires `VIEW DATABASE STATE`. Confirm that the operation is paused, check how far it has progressed, and assess the storage cost of the in-progress replacement structure.
 
 | Field | Source Column | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1243,10 +1186,7 @@ _This is a real paused resumable rebuild. The operation had completed about `61.
 
 #### Resume a paused rebuilds and verify completion
 
-**When to run:** when the next maintenance window opens and the paused operation should continue.
-**Trigger:** scheduled maintenance window start, or the operator is ready to let the rebuild finish.
-**Context:** T-SQL state-changing DDL. `RESUME` picks up where the rebuild left off. After completion, the row disappears from `sys.index_resumable_operations`.
-**Purpose:** complete the interrupted rebuild and confirm the operation is no longer tracked as in-progress.
+When the next maintenance window opens and the paused operation should continue. It is typically triggered by scheduled maintenance window start, or the operator is ready to let the rebuild finish. T-SQL state-changing DDL. `RESUME` picks up where the rebuild left off. After completion, the row disappears from `sys.index_resumable_operations`. Complete the interrupted rebuild and confirm the operation is no longer tracked as in-progress.
 
 *Resume a paused resumable rebuild.*
 
@@ -1276,10 +1216,7 @@ _No rows remain, which means there is no active or paused resumable operation fo
 
 #### Abort a paused resumable rebuild
 
-**When to run:** when a paused resumable rebuild should be discarded rather than completed — for example, if the maintenance plan has changed or the index design has been revised.
-**Trigger:** decision to abandon the in-progress rebuild and release the storage consumed by the partial replacement structure.
-**Context:** T-SQL state-changing DDL. `ABORT` discards the partial replacement index and removes the row from `sys.index_resumable_operations`. The original index remains in place unchanged.
-**Purpose:** demonstrate the abort path for a paused resumable rebuild and confirm that the operation is fully cleaned up.
+When a paused resumable rebuild should be discarded rather than completed — for example, if the maintenance plan has changed or the index design has been revised. It is typically triggered by decision to abandon the in-progress rebuild and release the storage consumed by the partial replacement structure. T-SQL state-changing DDL. `ABORT` discards the partial replacement index and removes the row from `sys.index_resumable_operations`. The original index remains in place unchanged. Demonstrate the abort path for a paused resumable rebuild and confirm that the operation is fully cleaned up.
 
 *Start and pause a new resumable rebuild so `ABORT` can be demonstrated against a live paused operation.*
 
@@ -1353,10 +1290,7 @@ Fill factor is not a universal tuning knob. It is a targeted response to page-sp
 
 #### Check the server-wide default fill factor
 
-**When to run:** before changing fill factor on any index, to understand the server-level baseline.
-**Trigger:** beginning a fill-factor review or configuring a new instance.
-**Context:** T-SQL read-only query against `sys.configurations`. Requires `VIEW SERVER STATE`.
-**Purpose:** confirm the server-wide fill factor default so index-level overrides are applied knowingly rather than accidentally.
+Before changing fill factor on any index, to understand the server-level baseline. It is typically triggered by beginning a fill-factor review or configuring a new instance. T-SQL read-only query against `sys.configurations`. Requires `VIEW SERVER STATE`. Confirm the server-wide fill factor default so index-level overrides are applied knowingly rather than accidentally.
 
 | Field | Source Column | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1391,10 +1325,7 @@ _The server default is `0`, which SQL Server interprets as fully packed pages. T
 
 #### Create a GUID-keyed demo table and measure page-split pressure
 
-**When to run:** when evaluating whether a specific index needs a lower fill factor, and direct page-split evidence is required rather than fragmentation alone.
-**Trigger:** fill-factor discussion for a random-key (e.g., GUID) or heavily-updated index.
-**Context:** T-SQL state-changing DDL and DML to create and populate `dbo.demo_idxmaint_splits`, followed by a read-only cross-DMV query combining `sys.dm_db_index_operational_stats` (split counters) with `sys.dm_db_index_physical_stats` (density and fragmentation). Requires `VIEW DATABASE STATE`.
-**Purpose:** show that fill-factor decisions should be driven by operational evidence (leaf allocation count, page merge count) paired with physical state, not by fragmentation percentage alone.
+When evaluating whether a specific index needs a lower fill factor, and direct page-split evidence is required rather than fragmentation alone. It is typically triggered by fill-factor discussion for a random-key (e.g., GUID) or heavily-updated index. T-SQL state-changing DDL and DML to create and populate `dbo.demo_idxmaint_splits`, followed by a read-only cross-DMV query combining `sys.dm_db_index_operational_stats` (split counters) with `sys.dm_db_index_physical_stats` (density and fragmentation). Requires `VIEW DATABASE STATE`. Show that fill-factor decisions should be driven by operational evidence (leaf allocation count, page merge count) paired with physical state, not by fragmentation percentage alone.
 
 *Create a random-insert rowstore table and inspect its page-split evidence after sustained GUID-based insert activity.*
 
@@ -1442,10 +1373,7 @@ GO
 
 #### Measure page-split and density evidence
 
-**When to run:** after the demo table has been populated with enough random-key inserts to generate measurable split activity.
-**Trigger:** need to quantify split pressure before making a fill-factor change.
-**Context:** T-SQL read-only query. Combines `sys.dm_db_index_operational_stats` (split and merge counters) with `sys.dm_db_index_physical_stats` (density and fragmentation) via `CROSS APPLY`.
-**Purpose:** produce a single row showing both the operational write-cost evidence and the physical state of the index so the fill-factor decision has concrete data.
+After the demo table has been populated with enough random-key inserts to generate measurable split activity. It is typically triggered by need to quantify split pressure before making a fill-factor change. T-SQL read-only query. Combines `sys.dm_db_index_operational_stats` (split and merge counters) with `sys.dm_db_index_physical_stats` (density and fragmentation) via `CROSS APPLY`. Produce a single row showing both the operational write-cost evidence and the physical state of the index so the fill-factor decision has concrete data.
 
 > [!info]- Query breakdown for page-split evidence
 >
@@ -1537,10 +1465,7 @@ Statistics and index maintenance intersect constantly. `REBUILD` refreshes index
 
 #### Insert rows to create stale statistics
 
-**When to run:** this step is part of the demo sequence — it simulates a data load that makes existing statistics stale.
-**Trigger:** need to demonstrate the before/after effect of `UPDATE STATISTICS`.
-**Context:** T-SQL state-changing DML. Inserts 25,000 randomized rows into the existing demo table.
-**Purpose:** increase `modification_counter` on the table's statistics objects so the subsequent `UPDATE STATISTICS` has a visible effect.
+This step is part of the demo sequence — it simulates a data load that makes existing statistics stale. It is typically triggered by need to demonstrate the before/after effect of `UPDATE STATISTICS`. T-SQL state-changing DML. Inserts 25,000 randomized rows into the existing demo table. Increase `modification_counter` on the table's statistics objects so the subsequent `UPDATE STATISTICS` has a visible effect.
 
 *Add another batch of randomized rows to the rowstore demo object so its statistics become stale again.*
 
@@ -1571,10 +1496,7 @@ ORDER BY NEWID();
 
 #### Inspect statistics properties before refresh
 
-**When to run:** before running `UPDATE STATISTICS`, to capture the baseline staleness metrics.
-**Trigger:** need a "before" snapshot for comparison.
-**Context:** T-SQL read-only query. `sys.dm_db_stats_properties` returns per-statistic metadata including row counts, sample sizes, modification counters, and timestamps.
-**Purpose:** establish how stale each statistics object is before the manual refresh.
+Before running `UPDATE STATISTICS`, to capture the baseline staleness metrics. It is typically triggered by need a "before" snapshot for comparison. T-SQL read-only query. `sys.dm_db_stats_properties` returns per-statistic metadata including row counts, sample sizes, modification counters, and timestamps. Establish how stale each statistics object is before the manual refresh.
 
 | Field | Source Column | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1624,10 +1546,7 @@ _Both index-backed statistics are stale before the manual refresh, but for diffe
 
 #### Refresh statistics with FULLSCAN and verify
 
-**When to run:** after a large data load, `REORGANIZE`, or any operation that materially changes the data distribution on a plan-sensitive table.
-**Trigger:** `modification_counter` is high enough to affect cardinality estimates, or post-REORGANIZE maintenance step.
-**Context:** T-SQL state-changing statement. `UPDATE STATISTICS ... WITH FULLSCAN` reads every row to rebuild the histogram. Can be expensive on large tables — use targeted `FULLSCAN` on plan-sensitive tables and default sampling for broad sweeps.
-**Purpose:** reset `modification_counter` to `0`, update `rows` and `rows_sampled` to the current count, and produce the highest-quality histogram.
+After a large data load, `REORGANIZE`, or any operation that materially changes the data distribution on a plan-sensitive table. It is typically triggered by `modification_counter` is high enough to affect cardinality estimates, or post-REORGANIZE maintenance step. T-SQL state-changing statement. `UPDATE STATISTICS ... WITH FULLSCAN` reads every row to rebuild the histogram. Can be expensive on large tables — use targeted `FULLSCAN` on plan-sensitive tables and default sampling for broad sweeps. Reset `modification_counter` to `0`, update `rows` and `rows_sampled` to the current count, and produce the highest-quality histogram.
 
 | Option | Syntax | Default | Description |
 |---|---|---|---|
@@ -1677,10 +1596,7 @@ _The post-refresh state is what `FULLSCAN` should produce. Both statistics objec
 
 #### Run a broad database sweep with sp_updatestats
 
-**When to run:** as a general maintenance step when default sampling is acceptable and only modified statistics need refreshing.
-**Trigger:** routine maintenance window, or after `REORGANIZE` when targeted `FULLSCAN` is not justified for every table.
-**Context:** T-SQL stored procedure. Updates only statistics whose `modification_counter > 0`. Uses default adaptive sampling (not `FULLSCAN`).
-**Purpose:** refresh stale statistics across the entire database with minimal operator effort.
+As a general maintenance step when default sampling is acceptable and only modified statistics need refreshing. It is typically triggered by routine maintenance window, or after `REORGANIZE` when targeted `FULLSCAN` is not justified for every table. T-SQL stored procedure. Updates only statistics whose `modification_counter > 0`. Uses default adaptive sampling (not `FULLSCAN`). Refresh stale statistics across the entire database with minimal operator effort.
 
 *Run a broad database sweep that updates only statistics SQL Server considers changed enough to refresh.*
 
@@ -1690,10 +1606,7 @@ EXEC sp_updatestats;
 
 #### Find the most stale statistics in the database
 
-**When to run:** after a broad maintenance sweep or at any time to rank statistics staleness across all user tables.
-**Trigger:** need to identify which statistics objects are most out of date and may be causing plan-quality issues.
-**Context:** T-SQL read-only query. Joins `sys.stats` with `sys.dm_db_stats_properties` and filters to user tables with `modification_counter > 0`.
-**Purpose:** rank all stale statistics by modification count so the operator can decide which tables need targeted `FULLSCAN` attention.
+After a broad maintenance sweep or at any time to rank statistics staleness across all user tables. It is typically triggered by need to identify which statistics objects are most out of date and may be causing plan-quality issues. T-SQL read-only query. Joins `sys.stats` with `sys.dm_db_stats_properties` and filters to user tables with `modification_counter > 0`. Rank all stale statistics by modification count so the operator can decide which tables need targeted `FULLSCAN` attention.
 
 | Field | Source Column | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1748,10 +1661,7 @@ _This database-wide view is how stale-statistics risk should be ranked in produc
 
 #### Create the usage-analysis demo table and generate workload
 
-**When to run:** once, at the start of the index-discovery walkthrough.
-**Trigger:** starting a hands-on index-discovery lab session.
-**Context:** T-SQL state-changing DDL and DML. Creates `dbo.demo_idxmaint_usage` with a clustered PK, one useful composite nonclustered index `(symbol, trade_date) INCLUDE (metric_value)`, and one extra nonclustered index on `(category)`. Then runs targeted seeks against the composite index and an `UPDATE` against the table so `sys.dm_db_index_usage_stats` has read and write evidence to report.
-**Purpose:** produce a table where one nonclustered index is clearly useful (serving seeks) and another has only write overhead (no reads), so the discovery queries surface both patterns.
+Once, at the start of the index-discovery walkthrough. It is typically triggered by starting a hands-on index-discovery lab session. T-SQL state-changing DDL and DML. Creates `dbo.demo_idxmaint_usage` with a clustered PK, one useful composite nonclustered index `(symbol, trade_date) INCLUDE (metric_value)`, and one extra nonclustered index on `(category)`. Then runs targeted seeks against the composite index and an `UPDATE` against the table so `sys.dm_db_index_usage_stats` has read and write evidence to report. Produce a table where one nonclustered index is clearly useful (serving seeks) and another has only write overhead (no reads), so the discovery queries surface both patterns.
 
 *Create the disposable usage-analysis table and generate enough reads and writes for `sys.dm_db_index_usage_stats` to be meaningful.*
 
@@ -1818,10 +1728,7 @@ GO
 
 #### List all indexes with key columns, includes, and properties
 
-**When to run:** before any drop, create, or maintenance decision — to know exactly what indexes exist and how each is shaped.
-**Trigger:** beginning an index review for a specific table, or after receiving a missing-index suggestion to check for overlap.
-**Context:** T-SQL read-only query joining `sys.indexes`, `sys.index_columns`, and `sys.columns`. Uses `STRING_AGG` (SQL Server 2017+) to concatenate key and included column names. Requires `VIEW DEFINITION`.
-**Purpose:** produce a single-row-per-index inventory showing key columns, included columns, uniqueness, locking properties, filter definitions, and fill factor.
+Before any drop, create, or maintenance decision — to know exactly what indexes exist and how each is shaped. It is typically triggered by beginning an index review for a specific table, or after receiving a missing-index suggestion to check for overlap. T-SQL read-only query joining `sys.indexes`, `sys.index_columns`, and `sys.columns`. Uses `STRING_AGG` (SQL Server 2017+) to concatenate key and included column names. Requires `VIEW DEFINITION`. Produce a single-row-per-index inventory showing key columns, included columns, uniqueness, locking properties, filter definitions, and fill factor.
 
 > [!info]- Query breakdown for index metadata inventory
 >
@@ -1914,10 +1821,7 @@ _This output is the structural inventory you need before any drop or create deci
 
 #### Inspect index read and write activity
 
-**When to run:** after the instance has been running long enough to accumulate representative workload evidence (at minimum one full business cycle).
-**Trigger:** index review to identify unused indexes or validate that recently created indexes are serving reads.
-**Context:** T-SQL read-only DMV query. `sys.dm_db_index_usage_stats` counters reset on engine restart. Requires `VIEW DATABASE STATE`.
-**Purpose:** show how many seeks, scans, lookups, and updates each index has accumulated so read benefit can be weighed against write cost.
+After the instance has been running long enough to accumulate representative workload evidence (at minimum one full business cycle). It is typically triggered by index review to identify unused indexes or validate that recently created indexes are serving reads. T-SQL read-only DMV query. `sys.dm_db_index_usage_stats` counters reset on engine restart. Requires `VIEW DATABASE STATE`. Show how many seeks, scans, lookups, and updates each index has accumulated so read benefit can be weighed against write cost.
 
 | Field | Source Column | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1979,10 +1883,7 @@ _The evidence is clear even on a short uptime window. The `(symbol, trade_date)`
 
 #### Filter to nonclustered indexes with zero reads and ongoing writes
 
-**When to run:** after adequate uptime, as part of a monthly or quarterly index review.
-**Trigger:** need to identify indexes that cost write maintenance without serving any observed read benefit.
-**Context:** T-SQL read-only DMV query. Filters `sys.dm_db_index_usage_stats` to nonclustered indexes where `user_seeks + user_scans + user_lookups = 0` and `user_updates > 0`. Excludes primary keys and unique constraints because those have semantic value beyond read performance.
-**Purpose:** surface "pure write overhead" candidates for disable-and-observe or eventual drop.
+After adequate uptime, as part of a monthly or quarterly index review. It is typically triggered by need to identify indexes that cost write maintenance without serving any observed read benefit. T-SQL read-only DMV query. Filters `sys.dm_db_index_usage_stats` to nonclustered indexes where `user_seeks + user_scans + user_lookups = 0` and `user_updates > 0`. Excludes primary keys and unique constraints because those have semantic value beyond read performance. Surface "pure write overhead" candidates for disable-and-observe or eventual drop.
 
 *Filter the usage DMV down to nonclustered indexes that have not served a single read but are still being maintained by writes.*
 
@@ -2041,10 +1942,7 @@ _This is the textbook "pure write overhead" pattern: no seeks, no scans, no look
 
 #### Create the missing-index demo table and run a selective workload
 
-**When to run:** once, at the start of the missing-index walkthrough.
-**Trigger:** starting a hands-on missing-index lab session.
-**Context:** T-SQL state-changing DDL and DML. Creates `dbo.demo_idxmaint_missing` with only a clustered PK (no useful secondary index), then runs a looped selective query 10 times so the optimizer records a missing-index suggestion.
-**Purpose:** produce a real missing-index DMV entry with meaningful seek counts and impact estimates.
+Once, at the start of the missing-index walkthrough. It is typically triggered by starting a hands-on missing-index lab session. T-SQL state-changing DDL and DML. Creates `dbo.demo_idxmaint_missing` with only a clustered PK (no useful secondary index), then runs a looped selective query 10 times so the optimizer records a missing-index suggestion. Produce a real missing-index DMV entry with meaningful seek counts and impact estimates.
 
 *Create the disposable missing-index demo object with only a clustered primary key.*
 
@@ -2120,10 +2018,7 @@ END;
 
 #### Query the missing-index DMVs and rank by improvement measure
 
-**When to run:** after adequate uptime, or after a specific selective workload has run enough times to generate meaningful optimizer requests.
-**Trigger:** monthly index review, or investigation into slow queries that lack appropriate nonclustered indexes.
-**Context:** T-SQL read-only DMV query joining `sys.dm_db_missing_index_group_stats`, `sys.dm_db_missing_index_groups`, and `sys.dm_db_missing_index_details`. Requires `VIEW DATABASE STATE`.
-**Purpose:** rank missing-index suggestions by the common `improvement_measure` heuristic (cost × impact × frequency) and surface the equality, inequality, and included column recommendations.
+After adequate uptime, or after a specific selective workload has run enough times to generate meaningful optimizer requests. It is typically triggered by monthly index review, or investigation into slow queries that lack appropriate nonclustered indexes. T-SQL read-only DMV query joining `sys.dm_db_missing_index_group_stats`, `sys.dm_db_missing_index_groups`, and `sys.dm_db_missing_index_details`. Requires `VIEW DATABASE STATE`. Rank missing-index suggestions by the common `improvement_measure` heuristic (cost × impact × frequency) and surface the equality, inequality, and included column recommendations.
 
 > [!info]- Query breakdown for missing-index DMVs
 >
@@ -2228,10 +2123,7 @@ For automation, prefer a battle-tested maintenance solution such as **Ola Hallen
 
 #### Production IndexOptimize example
 
-**When to run:** nightly maintenance window for all user databases.
-**Trigger:** scheduled SQL Agent job.
-**Context:** T-SQL stored procedure. Requires the Ola Hallengren Maintenance Solution to be installed (creates `dbo.IndexOptimize`, `dbo.CommandLog`, etc.). The procedure evaluates every eligible index, applies the fragmentation-tier action, updates modified statistics, and logs every operation.
-**Purpose:** automate evidence-based index and statistics maintenance with time-limiting and logging.
+Nightly maintenance window for all user databases. It is typically triggered by scheduled SQL Agent job. T-SQL stored procedure. Requires the Ola Hallengren Maintenance Solution to be installed (creates `dbo.IndexOptimize`, `dbo.CommandLog`, etc.). The procedure evaluates every eligible index, applies the fragmentation-tier action, updates modified statistics, and logs every operation. Automate evidence-based index and statistics maintenance with time-limiting and logging.
 
 *Run `IndexOptimize` across all user databases with standard fragmentation tiers, modified-statistics-only refresh, a 4-hour time limit, and command logging enabled.*
 

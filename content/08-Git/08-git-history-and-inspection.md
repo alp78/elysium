@@ -323,10 +323,7 @@ Three distinct histories exist in every Git repository:
 
 #### Display compact one-line history
 
-**When to run:** As a first step when investigating any change --- to get a quick overview of recent activity.
-**Trigger:** Starting a debugging session, reviewing what landed since last pull, or orienting in an unfamiliar repository.
-**Context:** Read-only. Runs locally. No permissions required beyond repository access.
-**Purpose:** See the most recent commits at a glance with minimal noise.
+As a first step when investigating any change --- to get a quick overview of recent activity. It is typically triggered by starting a debugging session, reviewing what landed since last pull, or orienting in an unfamiliar repository. Read-only. Runs locally. No permissions required beyond repository access. See the most recent commits at a glance with minimal noise.
 
 The `--oneline` flag condenses each commit to a single line: the abbreviated 7-character SHA followed by the first line of the commit message. This is the most common starting point for browsing history.
 
@@ -358,10 +355,7 @@ Each line reads as: `<short-SHA> <commit-message-first-line>`. The `-15` flag li
 
 #### Display the branch DAG as an ASCII graph
 
-**When to run:** When you need to understand branch topology --- where branches diverged, where merges happened, and which commits are on which branch.
-**Trigger:** Investigating a merge conflict, understanding PR history, or verifying that a rebase produced the expected linear history.
-**Context:** Read-only. The `--all` flag includes all branches (local and remote-tracking), not just the currently checked-out branch.
-**Purpose:** Visualize the commit DAG structure including branch and merge points.
+When you need to understand branch topology --- where branches diverged, where merges happened, and which commits are on which branch. It is typically triggered by investigating a merge conflict, understanding PR history, or verifying that a rebase produced the expected linear history. Read-only. The `--all` flag includes all branches (local and remote-tracking), not just the currently checked-out branch. Visualize the commit DAG structure including branch and merge points.
 
 > [!info]- Flag breakdown
 >
@@ -412,10 +406,7 @@ The `*` marks each commit. The `|`, `/`, and `\` characters draw the branch line
 
 #### Filter commits by author
 
-**When to run:** When reviewing a specific contributor's work --- for code review, sprint audits, or investigating who changed a specific area.
-**Trigger:** Preparing a review, auditing contributions, or tracing a change to its author.
-**Context:** Read-only. The `--author` flag accepts a substring match against the author name or email. Case-insensitive.
-**Purpose:** Narrow the log to commits from a specific person.
+When reviewing a specific contributor's work --- for code review, sprint audits, or investigating who changed a specific area. It is typically triggered by preparing a review, auditing contributions, or tracing a change to its author. Read-only. The `--author` flag accepts a substring match against the author name or email. Case-insensitive. Narrow the log to commits from a specific person.
 
 *Show the last 10 commits by author `alp78`.*
 
@@ -444,10 +435,7 @@ git log --author="alp78" --since="2026-04-01" --until="2026-04-13" --oneline
 
 #### View the history of a specific file
 
-**When to run:** When investigating the evolution of a single file --- how it changed over time, who changed it, and why.
-**Trigger:** Debugging a regression in a specific module, reviewing the change history of a configuration file, or auditing who modified a sensitive file.
-**Context:** Read-only. The `--` separator prevents Git from confusing the file path with a branch name.
-**Purpose:** Show only commits that touched the specified file.
+When investigating the evolution of a single file --- how it changed over time, who changed it, and why. It is typically triggered by debugging a regression in a specific module, reviewing the change history of a configuration file, or auditing who modified a sensitive file. Read-only. The `--` separator prevents Git from confusing the file path with a branch name. Show only commits that touched the specified file.
 
 *Show all commits that modified `config.py`.*
 
@@ -475,10 +463,7 @@ The `--` is a safety separator: it tells Git that everything after it is a file 
 
 #### View commit count per author
 
-**When to run:** When auditing contribution distribution across the team.
-**Trigger:** Sprint retrospectives, open-source contribution reviews, or identifying domain experts for a specific area.
-**Context:** Read-only. `--all` includes all branches.
-**Purpose:** Summarize total commit count per author.
+When auditing contribution distribution across the team. It is typically triggered by sprint retrospectives, open-source contribution reviews, or identifying domain experts for a specific area. Read-only. `--all` includes all branches. Summarize total commit count per author.
 
 `git shortlog` groups commits by author. The `-s` flag shows only the count (suppresses individual commit messages), and `-n` sorts by count descending.
 
@@ -497,10 +482,7 @@ Notice that the same person appears as two identities (`alp78` and `alp`) due to
 
 #### Normalize author identities with .mailmap
 
-**When to run:** When `git shortlog` or `git log` shows the same person under multiple names or emails, distorting contribution counts and audit trails.
-**Trigger:** Onboarding audit, compliance review, or any time you need accurate per-author statistics across repository history.
-**Context:** Read-only for reporting purposes. The `.mailmap` file is committed to the repository root. Once present, `git shortlog`, `git blame`, and any command using `%aN`/`%aE` format placeholders will automatically resolve identities.
-**Purpose:** Map multiple author identities to a single canonical name and email so that audit counts, blame attribution, and contribution stats are accurate.
+When `git shortlog` or `git log` shows the same person under multiple names or emails, distorting contribution counts and audit trails. It is typically triggered by onboarding audit, compliance review, or any time you need accurate per-author statistics across repository history. Read-only for reporting purposes. The `.mailmap` file is committed to the repository root. Once present, `git shortlog`, `git blame`, and any command using `%aN`/`%aE` format placeholders will automatically resolve identities. Map multiple author identities to a single canonical name and email so that audit counts, blame attribution, and contribution stats are accurate.
 
 A `.mailmap` file maps alternate identities to a canonical form. The syntax is:
 
@@ -530,10 +512,7 @@ The 9 commits previously attributed to `alp` are now correctly counted under `al
 
 #### Search commit messages with --grep
 
-**When to run:** When you know a keyword or issue number appeared in a commit message and need to find those commits.
-**Trigger:** Looking for all commits that reference a bug fix, a ticket number, or a feature name.
-**Context:** Read-only. Case-sensitive by default; add `-i` for case-insensitive matching. The pattern is a basic regular expression.
-**Purpose:** Filter the log to commits whose message matches a pattern.
+When you know a keyword or issue number appeared in a commit message and need to find those commits. It is typically triggered by looking for all commits that reference a bug fix, a ticket number, or a feature name. Read-only. Case-sensitive by default; add `-i` for case-insensitive matching. The pattern is a basic regular expression. Filter the log to commits whose message matches a pattern.
 
 *Find all commits with "fix" in the message.*
 
@@ -551,10 +530,7 @@ git log --grep="fix" --oneline
 
 #### Find when code was introduced or removed with -S (pickaxe)
 
-**When to run:** When you need to find the exact commit that introduced a function, variable, constant, or configuration value --- or when it was removed.
-**Trigger:** Investigating when a specific feature was added, when a deprecated function was removed, or tracing the origin of a configuration constant.
-**Context:** Read-only. `-S` searches for commits where the number of occurrences of the given string changed. This is different from `--grep`, which searches commit messages.
-**Purpose:** Identify the commit that added or removed a specific string from the codebase.
+When you need to find the exact commit that introduced a function, variable, constant, or configuration value --- or when it was removed. It is typically triggered by investigating when a specific feature was added, when a deprecated function was removed, or tracing the origin of a configuration constant. Read-only. `-S` searches for commits where the number of occurrences of the given string changed. This is different from `--grep`, which searches commit messages. Identify the commit that added or removed a specific string from the codebase.
 
 > [!info] Pickaxe vs grep
 >
@@ -575,10 +551,7 @@ These two commits are the ones where `CACHE_TTL` first appeared (`102afc6`) and 
 
 #### View full diffs per commit with -p
 
-**When to run:** When you need to see exactly what changed in each commit, line by line --- the most thorough tool for root-cause analysis.
-**Trigger:** Investigating a regression, reviewing the full change history of a file, or auditing every modification made to a sensitive configuration.
-**Context:** Read-only. Combines well with `-- file` to limit output to a single file.
-**Purpose:** Show the complete patch (diff) for each commit.
+When you need to see exactly what changed in each commit, line by line --- the most thorough tool for root-cause analysis. It is typically triggered by investigating a regression, reviewing the full change history of a file, or auditing every modification made to a sensitive configuration. Read-only. Combines well with `-- file` to limit output to a single file. Show the complete patch (diff) for each commit.
 
 *Show the full diff for each commit that touched `config.py`.*
 
@@ -637,10 +610,7 @@ Reading bottom-to-top: `102afc6` created `config.py` with `CACHE_TTL = 300`. The
 
 #### Use range notation to scope history
 
-**When to run:** When you need to see only the commits between two specific points in history --- for example, what landed between two releases, or what a branch added since it diverged.
-**Trigger:** Release audits, PR reviews, or investigating what changed between a known-good state and the current state.
-**Context:** Read-only. Two-dot (`A..B`) and three-dot (`A...B`) have different meanings.
-**Purpose:** Limit log output to a specific range of commits.
+When you need to see only the commits between two specific points in history --- for example, what landed between two releases, or what a branch added since it diverged. It is typically triggered by release audits, PR reviews, or investigating what changed between a known-good state and the current state. Read-only. Two-dot (`A..B`) and three-dot (`A...B`) have different meanings. Limit log output to a specific range of commits.
 
 Two range notations exist:
 
@@ -694,10 +664,7 @@ Lines prefixed with `<` are commits only on `main`. Lines prefixed with `>` are 
 
 #### Use custom format strings
 
-**When to run:** When you need machine-parseable or custom-formatted log output for scripts, reports, or dashboards.
-**Trigger:** Building release notes, feeding commit data into a pipeline, or creating audit trails.
-**Context:** Read-only. The `--format` string uses `%h` (short hash), `%an` (author name), `%ad` (author date), `%s` (subject), and many other placeholders.
-**Purpose:** Control exactly which fields appear and in what format.
+When you need machine-parseable or custom-formatted log output for scripts, reports, or dashboards. It is typically triggered by building release notes, feeding commit data into a pipeline, or creating audit trails. Read-only. The `--format` string uses `%h` (short hash), `%an` (author name), `%ad` (author date), `%s` (subject), and many other placeholders. Control exactly which fields appear and in what format.
 
 *Show short hash, date, and subject for the last 10 commits.*
 
@@ -733,10 +700,7 @@ Common format placeholders:
 
 #### Filter by merge status
 
-**When to run:** When you need to see only merge commits (to understand integration points) or exclude them (to see only direct work).
-**Trigger:** Auditing merge history, understanding when branches were integrated, or reviewing only feature commits without merge noise.
-**Context:** Read-only.
-**Purpose:** Include or exclude merge commits from the log.
+When you need to see only merge commits (to understand integration points) or exclude them (to see only direct work). It is typically triggered by auditing merge history, understanding when branches were integrated, or reviewing only feature commits without merge noise. Read-only. Include or exclude merge commits from the log.
 
 *Show only merge commits.*
 
@@ -806,10 +770,7 @@ bb3d362 feat: add application settings
 
 #### Compare unstaged changes (working directory vs index)
 
-**When to run:** Before staging, to review what you have modified but not yet added.
-**Trigger:** Before running `git add`, to verify your changes are correct and complete.
-**Context:** Read-only. Compares the working directory against the staging area (index). If you have already staged everything, this shows nothing.
-**Purpose:** See what you have changed in the working tree that is not yet staged.
+Before staging, to review what you have modified but not yet added. It is typically triggered before running `git add`, to verify your changes are correct and complete. Read-only. Compares the working directory against the staging area (index). If you have already staged everything, this shows nothing. See what you have changed in the working tree that is not yet staged.
 
 *Show unstaged changes.*
 
@@ -836,10 +797,7 @@ Lines prefixed with `-` (red) were removed. Lines prefixed with `+` (green) were
 
 #### Compare staged changes (index vs last commit)
 
-**When to run:** After staging with `git add`, to review exactly what will go into the next commit.
-**Trigger:** Before running `git commit`, as a final review step.
-**Context:** Read-only. Compares the staging area against HEAD. The `--cached` flag is a synonym for `--staged`.
-**Purpose:** See exactly what the next commit will contain.
+After staging with `git add`, to review exactly what will go into the next commit. It is typically triggered before running `git commit`, as a final review step. Read-only. Compares the staging area against HEAD. The `--cached` flag is a synonym for `--staged`. See exactly what the next commit will contain.
 
 *Show staged changes.*
 
@@ -865,10 +823,7 @@ This shows that the staged change is: `RETRY_COUNT` changed from `3` to `5`. Thi
 
 #### Compare branch changes since divergence (three-dot diff)
 
-**When to run:** When reviewing a PR or feature branch --- to see only what the branch changed, excluding anything that happened on main after the branch was created.
-**Trigger:** PR review, pre-merge validation, or understanding the scope of a branch.
-**Context:** Read-only. The three-dot syntax (`main...branch`) automatically finds the merge base and shows only changes on the branch side.
-**Purpose:** See the effective diff of a branch as it would appear in a PR.
+When reviewing a PR or feature branch --- to see only what the branch changed, excluding anything that happened on main after the branch was created. It is typically triggered by PR review, pre-merge validation, or understanding the scope of a branch. Read-only. The three-dot syntax (`main...branch`) automatically finds the merge base and shows only changes on the branch side. See the effective diff of a branch as it would appear in a PR.
 
 > [!info] Two-dot vs three-dot diff
 >
@@ -896,10 +851,7 @@ The `+` and `-` bar on the right shows the proportion of additions vs deletions 
 
 #### List only changed filenames
 
-**When to run:** When you need a quick inventory of which files were touched, without seeing the actual changes.
-**Trigger:** Estimating the scope of a change, identifying which reviewers to assign, or feeding a file list into another tool.
-**Context:** Read-only.
-**Purpose:** Get a clean list of changed files.
+When you need a quick inventory of which files were touched, without seeing the actual changes. It is typically triggered by estimating the scope of a change, identifying which reviewers to assign, or feeding a file list into another tool. Read-only. Get a clean list of changed files.
 
 *List files changed on the current branch vs main.*
 
@@ -962,10 +914,7 @@ The hunk header `@@ -1,5 +1,5 @@` reads as: "starting at line 1 in the old file,
 
 #### Annotate an entire file
 
-**When to run:** When you need to understand the authorship of every line in a file --- who last modified each line and when.
-**Trigger:** Investigating why a piece of code exists, finding the right person to ask about a decision, or auditing a configuration file.
-**Context:** Read-only. Shows the state of the file at HEAD by default. Use `<commit> -- <file>` to blame at a different point in history.
-**Purpose:** Map every line to its last-modifying commit, author, and date.
+When you need to understand the authorship of every line in a file --- who last modified each line and when. It is typically triggered by investigating why a piece of code exists, finding the right person to ask about a decision, or auditing a configuration file. Read-only. Shows the state of the file at HEAD by default. Use `<commit> -- <file>` to blame at a different point in history. Map every line to its last-modifying commit, author, and date.
 
 *Annotate every line of `src/pipeline.py` with authorship.*
 
@@ -1013,10 +962,7 @@ Each line is formatted as: `commit-sha (author date line-number) code`. Reading 
 
 #### Blame a specific line range
 
-**When to run:** When you only care about a specific function or block, not the entire file.
-**Trigger:** Investigating a single function's authorship, or focusing on a specific configuration block.
-**Context:** Read-only. The `-L start,end` flag restricts output to the given line range.
-**Purpose:** Narrow blame output to a specific region of the file.
+When you only care about a specific function or block, not the entire file. It is typically triggered by investigating a single function's authorship, or focusing on a specific configuration block. Read-only. The `-L start,end` flag restricts output to the given line range. Narrow blame output to a specific region of the file.
 
 *Blame lines 1--5 of `config.py`.*
 
@@ -1036,10 +982,7 @@ Three different commits authored these five lines: `2eff67c` set `CACHE_TTL` and
 
 #### Ignore whitespace-only changes with -w
 
-**When to run:** When a reformatting commit (indentation changes, trailing whitespace cleanup) has obscured the true logical author of each line.
-**Trigger:** After running a code formatter (black, ruff, prettier) that touched every line, making blame attribute the entire file to the formatting commit.
-**Context:** Read-only. `-w` ignores whitespace-only changes and attributes lines to the most recent commit that made a substantive change.
-**Purpose:** See the real logical author of each line, not the last formatter.
+When a reformatting commit (indentation changes, trailing whitespace cleanup) has obscured the true logical author of each line. It is typically triggered after running a code formatter (black, ruff, prettier) that touched every line, making blame attribute the entire file to the formatting commit. Read-only. `-w` ignores whitespace-only changes and attributes lines to the most recent commit that made a substantive change. See the real logical author of each line, not the last formatter.
 
 *Blame `src/pipeline.py` while ignoring whitespace changes.*
 
@@ -1060,10 +1003,7 @@ git blame -w src/pipeline.py
 
 #### Detect code moved from other files with -C
 
-**When to run:** When a function or block was extracted from one file into another (refactoring), and blame incorrectly attributes the code to the extraction commit instead of the original author.
-**Trigger:** After a refactor that moved code between files, when you need to trace the original author.
-**Context:** Read-only. `-C` searches other files in the same commit for the origin of moved lines. Use `-C -C` (repeated) for a more aggressive search across all files.
-**Purpose:** Attribute lines to their true origin, even across file moves and copies.
+When a function or block was extracted from one file into another (refactoring), and blame incorrectly attributes the code to the extraction commit instead of the original author. It is typically triggered after a refactor that moved code between files, when you need to trace the original author. Read-only. `-C` searches other files in the same commit for the origin of moved lines. Use `-C -C` (repeated) for a more aggressive search across all files. Attribute lines to their true origin, even across file moves and copies.
 
 ```bash
 git blame -C src/pipeline.py
@@ -1093,10 +1033,7 @@ git blame -C src/pipeline.py
 
 #### Display full commit details
 
-**When to run:** When you need the complete picture of a specific commit --- who made it, when, what the message says, and exactly what changed.
-**Trigger:** Following up on a blame result (to see the full commit context), reviewing a specific merge, or inspecting a tagged release.
-**Context:** Read-only. Accepts any valid ref: short SHA, full SHA, branch name, tag, or symbolic ref like `HEAD`.
-**Purpose:** See the complete metadata and diff for a single commit.
+When you need the complete picture of a specific commit --- who made it, when, what the message says, and exactly what changed. It is typically triggered by following up on a blame result (to see the full commit context), reviewing a specific merge, or inspecting a tagged release. Read-only. Accepts any valid ref: short SHA, full SHA, branch name, tag, or symbolic ref like `HEAD`. See the complete metadata and diff for a single commit.
 
 *Show the full details of commit `35c16f7`.*
 
@@ -1126,10 +1063,7 @@ The output has two parts: the commit header (full SHA, author, date, message) an
 
 #### View the scope of a commit with --stat
 
-**When to run:** When you need a quick summary of which files a commit touched and how many lines changed, without the full diff.
-**Trigger:** Reviewing the impact of a commit before reading the full diff, or auditing the scope of a merge.
-**Context:** Read-only.
-**Purpose:** See file-level change summary for a commit.
+When you need a quick summary of which files a commit touched and how many lines changed, without the full diff. It is typically triggered by reviewing the impact of a commit before reading the full diff, or auditing the scope of a merge. Read-only. See file-level change summary for a commit.
 
 *Show the stat summary for commit `35c16f7`.*
 
@@ -1150,10 +1084,7 @@ Date:   Sun Apr 12 17:55:00 2026 +0200
 
 #### Retrieve file content at a specific point in history
 
-**When to run:** When you need to see what a file looked like at a specific commit, branch, or tag --- without checking out that commit and disrupting your working directory.
-**Trigger:** Comparing current code against a known-good version, investigating what a config file contained at a release boundary, or extracting a file from a past state.
-**Context:** Read-only. Does not modify the working directory, staging area, or HEAD.
-**Purpose:** Retrieve the exact content of a file at any point in history.
+When you need to see what a file looked like at a specific commit, branch, or tag --- without checking out that commit and disrupting your working directory. It is typically triggered by comparing current code against a known-good version, investigating what a config file contained at a release boundary, or extracting a file from a past state. Read-only. Does not modify the working directory, staging area, or HEAD. Retrieve the exact content of a file at any point in history.
 
 The `ref:path` syntax works with any valid ref --- commit SHA, branch name, tag, or `HEAD`.
 
@@ -1226,10 +1157,7 @@ The reflog is a local-only, append-only log of every position HEAD has occupied.
 
 #### Display the reflog
 
-**When to run:** When you need to find a commit that is no longer reachable from any branch --- after a bad reset, a lost branch, or a failed rebase.
-**Trigger:** "Where was HEAD before I ran that reset?", "I accidentally deleted a branch --- what was its tip?", or "I need to undo a rebase."
-**Context:** Read-only (viewing). The reflog itself is a recovery tool --- once you find the SHA, you can use `git restore --source=<sha>`, `git switch --detach <sha>`, or `git reset` to restore.
-**Purpose:** See every recent HEAD movement with timestamps.
+When you need to find a commit that is no longer reachable from any branch --- after a bad reset, a lost branch, or a failed rebase. It is typically triggered by "Where was HEAD before I ran that reset?", "I accidentally deleted a branch --- what was its tip?", or "I need to undo a rebase.". Read-only (viewing). The reflog itself is a recovery tool --- once you find the SHA, you can use `git restore --source=<sha>`, `git switch --detach <sha>`, or `git reset` to restore. See every recent HEAD movement with timestamps.
 
 *Show the last 15 reflog entries.*
 
@@ -1326,10 +1254,7 @@ flowchart TD
 
 #### Run a bisect session
 
-**When to run:** When a test, build, or behavior that used to work is now broken, and you need to find exactly which commit caused the regression.
-**Trigger:** A CI test started failing, a performance regression appeared, data output changed unexpectedly, or a pipeline that used to succeed now fails.
-**Context:** `git bisect` temporarily checks out commits during the search, so your working directory will change. **Always commit or stash any uncommitted work before starting.** `git bisect reset` at the end restores HEAD to its original position.
-**Purpose:** Identify the exact commit that introduced a regression, with minimal manual effort.
+When a test, build, or behavior that used to work is now broken, and you need to find exactly which commit caused the regression. It is typically triggered by A CI test started failing, a performance regression appeared, data output changed unexpectedly, or a pipeline that used to succeed now fails. `git bisect` temporarily checks out commits during the search, so your working directory will change. **Always commit or stash any uncommitted work before starting.** `git bisect reset` at the end restores HEAD to its original position. Identify the exact commit that introduced a regression, with minimal manual effort.
 
 > [!todo] Bisect workflow --- step by step
 >
@@ -1401,10 +1326,7 @@ Switched to branch 'demo/bisect-history'
 
 #### Automate bisect with a test script
 
-**When to run:** When you can express the pass/fail condition as a script (exit code 0 = good, non-zero = bad).
-**Trigger:** The regression is testable by a specific command (a unit test, a build, a query).
-**Context:** `git bisect run` automates the entire process --- Git checks out each midpoint and runs your script, interpreting exit codes.
-**Purpose:** Fully automate bisect without manual intervention.
+When you can express the pass/fail condition as a script (exit code 0 = good, non-zero = bad). It is typically triggered by the regression is testable by a specific command (a unit test, a build, a query). `git bisect run` automates the entire process --- Git checks out each midpoint and runs your script, interpreting exit codes. Fully automate bisect without manual intervention.
 
 ```bash
 git bisect start HEAD v1.0.0
@@ -1451,10 +1373,7 @@ When a branch is rebased, force-pushed, or has commits amended, the commit SHAs 
 
 #### Compare two versions of a rebased branch
 
-**When to run:** When reviewing a force-pushed PR where the author rebased, amended commits, or reordered patches. You need to see what actually changed between the old version and the new version, ignoring the trivial SHA differences from the rebase.
-**Trigger:** A PR was force-pushed after review feedback. You need to verify the author addressed your comments without re-reviewing the entire series.
-**Context:** Read-only. Requires both the old and new commit ranges. The syntax is `git range-diff <base1>..<tip1> <base2>..<tip2>`. Reviewers can also use the three-argument form `git range-diff <base> <tip1> <tip2>` when the base is shared.
-**Purpose:** Show a commit-by-commit comparison of two versions of a patch series, highlighting what was added, removed, or modified between iterations.
+When reviewing a force-pushed PR where the author rebased, amended commits, or reordered patches. You need to see what actually changed between the old version and the new version, ignoring the trivial SHA differences from the rebase. It is typically triggered by A PR was force-pushed after review feedback. You need to verify the author addressed your comments without re-reviewing the entire series. Read-only. Requires both the old and new commit ranges. The syntax is `git range-diff <base1>..<tip1> <base2>..<tip2>`. Reviewers can also use the three-argument form `git range-diff <base> <tip1> <tip2>` when the base is shared. Show a commit-by-commit comparison of two versions of a patch series, highlighting what was added, removed, or modified between iterations.
 
 > [!info]- range-diff output symbols
 >
@@ -1506,10 +1425,7 @@ This tells the reviewer: "The author only changed one value in the third commit 
 
 #### Find commits not yet cherry-picked to upstream
 
-**When to run:** When maintaining a long-lived branch (e.g., a release branch) where patches are selectively cherry-picked from main, and you need to know which patches are still missing.
-**Trigger:** Release management, backport tracking, or verifying that all fixes from a feature branch have been integrated.
-**Context:** Read-only. `git cherry` compares patches by computing a symmetric diff of patch IDs (SHA of the diff content, ignoring commit metadata). A `+` prefix means the commit has **not** been applied to the upstream; a `-` prefix means an equivalent patch already exists.
-**Purpose:** Identify which commits on a branch still need to be cherry-picked or merged to another branch.
+When maintaining a long-lived branch (e.g., a release branch) where patches are selectively cherry-picked from main, and you need to know which patches are still missing. It is typically triggered by release management, backport tracking, or verifying that all fixes from a feature branch have been integrated. Read-only. `git cherry` compares patches by computing a symmetric diff of patch IDs (SHA of the diff content, ignoring commit metadata). A `+` prefix means the commit has **not** been applied to the upstream; a `-` prefix means an equivalent patch already exists. Identify which commits on a branch still need to be cherry-picked or merged to another branch.
 
 *Check which commits on `demo/range-diff-v1` have not yet been cherry-picked into `main`.*
 
@@ -1530,10 +1446,7 @@ Reading the output:
 
 #### Use --cherry-mark with git log for visual branch comparison
 
-**When to run:** When you want to see the full symmetric difference between two branches with cherry-pick equivalence marked visually.
-**Trigger:** Reviewing which commits are unique to each side vs already shared (via cherry-pick), during release branch maintenance or backport audits.
-**Context:** Read-only. `--cherry-mark` is a `git log` flag that works with the three-dot symmetric difference (`A...B`). Commits with an equivalent on the other side are marked `=`; unique commits are marked `+`.
-**Purpose:** Visualize the relationship between two diverged branches accounting for cherry-picks.
+When you want to see the full symmetric difference between two branches with cherry-pick equivalence marked visually. It is typically triggered by reviewing which commits are unique to each side vs already shared (via cherry-pick), during release branch maintenance or backport audits. Read-only. `--cherry-mark` is a `git log` flag that works with the three-dot symmetric difference (`A...B`). Commits with an equivalent on the other side are marked `=`; unique commits are marked `+`. Visualize the relationship between two diverged branches accounting for cherry-picks.
 
 *Show the symmetric difference between `main` and `demo/range-diff-v1` with cherry-pick markers.*
 
@@ -1611,10 +1524,7 @@ The commit touched only `config.py` and added one line. The message explains the
 
 #### Tracing a config drift in pipeline settings
 
-**When to run:** When a pipeline configuration value changed unexpectedly and you need to trace every modification.
-**Trigger:** A pipeline starts failing with timeout or memory errors, and the configuration may have drifted from its original value.
-**Context:** Read-only investigation pattern.
-**Purpose:** Build a complete timeline of how a configuration value evolved.
+When a pipeline configuration value changed unexpectedly and you need to trace every modification. It is typically triggered by A pipeline starts failing with timeout or memory errors, and the configuration may have drifted from its original value. Read-only investigation pattern. Build a complete timeline of how a configuration value evolved.
 
 > [!example] Trace the evolution of CACHE_TTL
 >
@@ -1638,10 +1548,7 @@ The commit touched only `config.py` and added one line. The message explains the
 
 #### Debugging a schema migration regression
 
-**When to run:** After a dbt model or SQL migration changes output unexpectedly.
-**Trigger:** Row counts dropped, a column disappeared, or downstream dashboards show wrong data.
-**Context:** Combine `git log -- models/`, `git diff`, and `git bisect` to isolate the change.
-**Purpose:** Find exactly which migration or model change caused the regression.
+After a dbt model or SQL migration changes output unexpectedly. It is typically triggered by row counts dropped, a column disappeared, or downstream dashboards show wrong data. Combine `git log -- models/`, `git diff`, and `git bisect` to isolate the change. Find exactly which migration or model change caused the regression.
 
 > [!example] Isolate a dbt model regression
 >
@@ -1668,10 +1575,7 @@ The commit touched only `config.py` and added one line. The message explains the
 
 #### Auditing secrets exposure in history
 
-**When to run:** When a credential, API key, or secret was accidentally committed and you need to determine the scope of exposure.
-**Trigger:** A secrets scanner flagged a commit, or someone noticed a key in the codebase.
-**Context:** Read-only investigation. Actual remediation (rotating the secret, rewriting history with `git filter-repo`) is a separate operation.
-**Purpose:** Determine when the secret entered history, who committed it, and which branches contain it.
+When a credential, API key, or secret was accidentally committed and you need to determine the scope of exposure. It is typically triggered by A secrets scanner flagged a commit, or someone noticed a key in the codebase. Read-only investigation. Actual remediation (rotating the secret, rewriting history with `git filter-repo`) is a separate operation. Determine when the secret entered history, who committed it, and which branches contain it.
 
 > [!danger] Secrets committed to Git are compromised
 >
@@ -1686,10 +1590,7 @@ The commit touched only `config.py` and added one line. The message explains the
 
 #### Inspecting notebook (.ipynb) changes
 
-**When to run:** When Jupyter notebooks are tracked in Git and you need to understand what changed between versions --- complicated by the JSON structure and base64-encoded cell outputs.
-**Trigger:** A notebook's outputs or metadata changed unexpectedly, or a data scientist's PR contains notebook diffs that are unreadable in standard `git diff`.
-**Context:** Notebooks are stored as JSON with embedded outputs (images, dataframes, tracebacks). Standard `git diff` shows raw JSON changes that are nearly impossible to review.
-**Purpose:** Inspect meaningful content changes in notebooks while ignoring noise from output cells and execution counts.
+When Jupyter notebooks are tracked in Git and you need to understand what changed between versions --- complicated by the JSON structure and base64-encoded cell outputs. It is typically triggered by A notebook's outputs or metadata changed unexpectedly, or a data scientist's PR contains notebook diffs that are unreadable in standard `git diff`. Notebooks are stored as JSON with embedded outputs (images, dataframes, tracebacks). Standard `git diff` shows raw JSON changes that are nearly impossible to review. Inspect meaningful content changes in notebooks while ignoring noise from output cells and execution counts.
 
 > [!warning] Standard git diff Is Unreadable for Notebooks
 >
@@ -1721,10 +1622,7 @@ git diff --word-diff v1.0.0..v1.1.0 -- notebooks/exploration.ipynb
 
 #### Inspecting binary and LFS-managed assets
 
-**When to run:** When large binary files (parquet, model weights, datasets, images) are tracked via Git LFS and you need to understand their change history.
-**Trigger:** A model artifact or dataset changed unexpectedly, or LFS pointer files appeared in a diff instead of the actual content.
-**Context:** Git LFS stores binary content on a remote server and replaces files in the repo with small pointer files. Standard `git diff` shows pointer changes (SHA256 hashes), not content changes. `git log` works normally for tracking when files changed.
-**Purpose:** Trace the history of large binary files and understand when specific versions were introduced.
+When large binary files (parquet, model weights, datasets, images) are tracked via Git LFS and you need to understand their change history. It is typically triggered by A model artifact or dataset changed unexpectedly, or LFS pointer files appeared in a diff instead of the actual content. Git LFS stores binary content on a remote server and replaces files in the repo with small pointer files. Standard `git diff` shows pointer changes (SHA256 hashes), not content changes. `git log` works normally for tracking when files changed. Trace the history of large binary files and understand when specific versions were introduced.
 
 ```bash
 # Show all commits that touched LFS-tracked parquet files
@@ -1757,10 +1655,7 @@ size 15728640
 
 #### Inspecting submodule history
 
-**When to run:** When a monorepo uses Git submodules for vendored dependencies or shared libraries, and you need to trace when a submodule was updated and to which commit.
-**Trigger:** A submodule update broke the build, or you need to audit which version of a shared library was pinned at a specific release.
-**Context:** Submodule updates appear in `git diff` as pointer changes (old commit → new commit). The actual content change is in the submodule's own repository.
-**Purpose:** Trace submodule version changes and understand what was updated.
+When a monorepo uses Git submodules for vendored dependencies or shared libraries, and you need to trace when a submodule was updated and to which commit. It is typically triggered by A submodule update broke the build, or you need to audit which version of a shared library was pinned at a specific release. Submodule updates appear in `git diff` as pointer changes (old commit → new commit). The actual content change is in the submodule's own repository. Trace submodule version changes and understand what was updated.
 
 ```bash
 # Show submodule pointer changes in a commit
@@ -1777,10 +1672,7 @@ The `--submodule=log` format expands pointer changes into the submodule's commit
 
 #### Monorepo path-scoped inspection
 
-**When to run:** When working in a monorepo containing multiple services, packages, or teams, and you need to scope inspection to a specific service's directory without noise from unrelated changes.
-**Trigger:** Debugging a regression in one service, auditing changes to a specific package, or reviewing team-specific commit history in a shared repository.
-**Context:** All standard inspection commands accept path arguments. In monorepos, always scope by path to avoid drowning in unrelated changes.
-**Purpose:** Limit all inspection output to a specific subtree of the repository.
+When working in a monorepo containing multiple services, packages, or teams, and you need to scope inspection to a specific service's directory without noise from unrelated changes. It is typically triggered by debugging a regression in one service, auditing changes to a specific package, or reviewing team-specific commit history in a shared repository. All standard inspection commands accept path arguments. In monorepos, always scope by path to avoid drowning in unrelated changes. Limit all inspection output to a specific subtree of the repository.
 
 ```bash
 # Log only commits touching the ingestion service
@@ -1809,10 +1701,7 @@ git log -S "instance_type" --oneline -- "infra/**/*.tf"
 
 #### Partial-clone and huge-history caveats
 
-**When to run:** When working with repositories that have been shallow-cloned (`--depth`), partially cloned (`--filter=blob:none`), or have very large histories (100k+ commits).
-**Trigger:** An inspection command fails with "missing object", runs extremely slowly, or returns incomplete results.
-**Context:** Shallow and partial clones intentionally omit objects to save disk and network. This breaks or limits several inspection commands.
-**Purpose:** Understand which inspection commands work in reduced-history repositories and how to work around limitations.
+When working with repositories that have been shallow-cloned (`--depth`), partially cloned (`--filter=blob:none`), or have very large histories (100k+ commits). It is typically triggered by an inspection command fails with "missing object", runs extremely slowly, or returns incomplete results. Shallow and partial clones intentionally omit objects to save disk and network. This breaks or limits several inspection commands. Understand which inspection commands work in reduced-history repositories and how to work around limitations.
 
 | Command | Behavior in shallow clone | Behavior in partial clone (`--filter=blob:none`) |
 |---------|--------------------------|--------------------------------------------------|

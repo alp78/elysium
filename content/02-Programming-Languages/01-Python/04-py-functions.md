@@ -5,7 +5,7 @@ tags:
 aliases: [lambda, closures, decorators, higher-order functions]
 description: "Python functions reference with executable examples and cell outputs - covers function basics, parameters, lambda, closures, decorators, and type hints. See [04-cs-functions](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/04-cs-functions) for the C# equivalent."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -158,10 +158,6 @@ Functions are defined with `def`, return values with `return`, and default to `N
 
 These imports are shared by the later snippets: `datetime` and `timezone` for time-aware examples, `functools` helpers for higher-order patterns, `re` for the pipeline example, and `typing` tools for annotations and introspection.
 
-**When to run:** Run this subsection before executing later examples in one continuous session.
-**Trigger:** Use it when a later example references shared imports from this page.
-**Context:** These imports establish the shared modules reused across the note.
-**Purpose:** Set up the execution context for the remaining snippets.
 *Python example: shared imports used by the later snippets.*
 ```python
 from datetime import datetime, timezone
@@ -179,10 +175,6 @@ import re
 
 `def` creates the function object. The first string literal in the body becomes the docstring. If the function reaches the end of the body without hitting `return`, Python returns `None`.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: define a documented function and call it twice.*
 ```python
 def greet(name):
@@ -202,10 +194,6 @@ Hello, Bob!
 
 Functions that exist only for side effects often omit `return`. Treat that as a clear contract: callers should not expect a value unless the function explicitly produces one.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: a side-effect function returns `None` when no explicit value is returned.*
 ```python
 def print_greeting(name):
@@ -224,10 +212,6 @@ None
 
 Default parameters let callers omit common values, and named arguments make call sites easier to read. Reserve very broad `*args` or `**kwargs` signatures for APIs that genuinely need open-ended argument forwarding.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: use a default parameter and keyword arguments at the call site.*
 ```python
 def greet(name, greeting="Hello"):
@@ -248,10 +232,6 @@ Yo, Diana!
 
 Binding a function to another variable does not create a copy. It gives you another reference to the same function object.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: assign a function object to another name.*
 ```python
 say_hello = greet
@@ -266,10 +246,6 @@ Hello, Diana!
 
 Higher-order functions accept other callables as input. This is the base pattern behind callbacks, pluggable strategies, and collection helpers.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: pass a function as a higher-order argument.*
 ```python
 def apply(func, value):
@@ -290,10 +266,6 @@ Passing functions directly keeps callers in control of behavior. It is a lightwe
 
 A closure captures names from the enclosing scope. Each call to the outer function creates a new enclosed environment, so separate closure instances can carry separate state or configuration.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: return a closure that captures an enclosing value.*
 ```python
 def make_multiplier(n):
@@ -316,10 +288,6 @@ print(triple(5))
 
 Callbacks let the caller decide what to do with success and failure without hardcoding output behavior inside the function that performs the work.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: route success handling through callback parameters.*
 ```python
 def fetch_data(url, on_success, on_error):
@@ -344,10 +312,6 @@ Got: data from api/users
 
 The strategy pattern passes a callable that encapsulates a policy. The consumer stays fixed while callers choose the pricing rule, scoring rule, or formatter they want.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: swap pricing behavior by passing different strategy functions.*
 ```python
 full_price = lambda price: price
@@ -372,10 +336,6 @@ Member:   $70.00
 
 Pipelines break a larger transformation into small, composable steps. `reduce()` is one way to apply each step to the previous step's output without introducing intermediate variables.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: compose string-cleanup steps with `reduce`.*
 ```python
 steps = [
@@ -397,10 +357,6 @@ Pipeline: '   Hello   WORLD   ' -> 'hello world'
 
 Inject dependencies instead of hardcoding them. The example uses a fixed default clock so the output remains reproducible in the note; production code would typically substitute `datetime.now(timezone.utc)` there.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: inject clock functions instead of hardcoding the current time.*
 ```python
 def process_order(order, get_now=None):
@@ -428,10 +384,6 @@ Test:       2024-01-01T12:00:00+00:00
 
 Optional callbacks decouple the core loop from presentation. The loader does the work, while the caller chooses whether progress is ignored, printed, sent to a progress bar, or forwarded to a UI.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: expose progress reporting through an optional callback slot.*
 ```python
 class DataLoader:
@@ -458,10 +410,6 @@ loader.load(["users", "orders", "products"])
 
 `sorted(iterable, key=func)` orders items by a derived value rather than the raw item itself. Python sorting is stable, so items with equal keys keep their original relative order.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: sort records by a derived key.*
 ```python
 employees = [
@@ -503,10 +451,6 @@ Default values are evaluated once when the function is defined. That rule is the
 
 Mutable defaults such as `[]` or `{}` persist across calls. When you mutate the object, later calls that rely on the default see the already-mutated state.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: mutable defaults preserve shared state across calls.*
 ```python
 def bad_append(item, lst=[]):
@@ -526,10 +470,6 @@ print(bad_append(2))
 
 Use `None` as the default and allocate the mutable object inside the function body. Each call that omits the argument then gets a fresh container.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: use a `None` sentinel to create a fresh list per call.*
 ```python
 def good_append(item, lst=None):
@@ -551,10 +491,6 @@ print(good_append(2))
 
 `**kwargs` gathers unmatched keyword arguments into a dictionary. Use it when the set of accepted keys is intentionally open-ended, not as a substitute for an otherwise well-defined signature.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: collect arbitrary keyword arguments into `kwargs`.*
 ```python
 def build_profile(**kwargs):
@@ -573,10 +509,6 @@ kwargs = {'name': 'Alice', 'age': 30}  (type: dict)
 
 At the call site, `**mapping` expands a dictionary into keyword arguments. This is useful when you are forwarding configuration or adapting one function's output to another function's signature.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: unpack a dictionary into keyword arguments.*
 ```python
 data = {"host": "localhost", "port": 5432}
@@ -595,10 +527,6 @@ localhost:5432
 
 The order is fixed: required parameters, then `*args`, then keyword-only parameters, then `**kwargs`. That ordering lets you build wrappers that still preserve explicit switches for the arguments that matter most.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: combine required, variadic, keyword-only, and `**kwargs` parameters.*
 ```python
 def kitchen_sink(required, *args, keyword_only="default", **kwargs):
@@ -625,10 +553,6 @@ Use `/` when callers should not rely on a parameter name, and use `*` when calle
 
 `*args` gathers any extra positional arguments into a tuple. It is common in wrappers and decorators, but explicit parameters remain easier to understand when the expected arguments are known in advance.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: collect positional arguments into a tuple.*
 ```python
 def total(*args):
@@ -647,10 +571,6 @@ args = (1, 2, 3)  (type: tuple)
 
 At the call site, `*sequence` expands the sequence into positional arguments. This is useful when a list or tuple already exists but the callee expects separate arguments.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: unpack a sequence into positional arguments.*
 ```python
 numbers = [1, 2, 3, 4, 5]
@@ -666,10 +586,6 @@ args = (1, 2, 3, 4, 5)  (type: tuple)
 
 Parameters before `/` can only be passed positionally. Parameters after `*` must be passed by name. Use positional-only parameters when you might rename the parameter later, and keyword-only parameters when readability or correctness depends on the name being visible at the call site.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: mix positional-only, regular, and keyword-only parameters.*
 ```python
 def func(pos_only, /, normal, *, kw_only):
@@ -696,10 +612,6 @@ Because lambdas can contain only one expression, they fit best where the logic i
 
 `lambda params: expression` creates a callable with an implicit return value. It is a compact form for very small functions.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: create and call a single-expression lambda.*
 ```python
 add = lambda a, b: a + b
@@ -714,10 +626,6 @@ print(add(3, 4))
 
 The most common use for lambdas is an inline sort key. Keep them short enough that the extracted value is immediately obvious.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: use lambdas as inline sort keys.*
 ```python
 names = ["Charlie", "Alice", "Bob", "Diana"]
@@ -734,10 +642,6 @@ print(sorted(names, key=lambda n: n[-1]))
 
 `map()` applies the callable to each element and returns an iterator. In Python codebases, list comprehensions are often more readable, but `map()` is still a standard higher-order tool.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: transform each element with `map` and a lambda.*
 ```python
 nums = [1, 2, 3, 4, 5]
@@ -752,10 +656,6 @@ print(list(map(lambda x: x**2, nums)))
 
 `filter()` keeps only elements for which the predicate returns a truthy value. As with `map()`, a comprehension is often the clearest alternative when the expression stops being trivial.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: filter values with a predicate lambda.*
 ```python
 print(list(filter(lambda x: x % 2 == 0, nums)))
@@ -773,10 +673,6 @@ This subsection covers the name-resolution behavior that matters when a lambda c
 
 Python resolves names in Local, Enclosing, Global, then Built-in order. Reading that rule correctly explains why nested functions can see outer names without copying them.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: show local, enclosing, and global names resolving independently.*
 ```python
 x = "global"
@@ -827,10 +723,6 @@ When an inner function only reads a name from the enclosing scope, no extra synt
 
 Use `nonlocal` when the closure owns state that must change across calls. If you find yourself managing several pieces of state this way, a class may be easier to read.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: mutate captured state with `nonlocal`.*
 ```python
 def make_counter(start=0):
@@ -865,10 +757,6 @@ Closure factories return specialized functions without introducing a class. This
 
 A validator factory captures a range once and returns a function that can be reused anywhere the check is needed.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: return specialized validators from a closure factory.*
 ```python
 def make_validator(min_val, max_val):
@@ -896,10 +784,6 @@ The most common closure bug in Python is late binding in loops. The closure keep
 
 When the lambda eventually runs, it reads the final value of the shared loop variable unless you bind the current value explicitly.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: late binding causes loop-created lambdas to share one variable.*
 ```python
 funcs_bad = [lambda: i for i in range(3)]
@@ -914,10 +798,6 @@ print([f() for f in funcs_bad])
 
 `lambda i=i: i` evaluates the default at definition time, so each lambda captures its own snapshot.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: bind the current loop value with a default argument.*
 ```python
 funcs_good = [lambda i=i: i for i in range(3)]
@@ -940,10 +820,6 @@ A decorator takes a function, returns another function, and is applied with `@de
 
 The example below uses fixed clock checkpoints so the note's output is deterministic. In production code, the same structure usually reads the clock from `time.perf_counter()`.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: preserve metadata with `@functools.wraps` and a deterministic timer.*
 ```python
 clock_values = iter([10.0, 10.125, 20.0, 20.05])
@@ -983,10 +859,6 @@ Decorators can accept arguments, can be stacked, and can come from the standard 
 
 Parameterized decorators add one more nesting level: a factory receives the decorator arguments, returns the actual decorator, and that decorator returns the wrapper.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: retry a deterministic sequence of failures before succeeding.*
 ```python
 def retry(max_attempts=3):
@@ -1027,10 +899,6 @@ Result: success
 
 `@a @b def f()` means `f = a(b(f))`. That order matters because each decorator wraps the result returned by the one below it.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: stack decorators and observe bottom-up application order.*
 ```python
 def log(func):
@@ -1059,10 +927,6 @@ compute took 0.050000s
 
 Python ships with decorators that change method binding behavior. These cover computed attributes, namespace-level helpers that live on a class, and alternate constructors.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: compare `@property`, `@staticmethod`, and `@classmethod`.*
 ```python
 class MyClass:
@@ -1101,10 +965,6 @@ The `functools` module adds several widely used higher-order helpers. `partial` 
 
 `partial()` returns a new callable with some arguments already filled in. It is often clearer than wrapping the original function in a tiny lambda just to bind one or two values.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: freeze selected arguments with `functools.partial`.*
 ```python
 from functools import partial
@@ -1127,10 +987,6 @@ print(cube(3))
 
 `@lru_cache(maxsize=128)` stores results by argument tuple. Use it for pure functions whose outputs depend only on their inputs, and ensure the arguments are hashable.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: cache recursive results and inspect cache statistics.*
 ```python
 from functools import lru_cache
@@ -1154,10 +1010,6 @@ CacheInfo(hits=48, misses=51, maxsize=128, currsize=51)
 
 `@singledispatch` creates a generic function and dispatches to registered implementations by the first argument's runtime type.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: register implementations by the first argument type.*
 ```python
 from functools import singledispatch
@@ -1203,10 +1055,6 @@ Use annotations on public functions, complex return values, and higher-order API
 
 Built-in generics such as `list[str]` and `dict[str, object]` are standard in modern Python. `Optional[T]` means the value may be `T` or `None`.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: annotate parameters, defaults, and a structured return value.*
 ```python
 def process(
@@ -1229,10 +1077,6 @@ print(process("Alice", 30, 85.5, tags=["admin"]))
 
 Annotate nullable results so callers know a guard is required before they dereference the value.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: use `Optional` for a nullable lookup result.*
 ```python
 def find_user(user_id: int) -> Optional[str]:
@@ -1252,10 +1096,6 @@ None
 
 `Callable[[ArgType, ...], ReturnType]` documents the arguments and return value that a function parameter expects.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: annotate a callable parameter signature.*
 ```python
 def apply_func(func: Callable[[int], int], value: int) -> int:
@@ -1276,10 +1116,6 @@ Type aliases make compound types easier to read, `__annotations__` exposes the r
 
 Frameworks such as FastAPI, Pydantic, and dataclass-based tooling inspect annotations at runtime. That is why type hints can influence real behavior even though Python itself does not enforce them.
 
-**When to run:** Run this subsection when you need a concrete example of the rule described here.
-**Trigger:** Use it to verify the syntax, behavior, or pitfall named in the heading.
-**Context:** The snippet assumes the shared imports in this note and any helpers introduced earlier in the same flow.
-**Purpose:** Compare the code with the adjacent output to confirm the behavior.
 *Python example: inspect type aliases and stored annotations at runtime.*
 ```python
 UserId = int
@@ -1300,58 +1136,504 @@ print(get_type_hints(process))
 {'name': <class 'str'>, 'age': <class 'int'>, 'score': <class 'float'>, 'active': <class 'bool'>, 'tags': list[str] | None, 'return': dict[str, object]}
 ```
 
-## Operational Guidance
+## Operational Risks
 
-### Failure boundaries
+These are the failure modes that most often turn small function utilities into hard-to-debug behavior.
 
-- Mutable defaults create shared state across calls because the default object is created once at function definition time.
-- Loop-created closures capture the variable, not the value you expected at that moment.
-- Decorators that skip `@functools.wraps` hide the wrapped function's metadata and make debugging harder.
-- `lru_cache` only works with hashable arguments.
-- Type hints document intent, but they do not reject bad values unless an external checker or runtime validator is involved.
+### Stateful defaults and captured values
 
-### Usage recommendations
+#### Mutable defaults retain prior state
 
-- Prefer explicit parameters over `*args` and `**kwargs` unless the API genuinely needs open-ended forwarding.
-- Use keyword-only parameters for flags and optional switches that are easy to misread positionally.
-- Reach for `partial()` when all you need is argument binding; it is usually clearer than a tiny lambda wrapper.
-- Keep lambdas short enough that the expression can be understood in one glance.
-- Add type hints to public functions and higher-order APIs where the expected callable signature is not obvious.
+Use `None` instead of `[]` so each call allocates its own container. A default such as `items=[]` is evaluated once at definition time, so later calls keep mutating the same object.
 
-### Troubleshooting
+*Python example: compare a mutable default with the `None` sentinel pattern.*
+```python
+def append_item_bad(value, items=[]):
+    items.append(value)
+    return items
+
+def append_item_good(value, items=None):
+    if items is None:
+        items = []
+    items.append(value)
+    return items
+
+print(append_item_bad("a"))
+print(append_item_bad("b"))
+print(append_item_good("a"))
+print(append_item_good("b"))
+```
+
+```text
+['a']
+['a', 'b']
+['a']
+['b']
+```
+
+#### Loop-created closures capture variables, not snapshots
+
+A closure created inside a loop reads the final `i` unless you bind the current value at definition time. The common repair is `lambda i=i: i`.
+
+*Python example: show late binding and the bound-default fix side by side.*
+```python
+funcs_bad = [lambda: i for i in range(3)]
+funcs_good = [lambda i=i: i for i in range(3)]
+
+print([func() for func in funcs_bad])
+print([func() for func in funcs_good])
+```
+
+```text
+[2, 2, 2]
+[0, 1, 2]
+```
+
+### Metadata and cache boundaries
+
+#### Decorators that skip `@functools.wraps` erase metadata
+
+Without `@functools.wraps(func)`, the decorated callable exposes `wrapper` metadata instead of the original function identity. That breaks `__name__`, `__doc__`, and some introspection tools.
+
+*Python example: compare decorator metadata before and after `@functools.wraps`.*
+```python
+import functools
+
+def bare_decorator(func):
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+def wrapped_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+@bare_decorator
+def bare():
+    """bare doc"""
+    return "bare"
+
+@wrapped_decorator
+def wrapped():
+    """wrapped doc"""
+    return "wrapped"
+
+print(bare.__name__, bare.__doc__)
+print(wrapped.__name__, wrapped.__doc__)
+```
+
+```text
+wrapper None
+wrapped wrapped doc
+```
+
+#### `@lru_cache` requires hashable arguments
+
+`@lru_cache` builds its key from the call arguments. Passing a `list` or `dict` fails before caching can help, so normalize the input to `tuple` or another hashable form first.
+
+*Python example: catch the unhashable-argument error and then call a hashable variant.*
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def total(values):
+    return sum(values)
+
+try:
+    total([1, 2, 3])
+except TypeError as exc:
+    print(exc)
+
+print(total((1, 2, 3)))
+```
+
+```text
+unhashable type: 'list'
+6
+```
+
+### Runtime typing boundaries
+
+#### Type annotations do not reject bad runtime values
+
+An annotation such as `name: str` documents intent, but the interpreter still runs the call unless you add a guard or external validator. Keep `mypy`, `pyright`, or explicit `isinstance()` checks separate from the hint itself.
+
+*Python example: pass a value that violates the hint but still runs.*
+```python
+def repeat(name: str) -> str:
+    return name * 2
+
+print(repeat("ha"))
+print(repeat(3))
+```
+
+```text
+haha
+6
+```
+
+## Recommended Patterns
+
+These patterns keep function-heavy code readable at the call site and easier to evolve under testing.
+
+### Signature design
+
+#### Prefer explicit parameters over open-ended forwarding
+
+An explicit signature such as `send_email(recipient, subject, *, retry=False)` tells callers what the function accepts. Reach for `*args` or `**kwargs` only when the wrapper truly needs to forward an unknown call shape.
+
+*Python example: compare a clear signature with a thin forwarding wrapper.*
+```python
+def send_email(recipient, subject, *, retry=False):
+    return f"{recipient}|{subject}|retry={retry}"
+
+def forward_email(*args, **kwargs):
+    return send_email(*args, **kwargs)
+
+print(send_email("ops@example.com", "Daily report", retry=True))
+print(forward_email("ops@example.com", "Daily report", retry=True))
+```
+
+```text
+ops@example.com|Daily report|retry=True
+ops@example.com|Daily report|retry=True
+```
+
+#### Use keyword-only flags for call-site clarity
+
+A bare `*` forces a flag such as `verbose=True` to be named instead of hidden in a positional slot. This makes behavior switches easier to scan in review.
+
+*Python example: require a `verbose` flag to be passed by name.*
+```python
+def render(report, *, verbose=False):
+    return f"{report}|verbose={verbose}"
+
+print(render("weekly"))
+print(render("weekly", verbose=True))
+```
+
+```text
+weekly|verbose=False
+weekly|verbose=True
+```
+
+### Reusable higher-order helpers
+
+#### Use `functools.partial` when only arguments need binding
+
+`partial()` makes it obvious that the underlying function stays the same and only a few arguments are pre-filled. That is usually clearer than a custom `lambda` wrapper.
+
+*Python example: bind fixed conversion settings with `functools.partial`.*
+```python
+from functools import partial
+
+def convert_units(value, factor, label):
+    return f"{value * factor:.1f} {label}"
+
+meters_to_cm = partial(convert_units, factor=100, label="cm")
+meters_to_mm = partial(convert_units, factor=1000, label="mm")
+
+print(meters_to_cm(1.5))
+print(meters_to_mm(1.5))
+```
+
+```text
+150.0 cm
+1500.0 mm
+```
+
+#### Keep `lambda` usage small and local
+
+Use `lambda` for one-expression helpers such as `sorted(..., key=...)`. When the logic stops being small, a named `def` is easier to read, test, and reuse.
+
+*Python example: use a short `lambda` only as a local sort key.*
+```python
+records = [
+    {"name": "Ada", "score": 91},
+    {"name": "Bob", "score": 88},
+    {"name": "Cy", "score": 95},
+]
+
+ordered = sorted(records, key=lambda record: record["score"], reverse=True)
+print([record["name"] for record in ordered])
+```
+
+```text
+['Cy', 'Ada', 'Bob']
+```
+
+#### Add `Callable` hints to higher-order interfaces
+
+A `Callable[[int], int]` hint documents the callback contract even though Python does not enforce it by itself. This matters when the parameter name alone does not reveal the expected signature.
+
+*Python example: annotate a callback-driven helper and call it with two strategies.*
+```python
+from typing import Callable
+
+def run_step(step: Callable[[int], int], value: int) -> int:
+    return step(value)
+
+print(run_step(lambda n: n + 1, 4))
+print(run_step(lambda n: n * 3, 4))
+```
+
+```text
+5
+12
+```
+
+## Troubleshooting
+
+Use these failure signatures to decide whether the bug is a binding issue, a state-sharing problem, or a mismatch between a signature and how callers invoke it.
+
+### Binding and call-shape errors
 
 #### `TypeError: f() takes 0 positional arguments but 1 was given`
 
-This usually means an instance method forgot its `self` parameter. Add `self` as the first method parameter so Python can bind the instance correctly.
+This usually means an instance method forgot `self`. Inside a class body, `def greet():` is still called as `Greeter.greet(instance)`, so the fix is `def greet(self):`.
 
-#### Shared mutable state across calls
+*Python example: reproduce the missing-`self` error and then fix it.*
+```python
+class BrokenGreeter:
+    def greet():
+        return "hello"
 
-If repeated calls keep reusing the same list or dictionary, inspect the function signature for a mutable default. Replace it with a `None` sentinel and create the container inside the function.
+class FixedGreeter:
+    def greet(self):
+        return "hello"
 
-#### All closures return the same value
+try:
+    print(BrokenGreeter().greet())
+except TypeError as exc:
+    print(exc)
 
-This is the classic late-binding loop problem. Bind the current loop value with a default argument such as `lambda i=i: i`, or pre-bind the value with `functools.partial()`.
+print(FixedGreeter().greet())
+```
 
-#### `TypeError: 'NoneType' object is not callable`
-
-A function name was probably rebound to `None` or another non-callable value. Check for name collisions where a variable shadows the original function object.
-
-#### Decorated function shows the wrong `__name__` or `__doc__`
-
-Add `@functools.wraps(func)` to the wrapper inside the decorator. That preserves the metadata that tools and debuggers rely on.
+```text
+BrokenGreeter.greet() takes 0 positional arguments but 1 was given
+hello
+```
 
 #### `TypeError: f() got an unexpected keyword argument`
 
-The caller passed a keyword that the function signature does not accept. Either add the parameter explicitly or accept `**kwargs` if the API is intentionally open-ended.
+The caller supplied a keyword that the function does not accept. Either add that parameter explicitly or accept `**kwargs` only when the API is intentionally open-ended.
+
+*Python example: trigger a keyword mismatch and then call a matching signature.*
+```python
+def connect(host, port):
+    return f"{host}:{port}"
+
+def connect_fixed(host, port, timeout=30):
+    return f"{host}:{port} timeout={timeout}"
+
+try:
+    print(connect("db.local", 5432, timeout=5))
+except TypeError as exc:
+    print(exc)
+
+print(connect_fixed("db.local", 5432, timeout=5))
+```
+
+```text
+connect() got an unexpected keyword argument 'timeout'
+db.local:5432 timeout=5
+```
+
+### Shared state and captured values
+
+#### Shared mutable state across calls
+
+If a `list` or `dict` keeps data from an earlier call, inspect the signature for a mutable default. Replace `items=[]` with `items=None` and allocate the container inside the function.
+
+*Python example: contrast the shared-default bug with the `None` sentinel fix.*
+```python
+def collect_bad(value, items=[]):
+    items.append(value)
+    return items
+
+def collect_good(value, items=None):
+    if items is None:
+        items = []
+    items.append(value)
+    return items
+
+print(collect_bad(1))
+print(collect_bad(2))
+print(collect_good(1))
+print(collect_good(2))
+```
+
+```text
+[1]
+[1, 2]
+[1]
+[2]
+```
+
+#### All closures return the same value
+
+This is the classic late-binding loop problem. Each closure reads the same `i` unless you bind the current value with `lambda i=i: i` or pre-bind with `partial()`.
+
+*Python example: compare the late-bound result with the repaired version.*
+```python
+funcs_bad = [lambda: i for i in range(3)]
+funcs_good = [lambda i=i: i for i in range(3)]
+
+print([func() for func in funcs_bad])
+print([func() for func in funcs_good])
+```
+
+```text
+[2, 2, 2]
+[0, 1, 2]
+```
+
+#### `TypeError: 'NoneType' object is not callable`
+
+A name that used to reference a function was rebound to `None` or another non-callable value. Avoid shadowing a function name when you still need to call it later.
+
+*Python example: shadow a function name with `None` and then use an unshadowed alias.*
+```python
+def build_message():
+    return "ok"
+
+safe_build_message = build_message
+build_message = None
+
+try:
+    build_message()
+except TypeError as exc:
+    print(exc)
+
+print(safe_build_message())
+```
+
+```text
+'NoneType' object is not callable
+ok
+```
+
+### Decorator and metadata issues
+
+#### Decorated function shows the wrong `__name__` or `__doc__`
+
+The wrapper likely omitted `@functools.wraps(func)`. Add `@functools.wraps(func)` so `__name__`, `__doc__`, and `__wrapped__` keep pointing at the original function metadata.
+
+*Python example: compare decorator metadata before and after `@functools.wraps`.*
+```python
+import functools
+
+def bare(func):
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+def fixed(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+@bare
+def broken_target():
+    """broken doc"""
+    return "broken"
+
+@fixed
+def fixed_target():
+    """fixed doc"""
+    return "fixed"
+
+print(broken_target.__name__, broken_target.__doc__)
+print(fixed_target.__name__, fixed_target.__doc__)
+```
+
+```text
+wrapper None
+fixed_target fixed doc
+```
+
+### Recursion, typing, and caching limits
 
 #### `RecursionError: maximum recursion depth exceeded`
 
-Recursive code is missing a reachable base case or recursing too deeply for the default interpreter limit. Fix the termination logic first; only raise the recursion limit when the algorithm is otherwise correct.
+Fix the termination logic or switch to an iterative version before touching `sys.setrecursionlimit()`. Raising the recursion limit does not help if the recursion never reaches a base case.
+
+*Python example: catch a runaway recursive call and then use an iterative equivalent.*
+```python
+def broken_countdown(n):
+    return broken_countdown(n - 1)
+
+def safe_countdown(n):
+    steps = 0
+    while n > 0:
+        n -= 1
+        steps += 1
+    return steps
+
+try:
+    broken_countdown(3)
+except RecursionError as exc:
+    print(type(exc).__name__)
+
+print(safe_countdown(3))
+```
+
+```text
+RecursionError
+3
+```
 
 #### Type hints do not stop bad runtime values
 
-That behavior is expected. Run a static checker such as `mypy` or `pyright`, or use a runtime validation framework if the program must reject bad values while it runs.
+An annotation such as `quantity: int` informs tools, not the interpreter. If the program must fail at runtime, add an explicit guard or a validation layer.
+
+*Python example: show an annotated function accepting the wrong type until a manual guard is added.*
+```python
+def double_unchecked(quantity: int) -> int:
+    return quantity * 2
+
+def double_checked(quantity: int) -> int:
+    if not isinstance(quantity, int):
+        raise TypeError("quantity must be int")
+    return quantity * 2
+
+print(double_unchecked("3"))
+try:
+    print(double_checked("3"))
+except TypeError as exc:
+    print(exc)
+```
+
+```text
+33
+quantity must be int
+```
 
 #### `lru_cache` fails with dict or list arguments
 
-Lists and dictionaries are unhashable. Convert them to a hashable representation first, such as a tuple or `frozenset(mapping.items())`.
+`@lru_cache` hashes the argument tuple, so mutable containers fail because they are unhashable. Convert the input to `tuple` or another hashable representation before it reaches the cached function.
+
+*Python example: trigger the unhashable error and then pass a tuple instead.*
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def sort_names(names):
+    return tuple(sorted(names))
+
+try:
+    sort_names(["bob", "ada"])
+except TypeError as exc:
+    print(exc)
+
+print(sort_names(("bob", "ada")))
+```
+
+```text
+unhashable type: 'list'
+('ada', 'bob')
+```

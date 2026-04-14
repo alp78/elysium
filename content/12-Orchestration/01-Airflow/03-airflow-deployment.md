@@ -159,10 +159,7 @@ This subsection covers the point where the Airflow services become a real contro
 
 #### Start The Stack And Verify Container Health
 
-**When to run:** Run this on first bootstrap, after upgrading the Airflow image, or after editing Compose configuration.
-**Trigger:** The Airflow runtime must be started or restarted.
-**Context:** This is a state-changing remote command executed through IAP. It requires SSH access to the VM and Docker permissions via `sudo`.
-**Purpose:** Start the Compose stack and confirm that the core services become healthy.
+Run this on first bootstrap, after upgrading the Airflow image, or after editing Compose configuration. It is typically triggered by the Airflow runtime must be started or restarted. This is a state-changing remote command executed through IAP. It requires SSH access to the VM and Docker permissions via `sudo`. Start the Compose stack and confirm that the core services become healthy.
 
 *The live validation command for the running platform is the same one used during the rollout.*
 
@@ -199,10 +196,7 @@ The Airflow runtime was not usable until the Google provider surfaces were wired
 
 #### Add `google_cloud_default`
 
-**When to run:** Run this on a fresh Airflow metadata database or any rebuilt environment where the Google connection has not been created yet.
-**Trigger:** Google provider tasks complain about missing `google_cloud_default`, or the connection list does not contain it.
-**Context:** This is a state-changing Airflow CLI command executed inside the worker container. It writes to the Airflow metadata database.
-**Purpose:** Create the default Google connection record that `CloudRunExecuteJobOperator` resolves implicitly.
+Run this on a fresh Airflow metadata database or any rebuilt environment where the Google connection has not been created yet. It is typically triggered by google provider tasks complain about missing `google_cloud_default`, or the connection list does not contain it. This is a state-changing Airflow CLI command executed inside the worker container. It writes to the Airflow metadata database. Create the default Google connection record that `CloudRunExecuteJobOperator` resolves implicitly.
 
 *This is the exact command that fixed the missing-connection issue during rollout.*
 
@@ -243,10 +237,7 @@ The provider then combined that connection object with the VM's service-account 
 
 #### Grant Cloud Run Execution Permission
 
-**When to run:** Run this after provisioning the VM service account if the Airflow worker must execute Cloud Run jobs.
-**Trigger:** `CloudRunExecuteJobOperator` receives a `403 Permission 'run.jobs.run' denied` error.
-**Context:** This is a state-changing IAM command run from the workstation. It modifies the project IAM policy.
-**Purpose:** Allow the Airflow VM service account to execute Cloud Run jobs in project `bq-wh-nb`.
+Run this after provisioning the VM service account if the Airflow worker must execute Cloud Run jobs. It is typically triggered by `CloudRunExecuteJobOperator` receives a `403 Permission 'run.jobs.run' denied` error. This is a state-changing IAM command run from the workstation. It modifies the project IAM policy. Allow the Airflow VM service account to execute Cloud Run jobs in project `bq-wh-nb`.
 
 *This is the exact IAM fix applied during rollout.*
 
@@ -277,10 +268,7 @@ The live DAG directory is host-mounted into the Airflow containers. That makes D
 
 #### Install The DAG File Using A Temp Copy And `install`
 
-**When to run:** Run this when updating a DAG file on the VM and the mounted DAG directory is owned by container UID `50000`.
-**Trigger:** A direct `gcloud compute scp` into `/home/alexper_recovery_gmail_com/app/dags` fails with `permission denied`.
-**Context:** This is a state-changing deployment step. It copies the file to the operator's home directory first, then installs it into the DAG directory with the correct ownership and mode.
-**Purpose:** Publish the DAG file without breaking host ownership or container-readability.
+Run this when updating a DAG file on the VM and the mounted DAG directory is owned by container UID `50000`. It is typically triggered by A direct `gcloud compute scp` into `/home/alexper_recovery_gmail_com/app/dags` fails with `permission denied`. This is a state-changing deployment step. It copies the file to the operator's home directory first, then installs it into the DAG directory with the correct ownership and mode. Publish the DAG file without breaking host ownership or container-readability.
 
 *The direct copy failed first.*
 

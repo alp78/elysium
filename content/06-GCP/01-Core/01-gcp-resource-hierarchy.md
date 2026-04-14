@@ -247,10 +247,7 @@ Use this subsection when a service account can access product APIs like BigQuery
 
 #### Enable the Cloud Resource Manager API
 
-**When to run:** Before the first project, folder, or organization metadata command against a new project.
-**Trigger:** `gcloud projects describe` fails with `API [cloudresourcemanager.googleapis.com] not enabled`.
-**Context:** Run this as a project owner or another identity that already has Service Usage Admin capability on the target project. This is state-changing.
-**Purpose:** Turn on the control-plane API that serves project, folder, and organization metadata.
+Before the first project, folder, or organization metadata command against a new project. It is typically triggered by `gcloud projects describe` fails with `API [cloudresourcemanager.googleapis.com] not enabled`. Run this as a project owner or another identity that already has Service Usage Admin capability on the target project. This is state-changing. Turn on the control-plane API that serves project, folder, and organization metadata.
 
 > [!warning] Owner bootstrap only
 >
@@ -274,10 +271,7 @@ The successful operation ID confirms that `cloudresourcemanager.googleapis.com` 
 
 #### Grant the minimum additional project roles to the service account
 
-**When to run:** After the API is enabled and before validating the service account against hierarchy and service commands.
-**Trigger:** The service account can authenticate, but project metadata, service listing, label mutation, or lien commands still fail.
-**Context:** Run as a project owner on `bq-wh-nb`. These commands are state-changing because they modify the project's IAM policy.
-**Purpose:** Add only the roles needed for this chapter's hierarchy, API enablement, label, and lien workflows.
+After the API is enabled and before validating the service account against hierarchy and service commands. It is typically triggered by the service account can authenticate, but project metadata, service listing, label mutation, or lien commands still fail. Run as a project owner on `bq-wh-nb`. These commands are state-changing because they modify the project's IAM policy. Add only the roles needed for this chapter's hierarchy, API enablement, label, and lien workflows.
 
 > [!info]- Why these four roles
 >
@@ -321,10 +315,7 @@ The service account already had workload roles such as `roles/bigquery.admin` an
 
 #### Verify the new role bindings
 
-**When to run:** Immediately after applying IAM changes.
-**Trigger:** You need to prove that the intended least-privilege bindings landed before switching to the service account.
-**Context:** Read-only `gcloud` command. It queries the current IAM policy on the project.
-**Purpose:** Confirm that the bootstrap roles are present and correctly attached to the service account.
+Immediately after applying IAM changes. It is typically triggered by you need to prove that the intended least-privilege bindings landed before switching to the service account. Read-only `gcloud` command. It queries the current IAM policy on the project. Confirm that the bootstrap roles are present and correctly attached to the service account.
 
 *List the hierarchy bootstrap roles currently granted to the service account.*
 
@@ -347,10 +338,7 @@ The filtered IAM policy confirms that the four bootstrap roles are present. This
 
 #### Activate the service account and target the project
 
-**When to run:** After the bootstrap IAM changes are complete and before validating project-level commands as the service account.
-**Trigger:** You want the rest of the hierarchy workflow to run under the non-human principal rather than the owner account.
-**Context:** Runs in the local shell and writes credentials plus default project settings into the active `gcloud` configuration. This is state-changing for the local CLI profile.
-**Purpose:** Switch the command context from the owner account to the service account that will execute the live examples.
+After the bootstrap IAM changes are complete and before validating project-level commands as the service account. It is typically triggered by you want the rest of the hierarchy workflow to run under the non-human principal rather than the owner account. Runs in the local shell and writes credentials plus default project settings into the active `gcloud` configuration. This is state-changing for the local CLI profile. Switch the command context from the owner account to the service account that will execute the live examples.
 
 > [!warning] Key file handling
 >
@@ -449,10 +437,7 @@ Use this command to discover which organization resources are visible to the act
 
 #### List organizations visible to the active principal
 
-**When to run:** At the start of a hierarchy audit or before planning folder-level changes.
-**Trigger:** You need to determine whether the environment is organization-backed or a standalone project.
-**Context:** Read-only control-plane query. No project mutation occurs.
-**Purpose:** Identify visible organization IDs and confirm whether a higher-level resource exists above the project.
+At the start of a hierarchy audit or before planning folder-level changes. It is typically triggered by you need to determine whether the environment is organization-backed or a standalone project. Read-only control-plane query. No project mutation occurs. Identify visible organization IDs and confirm whether a higher-level resource exists above the project.
 
 *Return all organizations visible to the active service account.*
 
@@ -480,10 +465,7 @@ This command is only meaningful when an organization ID or domain exists. Becaus
 
 #### Describe a specific organization
 
-**When to run:** After you have a valid organization ID or domain.
-**Trigger:** You need metadata such as `displayName`, `directoryCustomerId`, or `owner.directoryCustomerId`.
-**Context:** Read-only control-plane query. Requires visibility to the organization resource.
-**Purpose:** Confirm which organization a project belongs to and inspect the metadata that identifies that top-level ancestor.
+After you have a valid organization ID or domain. It is typically triggered by you need metadata such as `displayName`, `directoryCustomerId`, or `owner.directoryCustomerId`. Read-only control-plane query. Requires visibility to the organization resource. Confirm which organization a project belongs to and inspect the metadata that identifies that top-level ancestor.
 
 *Describe an organization by numeric ID or domain name.*
 
@@ -514,10 +496,7 @@ Use folder listing when an organization or parent folder exists and you need to 
 
 #### List child folders under an organization or parent folder
 
-**When to run:** After confirming that an organization or folder parent exists.
-**Trigger:** You need to inventory the folder tree or find the correct target parent for a new project.
-**Context:** Read-only query against Cloud Resource Manager. Exactly one of `--organization` or `--folder` must be supplied.
-**Purpose:** Enumerate child folders and confirm the folder topology above your projects.
+After confirming that an organization or folder parent exists. It is typically triggered by you need to inventory the folder tree or find the correct target parent for a new project. Read-only query against Cloud Resource Manager. Exactly one of `--organization` or `--folder` must be supplied. Enumerate child folders and confirm the folder topology above your projects.
 
 *List folders under an organization.*
 
@@ -545,10 +524,7 @@ Folder description is the next step after listing, when you need the metadata fo
 
 #### Describe a folder by ID
 
-**When to run:** After obtaining a real folder ID.
-**Trigger:** You need the display name, parent reference, or lifecycle state of a folder.
-**Context:** Read-only query. Requires access to the folder resource.
-**Purpose:** Inspect one folder in detail before moving projects or granting folder-level IAM.
+After obtaining a real folder ID. It is typically triggered by you need the display name, parent reference, or lifecycle state of a folder. Read-only query. Requires access to the folder resource. Inspect one folder in detail before moving projects or granting folder-level IAM.
 
 *Describe a folder by numeric ID.*
 
@@ -573,10 +549,7 @@ Folder creation is an organization-governance operation, not an everyday applica
 
 #### Create a new folder beneath an organization or folder
 
-**When to run:** During platform or environment design, not during routine application deployment.
-**Trigger:** You need a new administrative boundary such as a business unit, environment group, or compliance partition.
-**Context:** State-changing command. Requires a valid organization or parent folder and the authority to create folders there.
-**Purpose:** Insert a new folder into the hierarchy so projects can inherit IAM and policy from a controlled intermediate parent.
+During platform or environment design, not during routine application deployment. It is typically triggered by you need a new administrative boundary such as a business unit, environment group, or compliance partition. State-changing command. Requires a valid organization or parent folder and the authority to create folders there. Insert a new folder into the hierarchy so projects can inherit IAM and policy from a controlled intermediate parent.
 
 *Create a folder beneath an organization.*
 
@@ -602,10 +575,7 @@ Folder moves are powerful because they reparent an entire subtree, not just one 
 
 #### Reparent a folder under a different parent
 
-**When to run:** Only during a planned hierarchy redesign.
-**Trigger:** Teams, environments, or business units are being regrouped beneath a different parent folder or organization.
-**Context:** State-changing control-plane command. Exactly one of `--folder` or `--organization` must be supplied.
-**Purpose:** Move a folder to a new parent while keeping all child resources underneath it.
+Only during a planned hierarchy redesign. It is typically triggered by teams, environments, or business units are being regrouped beneath a different parent folder or organization. State-changing control-plane command. Exactly one of `--folder` or `--organization` must be supplied. Move a folder to a new parent while keeping all child resources underneath it.
 
 > [!warning] Folder move changes inheritance
 >
@@ -642,10 +612,7 @@ Project listing is the first sanity check before any destructive or environment-
 
 #### List projects visible to the service account
 
-**When to run:** Before choosing a project target or validating which projects a principal can access.
-**Trigger:** You need to inventory visible projects or verify that the active identity is scoped correctly.
-**Context:** Read-only Cloud Resource Manager query.
-**Purpose:** Enumerate accessible projects with their IDs, numbers, and lifecycle states.
+Before choosing a project target or validating which projects a principal can access. It is typically triggered by you need to inventory visible projects or verify that the active identity is scoped correctly. Read-only Cloud Resource Manager query. Enumerate accessible projects with their IDs, numbers, and lifecycle states.
 
 *List the projects visible to the active service account.*
 
@@ -674,10 +641,7 @@ Project description is the canonical metadata check. It is how you confirm lifec
 
 #### Describe the live project metadata
 
-**When to run:** Before modifying labels, IAM, APIs, or billing on a project.
-**Trigger:** You need to confirm exactly which project you are touching and what its current metadata looks like.
-**Context:** Read-only Cloud Resource Manager query.
-**Purpose:** Retrieve the authoritative metadata record for one project.
+Before modifying labels, IAM, APIs, or billing on a project. It is typically triggered by you need to confirm exactly which project you are touching and what its current metadata looks like. Read-only Cloud Resource Manager query. Retrieve the authoritative metadata record for one project.
 
 *Describe the live metadata for `bq-wh-nb`.*
 
@@ -715,10 +679,7 @@ Project creation is a control-plane provisioning step, not a normal application 
 
 #### Create a new project
 
-**When to run:** During environment bootstrap or platform expansion.
-**Trigger:** You need a new isolated administrative and billing boundary.
-**Context:** State-changing command. It creates a brand-new Google Cloud project and may optionally attach it to a folder or organization.
-**Purpose:** Provision a project that can later receive APIs, billing, IAM, and workload resources.
+During environment bootstrap or platform expansion. It is typically triggered by you need a new isolated administrative and billing boundary. State-changing command. It creates a brand-new Google Cloud project and may optionally attach it to a folder or organization. Provision a project that can later receive APIs, billing, IAM, and workload resources.
 
 *Create a new project with a specific name and optional labels.*
 
@@ -746,10 +707,7 @@ Project deletion is intentionally slow because Google Cloud gives you a recovery
 
 #### Soft-delete a project
 
-**When to run:** Only when you are certain the project is no longer required.
-**Trigger:** Environment retirement, cost cleanup, or a deliberate rebuild.
-**Context:** State-changing destructive command. It starts a 30-day recovery window rather than immediate irreversible destruction.
-**Purpose:** Move a project from `ACTIVE` into a recoverable deletion state.
+Only when you are certain the project is no longer required. It is typically triggered by environment retirement, cost cleanup, or a deliberate rebuild. State-changing destructive command. It starts a 30-day recovery window rather than immediate irreversible destruction. Move a project from `ACTIVE` into a recoverable deletion state.
 
 > [!danger] Project deletion is wide-scope
 >
@@ -771,10 +729,7 @@ No live output in this environment: project deletion was not executed against `b
 
 #### Restore a project during the recovery window
 
-**When to run:** After an accidental delete request and before the recovery window closes.
-**Trigger:** The project entered `DELETE_REQUESTED`, but the resources still need to be preserved.
-**Context:** State-changing recovery command. Works only during the soft-delete retention window.
-**Purpose:** Return a project to `ACTIVE` before irreversible deletion proceeds.
+After an accidental delete request and before the recovery window closes. It is typically triggered by the project entered `DELETE_REQUESTED`, but the resources still need to be preserved. State-changing recovery command. Works only during the soft-delete retention window. Return a project to `ACTIVE` before irreversible deletion proceeds.
 
 *Restore a project that is still inside the undelete window.*
 
@@ -797,10 +752,7 @@ Labels are the lightest-weight governance metadata you can add to a project. The
 
 #### Add a label to the project
 
-**When to run:** Before introducing cost allocation, environment filtering, or automation targeting that depends on project metadata.
-**Trigger:** A project needs machine-readable metadata such as environment, team, or owner.
-**Context:** State-changing project metadata update through Cloud Resource Manager.
-**Purpose:** Attach a label key/value pair to the project.
+Before introducing cost allocation, environment filtering, or automation targeting that depends on project metadata. It is typically triggered by A project needs machine-readable metadata such as environment, team, or owner. State-changing project metadata update through Cloud Resource Manager. Attach a label key/value pair to the project.
 
 *Add the label `codex-bootstrap=enabled` to `bq-wh-nb`.*
 
@@ -817,10 +769,7 @@ The update command returns the project summary after mutation. The `ENVIRONMENT`
 
 #### Verify the label mutation
 
-**When to run:** Immediately after adding or removing labels.
-**Trigger:** You need proof that the update reached Cloud Resource Manager.
-**Context:** Read-only metadata query.
-**Purpose:** Confirm the exact current label set on the project.
+Immediately after adding or removing labels. It is typically triggered by you need proof that the update reached Cloud Resource Manager. Read-only metadata query. Confirm the exact current label set on the project.
 
 *Describe the project and return only the label block.*
 
@@ -836,10 +785,7 @@ projectId: bq-wh-nb
 
 #### Remove the temporary label
 
-**When to run:** After validation or when the label no longer reflects reality.
-**Trigger:** Cleanup after a temporary test label or a metadata correction.
-**Context:** State-changing metadata update.
-**Purpose:** Remove one or more labels without touching the rest of the project.
+After validation or when the label no longer reflects reality. It is typically triggered by cleanup after a temporary test label or a metadata correction. State-changing metadata update. Remove one or more labels without touching the rest of the project.
 
 *Remove the temporary bootstrap label from `bq-wh-nb`.*
 
@@ -854,10 +800,7 @@ bq-wh-nb    BQ Database  348557092514
 
 #### Filter projects by label
 
-**When to run:** During inventory, governance audits, or automation that targets only one class of projects.
-**Trigger:** You need to select projects by metadata rather than by manually curated lists.
-**Context:** Read-only list command with server-side filtering.
-**Purpose:** Return only the projects whose labels match the filter expression.
+During inventory, governance audits, or automation that targets only one class of projects. It is typically triggered by you need to select projects by metadata rather than by manually curated lists. Read-only list command with server-side filtering. Return only the projects whose labels match the filter expression.
 
 *List projects labeled `env=dev`.*
 
@@ -885,10 +828,7 @@ Liens are deletion-protection controls. They do not manage access, but they stop
 
 #### Create a temporary deletion-protection lien
 
-**When to run:** Before handing a sensitive project to automation or before a risky administrative period.
-**Trigger:** You need an extra guardrail against accidental project deletion.
-**Context:** State-changing alpha command. Requires lien modification permission on the project.
-**Purpose:** Add a project lien that blocks `resourcemanager.projects.delete`.
+Before handing a sensitive project to automation or before a risky administrative period. It is typically triggered by you need an extra guardrail against accidental project deletion. State-changing alpha command. Requires lien modification permission on the project. Add a project lien that blocks `resourcemanager.projects.delete`.
 
 *Create a lien that blocks project deletion.*
 
@@ -909,10 +849,7 @@ The returned resource name is the authoritative lien handle. You need that ID la
 
 #### List active liens on the project
 
-**When to run:** After creating a lien or when investigating why a delete operation is blocked.
-**Trigger:** A project cannot be deleted or you need to audit the current deletion-protection state.
-**Context:** Read-only alpha command.
-**Purpose:** Show every active lien attached to the current project.
+After creating a lien or when investigating why a delete operation is blocked. It is typically triggered by A project cannot be deleted or you need to audit the current deletion-protection state. Read-only alpha command. Show every active lien attached to the current project.
 
 *List all current liens on `bq-wh-nb`.*
 
@@ -929,10 +866,7 @@ The `restrictions` value is the key field. Here it shows that the lien blocks pr
 
 #### Delete the temporary lien after validation
 
-**When to run:** After the protection test is complete or when the project should become deletable again.
-**Trigger:** Cleanup after a temporary guardrail or a planned project retirement.
-**Context:** State-changing alpha command.
-**Purpose:** Remove the lien so the restricted operation can proceed in the future.
+After the protection test is complete or when the project should become deletable again. It is typically triggered by cleanup after a temporary guardrail or a planned project retirement. State-changing alpha command. Remove the lien so the restricted operation can proceed in the future.
 
 *Delete the test lien by lien ID.*
 
@@ -946,10 +880,7 @@ Deleted [liens/p348557092514-l11906663-8e8e-44b3-8175-f770f6bc32c3].
 
 #### Verify that no liens remain
 
-**When to run:** Immediately after deleting a lien.
-**Trigger:** You need to prove that the project is no longer protected by a lingering restriction.
-**Context:** Read-only alpha list command.
-**Purpose:** Confirm that the project has returned to a no-lien state.
+Immediately after deleting a lien. It is typically triggered by you need to prove that the project is no longer protected by a lingering restriction. Read-only alpha list command. Confirm that the project has returned to a no-lien state.
 
 *Return the remaining liens as JSON after cleanup.*
 
@@ -979,10 +910,7 @@ This pattern is the fastest way to learn whether a project is attached to a fold
 
 #### Return the parent type and parent ID
 
-**When to run:** At the start of any hierarchy investigation.
-**Trigger:** You need to know whether folder or organization commands are applicable to the current project.
-**Context:** Read-only metadata query.
-**Purpose:** Return the immediate parent reference of the current project.
+At the start of any hierarchy investigation. It is typically triggered by you need to know whether folder or organization commands are applicable to the current project. Read-only metadata query. Return the immediate parent reference of the current project.
 
 *Return the parent type and parent ID for `bq-wh-nb`.*
 
@@ -1006,10 +934,7 @@ This pattern does not compute the full inherited effective policy, but it shows 
 
 #### List the direct roles granted to the service account on the project
 
-**When to run:** During access reviews or after changing IAM policy.
-**Trigger:** You need to prove which roles are bound directly on the project.
-**Context:** Read-only IAM policy query.
-**Purpose:** Show the direct project-level bindings attached to the service account.
+During access reviews or after changing IAM policy. It is typically triggered by you need to prove which roles are bound directly on the project. Read-only IAM policy query. Show the direct project-level bindings attached to the service account.
 
 *List the roles granted directly on `bq-wh-nb` to the service account used in this note.*
 
@@ -1047,10 +972,7 @@ This is the pattern you would use in an organization-backed environment to inven
 
 #### List projects beneath a folder
 
-**When to run:** During environment inventories or folder-level access reviews.
-**Trigger:** You know the folder ID and need the projects contained beneath it.
-**Context:** Read-only list pattern. Requires a real folder ancestor and visibility to it.
-**Purpose:** Enumerate projects scoped by one folder rather than by the full account view.
+During environment inventories or folder-level access reviews. It is typically triggered by you know the folder ID and need the projects contained beneath it. Read-only list pattern. Requires a real folder ancestor and visibility to it. Enumerate projects scoped by one folder rather than by the full account view.
 
 *List projects whose parent folder ID matches a specific folder.*
 

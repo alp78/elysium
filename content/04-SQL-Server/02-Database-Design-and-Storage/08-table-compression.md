@@ -273,10 +273,7 @@ This is the first diagnostic to run before any compression rollout. It reveals w
 
 #### `sys.partitions` + `sys.dm_db_partition_stats` | return current compression state and size
 
-**When to run:** before planning any compression changes, or as part of a periodic storage audit.
-**Trigger:** first-time database assessment, post-migration review, or storage-capacity planning.
-**Context:** read-only T-SQL query against catalog views and DMVs. No special permissions beyond `VIEW DATABASE STATE`. No restarts or locks.
-**Purpose:** produce a ranked list of the largest indexes with their current compression descriptor, so the operator can identify uncompressed candidates and already-compressed objects.
+Before planning any compression changes, or as part of a periodic storage audit. It is typically triggered by first-time database assessment, post-migration review, or storage-capacity planning. Read-only T-SQL query against catalog views and DMVs. No special permissions beyond `VIEW DATABASE STATE`. No restarts or locks. Produce a ranked list of the largest indexes with their current compression descriptor, so the operator can identify uncompressed candidates and already-compressed objects.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -367,10 +364,7 @@ Never enable compression blindly. SQL Server provides `sp_estimate_data_compress
 
 #### `sp_estimate_data_compression_savings` | compare ROW and PAGE on `gold.index_performance`
 
-**When to run:** before deciding whether to compress a specific table or index.
-**Trigger:** storage audit identifies a candidate, or query tuning reveals I/O-heavy scans on a read-heavy table.
-**Context:** read-only stored procedure call. Acquires an IS lock on the source table and creates a temporary copy in `tempdb`. No schema changes. Requires `SELECT` on the table, `VIEW DATABASE STATE`, and `VIEW DEFINITION`.
-**Purpose:** compare the projected size under `ROW` and `PAGE` compression against the current uncompressed size, so the operator can decide which tier (if any) is worth applying.
+Before deciding whether to compress a specific table or index. It is typically triggered by storage audit identifies a candidate, or query tuning reveals I/O-heavy scans on a read-heavy table. Read-only stored procedure call. Acquires an IS lock on the source table and creates a temporary copy in `tempdb`. No schema changes. Requires `SELECT` on the table, `VIEW DATABASE STATE`, and `VIEW DEFINITION`. Compare the projected size under `ROW` and `PAGE` compression against the current uncompressed size, so the operator can decide which tier (if any) is worth applying.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -435,10 +429,7 @@ This disposable table copies 50,000 rows from `silver.eurostoxx50_ohlcv` into a 
 
 #### `SELECT INTO` + `CREATE CLUSTERED INDEX` | build the disposable compression demo
 
-**When to run:** when you need a throwaway copy to validate compression savings before touching a production object.
-**Trigger:** `sp_estimate_data_compression_savings` reported a promising reduction and you want to confirm it on real data.
-**Context:** state-changing DDL. Creates a new table and clustered index. Requires `CREATE TABLE` permission. The table is disposable — drop it after validation.
-**Purpose:** produce a baseline uncompressed table that the subsequent rebuild steps will compress and measure.
+When you need a throwaway copy to validate compression savings before touching a production object. It is typically triggered by `sp_estimate_data_compression_savings` reported a promising reduction and you want to confirm it on real data. State-changing DDL. Creates a new table and clustered index. Requires `CREATE TABLE` permission. The table is disposable — drop it after validation. Produce a baseline uncompressed table that the subsequent rebuild steps will compress and measure.
 
 *Create the disposable rowstore table used to validate actual compression savings.*
 
@@ -469,10 +460,7 @@ FROM dbo.demo_table_compression;
 
 #### `sys.partitions` | verify baseline before compression
 
-**When to run:** immediately after creating the demo table, before any rebuild.
-**Trigger:** demo table is ready; need to record the `NONE` baseline for comparison.
-**Context:** read-only catalog query. No locks beyond IS.
-**Purpose:** capture the uncompressed page count and size as the baseline for the three-way comparison.
+Immediately after creating the demo table, before any rebuild. It is typically triggered by demo table is ready; need to record the `NONE` baseline for comparison. Read-only catalog query. No locks beyond IS. Capture the uncompressed page count and size as the baseline for the three-way comparison.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -514,10 +502,7 @@ Each rebuild rewrites the clustered index with the requested compression format.
 
 #### `ALTER INDEX ... REBUILD` | apply ROW compression
 
-**When to run:** after capturing the NONE baseline.
-**Trigger:** validation step in the three-way comparison sequence.
-**Context:** state-changing DDL. Rebuilds the clustered index offline. Acquires a `Sch-M` lock for the duration. On a disposable demo table, this is acceptable. On production, use `ONLINE = ON` (see the Online Rebuild section below).
-**Purpose:** measure the actual page-count reduction from row compression alone, isolated from page-level techniques.
+After capturing the NONE baseline. It is typically triggered by validation step in the three-way comparison sequence. State-changing DDL. Rebuilds the clustered index offline. Acquires a `Sch-M` lock for the duration. On a disposable demo table, this is acceptable. On production, use `ONLINE = ON` (see the Online Rebuild section below). Measure the actual page-count reduction from row compression alone, isolated from page-level techniques.
 
 > [!warning] Compression rebuilds are offline by default
 >
@@ -561,10 +546,7 @@ _Row compression reduced the clustered index from 296 pages to 183 pages — a 3
 
 #### `ALTER INDEX ... REBUILD` | apply PAGE compression
 
-**When to run:** after the ROW step, to complete the three-way comparison.
-**Trigger:** next step in the validation sequence.
-**Context:** same as the ROW rebuild — offline `Sch-M` lock on the demo table.
-**Purpose:** measure the additional savings from prefix and dictionary compression on top of row compression.
+After the ROW step, to complete the three-way comparison. It is typically triggered by next step in the validation sequence. Same as the ROW rebuild — offline `Sch-M` lock on the demo table. Measure the additional savings from prefix and dictionary compression on top of row compression.
 
 *Rebuild the clustered index with `PAGE` compression and verify the new page count.*
 
@@ -803,10 +785,7 @@ This DMV exposes per-index, per-partition counters for how often SQL Server atte
 
 #### `sys.dm_db_index_operational_stats` | check page compression effectiveness
 
-**When to run:** after enabling PAGE compression on an index, once the index has been in use for a representative workload period (at least one full ETL or query cycle).
-**Trigger:** post-compression validation, or investigating unexpectedly high CPU on a recently compressed table.
-**Context:** read-only DMV query. No special permissions beyond `VIEW DATABASE STATE`. Counters reset when the SQL Server instance restarts.
-**Purpose:** determine whether page compression is actually compressing pages effectively, or if the data is too diverse and the engine is falling back to row-only compression on most pages.
+After enabling PAGE compression on an index, once the index has been in use for a representative workload period (at least one full ETL or query cycle). It is typically triggered by post-compression validation, or investigating unexpectedly high CPU on a recently compressed table. Read-only DMV query. No special permissions beyond `VIEW DATABASE STATE`. Counters reset when the SQL Server instance restarts. Determine whether page compression is actually compressing pages effectively, or if the data is too diverse and the engine is falling back to row-only compression on most pages.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|

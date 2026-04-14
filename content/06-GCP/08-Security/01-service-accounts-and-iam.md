@@ -262,10 +262,7 @@ This subsection validates the current service-account estate and shows the real 
 
 #### List the current project service accounts
 
-**When to run:** At the start of any IAM review, incident-response triage, or least-privilege cleanup.
-**Trigger:** You need to know which machine identities already exist in the project.
-**Context:** Read-only command against the IAM API. Requires permission to list service accounts in the project.
-**Purpose:** Establish the current machine-identity inventory before changing any bindings.
+At the start of any IAM review, incident-response triage, or least-privilege cleanup. It is typically triggered by you need to know which machine identities already exist in the project. Read-only command against the IAM API. Requires permission to list service accounts in the project. Establish the current machine-identity inventory before changing any bindings.
 
 *List the live service accounts in `bq-wh-nb` with display names and disabled state.*
 
@@ -288,10 +285,7 @@ The important operational point is that `bq-wh-nb` already has dedicated identit
 
 #### Describe the primary high-privilege service account
 
-**When to run:** Before auditing roles, keys, or impersonation rights on a production service account.
-**Trigger:** A workload identity appears central to the project or carries broad permissions.
-**Context:** Read-only metadata lookup on a service account resource.
-**Purpose:** Capture the stable resource name, unique ID, and client ID for the principal you are about to audit.
+Before auditing roles, keys, or impersonation rights on a production service account. It is typically triggered by A workload identity appears central to the project or carries broad permissions. Read-only metadata lookup on a service account resource. Capture the stable resource name, unique ID, and client ID for the principal you are about to audit.
 
 *Describe `bq-wh-sa`, the broadest data-platform service account in this project.*
 
@@ -318,10 +312,7 @@ This confirms that `bq-wh-sa` is a user-managed service account owned by project
 
 #### Inspect key risk on a production service account
 
-**When to run:** During any least-privilege review, credential leak investigation, or migration away from JSON key files.
-**Trigger:** You need to know whether a service account still has long-lived downloadable credentials.
-**Context:** Read-only key inventory lookup on the service account.
-**Purpose:** Separate short-lived Google-managed signing keys from user-managed keys that can be copied and leaked.
+During any least-privilege review, credential leak investigation, or migration away from JSON key files. It is typically triggered by you need to know whether a service account still has long-lived downloadable credentials. Read-only key inventory lookup on the service account. Separate short-lived Google-managed signing keys from user-managed keys that can be copied and leaked.
 
 > [!danger] User-managed keys are long-lived bearer credentials
 >
@@ -352,10 +343,7 @@ This is a real risk signal. The two `SYSTEM_MANAGED` rows are normal Google-mana
 
 #### Create, disable, and re-enable a disposable service account
 
-**When to run:** During controlled IAM testing, onboarding of a new workload, or break-glass rehearsal.
-**Trigger:** You need a new machine identity with no inherited assumptions and no existing key history.
-**Context:** State-changing IAM commands on the project. Requires service-account create, disable, and enable permissions.
-**Purpose:** Validate the service-account lifecycle without touching production identities.
+During controlled IAM testing, onboarding of a new workload, or break-glass rehearsal. It is typically triggered by you need a new machine identity with no inherited assumptions and no existing key history. State-changing IAM commands on the project. Requires service-account create, disable, and enable permissions. Validate the service-account lifecycle without touching production identities.
 
 *Create the disposable service account used for the rest of the note, then disable and re-enable it.*
 
@@ -410,10 +398,7 @@ This subsection creates a minimal project custom role, validates a time-based IA
 
 #### Create a project-scoped custom role
 
-**When to run:** When no predefined role matches the exact machine permissions you want.
-**Trigger:** A service account needs less than a predefined role but more than one isolated permission.
-**Context:** State-changing IAM role administration on the project.
-**Purpose:** Replace broad predefined roles with a tiny permission set that can be reasoned about.
+When no predefined role matches the exact machine permissions you want. It is typically triggered by A service account needs less than a predefined role but more than one isolated permission. State-changing IAM role administration on the project. Replace broad predefined roles with a tiny permission set that can be reasoned about.
 
 *Create a custom role that can only read Secret Manager metadata, not secret payloads.*
 
@@ -442,10 +427,7 @@ This role is intentionally weak: it can inventory secret containers but cannot r
 
 #### Lint a temporary conditional binding before adding it
 
-**When to run:** Before applying any IAM condition that could unexpectedly lock out a workload.
-**Trigger:** You are about to add time-based or context-aware access.
-**Context:** Read-only validation call against the IAM condition linter.
-**Purpose:** Catch malformed CEL or unsupported references before changing the project policy.
+Before applying any IAM condition that could unexpectedly lock out a workload. It is typically triggered by you are about to add time-based or context-aware access. Read-only validation call against the IAM condition linter. Catch malformed CEL or unsupported references before changing the project policy.
 
 *Lint the CEL expression used for the temporary browser binding.*
 
@@ -466,10 +448,7 @@ The empty JSON object means the linter found no issues with this expression in t
 
 #### Add project bindings to the lab principal
 
-**When to run:** After the principal exists and the access requirement has been reduced to a minimal role set.
-**Trigger:** A new workload needs live access to one project surface.
-**Context:** State-changing project IAM policy update.
-**Purpose:** Grant the lab principal one small custom role and one temporary predefined role.
+After the principal exists and the access requirement has been reduced to a minimal role set. It is typically triggered by A new workload needs live access to one project surface. State-changing project IAM policy update. Grant the lab principal one small custom role and one temporary predefined role.
 
 *Grant the custom role unconditionally and `roles/browser` under a time-bound condition.*
 
@@ -500,10 +479,7 @@ The custom role handles metadata inventory. The browser role is the temporary pr
 
 #### Inspect the resulting project bindings for the lab principal
 
-**When to run:** Immediately after any IAM policy change.
-**Trigger:** You need to confirm the project policy now contains exactly the intended membership and condition.
-**Context:** Read-only IAM policy inspection with filtering.
-**Purpose:** Verify that the binding landed with the expected role and condition.
+Immediately after any IAM policy change. It is typically triggered by you need to confirm the project policy now contains exactly the intended membership and condition. Read-only IAM policy inspection with filtering. Verify that the binding landed with the expected role and condition.
 
 *Filter the project policy down to only the bindings that mention the lab principal.*
 
@@ -524,10 +500,7 @@ This is the exact shape you want after a change: one row for the unconditional c
 
 #### Analyze the effective allow path with Cloud Asset
 
-**When to run:** After a grant exists but before you rely on it in production.
-**Trigger:** You want to know which binding is responsible for a permission.
-**Context:** Read-only analysis against Cloud Asset Inventory.
-**Purpose:** Prove which IAM binding contributes `resourcemanager.projects.get` for the lab principal.
+After a grant exists but before you rely on it in production. It is typically triggered by you want to know which binding is responsible for a permission. Read-only analysis against Cloud Asset Inventory. Prove which IAM binding contributes `resourcemanager.projects.get` for the lab principal.
 
 *Ask Cloud Asset which binding explains project-read access for the lab principal.*
 
@@ -549,10 +522,7 @@ Cloud Asset correctly points to the conditional browser binding. That is the bin
 
 #### Troubleshoot the permission before and after the expiry time
 
-**When to run:** Before cutover, before an expiration window ends, or whenever a conditional binding is suspected.
-**Trigger:** A workload has a conditional grant and you need to know whether the condition evaluates to true right now.
-**Context:** Read-only call to Policy Troubleshooter.
-**Purpose:** Show that the same binding grants access on April 13, 2026 and stops granting access after January 1, 2027.
+Before cutover, before an expiration window ends, or whenever a conditional binding is suspected. It is typically triggered by A workload has a conditional grant and you need to know whether the condition evaluates to true right now. Read-only call to Policy Troubleshooter. Show that the same binding grants access on April 13, 2026 and stops granting access after January 1, 2027.
 
 *Troubleshoot the project-read permission while the condition is still true.*
 
@@ -612,10 +582,7 @@ The prompt for this chapter called out Policy Simulator explicitly, so it matter
 
 #### Inspect the current Policy Intelligence simulate surface
 
-**When to run:** Before assuming the CLI can preview the exact IAM change you are about to make.
-**Trigger:** You want to know whether simulation is available for the policy family you care about.
-**Context:** CLI help inspection.
-**Purpose:** Distinguish the live simulation surface from the IAM-validation tools that are actually usable in this project.
+Before assuming the CLI can preview the exact IAM change you are about to make. It is typically triggered by you want to know whether simulation is available for the policy family you care about. CLI help inspection. Distinguish the live simulation surface from the IAM-validation tools that are actually usable in this project.
 
 ```bash
 gcloud policy-intelligence simulate --help
@@ -654,10 +621,7 @@ This subsection grants the operator short-lived impersonation rights on the lab 
 
 #### Grant token-creator on the lab principal to the operator
 
-**When to run:** Before testing a workload identity from your own authenticated session.
-**Trigger:** You need a short-lived token for a service account but do not want to download a key file.
-**Context:** State-changing IAM policy update on the service account resource itself.
-**Purpose:** Authorize the human operator to mint access tokens for the lab principal.
+Before testing a workload identity from your own authenticated session. It is typically triggered by you need a short-lived token for a service account but do not want to download a key file. State-changing IAM policy update on the service account resource itself. Authorize the human operator to mint access tokens for the lab principal.
 
 *Grant `roles/iam.serviceAccountTokenCreator` on the lab service account to the current user.*
 
@@ -701,10 +665,7 @@ This binding is what makes impersonation possible. Without it, `gcloud auth prin
 
 #### Mint a short-lived token through impersonation
 
-**When to run:** During safe identity testing, CLI-based debugging, or REST API reproduction.
-**Trigger:** You need to prove that you can authenticate as the service account without exporting a key.
-**Context:** Read-only token-minting call through IAM Credentials.
-**Purpose:** Demonstrate the keyless authentication path for the lab principal.
+During safe identity testing, CLI-based debugging, or REST API reproduction. It is typically triggered by you need to prove that you can authenticate as the service account without exporting a key. Read-only token-minting call through IAM Credentials. Demonstrate the keyless authentication path for the lab principal.
 
 *Print an impersonated OAuth token for the lab principal.*
 
@@ -722,10 +683,7 @@ The warning is important: the token belongs to the service account, but the audi
 
 #### Prove project-scope metadata access and secret-scope payload access
 
-**When to run:** After the service account has both project-scope and resource-scope grants.
-**Trigger:** You need to prove that the principal can see what it should see and nothing more.
-**Context:** The first command relies on the custom project role plus the temporary browser role. The second relies on `roles/secretmanager.secretAccessor` at secret scope.
-**Purpose:** Validate least privilege with a real secret list and a real secret read.
+After the service account has both project-scope and resource-scope grants. It is typically triggered by you need to prove that the principal can see what it should see and nothing more. The first command relies on the custom project role plus the temporary browser role. The second relies on `roles/secretmanager.secretAccessor` at secret scope. Validate least privilege with a real secret list and a real secret read.
 
 *List secrets as the lab principal.*
 
@@ -780,10 +738,7 @@ This subsection shows the difference between "the command exists" and "the envir
 
 #### List current deny policies attached to the project
 
-**When to run:** Before assuming a permission is blocked only by allow policy.
-**Trigger:** You are auditing a project for higher-order IAM guardrails.
-**Context:** Read-only deny-policy inventory on the project attachment point.
-**Purpose:** Determine whether any explicit deny policies already apply to this project.
+Before assuming a permission is blocked only by allow policy. It is typically triggered by you are auditing a project for higher-order IAM guardrails. Read-only deny-policy inventory on the project attachment point. Determine whether any explicit deny policies already apply to this project.
 
 *List deny policies attached to project number `348557092514`.*
 
@@ -802,10 +757,7 @@ There are no deny policies currently attached to this project.
 
 #### Attempt project-scope deny-policy creation
 
-**When to run:** When you need to verify whether project-scope deny administration is actually available to the current principal.
-**Trigger:** You want to block a dangerous permission even if an allow binding grants it.
-**Context:** State-changing deny-policy create attempt on the project attachment point.
-**Purpose:** Validate whether this environment can author deny policies at project scope.
+When you need to verify whether project-scope deny administration is actually available to the current principal. It is typically triggered by you want to block a dangerous permission even if an allow binding grants it. State-changing deny-policy create attempt on the project attachment point. Validate whether this environment can author deny policies at project scope.
 
 *Attempt to create a deny policy that would block secret reads for the disposable lab principal.*
 
@@ -824,10 +776,7 @@ The practical result is clear: deny-policy authoring is not available from the c
 
 #### Check whether deny-policy creation can be delegated through a custom role
 
-**When to run:** After a deny-policy create attempt fails and you need to know whether a custom role could close the gap.
-**Trigger:** The current principal lacks `iam.denypolicies.create`.
-**Context:** Read-only permission capability check.
-**Purpose:** Determine whether `iam.denypolicies.create` is eligible for project custom roles in this environment.
+After a deny-policy create attempt fails and you need to know whether a custom role could close the gap. It is typically triggered by the current principal lacks `iam.denypolicies.create`. Read-only permission capability check. Determine whether `iam.denypolicies.create` is eligible for project custom roles in this environment.
 
 *Query the permission metadata for `iam.denypolicies.create` on this project resource.*
 
@@ -859,10 +808,7 @@ PAB policies are not a project-local feature. They depend on organization-level 
 
 #### Confirm that `bq-wh-nb` has no visible organization parent
 
-**When to run:** Before planning any PAB or VPC Service Controls rollout.
-**Trigger:** You are deciding whether a project can host organization-scoped security controls.
-**Context:** Read-only organization and project metadata lookup.
-**Purpose:** Prove whether this project sits inside an organization that can hold org-scoped controls.
+Before planning any PAB or VPC Service Controls rollout. It is typically triggered by you are deciding whether a project can host organization-scoped security controls. Read-only organization and project metadata lookup. Prove whether this project sits inside an organization that can hold org-scoped controls.
 
 *List visible organizations for the current credentials, then describe the project itself.*
 

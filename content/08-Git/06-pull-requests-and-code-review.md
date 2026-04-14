@@ -332,10 +332,7 @@ The PR lifecycle covers creating a branch-based proposal, having teammates revie
 
 #### Create a PR with title and body
 
-**When to run:** After pushing a feature branch with all commits ready for review.
-**Trigger:** Feature branch is complete and pushed to the remote.
-**Context:** Runs from the feature branch in a local clone. Read-only locally — creates a PR object on GitHub.
-**Purpose:** Propose the branch's changes for review and eventual merge into the base branch.
+After pushing a feature branch with all commits ready for review. It is typically triggered by feature branch is complete and pushed to the remote. Runs from the feature branch in a local clone. Read-only locally — creates a PR object on GitHub. Propose the branch's changes for review and eventual merge into the base branch.
 
 *Create a pull request for the SQL migration branch.*
 
@@ -349,10 +346,7 @@ https://github.com/alp78/git-lab/pull/2
 
 #### Create a PR with a structured body
 
-**When to run:** When the PR description needs sections, checklists, or formatting that exceeds a single sentence.
-**Trigger:** Any PR that modifies schemas, DAGs, infrastructure, or shared configuration.
-**Context:** The `--body` flag accepts full markdown. Use a heredoc to pass multi-line content without escaping.
-**Purpose:** Give reviewers enough context to evaluate the change without reading every diff line.
+When the PR description needs sections, checklists, or formatting that exceeds a single sentence. It is typically triggered by any PR that modifies schemas, DAGs, infrastructure, or shared configuration. The `--body` flag accepts full markdown. Use a heredoc to pass multi-line content without escaping. Give reviewers enough context to evaluate the change without reading every diff line.
 
 > [!tip] Use heredoc for multi-line PR bodies
 >
@@ -383,10 +377,7 @@ https://github.com/alp78/git-lab/pull/2
 
 #### Create a draft PR
 
-**When to run:** When work is in progress and you want CI feedback but do not want the PR to be mergeable yet.
-**Trigger:** Starting a complex feature where early CI validation or team visibility is valuable.
-**Context:** Draft PRs run CI checks but disable the merge button. Reviewers can see the code but their approvals do not count until the draft is promoted.
-**Purpose:** Signal "not ready for merge" while still getting automated feedback.
+When work is in progress and you want CI feedback but do not want the PR to be mergeable yet. It is typically triggered by starting a complex feature where early CI validation or team visibility is valuable. Draft PRs run CI checks but disable the merge button. Reviewers can see the code but their approvals do not count until the draft is promoted. Signal "not ready for merge" while still getting automated feedback.
 
 *Open a draft PR for the dbt staging model.*
 
@@ -418,10 +409,7 @@ gh pr ready 3
 
 #### Create a PR with reviewer, assignee, and label
 
-**When to run:** When the team uses labels for triage or when a specific reviewer should be notified immediately.
-**Trigger:** PRs that touch specific domains (testing, infrastructure, data quality).
-**Context:** Labels must already exist on the repository. Create them with `gh label create` if needed.
-**Purpose:** Route the PR to the correct reviewer and categorize it for project tracking.
+When the team uses labels for triage or when a specific reviewer should be notified immediately. It is typically triggered by PRs that touch specific domains (testing, infrastructure, data quality). Labels must already exist on the repository. Create them with `gh label create` if needed. Route the PR to the correct reviewer and categorize it for project tracking.
 
 *Create a PR with a label and assignee.*
 
@@ -455,10 +443,7 @@ https://github.com/alp78/git-lab/pull/9
 
 #### List all open PRs
 
-**When to run:** During daily standup, before starting work, or when checking what needs review.
-**Trigger:** Routine check on team activity or looking for a specific PR.
-**Context:** Read-only. Queries the GitHub API for the current repository.
-**Purpose:** See all open work and identify PRs needing attention.
+During daily standup, before starting work, or when checking what needs review. It is typically triggered by routine check on team activity or looking for a specific PR. Read-only. Queries the GitHub API for the current repository. See all open work and identify PRs needing attention.
 
 *List all open pull requests.*
 
@@ -506,10 +491,7 @@ gh pr list --state all
 
 #### View a PR's details
 
-**When to run:** Before starting a code review, or when checking the status of your own PR.
-**Trigger:** A PR notification arrives, or you need to check CI status.
-**Context:** Read-only. Queries the GitHub API.
-**Purpose:** Understand the PR's current state — who authored it, what it changes, what reviews and checks are pending.
+Before starting a code review, or when checking the status of your own PR. It is typically triggered by A PR notification arrives, or you need to check CI status. Read-only. Queries the GitHub API. Understand the PR's current state — who authored it, what it changes, what reviews and checks are pending.
 
 *View PR #9 details.*
 
@@ -553,10 +535,7 @@ gh pr view 9 --web
 
 #### Check out a PR branch for local testing
 
-**When to run:** When a PR needs manual testing, debugging, or a local build to verify correctness.
-**Trigger:** A reviewer wants to go beyond reading the diff — they need to run the code.
-**Context:** Modifies the local working tree. Fetches from the remote. Requires a clean working tree (stash or commit first).
-**Purpose:** Get the PR's exact code on your machine for testing.
+When a PR needs manual testing, debugging, or a local build to verify correctness. It is typically triggered by A reviewer wants to go beyond reading the diff — they need to run the code. Modifies the local working tree. Fetches from the remote. Requires a clean working tree (stash or commit first). Get the PR's exact code on your machine for testing.
 
 *Check out PR #9 for local testing.*
 
@@ -575,10 +554,7 @@ Your branch is up to date with 'origin/feat/data-quality-checks'.
 
 #### View the diff of a PR
 
-**When to run:** When you want to review changes in the terminal without opening the browser.
-**Trigger:** Quick review of small PRs or scripting diff analysis.
-**Context:** Read-only. Outputs the diff to stdout.
-**Purpose:** Inspect exactly what the PR changes, file by file.
+When you want to review changes in the terminal without opening the browser. It is typically triggered by quick review of small PRs or scripting diff analysis. Read-only. Outputs the diff to stdout. Inspect exactly what the PR changes, file by file.
 
 *View the diff of PR #2 (market hours migration).*
 
@@ -616,10 +592,7 @@ index 0000000..e7d618f
 
 #### Submit a review comment
 
-**When to run:** When you have feedback that does not block the merge but should be addressed.
-**Trigger:** You see a style issue, a question, or an optional improvement.
-**Context:** Creates a review on GitHub. Does not change the PR's mergeability state.
-**Purpose:** Provide non-blocking feedback to the author.
+When you have feedback that does not block the merge but should be addressed. It is typically triggered by you see a style issue, a question, or an optional improvement. Creates a review on GitHub. Does not change the PR's mergeability state. Provide non-blocking feedback to the author.
 
 *Leave a review comment on PR #6.*
 
@@ -629,10 +602,7 @@ gh pr review 6 --comment --body "Consider adding validation for exchange codes (
 
 #### Approve a PR
 
-**When to run:** When the code is correct, tests pass, and you are satisfied the PR is ready to merge.
-**Trigger:** Completed review with no blocking issues.
-**Context:** Creates an approval review. If branch protection requires N approvals, this counts as one.
-**Purpose:** Signal that the reviewer endorses the changes.
+When the code is correct, tests pass, and you are satisfied the PR is ready to merge. It is typically triggered by completed review with no blocking issues. Creates an approval review. If branch protection requires N approvals, this counts as one. Signal that the reviewer endorses the changes.
 
 > [!warning] Cannot approve your own PR
 >
@@ -650,10 +620,7 @@ gh pr review 6 --approve --body "Approved — schema is clean, seeds are correct
 
 #### Request changes on a PR
 
-**When to run:** When the code has issues that must be fixed before merge.
-**Trigger:** Security flaw, logic bug, missing test, or policy violation found during review.
-**Context:** Blocks the merge button until the reviewer either dismisses or updates their review after the author pushes fixes.
-**Purpose:** Enforce a fix before the code reaches the base branch.
+When the code has issues that must be fixed before merge. It is typically triggered by security flaw, logic bug, missing test, or policy violation found during review. Blocks the merge button until the reviewer either dismisses or updates their review after the author pushes fixes. Enforce a fix before the code reaches the base branch.
 
 *Request changes on a PR.*
 
@@ -674,10 +641,7 @@ PRs can be closed without merging (abandoned, superseded, or deferred) and reope
 
 #### Close a PR
 
-**When to run:** When a PR is abandoned, superseded by another PR, or deferred to a future milestone.
-**Trigger:** Decision to not merge this branch.
-**Context:** Closes the PR on GitHub. Does not delete the branch. Does not affect the local clone.
-**Purpose:** Signal that this work is no longer active.
+When a PR is abandoned, superseded by another PR, or deferred to a future milestone. It is typically triggered by decision to not merge this branch. Closes the PR on GitHub. Does not delete the branch. Does not affect the local clone. Signal that this work is no longer active.
 
 *Close PR #6 with a comment explaining why.*
 
@@ -691,10 +655,7 @@ gh pr close 6 --comment "Closing — will revisit after the migration PR lands."
 
 #### Reopen a closed PR
 
-**When to run:** When a previously closed PR becomes relevant again.
-**Trigger:** The blocking dependency has been resolved, or the team decided to proceed with the work.
-**Context:** Reopens the PR on GitHub. The branch must still exist on the remote.
-**Purpose:** Resume the review process without creating a new PR.
+When a previously closed PR becomes relevant again. It is typically triggered by the blocking dependency has been resolved, or the team decided to proceed with the work. Reopens the PR on GitHub. The branch must still exist on the remote. Resume the review process without creating a new PR.
 
 *Reopen PR #6.*
 
@@ -721,10 +682,7 @@ Squash merge collapses every commit on the feature branch into a single new comm
 
 #### Squash merge a PR
 
-**When to run:** When you want one commit per PR on the base branch — the most common default for teams.
-**Trigger:** PR is approved, checks pass, branch is up to date.
-**Context:** Creates a new commit on the base branch. Deletes the remote feature branch if `--delete-branch` is passed.
-**Purpose:** Produce a clean, linear history where each PR is one commit.
+When you want one commit per PR on the base branch — the most common default for teams. It is typically triggered by PR is approved, checks pass, branch is up to date. Creates a new commit on the base branch. Deletes the remote feature branch if `--delete-branch` is passed. Produce a clean, linear history where each PR is one commit.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -773,10 +731,7 @@ Standard merge creates a **merge commit** with two parents: the tip of the base 
 
 #### Standard merge a PR
 
-**When to run:** When audit policy requires preserving the full branch history.
-**Trigger:** PR approved and checks pass. Team policy mandates merge commits.
-**Context:** Creates a merge commit on the base branch. Feature branch commits become part of main's history graph.
-**Purpose:** Preserve the complete development timeline with branch structure visible.
+When audit policy requires preserving the full branch history. It is typically triggered by PR approved and checks pass. Team policy mandates merge commits. Creates a merge commit on the base branch. Feature branch commits become part of main's history graph. Preserve the complete development timeline with branch structure visible.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -820,10 +775,7 @@ Rebase merge replays each feature branch commit on top of the base, one by one, 
 
 #### Rebase merge a PR
 
-**When to run:** When the team values linear history but also wants to see individual commits (not just one squash commit per PR).
-**Trigger:** PR approved and checks pass. Team prefers linear history.
-**Context:** Creates new commit objects on the base branch. Original SHAs on the feature branch become unreachable.
-**Purpose:** Produce a linear history that preserves individual commit granularity.
+When the team values linear history but also wants to see individual commits (not just one squash commit per PR). It is typically triggered by PR approved and checks pass. Team prefers linear history. Creates new commit objects on the base branch. Original SHAs on the feature branch become unreachable. Produce a linear history that preserves individual commit granularity.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -952,10 +904,7 @@ Branch protection rules are configured per-branch in the repository settings. Th
 
 #### Configure branch protection via the API
 
-**When to run:** When setting up a new repository or automating governance.
-**Trigger:** Repository creation, team onboarding, or security audit.
-**Context:** Requires admin access to the repository. The API call modifies repository settings on GitHub.
-**Purpose:** Enforce code quality and review requirements before code reaches the base branch.
+When setting up a new repository or automating governance. It is typically triggered by repository creation, team onboarding, or security audit. Requires admin access to the repository. The API call modifies repository settings on GitHub. Enforce code quality and review requirements before code reaches the base branch.
 
 > [!info]- Branch protection API payload
 >
@@ -998,10 +947,7 @@ gh api repos/alp78/git-lab/branches/main/protection \
 
 #### Remove branch protection
 
-**When to run:** When the rules are no longer needed (e.g., sandbox repos, temporary relaxation for emergency fixes).
-**Trigger:** Admin decision to remove protection.
-**Context:** Requires admin access. Removes all protection rules from the branch.
-**Purpose:** Restore unrestricted access to the branch.
+When the rules are no longer needed (e.g., sandbox repos, temporary relaxation for emergency fixes). It is typically triggered by admin decision to remove protection. Requires admin access. Removes all protection rules from the branch. Restore unrestricted access to the branch.
 
 *Remove branch protection from main.*
 
@@ -1029,10 +975,7 @@ A `CODEOWNERS` file in `.github/CODEOWNERS` automatically assigns reviewers base
 
 #### CODEOWNERS syntax
 
-**When to run:** When setting up a new repository or when team ownership boundaries change.
-**Trigger:** Repository governance setup, onboarding new teams, or reorganizing code ownership.
-**Context:** The file lives at `.github/CODEOWNERS` in the repository root. GitHub reads it on every PR creation and assigns reviewers automatically.
-**Purpose:** Ensure the right people review changes to the code they own.
+When setting up a new repository or when team ownership boundaries change. It is typically triggered by repository governance setup, onboarding new teams, or reorganizing code ownership. The file lives at `.github/CODEOWNERS` in the repository root. GitHub reads it on every PR creation and assigns reviewers automatically. Ensure the right people review changes to the code they own.
 
 > [!info]- CODEOWNERS syntax rules
 >
@@ -1466,10 +1409,7 @@ gitGraph TB:
 
 #### Attempt the squash merge
 
-**When to run:** After opening a PR, when you expect the branch to be mergeable.
-**Trigger:** PR is approved and you want to merge.
-**Context:** If the branch has diverged from main, GitHub returns a "not mergeable" error.
-**Purpose:** Attempt to merge — the error message confirms the divergence.
+After opening a PR, when you expect the branch to be mergeable. It is typically triggered by PR is approved and you want to merge. If the branch has diverged from main, GitHub returns a "not mergeable" error. Attempt to merge — the error message confirms the divergence.
 
 *Attempt to squash merge the diverged PR.*
 

@@ -218,10 +218,7 @@ The first lifecycle question is always the same: what exists right now, what is 
 
 #### PowerShell | docker compose ps | inspect the local Windows compose project
 
-**When to run:** After `docker compose up`, after a reboot, or when a host-side tool cannot reach the local SQL Server or dashboard.
-**Trigger:** The repo appears partially up, or you need to verify whether a service exists as a container versus only as a compose definition.
-**Context:** PowerShell on the Windows host in `C:\Users\aperi\DEV\ESG`. This is a read-only inventory command.
-**Purpose:** Confirm which local services are present and whether they are actually serving traffic.
+After `docker compose up`, after a reboot, or when a host-side tool cannot reach the local SQL Server or dashboard. It is typically triggered by the repo appears partially up, or you need to verify whether a service exists as a container versus only as a compose definition. PowerShell on the Windows host in `C:\Users\aperi\DEV\ESG`. This is a read-only inventory command. Confirm which local services are present and whether they are actually serving traffic.
 
 *Lists the current local `stoxx` compose containers and their lifecycle state.*
 
@@ -246,10 +243,7 @@ This output proves three useful facts immediately. First, the local dashboard ex
 
 #### Linux | docker compose ps | inspect the live Airflow VM compose project
 
-**When to run:** After any VM reboot, Airflow outage, DAG deployment, or healthcheck alarm.
-**Trigger:** The Airflow UI, scheduler, worker, or broker appears unavailable, or you need to verify the live container topology before debugging.
-**Context:** Linux shell on `stoxx-airflow`, reached through `gcloud compute ssh`. This is a read-only inventory command against the live VM.
-**Purpose:** Confirm the real Airflow stack that is currently running in GCP and identify which services expose host ports.
+After any VM reboot, Airflow outage, DAG deployment, or healthcheck alarm. It is typically triggered by the Airflow UI, scheduler, worker, or broker appears unavailable, or you need to verify the live container topology before debugging. Linux shell on `stoxx-airflow`, reached through `gcloud compute ssh`. This is a read-only inventory command against the live VM. Confirm the real Airflow stack that is currently running in GCP and identify which services expose host ports.
 
 *Lists the current live Airflow compose containers on the GCP VM.*
 
@@ -289,10 +283,7 @@ These commands are operationally different from `docker compose ps`. They do not
 
 #### Linux | docker exec | verify the live Airflow scheduler runtime from inside the containers
 
-**When to run:** After Airflow startup, after a Compose refresh, or when task execution does not match the expected executor model.
-**Trigger:** The scheduler is running but you need proof that it is on the intended Airflow version, using the intended executor, and still connected to PostgreSQL.
-**Context:** Linux shell on `stoxx-airflow`. The commands below are read-only checks executed inside existing containers.
-**Purpose:** Prove that the live scheduler is really Airflow 3.2.0, that it is using `CeleryExecutor`, and that the metadata database is reachable from the stack itself.
+After Airflow startup, after a Compose refresh, or when task execution does not match the expected executor model. It is typically triggered by the scheduler is running but you need proof that it is on the intended Airflow version, using the intended executor, and still connected to PostgreSQL. Linux shell on `stoxx-airflow`. The commands below are read-only checks executed inside existing containers. Prove that the live scheduler is really Airflow 3.2.0, that it is using `CeleryExecutor`, and that the metadata database is reachable from the stack itself.
 
 *Reads the Airflow version, executor setting, and PostgreSQL readiness from the live VM containers.*
 
@@ -312,10 +303,7 @@ This is a decisive runtime check. The container is not only present; it is the e
 
 #### Linux | docker logs | read the scheduler's recent operational trail
 
-**When to run:** When tasks stay queued, when a DAG appears idle, or when you need to prove that the scheduler is dispatching Cloud Run work.
-**Trigger:** Airflow UI symptoms do not tell you whether the scheduler is making forward progress.
-**Context:** Linux shell on `stoxx-airflow`. This is a read-only log inspection against the running scheduler container.
-**Purpose:** Show recent scheduling decisions, queue transitions, and successful task completion directly from the scheduler logs.
+When tasks stay queued, when a DAG appears idle, or when you need to prove that the scheduler is dispatching Cloud Run work. It is typically triggered by airflow UI symptoms do not tell you whether the scheduler is making forward progress. Linux shell on `stoxx-airflow`. This is a read-only log inspection against the running scheduler container. Show recent scheduling decisions, queue transitions, and successful task completion directly from the scheduler logs.
 
 *Dumps the most recent scheduler log lines from the live Airflow VM.*
 

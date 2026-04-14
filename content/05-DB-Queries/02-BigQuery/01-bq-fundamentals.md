@@ -186,10 +186,7 @@ First thing in any database — see what's there. The Python client library list
 
 #### List tables with row counts and storage sizes via the Python client
 
-**When to run:** At the start of any BigQuery exploration session, or after a new dataset is created or tables are added/removed.
-**Trigger:** First contact with an unfamiliar project or dataset, or verifying that a pipeline load created the expected tables.
-**Context:** Python client library call (`bigquery.Client`). Read-only — metadata access is free and not billed per bytes scanned. Requires `bigquery.tables.list` and `bigquery.tables.get` permissions (included in `roles/bigquery.dataViewer`).
-**Purpose:** Build a complete inventory of all tables across the medallion layers — names, row counts, and storage sizes — to understand the data landscape before writing queries.
+At the start of any BigQuery exploration session, or after a new dataset is created or tables are added/removed. It is typically triggered by first contact with an unfamiliar project or dataset, or verifying that a pipeline load created the expected tables. Python client library call (`bigquery.Client`). Read-only — metadata access is free and not billed per bytes scanned. Requires `bigquery.tables.list` and `bigquery.tables.get` permissions (included in `roles/bigquery.dataViewer`). Build a complete inventory of all tables across the medallion layers — names, row counts, and storage sizes — to understand the data landscape before writing queries.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -271,10 +268,7 @@ Check data types before writing queries — `float` vs `int` vs `varchar` change
 
 #### Inspect column names, types, and nullability with INFORMATION_SCHEMA
 
-**When to run:** Before writing any query against a table, or when debugging unexpected type coercion or NULL behavior.
-**Trigger:** First interaction with a table, or encountering a type mismatch error in a JOIN or aggregation.
-**Context:** SQL query against `INFORMATION_SCHEMA.COLUMNS`. Read-only, free (metadata queries are not billed). Requires `bigquery.tables.get` permission.
-**Purpose:** Confirm column names, data types, and nullability so that downstream queries use correct types and handle NULLs explicitly.
+Before writing any query against a table, or when debugging unexpected type coercion or NULL behavior. It is typically triggered by first interaction with a table, or encountering a type mismatch error in a JOIN or aggregation. SQL query against `INFORMATION_SCHEMA.COLUMNS`. Read-only, free (metadata queries are not billed). Requires `bigquery.tables.get` permission. Confirm column names, data types, and nullability so that downstream queries use correct types and handle NULLs explicitly.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -366,10 +360,7 @@ The fundamental query: pick columns, filter rows, sort results. `LIMIT N` limits
 
 #### Retrieve the 10 most recent ASML trading days
 
-**When to run:** During initial data exploration or to verify that the latest pipeline load landed correctly.
-**Trigger:** Need to confirm the most recent data available for a specific symbol, or spot-checking data freshness.
-**Context:** GoogleSQL SELECT against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Bytes scanned = only the columns named in the SELECT list. `LIMIT` does not reduce scan cost — all matching rows are scanned, then output is truncated.
-**Purpose:** Retrieve the most recent OHLCV rows for a single stock to verify data completeness and recency.
+During initial data exploration or to verify that the latest pipeline load landed correctly. It is typically triggered by need to confirm the most recent data available for a specific symbol, or spot-checking data freshness. GoogleSQL SELECT against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Bytes scanned = only the columns named in the SELECT list. `LIMIT` does not reduce scan cost — all matching rows are scanned, then output is truncated. Retrieve the most recent OHLCV rows for a single stock to verify data completeness and recency.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -466,10 +457,7 @@ Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This find
 
 #### Find high-volume days with large intraday price swings
 
-**When to run:** During ad-hoc market analysis or when investigating anomalous trading activity.
-**Trigger:** Need to identify potential breakout or crash days for risk analysis, backtesting filters, or event-driven trading signals.
-**Context:** GoogleSQL SELECT with multi-condition WHERE against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Scans `symbol`, `date`, `close`, `open`, `volume` columns. The computed `daily_move_pct` is derived inline — not stored.
-**Purpose:** Surface high-volume trading days where the intraday price swing exceeded 3% — candidate events for breakout/crash classification.
+During ad-hoc market analysis or when investigating anomalous trading activity. It is typically triggered by need to identify potential breakout or crash days for risk analysis, backtesting filters, or event-driven trading signals. GoogleSQL SELECT with multi-condition WHERE against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Scans `symbol`, `date`, `close`, `open`, `volume` columns. The computed `daily_move_pct` is derived inline — not stored. Surface high-volume trading days where the intraday price swing exceeded 3% — candidate events for breakout/crash classification.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -567,10 +555,7 @@ LIMIT 15
 
 #### Rank stocks by average daily trading volume
 
-**When to run:** During liquidity analysis or when building a universe filter for a trading strategy.
-**Trigger:** Need to identify the most actively traded stocks for portfolio construction, or to verify that volume data is populated across the full history.
-**Context:** GoogleSQL GROUP BY against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Scans `symbol`, `volume`, `close`, `date` columns. Aggregates across the entire table (no date filter — full history scan).
-**Purpose:** Rank stocks by average daily trading volume to assess liquidity — a core input for index weighting and portfolio construction decisions.
+During liquidity analysis or when building a universe filter for a trading strategy. It is typically triggered by need to identify the most actively traded stocks for portfolio construction, or to verify that volume data is populated across the full history. GoogleSQL GROUP BY against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Scans `symbol`, `volume`, `close`, `date` columns. Aggregates across the entire table (no date filter — full history scan). Rank stocks by average daily trading volume to assess liquidity — a core input for index weighting and portfolio construction decisions.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -677,10 +662,7 @@ Group by `EXTRACT(YEAR FROM date), EXTRACT(MONTH FROM date)` to build time-serie
 
 #### Build a monthly time-series summary per stock
 
-**When to run:** When building monthly performance reports or feeding a time-series visualization.
-**Trigger:** Need to see monthly aggregated price behavior (high/low/average) and total volume for trend analysis or reporting.
-**Context:** GoogleSQL GROUP BY with `EXTRACT(YEAR/MONTH)` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Scans `symbol`, `date`, `close`, `volume` columns. The `EXTRACT` functions on the WHERE-filtered column do not prevent partition pruning when combined with a direct date range filter (as shown here with `date >= '2025-01-01'`).
-**Purpose:** Produce a monthly time-series summary per stock showing price range, average price, and total volume — the basis for monthly performance dashboards.
+When building monthly performance reports or feeding a time-series visualization. It is typically triggered by need to see monthly aggregated price behavior (high/low/average) and total volume for trend analysis or reporting. GoogleSQL GROUP BY with `EXTRACT(YEAR/MONTH)` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Scans `symbol`, `date`, `close`, `volume` columns. The `EXTRACT` functions on the WHERE-filtered column do not prevent partition pruning when combined with a direct date range filter (as shown here with `date >= '2025-01-01'`). Produce a monthly time-series summary per stock showing price range, average price, and total volume — the basis for monthly performance dashboards.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -800,10 +782,7 @@ The subquery with `ROW_NUMBER()` picks only the most recent price per symbol.
 
 #### Join latest price per stock with company dimension metadata
 
-**When to run:** When building a current-state snapshot of the portfolio — latest price enriched with sector, country, and company name.
-**Trigger:** Dashboard refresh, ad-hoc portfolio review, or verifying that dimension metadata aligns with the latest price data.
-**Context:** GoogleSQL JOIN between `stoxx_silver.eurostoxx50_ohlcv` and `stoxx_silver.index_dim`. Read-only. The subquery uses `ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date DESC)` to deduplicate to the latest date per symbol before joining. BigQuery will broadcast the small dimension table automatically.
-**Purpose:** Produce a single enriched row per stock showing the most recent price alongside company metadata (sector, country, name).
+When building a current-state snapshot of the portfolio — latest price enriched with sector, country, and company name. It is typically triggered by dashboard refresh, ad-hoc portfolio review, or verifying that dimension metadata aligns with the latest price data. GoogleSQL JOIN between `stoxx_silver.eurostoxx50_ohlcv` and `stoxx_silver.index_dim`. Read-only. The subquery uses `ROW_NUMBER() OVER (PARTITION BY symbol ORDER BY date DESC)` to deduplicate to the latest date per symbol before joining. BigQuery will broadcast the small dimension table automatically. Produce a single enriched row per stock showing the most recent price alongside company metadata (sector, country, name).
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -911,10 +890,7 @@ The gold layer has pre-computed composite scores. We join with the dimension tab
 
 #### Join gold composite scores with dimension labels for a ranked dashboard
 
-**When to run:** When producing a ranked stock dashboard that combines pre-computed gold scores with human-readable dimension labels.
-**Trigger:** Daily dashboard refresh, portfolio review, or verifying that the scoring pipeline produced sensible results.
-**Context:** GoogleSQL JOIN between `stoxx_gold.scores_daily` and `stoxx_silver.index_dim`. Read-only. The subquery on `score_date` fetches the latest scoring run. BigQuery broadcasts the dimension table automatically.
-**Purpose:** Produce the final ranked stock dashboard joining composite scores (value, momentum, sentiment) with company metadata and index weight.
+When producing a ranked stock dashboard that combines pre-computed gold scores with human-readable dimension labels. It is typically triggered by daily dashboard refresh, portfolio review, or verifying that the scoring pipeline produced sensible results. GoogleSQL JOIN between `stoxx_gold.scores_daily` and `stoxx_silver.index_dim`. Read-only. The subquery on `score_date` fetches the latest scoring run. BigQuery broadcasts the dimension table automatically. Produce the final ranked stock dashboard joining composite scores (value, momentum, sentiment) with company metadata and index weight.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -1058,10 +1034,7 @@ A **moving average** smooths price data over N days. Used for trend detection:
 
 #### Compute 30-day and 90-day SMAs with a sliding window
 
-**When to run:** When generating trend signals or building technical analysis overlays for time-series data.
-**Trigger:** Need to compute short-term (SMA 30) and long-term (SMA 90) moving averages for trend detection. Price above SMA = bullish momentum; price crossing below = bearish signal.
-**Context:** GoogleSQL window function `AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The `ROWS` frame ensures exactly 30 or 90 physical rows are averaged (not `RANGE`, which would group ties).
-**Purpose:** Compute 30-day and 90-day simple moving averages (SMA) to identify trend direction and potential crossover signals.
+When generating trend signals or building technical analysis overlays for time-series data. It is typically triggered by need to compute short-term (SMA 30) and long-term (SMA 90) moving averages for trend detection. Price above SMA = bullish momentum; price crossing below = bearish signal. GoogleSQL window function `AVG() OVER (ROWS BETWEEN N PRECEDING AND CURRENT ROW)` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The `ROWS` frame ensures exactly 30 or 90 physical rows are averaged (not `RANGE`, which would group ties). Compute 30-day and 90-day simple moving averages (SMA) to identify trend direction and potential crossover signals.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1155,10 +1128,7 @@ Use cases:
 
 #### Calculate daily return percentage and detect calendar gaps
 
-**When to run:** When computing daily return time series or auditing the trading calendar for unexpected gaps.
-**Trigger:** Building a return series for risk/performance analytics, or investigating why a rolling calculation produced unexpected results (often caused by hidden gaps).
-**Context:** GoogleSQL window functions `LAG()` and `DATE_DIFF()` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. LAG is partitioned by symbol and ordered by date — each row sees only its own symbol's history.
-**Purpose:** Compute daily return as percentage change from the previous close, and detect calendar gaps (days_gap > 3 indicates a holiday or data issue beyond a normal weekend).
+When computing daily return time series or auditing the trading calendar for unexpected gaps. It is typically triggered by building a return series for risk/performance analytics, or investigating why a rolling calculation produced unexpected results (often caused by hidden gaps). GoogleSQL window functions `LAG()` and `DATE_DIFF()` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. LAG is partitioned by symbol and ordered by date — each row sees only its own symbol's history. Compute daily return as percentage change from the previous close, and detect calendar gaps (days_gap > 3 indicates a holiday or data issue beyond a normal weekend).
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1260,10 +1230,7 @@ This is the core of the gold scoring engine — rank stocks by composite score.
 
 #### Rank stocks by YTD return and assign quartile buckets
 
-**When to run:** When building a YTD performance ranking or segmenting stocks into quantile buckets for portfolio construction.
-**Trigger:** End-of-day scoring run, periodic performance review, or constructing a quantile-based trading signal.
-**Context:** GoogleSQL CTEs with self-join and window functions against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The `bounds` CTE scans the table once to find the first and last trading dates of the current year. The `ytd` CTE self-joins to pair each symbol's opening and closing prices.
-**Purpose:** Compute year-to-date return per stock, rank them best to worst, and assign quartile buckets (1 = top performers, 4 = laggards).
+When building a YTD performance ranking or segmenting stocks into quantile buckets for portfolio construction. It is typically triggered by end-of-day scoring run, periodic performance review, or constructing a quantile-based trading signal. GoogleSQL CTEs with self-join and window functions against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The `bounds` CTE scans the table once to find the first and last trading dates of the current year. The `ytd` CTE self-joins to pair each symbol's opening and closing prices. Compute year-to-date return per stock, rank them best to worst, and assign quartile buckets (1 = top performers, 4 = laggards).
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -1370,10 +1337,7 @@ This builds a sector heatmap: average score, best/worst rank per sector.
 
 #### Build a sector heatmap with chained CTEs
 
-**When to run:** When building a sector-level dashboard or comparing sector performance for allocation decisions.
-**Trigger:** Daily scoring run complete — need to roll up stock-level scores to sector-level aggregates for portfolio managers.
-**Context:** GoogleSQL chained CTEs joining `stoxx_gold.scores_daily` with `stoxx_silver.index_dim`. Read-only. Two CTEs: `latest_scores` enriches individual stock scores with sector labels; `sector_stats` aggregates by sector.
-**Purpose:** Produce a sector heatmap showing average composite score, average value/momentum scores, and best/worst rank per sector — a single-query sector overview.
+When building a sector-level dashboard or comparing sector performance for allocation decisions. It is typically triggered by daily scoring run complete — need to roll up stock-level scores to sector-level aggregates for portfolio managers. GoogleSQL chained CTEs joining `stoxx_gold.scores_daily` with `stoxx_silver.index_dim`. Read-only. Two CTEs: `latest_scores` enriches individual stock scores with sector labels; `sector_stats` aggregates by sector. Produce a sector heatmap showing average composite score, average value/momentum scores, and best/worst rank per sector — a single-query sector overview.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -1487,10 +1451,7 @@ Multiple CTEs chained together. Compares YTD performance, volatility, and valuat
 
 #### Compare key metrics across all four indices
 
-**When to run:** When comparing index-level performance metrics across the full stoxx universe for cross-index analysis.
-**Trigger:** Daily performance reporting, portfolio allocation review, or verifying that the index performance pipeline is producing consistent results across all indices.
-**Context:** GoogleSQL CTE with `ROW_NUMBER` against `stoxx_gold.index_performance` joined with `stoxx_bronze.dim_index`. Read-only. Fetches the latest performance row per index.
-**Purpose:** Produce a cross-index comparison showing YTD return, 30-day return and volatility, stock count, average P/E, and dividend yield — the kind of summary an index provider reviews daily.
+When comparing index-level performance metrics across the full stoxx universe for cross-index analysis. It is typically triggered by daily performance reporting, portfolio allocation review, or verifying that the index performance pipeline is producing consistent results across all indices. GoogleSQL CTE with `ROW_NUMBER` against `stoxx_gold.index_performance` joined with `stoxx_bronze.dim_index`. Read-only. Fetches the latest performance row per index. Produce a cross-index comparison showing YTD return, 30-day return and volatility, stock count, average P/E, and dividend yield — the kind of summary an index provider reviews daily.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -1614,10 +1575,7 @@ The first cell checks structural integrity (null prices, negative values, high <
 
 #### Run structural quality checks (NULLs, negatives, impossible values)
 
-**When to run:** After every pipeline load, before promoting data from silver to gold.
-**Trigger:** Completion of a silver-layer load — this is a gate that must pass before any downstream transforms execute.
-**Context:** GoogleSQL UNION ALL of three independent COUNT queries against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Each check scans only the relevant columns. Any non-zero `issues` count requires investigation.
-**Purpose:** Validate structural integrity of the silver OHLCV data — catch null prices, negative prices, and physically impossible values (high < low) before they contaminate gold-layer analytics.
+After every pipeline load, before promoting data from silver to gold. It is typically triggered by completion of a silver-layer load — this is a gate that must pass before any downstream transforms execute. GoogleSQL UNION ALL of three independent COUNT queries against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Each check scans only the relevant columns. Any non-zero `issues` count requires investigation. Validate structural integrity of the silver OHLCV data — catch null prices, negative prices, and physically impossible values (high < low) before they contaminate gold-layer analytics.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1642,10 +1600,7 @@ WHERE high < low
 
 #### Run operational freshness and gap-fill checks
 
-**When to run:** After every pipeline load, alongside the structural checks above.
-**Trigger:** Completion of a silver-layer load — monitors pipeline health and data currency.
-**Context:** GoogleSQL UNION ALL of two queries against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The `gap_filled_rows` check counts rows where `is_filled = TRUE` (synthetic rows created during gap-filling). The `days_since_update` check computes freshness.
-**Purpose:** Monitor operational health — how many synthetic gap-filled rows exist, and how many days since the last data update. A high `days_since_update` value (> 1 on a business day) indicates the pipeline may have stalled.
+After every pipeline load, alongside the structural checks above. It is typically triggered by completion of a silver-layer load — monitors pipeline health and data currency. GoogleSQL UNION ALL of two queries against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. The `gap_filled_rows` check counts rows where `is_filled = TRUE` (synthetic rows created during gap-filling). The `days_since_update` check computes freshness. Monitor operational health — how many synthetic gap-filled rows exist, and how many days since the last data update. A high `days_since_update` value (> 1 on a business day) indicates the pipeline may have stalled.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1736,10 +1691,7 @@ The silver transform adds computed columns to raw data. Here, `LAG()` computes d
 
 #### Compute daily return with LAG and NULLIF safe division
 
-**When to run:** During the silver-layer transform phase — after raw OHLCV data is loaded and validated, before gold-layer scoring.
-**Trigger:** Successful completion of the silver quality gate checks. This transform adds the `daily_return` computed column to the silver dataset.
-**Context:** GoogleSQL window function `LAG()` with `NULLIF` safe division against `stoxx_silver.eurostoxx50_ohlcv`. Read-only query (in production this would be an `INSERT INTO ... SELECT` or a scheduled query writing to a target table). Uses `NULLIF(LAG(close), 0)` to prevent division-by-zero errors.
-**Purpose:** Compute daily return as a decimal change from the previous day's close — the foundational input for rolling volatility, momentum scores, and risk analytics.
+During the silver-layer transform phase — after raw OHLCV data is loaded and validated, before gold-layer scoring. It is typically triggered by successful completion of the silver quality gate checks. This transform adds the `daily_return` computed column to the silver dataset. GoogleSQL window function `LAG()` with `NULLIF` safe division against `stoxx_silver.eurostoxx50_ohlcv`. Read-only query (in production this would be an `INSERT INTO ... SELECT` or a scheduled query writing to a target table). Uses `NULLIF(LAG(close), 0)` to prevent division-by-zero errors. Compute daily return as a decimal change from the previous day's close — the foundational input for rolling volatility, momentum scores, and risk analytics.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1823,10 +1775,7 @@ The gold transform normalizes scores across the index using z-scores: `(value - 
 
 #### Normalize composite scores to z-scores across the index
 
-**When to run:** During the gold-layer scoring pipeline — after composite scores are computed, before final ranking and dashboard publication.
-**Trigger:** Completion of the scoring calculation. Z-score normalization makes scores comparable across scoring runs with different means/standard deviations.
-**Context:** GoogleSQL CTE with window functions `AVG() OVER ()` and `STDDEV() OVER ()` against `stoxx_gold.scores_daily`. Read-only. The `OVER ()` clause with no partition computes the mean and standard deviation across the entire index.
-**Purpose:** Normalize composite scores to z-scores (standard deviations from the mean) and rank stocks — enables cross-period comparison since z-scores are scale-invariant.
+During the gold-layer scoring pipeline — after composite scores are computed, before final ranking and dashboard publication. It is typically triggered by completion of the scoring calculation. Z-score normalization makes scores comparable across scoring runs with different means/standard deviations. GoogleSQL CTE with window functions `AVG() OVER ()` and `STDDEV() OVER ()` against `stoxx_gold.scores_daily`. Read-only. The `OVER ()` clause with no partition computes the mean and standard deviation across the entire index. Normalize composite scores to z-scores (standard deviations from the mean) and rank stocks — enables cross-period comparison since z-scores are scale-invariant.
 
 > [!info]- Clause-by-clause breakdown
 >

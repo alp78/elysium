@@ -269,10 +269,7 @@ Before creating VMs, the Compute Engine API must be enabled and the service acco
 
 #### Enable the Compute Engine and Monitoring APIs
 
-**When to run:** Before any `gcloud compute` or `gcloud monitoring` command in a project that has never used Compute Engine.
-**Trigger:** First-time project setup, or `PERMISSION_DENIED: Compute Engine API has not been used in project` error.
-**Context:** Runs as the authenticated user (must have `roles/serviceusage.serviceUsageAdmin` or `roles/owner` on the project). State-changing — enables billing for Compute Engine resources.
-**Purpose:** Unlock the `compute.googleapis.com` and `monitoring.googleapis.com` APIs so VMs can be created and their metrics collected.
+Before any `gcloud compute` or `gcloud monitoring` command in a project that has never used Compute Engine. It is typically triggered by first-time project setup, or `PERMISSION_DENIED: Compute Engine API has not been used in project` error. Runs as the authenticated user (must have `roles/serviceusage.serviceUsageAdmin` or `roles/owner` on the project). State-changing — enables billing for Compute Engine resources. Unlock the `compute.googleapis.com` and `monitoring.googleapis.com` APIs so VMs can be created and their metrics collected.
 
 *Enable the Compute Engine API on the project.*
 
@@ -292,10 +289,7 @@ gcloud services enable monitoring.googleapis.com --project=bq-wh-nb
 
 #### Provision the service account with production IAM roles
 
-**When to run:** After API enablement, before creating the first VM that will use this service account.
-**Trigger:** Setting up a production VM that needs to write logs, emit metrics, and read monitoring data for right-sizing.
-**Context:** Runs as the authenticated user with `roles/resourcemanager.projectIamAdmin`. Each `add-iam-policy-binding` is state-changing and takes effect immediately. The service account `bq-wh-sa` is a dedicated pipeline identity — not the Compute Engine default service account, which has overly broad `roles/editor` permissions.
-**Purpose:** Grant the minimum IAM roles required for a production SQL Server VM: structured logging via the Ops Agent, metrics emission for alerting and dashboards, and metrics read access for right-sizing analysis.
+After API enablement, before creating the first VM that will use this service account. It is typically triggered by setting up a production VM that needs to write logs, emit metrics, and read monitoring data for right-sizing. Runs as the authenticated user with `roles/resourcemanager.projectIamAdmin`. Each `add-iam-policy-binding` is state-changing and takes effect immediately. The service account `bq-wh-sa` is a dedicated pipeline identity — not the Compute Engine default service account, which has overly broad `roles/editor` permissions. Grant the minimum IAM roles required for a production SQL Server VM: structured logging via the Ops Agent, metrics emission for alerting and dashboards, and metrics read access for right-sizing analysis.
 
 > [!warning] Never use the Compute Engine default service account in production
 >
@@ -415,10 +409,7 @@ Compute Engine VMs are created with `gcloud compute instances create`. The comma
 
 #### Create the VM with explicit production configuration
 
-**When to run:** When provisioning a new VM for a production or development workload.
-**Trigger:** Infrastructure setup for `stoxx-vm` — the SQL Server host for the `stoxx_db` database.
-**Context:** Runs as the authenticated user. State-changing — creates a billable Compute Engine instance. The `--no-address` flag prevents assignment of an external IP — SSH access is via IAP tunnel only.
-**Purpose:** Create `stoxx-vm` with the `e2-medium` machine type (initial sizing — will be resized to `n2-standard-4` after baseline metrics are collected), 50 GB balanced persistent disk, Ubuntu 22.04, and the `bq-wh-sa` service account.
+When provisioning a new VM for a production or development workload. It is typically triggered by infrastructure setup for `stoxx-vm` — the SQL Server host for the `stoxx_db` database. Runs as the authenticated user. State-changing — creates a billable Compute Engine instance. The `--no-address` flag prevents assignment of an external IP — SSH access is via IAP tunnel only. Create `stoxx-vm` with the `e2-medium` machine type (initial sizing — will be resized to `n2-standard-4` after baseline metrics are collected), 50 GB balanced persistent disk, Ubuntu 22.04, and the `bq-wh-sa` service account.
 
 > [!info]- Flag breakdown
 >
@@ -464,10 +455,7 @@ The output confirms `stoxx-vm` is `RUNNING` in `europe-west1-b` with an internal
 
 #### Create a VM with a startup script
 
-**When to run:** When the VM needs automated post-boot configuration — package installation, agent setup, or application initialization.
-**Trigger:** Provisioning a VM that must be ready to operate without manual SSH intervention after boot.
-**Context:** Runs as the authenticated user. State-changing. The startup script executes as root on every boot (not just first boot) — idempotent scripts are essential.
-**Purpose:** Demonstrate the `--metadata-from-file` flag for passing a startup script that installs baseline packages and logs completion.
+When the VM needs automated post-boot configuration — package installation, agent setup, or application initialization. It is typically triggered by provisioning a VM that must be ready to operate without manual SSH intervention after boot. Runs as the authenticated user. State-changing. The startup script executes as root on every boot (not just first boot) — idempotent scripts are essential. Demonstrate the `--metadata-from-file` flag for passing a startup script that installs baseline packages and logs completion.
 
 The startup script (`startup.sh`) runs as root on every boot:
 
@@ -576,10 +564,7 @@ Inspection commands are read-only — they query the Compute Engine API for the 
 
 #### List all VM instances
 
-**When to run:** To get a quick inventory of all VMs in the project with their status, zone, and machine type.
-**Trigger:** Routine audit, cost review, or verifying that a provisioning step completed.
-**Context:** Read-only. Requires `compute.instances.list` permission (included in `roles/compute.viewer`).
-**Purpose:** Display all VMs in `bq-wh-nb` with their key properties in a single table.
+To get a quick inventory of all VMs in the project with their status, zone, and machine type. It is typically triggered by routine audit, cost review, or verifying that a provisioning step completed. Read-only. Requires `compute.instances.list` permission (included in `roles/compute.viewer`). Display all VMs in `bq-wh-nb` with their key properties in a single table.
 
 *List all VM instances in the current project.*
 
@@ -597,10 +582,7 @@ The output shows two VMs — `stoxx-vm` (the production SQL Server host) and `st
 
 #### Describe a specific VM instance
 
-**When to run:** When you need the full resource configuration — disk attachments, service account, network interfaces, labels, metadata, and scheduling options.
-**Trigger:** Auditing configuration, troubleshooting connectivity, extracting the attached service account, or verifying label and tag assignments.
-**Context:** Read-only. Requires `compute.instances.get` permission. Returns YAML by default.
-**Purpose:** Retrieve the complete resource definition for `stoxx-vm`.
+When you need the full resource configuration — disk attachments, service account, network interfaces, labels, metadata, and scheduling options. It is typically triggered by auditing configuration, troubleshooting connectivity, extracting the attached service account, or verifying label and tag assignments. Read-only. Requires `compute.instances.get` permission. Returns YAML by default. Retrieve the complete resource definition for `stoxx-vm`.
 
 *Describe `stoxx-vm` — key fields only (name, machineType, network, service account, disks, status, labels, metadata, tags, scheduling).*
 
@@ -658,10 +640,7 @@ Key fields to verify: `serviceAccounts.email` is `bq-wh-sa` (not the default com
 
 #### Filter and format VM listings
 
-**When to run:** When scripting or when the project has many VMs and you need a filtered, formatted view.
-**Trigger:** Searching for VMs by status, label, or zone for operational scripts or reporting.
-**Context:** Read-only. The `--filter` flag applies server-side filtering; `--format` reshapes the output.
-**Purpose:** Demonstrate `--filter` and `--format` for extracting specific VM properties.
+When scripting or when the project has many VMs and you need a filtered, formatted view. It is typically triggered by searching for VMs by status, label, or zone for operational scripts or reporting. Read-only. The `--filter` flag applies server-side filtering; `--format` reshapes the output. Demonstrate `--filter` and `--format` for extracting specific VM properties.
 
 *List only running VMs with a formatted table showing name, zone, machine type, internal IP, and status.*
 
@@ -695,10 +674,7 @@ Compute Engine exposes lifecycle operations as individual `gcloud compute instan
 
 #### Stop a VM instance
 
-**When to run:** When a VM needs to be taken offline gracefully — for maintenance, resizing, or cost savings.
-**Trigger:** Scheduled maintenance window, machine type change (requires stopped state), or manual cost management.
-**Context:** State-changing — transitions the VM from `RUNNING` → `STOPPING` → `TERMINATED`. Requires `compute.instances.stop`. Disk charges continue in `TERMINATED` state.
-**Purpose:** Gracefully shut down `stoxx-vm` via ACPI signal.
+When a VM needs to be taken offline gracefully — for maintenance, resizing, or cost savings. It is typically triggered by scheduled maintenance window, machine type change (requires stopped state), or manual cost management. State-changing — transitions the VM from `RUNNING` → `STOPPING` → `TERMINATED`. Requires `compute.instances.stop`. Disk charges continue in `TERMINATED` state. Gracefully shut down `stoxx-vm` via ACPI signal.
 
 *Stop `stoxx-vm` — sends an ACPI shutdown signal and waits for the VM to reach `TERMINATED` state.*
 
@@ -721,10 +697,7 @@ Updated [https://compute.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europ
 
 #### Start a VM instance
 
-**When to run:** To bring a stopped VM back online.
-**Trigger:** After a maintenance window, after a resize operation, or at the start of a scheduled work period.
-**Context:** State-changing — transitions the VM from `TERMINATED` → `STAGING` → `RUNNING`. The VM gets a new internal IP (may differ from the previous one unless a static internal IP is reserved). Takes 60–90 seconds for the OS to boot.
-**Purpose:** Start `stoxx-vm` and confirm the assigned internal IP.
+To bring a stopped VM back online. It is typically triggered after a maintenance window, after a resize operation, or at the start of a scheduled work period. State-changing — transitions the VM from `TERMINATED` → `STAGING` → `RUNNING`. The VM gets a new internal IP (may differ from the previous one unless a static internal IP is reserved). Takes 60–90 seconds for the OS to boot. Start `stoxx-vm` and confirm the assigned internal IP.
 
 *Start `stoxx-vm` and observe the assigned internal IP.*
 
@@ -740,10 +713,7 @@ Instance internal IP is 10.132.0.2
 
 #### Reset (hard reboot) a VM instance
 
-**When to run:** When the VM is unresponsive to SSH and `stop` does not complete.
-**Trigger:** VM hangs, kernel panic, or unresponsive OS — the "last resort" before deleting and recreating.
-**Context:** State-changing — forces an immediate hardware reset without a clean shutdown. Does not send ACPI signal — equivalent to pulling the power cable and plugging it back in. File system corruption is possible if writes were in progress.
-**Purpose:** Force-restart `stoxx-vm` when graceful shutdown is not possible.
+When the VM is unresponsive to SSH and `stop` does not complete. It is typically triggered by VM hangs, kernel panic, or unresponsive OS — the "last resort" before deleting and recreating. State-changing — forces an immediate hardware reset without a clean shutdown. Does not send ACPI signal — equivalent to pulling the power cable and plugging it back in. File system corruption is possible if writes were in progress. Force-restart `stoxx-vm` when graceful shutdown is not possible.
 
 *Hard-reset `stoxx-vm` — no clean shutdown, immediate reboot.*
 
@@ -765,10 +735,7 @@ Updated [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-we
 
 #### Suspend a VM instance
 
-**When to run:** When you want to pause a VM and preserve its in-memory state — faster resume than a full stop/start cycle.
-**Trigger:** End-of-day pause for development VMs, or temporary pause during maintenance of dependent services.
-**Context:** State-changing — transitions the VM from `RUNNING` → `SUSPENDING` → `SUSPENDED`. The VM's memory is written to disk. Suspended VMs incur disk charges for both the boot disk and the memory-state file. Not all machine types support suspend.
-**Purpose:** Suspend `stoxx-vm` to preserve memory state for fast resume.
+When you want to pause a VM and preserve its in-memory state — faster resume than a full stop/start cycle. It is typically triggered by end-of-day pause for development VMs, or temporary pause during maintenance of dependent services. State-changing — transitions the VM from `RUNNING` → `SUSPENDING` → `SUSPENDED`. The VM's memory is written to disk. Suspended VMs incur disk charges for both the boot disk and the memory-state file. Not all machine types support suspend. Suspend `stoxx-vm` to preserve memory state for fast resume.
 
 *Suspend `stoxx-vm` — memory is written to disk, VM enters `SUSPENDED` state.*
 
@@ -783,10 +750,7 @@ Updated [https://compute.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europ
 
 #### Resume a suspended VM instance
 
-**When to run:** To bring a suspended VM back online with its previous memory state.
-**Trigger:** Start of work day, or dependent services are back online.
-**Context:** State-changing — transitions `SUSPENDED` → `RUNNING`. Resume is faster than a cold boot because the OS does not need to reinitialize — the memory image is loaded from disk.
-**Purpose:** Resume `stoxx-vm` from suspended state.
+To bring a suspended VM back online with its previous memory state. It is typically triggered by start of work day, or dependent services are back online. State-changing — transitions `SUSPENDED` → `RUNNING`. Resume is faster than a cold boot because the OS does not need to reinitialize — the memory image is loaded from disk. Resume `stoxx-vm` from suspended state.
 
 *Resume `stoxx-vm` — memory is restored from disk, VM enters `RUNNING` state.*
 
@@ -814,10 +778,7 @@ The VM must be in `TERMINATED` state before changing machine type — you cannot
 
 #### Stop → resize → start workflow
 
-**When to run:** When monitoring data shows the current machine type is over- or under-provisioned.
-**Trigger:** Right-sizing analysis indicates CPU peak is below 30% (downsize) or memory pressure is causing OOM kills (upsize).
-**Context:** Requires the VM to be in `TERMINATED` state. State-changing — the new machine type takes effect on the next start. Downtime is required (typically 2–3 minutes total).
-**Purpose:** Resize `stoxx-vm` from `e2-medium` (2 vCPU, 4 GB) to `n2-standard-4` (4 vCPU, 16 GB) — the target production size for SQL Server with the `stoxx_db` multi-filegroup layout.
+When monitoring data shows the current machine type is over- or under-provisioned. It is typically triggered by right-sizing analysis indicates CPU peak is below 30% (downsize) or memory pressure is causing OOM kills (upsize). Requires the VM to be in `TERMINATED` state. State-changing — the new machine type takes effect on the next start. Downtime is required (typically 2–3 minutes total). Resize `stoxx-vm` from `e2-medium` (2 vCPU, 4 GB) to `n2-standard-4` (4 vCPU, 16 GB) — the target production size for SQL Server with the `stoxx_db` multi-filegroup layout.
 
 *Step 1 — Stop the instance.*
 
@@ -876,10 +837,7 @@ n2-standard-4
 
 #### Custom machine types
 
-**When to run:** When no predefined machine type matches the workload's exact CPU/memory requirements — avoids paying for unused resources.
-**Trigger:** Workload profiling shows a non-standard CPU-to-memory ratio (e.g., 6 vCPU with 24 GB — which is not available as a predefined type).
-**Context:** Same stop → set → start workflow. Custom machine types cost approximately 5% more than equivalent predefined types per vCPU-hour, but avoid over-provisioning. Memory must be a multiple of 256 MB.
-**Purpose:** Demonstrate custom machine type sizing.
+When no predefined machine type matches the workload's exact CPU/memory requirements — avoids paying for unused resources. It is typically triggered by workload profiling shows a non-standard CPU-to-memory ratio (e.g., 6 vCPU with 24 GB — which is not available as a predefined type). Same stop → set → start workflow. Custom machine types cost approximately 5% more than equivalent predefined types per vCPU-hour, but avoid over-provisioning. Memory must be a multiple of 256 MB. Demonstrate custom machine type sizing.
 
 *Set a custom machine type with 6 vCPUs and 24 GB memory (VM must be stopped).*
 
@@ -944,10 +902,7 @@ Instance schedules are a Compute Engine resource policy (`compute.googleapis.com
 
 #### Create an instance schedule resource policy
 
-**When to run:** When a VM follows a predictable work schedule and does not need to run 24/7.
-**Trigger:** Cost review identifies VMs running during off-hours with near-zero utilization.
-**Context:** State-changing — creates a regional resource policy. Requires `compute.resourcePolicies.create`. The policy operates independently of manual operations — if the VM is manually stopped, it will still be started at the next scheduled time.
-**Purpose:** Create a business-hours schedule for `stoxx-vm` (Monday–Friday, 07:00–21:00 CET).
+When a VM follows a predictable work schedule and does not need to run 24/7. It is typically triggered by cost review identifies VMs running during off-hours with near-zero utilization. State-changing — creates a regional resource policy. Requires `compute.resourcePolicies.create`. The policy operates independently of manual operations — if the VM is manually stopped, it will still be started at the next scheduled time. Create a business-hours schedule for `stoxx-vm` (Monday–Friday, 07:00–21:00 CET).
 
 *Create the `stoxx-vm-schedule` resource policy with business-hours cron expressions.*
 
@@ -966,10 +921,7 @@ Created [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/regions/europe-
 
 #### Attach the schedule to a VM
 
-**When to run:** After creating the resource policy.
-**Trigger:** Immediately after `resource-policies create`, or when assigning an existing policy to a new VM.
-**Context:** State-changing — binds the policy to the VM. The policy takes effect from the next matching cron time.
-**Purpose:** Attach `stoxx-vm-schedule` to `stoxx-vm`.
+After creating the resource policy. It is typically triggered by immediately after `resource-policies create`, or when assigning an existing policy to a new VM. State-changing — binds the policy to the VM. The policy takes effect from the next matching cron time. Attach `stoxx-vm-schedule` to `stoxx-vm`.
 
 *Attach the schedule policy to `stoxx-vm`.*
 
@@ -985,10 +937,7 @@ Updated [https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-we
 
 #### List and describe the schedule policy
 
-**When to run:** To verify the cron expressions, timezone, and next scheduled run time.
-**Trigger:** Routine audit, or investigating why a VM started or stopped unexpectedly.
-**Context:** Read-only.
-**Purpose:** Inspect the schedule policy configuration and upcoming execution time.
+To verify the cron expressions, timezone, and next scheduled run time. It is typically triggered by routine audit, or investigating why a VM started or stopped unexpectedly. Read-only. Inspect the schedule policy configuration and upcoming execution time.
 
 *List resource policies in the region.*
 
@@ -1088,10 +1037,7 @@ Spot VMs are surplus Compute Engine capacity offered at up to 91% discount. They
 
 #### Create a Spot VM
 
-**When to run:** When provisioning a fault-tolerant batch worker that can tolerate preemption.
-**Trigger:** Batch ETL runs, BigQuery export workers, ML training jobs, or any workload that checkpoints and retries automatically.
-**Context:** State-changing — creates a billable instance. The `PREEMPTIBLE` column shows `true` in `instances list` output. `--instance-termination-action=STOP` keeps the VM and disk for restart; `DELETE` destroys both on preemption.
-**Purpose:** Create a Spot VM for batch workloads at up to 91% discount.
+When provisioning a fault-tolerant batch worker that can tolerate preemption. It is typically triggered by batch ETL runs, BigQuery export workers, ML training jobs, or any workload that checkpoints and retries automatically. State-changing — creates a billable instance. The `PREEMPTIBLE` column shows `true` in `instances list` output. `--instance-termination-action=STOP` keeps the VM and disk for restart; `DELETE` destroys both on preemption. Create a Spot VM for batch workloads at up to 91% discount.
 
 *Create `stoxx-batch-worker` as a Spot VM with stop-on-preemption behavior.*
 
@@ -1142,10 +1088,7 @@ The most common waste in cloud data engineering is over-provisioned VMs. Right-s
 
 #### Query CPU utilization via the Monitoring API
 
-**When to run:** After the VM has been running a representative workload for at least 24 hours (ideally a full week).
-**Trigger:** Cost review, post-resize verification, or periodic right-sizing audit.
-**Context:** Read-only API call. Requires `roles/monitoring.viewer`. The `instance_id` is the numeric VM ID (visible in `instances describe` output), not the VM name. Values are floats between `0.0` (0%) and `1.0` (100%) representing the fraction of allocated CPU consumed.
-**Purpose:** Retrieve recent CPU utilization data points for `stoxx-vm` to determine if the current machine type is correctly sized.
+After the VM has been running a representative workload for at least 24 hours (ideally a full week). It is typically triggered by cost review, post-resize verification, or periodic right-sizing audit. Read-only API call. Requires `roles/monitoring.viewer`. The `instance_id` is the numeric VM ID (visible in `instances describe` output), not the VM name. Values are floats between `0.0` (0%) and `1.0` (100%) representing the fraction of allocated CPU consumed. Retrieve recent CPU utilization data points for `stoxx-vm` to determine if the current machine type is correctly sized.
 
 > [!info]- API query breakdown
 >
@@ -1238,10 +1181,7 @@ Permanently removes a VM and, by default, also deletes the boot disk (if `autoDe
 
 #### Delete a VM instance
 
-**When to run:** When the VM is no longer needed — decommissioned workload, replaced by a new instance, or cleanup after testing.
-**Trigger:** End of lifecycle, post-migration cleanup, or resource policy deletion workflow.
-**Context:** State-changing and irreversible. Requires `compute.instances.delete`. The command prompts for confirmation (use `--quiet` to skip in automation). Boot disk is deleted if `autoDelete: true`.
-**Purpose:** Delete `stoxx-vm` and its boot disk.
+When the VM is no longer needed — decommissioned workload, replaced by a new instance, or cleanup after testing. It is typically triggered by end of lifecycle, post-migration cleanup, or resource policy deletion workflow. State-changing and irreversible. Requires `compute.instances.delete`. The command prompts for confirmation (use `--quiet` to skip in automation). Boot disk is deleted if `autoDelete: true`. Delete `stoxx-vm` and its boot disk.
 
 *Delete `stoxx-vm` — the `--quiet` flag suppresses the confirmation prompt.*
 

@@ -223,10 +223,7 @@ These commands identify the recurring drivers that continue to exist even if no 
 
 #### List running Compute Engine instances
 
-**When to run:** Run this at the start of any TCO or rightsizing review.
-**Trigger:** Use it when you need to know which workloads create the platform’s fixed compute floor.
-**Context:** This is a read-only Compute Engine inventory query.
-**Purpose:** Identify always-on machine types, regions, and labels.
+Run this at the start of any TCO or rightsizing review. It is typically triggered by use it when you need to know which workloads create the platform’s fixed compute floor. This is a read-only Compute Engine inventory query. Identify always-on machine types, regions, and labels.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -251,10 +248,7 @@ Both VMs are currently running, so both contribute to the project’s steady com
 
 #### List attached persistent disks
 
-**When to run:** Run this whenever you compare stop-vs-delete savings or model storage-heavy VM architectures.
-**Trigger:** Use it when VM costs look modest but the monthly bill still does not drop after stoppage.
-**Context:** This is a read-only persistent-disk inventory query.
-**Purpose:** Quantify attached disk sizes and types, which continue to bill independently of instance runtime.
+Run this whenever you compare stop-vs-delete savings or model storage-heavy VM architectures. It is typically triggered by use it when VM costs look modest but the monthly bill still does not drop after stoppage. This is a read-only persistent-disk inventory query. Quantify attached disk sizes and types, which continue to bill independently of instance runtime.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -281,10 +275,7 @@ The disk inventory is important because attached disks continue to bill even if 
 
 #### Measure bucket footprint
 
-**When to run:** Run this before treating object storage as a meaningful TCO driver.
-**Trigger:** Use it when a design review assumes GCS is a large contributor to monthly cost.
-**Context:** This is a read-only aggregate size query across the main workload buckets.
-**Purpose:** Separate real storage cost drivers from buckets that are operationally present but financially negligible.
+Run this before treating object storage as a meaningful TCO driver. It is typically triggered by use it when a design review assumes GCS is a large contributor to monthly cost. This is a read-only aggregate size query across the main workload buckets. Separate real storage cost drivers from buckets that are operationally present but financially negligible.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -316,10 +307,7 @@ Variable drivers are the easiest place to make wrong assumptions. The live query
 
 #### Summarize BigQuery query activity by principal
 
-**When to run:** Run this when you need to know whether analytical workloads are large enough to matter in the current TCO.
-**Trigger:** Use it during warehouse design reviews and before considering BigQuery editions.
-**Context:** This is a read-only SQL query against `JOBS_BY_PROJECT`.
-**Purpose:** Measure current query activity without pretending it is the same as billed cost.
+Run this when you need to know whether analytical workloads are large enough to matter in the current TCO. It is typically triggered by use it during warehouse design reviews and before considering BigQuery editions. This is a read-only SQL query against `JOBS_BY_PROJECT`. Measure current query activity without pretending it is the same as billed cost.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -355,10 +343,7 @@ The current analytical volume is far below any level that would justify BigQuery
 
 #### List Cloud Run jobs
 
-**When to run:** Run this before assuming serverless batch work is a major cost driver.
-**Trigger:** Use it during TCO reviews or when batch jobs are blamed for unexpected spend.
-**Context:** This is a read-only Cloud Run inventory call scoped to `europe-west1`.
-**Purpose:** Identify job-level CPU, memory, and execution history.
+Run this before assuming serverless batch work is a major cost driver. It is typically triggered by use it during TCO reviews or when batch jobs are blamed for unexpected spend. This is a read-only Cloud Run inventory call scoped to `europe-west1`. Identify job-level CPU, memory, and execution history.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -394,10 +379,7 @@ The current job estate is tiny: two batch jobs, both with modest resource limits
 
 #### Inspect recent Cloud Run execution durations
 
-**When to run:** Run this when you need a real runtime input for Cloud Run TCO.
-**Trigger:** Use it after job design changes or when a supposedly cheap batch pattern starts to look expensive.
-**Context:** This is a read-only execution-history query for a single Cloud Run job.
-**Purpose:** Measure actual runtime rather than assuming duration.
+Run this when you need a real runtime input for Cloud Run TCO. It is typically triggered by use it after job design changes or when a supposedly cheap batch pattern starts to look expensive. This is a read-only execution-history query for a single Cloud Run job. Measure actual runtime rather than assuming duration.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -435,10 +417,7 @@ The goal is not to recreate the invoice. The goal is to map live inventory to cu
 
 #### Query live Compute Engine and disk prices
 
-**When to run:** Run this when a TCO model needs current list prices rather than copied documentation values.
-**Trigger:** Use it during baseline refreshes or before any price-sensitive design decision.
-**Context:** This is a read-only Pricing API call using the active `gcloud` token.
-**Purpose:** Retrieve the live rates that match the actual VM and disk types present in the project region.
+Run this when a TCO model needs current list prices rather than copied documentation values. It is typically triggered by use it during baseline refreshes or before any price-sensitive design decision. This is a read-only Pricing API call using the active `gcloud` token. Retrieve the live rates that match the actual VM and disk types present in the project region.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -507,10 +486,7 @@ These prices are enough to build a current fixed-cost baseline for the existing 
 
 #### Calculate the recurring monthly baseline from live inventory
 
-**When to run:** Run this when you need a quick recurring monthly floor from the current project state.
-**Trigger:** Use it after any machine-type or disk-size change.
-**Context:** This is a local PowerShell calculation that uses live rates and live inventory values already verified in this note.
-**Purpose:** Convert the project’s fixed infrastructure into a monthly public list-price baseline in `CZK`.
+Run this when you need a quick recurring monthly floor from the current project state. It is typically triggered by use it after any machine-type or disk-size change. This is a local PowerShell calculation that uses live rates and live inventory values already verified in this note. Convert the project’s fixed infrastructure into a monthly public list-price baseline in `CZK`.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -560,10 +536,7 @@ This is the most important result in the note. It shows that the current steady-
 
 #### Calculate the current observed variable footprint
 
-**When to run:** Run this when you want to check whether variable drivers are still negligible or starting to compete with the fixed floor.
-**Trigger:** Use it during monthly reviews or after workload growth.
-**Context:** This is a local PowerShell calculation using live execution durations, live query bytes, and live list prices already verified in this note.
-**Purpose:** Estimate the current variable footprint for Cloud Run jobs and BigQuery analysis.
+Run this when you want to check whether variable drivers are still negligible or starting to compete with the fixed floor. It is typically triggered by use it during monthly reviews or after workload growth. This is a local PowerShell calculation using live execution durations, live query bytes, and live list prices already verified in this note. Estimate the current variable footprint for Cloud Run jobs and BigQuery analysis.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|

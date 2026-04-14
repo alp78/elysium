@@ -265,10 +265,7 @@ Listing is the fastest way to answer three operational questions: what the proje
 
 #### List the enabled services in `bq-wh-nb`
 
-**When to run:** Before running any product-specific command that depends on a Google Cloud API.
-**Trigger:** First project audit, preflight checks, or troubleshooting an "API not enabled" failure.
-**Context:** Read-only `gcloud` list command. It queries Service Usage state for the target project and does not mutate anything.
-**Purpose:** Return the exact service endpoints currently enabled in `bq-wh-nb`.
+Before running any product-specific command that depends on a Google Cloud API. It is typically triggered by first project audit, preflight checks, or troubleshooting an "API not enabled" failure. Read-only `gcloud` list command. It queries Service Usage state for the target project and does not mutate anything. Return the exact service endpoints currently enabled in `bq-wh-nb`.
 
 | Output column | Source field | Type | Meaning |
 |---|---|---|---|
@@ -333,10 +330,7 @@ The project currently has 29 enabled services. The list mixes product APIs such 
 
 #### Sample the services available to `bq-wh-nb`
 
-**When to run:** During service discovery, project bootstrap planning, or before writing an enablement batch.
-**Trigger:** You know a workload category but not the exact service endpoint name yet.
-**Context:** Read-only Service Usage query. The command can return a very large result set, so `--limit` is used here to keep the output reviewable.
-**Purpose:** Show the difference between "available to enable" and "already enabled."
+During service discovery, project bootstrap planning, or before writing an enablement batch. It is typically triggered by you know a workload category but not the exact service endpoint name yet. Read-only Service Usage query. The command can return a very large result set, so `--limit` is used here to keep the output reviewable. Show the difference between "available to enable" and "already enabled.".
 
 | Output column | Source field | Type | Meaning |
 |---|---|---|---|
@@ -402,10 +396,7 @@ Filtering matters because the available-services catalog is broad enough to prod
 
 #### Filter available services with a broad name expression
 
-**When to run:** During initial discovery, before you know the exact service endpoint.
-**Trigger:** You know the product family, such as BigQuery, but not the exact canonical service names yet.
-**Context:** Read-only list command. The filter is intentionally broad and can match marketplace or public-data services in addition to the Google-managed API.
-**Purpose:** Show why fuzzy search is useful for discovery but unsafe for automation.
+During initial discovery, before you know the exact service endpoint. It is typically triggered by you know the product family, such as BigQuery, but not the exact canonical service names yet. Read-only list command. The filter is intentionally broad and can match marketplace or public-data services in addition to the Google-managed API. Show why fuzzy search is useful for discovery but unsafe for automation.
 
 | Output column | Source field | Type | Meaning |
 |---|---|---|---|
@@ -450,10 +441,7 @@ This is the exact reason broad discovery filters do not belong in production scr
 
 #### Filter available services by exact canonical API name
 
-**When to run:** After discovery, when you are ready to write a deterministic script or bootstrap step.
-**Trigger:** You want to prove that one exact service endpoint exists in the available catalog.
-**Context:** Read-only list command using an equality filter. This is safe for scripts because it does not rely on fuzzy matching.
-**Purpose:** Return exactly one target API by canonical service endpoint.
+After discovery, when you are ready to write a deterministic script or bootstrap step. It is typically triggered by you want to prove that one exact service endpoint exists in the available catalog. Read-only list command using an equality filter. This is safe for scripts because it does not rely on fuzzy matching. Return exactly one target API by canonical service endpoint.
 
 | Output column | Source field | Type | Meaning |
 |---|---|---|---|
@@ -475,10 +463,7 @@ This is the scripting-safe pattern. Exact equality on `config.name` avoids marke
 
 #### Filter enabled services by product title
 
-**When to run:** When you need a quick family-level inventory rather than one exact API.
-**Trigger:** You want to see every enabled BigQuery-related API in the current project.
-**Context:** Read-only list command against the enabled-services view.
-**Purpose:** Return the currently enabled services whose titles belong to one product family.
+When you need a quick family-level inventory rather than one exact API. It is typically triggered by you want to see every enabled BigQuery-related API in the current project. Read-only list command against the enabled-services view. Return the currently enabled services whose titles belong to one product family.
 
 | Output column | Source field | Type | Meaning |
 |---|---|---|---|
@@ -506,10 +491,7 @@ This filter is broad enough to be useful and still precise enough to stay inside
 
 #### Filter enabled services by a substring and observe the CLI warning
 
-**When to run:** During quick interactive exploration of a small enabled-service set.
-**Trigger:** You want a fast shortlist of storage-related services without remembering all exact names.
-**Context:** Read-only list command. The filter works today, but the CLI warns that future operator behavior will tighten.
-**Purpose:** Show a substring search that is acceptable for ad hoc exploration but weak for long-lived scripts.
+During quick interactive exploration of a small enabled-service set. It is typically triggered by you want a fast shortlist of storage-related services without remembering all exact names. Read-only list command. The filter works today, but the CLI warns that future operator behavior will tighten. Show a substring search that is acceptable for ad hoc exploration but weak for long-lived scripts.
 
 | Output column | Source field | Type | Meaning |
 |---|---|---|---|
@@ -535,10 +517,7 @@ The command works today, but the warning is the important part. For automation, 
 
 #### Attempt the older wildcard title pattern
 
-**When to run:** When validating an older runbook or copied command snippet.
-**Trigger:** You inherited a filter expression that uses shell-style wildcards inside the `:` operator.
-**Context:** Read-only command, but the expression is invalid in the current CLI parser.
-**Purpose:** Show the current error shape so you know the fix belongs in the filter syntax, not in IAM or project state.
+When validating an older runbook or copied command snippet. It is typically triggered by you inherited a filter expression that uses shell-style wildcards inside the `:` operator. Read-only command, but the expression is invalid in the current CLI parser. Show the current error shape so you know the fix belongs in the filter syntax, not in IAM or project state.
 
 *Run the older wildcard pattern against the available-services catalog.*
 
@@ -569,10 +548,7 @@ The current prompt asks for `gcloud services describe`, but the installed SDK do
 
 #### Confirm that `gcloud services describe` is not present in SDK `563.0.0`
 
-**When to run:** Before relying on copied examples that mention `gcloud services describe`.
-**Trigger:** You need service metadata and expect a direct describe subcommand under `gcloud services`.
-**Context:** Read-only command lookup. The failure happens entirely in the CLI parser before a service request is sent.
-**Purpose:** Prove that the current SDK surface does not expose the subcommand the prompt asks for.
+Before relying on copied examples that mention `gcloud services describe`. It is typically triggered by you need service metadata and expect a direct describe subcommand under `gcloud services`. Read-only command lookup. The failure happens entirely in the CLI parser before a service request is sent. Prove that the current SDK surface does not expose the subcommand the prompt asks for.
 
 *Attempt to describe the BigQuery API directly from the `gcloud services` command group.*
 
@@ -596,10 +572,7 @@ On April 13, 2026, with Google Cloud SDK `563.0.0`, there is no direct `gcloud s
 
 #### Query the Service Usage REST API for the same service metadata
 
-**When to run:** After confirming the CLI surface does not provide a direct describe command.
-**Trigger:** You still need service state, descriptive metadata, and quota descriptors for one API.
-**Context:** Read-only REST call authenticated with the active service-account access token. The shell wrapper below is PowerShell because that is the live execution environment for this note.
-**Purpose:** Retrieve the Service Usage `services.get` payload for `bigquery.googleapis.com`.
+After confirming the CLI surface does not provide a direct describe command. It is typically triggered by you still need service state, descriptive metadata, and quota descriptors for one API. Read-only REST call authenticated with the active service-account access token. The shell wrapper below is PowerShell because that is the live execution environment for this note. Retrieve the Service Usage `services.get` payload for `bigquery.googleapis.com`.
 
 | Output field | Source field | Type | Meaning |
 |---|---|---|---|
@@ -696,10 +669,7 @@ Enablement is the project-bootstrap step that turns a service from "available" i
 
 #### Enable one currently disabled API
 
-**When to run:** Before first use of a specific product that is available but not yet enabled.
-**Trigger:** A workload needs a service such as Cloud Scheduler, Dataflow, or Pub/Sub for the first time.
-**Context:** State-changing Service Usage operation against the target project. This changes only API activation state, not IAM or resource configuration.
-**Purpose:** Activate one specific API so product requests can start reaching the service backend.
+Before first use of a specific product that is available but not yet enabled. It is typically triggered by A workload needs a service such as Cloud Scheduler, Dataflow, or Pub/Sub for the first time. State-changing Service Usage operation against the target project. This changes only API activation state, not IAM or resource configuration. Activate one specific API so product requests can start reaching the service backend.
 
 *Enable `cloudscheduler.googleapis.com` for `bq-wh-nb`.*
 
@@ -715,10 +685,7 @@ The returned operation name is the control-plane record of the enablement. After
 
 #### Enable multiple APIs in one call
 
-**When to run:** During project bootstrap, environment normalization, or when rolling out a feature that depends on several services at once.
-**Trigger:** A workflow needs more than one API and you want one atomic-enough activation step instead of several separate commands.
-**Context:** State-changing Service Usage operation. Multiple canonical service names are passed as positional arguments in one command.
-**Purpose:** Enable several service endpoints with one call and one long-running operation.
+During project bootstrap, environment normalization, or when rolling out a feature that depends on several services at once. It is typically triggered by A workflow needs more than one API and you want one atomic-enough activation step instead of several separate commands. State-changing Service Usage operation. Multiple canonical service names are passed as positional arguments in one command. Enable several service endpoints with one call and one long-running operation.
 
 *Enable two observability APIs in one command.*
 
@@ -734,10 +701,7 @@ Even when the target services are already enabled, Service Usage can still ackno
 
 #### Bootstrap a data-engineering baseline on a new project
 
-**When to run:** During initial platform bootstrap for a new data project.
-**Trigger:** You want the common control-plane and analytics services available before workload code lands.
-**Context:** State-changing batch enablement. The list below mixes analytics, metadata, storage, scheduler, and identity-support APIs that commonly appear together in data engineering projects.
-**Purpose:** Turn on a practical baseline of services in one reproducible command.
+During initial platform bootstrap for a new data project. It is typically triggered by you want the common control-plane and analytics services available before workload code lands. State-changing batch enablement. The list below mixes analytics, metadata, storage, scheduler, and identity-support APIs that commonly appear together in data engineering projects. Turn on a practical baseline of services in one reproducible command.
 
 *Enable a common data-engineering baseline in one shot.*
 
@@ -768,10 +732,7 @@ Disabling is the inverse control-plane operation. It does not usually delete the
 
 #### Start an asynchronous disable operation
 
-**When to run:** During controlled cleanup, rollback, or platform hardening after confirming that the service is no longer needed.
-**Trigger:** You want to remove an API from the project's active surface area without blocking the shell while the control-plane operation finishes.
-**Context:** State-changing command. `--async` returns immediately and gives you an operation name to track later.
-**Purpose:** Start a disable job for one API and hand off completion tracking to the operations subcommands.
+During controlled cleanup, rollback, or platform hardening after confirming that the service is no longer needed. It is typically triggered by you want to remove an API from the project's active surface area without blocking the shell while the control-plane operation finishes. State-changing command. `--async` returns immediately and gives you an operation name to track later. Start a disable job for one API and hand off completion tracking to the operations subcommands.
 
 *Start an asynchronous disable of `cloudscheduler.googleapis.com`.*
 
@@ -800,10 +761,7 @@ Dependencies are the reason disablement deserves more care than enablement. A se
 
 #### Attempt to disable BigQuery without `--force`
 
-**When to run:** Before using `--force`, to see whether the target service is still required by other enabled APIs.
-**Trigger:** You suspect the service may have dependents and want the CLI to enumerate them before any destructive cascade happens.
-**Context:** State-changing command attempt, but this example fails before the disable proceeds because Service Usage blocks the request.
-**Purpose:** Show the exact dependency error emitted when an enabled service still has active dependents.
+Before using `--force`, to see whether the target service is still required by other enabled APIs. It is typically triggered by you suspect the service may have dependents and want the CLI to enumerate them before any destructive cascade happens. State-changing command attempt, but this example fails before the disable proceeds because Service Usage blocks the request. Show the exact dependency error emitted when an enabled service still has active dependents.
 
 *Try to disable BigQuery without allowing cascaded dependent-service disablement.*
 
@@ -861,10 +819,7 @@ Service Usage uses long-running operations for enable and disable requests. That
 
 #### Describe the asynchronous Cloud Scheduler disable operation
 
-**When to run:** After an `--async` enable or disable request returns an operation name.
-**Trigger:** You need the operation result, the target service state, or proof that the control-plane action finished.
-**Context:** Read-only operation lookup. It queries the Service Usage operation resource, not the service catalog directly.
-**Purpose:** Inspect the operation resource returned by the asynchronous disable command.
+After an `--async` enable or disable request returns an operation name. It is typically triggered by you need the operation result, the target service state, or proof that the control-plane action finished. Read-only operation lookup. It queries the Service Usage operation resource, not the service catalog directly. Inspect the operation resource returned by the asynchronous disable command.
 
 *Describe the disable operation returned for `cloudscheduler.googleapis.com`.*
 
@@ -915,10 +870,7 @@ In this run the operation finished so quickly that `describe` already returned t
 
 #### Wait for the disable operation to finish
 
-**When to run:** Immediately after an asynchronous enable or disable when the next step depends on completion.
-**Trigger:** Your script or runbook cannot proceed safely until the API state has converged.
-**Context:** Read-only wait loop on the operation resource. It does not change service state by itself.
-**Purpose:** Block until the Service Usage operation reaches a final result and return that result.
+Immediately after an asynchronous enable or disable when the next step depends on completion. It is typically triggered by your script or runbook cannot proceed safely until the API state has converged. Read-only wait loop on the operation resource. It does not change service state by itself. Block until the Service Usage operation reaches a final result and return that result.
 
 *Wait on the Cloud Scheduler disable operation until Service Usage marks it complete.*
 

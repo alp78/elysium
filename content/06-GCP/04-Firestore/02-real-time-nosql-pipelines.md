@@ -381,10 +381,7 @@ Event-driven Firestore patterns fail most often because required services were n
 
 #### List enabled APIs relevant to Firestore-driven pipelines
 
-**When to run:** Before designing or deploying Firestore-triggered or Firestore-fed pipeline components.
-**Trigger:** You need to know whether the project can currently support Eventarc, Cloud Run, Pub/Sub, Dataflow, and BigQuery integration patterns.
-**Context:** `gcloud` CLI, read-only.
-**Purpose:** Surface the service APIs that are already enabled so you can distinguish platform readiness from application errors.
+Before designing or deploying Firestore-triggered or Firestore-fed pipeline components. It is typically triggered by you need to know whether the project can currently support Eventarc, Cloud Run, Pub/Sub, Dataflow, and BigQuery integration patterns. `gcloud` CLI, read-only. Surface the service APIs that are already enabled so you can distinguish platform readiness from application errors.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -408,10 +405,7 @@ From this live output, the current project is ready for Firestore, Pub/Sub, and 
 
 #### Confirm the Firestore database location before creating triggers
 
-**When to run:** Before creating Eventarc triggers, Cloud Run services, or cross-service wiring that depends on regional placement.
-**Trigger:** You are about to create an Eventarc trigger or reason about latency between Firestore and compute.
-**Context:** `gcloud` CLI, read-only.
-**Purpose:** Confirm the Firestore database location so downstream services can be co-located correctly.
+Before creating Eventarc triggers, Cloud Run services, or cross-service wiring that depends on regional placement. It is typically triggered by you are about to create an Eventarc trigger or reason about latency between Firestore and compute. `gcloud` CLI, read-only. Confirm the Firestore database location so downstream services can be co-located correctly.
 
 *Print the location of the live `main` Firestore database.*
 
@@ -429,10 +423,7 @@ For Firestore direct events, the trigger location and destination region should 
 
 #### Enable the missing APIs for Eventarc and Dataflow patterns
 
-**When to run:** After verifying the project is missing Eventarc, Cloud Run, or Dataflow and before attempting to create triggers or launch streaming jobs.
-**Trigger:** The service list shows the platform is not provisioned for the desired integration pattern.
-**Context:** `gcloud` CLI, state-changing. Requires permission to enable services in the project.
-**Purpose:** Provision the project-level APIs needed for Eventarc-triggered reactions and Dataflow-based processing.
+After verifying the project is missing Eventarc, Cloud Run, or Dataflow and before attempting to create triggers or launch streaming jobs. It is typically triggered by the service list shows the platform is not provisioned for the desired integration pattern. `gcloud` CLI, state-changing. Requires permission to enable services in the project. Provision the project-level APIs needed for Eventarc-triggered reactions and Dataflow-based processing.
 
 > [!warning] API enablement is a project-wide mutation
 >
@@ -470,10 +461,7 @@ Use this pattern when a document write itself is the event boundary and the down
 
 #### Create a Firestore document-written trigger for Cloud Run
 
-**When to run:** After enabling Eventarc and Cloud Run and after the destination service already exists.
-**Trigger:** A write to a specific Firestore path such as `pipeline_runs/{runId}` should start a serverless reaction.
-**Context:** `gcloud` CLI, state-changing. Requires Eventarc admin permissions and a service account that can invoke the destination service.
-**Purpose:** Route Firestore document mutations into a Cloud Run service without a polling loop.
+After enabling Eventarc and Cloud Run and after the destination service already exists. It is typically triggered by A write to a specific Firestore path such as `pipeline_runs/{runId}` should start a serverless reaction. `gcloud` CLI, state-changing. Requires Eventarc admin permissions and a service account that can invoke the destination service. Route Firestore document mutations into a Cloud Run service without a polling loop.
 
 > [!warning] Location and identity must line up
 >
@@ -506,10 +494,7 @@ After creating the trigger, use `gcloud eventarc triggers list --location='europ
 
 #### Track long-running Firestore admin operations safely
 
-**When to run:** During exports, imports, restores, or bulk deletes that have been started asynchronously.
-**Trigger:** You need to verify progress or keep the operation name for later review.
-**Context:** `gcloud` CLI. The initiating command returns or logs the operation name. In the current live project, `gcloud firestore operations list` errors because the project uses the named database `main` instead of `'(default)'`.
-**Purpose:** Keep long-running admin work observable without assuming project defaults that are wrong for this environment.
+During exports, imports, restores, or bulk deletes that have been started asynchronously. It is typically triggered by you need to verify progress or keep the operation name for later review. `gcloud` CLI. The initiating command returns or logs the operation name. In the current live project, `gcloud firestore operations list` errors because the project uses the named database `main` instead of `'(default)'`. Keep long-running admin work observable without assuming project defaults that are wrong for this environment.
 
 > [!warning] Do not rely on `operations list` in this project
 >
@@ -543,10 +528,7 @@ The clean Firestore pattern is to keep current operational truth in Firestore an
 
 #### Export operational history for BigQuery or offline processing
 
-**When to run:** Before historical analysis, before deleting old records, or when building a warehouse view of operational metadata.
-**Trigger:** Firestore is holding data that is still useful, but no longer belongs on the low-latency hot path.
-**Context:** `gcloud` CLI, state-changing. Requires a real Cloud Storage bucket, billing, and appropriate permissions.
-**Purpose:** Snapshot operational history into a portable format that can be loaded into BigQuery or archived in Cloud Storage.
+Before historical analysis, before deleting old records, or when building a warehouse view of operational metadata. It is typically triggered by firestore is holding data that is still useful, but no longer belongs on the low-latency hot path. `gcloud` CLI, state-changing. Requires a real Cloud Storage bucket, billing, and appropriate permissions. Snapshot operational history into a portable format that can be loaded into BigQuery or archived in Cloud Storage.
 
 > [!warning] Export is billed and should be scoped
 >
@@ -568,10 +550,7 @@ Firestore documentation explicitly notes that managed Firestore exports can be l
 
 #### Run a managed bulk delete for bounded operational collections
 
-**When to run:** When TTL is insufficient for urgency, or when you need a controlled cleanup of one or more operational collection groups.
-**Trigger:** A collection group such as `replay_manifests` or `run_debug_payloads` must be cleared in bulk.
-**Context:** `gcloud` CLI, state-changing. Requires billing and Firestore bulk admin permission.
-**Purpose:** Delete large operational data sets without writing custom deletion code.
+When TTL is insufficient for urgency, or when you need a controlled cleanup of one or more operational collection groups. It is typically triggered by A collection group such as `replay_manifests` or `run_debug_payloads` must be cleared in bulk. `gcloud` CLI, state-changing. Requires billing and Firestore bulk admin permission. Delete large operational data sets without writing custom deletion code.
 
 > [!danger] Bulk delete is destructive and not retroactive to later writes
 >

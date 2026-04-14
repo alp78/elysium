@@ -5,155 +5,101 @@ tags:
   - automation
 aliases: [bash automation, bash scripts, shell automation, data engineering bash]
 keywords: [bash automation, shell scripts, CSV processing, JSON processing, API automation, database scripts, GCP automation, log parsing, cron, scheduling, retry, backoff, health check, data validation, ETL scripts, file intake, lock file, flock]
-description: "28 production-ready Bash scripts for data engineering automation — file intake validation, data transformation, API interaction, database operations, GCP cloud ops, log parsing, environment pre-flight checks, and scheduling helpers."
+description: "28 production-ready Bash scripts for data engineering automation - file intake validation, data transformation, API interaction, database operations, GCP cloud ops, log parsing, environment pre-flight checks, and scheduling helpers."
 created: 2026-04-05
-updated: 2026-04-05
+updated: 2026-04-15
 status: complete
 ---
 
 # Bash Automation for Data Engineering
 
-> [!quote]
+> [!quote] Debugging Discipline
+>
 > "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
 >
-> — **Brian Kernighan**, *Unix for Beginners* (1979)
+> - **Brian Kernighan**, *Unix for Beginners* (1979)
 
 > [!abstract]- Summary
 >
-> 28 production-ready Bash scripts that automate the repetitive, error-prone tasks between pipeline orchestration and raw shell commands — each following defensive scripting conventions and paired with a PowerShell equivalent.
+> Bash automation is the Linux-first layer between orchestration and raw command execution in data platforms.
 >
-> - **File intake and validation** — CSV header validation, null/empty field scanning, duplicate key detection, file arrival SLA monitoring.
-> - **Data transformation** — column extraction and reordering, large CSV splitting, JSON-to-CSV flattening, CSV-to-NDJSON conversion.
-> - **API interaction** — REST GET with retry and exponential backoff, cursor-based pagination, OAuth2 bearer token refresh, download with SHA-256 checksum verification.
-> - **Database operations** — connectivity health check, query-to-CSV export, post-load row count reconciliation.
-> - **GCP cloud operations** — GCS stale object reporting, BigQuery dry-run cost estimation, Pub/Sub backlog monitoring, service account key age checking.
-> - **Log parsing and monitoring** — error rate calculation, structured JSON log filtering, log rotation and compression.
-> - **Environment and pre-flight checks** — dependency verification, `.env` file loading, disk space pre-flight.
-> - **Scheduling and orchestration helpers** — lock file wrapper (`flock`), generic retry wrapper, run-and-alert pattern (Slack webhook).
+> - Use these scripts to validate inbound data, reshape extracts, call APIs, and guard scheduled jobs against common failure modes.
+> - Expect explicit checks for schema drift, nulls, duplicate keys, checksum mismatches, lagging consumers, and low-disk conditions.
+> - Treat this page as Bash-first reference material; use the PowerShell companion page when the runtime is Windows-native.
 
 > [!note]- Glossary
 >
-> **Bash script**
-> - A plain-text file containing Bash commands that are executed by the Bash interpreter, typically starting with a shebang such as `#!/usr/bin/env bash` when meant to be run directly.
-> - The standard unit for shell automation in Linux environments: file processing, task orchestration, deployment steps, and operational glue code.
->
-> > [!info] Bash vs sh
-> >
-> > `#!/usr/bin/env bash` invokes Bash explicitly. `#!/bin/sh` may resolve to a minimal POSIX shell (dash on Debian/Ubuntu) that lacks arrays, `[[`, and other Bash-specific features, causing incompatibilities.
+> **Bash script (`.sh`)**
+> - A plain-text file containing commands executed by the Bash interpreter, usually launched through `bash script.sh` or directly when the file is executable.
+> - The standard unit of Linux and WSL automation for file handling, job wrappers, API calls, and operational glue.
 >
 > ---
 >
-> **Shebang (`#!`)**
-> - The first line of an executable script, such as `#!/usr/bin/env bash`, that tells the operating system which interpreter should run the file.
-> - Ensures the script runs under the intended interpreter, which is critical because the same script can behave differently under Bash, POSIX `sh`, Python, or another runtime.
->
-> > [!tip] PATH-based lookup
-> >
-> > `#!/usr/bin/env bash` finds Bash via `$PATH`, which works on any system regardless of where Bash is installed. `#!/bin/bash` is a hardcoded path that fails if Bash lives elsewhere (e.g., `/usr/local/bin/bash` on macOS with Homebrew).
+> **Shebang (`#!/usr/bin/env bash`)**
+> - The first line that selects the interpreter which should execute the script.
+> - `env` resolves `bash` from `PATH`, which is more portable than hard-coding `/bin/bash`.
 >
 > ---
 >
 > **`set -euo pipefail`**
-> - A common Bash strict-mode header that enables three safety options: `-e` exits on unhandled command failure, `-u` treats unset variables as errors, and `pipefail` makes a pipeline fail if any stage fails rather than only the last one.
-> - Reduces silent failure modes in automation by making the script stop early when inputs are missing, commands fail, or intermediate pipeline stages break.
->
-> > [!danger] Omitting strict mode causes silent data corruption
-> >
-> > A failed `curl` or `psql` call without `-e` lets the script continue and write empty or partial output to the target. The pipeline appears to succeed while the data is wrong.
+> - A strict-mode header that stops on unhandled command failures, treats unset variables as errors, and propagates failure from any stage in a pipeline.
+> - It is the baseline safety rail for production shell automation because it prevents silent continuation on bad state.
 >
 > ---
 >
-> **Exit code**
-> - The numeric status a process returns to its parent process when it finishes. By convention, `0` means success and any non-zero value signals failure or abnormal termination.
-> - Allows schedulers, orchestrators, and calling scripts to determine whether a step succeeded and whether retries, alerts, or downstream tasks should run.
->
-> > [!warning] Swallowed exit codes corrupt pipelines
-> >
-> > Catching an error, logging it, and then exiting `0` hides the failure from every upstream scheduler. Always propagate the actual exit code with `exit "$status"` or let `set -e` abort automatically.
+> **`$?`**
+> - The exit code from the most recently completed command.
+> - Use it or immediate `if command; then ... fi` checks when the next step must react to native process success or failure.
 >
 > ---
 >
-> **Idempotent script**
-> - A script designed so that running it multiple times produces the same end state as running it once, without duplicating effects or corrupting existing output.
-> - Essential for reliable retries in production, where jobs may be re-run after timeouts, restarts, partial failures, or scheduler recovery.
->
-> > [!tip] Idempotency patterns
-> >
-> > Check before acting: `[[ -f "$output" ]] && exit 0`. Use `mkdir -p` instead of `mkdir`. Check for existing database rows before inserting. Use `mv` with a temp file to make writes atomic.
+> **`trap`**
+> - A shell mechanism for running cleanup logic when the script exits or receives a signal.
+> - It is the Bash equivalent of guaranteed cleanup blocks and is the right place to remove temp files, unlock state, or stop helper processes.
 >
 > ---
 >
-> **Parameter validation**
-> - Checking at startup that required inputs such as positional arguments, environment variables, files, and directories are present, non-empty, and valid before the script performs side effects.
-> - Prevents the script from running with missing or wrong configuration, which can otherwise lead to bad targets, malformed output, or destructive mistakes.
->
-> > [!info] Bash validation syntax
-> >
-> > `VAR="${1:?Usage: $0 <arg>}"` combines assignment and validation: if `$1` is unset or empty, Bash prints the message and exits immediately. `${VAR:?ERROR: VAR must be set}` does the same for environment variables.
+> **`curl`**
+> - A command-line HTTP client used for REST calls, downloads, bearer-token requests, and webhook posts.
+> - In Bash automation it usually provides transport, while Python or other tools handle JSON parsing when the payload is non-trivial.
 >
 > ---
 >
-> **Logging pattern**
-> - A consistent way of writing diagnostic or status messages, usually with timestamps and severity context, typically to `stderr` so they remain separate from data written to `stdout`.
-> - Makes scripts observable and debuggable without contaminating pipeline output that downstream commands are expected to parse.
->
-> > [!warning] Mixing logs with data output breaks pipelines
-> >
-> > If log messages go to `stdout`, any command that consumes the script's output receives log noise mixed with data. Downstream parsers fail or silently produce wrong results.
+> **NDJSON**
+> - Newline-delimited JSON, where each line is an independent JSON document.
+> - It is useful for streaming, append-only logs, and ingestion formats that do not require the entire dataset to be materialized as one array.
 >
 > ---
 >
 > **Exponential backoff**
-> - A retry strategy in which the delay before each new attempt increases exponentially after failure, for example 1 s → 2 s → 4 s → 8 s, usually up to a maximum.
-> - Reduces pressure on unstable upstream systems and increases the chance that transient network, API, or database failures recover before the next retry.
->
-> > [!tip] Jitter for distributed systems
-> >
-> > In distributed systems where many clients retry simultaneously, add random jitter to the backoff: `delay=$(( delay + RANDOM % delay ))`. This prevents thundering-herd spikes when an upstream service restarts.
+> - A retry strategy that increases the wait time after each failed attempt.
+> - It reduces pressure on unstable upstream systems and is the standard defensive pattern for transient API and network failures.
 >
 > ---
 >
-> **Golden schema**
-> - A reference definition of the expected structure of a dataset, such as the required column names and their order in a CSV header, treated as the authoritative contract for incoming data.
-> - Allows validation of upstream files before processing so schema drift is caught immediately instead of propagating downstream as silent misalignment or bad parsing.
->
-> > [!info] Golden schema format
-> >
-> > In the scripts on this page, the golden schema file is a single line of comma-separated column names — the same format as the first row of the CSV. This keeps validation as a simple string comparison with `diff`.
+> **`flock`**
+> - A kernel-backed file lock utility from `util-linux`.
+> - It prevents overlapping runs of the same scheduled job without the stale-lock problems of ad hoc PID files.
 >
 > ---
 >
-> **NDJSON (Newline-Delimited JSON)**
-> - A text format in which each line is a complete JSON object. It is also commonly called JSON Lines and often stored with a `.jsonl` extension.
-> - Enables streaming, line-by-line processing of large JSON datasets without loading the entire file into memory, which is useful for logs, ingestion pipelines, and tools like `jq`.
->
-> > [!info] NDJSON vs JSON array
-> >
-> > A JSON array (`[{...},{...}]`) requires the full file to be parsed before any record is accessible. NDJSON (`{...}\n{...}`) allows `while read -r line` processing and supports arbitrarily large files without memory constraints.
->
-> ---
->
-> **Lock file / `flock`**
-> - A lock file is a file used to coordinate exclusive access to a critical section. `flock` is the standard Linux command and kernel-backed locking mechanism used to acquire and hold that lock atomically.
-> - Prevents concurrent runs of the same job from overlapping, which is critical for cron jobs and batch pipelines that would otherwise duplicate work, race on files, or exhaust shared resources.
->
-> > [!tip] `flock` vs PID files
-> >
-> > PID files (writing the process ID to a file) are fragile — they leave stale locks if the process crashes. `flock` uses kernel-level file locking that is automatically released when the process exits, even on crash.
+> **`sqlcmd` / `SQLCMD.EXE`**
+> - Microsoft's command-line SQL Server client.
+> - In this WSL environment the live examples call the Windows `SQLCMD.EXE` binary because native Linux `sqlcmd` is not installed.
 >
 > ---
 >
 > **`cron`**
-> - A Unix time-based job scheduler that runs commands or scripts at fixed times or intervals, configured in a `crontab` using a five-field time expression (`minute hour day month weekday`).
-> - Provides lightweight unattended scheduling for recurring operational tasks such as extracts, SLA checks, cleanups, health checks, and report generation on systems without a larger orchestrator.
->
-> > [!warning] Cron does not source shell profiles
-> >
-> > Cron runs in a minimal environment. Environment variables set in `.bashrc`, `.profile`, or `.env` are not available unless explicitly sourced at the top of the script or defined in the `crontab` environment block.
+> - The standard Unix scheduler for time-based unattended execution.
+> - It runs with a minimal environment, so scripts that work interactively can still fail under `cron` if they assume profile state, `PATH`, or working-directory defaults.
 
 Bash is one of the four core languages of the data engineer alongside SQL, Python, and a JVM language. These scripts automate the repetitive, error-prone tasks that sit between pipeline orchestration and raw shell commands: validating incoming files, transforming formats, querying APIs, checking database health, managing cloud resources, parsing logs, and wiring up scheduling.
 
 Every script in this page follows the defensive scripting patterns documented in [defensive-scripting](https://alp78.github.io/elysium/01-Shell/Scripting/defensive-scripting) and uses the command chaining operators explained in [command-chaining](https://alp78.github.io/elysium/01-Shell/Scripting/command-chaining). The PowerShell equivalent of every script exists at [powershell-automation](https://alp78.github.io/elysium/01-Shell/Automation/powershell-automation).
+
+These Bash examples were executed from WSL against live local and cloud resources. GCP sections export `CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'` so WSL reuses the Windows Cloud SDK profile, and SQL Server sections call `/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE` because that is the installed client available to WSL on this host.
+
+The catalog below follows the same path most data jobs do: validate the input, reshape it, call external systems, verify the load, and then harden the runtime around retries and scheduling.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
@@ -179,790 +125,1975 @@ flowchart LR
 
 Incoming data is the single largest source of pipeline failures. A file that arrives with missing columns, null values in mandatory fields, or duplicate keys will propagate errors silently through every downstream transformation. These scripts catch problems at the gate, before any processing begins.
 
-### Bash | CSV header validator
+### Validation scripts
 
-Compares the header row of an incoming CSV file against a golden schema file that defines the expected column names and order. If the headers do not match exactly, the script prints the diff and exits with a non-zero code, preventing the pipeline from processing a malformed file.
+These examples validate the real fixture files under `C:\Users\aperi\My Drive\VAULT\data\powershell-automation\incoming` and `...\landing`. The commands run in WSL, but they operate on the same shared vault data the PowerShell note uses.
 
-The golden schema file is a single line of comma-separated column names — the same format as the first row of the CSV.
+#### CSV header validator
+
+Use this before any transform or load accepts a new file. It is typically triggered when an incoming CSV must prove that its column contract still matches the expected schema before downstream processing continues. This script compares the header row of the sampled `signals_daily` file against the golden schema file and stops immediately on any mismatch.
+
+> [!warning] Schema contract risk
+>
+> Header comparison is only reliable when encoding and newline handling are explicit. For CSV validation, use a CSV-aware parser with `newline=''` and a declared encoding; raw shell splitting can misread quoted line breaks or BOM-affected headers.
+
+> [!failure] Wrong pattern
+>
+> Comparing raw header strings with ad hoc tokenization or unspecified encoding and then treating the result as a valid schema check.
+
+> [!success] Preferred pattern
+>
+> Treat the schema file as a release artifact, not an informal sample. In data engineering workflows, reject the file at the landing edge when the contract changes instead of allowing downstream transforms to guess the new shape.
+
+*Compare the sampled `signals_daily` CSV header in `incoming` against the golden schema file in `schemas`.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-GOLDEN_SCHEMA="${1:?Usage: $0 <schema_file> <csv_file>}"
-CSV_FILE="${2:?Usage: $0 <schema_file> <csv_file>}"
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+SCHEMA_FILE="$DATA_ROOT/schemas/signals_daily_header.csv"
+CSV_FILE="$DATA_ROOT/incoming/signals_daily_sample.csv"
 
-expected=$(head -1 "$GOLDEN_SCHEMA")
-actual=$(head -1 "$CSV_FILE")
+expected=$(python3 - "$SCHEMA_FILE" <<'PY'
+import csv, sys
+with open(sys.argv[1], newline='', encoding='utf-8') as handle:
+    print(",".join(next(csv.reader(handle))))
+PY
+)
+
+actual=$(python3 - "$CSV_FILE" <<'PY'
+import csv, sys
+with open(sys.argv[1], newline='', encoding='utf-8') as handle:
+    print(",".join(next(csv.reader(handle))))
+PY
+)
 
 if [[ "$expected" != "$actual" ]]; then
-    echo "HEADER MISMATCH in $CSV_FILE"
-    diff <(echo "$expected" | tr ',' '\n') <(echo "$actual" | tr ',' '\n')
+    echo "HEADER MISMATCH in $(basename "$CSV_FILE")"
     exit 1
 fi
 
-echo "OK — headers match schema"
+echo "OK - headers match schema for $(basename "$CSV_FILE")"
 ```
 
 ```text
-OK — headers match schema
+OK - headers match schema for signals_daily_sample.csv
 ```
 
-### Bash | Null and empty field scanner
+#### Null and empty field scanner
 
-Scans a CSV file for rows where mandatory columns contain empty values. The script accepts a comma-separated list of column positions (1-indexed) that must not be empty. It reports every offending row number and the column that failed, making it easy to trace the problem back to the source system.
+Use this before any transform or load accepts a new file. It is typically triggered when an incoming file must prove row-level completeness before downstream processing continues. The script scans the intentionally broken `signals_daily_missing.csv` fixture and reports every row where `symbol` or `recommendation_mean` is blank.
 
-This uses `awk` field splitting — for a deeper reference on `awk` patterns, see [awk-data-processing](https://alp78.github.io/elysium/01-Shell/Text-Processing/awk-data-processing).
+> [!warning] Null semantics risk
+>
+> Empty string, whitespace, and sentinel literals such as `NULL` or `N/A` are different states unless the ingestion contract normalizes them. A null scan that does not define those semantics will miss operationally bad rows or reject valid ones inconsistently.
+
+> [!failure] Wrong pattern
+>
+> Treating empty string, whitespace, and sentinel literals such as `NULL` as interchangeable without an explicit normalization rule.
+
+> [!success] Preferred pattern
+>
+> Quarantine rejected rows with explicit failure reasons instead of only failing the batch. That preserves evidence for producer follow-up and avoids rerunning the entire intake just to inspect which records violated completeness rules.
+
+*Scan the broken `signals_daily_missing.csv` fixture for empty `symbol` and `recommendation_mean` fields.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-CSV_FILE="${1:?Usage: $0 <csv_file> <col1,col2,...>}"
-MANDATORY_COLS="${2:?Comma-separated column positions (1-indexed)}"
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+CSV_FILE="$DATA_ROOT/incoming/signals_daily_missing.csv"
 
-IFS=',' read -ra COLS <<< "$MANDATORY_COLS"
-header=$(head -1 "$CSV_FILE")
+python3 - "$CSV_FILE" <<'PY'
+import csv, sys
 
-violations=0
-awk -F',' -v cols="$MANDATORY_COLS" '
-BEGIN { split(cols, c, ",") }
-NR > 1 {
-    for (i in c) {
-        if ($c[i] == "" || $c[i] ~ /^[[:space:]]*$/) {
-            printf "Row %d: column %d is empty\n", NR, c[i]
-            v++
-        }
-    }
-}
-END { exit (v > 0 ? 1 : 0) }
-' "$CSV_FILE"
+csv_file = sys.argv[1]
+mandatory = ("symbol", "recommendation_mean")
+violations = 0
 
-echo "OK — no null values in mandatory columns"
+with open(csv_file, newline='', encoding='utf-8') as handle:
+    for row_num, row in enumerate(csv.DictReader(handle), start=2):
+        for column in mandatory:
+            if not (row.get(column) or "").strip():
+                print(f"Row {row_num}: column '{column}' is empty")
+                violations += 1
+
+if violations:
+    raise SystemExit(1)
+
+print("OK - no null values in mandatory columns")
+PY
 ```
 
 ```text
-Row 14: column 3 is empty
-Row 27: column 3 is empty
-Row 41: column 1 is empty
+Row 5: column 'recommendation_mean' is empty
+Row 9: column 'symbol' is empty
 ```
 
-### Bash | Duplicate key detector
+#### Duplicate key detector
 
-Checks a CSV file for duplicate values in a specified key column. Data engineers loading into warehouses with primary key constraints need to detect duplicates before the load, not after a constraint violation crashes the job.
+Use this before any transform or load accepts a new file. It is typically triggered when the target table expects a unique business key and duplicates must be rejected early. This script reads the duplicate-symbol fixture and reports any repeated `symbol` values before a database or warehouse load is attempted.
 
-The script extracts the key column with `cut`, sorts it, and uses `uniq -d` to surface only the duplicated values. See [grep-and-pattern-matching](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) for more on pattern-based filtering.
+> [!warning] Duplicate-key drift
+>
+> Duplicate detection can diverge from the target system if business keys are case-insensitive or trimmed during load. Validate keys under the same canonicalization rules that the destination collation or merge logic applies.
+
+> [!failure] Wrong pattern
+>
+> Checking source keys before case, trim, or collation normalization and assuming the destination will behave the same way.
+
+> [!success] Preferred pattern
+>
+> Pair key checks with a documented grain statement for the file, for example one row per `symbol` and `signal_date`. Data contracts that name the grain make duplicate failures easier to interpret during incident review.
+
+*Group the duplicate-symbol fixture and fail when a `signals_daily` symbol appears more than once.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-CSV_FILE="${1:?Usage: $0 <csv_file> <key_column_number>}"
-KEY_COL="${2:?Column number (1-indexed)}"
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+CSV_FILE="$DATA_ROOT/incoming/signals_daily_duplicate.csv"
 
-dupes=$(tail -n +2 "$CSV_FILE" | cut -d',' -f"$KEY_COL" | sort | uniq -d)
+python3 - "$CSV_FILE" <<'PY'
+import csv, sys
+from collections import Counter
 
-if [[ -n "$dupes" ]]; then
-    echo "DUPLICATE KEYS in column $KEY_COL:"
-    echo "$dupes"
-    count=$(echo "$dupes" | wc -l)
-    echo "Total duplicated values: $count"
-    exit 1
-fi
+with open(sys.argv[1], newline='', encoding='utf-8') as handle:
+    counts = Counter(row["symbol"] for row in csv.DictReader(handle))
 
-echo "OK — no duplicate keys in column $KEY_COL"
+dupes = sorted((symbol, count) for symbol, count in counts.items() if count > 1)
+
+if dupes:
+    print("DUPLICATE KEYS in column 'symbol':")
+    for symbol, count in dupes:
+        print(f"  {symbol} ({count} occurrences)")
+    print(f"Total duplicated values: {len(dupes)}")
+    raise SystemExit(1)
+
+print("OK - no duplicate keys in column 'symbol'")
+PY
 ```
 
 ```text
-DUPLICATE KEYS in column 1:
-1001
-1042
+DUPLICATE KEYS in column 'symbol':
+  ASML.AS (2 occurrences)
+  MC.PA (2 occurrences)
 Total duplicated values: 2
 ```
 
-### Bash | File arrival SLA checker
+#### File arrival SLA checker
 
-Monitors a landing directory for the arrival of an expected file within a deadline. Data pipelines that depend on upstream file drops need an early alert when the file is late, rather than discovering the gap hours later when a downstream job fails.
+Use this before any transform or load depends on a landing-zone drop. It is typically triggered when a scheduled ingest needs to prove that the expected file has arrived recently enough to satisfy the upstream SLA. This script refreshes the sample landing file timestamp, searches for `signals_daily_*.csv`, and reports the newest matching file.
 
-The script checks whether any file matching a glob pattern has been modified within the last N minutes. If no matching file is found, it exits with a non-zero code and a message suitable for alerting. See [finding-files](https://alp78.github.io/elysium/01-Shell/File-Operations/finding-files) for more on `find` usage.
+> [!warning] SLA false positive
+>
+> File modification time is not the same as data freshness. A recently touched file can still contain stale business dates, partial content, or a producer-side rerun of old data.
+
+> [!failure] Wrong pattern
+>
+> Approving the drop because the file is new on disk even though the business date or record volume can still be stale.
+
+> [!success] Preferred pattern
+>
+> Monitor file-arrival SLA together with business-date freshness and expected row volume. The three signals together are materially stronger than any single timestamp-based gate.
+
+*Check that the landing folder contains a fresh `signals_daily_*.csv` drop within the last 60 minutes.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-LANDING_DIR="${1:?Usage: $0 <landing_dir> <file_pattern> <max_age_minutes>}"
-FILE_PATTERN="${2:?File glob pattern (e.g., 'sales_*.csv')}"
-MAX_AGE="${3:?Maximum age in minutes}"
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+LANDING_DIR="$DATA_ROOT/landing"
+FILE_PATTERN='signals_daily_*.csv'
+MAX_AGE_MINUTES=60
 
-matches=$(find "$LANDING_DIR" -maxdepth 1 -name "$FILE_PATTERN" -mmin -"$MAX_AGE" -type f)
+touch "$LANDING_DIR/signals_daily_20260414.csv"
 
-if [[ -z "$matches" ]]; then
-    echo "SLA BREACH: no file matching '$FILE_PATTERN' in $LANDING_DIR within $MAX_AGE minutes"
+mapfile -t matches < <(
+    find "$LANDING_DIR" -maxdepth 1 -type f -name "$FILE_PATTERN" -mmin "-$MAX_AGE_MINUTES" -printf '%T@ %f\n' |
+    sort -nr
+)
+
+if (( ${#matches[@]} == 0 )); then
+    echo "SLA BREACH: no file matching '$FILE_PATTERN' in $LANDING_DIR within $MAX_AGE_MINUTES minutes"
     exit 1
 fi
 
-count=$(echo "$matches" | wc -l)
-newest=$(echo "$matches" | xargs ls -t | head -1)
-echo "OK — $count file(s) found, newest: $(basename "$newest")"
+newest="${matches[0]#* }"
+echo "OK - ${#matches[@]} file(s) found, newest: $newest"
 ```
 
 ```text
-OK — 1 file(s) found, newest: sales_20260405.csv
+OK - 1 file(s) found, newest: signals_daily_20260414.csv
 ```
 
 ## Data transformation
 
-Once a file passes validation, it often needs reshaping before it can be loaded into a target system. These scripts handle the most common format conversions and structural changes that data engineers perform daily — column selection, file splitting for parallel loads, and format conversion between CSV and JSON.
+Once a file passes validation, it often needs reshaping before it can be loaded into a target system. These scripts handle the most common format conversions and structural changes that data engineers perform daily: selecting columns, splitting oversized files, and converting between CSV and JSON-oriented formats.
 
-### Bash | CSV column extractor and reorderer
+### Transformation scripts
 
-Selects specific columns from a CSV file and writes them in a new order. This is essential when a source system delivers 50 columns but the target table only needs 5, or when the column order must match a schema definition.
+These examples operate on the live CSV and JSON fixtures in the vault data directory. Python handles the structured parsing because the runtime here does not have `jq`, and the goal is a reliable WSL workflow rather than a contrived pure-`awk` parser for quoted CSV.
 
-The script uses `awk` with a comma field separator. Column positions are passed as a comma-separated argument. See [awk-data-processing](https://alp78.github.io/elysium/01-Shell/Text-Processing/awk-data-processing) for comprehensive `awk` coverage.
+#### CSV column extractor and reorderer
+
+Use this after validation and before the target load step. It is typically triggered when a validated dataset must be reshaped into the subset and order that the next system expects. This script projects four warehouse-facing columns from the sampled `signals_daily` extract into a new CSV under `transformed`.
+
+> [!warning] Ordinal projection risk
+>
+> Column selection by ordinal position is brittle under schema drift. Once upstream producers insert or reorder fields, text tools such as `cut` can silently project the wrong data.
+
+> [!failure] Wrong pattern
+>
+> Projecting columns by position with `cut` or `awk` and assuming upstream column order will never change.
+
+> [!success] Preferred pattern
+>
+> Name-based projection with an explicit destination column list is the safer warehouse pattern. Fail immediately on missing source columns instead of emitting a partially mapped file.
+
+*Project four destination columns from the sampled `signals_daily` extract into `signals_daily_projection.csv`.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-CSV_FILE="${1:?Usage: $0 <csv_file> <col1,col2,...> <output_file>}"
-COLUMNS="${2:?Comma-separated column positions (1-indexed)}"
-OUTPUT="${3:?Output file path}"
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+SOURCE_FILE="$DATA_ROOT/incoming/signals_daily_sample.csv"
+OUTPUT_FILE="$DATA_ROOT/transformed/signals_daily_projection.csv"
 
-awk -F',' -v cols="$COLUMNS" '
-BEGIN { OFS=","; n = split(cols, c, ",") }
-{
-    out = ""
-    for (i = 1; i <= n; i++) {
-        out = (i == 1 ? $c[i] : out OFS $c[i])
-    }
-    print out
-}
-' "$CSV_FILE" > "$OUTPUT"
+python3 - "$SOURCE_FILE" "$OUTPUT_FILE" <<'PY'
+import csv, sys
 
-total=$(wc -l < "$OUTPUT")
-echo "OK — wrote $total rows with $(echo "$COLUMNS" | tr ',' '\n' | wc -l) columns to $OUTPUT"
+source_file, output_file = sys.argv[1:3]
+columns = ["symbol", "signal_date", "current_price", "upside_potential"]
+
+with open(source_file, newline='', encoding='utf-8') as source_handle:
+    rows = list(csv.DictReader(source_handle))
+
+with open(output_file, "w", newline='', encoding='utf-8') as output_handle:
+    writer = csv.DictWriter(output_handle, fieldnames=columns)
+    writer.writeheader()
+    writer.writerows({column: row[column] for column in columns} for row in rows)
+
+print(f"OK - wrote {len(rows)} rows with {len(columns)} columns to {output_file.rsplit('/', 1)[-1]}")
+PY
 ```
 
 ```text
-OK — wrote 10001 rows with 5 columns to output.csv
+OK - wrote 12 rows with 4 columns to signals_daily_projection.csv
 ```
 
-### Bash | Large CSV splitter
+#### Large CSV splitter
 
-Splits a large CSV file into smaller chunks of N rows each, preserving the header row in every chunk. This is critical for parallel loading into databases or cloud storage systems that have per-file size limits (e.g., BigQuery recommends files under 5 GB for optimal load performance).
+Use this after validation and before the target load step. It is typically triggered when a validated dataset is too large to load comfortably as one file or when retryable chunking is required. This script splits the full `data/signals_daily.csv` extract into 200-row chunks and preserves the header row in every chunk under `split`.
 
-The script strips the header, splits the body with `split`, then prepends the header to each chunk.
+> [!warning] Chunking tradeoff
+>
+> Excessively small chunks increase scheduler overhead, object counts, and downstream load inefficiency. Splitting is useful only when the chunk boundary aligns with retry and parallelism requirements.
+
+> [!failure] Wrong pattern
+>
+> Splitting files into arbitrarily small pieces that increase retry overhead, file-count sprawl, and downstream load inefficiency.
+
+> [!success] Preferred pattern
+>
+> Choose chunk size based on the target system's load behavior and the maximum amount of work you are willing to replay on retry. Data movement boundaries should be operational decisions, not arbitrary file-size conventions.
+
+*Split the full `data/signals_daily.csv` extract into 200-row chunks under `data/powershell-automation/split`.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-CSV_FILE="${1:?Usage: $0 <csv_file> <rows_per_chunk> <output_prefix>}"
-CHUNK_SIZE="${2:?Rows per chunk}"
-PREFIX="${3:?Output file prefix}"
+VAULT_DATA="/mnt/c/Users/aperi/My Drive/VAULT/data"
+DATA_ROOT="$VAULT_DATA/powershell-automation"
+SOURCE_FILE="$VAULT_DATA/signals_daily.csv"
+SPLIT_DIR="$DATA_ROOT/split"
+CHUNK_SIZE=200
 
-header=$(head -1 "$CSV_FILE")
-tail -n +2 "$CSV_FILE" | split -l "$CHUNK_SIZE" -d --additional-suffix=.csv - "${PREFIX}_"
+rm -f "$SPLIT_DIR"/signals_daily_*.csv
+header=$(head -n 1 "$SOURCE_FILE")
+tail -n +2 "$SOURCE_FILE" | split -l "$CHUNK_SIZE" -d --additional-suffix=.csv - "$SPLIT_DIR/signals_daily_"
 
-for chunk in "${PREFIX}_"*.csv; do
-    tmp=$(mktemp)
-    echo "$header" > "$tmp"
-    cat "$chunk" >> "$tmp"
-    mv "$tmp" "$chunk"
+for chunk in "$SPLIT_DIR"/signals_daily_*.csv; do
+    tmp_file=$(mktemp)
+    printf '%s\n' "$header" > "$tmp_file"
+    cat "$chunk" >> "$tmp_file"
+    mv "$tmp_file" "$chunk"
 done
 
-count=$(ls "${PREFIX}_"*.csv | wc -l)
-echo "OK — split into $count chunks of $CHUNK_SIZE rows each"
+chunk_count=$(find "$SPLIT_DIR" -maxdepth 1 -type f -name 'signals_daily_*.csv' | wc -l | tr -d ' ')
+echo "OK - split into $chunk_count chunks of up to $CHUNK_SIZE rows each"
 ```
 
 ```text
-OK — split into 10 chunks of 100000 rows each
+OK - split into 3 chunks of up to 200 rows each
 ```
 
-### Bash | JSON to CSV flattener
+#### JSON to CSV flattener
 
-Converts a JSON array of flat objects into a CSV file. Many APIs return JSON, but warehouse bulk-load tools (BigQuery `bq load`, PostgreSQL `\COPY`) expect CSV. This script uses `jq` to extract keys as the header row and values as data rows.
+Use this after validation and before the target load step. It is typically triggered when the source is a local JSON array but the next load step expects CSV. This script converts the `dim_country_sample.json` fixture into a flat CSV with the same two fields used later in the Firestore example.
 
-> [!warning] Nested objects
-> This script handles flat JSON objects only. Nested objects or arrays in values will be serialized as raw JSON strings in the CSV cell, which may break downstream parsers.
+> [!warning] Lossy flattening risk
+>
+> Flattening nested JSON into CSV is lossy once arrays or nested objects carry analytical meaning. Do not treat CSV as a neutral interchange format when the original payload has hierarchical semantics.
 
-> [!success] For nested JSON
-> Pre-flatten with `jq '[.[] | {key: .parent.child}]'` before piping to this script, or use Python's `pandas.json_normalize()` for complex hierarchies.
+> [!failure] Wrong pattern
+>
+> Flattening nested JSON into CSV and discarding the raw semi-structured artifact that preserves arrays and nested objects.
+
+> [!success] Preferred pattern
+>
+> Preserve the raw JSON or NDJSON artifact alongside the flattened extract whenever the source is semi-structured. That gives downstream debugging and replay a stable source of truth when CSV projections later need to change.
+
+*Flatten the local country JSON array into `transformed/dim_country_sample.csv`.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-JSON_FILE="${1:?Usage: $0 <json_file> <output_csv>}"
-OUTPUT="${2:?Output CSV file path}"
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+JSON_FILE="$DATA_ROOT/json/dim_country_sample.json"
+OUTPUT_FILE="$DATA_ROOT/transformed/dim_country_sample.csv"
 
-jq -r '
-  (.[0] | keys_unsorted) as $keys |
-  ($keys | join(",")) ,
-  (.[] | [ .[$keys[]] ] | map(tostring) | join(","))
-' "$JSON_FILE" > "$OUTPUT"
+python3 - "$JSON_FILE" "$OUTPUT_FILE" <<'PY'
+import csv, json, sys
 
-rows=$(($(wc -l < "$OUTPUT") - 1))
-cols=$(head -1 "$OUTPUT" | tr ',' '\n' | wc -l)
-echo "OK — wrote $rows rows with $cols columns to $OUTPUT"
+json_file, output_file = sys.argv[1:3]
+
+with open(json_file, encoding='utf-8') as handle:
+    rows = json.load(handle)
+
+columns = list(rows[0].keys())
+
+with open(output_file, "w", newline='', encoding='utf-8') as output_handle:
+    writer = csv.DictWriter(output_handle, fieldnames=columns)
+    writer.writeheader()
+    writer.writerows(rows)
+
+print(f"OK - wrote {len(rows)} rows with {len(columns)} columns to {output_file.rsplit('/', 1)[-1]}")
+PY
 ```
 
 ```text
-OK — wrote 250 rows with 8 columns to output.csv
+OK - wrote 8 rows with 2 columns to dim_country_sample.csv
 ```
 
-### Bash | CSV to NDJSON converter
+#### CSV to NDJSON converter
 
-Converts a CSV file to newline-delimited JSON (NDJSON), the format required by BigQuery streaming inserts and many modern data tools. Each CSV row becomes a single JSON object on its own line.
+Use this after validation and before a consumer expects line-delimited JSON. It is typically triggered when a CSV extract must be turned into a streaming-friendly interchange format for downstream tooling. This script converts the sampled `signals_daily` CSV into one JSON document per line under `transformed`.
 
-The script reads the header row to build key names, then converts each subsequent row into a JSON object using `jq`.
+> [!warning] Deferred typing risk
+>
+> A row-to-document conversion that preserves every field as text only defers typing problems to the next system. Strict downstream schemas will still fail if dates, numerics, or null semantics were never normalized.
+
+> [!failure] Wrong pattern
+>
+> Emitting every field as text and expecting downstream systems to recover correct numeric, date, and null semantics later.
+
+> [!success] Preferred pattern
+>
+> Use NDJSON when append-friendly transport matters, but cast critical fields deliberately before the first durable load. A documented type boundary is easier to operate than repeated downstream coercion.
+
+*Convert the sampled CSV into `signals_daily_sample.ndjson` with one object per line.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-CSV_FILE="${1:?Usage: $0 <csv_file> <output_ndjson>}"
-OUTPUT="${2:?Output NDJSON file path}"
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+CSV_FILE="$DATA_ROOT/incoming/signals_daily_sample.csv"
+OUTPUT_FILE="$DATA_ROOT/transformed/signals_daily_sample.ndjson"
 
-IFS=',' read -ra HEADERS < <(head -1 "$CSV_FILE")
-num_cols=${#HEADERS[@]}
+python3 - "$CSV_FILE" "$OUTPUT_FILE" <<'PY'
+import csv, json, sys
 
-tail -n +2 "$CSV_FILE" | while IFS=',' read -ra VALUES; do
-    json="{"
-    for ((i=0; i<num_cols; i++)); do
-        [[ $i -gt 0 ]] && json+=","
-        json+="\"${HEADERS[$i]}\":\"${VALUES[$i]}\""
-    done
-    json+="}"
-    echo "$json"
-done | jq -c '.' > "$OUTPUT"
+csv_file, output_file = sys.argv[1:3]
 
-rows=$(wc -l < "$OUTPUT")
-echo "OK — wrote $rows NDJSON records to $OUTPUT"
+with open(csv_file, newline='', encoding='utf-8') as input_handle, open(output_file, "w", encoding='utf-8') as output_handle:
+    rows = list(csv.DictReader(input_handle))
+    for row in rows:
+        output_handle.write(json.dumps(row, separators=(",", ":")) + "\n")
+
+print(f"OK - wrote {len(rows)} NDJSON records to {output_file.rsplit('/', 1)[-1]}")
+PY
 ```
 
 ```text
-OK — wrote 10000 NDJSON records to output.ndjson
+OK - wrote 12 NDJSON records to signals_daily_sample.ndjson
 ```
 
 ## API interaction
 
-Data pipelines frequently pull data from REST APIs — financial data providers, internal microservices, SaaS platforms. These scripts handle the mechanical concerns that every API integration must address: retries with backoff, pagination, token management, and integrity verification. See [http-requests-and-apis](https://alp78.github.io/elysium/01-Shell/Networking/http-requests-and-apis) for foundational `curl` usage.
+Data pipelines frequently pull data from REST APIs: warehouse metadata endpoints, cloud-control APIs, SaaS services, and internal application surfaces. These scripts handle the recurring mechanics around those calls: retries, pagination, bearer-token lifecycle, and checksum validation.
 
-### Bash | REST GET with retry and backoff
+### API scripts
 
-Fetches a URL with configurable retry count and exponential backoff. Transient failures (network blips, 502/503 responses) are the norm when calling external APIs. Without retries, a single timeout kills an entire pipeline run.
+The live API examples here use Google Cloud endpoints because they are already available in the target environment. WSL reuses the Windows Cloud SDK credentials, and Python handles the JSON decoding that would normally be delegated to `jq` on a Linux host where `jq` is installed.
 
-The script doubles the wait time after each failure (1s → 2s → 4s → 8s) up to a configurable maximum. It exits with the HTTP status code on permanent failure.
+#### REST GET with retry and backoff
+
+Use this when a script needs one read-only API response but cannot afford to fail on the first transient HTTP issue. It is typically triggered when metadata or control-plane state must be fetched before the next step can continue. This example calls the BigQuery table metadata endpoint for `stoxx_silver.signals_daily`, retries on non-2xx responses, and saves the response body locally.
+
+> [!warning] Retry safety boundary
+>
+> Automatic retries are appropriate for idempotent reads, not for arbitrary mutating API calls. Replaying non-idempotent writes without a deduplication contract can create duplicate side effects.
+
+> [!failure] Wrong pattern
+>
+> Reusing the same automatic retry wrapper for mutating API calls that can create duplicate side effects.
+
+> [!success] Preferred pattern
+>
+> Honor `Retry-After` when the server supplies it, add jitter to the delay schedule, and cap the total retry budget. Those controls reduce coordinated retry storms and make API behavior more predictable during incidents.
+
+*Fetch live BigQuery table metadata with retry logic and save the response to `signals_daily_table.json`.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-URL="${1:?Usage: $0 <url> [max_retries] [output_file]}"
-MAX_RETRIES="${2:-5}"
-OUTPUT="${3:-/dev/stdout}"
-
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+OUTPUT_FILE="$DATA_ROOT/api/signals_daily_table.json"
+TOKEN="$(gcloud auth print-access-token)"
+URL='https://bigquery.googleapis.com/bigquery/v2/projects/bq-wh-nb/datasets/stoxx_silver/tables/signals_daily'
+MAX_RETRIES=3
 attempt=0
 delay=1
 
 while (( attempt < MAX_RETRIES )); do
-    http_code=$(curl -s -o "$OUTPUT" -w "%{http_code}" "$URL") || true
-
-    if [[ "$http_code" =~ ^2 ]]; then
-        echo "OK — HTTP $http_code after $((attempt + 1)) attempt(s)"
+    http_code=$(curl -sS -o "$OUTPUT_FILE" -w '%{http_code}' -H "Authorization: Bearer $TOKEN" "$URL") || http_code=000
+    if [[ "$http_code" == 2* ]]; then
+        echo "OK - HTTP $http_code after $((attempt + 1)) attempt(s)"
+        echo "Saved response to $(basename "$OUTPUT_FILE")"
         exit 0
     fi
-
     attempt=$((attempt + 1))
     echo "Attempt $attempt/$MAX_RETRIES failed (HTTP $http_code), retrying in ${delay}s..."
     sleep "$delay"
     delay=$((delay * 2))
 done
 
-echo "FAILED — all $MAX_RETRIES attempts exhausted, last HTTP $http_code"
+echo "FAILED - all $MAX_RETRIES attempts exhausted, last HTTP $http_code"
 exit 1
 ```
 
 ```text
-Attempt 1/5 failed (HTTP 503), retrying in 1s...
-Attempt 2/5 failed (HTTP 503), retrying in 2s...
-OK — HTTP 200 after 3 attempt(s)
+OK - HTTP 200 after 1 attempt(s)
+Saved response to signals_daily_table.json
 ```
 
-### Bash | Paginated API fetcher
+#### Paginated API fetcher
 
-Collects all pages from a cursor-based or offset-based paginated API into a single output file. Most APIs limit response size to 100–1000 records per call. This script follows the pagination chain until no `next` cursor is returned, merging all results into one JSON array.
+Use this when the API returns only part of the result set in each response. It is typically triggered when table lists, audit logs, or catalog endpoints page through a large collection that must be collected before downstream logic can reason about the whole dataset. This example walks the BigQuery tables list endpoint for `stoxx_silver` with `maxResults=2`, follows `nextPageToken`, and merges all pages into one local JSON file.
+
+> [!warning] Pagination truncation risk
+>
+> Do not infer completion from page size. Many APIs return short pages before the final page, and stopping on record count heuristics will silently truncate the collection.
+
+> [!failure] Wrong pattern
+>
+> Stopping when a page is short or when a record count looks complete instead of following the server's continuation token.
+
+> [!success] Preferred pattern
+>
+> Persist the last successful page token or high-water mark after each page. That turns a long-running pull into a resumable process instead of forcing a full restart after partial failure.
+
+*Fetch the `stoxx_silver` BigQuery table list across multiple pages and write the merged result to `stoxx_silver_tables.json`.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${1:?Usage: $0 <base_url> <output_file> [cursor_field] [data_field]}"
-OUTPUT="${2:?Output file path}"
-CURSOR_FIELD="${3:-next_cursor}"
-DATA_FIELD="${4:-data}"
-
-cursor=""
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+OUTPUT_FILE="$DATA_ROOT/api/stoxx_silver_tables.json"
+TOKEN="$(gcloud auth print-access-token)"
+BASE_URL='https://bigquery.googleapis.com/bigquery/v2/projects/bq-wh-nb/datasets/stoxx_silver/tables?maxResults=2'
+page_token=''
 page=0
-echo "[" > "$OUTPUT"
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "$tmp_dir"' EXIT
 
 while true; do
     page=$((page + 1))
-    if [[ -n "$cursor" ]]; then
-        url="${BASE_URL}?cursor=${cursor}"
+    url="$BASE_URL"
+    if [[ -n "$page_token" ]]; then
+        url="${url}&pageToken=${page_token}"
+    fi
+
+    response_file="$tmp_dir/page_${page}.json"
+    curl -sS -H "Authorization: Bearer $TOKEN" "$url" -o "$response_file"
+
+    readarray -t parsed < <(python3 - "$response_file" <<'PY'
+import json, sys
+with open(sys.argv[1], encoding='utf-8') as handle:
+    payload = json.load(handle)
+tables = payload.get("tables", [])
+print(len(tables))
+print(payload.get("nextPageToken", ""))
+PY
+    )
+
+    table_count="${parsed[0]}"
+    page_token="${parsed[1]}"
+
+    if [[ -n "$page_token" ]]; then
+        echo "Page $page fetched, $table_count table(s), nextPageToken returned"
     else
-        url="$BASE_URL"
+        echo "Page $page fetched, $table_count table(s)"
     fi
 
-    response=$(curl -sf "$url")
-    records=$(echo "$response" | jq -c ".${DATA_FIELD}[]")
-
-    if [[ $page -gt 1 ]]; then
-        sed -i '$ s/$/,/' "$OUTPUT"
-    fi
-    echo "$records" >> "$OUTPUT"
-
-    cursor=$(echo "$response" | jq -r ".${CURSOR_FIELD} // empty")
-    if [[ -z "$cursor" ]]; then
-        break
-    fi
-    echo "Page $page fetched, next cursor: ${cursor:0:20}..."
+    [[ -z "$page_token" ]] && break
 done
 
-echo "]" >> "$OUTPUT"
-total=$(jq 'length' "$OUTPUT")
-echo "OK — fetched $page page(s), $total total records to $OUTPUT"
+python3 - "$tmp_dir" "$OUTPUT_FILE" <<'PY'
+import glob, json, os, sys
+tmp_dir, output_file = sys.argv[1:3]
+rows = []
+for path in sorted(glob.glob(os.path.join(tmp_dir, "page_*.json"))):
+    with open(path, encoding='utf-8') as handle:
+        payload = json.load(handle)
+    rows.extend(payload.get("tables", []))
+with open(output_file, "w", encoding='utf-8') as handle:
+    json.dump(rows, handle, indent=2)
+PY
+
+total=$(python3 - "$OUTPUT_FILE" <<'PY'
+import json, sys
+with open(sys.argv[1], encoding='utf-8') as handle:
+    print(len(json.load(handle)))
+PY
+)
+
+echo "OK - fetched $page page(s), $total total records to $(basename "$OUTPUT_FILE")"
 ```
 
 ```text
-Page 1 fetched, next cursor: eyJsYXN0X2lkIjox...
-Page 2 fetched, next cursor: eyJsYXN0X2lkIjoy...
-OK — fetched 3 page(s), 287 total records to output.json
+Page 1 fetched, 2 table(s), nextPageToken returned
+Page 2 fetched, 2 table(s), nextPageToken returned
+Page 3 fetched, 2 table(s)
+OK - fetched 3 page(s), 6 total records to stoxx_silver_tables.json
 ```
 
-### Bash | Bearer token refresh wrapper
+#### Bearer token refresh wrapper
 
-Obtains an OAuth2 bearer token using client credentials grant, caches it in a variable, and re-authenticates when the token expires or a 401 response is received. This pattern is standard for service-to-service API calls where tokens have a limited TTL (typically 3600 seconds).
+Use this when an API client must survive token expiry across scheduled runs. It is typically triggered when a wrapper script needs cached credentials for repeat calls but still has to refresh before the token becomes invalid. This example keeps a token cache file under `api`, refreshes it from `gcloud auth print-access-token` when missing or near expiry, and then calls the BigQuery dataset list endpoint.
+
+> [!warning] Token-expiry race
+>
+> Refreshing exactly at nominal expiry is unsafe because of clock skew and request transit time. A cache that cuts the timing margin too closely will create intermittent authentication failures that are difficult to reproduce.
+
+> [!failure] Wrong pattern
+>
+> Waiting until nominal expiry or sharing one token cache across different runtimes and service identities.
+
+> [!success] Preferred pattern
+>
+> Refresh access tokens early and scope the cache to the exact runtime identity and environment. Shared token files across different operators or schedulers create avoidable credential ambiguity.
+
+*Refresh the local bearer-token cache if needed and list the available BigQuery datasets in `bq-wh-nb`.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-TOKEN_URL="${1:?Usage: $0 <token_url> <client_id> <client_secret> <api_url>}"
-CLIENT_ID="${2:?Client ID}"
-CLIENT_SECRET="${3:?Client secret}"
-API_URL="${4:?Target API URL}"
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+CACHE_FILE="$DATA_ROOT/api/access_token_cache.json"
+rm -f "$CACHE_FILE"
 
-get_token() {
-    response=$(curl -sf -X POST "$TOKEN_URL" \
-        -d "grant_type=client_credentials" \
-        -d "client_id=$CLIENT_ID" \
-        -d "client_secret=$CLIENT_SECRET")
-    echo "$response" | jq -r '.access_token'
-}
-
-TOKEN=$(get_token)
-
-http_code=$(curl -s -o /tmp/api_response.json -w "%{http_code}" \
-    -H "Authorization: Bearer $TOKEN" "$API_URL")
-
-if [[ "$http_code" == "401" ]]; then
-    echo "Token expired, refreshing..."
-    TOKEN=$(get_token)
-    http_code=$(curl -s -o /tmp/api_response.json -w "%{http_code}" \
-        -H "Authorization: Bearer $TOKEN" "$API_URL")
+if [[ ! -f "$CACHE_FILE" ]] || ! python3 - "$CACHE_FILE" <<'PY'
+import json, sys, time
+try:
+    with open(sys.argv[1], encoding='utf-8') as handle:
+        payload = json.load(handle)
+    raise SystemExit(0 if payload["expires_at"] - time.time() > 300 else 1)
+except Exception:
+    raise SystemExit(1)
+PY
+then
+    echo "Token cache missing or expiring soon, refreshing..."
+    token="$(gcloud auth print-access-token)"
+    python3 - "$CACHE_FILE" "$token" <<'PY'
+import json, sys, time
+cache_file, token = sys.argv[1:3]
+with open(cache_file, "w", encoding='utf-8') as handle:
+    json.dump({"access_token": token, "expires_at": time.time() + 3300}, handle)
+PY
 fi
 
-if [[ "$http_code" =~ ^2 ]]; then
-    echo "OK — HTTP $http_code"
-    cat /tmp/api_response.json
-else
-    echo "FAILED — HTTP $http_code"
-    exit 1
-fi
+token=$(python3 - "$CACHE_FILE" <<'PY'
+import json, sys
+with open(sys.argv[1], encoding='utf-8') as handle:
+    print(json.load(handle)["access_token"])
+PY
+)
+
+DATASETS_JSON=$(mktemp)
+trap 'rm -f "$DATASETS_JSON"' EXIT
+http_code=$(curl -sS -o "$DATASETS_JSON" -w '%{http_code}' -H "Authorization: Bearer $token" 'https://bigquery.googleapis.com/bigquery/v2/projects/bq-wh-nb/datasets')
+
+echo "OK - HTTP $http_code"
+echo -n "Datasets: "
+python3 - "$DATASETS_JSON" <<'PY'
+import json, sys
+with open(sys.argv[1], encoding='utf-8') as handle:
+    payload = json.load(handle)
+names = sorted(item["datasetReference"]["datasetId"] for item in payload.get("datasets", []))
+print(", ".join(names))
+PY
 ```
 
 ```text
-Token expired, refreshing...
-OK — HTTP 200
+Token cache missing or expiring soon, refreshing...
+OK - HTTP 200
+Datasets: stoxx_bronze, stoxx_gold, stoxx_marts, stoxx_silver
 ```
 
-### Bash | Download with checksum verification
+#### Download with checksum verification
 
-Downloads a file and verifies its SHA-256 hash against an expected value. Data integrity is non-negotiable when downloading datasets, model artifacts, or binary dependencies. A corrupted file that passes silently can produce wrong results that are far harder to detect than a failed download.
+Use this when a remote artifact is required locally and corruption must be detected before any consumer touches the file. It is typically triggered when a dataset, model artifact, or export must be downloaded and verified as a byte-for-byte match against an expected digest. This example downloads the live GCS export through the storage media API, decompresses it into a CSV, and verifies the resulting SHA-256 checksum against the saved digest file under `api`.
+
+> [!warning] Version ambiguity risk
+>
+> A checksum alone does not prove that you downloaded the intended version when the object name is mutable. If the upstream object can be replaced in place, you can validate the wrong generation successfully.
+
+> [!failure] Wrong pattern
+>
+> Accepting a checksum match without pinning the remote object generation or another immutable version identifier.
+
+> [!success] Preferred pattern
+>
+> Record immutable object generation together with the checksum whenever Cloud Storage is the source. Version identity and content identity are both needed for reliable replay and audit.
+
+*Download the exported `eurostoxx50_ohlcv` object, decompress it locally, and verify the CSV checksum.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-URL="${1:?Usage: $0 <url> <output_file> <expected_sha256>}"
-OUTPUT="${2:?Output file path}"
-EXPECTED_HASH="${3:?Expected SHA-256 hash}"
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+TOKEN="$(gcloud auth print-access-token)"
+TMP_GZ="$(mktemp)"
+OUTPUT_FILE="$DATA_ROOT/downloads/eurostoxx50_ohlcv.csv"
+CHECKSUM_FILE="$DATA_ROOT/api/eurostoxx50_ohlcv.sha256"
+SOURCE_URL='https://storage.googleapis.com/download/storage/v1/b/stoxx-bq-bucket/o/export%2Feurostoxx50_ohlcv-000000000000.csv.gz?alt=media'
+trap 'rm -f "$TMP_GZ"' EXIT
 
-curl -sfL -o "$OUTPUT" "$URL"
+curl -sS -L -H "Authorization: Bearer $TOKEN" "$SOURCE_URL" -o "$TMP_GZ"
+gzip -dc "$TMP_GZ" > "$OUTPUT_FILE"
 
-actual_hash=$(sha256sum "$OUTPUT" | cut -d' ' -f1)
+expected_hash="$(tr -d '\r\n' < "$CHECKSUM_FILE")"
+actual_hash="$(sha256sum "$OUTPUT_FILE" | awk '{print $1}')"
 
-if [[ "$actual_hash" != "$EXPECTED_HASH" ]]; then
+if [[ "$expected_hash" != "$actual_hash" ]]; then
     echo "CHECKSUM MISMATCH"
-    echo "Expected: $EXPECTED_HASH"
+    echo "Expected: $expected_hash"
     echo "Actual:   $actual_hash"
-    rm -f "$OUTPUT"
     exit 1
 fi
 
-size=$(stat --format="%s" "$OUTPUT" 2>/dev/null || stat -f%z "$OUTPUT")
-echo "OK — downloaded $(basename "$OUTPUT") ($size bytes), checksum verified"
+size_bytes=$(stat -c '%s' "$OUTPUT_FILE")
+echo "OK - downloaded $(basename "$OUTPUT_FILE") ($size_bytes bytes), checksum verified"
 ```
 
 ```text
-OK — downloaded dataset_v3.parquet (42917632 bytes), checksum verified
+OK - downloaded eurostoxx50_ohlcv.csv (4682 bytes), checksum verified
 ```
 
 ## Database operations
 
-Every data pipeline eventually touches a database — loading data, exporting query results, or checking that a load completed correctly. These scripts handle the three most common database automation tasks: connectivity verification, query execution with export, and post-load reconciliation.
+Every data pipeline eventually touches a database: running health checks, exporting a result set, or confirming that a load landed exactly as expected. In this environment the live database is the `stoxx` SQL Server instance running in the `stoxx-db` container, and the Bash examples call Windows `SQLCMD.EXE` from WSL.
 
-> [!info] Database clients
-> These scripts use `psql` (PostgreSQL) as the example client. Replace with `mysql`, `sqlcmd`, or `bq` for other databases — the wrapper pattern is identical.
+### Database scripts
 
-### Bash | Database connectivity health check
+These scripts use the real SQL files under `data/powershell-automation/sql` and the live SQL Server listener on `localhost,1434`. They are read-only except where the later data-movement section intentionally creates or truncates demo load tables.
 
-Tests whether a database is reachable and responsive by executing a trivial query and measuring the round-trip time. This is the first check in any pipeline that depends on a database — there is no point starting a multi-hour ETL job if the target is unreachable.
+#### Database connectivity health check
+
+Use this before a job depends on SQL Server for export or validation. It is typically triggered when the runtime must prove that the target database is reachable before spending time on upstream work. This example times a trivial query against `stoxx` and reports the round-trip latency.
+
+> [!warning] Connectivity trust tradeoff
+>
+> `sqlcmd -C` trusts the server certificate presented by the endpoint. That is acceptable for this local lab path but is not the production pattern for a secured SQL Server estate.
+
+> [!failure] Wrong pattern
+>
+> Treating `-C` trust-server-certificate behavior as the production pattern instead of a local convenience.
+
+> [!success] Preferred pattern
+>
+> Keep the health query trivial and measure latency explicitly. A fast connectivity probe should answer only whether the dependency is reachable, not hide application logic inside the check itself.
+
+*Execute a one-row health query against the live `stoxx` SQL Server instance and time the response.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-DB_HOST="${1:?Usage: $0 <host> <port> <dbname> <user>}"
-DB_PORT="${2:-5432}"
-DB_NAME="${3:-postgres}"
-DB_USER="${4:-$USER}"
+SQLCMD="/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE"
+START_MS=$(date +%s%3N)
+"$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -Q "SET NOCOUNT ON; SELECT 1 AS HealthCheck;" -h -1 -W > /dev/null
+END_MS=$(date +%s%3N)
+LATENCY_MS=$((END_MS - START_MS))
 
-start_ms=$(date +%s%N)
-
-result=$(psql -h "$DB_HOST" -p "$DB_PORT" -d "$DB_NAME" -U "$DB_USER" \
-    -tAc "SELECT 1" 2>&1) || {
-    echo "FAILED — cannot connect to $DB_HOST:$DB_PORT/$DB_NAME"
-    echo "Error: $result"
-    exit 1
-}
-
-end_ms=$(date +%s%N)
-latency_ms=$(( (end_ms - start_ms) / 1000000 ))
-
-echo "OK — connected to $DB_HOST:$DB_PORT/$DB_NAME in ${latency_ms}ms"
+echo "OK - connected to localhost,1434/stoxx in ${LATENCY_MS}ms"
 ```
 
 ```text
-OK — connected to db.example.com:5432/warehouse in 23ms
+OK - connected to localhost,1434/stoxx in 137ms
 ```
 
-### Bash | Query to CSV exporter
+#### Query to CSV exporter
 
-Executes a SQL file against a database and writes the result set to a CSV file. This is the standard extraction step in any EL(T) pipeline — pull data from a source database into a portable format for transfer or transformation.
+Use this when SQL Server is the source system and the next step expects a portable file rather than an interactive result set. It is typically triggered by an extract, handoff, or validation workflow that needs the query results as CSV on disk. This example runs the saved `stoxx_eurostoxx_latest.sql` query, cleans the `sqlcmd` text output, and writes a real CSV under `exports`.
+
+> [!warning] Whitespace loss risk
+>
+> `sqlcmd -W` trims trailing spaces. That improves machine parsing here, but it is unsafe if fixed-width data or padded `CHAR` values carry business meaning.
+
+> [!failure] Wrong pattern
+>
+> Using `-W` by default even when trailing spaces or fixed-width `CHAR` values are part of the data contract.
+
+> [!success] Preferred pattern
+>
+> Use machine-friendly switches only when the downstream parser and data contract allow them. When padding is significant, preserve the raw shape and validate field widths explicitly before exporting.
+
+*Run the saved `stoxx_eurostoxx_latest.sql` query against `stoxx` and export the result set to CSV.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-SQL_FILE="${1:?Usage: $0 <sql_file> <output_csv> <host> <dbname> <user>}"
-OUTPUT="${2:?Output CSV file path}"
-DB_HOST="${3:?Database host}"
-DB_NAME="${4:?Database name}"
-DB_USER="${5:-$USER}"
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+SQLCMD="/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE"
+SQL_FILE_WIN='C:\Users\aperi\My Drive\VAULT\data\powershell-automation\sql\stoxx_eurostoxx_latest.sql'
+OUTPUT_FILE="$DATA_ROOT/exports/stoxx_eurostoxx_latest.csv"
 
-psql -h "$DB_HOST" -d "$DB_NAME" -U "$DB_USER" \
-    --csv -f "$SQL_FILE" > "$OUTPUT"
+"$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -W -s"," -i "$SQL_FILE_WIN" | \
+python3 - "$OUTPUT_FILE" <<'PY'
+import csv, sys
 
-rows=$(($(wc -l < "$OUTPUT") - 1))
-cols=$(head -1 "$OUTPUT" | tr ',' '\n' | wc -l)
-echo "OK — exported $rows rows with $cols columns to $OUTPUT"
+output_file = sys.argv[1]
+lines = [line.rstrip("\r\n") for line in sys.stdin if line.strip()]
+rows = []
+
+for line in lines:
+    parts = line.split(",")
+    if all(part and set(part) <= {"-"} for part in parts):
+        continue
+    rows.append(parts)
+
+with open(output_file, "w", newline="", encoding="utf-8") as handle:
+    writer = csv.writer(handle)
+    writer.writerows(rows)
+
+data_rows = max(len(rows) - 1, 0)
+column_count = len(rows[0]) if rows else 0
+print(f"OK - exported {data_rows} rows with {column_count} columns to {output_file.rsplit('/', 1)[-1]}")
+PY
 ```
 
 ```text
-OK — exported 48231 rows with 12 columns to extract_20260405.csv
+OK - exported 12 rows with 4 columns to stoxx_eurostoxx_latest.csv
 ```
 
-### Bash | Row count reconciliation
+#### Row count reconciliation
 
-Compares the number of data rows in a source CSV file against the row count in the target database table after a load. A mismatch means rows were lost or duplicated during the load — either case is a data quality incident that must be caught immediately.
+Use this immediately after an export or load when row preservation matters more than raw task completion. It is typically triggered when the workflow must prove that the file on disk and the SQL query used to validate it still agree on row count. This example compares the CSV exported above with the saved count query under `sql`.
+
+> [!warning] Reconciliation blind spot
+>
+> Equal row counts do not prove that two datasets are equivalent. Key duplication, dropped columns, and value drift can still be present while counts match exactly.
+
+> [!failure] Wrong pattern
+>
+> Approving an export or load solely because the row counts match, without any control totals or key-level checks.
+
+> [!success] Preferred pattern
+>
+> Pair row-count checks with control totals, distinct-key counts, or bounded hashes over business columns. Reconciliation is materially stronger when it validates both volume and content.
+
+*Compare the exported CSV row count to the saved SQL count query for the same `silver.eurostoxx50_ohlcv` slice.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-CSV_FILE="${1:?Usage: $0 <csv_file> <table_name> <host> <dbname> <user>}"
-TABLE="${2:?Target table name}"
-DB_HOST="${3:?Database host}"
-DB_NAME="${4:?Database name}"
-DB_USER="${5:-$USER}"
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+SQLCMD="/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE"
+CSV_FILE="$DATA_ROOT/exports/stoxx_eurostoxx_latest.csv"
+COUNT_SQL_WIN='C:\Users\aperi\My Drive\VAULT\data\powershell-automation\sql\stoxx_eurostoxx_latest_count.sql'
 
-file_rows=$(($(wc -l < "$CSV_FILE") - 1))
+file_rows=$(python3 - "$CSV_FILE" <<'PY'
+import csv, sys
+with open(sys.argv[1], newline='', encoding='utf-8') as handle:
+    print(sum(1 for _ in csv.DictReader(handle)))
+PY
+)
 
-db_rows=$(psql -h "$DB_HOST" -d "$DB_NAME" -U "$DB_USER" \
-    -tAc "SELECT COUNT(*) FROM $TABLE")
+db_rows=$("$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -h -1 -W -i "$COUNT_SQL_WIN" | tr -d '\r' | awk 'NF {print $1; exit}')
 
-if [[ "$file_rows" -ne "$db_rows" ]]; then
+if [[ "$file_rows" != "$db_rows" ]]; then
     echo "ROW COUNT MISMATCH"
     echo "Source file: $file_rows rows"
-    echo "Target table: $db_rows rows"
-    echo "Difference: $((file_rows - db_rows))"
+    echo "Target query: $db_rows rows"
     exit 1
 fi
 
-echo "OK — $file_rows rows in file match $db_rows rows in $TABLE"
+echo "OK - $file_rows rows in stoxx_eurostoxx_latest.csv match $db_rows rows returned by stoxx_eurostoxx_latest_count.sql"
 ```
 
 ```text
-OK — 48231 rows in file match 48231 rows in warehouse.sales_daily
+OK - 12 rows in stoxx_eurostoxx_latest.csv match 12 rows returned by stoxx_eurostoxx_latest_count.sql
 ```
 
 ## GCP cloud operations
 
-These scripts automate the most common Google Cloud Platform tasks that data engineers perform outside of orchestration tools. They use the `gcloud`, `gsutil`, and `bq` command-line tools, which work identically on Linux and macOS. The difference between Bash and PowerShell scripts for GCP is entirely in how output is parsed — the CLI commands are the same.
+These scripts automate the most common Google Cloud Platform tasks that data engineers perform outside of orchestration tools. In this WSL environment the Google CLI tools come from the Windows Cloud SDK installation, so every example exports the Windows SDK config path before making live calls into `bq-wh-nb`.
 
-> [!tip] Cross-platform GCP CLI
-> `gcloud`, `gsutil`, and `bq` are fully cross-platform. On Linux, pipe JSON output to `jq`. On PowerShell, pipe to `ConvertFrom-Json`. The CLI flags and behavior are identical. See [connecting-to-gcp-resources](https://alp78.github.io/elysium/01-Shell/Networking/connecting-to-gcp-resources) for authentication setup.
+### Cloud automation scripts
 
-### Bash | GCS stale object reporter
+These examples use the actual project resources available to the vault: `stoxx-stage-bucket`, `stoxx-bq-bucket`, the `stoxx_*` BigQuery datasets, and the Eventarc-created Pub/Sub subscription. The outputs below are not placeholders; they were captured from live commands running against those resources.
 
-Lists objects in a GCS bucket that are older than a specified number of days. Stale data accumulates in landing buckets when upstream systems stop cleaning up, leading to unexpected storage costs and confusion about which files are current. This script surfaces objects past their expected retention.
+#### GCS stale object reporter
+
+Use this when a bucket needs a retention or hygiene check before more data is staged into it. It is typically triggered when a project bucket accumulates exports or intermediate objects and operators need a fast view of which ones are older than policy allows. This script lists objects in `gs://stoxx-bq-bucket/export` that are more than one day old.
+
+> [!warning] Retention decision risk
+>
+> Object age alone is not a retention policy. Without lifecycle rules, legal-hold awareness, or downstream-consumer context, deleting old objects from a report like this can remove still-needed recovery points.
+
+> [!failure] Wrong pattern
+>
+> Deleting objects directly from an age report without checking ownership, retention policy, or recovery requirements.
+
+> [!success] Preferred pattern
+>
+> Use age reporting as an operator signal before codifying bucket lifecycle policy. It is most useful when paired with object prefix ownership and an explicit retention class for each landing or export path.
+
+*List GCS export objects older than one day in `gs://stoxx-bq-bucket/export`.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-BUCKET="${1:?Usage: $0 <bucket_url> <max_age_days>}"
-MAX_AGE_DAYS="${2:?Maximum age in days}"
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+BUCKET='gs://stoxx-bq-bucket/export'
+MAX_AGE_DAYS=1
+cutoff_epoch=$(date -u -d "$MAX_AGE_DAYS day ago" +%s)
 
-cutoff=$(date -d "$MAX_AGE_DAYS days ago" +%s)
-
-gsutil ls -l "$BUCKET" | grep -v "TOTAL:" | while read -r size date_str path; do
-    [[ -z "$path" ]] && continue
-    obj_epoch=$(date -d "$date_str" +%s 2>/dev/null) || continue
-    if (( obj_epoch < cutoff )); then
-        age_days=$(( ($(date +%s) - obj_epoch) / 86400 ))
-        printf "%-60s %10s bytes  %d days old\n" "$path" "$size" "$age_days"
+gsutil ls -l "$BUCKET" | awk 'NF >= 3 && $1 ~ /^[0-9]+$/ { print $1, $2, $3 }' | \
+while read -r size_bytes timestamp object_path; do
+    object_epoch=$(date -u -d "$timestamp" +%s)
+    if (( object_epoch < cutoff_epoch )); then
+        age_days=$(( ( $(date -u +%s) - object_epoch ) / 86400 ))
+        printf "%-60s %10s bytes  %d days old\n" "$object_path" "$size_bytes" "$age_days"
     fi
 done
 
-echo "--- Objects older than $MAX_AGE_DAYS days listed above ---"
+echo "--- Objects older than $MAX_AGE_DAYS day(s) listed above ---"
 ```
 
 ```text
-gs://landing-bucket/sales_20260101.csv          1048576 bytes  94 days old
-gs://landing-bucket/sales_20260115.csv          2097152 bytes  80 days old
---- Objects older than 60 days listed above ---
+gs://stoxx-bq-bucket/export/eurostoxx50_ohlcv-000000000000.csv.gz       1548 bytes  2 days old
+gs://stoxx-bq-bucket/export/eurostoxx50_ohlcv-000000000000.parquet       7155 bytes  2 days old
+--- Objects older than 1 day(s) listed above ---
 ```
 
-### Bash | BigQuery dry-run cost estimator
+#### GCS stage and promote with checksum verification
 
-Estimates the bytes that a BigQuery query will scan before actually running it. BigQuery charges per byte scanned ($6.25/TB in on-demand pricing as of 2026). Running a `--dry_run` first prevents expensive mistakes like querying a multi-terabyte table without a partition filter.
+Use this before a file leaves the landing zone and becomes visible to downstream BigQuery loads or other consumers. It is typically triggered when a local extract or transformed file is ready to publish into the project buckets but must be verified before promotion. This script uploads the sample CSV to `stoxx-stage-bucket`, compares the local and remote MD5 digests, then copies the verified object into `stoxx-bq-bucket`.
+
+> [!warning] Promotion race condition
+>
+> Overwrite-by-name is race-prone in shared buckets. Another process can replace the staged object between verification and promotion if the workflow does not use generation-based preconditions.
+
+> [!failure] Wrong pattern
+>
+> Publishing to shared object names without generation-match preconditions on the stage and promote steps.
+
+> [!success] Preferred pattern
+>
+> Record the immutable object generation and use generation-match preconditions on both stage and promote paths. That turns the bucket handoff into an auditable publish step instead of a best-effort copy.
+
+*Upload the sample CSV to the stage bucket, verify the checksum, and promote the verified object into the production bucket.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-SQL_FILE="${1:?Usage: $0 <sql_file> [project_id]}"
-PROJECT="${2:-$(gcloud config get-value project)}"
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+DATA_ROOT="/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation"
+SOURCE_FILE="$DATA_ROOT/incoming/signals_daily_sample.csv"
+STAGE_URI='gs://stoxx-stage-bucket/powershell-automation/signals_daily_sample.csv'
+PROMOTE_URI='gs://stoxx-bq-bucket/powershell-automation/signals_daily_sample.csv'
+LOCAL_MD5=$(md5sum "$SOURCE_FILE" | awk '{print $1}')
 
-bytes=$(bq query --project_id="$PROJECT" \
-    --use_legacy_sql=false \
-    --dry_run \
-    --format=json \
-    < "$SQL_FILE" | jq -r '.statistics.totalBytesProcessed')
+gcloud storage cp "$SOURCE_FILE" "$STAGE_URI" >/dev/null
+stage_json=$(gcloud storage objects describe "$STAGE_URI" --format=json)
+stage_info=$(python3 - <<'PY' "$stage_json"
+import base64, json, sys
+payload = json.loads(sys.argv[1])
+print(payload["name"])
+print(payload["generation"])
+print(base64.b64decode(payload["md5_hash"]).hex())
+PY
+)
+mapfile -t stage_lines <<< "$stage_info"
+stage_name="${stage_lines[0]}"
+stage_generation="${stage_lines[1]}"
+stage_md5="${stage_lines[2]}"
 
-gb=$(echo "scale=2; $bytes / 1073741824" | bc)
-cost=$(echo "scale=4; $gb * 6.25 / 1024" | bc)
+if [[ "$stage_md5" != "$LOCAL_MD5" ]]; then
+    echo "Stage checksum mismatch"
+    exit 1
+fi
+
+gcloud storage cp "$STAGE_URI" "$PROMOTE_URI" >/dev/null
+promote_json=$(gcloud storage objects describe "$PROMOTE_URI" --format=json)
+promote_info=$(python3 - <<'PY' "$promote_json"
+import base64, json, sys
+payload = json.loads(sys.argv[1])
+print(payload["name"])
+print(payload["generation"])
+print(base64.b64decode(payload["md5_hash"]).hex())
+PY
+)
+mapfile -t promote_lines <<< "$promote_info"
+promote_name="${promote_lines[0]}"
+promote_generation="${promote_lines[1]}"
+promote_md5="${promote_lines[2]}"
+
+if [[ "$promote_md5" != "$LOCAL_MD5" ]]; then
+    echo "Promote checksum mismatch"
+    exit 1
+fi
+
+echo "Local MD5: $LOCAL_MD5"
+echo "Stage object: $stage_name generation $stage_generation md5 $stage_md5"
+echo "Promote object: $promote_name generation $promote_generation md5 $promote_md5"
+echo 'Checksum verified across stage and promoted copies.'
+```
+
+```text
+Local MD5: ed8c817608799befe9121aae5a40e7b1
+Stage object: powershell-automation/signals_daily_sample.csv generation 1776201035250237 md5 ed8c817608799befe9121aae5a40e7b1
+Promote object: powershell-automation/signals_daily_sample.csv generation 1776201081528618 md5 ed8c817608799befe9121aae5a40e7b1
+Checksum verified across stage and promoted copies.
+```
+
+#### BigQuery dry-run cost estimator
+
+Use this before any non-trivial BigQuery statement runs in a scheduled or operator-driven workflow. It is typically triggered when a query touches a production dataset and cost or partition discipline must be validated before execution. This example dry-runs the saved `bq_signals_latest.sql` statement and calculates the on-demand scan estimate.
+
+> [!warning] Cost guardrail gap
+>
+> A dry run is advisory, not an execution-time guardrail. The real query can still run expensively unless the production invocation also enforces a bytes-billed ceiling.
+
+> [!failure] Wrong pattern
+>
+> Relying on a dry run alone and letting the execution path run without `maximum_bytes_billed` protection.
+
+> [!success] Preferred pattern
+>
+> Pair dry runs with `maximum_bytes_billed` on the real query path. That combination gives operators both a pre-execution estimate and a hard stop when partition pruning fails or the query text changes unexpectedly.
+
+*Dry-run the saved BigQuery statement in `sql/bq_signals_latest.sql` and estimate the bytes scanned before execution.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+SQL_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/sql/bq_signals_latest.sql'
+dry_run_json=$(bq query --project_id=bq-wh-nb --location=europe-west1 --use_legacy_sql=false --dry_run --format=json < "$SQL_FILE")
+
+readarray -t metrics < <(python3 - <<'PY' "$dry_run_json"
+import json, sys
+payload = json.loads(sys.argv[1])
+bytes_processed = int(payload["statistics"]["totalBytesProcessed"])
+gb = bytes_processed / (1024 ** 3)
+cost = bytes_processed / (1024 ** 4) * 6.25
+print(bytes_processed)
+print(gb)
+print(cost)
+PY
+)
+
+bytes_processed="${metrics[0]}"
+scan_gb=$(python3 - <<'PY' "$bytes_processed"
+import sys
+value = int(sys.argv[1]) / (1024 ** 3)
+print(f"{value:.1e}" if value < 0.0001 else f"{value:.6f}".rstrip('0').rstrip('.'))
+PY
+)
+cost=$(python3 - <<'PY' "$bytes_processed"
+import sys
+value = int(sys.argv[1]) / (1024 ** 4) * 6.25
+print(f"{value:.8f}")
+PY
+)
 
 echo "Query: $(basename "$SQL_FILE")"
-echo "Bytes to scan: $bytes ($gb GB)"
+echo "Bytes to scan: $bytes_processed (${scan_gb} GB)"
 echo "Estimated cost: \$$cost (on-demand pricing)"
 ```
 
 ```text
-Query: monthly_aggregation.sql
-Bytes to scan: 5368709120 (5.00 GB)
-Estimated cost: $0.0305 (on-demand pricing)
+Query: bq_signals_latest.sql
+Bytes to scan: 24613 (2.3e-05 GB)
+Estimated cost: $0.00000014 (on-demand pricing)
 ```
 
-### Bash | Pub/Sub backlog monitor
+#### BigQuery load job with polling and row-count verification
 
-Checks the number of undelivered messages across one or more Pub/Sub subscriptions and alerts if any exceed a threshold. A growing backlog means consumers are falling behind — this is often the first sign of a processing bottleneck or a crashed subscriber.
+Use this after a staged object has passed checksum verification and is ready to enter a BigQuery dataset. It is typically triggered when a batch file is present in GCS and the next workflow step is to load it into BigQuery without guessing whether the job finished cleanly. This example starts an asynchronous load into `stoxx_bronze.powershell_automation_signals_load`, polls the job state, and then verifies row count and date range with the saved SQL file.
+
+> [!warning] Autodetect schema drift
+>
+> `--autodetect` is convenient for demonstrations but fragile for production CSV contracts. Small sampling artifacts, type ambiguity, and producer-side format changes can all create unstable schemas.
+
+> [!failure] Wrong pattern
+>
+> Treating `--autodetect` as a stable ingestion contract for production CSV feeds.
+
+> [!success] Preferred pattern
+>
+> Use explicit schemas for stable feeds and keep the bucket and dataset in the same BigQuery location. Polling plus post-load verification is the correct pattern because job submission alone does not prove that the table is usable.
+
+*Launch a live BigQuery load job, poll until it reaches `DONE`, and verify the loaded table with the saved SQL file.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-THRESHOLD="${1:?Usage: $0 <threshold> <subscription1> [subscription2 ...]}"
-shift
-SUBSCRIPTIONS=("$@")
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+TABLE_ID='bq-wh-nb:stoxx_bronze.powershell_automation_signals_load'
+SOURCE_URI='gs://stoxx-stage-bucket/powershell-automation/signals_daily_sample.csv'
+VERIFY_SQL='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/sql/bq_signals_load_verify.sql'
 
-exit_code=0
+job_json=$(bq load --project_id=bq-wh-nb --location=europe-west1 --replace --autodetect --source_format=CSV --skip_leading_rows=1 --max_bad_records=0 --nosync --format=json "$TABLE_ID" "$SOURCE_URI")
+job_id=$(python3 - <<'PY' "$job_json"
+import json, sys
+print(json.loads(sys.argv[1])["jobReference"]["jobId"])
+PY
+)
 
-for sub in "${SUBSCRIPTIONS[@]}"; do
-    backlog=$(gcloud pubsub subscriptions describe "$sub" \
-        --format="value(numUndeliveredMessages)" 2>/dev/null || echo "N/A")
-
-    if [[ "$backlog" == "N/A" ]]; then
-        echo "WARN — subscription $sub not found"
-        continue
-    fi
-
-    if (( backlog > THRESHOLD )); then
-        echo "ALERT — $sub: $backlog undelivered messages (threshold: $THRESHOLD)"
-        exit_code=1
-    else
-        echo "OK — $sub: $backlog undelivered messages"
-    fi
+poll_count=0
+while true; do
+    poll_count=$((poll_count + 1))
+    sleep 1
+    status_json=$(bq show --project_id=bq-wh-nb --location=europe-west1 -j --format=json "$job_id")
+    state=$(python3 - <<'PY' "$status_json"
+import json, sys
+payload = json.loads(sys.argv[1])
+print(payload["status"]["state"])
+PY
+)
+    echo "Poll $poll_count - state $state"
+    [[ "$state" == "DONE" ]] && break
 done
 
-exit "$exit_code"
+verify_json=$(bq query --project_id=bq-wh-nb --location=europe-west1 --use_legacy_sql=false --format=json < "$VERIFY_SQL")
+readarray -t verify_lines < <(python3 - <<'PY' "$verify_json"
+import json, sys
+row = json.loads(sys.argv[1])[0]
+print(row["loaded_rows"])
+print(row["min_signal_date"])
+print(row["max_signal_date"])
+print(row["distinct_symbols"])
+PY
+)
+
+echo "JobId: $job_id"
+echo "Loaded rows: ${verify_lines[0]}"
+echo "Signal date range: ${verify_lines[1]} to ${verify_lines[2]}"
+echo "Distinct symbols: ${verify_lines[3]}"
 ```
 
 ```text
-OK — orders-sub: 12 undelivered messages
-ALERT — events-sub: 8542 undelivered messages (threshold: 1000)
-OK — logs-sub: 0 undelivered messages
+Poll 1 - state DONE
+JobId: bqjob_r2d0b164c0bc35f72_0000019d8dd39bbf_1
+Loaded rows: 12
+Signal date range: 2026-03-04 to 2026-03-04
+Distinct symbols: 12
 ```
 
-### Bash | Service account key age checker
+#### BigQuery schema drift checker
 
-Lists all keys for a service account and flags any that are older than a specified number of days (default: 90). Google recommends rotating service account keys every 90 days. Forgotten keys are a security risk — this script provides the visibility that manual key management lacks.
+Use this immediately before a load job or schema-sensitive transform that expects a stable file contract. It is typically triggered when a producer changes a header row or a target table evolves in BigQuery. This example compares the drifted local header file against the live schema for `bq-wh-nb:stoxx_silver.signals_daily` and reports missing or extra columns explicitly.
+
+> [!warning] Unversioned schema change
+>
+> Not all drift is accidental. Approved schema evolution still needs explicit version handling; otherwise a valid new producer release will look identical to an unreviewed breaking change.
+
+> [!failure] Wrong pattern
+>
+> Handling every schema difference ad hoc instead of versioning the contract and approving compatible evolution explicitly.
+
+> [!success] Preferred pattern
+>
+> Version file contracts and require a controlled approval path for added or renamed columns. Schema comparison is most effective when it sits behind a known compatibility policy rather than a binary allow-or-block rule.
+
+*Compare a drifted local header file to the live `stoxx_silver.signals_daily` schema and emit a drift result.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-SA_EMAIL="${1:?Usage: $0 <service_account_email> [max_age_days]}"
-MAX_AGE="${2:-90}"
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+HEADER_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/schemas/signals_daily_drift_header.csv'
+TABLE_ID='bq-wh-nb:stoxx_silver.signals_daily'
 
-cutoff=$(date -d "$MAX_AGE days ago" +%Y-%m-%dT%H:%M:%SZ)
+python3 - "$HEADER_FILE" "$(bq show --project_id=bq-wh-nb --format=json "$TABLE_ID")" <<'PY'
+import csv, io, json, sys
 
-gcloud iam service-accounts keys list \
-    --iam-account="$SA_EMAIL" \
-    --format=json | jq -r --arg cutoff "$cutoff" '
-    .[] |
-    select(.keyType == "USER_MANAGED") |
-    select(.validAfterTime < $cutoff) |
-    "ROTATE — key \(.keyId[0:12])... created \(.validAfterTime)"
-'
+with open(sys.argv[1], newline='', encoding='utf-8') as handle:
+    file_columns = next(csv.reader(handle))
+table_columns = [field["name"] for field in json.loads(sys.argv[2])["schema"]["fields"]]
 
-gcloud iam service-accounts keys list \
-    --iam-account="$SA_EMAIL" \
-    --format=json | jq -r --arg cutoff "$cutoff" '
-    .[] |
-    select(.keyType == "USER_MANAGED") |
-    select(.validAfterTime >= $cutoff) |
-    "OK — key \(.keyId[0:12])... created \(.validAfterTime)"
-'
+missing_in_file = [column for column in table_columns if column not in file_columns]
+extra_in_file = [column for column in file_columns if column not in table_columns]
+
+if not missing_in_file and not extra_in_file:
+    print("OK - schema matches bq-wh-nb:stoxx_silver.signals_daily")
+    raise SystemExit(0)
+
+print("DRIFT - schema mismatch against bq-wh-nb:stoxx_silver.signals_daily")
+print("Missing in file: " + (", ".join(missing_in_file) if missing_in_file else "<none>"))
+print("Extra in file: " + (", ".join(extra_in_file) if extra_in_file else "<none>"))
+raise SystemExit(1)
+PY
 ```
 
 ```text
-ROTATE — key a1b2c3d4e5f6... created 2025-12-01T10:30:00Z
-OK — key f6e5d4c3b2a1... created 2026-03-15T14:22:00Z
+DRIFT - schema mismatch against bq-wh-nb:stoxx_silver.signals_daily
+Missing in file: <none>
+Extra in file: ingested_at
+```
+
+#### BigQuery table freshness checker
+
+Use this on a schedule after ingestion windows close or before dependent marts assume the latest business date is available. It is typically triggered when data readiness is defined by date lag rather than by raw job completion. This example runs the saved freshness query against `stoxx_silver.signals_daily`, compares the lag to a seven-day threshold, and emits a pass/fail status.
+
+> [!warning] Freshness-only readiness
+>
+> Latest business date alone can still hide partial loads. A table may contain today's date while missing a material share of the expected rows or partitions.
+
+> [!failure] Wrong pattern
+>
+> Declaring the table ready because the latest business date exists, even when the slice could still be incomplete.
+
+> [!success] Preferred pattern
+>
+> Evaluate freshness together with completeness measures such as row count, key coverage, or expected partition count. Data readiness should reflect whether the slice is complete, not only whether a date value exists.
+
+*Evaluate the saved freshness query and fail only when the live lag exceeds the configured SLA threshold.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+SQL_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/sql/bq_signals_freshness.sql'
+MAX_LAG_DAYS=7
+result_json=$(bq query --project_id=bq-wh-nb --location=europe-west1 --use_legacy_sql=false --format=json < "$SQL_FILE")
+
+readarray -t freshness < <(python3 - <<'PY' "$result_json"
+import json, sys
+row = json.loads(sys.argv[1])[0]
+print(row["latest_signal_date"])
+print(row["lag_days"])
+print(row["total_rows"])
+PY
+)
+
+latest_signal_date="${freshness[0]}"
+lag_days="${freshness[1]}"
+total_rows="${freshness[2]}"
+
+if (( lag_days > MAX_LAG_DAYS )); then
+    echo "STALE - stoxx_silver.signals_daily latest signal_date $latest_signal_date is $lag_days day(s) old (threshold: $MAX_LAG_DAYS)"
+    echo "Rows monitored: $total_rows"
+    exit 1
+fi
+
+echo "OK - stoxx_silver.signals_daily latest signal_date $latest_signal_date is $lag_days day(s) old (threshold: $MAX_LAG_DAYS)"
+echo "Rows monitored: $total_rows"
+```
+
+```text
+OK - stoxx_silver.signals_daily latest signal_date 2026-04-08 is 6 day(s) old (threshold: 7)
+Rows monitored: 635
+```
+
+#### Pub/Sub backlog monitor
+
+Use this when a single current backlog value is enough to decide whether a subscriber is healthy. It is typically triggered by an operational check that needs to know whether a consumer is currently behind before the pipeline continues. This example reads the live `num_undelivered_messages` metric for the Eventarc subscription through the Cloud Monitoring API.
+
+> [!warning] Incomplete lag signal
+>
+> Backlog count alone is an incomplete health signal. A small undelivered count can still represent unhealthy processing if message age is growing or if poison messages are cycling repeatedly.
+
+> [!failure] Wrong pattern
+>
+> Alerting on `num_undelivered_messages` alone and ignoring message age or poison-message behavior.
+
+> [!success] Preferred pattern
+>
+> Pair `num_undelivered_messages` with `oldest_unacked_message_age` and an explicit dead-letter policy. Subscriber lag is easier to operate when count and age move together in the alerting model.
+
+*Read the live Pub/Sub backlog metric for the Eventarc subscription from Cloud Monitoring.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+PROJECT_ID='bq-wh-nb'
+SUBSCRIPTION_ID='eventarc-europe-west1-stoxx-firestore-control-written-sub-850'
+THRESHOLD=10
+TOKEN="$(gcloud auth print-access-token)"
+start_time=$(date -u -d '1 hour ago' +%Y-%m-%dT%H:%M:%SZ)
+end_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+filter="metric.type=\"pubsub.googleapis.com/subscription/num_undelivered_messages\" AND resource.labels.subscription_id=\"${SUBSCRIPTION_ID}\""
+uri="https://monitoring.googleapis.com/v3/projects/${PROJECT_ID}/timeSeries?filter=$(python3 - <<'PY' "$filter"
+import sys, urllib.parse
+print(urllib.parse.quote(sys.argv[1], safe=''))
+PY
+)&interval.startTime=${start_time}&interval.endTime=${end_time}&view=FULL&pageSize=1"
+
+response_json=$(curl -sS -H "Authorization: Bearer $TOKEN" "$uri")
+backlog=$(python3 - <<'PY' "$response_json"
+import json, sys
+payload = json.loads(sys.argv[1])
+points = payload.get("timeSeries", [{}])[0].get("points", [])
+print(points[0]["value"]["int64Value"] if points else 0)
+PY
+)
+
+if (( backlog > THRESHOLD )); then
+    echo "ALERT - ${SUBSCRIPTION_ID}: $backlog undelivered messages (threshold: $THRESHOLD)"
+    exit 1
+fi
+
+echo "OK - ${SUBSCRIPTION_ID}: $backlog undelivered messages"
+```
+
+```text
+OK - eventarc-europe-west1-stoxx-firestore-control-written-sub-850: 0 undelivered messages
+```
+
+#### Pub/Sub backlog trend monitor
+
+Use this when one backlog point is not enough and the operator needs to know whether the subscription is building debt over time. It is typically triggered when transient spikes are common and the check should alert only on sustained lag. This example reads a six-hour aligned history from Cloud Monitoring, summarizes the sample count, max backlog, average backlog, and non-zero samples, and only alerts on a persistent pattern.
+
+> [!warning] Idle window ambiguity
+>
+> Zero backlog does not necessarily mean healthy consumption; it can also mean there was no publish traffic in the measurement window. Trend interpretation without expected activity context can produce false reassurance.
+
+> [!failure] Wrong pattern
+>
+> Reading a zero-backlog window as healthy consumption without confirming that any messages were published.
+
+> [!success] Preferred pattern
+>
+> Read backlog trends alongside publish volume or the expected event cadence for the source system. Sustained lag alerts are most useful when they distinguish idle pipelines from pipelines that are actively falling behind.
+
+*Read the aligned backlog history for the Eventarc subscription and summarize whether the backlog is sustained or transient.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+PROJECT_ID='bq-wh-nb'
+SUBSCRIPTION_ID='eventarc-europe-west1-stoxx-firestore-control-written-sub-850'
+WINDOW_HOURS=6
+THRESHOLD=10
+SUSTAINED_SAMPLES=3
+TOKEN="$(gcloud auth print-access-token)"
+start_time=$(date -u -d "${WINDOW_HOURS} hours ago" +%Y-%m-%dT%H:%M:%SZ)
+end_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+filter="metric.type=\"pubsub.googleapis.com/subscription/num_undelivered_messages\" AND resource.labels.subscription_id=\"${SUBSCRIPTION_ID}\""
+escaped_filter=$(python3 - <<'PY' "$filter"
+import sys, urllib.parse
+print(urllib.parse.quote(sys.argv[1], safe=''))
+PY
+)
+uri="https://monitoring.googleapis.com/v3/projects/${PROJECT_ID}/timeSeries?filter=${escaped_filter}&interval.startTime=${start_time}&interval.endTime=${end_time}&view=FULL&pageSize=1&aggregation.alignmentPeriod=300s&aggregation.perSeriesAligner=ALIGN_MAX"
+
+response_json=$(curl -sS -H "Authorization: Bearer $TOKEN" "$uri")
+readarray -t metrics < <(python3 - <<'PY' "$response_json"
+import json, sys
+payload = json.loads(sys.argv[1])
+points = payload.get("timeSeries", [{}])[0].get("points", [])
+points = sorted(points, key=lambda point: point["interval"]["endTime"])
+values = [int(point["value"]["int64Value"]) for point in points] or [0]
+sample_count = len(points) if points else 1
+latest_point = points[-1]["interval"]["endTime"] if points else "1970-01-01T00:00:00Z"
+latest_value = values[-1]
+max_value = max(values)
+avg_value = sum(values) / len(values)
+non_zero = sum(1 for value in values if value > 0)
+print(sample_count)
+print(latest_point)
+print(latest_value)
+print(max_value)
+print(int(avg_value) if avg_value.is_integer() else round(avg_value, 2))
+print(non_zero)
+PY
+)
+
+sample_count="${metrics[0]}"
+latest_point="${metrics[1]}"
+latest_value="${metrics[2]}"
+max_backlog="${metrics[3]}"
+avg_backlog="${metrics[4]}"
+non_zero_samples="${metrics[5]}"
+
+echo "Window: $WINDOW_HOURS hour(s), samples: $sample_count"
+echo "Latest point: $latest_point backlog $latest_value"
+echo "Max backlog: $max_backlog, average backlog: $avg_backlog, non-zero samples: $non_zero_samples"
+
+if (( max_backlog > THRESHOLD && non_zero_samples >= SUSTAINED_SAMPLES )); then
+    echo "ALERT - sustained backlog detected for $SUBSCRIPTION_ID"
+    exit 1
+fi
+
+echo "OK - no sustained backlog detected for $SUBSCRIPTION_ID"
+```
+
+```text
+Window: 6 hour(s), samples: 1
+Latest point: 2026-04-14T21:13:16Z backlog 0
+Max backlog: 0, average backlog: 0, non-zero samples: 0
+OK - no sustained backlog detected for eventarc-europe-west1-stoxx-firestore-control-written-sub-850
+```
+
+#### Service account key age checker
+
+Use this when the project needs a quick credential-rotation audit. It is typically triggered by a periodic security check or by troubleshooting a service account with long-lived user-managed keys. This example lists the keys on `bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com`, compares their creation times to a 20-day threshold, and prints whether each key should be rotated.
+
+> [!warning] Key exposure surface
+>
+> User-managed service account keys are a last-resort credential form because they can be copied, cached, and forgotten outside the control plane. Rotation checks mitigate age risk but do not remove the leakage surface.
+
+> [!failure] Wrong pattern
+>
+> Treating rotation as sufficient while continuing to depend on long-lived user-managed service account keys.
+
+> [!success] Preferred pattern
+>
+> Prefer service account impersonation or Workload Identity Federation wherever the runtime allows it. When keys are unavoidable, restrict creation through policy and audit their age and use explicitly.
+
+*Inspect the user-managed keys on the project service account and flag keys older than 20 days.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+SERVICE_ACCOUNT='bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com'
+MAX_AGE_DAYS=20
+keys_json=$(gcloud iam service-accounts keys list --iam-account="$SERVICE_ACCOUNT" --project=bq-wh-nb --format=json)
+
+python3 - <<'PY' "$keys_json" "$MAX_AGE_DAYS"
+import datetime as dt
+import json
+import sys
+
+keys = json.loads(sys.argv[1])
+max_age_days = int(sys.argv[2])
+cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=max_age_days)
+
+for key in sorted((item for item in keys if item["keyType"] == "USER_MANAGED"), key=lambda item: item["validAfterTime"]):
+    created = dt.datetime.fromisoformat(key["validAfterTime"].replace("Z", "+00:00"))
+    key_id = key["name"].split("/")[-1][:12]
+    status = "ROTATE" if created < cutoff else "OK"
+    print(f"{status} - key {key_id}... created {key['validAfterTime']}")
+PY
+```
+
+```text
+ROTATE - key 3166c79513e7... created 2026-03-22T16:27:38Z
+OK - key b228f14a7cc8... created 2026-04-05T07:34:04Z
+```
+
+## Data movement pipelines
+
+Most production automation moves files between systems more often than it performs complicated in-memory transformations. These patterns show the handoff points explicitly: a local file published to GCS, a local file loaded straight into BigQuery, a host file streamed into SQL Server, a JSON file upserted into Firestore, and a chained pipeline that crosses all four targets in sequence.
+
+### Destination loads
+
+These examples start from local files under `C:\Users\aperi\My Drive\VAULT\data\powershell-automation`. Each script finishes with a live destination-side check so the movement step proves that the target now contains the expected data instead of only assuming the upload succeeded.
+
+#### Local file to GCS object
+
+Use this when a local export, transformed file, or partner drop must be made available to cloud consumers through a bucket path. It is typically triggered when a Bash run has produced a file on the host and the next stage expects a GCS object instead of a local path. This example uploads the projection CSV into `stoxx-stage-bucket` and then reads the object metadata back from GCS.
+
+> [!warning] Object overwrite risk
+>
+> Direct host-to-bucket publishing can overwrite concurrent runs if the destination object name is shared. That is especially risky when schedulers rerun the same job name on failure.
+
+> [!failure] Wrong pattern
+>
+> Publishing retries or concurrent runs to the same object path and assuming the last write is safe.
+
+> [!success] Preferred pattern
+>
+> Use run-scoped object paths or generation preconditions when the same logical load can be retried. Object naming should make replay safe before downstream consumers ever read the bucket.
+
+*Upload the local projection CSV into `stoxx-stage-bucket` and confirm the created object metadata.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+SOURCE_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/transformed/signals_daily_projection.csv'
+DESTINATION_URI='gs://stoxx-stage-bucket/powershell-automation/local-file-upload/signals_daily_projection.csv'
+
+gcloud storage cp "$SOURCE_FILE" "$DESTINATION_URI" >/dev/null
+meta_json=$(gcloud storage objects describe "$DESTINATION_URI" --format=json)
+
+readarray -t meta < <(python3 - <<'PY' "$meta_json"
+import json, sys
+payload = json.loads(sys.argv[1])
+print(payload["name"])
+print(payload["generation"])
+print(payload["size"])
+PY
+)
+
+echo "Uploaded file: $(basename "$SOURCE_FILE")"
+echo "Object: ${meta[0]}"
+echo "Generation: ${meta[1]}"
+echo "Bytes: ${meta[2]}"
+```
+
+```text
+Uploaded file: signals_daily_projection.csv
+Object: powershell-automation/local-file-upload/signals_daily_projection.csv
+Generation: 1776201292531552
+Bytes: 588
+```
+
+#### Local file to BigQuery table
+
+Use this when a small or medium file already exists on the host and you want an immediate table load without first staging it in GCS. It is typically triggered when a Bash job has produced a CSV locally and the next step is an agent-local BigQuery load. This example loads `signals_daily_projection.csv` straight into `stoxx_bronze.powershell_automation_local_file_load` and verifies the destination table with the saved SQL file.
+
+> [!warning] Undurable load boundary
+>
+> Direct local-file loads are operationally convenient on a single runner but are not the standard handoff pattern for shared production ingestion. They bypass durable staging and make replay harder when the runner disappears.
+
+> [!failure] Wrong pattern
+>
+> Making direct local-file loads the normal production handoff instead of using durable staged objects.
+
+> [!success] Preferred pattern
+>
+> Reserve direct local loads for controlled operator workflows and small files. For repeatable production paths, stage to GCS first and load with an explicit schema so the ingest boundary remains durable and reviewable.
+
+*Load the local projection CSV directly into BigQuery and verify the resulting table.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+SOURCE_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/transformed/signals_daily_projection.csv'
+VERIFY_SQL='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/sql/bq_local_file_verify.sql'
+TABLE_ID='bq-wh-nb:stoxx_bronze.powershell_automation_local_file_load'
+
+bq load --project_id=bq-wh-nb --location=europe-west1 --replace --autodetect --source_format=CSV --skip_leading_rows=1 "$TABLE_ID" "$SOURCE_FILE" >/dev/null
+result_json=$(bq query --project_id=bq-wh-nb --location=europe-west1 --use_legacy_sql=false --format=json < "$VERIFY_SQL")
+
+readarray -t result < <(python3 - <<'PY' "$result_json"
+import json, sys
+row = json.loads(sys.argv[1])[0]
+print(row["loaded_rows"])
+print(row["latest_signal_date"])
+print(row["max_upside"])
+PY
+)
+
+echo "Loaded rows: ${result[0]}"
+echo "Latest signal_date: ${result[1]}"
+echo "Max upside: ${result[2]}"
+```
+
+```text
+Loaded rows: 12
+Latest signal_date: 2026-03-04
+Max upside: 0.523479507707014
+```
+
+#### Local file to SQL Server table
+
+Use this when SQL Server is the immediate next system but the source file exists only on the host running WSL. It is typically triggered when a CSV extract has landed on the runner and the target SQL Server instance cannot read that host path directly. This example prepares `dbo.powershell_automation_local_file_load`, generates `INSERT` statements from the projection CSV, executes them through `SQLCMD.EXE`, and then validates the result with the saved verification query.
+
+> [!warning] Row-by-row loading
+>
+> Row-by-row `INSERT` generation does not scale for large files. It increases transaction overhead, bloats log activity, and becomes slow long before the source volume reaches ordinary warehouse batch sizes.
+
+> [!failure] Wrong pattern
+>
+> Scaling row-by-row `INSERT` generation beyond small control files instead of moving to bulk-load mechanisms.
+
+> [!success] Preferred pattern
+>
+> Use this pattern for controlled demos or small control files only. For larger loads, move to `BULK INSERT`, `bcp`, or another bulk-ingest path that lets SQL Server read data in set-oriented batches.
+
+*Stream the local projection CSV into `stoxx.dbo.powershell_automation_local_file_load` and verify the loaded rows.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+DATA_ROOT='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation'
+SQLCMD="/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE"
+SOURCE_FILE="$DATA_ROOT/transformed/signals_daily_projection.csv"
+SETUP_SQL_WIN='C:\Users\aperi\My Drive\VAULT\data\powershell-automation\sql\stoxx_local_file_load_setup.sql'
+VERIFY_SQL_WIN='C:\Users\aperi\My Drive\VAULT\data\powershell-automation\sql\stoxx_local_file_load_verify.sql'
+LOAD_SQL_WSL='/mnt/c/Users/aperi/My Drive/VAULT/.codex-temp/stoxx_local_file_load.sql'
+LOAD_SQL_WIN='C:\Users\aperi\My Drive\VAULT\.codex-temp\stoxx_local_file_load.sql'
+
+python3 - "$SOURCE_FILE" "$LOAD_SQL_WSL" <<'PY'
+import csv, sys
+
+source_file, output_file = sys.argv[1:3]
+
+with open(source_file, newline='', encoding='utf-8') as input_handle, open(output_file, 'w', encoding='utf-8', newline='\n') as output_handle:
+    output_handle.write("SET NOCOUNT ON;\n")
+    for row in csv.DictReader(input_handle):
+        output_handle.write(
+            "INSERT INTO dbo.powershell_automation_local_file_load "
+            "(symbol, signal_date, current_price, upside_potential) "
+            f"VALUES (N'{row['symbol']}', '{row['signal_date']}', {row['current_price']}, {row['upside_potential']});\n"
+        )
+PY
+
+"$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -i "$SETUP_SQL_WIN" >/dev/null
+"$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -i "$LOAD_SQL_WIN" >/dev/null
+verify_line=$("$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -h -1 -W -s"," -i "$VERIFY_SQL_WIN" | tr -d '\r' | awk 'NF && $1 !~ /^-/{print; exit}')
+IFS=',' read -r loaded_rows latest_signal_date max_upside <<< "$verify_line"
+rm -f "$LOAD_SQL_WSL"
+
+echo "Loaded rows: $loaded_rows"
+echo "Latest signal_date: $latest_signal_date"
+echo "Max upside: $max_upside"
+```
+
+```text
+Loaded rows: 12
+Latest signal_date: 2026-03-04
+Max upside: 0.5234795077
+```
+
+#### Local file to Firestore collection
+
+Use this when the destination is a document store and the source file already exists as local JSON on the runner. It is typically triggered when a process has produced a small dimension, control, or status file that should become Firestore documents. This example reads `dim_country_sample.json`, upserts one document per `iso_alpha2` value into Firestore Native, and then checks the live collection count through the REST API.
+
+> [!warning] Firestore write pressure
+>
+> Firestore ingestion has different scaling limits than warehouse loads. Large write bursts, sequential hot keys, and oversized batches can all create throughput or contention problems quickly.
+
+> [!failure] Wrong pattern
+>
+> Sending large bursts without deterministic document IDs, batch control, or hotspot-aware key design.
+
+> [!success] Preferred pattern
+>
+> Use deterministic document IDs for idempotent upserts and chunk larger loads deliberately. Firestore is well suited for small control, status, and dimension datasets when write patterns are explicit and bounded.
+
+*Upsert the local country JSON file into the `powershell_automation_country_load` collection and confirm the live document count.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+SOURCE_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/json/dim_country_sample.json'
+TOKEN="$(gcloud auth print-access-token)"
+
+python3 - "$SOURCE_FILE" "$TOKEN" <<'PY'
+import json
+import sys
+import urllib.request
+
+source_file, token = sys.argv[1:3]
+project_id = "bq-wh-nb"
+database_id = "main"
+collection_id = "powershell_automation_country_load"
+
+with open(source_file, encoding='utf-8') as handle:
+    rows = json.load(handle)
+
+headers = {
+    "Authorization": f"Bearer {token}",
+    "Content-Type": "application/json",
+}
+
+for row in rows:
+    doc_id = row["iso_alpha2"].lower()
+    uri = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/{database_id}/documents/{collection_id}/{doc_id}"
+    body = json.dumps({
+        "fields": {
+            "country_name": {"stringValue": row["country_name"]},
+            "iso_alpha2": {"stringValue": row["iso_alpha2"]},
+            "source_file": {"stringValue": source_file.rsplit('/', 1)[-1]},
+        }
+    }).encode("utf-8")
+    request = urllib.request.Request(uri, data=body, method="PATCH", headers=headers)
+    urllib.request.urlopen(request).read()
+
+list_uri = f"https://firestore.googleapis.com/v1/projects/{project_id}/databases/{database_id}/documents/{collection_id}?pageSize=20"
+request = urllib.request.Request(list_uri, headers={"Authorization": f"Bearer {token}"})
+response = json.loads(urllib.request.urlopen(request).read().decode("utf-8"))
+count = len(response.get("documents", []))
+
+print(f"Source rows: {len(rows)}")
+print(f"Documents in collection: {count}")
+print(f"Collection: {collection_id}")
+PY
+```
+
+```text
+Source rows: 8
+Documents in collection: 8
+Collection: powershell_automation_country_load
+```
+
+### Chained pipelines
+
+Real orchestration usually crosses multiple systems in one run. The key is to make each handoff explicit, persist intermediate artifacts where they matter, and validate every destination before advancing to the next hop.
+
+#### GCS to SQL Server to BigQuery to Firestore
+
+Use this when one automation run must ingest a staged cloud file, land it in SQL Server, publish a relational summary into BigQuery, and expose the run result as a Firestore document. It is typically triggered when a bucket object has arrived and the operational requirement is a multi-system handoff rather than a single-target load. This example downloads the staged CSV, loads it into `stoxx`, exports a one-row summary to CSV, loads that summary into BigQuery, and then patches the Firestore run-status document.
+
+> [!warning] Partial-commit divergence
+>
+> Multi-system pipelines fail partially in practice. If one hop commits and the next one does not, the run can leave SQL Server, BigQuery, and Firestore in contradictory states.
+
+> [!failure] Wrong pattern
+>
+> Chaining four systems without a run identifier or idempotent write contract for each hop.
+
+> [!success] Preferred pattern
+>
+> Persist a run identifier and make each hop idempotent against that identifier. Chained automation is operationally safer when every system can answer whether a specific run has already been applied.
+
+*Run the full chained handoff from a GCS object through SQL Server and BigQuery into a Firestore status document.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+export CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud'
+DATA_ROOT='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation'
+SQLCMD="/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE"
+SOURCE_URI='gs://stoxx-stage-bucket/powershell-automation/signals_daily_sample.csv'
+LANDING_FILE="$DATA_ROOT/landing/chain_signals_daily_sample.csv"
+SUMMARY_FILE="$DATA_ROOT/exports/chain_signal_summary.csv"
+SETUP_SQL_WIN='C:\Users\aperi\My Drive\VAULT\data\powershell-automation\sql\stoxx_chain_stage_setup.sql'
+SUMMARY_SQL_WIN='C:\Users\aperi\My Drive\VAULT\data\powershell-automation\sql\stoxx_chain_summary.sql'
+VERIFY_SQL='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/sql/bq_chain_summary_verify.sql'
+LOAD_SQL_WSL='/mnt/c/Users/aperi/My Drive/VAULT/.codex-temp/stoxx_chain_stage_load.sql'
+LOAD_SQL_WIN='C:\Users\aperi\My Drive\VAULT\.codex-temp\stoxx_chain_stage_load.sql'
+FIRESTORE_DOC='https://firestore.googleapis.com/v1/projects/bq-wh-nb/databases/main/documents/powershell_automation_pipeline_runs/chain-latest'
+
+gcloud storage cp "$SOURCE_URI" "$LANDING_FILE" >/dev/null
+download_rows=$(python3 - "$LANDING_FILE" <<'PY'
+import csv, sys
+with open(sys.argv[1], newline='', encoding='utf-8') as handle:
+    print(sum(1 for _ in csv.DictReader(handle)))
+PY
+)
+
+python3 - "$LANDING_FILE" "$LOAD_SQL_WSL" <<'PY'
+import csv, sys
+
+source_file, output_file = sys.argv[1:3]
+text_fields = {"symbol", "signal_date"}
+skip_fields = {"id", "_index"}
+
+with open(source_file, newline='', encoding='utf-8') as input_handle, open(output_file, 'w', encoding='utf-8', newline='\n') as output_handle:
+    reader = csv.DictReader(input_handle)
+    columns = [field for field in reader.fieldnames if field not in skip_fields]
+    output_handle.write("SET NOCOUNT ON;\n")
+    for row in reader:
+        values = []
+        for column in columns:
+            value = row[column]
+            if value == "":
+                values.append("NULL")
+            elif column in text_fields:
+                values.append("N'" + value.replace("'", "''") + "'")
+            else:
+                values.append(value)
+        output_handle.write(
+            "INSERT INTO dbo.powershell_automation_chain_stage (" + ", ".join(columns) + ") VALUES (" + ", ".join(values) + ");\n"
+        )
+PY
+
+"$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -i "$SETUP_SQL_WIN" >/dev/null
+"$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -i "$LOAD_SQL_WIN" >/dev/null
+
+"$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -W -s"," -i "$SUMMARY_SQL_WIN" | \
+python3 - "$SUMMARY_FILE" <<'PY'
+import csv, sys
+
+output_file = sys.argv[1]
+lines = [line.rstrip("\r\n") for line in sys.stdin if line.strip()]
+rows = []
+for line in lines:
+    parts = line.split(",")
+    if all(part and set(part) <= {"-"} for part in parts):
+        continue
+    rows.append(parts)
+with open(output_file, "w", newline="", encoding="utf-8") as handle:
+    csv.writer(handle).writerows(rows)
+PY
+
+sql_summary_line=$("$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -h -1 -W -s"," -i "$SUMMARY_SQL_WIN" | tr -d '\r' | awk 'NF && $1 !~ /^-/{print; exit}')
+IFS=',' read -r sql_rows_loaded latest_signal_date max_upside source_object <<< "$sql_summary_line"
+
+bq load --project_id=bq-wh-nb --location=europe-west1 --replace --autodetect --source_format=CSV --skip_leading_rows=1 'bq-wh-nb:stoxx_bronze.powershell_automation_chain_summary' "$SUMMARY_FILE" >/dev/null
+verify_json=$(bq query --project_id=bq-wh-nb --location=europe-west1 --use_legacy_sql=false --format=json < "$VERIFY_SQL")
+readarray -t verify < <(python3 - <<'PY' "$verify_json"
+import json, sys
+row = json.loads(sys.argv[1])[0]
+print(row["sql_rows_loaded"])
+print(row["latest_signal_date"])
+print(row["max_upside"])
+print(row["source_object"])
+PY
+)
+
+TOKEN="$(gcloud auth print-access-token)"
+firestore_name=$(python3 - "$TOKEN" "${verify[3]}" "${verify[0]}" "${verify[1]}" "${verify[2]}" "$FIRESTORE_DOC" <<'PY'
+import json
+import sys
+import urllib.request
+
+token, source_object, rows_loaded, latest_signal_date, max_upside, uri = sys.argv[1:7]
+body = json.dumps({
+    "fields": {
+        "source_object": {"stringValue": source_object},
+        "sql_rows_loaded": {"integerValue": rows_loaded},
+        "latest_signal_date": {"stringValue": latest_signal_date},
+        "max_upside": {"doubleValue": float(max_upside)},
+    }
+}).encode("utf-8")
+request = urllib.request.Request(
+    uri,
+    data=body,
+    method="PATCH",
+    headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+)
+response = json.loads(urllib.request.urlopen(request).read().decode("utf-8"))
+print(response["name"])
+PY
+)
+
+rm -f "$LOAD_SQL_WSL"
+
+echo "GCS download rows: $download_rows"
+echo "SQL Server rows loaded: $sql_rows_loaded"
+echo "BigQuery rows loaded: ${verify[0]}"
+echo "Latest signal_date: ${verify[1]}"
+echo "Firestore doc: $firestore_name"
+```
+
+```text
+GCS download rows: 12
+SQL Server rows loaded: 12
+BigQuery rows loaded: 12
+Latest signal_date: 2026-03-04
+Firestore doc: projects/bq-wh-nb/databases/main/documents/powershell_automation_pipeline_runs/chain-latest
 ```
 
 ## Log parsing and monitoring
 
-Pipeline logs contain the earliest signal of problems — error spikes, latency changes, and unexpected patterns. These scripts extract actionable information from log files without requiring a full observability stack, making them suitable for lightweight monitoring, ad-hoc investigation, and environments where Grafana or Datadog are not yet deployed.
+Pipeline logs contain the earliest signal of problems: error spikes, latency changes, and unexpected operational patterns. These scripts extract actionable information from the flat log and NDJSON fixtures under `data/powershell-automation/logs` without requiring a separate observability stack.
 
-### Bash | Error rate calculator
+### Log analysis scripts
 
-Counts occurrences of each log level (ERROR, WARN, INFO) in a log file and reports percentages. An error rate above 5% is typically cause for investigation; above 10% indicates a systemic problem. This script provides the quick triage numbers that determine whether to escalate.
+The outputs below come from the real fixture files used by the PowerShell note. Bash uses `grep`, `find`, `gzip`, and Python JSON parsing here because those are the tools actually present in the WSL environment.
+
+#### Error rate calculator
+
+Use this when a run has produced a flat log file and the next decision is whether the error rate is high enough to page or investigate. It is typically triggered during quick triage after a pipeline or automation wrapper finishes. This example counts `ERROR`, `WARN`, and `INFO` lines in `pipeline.log` and raises an alert when the error rate exceeds five percent.
+
+> [!warning] Text-matching blind spots
+>
+> Plain-text severity counting is susceptible to false positives when message bodies contain severity words. It is acceptable for lightweight triage, but it is not a robust alerting substrate for production telemetry.
+
+> [!failure] Wrong pattern
+>
+> Using `grep`-based severity counts as the primary alerting system even though message text can contain misleading severity words.
+
+> [!success] Preferred pattern
+>
+> Use flat-log counting as a fast operator check and move durable alerting to structured logs with explicit severity fields. Monitoring logic should parse event structure, not only message text.
+
+*Calculate the severity distribution in `pipeline.log` and alert on an elevated error rate.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOG_FILE="${1:?Usage: $0 <log_file>}"
+LOG_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/logs/pipeline.log'
+total_lines=$(wc -l < "$LOG_FILE" | tr -d ' ')
+error_lines=$(grep -c ' ERROR ' "$LOG_FILE" || true)
+warn_lines=$(grep -c ' WARN ' "$LOG_FILE" || true)
+info_lines=$(grep -c ' INFO ' "$LOG_FILE" || true)
 
-total=$(wc -l < "$LOG_FILE")
-errors=$(grep -c "ERROR" "$LOG_FILE" || true)
-warns=$(grep -c "WARN" "$LOG_FILE" || true)
-infos=$(grep -c "INFO" "$LOG_FILE" || true)
+error_pct=$(python3 - <<'PY' "$error_lines" "$total_lines"
+import sys
+print(f"{int(sys.argv[1]) * 100 / int(sys.argv[2]):.1f}")
+PY
+)
+warn_pct=$(python3 - <<'PY' "$warn_lines" "$total_lines"
+import sys
+print(f"{int(sys.argv[1]) * 100 / int(sys.argv[2]):.1f}")
+PY
+)
+info_pct=$(python3 - <<'PY' "$info_lines" "$total_lines"
+import sys
+print(f"{int(sys.argv[1]) * 100 / int(sys.argv[2]):.1f}")
+PY
+)
 
-echo "Log: $(basename "$LOG_FILE") ($total lines)"
-echo "---"
-printf "ERROR: %d (%.1f%%)\n" "$errors" "$(echo "scale=1; $errors * 100 / $total" | bc)"
-printf "WARN:  %d (%.1f%%)\n" "$warns" "$(echo "scale=1; $warns * 100 / $total" | bc)"
-printf "INFO:  %d (%.1f%%)\n" "$infos" "$(echo "scale=1; $infos * 100 / $total" | bc)"
+echo "Log: $(basename "$LOG_FILE") ($total_lines lines)"
+echo '---'
+printf 'ERROR: %s (%s%%)\n' "$error_lines" "$error_pct"
+printf 'WARN:  %s (%s%%)\n' "$warn_lines" "$warn_pct"
+printf 'INFO:  %s (%s%%)\n' "$info_lines" "$info_pct"
 
-error_pct=$(echo "scale=1; $errors * 100 / $total" | bc)
-if (( $(echo "$error_pct > 5" | bc -l) )); then
+if python3 - <<'PY' "$error_pct"
+import sys
+raise SystemExit(0 if float(sys.argv[1]) > 5 else 1)
+PY
+then
     echo "--- ALERT: error rate ${error_pct}% exceeds 5% threshold ---"
     exit 1
 fi
 ```
 
 ```text
-Log: pipeline.log (14832 lines)
+Log: pipeline.log (12 lines)
 ---
-ERROR: 247 (1.6%)
-WARN:  1891 (12.7%)
-INFO:  12694 (85.5%)
+ERROR: 2 (16.7%)
+WARN:  3 (25.0%)
+INFO:  7 (58.3%)
+--- ALERT: error rate 16.7% exceeds 5% threshold ---
 ```
 
-### Bash | Structured JSON log filter
+#### Structured JSON log filter
 
-Extracts log entries from an NDJSON (newline-delimited JSON) log file that match a specified severity level and fall within a time window. Modern applications emit structured logs in JSON format. Filtering these with `grep` loses the structure — `jq` preserves it and enables precise time-range queries.
+Use this when a run has produced NDJSON logs and operator decisions need to be driven from structured fields rather than text matching. It is typically triggered during triage after a failure, timeout, or unexpected side effect. This example filters the NDJSON log fixture for `ERROR` entries in a narrow UTC time window and pretty-prints the matching objects.
+
+> [!warning] Timestamp shape mismatch
+>
+> Lexical timestamp comparisons are only safe when every record uses the same normalized UTC RFC 3339 shape. Mixed offsets, fractional precision, or local-time strings will break simple string-window filters.
+
+> [!failure] Wrong pattern
+>
+> Comparing timestamps lexically when the source records can vary in timezone, precision, or formatting.
+
+> [!success] Preferred pattern
+>
+> Standardize structured logs on zero-padded UTC timestamps and a fixed field contract. Once the log shape is stable, Bash and Python wrappers can perform precise triage without inventing parser-specific exceptions.
+
+*Filter the NDJSON log fixture for `ERROR` entries inside the selected UTC time window.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOG_FILE="${1:?Usage: $0 <ndjson_log> <level> <start_time> <end_time>}"
-LEVEL="${2:?Log level (ERROR, WARN, INFO)}"
-START="${3:?Start time (ISO 8601)}"
-END="${4:?End time (ISO 8601)}"
+LOG_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/logs/pipeline.ndjson'
+LEVEL='ERROR'
+START_TIME='2026-04-14T08:00:10Z'
+END_TIME='2026-04-14T08:00:21Z'
 
-jq -c --arg level "$LEVEL" --arg start "$START" --arg end "$END" '
-    select(
-        .level == $level and
-        .timestamp >= $start and
-        .timestamp <= $end
-    )
-' "$LOG_FILE" | while read -r line; do
-    echo "$line" | jq '.'
-done
+python3 - "$LOG_FILE" "$LEVEL" "$START_TIME" "$END_TIME" <<'PY'
+import json, sys
 
-count=$(jq -c --arg level "$LEVEL" --arg start "$START" --arg end "$END" '
-    select(.level == $level and .timestamp >= $start and .timestamp <= $end)
-' "$LOG_FILE" | wc -l)
+log_file, level, start_time, end_time = sys.argv[1:5]
+matches = []
 
-echo "--- $count $LEVEL entries between $START and $END ---"
+with open(log_file, encoding='utf-8') as handle:
+    for line in handle:
+        entry = json.loads(line)
+        if entry["level"] == level and start_time <= entry["timestamp"] <= end_time:
+            matches.append(entry)
+            print(json.dumps(entry, indent=2))
+
+print(f"--- {len(matches)} {level} entries between {start_time} and {end_time} ---")
+PY
 ```
 
 ```text
 {
-  "timestamp": "2026-04-05T03:12:44Z",
+  "timestamp": "2026-04-14T08:00:11Z",
   "level": "ERROR",
-  "message": "Connection pool exhausted",
-  "service": "ingest-worker"
+  "message": "First webhook notification attempt timed out",
+  "service": "scheduler-wrapper"
 }
---- 3 ERROR entries between 2026-04-05T03:00:00Z and 2026-04-05T04:00:00Z ---
+{
+  "timestamp": "2026-04-14T08:00:20Z",
+  "level": "ERROR",
+  "message": "Checksum validation failed on stale local copy",
+  "service": "artifact-verifier"
+}
+--- 2 ERROR entries between 2026-04-14T08:00:10Z and 2026-04-14T08:00:21Z ---
 ```
 
-### Bash | Log rotation and compression
+#### Log rotation and compression
 
-Compresses log files older than N days and deletes those older than M days. Without rotation, log directories grow unbounded until they fill the disk and crash the application. This script implements the two-stage lifecycle (compress → delete) that `logrotate` handles on managed systems, but works anywhere without configuration files.
+Use this when a run has produced logs and the host needs a lightweight retention pattern without depending on system-level `logrotate`. It is typically triggered by scheduled cleanup on agents that keep flat files under a shared working directory. This example recreates aged log fixtures under `logs/archive`, compresses the old `.log` files with `gzip`, and deletes archives older than the retention threshold.
 
-See [compression](https://alp78.github.io/elysium/01-Shell/File-Operations/compression) for detailed coverage of `gzip` options.
+> [!warning] Open-file rotation risk
+>
+> Compressing a file that an active process still holds open can lose log continuity or duplicate content depending on how the writer behaves. Rotation policy must account for file handles, not only filenames and ages.
+
+> [!failure] Wrong pattern
+>
+> Compressing files that active writers still have open and assuming rotation is complete because the filename changed.
+
+> [!success] Preferred pattern
+>
+> Rotate only closed files or pair rotation with an explicit reopen signal from the writer. Lightweight Bash rotation is acceptable when the ownership of file writers is clear and retention rules are simple.
+
+*Compress and delete aged log fixtures under `data/powershell-automation/logs/archive`.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOG_DIR="${1:?Usage: $0 <log_dir> <compress_after_days> <delete_after_days>}"
-COMPRESS_DAYS="${2:?Compress logs older than N days}"
-DELETE_DAYS="${3:?Delete logs older than M days}"
+ARCHIVE_DIR='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/logs/archive'
+COMPRESS_AFTER_DAYS=2
+DELETE_AFTER_DAYS=7
 
-if (( DELETE_DAYS <= COMPRESS_DAYS )); then
-    echo "ERROR: delete_after_days ($DELETE_DAYS) must be greater than compress_after_days ($COMPRESS_DAYS)"
-    exit 1
-fi
+rm -f "$ARCHIVE_DIR"/*
+printf 'historical log line\n' > "$ARCHIVE_DIR/etl-20260410.log"
+printf 'historical log line\n' > "$ARCHIVE_DIR/ingest-20260411.log"
+printf 'archived log\n' | gzip > "$ARCHIVE_DIR/etl-20260401.log.gz"
+touch -d '5 days ago' "$ARCHIVE_DIR/etl-20260410.log"
+touch -d '4 days ago' "$ARCHIVE_DIR/ingest-20260411.log"
+touch -d '10 days ago' "$ARCHIVE_DIR/etl-20260401.log.gz"
 
 compressed=0
 deleted=0
@@ -970,292 +2101,741 @@ deleted=0
 while IFS= read -r -d '' file; do
     gzip "$file"
     compressed=$((compressed + 1))
-done < <(find "$LOG_DIR" -name "*.log" -mtime +"$COMPRESS_DAYS" -type f -print0)
+done < <(find "$ARCHIVE_DIR" -maxdepth 1 -type f -name '*.log' -mtime +"$COMPRESS_AFTER_DAYS" -print0)
 
 while IFS= read -r -d '' file; do
     rm -f "$file"
     deleted=$((deleted + 1))
-done < <(find "$LOG_DIR" -name "*.log.gz" -mtime +"$DELETE_DAYS" -type f -print0)
+done < <(find "$ARCHIVE_DIR" -maxdepth 1 -type f -name '*.log.gz' -mtime +"$DELETE_AFTER_DAYS" -print0)
 
-echo "OK — compressed $compressed log(s), deleted $deleted archive(s)"
+echo "OK - compressed $compressed log(s), deleted $deleted archive(s)"
 ```
 
 ```text
-OK — compressed 14 log(s), deleted 7 archive(s)
+OK - compressed 2 log(s), deleted 1 archive(s)
 ```
 
 ## Environment and pre-flight checks
 
-These scripts run before a pipeline starts to verify that the execution environment is correctly configured. A missing CLI tool, an unset credential, or a full disk will cause a pipeline to fail partway through, leaving partial state that is harder to clean up than a clean abort at the start.
+These scripts run before a pipeline starts to verify that the execution environment is correctly configured. A missing CLI, an unset credential, or an exhausted disk is cheaper to reject up front than to recover after partial work.
 
-### Bash | Dependency checker
+### Pre-flight scripts
 
-Verifies that all required command-line tools are installed and available on `$PATH` before a pipeline runs. This prevents the frustrating scenario where a job runs for 30 minutes before failing because `jq` is not installed on the new build agent.
+The checks here reflect the actual WSL runtime used for the Bash note: Windows Cloud SDK on the WSL `PATH`, Windows `SQLCMD.EXE`, and the mounted vault data directory under `/mnt/c`.
+
+#### Dependency checker
+
+Use this immediately before the job commits to work on the current host. It is typically triggered when the runtime environment must be validated before the main workload starts. This example checks the real tools required by the Bash note, including the Windows `SQLCMD.EXE` binary exposed into WSL.
+
+> [!warning] False dependency readiness
+>
+> `PATH` presence does not prove that a tool is usable. A CLI can exist locally while still lacking credentials, project context, or network reachability to perform the required work.
+
+> [!failure] Wrong pattern
+>
+> Assuming a binary on `PATH` proves that credentials, network access, and runtime context are also valid.
+
+> [!success] Preferred pattern
+>
+> Follow binary discovery with low-cost auth or version probes for the critical tools. Pre-flight should confirm both presence and minimum operability before the main job allocates time or state.
+
+*Verify that the local Bash, checksum, locking, Google Cloud, and SQL Server tooling is available before the main workflow starts.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-REQUIRED_TOOLS=(gcloud gsutil bq jq curl psql python3)
+SQLCMD='/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE'
+required_tools=(python3 curl split flock sha256sum md5sum gcloud gsutil bq)
+missing_tools=()
 
-missing=()
-
-for tool in "${REQUIRED_TOOLS[@]}"; do
-    if ! command -v "$tool" &>/dev/null; then
-        missing+=("$tool")
-    fi
+for tool in "${required_tools[@]}"; do
+    command -v "$tool" >/dev/null 2>&1 || missing_tools+=("$tool")
 done
 
-if (( ${#missing[@]} > 0 )); then
-    echo "MISSING DEPENDENCIES:"
-    printf "  - %s\n" "${missing[@]}"
+[[ -x "$SQLCMD" ]] || missing_tools+=('SQLCMD.EXE')
+
+if (( ${#missing_tools[@]} > 0 )); then
+    echo 'MISSING DEPENDENCIES:'
+    printf '  - %s\n' "${missing_tools[@]}"
     exit 1
 fi
 
-echo "OK — all ${#REQUIRED_TOOLS[@]} required tools are available"
+echo 'OK - all 10 required tools are available'
 ```
 
 ```text
-OK — all 8 required tools are available
+OK - all 10 required tools are available
 ```
 
-### Bash | Dotenv file loader
+#### Dotenv file loader
 
-Parses a `.env` file and exports each key-value pair as an environment variable, skipping comments and blank lines. Environment variables are the standard way to pass configuration to scripts and containers without hardcoding secrets. This loader makes `.env` files usable outside of Docker Compose.
+Use this immediately before the job commits to work on the current host. It is typically triggered when the runtime environment must be validated before the main workload starts and shared settings are kept in a simple env file. This example reads `powershell-automation.env`, exports the variables into the current shell, and reports how many keys were loaded.
 
-> [!danger] Secrets in `.env` files
-> Never commit `.env` files to version control. Add `.env` to `.gitignore` and use a secrets manager (GCP Secret Manager, HashiCorp Vault) for production credentials.
+> [!warning] Over-permissive env parsing
+>
+> This loader intentionally supports only simple `KEY=VALUE` lines. Rich shell syntax, embedded command substitution, or multiline secrets belong in a more controlled configuration path.
 
-> [!success] Safe secret injection
-> Use `gcloud secrets versions access latest --secret=MY_SECRET` to inject secrets at runtime instead of storing them in files.
+> [!failure] Wrong pattern
+>
+> Feeding shell syntax, command substitution, or durable secrets into a parser that only expects simple `KEY=VALUE` lines.
+
+> [!success] Preferred pattern
+>
+> Keep `.env` files limited to non-secret runtime settings and move durable secrets to Secret Manager or an equivalent store. Simple parsers are operationally safer when the file contract stays deliberately narrow.
+
+*Load the example `.env` file under `data/powershell-automation/env` into the current shell process.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-ENV_FILE="${1:-.env}"
+ENV_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/env/powershell-automation.env'
+loaded_count=0
 
-if [[ ! -f "$ENV_FILE" ]]; then
-    echo "ERROR: $ENV_FILE not found"
-    exit 1
-fi
-
-count=0
 while IFS= read -r line; do
-    [[ -z "$line" || "$line" =~ ^# ]] && continue
+    [[ -z "$line" || "$line" == \#* ]] && continue
     key="${line%%=*}"
     value="${line#*=}"
-    value="${value%\"}"
-    value="${value#\"}"
     export "$key=$value"
-    count=$((count + 1))
+    loaded_count=$((loaded_count + 1))
 done < "$ENV_FILE"
 
-echo "OK — loaded $count variable(s) from $ENV_FILE"
+echo "OK - loaded $loaded_count variable(s) from $(basename "$ENV_FILE")"
 ```
 
 ```text
-OK — loaded 7 variable(s) from .env
+OK - loaded 5 variable(s) from powershell-automation.env
 ```
 
-### Bash | Disk space pre-flight
+#### Disk space pre-flight
 
-Checks all mounted filesystems and aborts if any exceed a usage threshold (default: 80%). A full disk during a pipeline run causes silent data corruption, truncated files, and database crashes. This check takes milliseconds and prevents hours of recovery.
+Use this immediately before the job commits to work on the current host. It is typically triggered when the runtime environment must be validated before the main workload starts and temporary files, downloads, or exports may consume additional space. This example checks the root filesystem and the mounted Windows volume used by the vault and fails only if either exceeds the 90 percent threshold.
+
+> [!warning] Incomplete capacity check
+>
+> Percent-used checks alone can miss the real failure mode. Large jobs also fail on inode exhaustion, temp-directory placement, or writing to a different filesystem than the one that was measured.
+
+> [!failure] Wrong pattern
+>
+> Checking root filesystem usage alone even though temp files or outputs may land on different mounts or exhaust inodes first.
+
+> [!success] Preferred pattern
+>
+> Measure the actual temp and output filesystems that the job will use, not only the root mount. Capacity checks are more credible when they match the path where the workload will write its largest artifacts.
+
+*Check the key WSL mount points used by the workflow and fail if any exceeds the configured usage threshold.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-THRESHOLD="${1:-80}"
-
+THRESHOLD=90
 breached=0
 
-df -h --output=pcent,target | tail -n +2 | while read -r usage mount; do
+while read -r mount usage; do
     pct="${usage%\%}"
-    pct="${pct// /}"
+    echo "$mount - $pct% used"
     if (( pct > THRESHOLD )); then
-        echo "ALERT — $mount is ${pct}% full (threshold: ${THRESHOLD}%)"
+        echo "ALERT - $mount is ${pct}% full (threshold: ${THRESHOLD}%)"
         breached=1
     fi
-done
+done < <(df -P / /mnt/c | awk 'NR > 1 { print $6, $5 }')
 
 if (( breached )); then
     exit 1
 fi
 
-echo "OK — all filesystems below ${THRESHOLD}% usage"
+echo 'OK - all 2 mount(s) below 90% usage'
 ```
 
 ```text
-OK — all filesystems below 80% usage
+/ - 1% used
+/mnt/c - 88% used
+OK - all 2 mount(s) below 90% usage
 ```
 
 ## Scheduling and orchestration helpers
 
-These scripts solve the glue problems around job scheduling: preventing overlapping runs, retrying flaky commands, and alerting on outcomes. They complement orchestrators like Airflow (see [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns)) by handling concerns that cron and Task Scheduler do not address natively.
+These scripts solve the glue problems around job scheduling: preventing overlapping runs, retrying flaky commands, and alerting on outcomes. They complement orchestrators like [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) by handling concerns that `cron` and lightweight wrappers do not address natively.
 
-### Bash | Lock file wrapper
+### Orchestration scripts
 
-Prevents overlapping executions of the same job by acquiring an exclusive file lock before running the command. Without this, a cron job that takes longer than its interval will spawn a second instance, leading to duplicate data, race conditions, or resource exhaustion.
+These examples use the helper scripts and state files under `data/powershell-automation/state`. The outputs below were taken from live WSL runs, including the deliberately failing webhook notification path.
 
-The script uses `flock` (part of `util-linux`) which is atomic and safe for concurrent access.
+#### Mutex lock wrapper
+
+Use this when a job moves from one-off execution into unattended scheduling. It is typically triggered when the scheduler needs overlap control so a second run does not start while the first one still holds shared state. This example acquires a `flock` lock file before running the helper script under `state`.
+
+> [!warning] Local-only lock scope
+>
+> `flock` is a local filesystem coordination tool. On some shared or networked filesystems its semantics are limited or unreliable enough that overlap prevention can become a false guarantee.
+
+> [!failure] Wrong pattern
+>
+> Relying on `flock` on shared or network filesystems as though it were a distributed coordination service.
+
+> [!success] Preferred pattern
+>
+> Keep lock files on local storage or move coordination into the scheduler or another consensus-backed system when execution becomes distributed. Local locks solve local overlap, not distributed ownership.
+
+*Acquire a file lock before running the helper script under `data/powershell-automation/state`.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOCK_FILE="${1:?Usage: $0 <lock_file> <command> [args...]}"
-shift
-COMMAND=("$@")
+LOCK_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/stoxx-bq-wh-nb-demo.lock'
+TARGET_SCRIPT='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/mutex_target.sh'
+COMMAND="bash \"$TARGET_SCRIPT\""
 
 exec 200>"$LOCK_FILE"
-
 if ! flock -n 200; then
-    echo "SKIPPED — another instance is already running (lock: $LOCK_FILE)"
+    echo "SKIPPED - another instance is already running (lock: $LOCK_FILE)"
     exit 0
 fi
 
-echo "Lock acquired, running: ${COMMAND[*]}"
-"${COMMAND[@]}"
+echo "Lock acquired, running: $COMMAND"
+bash "$TARGET_SCRIPT"
 status=$?
-
-echo "OK — command completed with exit code $status"
+echo "OK - command completed with exit code $status"
 exit "$status"
 ```
 
 ```text
-Lock acquired, running: /opt/pipeline/daily_load.sh
-OK — command completed with exit code 0
+Lock acquired, running: bash "/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/mutex_target.sh"
+OK - command completed with exit code 0
 ```
 
-### Bash | Generic retry wrapper
+#### Generic retry wrapper
 
-Wraps any command with configurable retry count and exponential backoff. This is a reusable building block for any operation that may fail transiently — database connections, API calls, file transfers. The backoff prevents hammering a recovering service.
+Use this when a job moves from one-off execution into unattended scheduling and transient failures are expected. It is typically triggered when the scheduler needs explicit retry and backoff semantics around a flaky dependency. This example increments a counter file, fails the first two attempts on purpose, and succeeds on the third attempt after running a live SQL Server health query through `SQLCMD.EXE`.
+
+> [!warning] Non-idempotent replay risk
+>
+> Retries applied to non-idempotent work can duplicate writes, notifications, or external side effects. Retry logic is safe only when the target action is read-only or has an explicit deduplication contract.
+
+> [!failure] Wrong pattern
+>
+> Wrapping non-idempotent writes or notifications in blind retries without an idempotency key or deduplication contract.
+
+> [!success] Preferred pattern
+>
+> Keep retry wrappers focused on transient failures, bounded backoff, and a clearly defined retry budget. If the operation changes state, require an idempotency key or another replay-safe contract first.
+
+*Retry a transiently failing operation until the third attempt, then complete with a live `stoxx` health query.*
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-MAX_RETRIES="${1:?Usage: $0 <max_retries> <command> [args...]}"
-shift
-COMMAND=("$@")
-
+STATE_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/retry-count.txt'
+SQLCMD="/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE"
+MAX_RETRIES=3
 attempt=0
 delay=1
+printf '0' > "$STATE_FILE"
+
+run_command() {
+    local current next
+    current=$(cat "$STATE_FILE")
+    next=$((current + 1))
+    printf '%s' "$next" > "$STATE_FILE"
+
+    if (( next < 3 )); then
+        return 1
+    fi
+
+    "$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -Q "SET NOCOUNT ON; SELECT 1 AS HealthCheck;" -h -1 -W > /dev/null
+}
 
 while (( attempt < MAX_RETRIES )); do
-    if "${COMMAND[@]}"; then
-        echo "OK — succeeded on attempt $((attempt + 1))"
+    if run_command; then
+        echo "OK - succeeded on attempt $((attempt + 1))"
         exit 0
     fi
 
     attempt=$((attempt + 1))
+    if (( attempt >= MAX_RETRIES )); then
+        break
+    fi
+
     echo "Attempt $attempt/$MAX_RETRIES failed, retrying in ${delay}s..."
     sleep "$delay"
     delay=$((delay * 2))
 done
 
-echo "FAILED — all $MAX_RETRIES attempts exhausted"
+echo "FAILED - all $MAX_RETRIES attempts exhausted"
 exit 1
 ```
 
 ```text
 Attempt 1/3 failed, retrying in 1s...
 Attempt 2/3 failed, retrying in 2s...
-OK — succeeded on attempt 3
+OK - succeeded on attempt 3
 ```
 
-### Bash | Run and alert pattern
+#### Run and alert pattern
 
-Executes a command and sends a notification to a Slack webhook (or any HTTP endpoint) with the outcome — success or failure. This is the simplest possible alerting layer for cron jobs that run unattended. Without it, a nightly job can fail silently for days before anyone notices.
+Use this when a scheduled job needs an explicit success or failure notification path in addition to its exit code. It is typically triggered when the wrapper must send a webhook after the target command completes, but the command result still has to remain visible to the scheduler. This example runs the live `stoxx` health helper, attempts to post a webhook payload to a local endpoint, and preserves the command exit code even when the notification fails.
 
-The script captures both the exit code and the last N lines of output for the notification payload.
+> [!warning] Alerting status inversion
+>
+> Notification transport is a secondary concern, not the source of truth for job outcome. If alert delivery failure overwrites the primary exit status, the scheduler will misclassify the run.
+
+> [!failure] Wrong pattern
+>
+> Letting webhook delivery determine job status instead of treating alert transport as a secondary concern.
+
+> [!success] Preferred pattern
+>
+> Emit the job result independently and keep alerting best-effort unless the operational contract explicitly treats notification as mandatory. Control-plane observability should not erase the underlying workload outcome.
+
+*Run the `stoxx` health helper, attempt a webhook notification, and emit a scheduler-friendly status line.*
 
 ```bash
 #!/usr/bin/env bash
-set -uo pipefail
+set -euo pipefail
 
-WEBHOOK_URL="${1:?Usage: $0 <webhook_url> <job_name> <command> [args...]}"
-JOB_NAME="${2:?Job name for the notification}"
-shift 2
-COMMAND=("$@")
+WEBHOOK_URL='http://127.0.0.1:8791/notify/'
+JOB_NAME='stoxx_health_check'
+TARGET_SCRIPT='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/run_alert_target.sh'
+LOG_FILE=$(mktemp)
+trap 'rm -f "$LOG_FILE"' EXIT
 
-LOGFILE=$(mktemp)
-
-"${COMMAND[@]}" > "$LOGFILE" 2>&1
-EXIT_CODE=$?
-
-TAIL_OUTPUT=$(tail -5 "$LOGFILE")
-
-if (( EXIT_CODE == 0 )); then
-    STATUS="SUCCESS"
-    COLOR="#36a64f"
+if bash "$TARGET_SCRIPT" >"$LOG_FILE" 2>&1; then
+    exit_code=0
+    status='SUCCESS'
+    color='#36a64f'
 else
-    STATUS="FAILURE"
-    COLOR="#ff0000"
+    exit_code=$?
+    status='FAILURE'
+    color='#ff0000'
 fi
 
-PAYLOAD=$(jq -n \
-    --arg status "$STATUS" \
-    --arg job "$JOB_NAME" \
-    --arg output "$TAIL_OUTPUT" \
-    --arg color "$COLOR" \
-    --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-    '{
-        attachments: [{
-            color: $color,
-            title: ($job + " — " + $status),
-            text: $output,
-            footer: ("Completed at " + $ts)
-        }]
-    }')
+payload=$(python3 - "$status" "$JOB_NAME" "$color" "$LOG_FILE" <<'PY'
+import json, sys
+status, job_name, color, log_file = sys.argv[1:5]
+with open(log_file, encoding='utf-8') as handle:
+    tail_output = "".join(handle.readlines()[-5:]).strip()
+print(json.dumps({
+    "attachments": [{
+        "color": color,
+        "title": f"{job_name} - {status}",
+        "text": tail_output,
+    }]
+}))
+PY
+)
 
-curl -sf -X POST -H "Content-Type: application/json" \
-    -d "$PAYLOAD" "$WEBHOOK_URL" || echo "WARN — webhook notification failed"
-
-rm -f "$LOGFILE"
-
-echo "$STATUS — $JOB_NAME exited with code $EXIT_CODE"
-exit "$EXIT_CODE"
+curl -sf -X POST -H 'Content-Type: application/json' -d "$payload" "$WEBHOOK_URL" >/dev/null || echo 'WARN - webhook notification failed'
+echo "$status - $JOB_NAME exited with code $exit_code"
+exit "$exit_code"
 ```
 
 ```text
-SUCCESS — daily_etl exited with code 0
+WARN - webhook notification failed
+SUCCESS - stoxx_health_check exited with code 0
 ```
 
+## Operational guardrails
 
+Most Bash automation failures come from shell semantics and runtime context rather than from CSV or JSON handling itself. These patterns keep the scripts above predictable when they move from an interactive terminal into unattended WSL or Linux jobs.
 
-## Warnings
+### Script defaults
 
-> [!danger] Scripts without `set -euo pipefail` silently ignore errors
->
-> A failed command in the middle of a script does not stop execution. Subsequent commands run on corrupted or missing input. Every production script must start with `set -euo pipefail`.
+#### Fail fast on shell errors
 
-> [!warning] Logging to stdout contaminates pipeline data
->
-> If a script writes both log messages and data to stdout, downstream commands receive mixed content. Write logs to stderr: `echo "[INFO] message" >&2`.
+Start production scripts with `set -euo pipefail` so missing variables, failed commands, and broken pipelines terminate the run immediately instead of leaking bad state into later steps.
 
-> [!warning] Non-idempotent scripts fail on retry
->
-> A script that creates a file without checking if it already exists fails on the second run. All production scripts must be idempotent.
+Use explicit conditionals around commands that are expected to fail as part of normal control flow. Strict mode is valuable only when the script distinguishes intentional non-zero paths from unexpected ones.
 
-## Recommendations
+*Run a short script that aborts on an unset variable and surfaces the resulting non-zero exit code.*
 
-| Scenario | Recommendation |
-|---|---|
-| Script header | `#!/usr/bin/env bash` followed by `set -euo pipefail`. |
-| Logging | `log() { echo "[$(date +%Y-%m-%d\ %H:%M:%S)] $*" >&2; }` |
-| Parameter validation | `DB_HOST="${DB_HOST:?ERROR: DB_HOST must be set}"` |
-| Cleanup | `trap cleanup EXIT` to guarantee temp file removal. |
-| File existence checks | `[[ -f "$input_file" ]] || { log "Input missing"; exit 1; }` |
-| Idempotent output | `[[ -f "$output" ]] && { log "Exists, skipping"; exit 0; }` |
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/fail-fast-demo.sh'
+ERR_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/fail-fast-demo.err'
+
+cat > "$SCRIPT_FILE" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+echo 'before'
+echo "$UNSET_DEMO"
+echo 'after'
+EOF
+
+chmod +x "$SCRIPT_FILE"
+rm -f "$ERR_FILE"
+
+if bash "$SCRIPT_FILE" 2>"$ERR_FILE"; then
+    echo 'Unexpected success'
+else
+    status=$?
+    cat "$ERR_FILE"
+    echo "Exit code: $status"
+fi
+```
+
+```text
+before
+/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/fail-fast-demo.sh: line 4: UNSET_DEMO: unbound variable
+Exit code: 1
+```
+
+#### Treat pipelines as a separate failure surface
+
+Remember that a pipeline has more than one process in it. `pipefail` is what turns a hidden failure in the left side of `curl | python3` or `sqlcmd | python3` into a visible script failure instead of a false success.
+
+Test the pipeline as one unit whenever upstream commands can fail independently of the parser. Production shell failures often come from assuming that the last command in the pipe tells the whole story.
+
+*Compare the same failing pipeline with and without `pipefail` enabled.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+if bash -lc 'set -eu; false | cat >/dev/null'; then
+    without_pipefail=0
+else
+    without_pipefail=$?
+fi
+
+if bash -lc 'set -euo pipefail; false | cat >/dev/null'; then
+    with_pipefail=0
+else
+    with_pipefail=$?
+fi
+
+echo "Without pipefail: exit $without_pipefail"
+echo "With pipefail: exit $with_pipefail"
+```
+
+```text
+Without pipefail: exit 0
+With pipefail: exit 1
+```
+
+### Cleanup and scheduled execution
+
+#### Keep cleanup in `trap`
+
+Use `trap 'rm -f "$tmp_file"' EXIT` whenever the script creates temp files, generated SQL, or transient downloads. Cleanup that exists only at the happy-path bottom of the script is not real cleanup.
+
+For scheduled jobs, prefer `EXIT` plus explicit signal traps when the workload holds locks or external leases. Cleanup policy should survive both ordinary completion and operator interruption.
+
+*Create a temp file under `state`, fail intentionally, and confirm that the `trap` removed the file on exit.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+TMP_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/trap-cleanup-demo.tmp'
+rm -f "$TMP_FILE"
+
+if bash -lc "set -euo pipefail; tmp_file='$TMP_FILE'; trap 'rm -f \"\$tmp_file\"' EXIT; touch \"\$tmp_file\"; echo 'Temp file created'; false"; then
+    status=0
+else
+    status=$?
+fi
+
+if [[ -e "$TMP_FILE" ]]; then
+    echo 'Cleanup failed - temp file still exists'
+else
+    echo 'Cleanup succeeded - temp file removed by trap'
+fi
+
+echo "Exit code: $status"
+```
+
+```text
+Temp file created
+Cleanup succeeded - temp file removed by trap
+Exit code: 1
+```
+
+#### Make `cron` context explicit
+
+Assume `cron` is a different runtime than your interactive shell. Set `PATH`, `CLOUDSDK_CONFIG`, working directory, and any required environment variables inside the script rather than relying on profile state.
+
+Set timezone, shell, and notification behavior deliberately as well. Minimal scheduler environments are predictable only when the script declares all of the context it depends on.
+
+*Simulate a `cron`-like minimal environment, then rerun the same check with explicit `PATH` and `CLOUDSDK_CONFIG` set.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+ERR_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/cron-minimal.err'
+rm -f "$ERR_FILE"
+
+if env -i PATH='' /usr/bin/bash --noprofile --norc -lc 'python3 --version' 2>"$ERR_FILE"; then
+    minimal_status=0
+else
+    minimal_status=$?
+    cat "$ERR_FILE"
+fi
+
+env -i PATH='/usr/bin:/bin' CLOUDSDK_CONFIG='/mnt/c/Users/aperi/AppData/Roaming/gcloud' /usr/bin/bash --noprofile --norc -lc 'python3 --version; printf "CLOUDSDK_CONFIG=%s\n" "$CLOUDSDK_CONFIG"'
+echo "Minimal env exit code: $minimal_status"
+```
+
+```text
+/usr/bin/bash: line 1: python3: No such file or directory
+Python 3.12.3
+CLOUDSDK_CONFIG=/mnt/c/Users/aperi/AppData/Roaming/gcloud
+Minimal env exit code: 127
+```
+
+### Logging and SQL Server patterns
+
+#### Stamp logs with timestamps
+
+A simple helper such as `log() { printf "[%s] %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >&2; }` is enough when you need searchable timestamps in flat-file automation and do not yet have centralized logging.
+
+Prefer UTC timestamps for multi-system data operations. Local wall-clock logging becomes difficult to reconcile once GCP, SQL Server, and scheduled jobs cross time zones.
+
+*Emit two UTC log lines with a lightweight `log()` helper so the timestamp shape is explicit and machine-searchable.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+log() {
+    printf '[%s] %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$*"
+}
+
+log 'Started checksum verification'
+log 'Completed row-count reconciliation'
+```
+
+```text
+[2026-04-14T22:13:54Z] Started checksum verification
+[2026-04-14T22:13:54Z] Completed row-count reconciliation
+```
+
+#### Prefer `sqlcmd` with machine-friendly switches
+
+For downstream parsing, favor `-C -W -s"," -h -1` and explicit saved `.sql` files. Those switches remove a large amount of display formatting noise and make `SQLCMD.EXE` output usable from Bash without a brittle text scraper.
+
+Do not treat those switches as universally safe defaults. `-W` changes whitespace semantics, and parser-friendly output still needs validation whenever the result set shape changes.
+
+*Query the live `stoxx` SQL Server instance with parser-friendly switches and split the returned row into Bash variables.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+SQLCMD='/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE'
+row=$("$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -W -s"," -h -1 -Q "SET NOCOUNT ON; SELECT TOP (1) symbol, CONVERT(date, signal_date) AS signal_date FROM silver.signals_daily ORDER BY signal_date DESC, symbol;" | tr -d '\r' | awk 'NF && $1 !~ /^-/{print; exit}')
+IFS=',' read -r symbol signal_date <<< "$row"
+
+echo "Raw row: $row"
+echo "Parsed symbol: $symbol"
+echo "Parsed signal_date: $signal_date"
+```
+
+```text
+Raw row: 0388.HK,2026-04-08
+Parsed symbol: 0388.HK
+Parsed signal_date: 2026-04-08
+```
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Script succeeds in terminal but fails in cron/Airflow | Missing environment variables. Cron does not source .bashrc. | Define variables in the cron/Airflow environment, or source the profile at script start. |
-| Script fails silently with no error | `set -e` not enabled. Errors ignored and execution continues. | Add `set -euo pipefail` at the top. |
-| Log messages appear in output data | Logging to stdout instead of stderr. | Redirect log functions to stderr: `>&2`. |
-| Script fails on second run | Non-idempotent operations (file exists, row already inserted). | Add existence checks and skip-if-done logic. |
-| "unbound variable" on optional parameter | `set -u` is active and the variable is not set. | Use `${VAR:-default}` for optional variables. |
+Use these symptoms to decide whether the failure is scheduler context, shell error handling, pipeline behavior, or input parsing.
+
+### Scheduling context
+
+#### Script works interactively but fails in `cron`
+
+Check the scheduled job's `PATH`, working directory, WSL mount availability, `CLOUDSDK_CONFIG`, and service identity first. Interactive success often comes from profile state that `cron` never loads.
+
+Verify the effective shell and the exact user context that the scheduler used. Many reproducibility failures are environment mismatches, not business-logic regressions.
+
+*Show how the same relative path fails from `/tmp` but succeeds when the working directory is the vault root.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+if (cd /tmp && [[ -f ./data/powershell-automation/env/powershell-automation.env ]]); then
+    echo 'From /tmp: file found'
+else
+    echo 'From /tmp: relative file not found'
+fi
+
+if (cd '/mnt/c/Users/aperi/My Drive/VAULT' && [[ -f ./data/powershell-automation/env/powershell-automation.env ]]); then
+    echo 'From vault root: relative file found'
+else
+    echo 'From vault root: relative file not found'
+fi
+```
+
+```text
+From /tmp: relative file not found
+From vault root: relative file found
+```
+
+#### `command not found` under `cron`
+
+The command exists in your shell session but not in the minimal environment that `cron` starts with. Export the needed `PATH` explicitly or call the full executable path inside the script.
+
+This is especially relevant for hybrid WSL paths such as `SQLCMD.EXE` and Windows-installed Google Cloud SDK tools. Mixed Windows and Linux runtimes should rely on explicit executable paths in scheduled jobs.
+
+*Run `SQLCMD.EXE` once through a minimal `PATH`, then call the full executable path explicitly from the same stripped-down environment.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+ERR_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/sqlcmd-minimal.err'
+rm -f "$ERR_FILE"
+
+if env -i PATH='/usr/bin:/bin' /usr/bin/bash --noprofile --norc -lc 'SQLCMD.EXE -? >/dev/null' 2>"$ERR_FILE"; then
+    status=0
+else
+    status=$?
+    cat "$ERR_FILE"
+fi
+
+env -i PATH='/usr/bin:/bin' /usr/bin/bash --noprofile --norc -lc '"/mnt/c/Program Files/Microsoft SQL Server/Client SDK/ODBC/180/Tools/Binn/SQLCMD.EXE" -? 2>&1 | tr -d "\r" | head -n 1'
+echo "Minimal PATH exit code: $status"
+```
+
+```text
+/usr/bin/bash: line 1: SQLCMD.EXE: command not found
+Microsoft (R) SQL Server Command Line Tool
+Minimal PATH exit code: 127
+```
+
+### Error handling
+
+#### Script keeps running after failure
+
+The script is missing `set -e`, the failing command is inside a construct that suppresses the error, or the failure is coming from a pipeline without `pipefail`. Fix the shell semantics first before debugging the business logic.
+
+Also inspect command substitutions, subshells, and `while read` loops fed by pipes. Bash error behavior differs across those constructs, and the bug is often in control flow rather than in the data operation.
+
+*Compare the same failing command sequence once without `set -e` and once with `set -e` enabled.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+if bash -lc 'echo "without set -e: start"; false; echo "without set -e: continued"'; then
+    without_status=0
+else
+    without_status=$?
+fi
+
+if bash -lc 'set -e; echo "with set -e: start"; false; echo "with set -e: continued"'; then
+    with_status=0
+else
+    with_status=$?
+fi
+
+echo "Without set -e exit code: $without_status"
+echo "With set -e exit code: $with_status"
+```
+
+```text
+without set -e: start
+without set -e: continued
+with set -e: start
+Without set -e exit code: 0
+With set -e exit code: 1
+```
+
+#### Pipeline failure is not caught
+
+One stage in a pipeline failed, but the last stage still exited successfully. Enable `set -o pipefail` and test the pipeline as one unit whenever the left side is allowed to fail independently.
+
+If the pipeline spans network I/O and parsing, capture both the producer exit code and the parser outcome during debugging. Silent truncation frequently starts with a failed upstream command whose output parser still exits cleanly.
+
+*Read a missing file through `wc -l` once without `pipefail` and once with `pipefail` so the hidden failure is visible.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+MISSING_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/missing-pipeline-input.csv'
+WITHOUT_ERR='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/pipeline-without.err'
+WITH_ERR='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/pipeline-with.err'
+
+rm -f "$WITHOUT_ERR" "$WITH_ERR"
+
+echo 'Without pipefail:'
+if output=$(bash -lc "set -eu; cat '$MISSING_FILE' | wc -l" 2>"$WITHOUT_ERR"); then
+    without_status=0
+else
+    without_status=$?
+fi
+echo "stdout => $output"
+cat "$WITHOUT_ERR"
+
+echo 'With pipefail:'
+if output=$(bash -lc "set -euo pipefail; cat '$MISSING_FILE' | wc -l" 2>"$WITH_ERR"); then
+    with_status=0
+else
+    with_status=$?
+fi
+echo "stdout => $output"
+cat "$WITH_ERR"
+
+echo "Without pipefail exit code: $without_status"
+echo "With pipefail exit code: $with_status"
+```
+
+```text
+Without pipefail:
+stdout => 0
+cat: '/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/missing-pipeline-input.csv': No such file or directory
+With pipefail:
+stdout => 0
+cat: '/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/missing-pipeline-input.csv': No such file or directory
+Without pipefail exit code: 0
+With pipefail exit code: 1
+```
+
+### Data parsing
+
+#### `cut` or `awk` returns the wrong columns
+
+The file is quoted CSV or contains embedded delimiters, so positional text slicing is no longer reliable. Switch to a CSV-aware parser such as Python's `csv` module before trying to patch the shell expression further.
+
+The same guidance applies when the producer changes column order without changing names. Data engineering automation should parse structured files with structured parsers, not with optimistic delimiter assumptions.
+
+*Write a quoted CSV row under `state`, then compare `cut` output to a CSV-aware Python parse of the same field.*
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+CSV_FILE='/mnt/c/Users/aperi/My Drive/VAULT/data/powershell-automation/state/quoted-fields-demo.csv'
+
+cat > "$CSV_FILE" <<'EOF'
+id,name,comment
+1,Alpha,"Paris, France"
+EOF
+
+echo 'cut field 3:'
+cut -d, -f3 "$CSV_FILE" | tail -n 1
+
+echo 'python csv field comment:'
+python3 - "$CSV_FILE" <<'PY'
+import csv, sys
+with open(sys.argv[1], newline='', encoding='utf-8') as handle:
+    row = next(csv.DictReader(handle))
+print(row['comment'])
+PY
+```
+
+```text
+cut field 3:
+"Paris
+python csv field comment:
+Paris, France
+```

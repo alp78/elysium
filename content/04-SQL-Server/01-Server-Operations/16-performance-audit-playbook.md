@@ -107,10 +107,7 @@ This subsection captures the engine baseline in one row, then checks the per-dat
 
 #### Capture the instance baseline
 
-**When to run:** first action of any audit, before touching any cumulative DMV.
-**Trigger:** scheduled health check, unplanned performance complaint, post-restart verification, or drift-detection sweep across instances.
-**Context:** single T-SQL session against the target instance, `VIEW SERVER STATE` required, strictly read-only, no restart or downtime implications.
-**Purpose:** anchor every later cumulative finding against the engine build, uptime-driven confidence boundary, CPU and memory posture, and the four configuration knobs that dominate CPU and memory behavior.
+First action of any audit, before touching any cumulative DMV. It is typically triggered by scheduled health check, unplanned performance complaint, post-restart verification, or drift-detection sweep across instances. Single T-SQL session against the target instance, `VIEW SERVER STATE` required, strictly read-only, no restart or downtime implications. Anchor every later cumulative finding against the engine build, uptime-driven confidence boundary, CPU and memory posture, and the four configuration knobs that dominate CPU and memory behavior.
 
 The query is deliberately wide: it mixes `SERVERPROPERTY` metadata, live process state from `sys.dm_os_sys_info`, and current configuration values from `sys.configurations` so that every downstream phase has a ready-made baseline to reference without running extra queries.
 
@@ -194,10 +191,7 @@ _This instance is running SQL Server 2022 on a fresh uptime boundary: `uptime_da
 
 #### Review database inventory and risky defaults
 
-**When to run:** directly after the instance baseline, before any workload-level query.
-**Trigger:** first audit of an unfamiliar instance, post-migration validation, or investigation of why a specific database behaves differently from the rest.
-**Context:** single T-SQL session, `VIEW ANY DEFINITION` or `sysadmin`, read-only against `sys.databases`, no locking risk.
-**Purpose:** expose the per-database defaults (recovery model, compatibility level, RCSI, auto-shrink, auto-stats) that most frequently distort cumulative DMVs and mask or amplify later findings.
+Directly after the instance baseline, before any workload-level query. It is typically triggered by first audit of an unfamiliar instance, post-migration validation, or investigation of why a specific database behaves differently from the rest. Single T-SQL session, `VIEW ANY DEFINITION` or `sysadmin`, read-only against `sys.databases`, no locking risk. Expose the per-database defaults (recovery model, compatibility level, RCSI, auto-shrink, auto-stats) that most frequently distort cumulative DMVs and mask or amplify later findings.
 
 `sys.databases` is the authoritative catalog view for the settings below. Every row on the instance — including system databases, offline databases, and AG secondaries in their `RESTORING` state — appears once, which makes this the correct inventory source rather than `DATABASEPROPERTYEX`.
 
@@ -279,10 +273,7 @@ These queries answer three different questions: who owns the buffer pool, whethe
 
 #### Measure buffer-pool ownership by database
 
-**When to run:** first check of Phase 2, before interpreting PLE or wait data.
-**Trigger:** suspected memory pressure, unexplained `PAGEIOLATCH_*` waits, multi-database instance where one workload may be starving another.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only. On busy instances `sys.dm_os_buffer_descriptors` can be expensive to scan; run during a calm window when possible.
-**Purpose:** expose how buffer-pool memory is distributed across databases so that later PLE and wait findings can be attributed to the right workload.
+First check of Phase 2, before interpreting PLE or wait data. It is typically triggered by suspected memory pressure, unexplained `PAGEIOLATCH_*` waits, multi-database instance where one workload may be starving another. Single T-SQL session, `VIEW SERVER STATE`, read-only. On busy instances `sys.dm_os_buffer_descriptors` can be expensive to scan; run during a calm window when possible. Expose how buffer-pool memory is distributed across databases so that later PLE and wait findings can be attributed to the right workload.
 
 `sys.dm_os_buffer_descriptors` exposes one row per cached 8 KB data page. Grouping by `database_id` aggregates pages into a per-database footprint, and multiplying by 8 KB (`COUNT(*) * 8 / 1024`) converts pages to MB.
 
@@ -340,10 +331,7 @@ _`stoxx` dominates the useful cache at `480 MB` — expected since it is the pri
 
 #### Check Page Life Expectancy by buffer node
 
-**When to run:** immediately after the buffer-pool breakdown, as the second memory-pressure signal.
-**Trigger:** suspected memory pressure, reports of slow queries with high physical reads, planning NUMA layout changes, or validating that the buffer pool has warmed.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only. The query is trivial.
-**Purpose:** quantify how long a data page survives in the buffer pool before being evicted, and confirm the value is consistent across NUMA nodes.
+Immediately after the buffer-pool breakdown, as the second memory-pressure signal. It is typically triggered by suspected memory pressure, reports of slow queries with high physical reads, planning NUMA layout changes, or validating that the buffer pool has warmed. Single T-SQL session, `VIEW SERVER STATE`, read-only. The query is trivial. Quantify how long a data page survives in the buffer pool before being evicted, and confirm the value is consistent across NUMA nodes.
 
 `sys.dm_os_performance_counters` exposes both the instance-aggregate `Buffer Manager` PLE and one row per NUMA buffer node under `Buffer Node`. Comparing the two is essential because a healthy aggregate value can hide one starved node on multi-socket hardware.
 
@@ -396,10 +384,7 @@ _This is a healthy point-in-time PLE result. `18103` seconds is almost exactly f
 
 #### Check pending memory grants
 
-**When to run:** as the third memory check, directly after PLE.
-**Trigger:** users report queries "stuck before running", dashboards show `RESOURCE_SEMAPHORE` waits, investigation of seemingly idle sessions that consume workspace memory.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only, point-in-time snapshot of the live grant queue.
-**Purpose:** determine whether any query is currently queued for workspace memory rather than executing, which distinguishes grant starvation from buffer-pool pressure.
+As the third memory check, directly after PLE. It is typically triggered by users report queries "stuck before running", dashboards show `RESOURCE_SEMAPHORE` waits, investigation of seemingly idle sessions that consume workspace memory. Single T-SQL session, `VIEW SERVER STATE`, read-only, point-in-time snapshot of the live grant queue. Determine whether any query is currently queued for workspace memory rather than executing, which distinguishes grant starvation from buffer-pool pressure.
 
 `sys.dm_exec_query_memory_grants` is the authoritative live view of workspace-memory requests. Rows where `grant_time IS NOT NULL` are already running; rows where `grant_time IS NULL` are queued behind the memory-grant semaphore.
 
@@ -490,10 +475,7 @@ flowchart LR
 
 #### Capture the top cumulative waits
 
-**When to run:** after the baseline and memory phases, before diving into I/O, query, or blocking detail.
-**Trigger:** any performance investigation where the root cause is not already known; cumulative triage after an incident; validating the effect of a configuration change after a full workload cycle.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only. Cumulative since last restart or explicit `DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR)`.
-**Purpose:** rank actionable waits and choose the next investigative branch. Not a root cause by itself — wait stats point to the family of bottleneck, which then has to be confirmed with the matching detail phase.
+After the baseline and memory phases, before diving into I/O, query, or blocking detail. It is typically triggered by any performance investigation where the root cause is not already known; cumulative triage after an incident; validating the effect of a configuration change after a full workload cycle. Single T-SQL session, `VIEW SERVER STATE`, read-only. Cumulative since last restart or explicit `DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR)`. Rank actionable waits and choose the next investigative branch. Not a root cause by itself — wait stats point to the family of bottleneck, which then has to be confirmed with the matching detail phase.
 
 > [!warning] Short-uptime cumulative bias
 >
@@ -597,10 +579,7 @@ I/O latency determines how expensive physical reads and writes are when the buff
 
 #### Measure average read and write stall by file
 
-**When to run:** after Phase 3 when waits suggest I/O (`PAGEIOLATCH_*`, `WRITELOG`, `IO_COMPLETION`, `BACKUPIO`), or as routine Phase 4 triage.
-**Trigger:** users report slow queries under cold cache, dashboards show rising physical reads, storage migration validation, pre- and post-change comparison when moving a database to new storage.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only. `sys.dm_io_virtual_file_stats` is lightweight and safe at any time; results are cumulative since SQL Server start or file creation.
-**Purpose:** separate storage latency from query-shape problems by measuring average read and write stall per file, then attributing slow storage to specific data or log paths.
+After Phase 3 when waits suggest I/O (`PAGEIOLATCH_*`, `WRITELOG`, `IO_COMPLETION`, `BACKUPIO`), or as routine Phase 4 triage. It is typically triggered by users report slow queries under cold cache, dashboards show rising physical reads, storage migration validation, pre- and post-change comparison when moving a database to new storage. Single T-SQL session, `VIEW SERVER STATE`, read-only. `sys.dm_io_virtual_file_stats` is lightweight and safe at any time; results are cumulative since SQL Server start or file creation. Separate storage latency from query-shape problems by measuring average read and write stall per file, then attributing slow storage to specific data or log paths.
 
 Cumulative averages are excellent for identifying persistently bad storage but weaker for short spikes. For intermittent storage issues, capture two snapshots with a timed delay and compute delta averages instead.
 
@@ -683,10 +662,7 @@ This phase ranks cached statements by cumulative CPU and logical reads. It is us
 
 #### Rank cached statements by cumulative CPU and logical reads
 
-**When to run:** after the baseline confidence check, wait analysis, and I/O check have narrowed the investigation to query-level cost.
-**Trigger:** need a shortlist of candidate statements to tune, confirm whether a reported slow query is cached, or rank workload hotspots when Query Store is unavailable.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only. `CROSS APPLY sys.dm_exec_sql_text` can be mildly expensive on a very large plan cache; acceptable in any normal audit window.
-**Purpose:** rank cached statements by cumulative CPU with logical-read and execution-count context so that single-shot monster statements are not mistaken for chronic hotspots.
+After the baseline confidence check, wait analysis, and I/O check have narrowed the investigation to query-level cost. It is typically triggered by need a shortlist of candidate statements to tune, confirm whether a reported slow query is cached, or rank workload hotspots when Query Store is unavailable. Single T-SQL session, `VIEW SERVER STATE`, read-only. `CROSS APPLY sys.dm_exec_sql_text` can be mildly expensive on a very large plan cache; acceptable in any normal audit window. Rank cached statements by cumulative CPU with logical-read and execution-count context so that single-shot monster statements are not mistaken for chronic hotspots.
 
 `sys.dm_exec_query_stats` is only useful while a plan is in cache. Plans age out under cache pressure or when recompiled, and the DMV resets on restart or when `DBCC FREEPROCCACHE` is run. For durable hotspot tracking across plan churn, Query Store (`sys.query_store_query_text`, `sys.query_store_runtime_stats`) is the better source.
 
@@ -773,10 +749,7 @@ Index health is not just fragmentation. The point of this phase is to determine 
 
 #### Check fragmentation on materially sized indexes
 
-**When to run:** as Phase 6 triage, or before and after an index-maintenance window to verify results.
-**Trigger:** complaints about slow range scans, capacity planning for index rebuilds, evaluating whether an existing maintenance job is working.
-**Context:** single T-SQL session, `VIEW DATABASE STATE`, read-only. `LIMITED` mode reads only the b-tree parent pages, which is cheap; `SAMPLED` and `DETAILED` modes are much more expensive and can be disruptive on very large tables.
-**Purpose:** identify clustered and nonclustered B-tree indexes whose logical fragmentation is high *and* whose page count is large enough to matter operationally — fragmentation on a tiny index rarely justifies any action.
+As Phase 6 triage, or before and after an index-maintenance window to verify results. It is typically triggered by complaints about slow range scans, capacity planning for index rebuilds, evaluating whether an existing maintenance job is working. Single T-SQL session, `VIEW DATABASE STATE`, read-only. `LIMITED` mode reads only the b-tree parent pages, which is cheap; `SAMPLED` and `DETAILED` modes are much more expensive and can be disruptive on very large tables. Identify clustered and nonclustered B-tree indexes whose logical fragmentation is high *and* whose page count is large enough to matter operationally — fragmentation on a tiny index rarely justifies any action.
 
 Logical fragmentation measures the proportion of pages in the leaf level that are out of order relative to allocation. It is the right signal for range-scan cost on B-trees but is meaningless on columnstore indexes (use `sys.dm_db_column_store_row_group_physical_stats` for those).
 
@@ -863,10 +836,7 @@ _The only nontrivial fragmentation is on the `symbol_date` nonclustered indexes 
 
 #### Measure current `tempdb` space usage
 
-**When to run:** when `tempdb` is suspected as a bottleneck, or as routine Phase 7 triage.
-**Trigger:** complaints of "everything is slow", `tempdb` autogrowth events, RCSI/SI workloads showing unusual version-store growth, or spill warnings in query plans.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only, executed in `tempdb` context. The `USE tempdb` is required because `sys.dm_db_file_space_usage` is a database-scoped DMV and the `tempdb` row is the only operationally meaningful one.
-**Purpose:** attribute current `tempdb` footprint to the four categories that matter: user temp objects, internal worktables and spill structures, row-versioning store, and remaining free space.
+When `tempdb` is suspected as a bottleneck, or as routine Phase 7 triage. It is typically triggered by complaints of "everything is slow", `tempdb` autogrowth events, RCSI/SI workloads showing unusual version-store growth, or spill warnings in query plans. Single T-SQL session, `VIEW SERVER STATE`, read-only, executed in `tempdb` context. The `USE tempdb` is required because `sys.dm_db_file_space_usage` is a database-scoped DMV and the `tempdb` row is the only operationally meaningful one. Attribute current `tempdb` footprint to the four categories that matter: user temp objects, internal worktables and spill structures, row-versioning store, and remaining free space.
 
 `sys.dm_db_file_space_usage` exposes page-level allocation counts for the database's files. For any database other than `tempdb`, the DMV still works but the interesting columns are the tempdb-specific ones (`user_object_*`, `internal_object_*`, `version_store_*`, `unallocated_extent_*`).
 
@@ -918,10 +888,7 @@ _`tempdb` is effectively idle right now. User objects consume just under `2 MB`,
 
 #### Review `tempdb` file layout and growth behavior
 
-**When to run:** after checking current space usage, as the second Phase 7 query.
-**Trigger:** first audit of an instance, post-install validation, investigation of PFS/GAM/SGAM latch contention, tuning to eliminate autogrowth skew.
-**Context:** single T-SQL session, `VIEW ANY DEFINITION` against `tempdb.sys.database_files`, read-only. The query is trivial.
-**Purpose:** verify the file count, equal sizing, and growth settings match the modern `tempdb` guidance — `1` file per logical CPU up to `8`, equal sizes, fixed growth, `tempdb` metadata optimization when available.
+After checking current space usage, as the second Phase 7 query. It is typically triggered by first audit of an instance, post-install validation, investigation of PFS/GAM/SGAM latch contention, tuning to eliminate autogrowth skew. Single T-SQL session, `VIEW ANY DEFINITION` against `tempdb.sys.database_files`, read-only. The query is trivial. Verify the file count, equal sizing, and growth settings match the modern `tempdb` guidance — `1` file per logical CPU up to `8`, equal sizes, fixed growth, `tempdb` metadata optimization when available.
 
 From SQL Server 2016 onward, the installer pre-sizes multiple equally-sized `tempdb` data files; from SQL Server 2019 and later, `ALTER SERVER CONFIGURATION SET MEMORY_OPTIMIZED TEMPDB_METADATA = ON` further reduces PFS latch contention. The file layout below still matters because wrong sizes or percentage growth can silently re-introduce allocation skew.
 
@@ -1015,10 +982,7 @@ stateDiagram-v2
 
 #### Check for active user blocking right now
 
-**When to run:** every time a user reports "the database is slow", at the start of Phase 8, and whenever Phase 3 waits show `LCK_M_*` dominance.
-**Trigger:** live incident, monitoring alert on blocked sessions, investigation of long-running transactions, post-deploy verification.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only. Point-in-time snapshot — run twice a few seconds apart to distinguish transient blocking from a stable chain.
-**Purpose:** capture every active user request with the running statement, the exact wait type, the blocking session (if any), and CPU/I/O totals so a head blocker can be found without ambiguity.
+Every time a user reports "the database is slow", at the start of Phase 8, and whenever Phase 3 waits show `LCK_M_*` dominance. It is typically triggered by live incident, monitoring alert on blocked sessions, investigation of long-running transactions, post-deploy verification. Single T-SQL session, `VIEW SERVER STATE`, read-only. Point-in-time snapshot — run twice a few seconds apart to distinguish transient blocking from a stable chain. Capture every active user request with the running statement, the exact wait type, the blocking session (if any), and CPU/I/O totals so a head blocker can be found without ambiguity.
 
 A single snapshot captures the currently executing statement only (via statement-offset substring), not the whole batch. Run the query again `5-10 s` later; if the same `session_id` is still listed with the same `blocking_session_id`, the chain is stable and the blocking is real, not transient.
 
@@ -1115,10 +1079,7 @@ _There was no active user blocking at capture time. That is the correct result t
 
 #### Check the deadlock counter carefully
 
-**When to run:** as a quick secondary check after the live-requests query.
-**Trigger:** user reports of "it just failed randomly and retried", blocking analysis already finished, validating whether deadlock activity exists at all.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only. Trivial query cost.
-**Purpose:** determine whether the instance has produced any deadlocks since startup. This is a binary triage signal, not a root-cause diagnostic.
+As a quick secondary check after the live-requests query. It is typically triggered by user reports of "it just failed randomly and retried", blocking analysis already finished, validating whether deadlock activity exists at all. Single T-SQL session, `VIEW SERVER STATE`, read-only. Trivial query cost. Determine whether the instance has produced any deadlocks since startup. This is a binary triage signal, not a root-cause diagnostic.
 
 SQL Server counters named `/sec` are actually per-second *ratios*, but `Number of Deadlocks/sec` is implemented as a total count — it increments once per deadlock and never decrements. Treating `cntr_value` as a cumulative counter is the correct reading regardless of the column name.
 
@@ -1217,10 +1178,7 @@ flowchart TD
 
 #### Find user tables with the stalest statistics
 
-**When to run:** when the optimizer is suspected of choosing bad plans, or as routine Phase 9 triage.
-**Trigger:** complaints of intermittent slow queries, cardinality mis-estimates in actual plans, after a bulk load or large `DELETE`, before and after stats maintenance.
-**Context:** single T-SQL session, `VIEW DATABASE STATE`, read-only per database. The query runs in whatever database is current, so set context explicitly with `USE <db>` in multi-database audits.
-**Purpose:** find statistics objects on real user tables whose modification counter has drifted significantly since the last update, so that the stats refresh candidate list is data-driven rather than calendar-driven.
+When the optimizer is suspected of choosing bad plans, or as routine Phase 9 triage. It is typically triggered by complaints of intermittent slow queries, cardinality mis-estimates in actual plans, after a bulk load or large `DELETE`, before and after stats maintenance. Single T-SQL session, `VIEW DATABASE STATE`, read-only per database. The query runs in whatever database is current, so set context explicitly with `USE <db>` in multi-database audits. Find statistics objects on real user tables whose modification counter has drifted significantly since the last update, so that the stats refresh candidate list is data-driven rather than calendar-driven.
 
 SQL Server's auto-update threshold under the default trace flag 2371 (active by default from compatibility level `130+`) uses a dynamic formula roughly equal to `SQRT(1000 * rows)`, so large tables trigger updates earlier than the old flat `20% + 500` rule. On a 506-row table the legacy rule still applies and a modification counter of `14674` is extreme — the auto-update will fire on the next qualifying query, but that does not help plans cached before that fires.
 
@@ -1288,10 +1246,7 @@ _This is an actionable finding. `dbo.gold_daily_summary` has two statistics obje
 
 #### Review plan-cache composition by plan type
 
-**When to run:** after the stale stats check, as the second Phase 9 query.
-**Trigger:** suspected compilation pressure, memory cap is being hit disproportionately by plan cache, or Phase 1 shows `optimize for ad hoc workloads = 0` on an ad hoc-heavy workload.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only. Grouping the entire plan cache is cheap.
-**Purpose:** classify cached plans by object type and measure how much cache memory and reuse each class owns, so that parameterization and cache-hygiene decisions are based on real distribution rather than assumptions.
+After the stale stats check, as the second Phase 9 query. It is typically triggered by suspected compilation pressure, memory cap is being hit disproportionately by plan cache, or Phase 1 shows `optimize for ad hoc workloads = 0` on an ad hoc-heavy workload. Single T-SQL session, `VIEW SERVER STATE`, read-only. Grouping the entire plan cache is cheap. Classify cached plans by object type and measure how much cache memory and reuse each class owns, so that parameterization and cache-hygiene decisions are based on real distribution rather than assumptions.
 
 `sys.dm_exec_cached_plans` exposes one row per cached compiled plan. The `objtype` column distinguishes the plan class.
 
@@ -1361,10 +1316,7 @@ _The plan cache is dominated by `Adhoc` at `81.27 MB` across `593` plans, follow
 
 #### Quantify single-use ad hoc plan waste
 
-**When to run:** directly after the plan-cache composition query.
-**Trigger:** `Adhoc` dominates cache_mb, `optimize for ad hoc workloads` is off, or compile-per-second counters are elevated.
-**Context:** single T-SQL session, `VIEW SERVER STATE`, read-only, cheap.
-**Purpose:** measure exactly how much plan-cache memory is held by ad hoc plans with `usecounts = 1` — the "compiled once, never reused" pattern that most benefits from stub caching and parameterization.
+Directly after the plan-cache composition query. It is typically triggered by `Adhoc` dominates cache_mb, `optimize for ad hoc workloads` is off, or compile-per-second counters are elevated. Single T-SQL session, `VIEW SERVER STATE`, read-only, cheap. Measure exactly how much plan-cache memory is held by ad hoc plans with `usecounts = 1` — the "compiled once, never reused" pattern that most benefits from stub caching and parameterization.
 
 | Field | Source | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1416,10 +1368,7 @@ The point of this phase is to catch file-growth settings and log reuse blockers 
 
 #### Review file sizes and growth increments
 
-**When to run:** at the start of Phase 10, after the workload-level investigation is complete.
-**Trigger:** capacity review, post-migration validation, pre-deploy file hardening, or preparation for a database move.
-**Context:** single T-SQL session, `VIEW ANY DEFINITION`, read-only against `sys.master_files`. `tempdb` is excluded here because Phase 7 covers it more precisely.
-**Purpose:** verify every database file has a predictable size, an explicit or unlimited maximum, and a fixed MB growth increment rather than a percentage. Percentage growth is the root cause of many "my database suddenly allocated 20 GB in one autogrow" tickets.
+At the start of Phase 10, after the workload-level investigation is complete. It is typically triggered by capacity review, post-migration validation, pre-deploy file hardening, or preparation for a database move. Single T-SQL session, `VIEW ANY DEFINITION`, read-only against `sys.master_files`. `tempdb` is excluded here because Phase 7 covers it more precisely. Verify every database file has a predictable size, an explicit or unlimited maximum, and a fixed MB growth increment rather than a percentage. Percentage growth is the root cause of many "my database suddenly allocated 20 GB in one autogrow" tickets.
 
 | Field | Source | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1493,10 +1442,7 @@ _User databases are configured sensibly: `stoxx`, `stoxx_backup`, and `stoxx_db`
 
 #### Check log reuse wait reasons
 
-**When to run:** immediately after the file-size check, as the second Phase 10 query.
-**Trigger:** unexplained log-file growth, `ACTIVE_TRANSACTION` reports, backup validation, or investigation of long-running transactions on a `FULL` recovery database.
-**Context:** single T-SQL session, `VIEW ANY DEFINITION`, read-only. Instantaneous snapshot — capture twice if needed to tell transient from persistent.
-**Purpose:** expose why each database's transaction log cannot currently reuse its oldest inactive VLFs, so log growth can be attributed to the correct cause (missing backup, open transaction, replication lag, CDC, mirroring/AG sync, etc.) rather than treated as a generic "log is full" incident.
+Immediately after the file-size check, as the second Phase 10 query. It is typically triggered by unexplained log-file growth, `ACTIVE_TRANSACTION` reports, backup validation, or investigation of long-running transactions on a `FULL` recovery database. Single T-SQL session, `VIEW ANY DEFINITION`, read-only. Instantaneous snapshot — capture twice if needed to tell transient from persistent. Expose why each database's transaction log cannot currently reuse its oldest inactive VLFs, so log growth can be attributed to the correct cause (missing backup, open transaction, replication lag, CDC, mirroring/AG sync, etc.) rather than treated as a generic "log is full" incident.
 
 `log_reuse_wait_desc` is the human-readable version of `log_reuse_wait`. The value is instantaneous: the same description can be completely normal (`NOTHING` during idle, `ACTIVE_TRANSACTION` during a short online index rebuild) or a serious problem (`LOG_BACKUP` on a `FULL`-recovery database that has never been log-backed).
 
@@ -1577,10 +1523,7 @@ Performance audits frequently expose security drift at the same time: overly bro
 
 #### Review current sysadmin membership
 
-**When to run:** at the start of Phase 11, and whenever any privileged-change request is investigated.
-**Trigger:** baseline hardening review, suspected unauthorized access, post-incident forensic review, or routine quarterly privilege audit.
-**Context:** single T-SQL session, `VIEW ANY DEFINITION` or `sysadmin`, read-only against `sys.server_principals` and `sys.server_role_members`.
-**Purpose:** list every principal currently in the `sysadmin` server role. The audit goal is not merely enumeration; it is to decide whether each principal *should* still have that level of privilege.
+At the start of Phase 11, and whenever any privileged-change request is investigated. It is typically triggered by baseline hardening review, suspected unauthorized access, post-incident forensic review, or routine quarterly privilege audit. Single T-SQL session, `VIEW ANY DEFINITION` or `sysadmin`, read-only against `sys.server_principals` and `sys.server_role_members`. List every principal currently in the `sysadmin` server role. The audit goal is not merely enumeration; it is to decide whether each principal *should* still have that level of privilege.
 
 | Field | Source | Type / Unit | Meaning |
 |---|---|---|---|
@@ -1638,10 +1581,7 @@ _This is a real hardening concern on three counts. First, `sa` is enabled — mo
 
 #### Check whether `guest` has `CONNECT` in the current database
 
-**When to run:** after the sysadmin review, as the second Phase 11 query.
-**Trigger:** database-level hardening audit, investigation of anonymous access reports, routine privilege review.
-**Context:** single T-SQL session, run in the target database (`USE stoxx;`), `VIEW DEFINITION` or owner privileges on `sys.database_permissions`, read-only.
-**Purpose:** determine whether the built-in `guest` user currently has `CONNECT` permission in this database. `guest` is the mechanism SQL Server uses to let *any* authenticated login access a database without an explicit user mapping; on most application databases, that is exactly the wrong behavior.
+After the sysadmin review, as the second Phase 11 query. It is typically triggered by database-level hardening audit, investigation of anonymous access reports, routine privilege review. Single T-SQL session, run in the target database (`USE stoxx;`), `VIEW DEFINITION` or owner privileges on `sys.database_permissions`, read-only. Determine whether the built-in `guest` user currently has `CONNECT` permission in this database. `guest` is the mechanism SQL Server uses to let *any* authenticated login access a database without an explicit user mapping; on most application databases, that is exactly the wrong behavior.
 
 `guest` is created automatically in every database and cannot be dropped, but its `CONNECT` permission can be revoked (and is revoked by default in user databases since SQL Server 2005). The `master` and `tempdb` system databases intentionally keep `guest` `CONNECT` enabled and should not be modified.
 

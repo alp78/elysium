@@ -127,10 +127,7 @@ The first branch of the master flowchart depends entirely on which wait family d
 
 #### Surface the top actionable wait families
 
-**When to run:** As the first response to any "the database feels slow" or "everything is laggy" report, before opening any query-level DMV. The filtered wait-stats read is cheap, safe, and informs every subsequent branch of Flowchart 1.
-**Trigger:** Generic user-facing latency or throughput complaint with no specific slow query yet identified.
-**Context:** T-SQL session against the target instance, read-only, requires `VIEW SERVER STATE`. The result is cumulative since `sqlserver_start_time`, so a very fresh or very idle instance will return a thin signal — that outcome is the `NO` branch of the master flowchart.
-**Purpose:** Identify which resource family the workload is actually waiting on so the next diagnostic branch (blocking, storage, CPU, parallelism) is chosen from real evidence instead of a guess.
+As the first response to any "the database feels slow" or "everything is laggy" report, before opening any query-level DMV. The filtered wait-stats read is cheap, safe, and informs every subsequent branch of Flowchart 1. It is typically triggered by generic user-facing latency or throughput complaint with no specific slow query yet identified. T-SQL session against the target instance, read-only, requires `VIEW SERVER STATE`. The result is cumulative since `sqlserver_start_time`, so a very fresh or very idle instance will return a thin signal — that outcome is the `NO` branch of the master flowchart. Identify which resource family the workload is actually waiting on so the next diagnostic branch (blocking, storage, CPU, parallelism) is chosen from real evidence instead of a guess.
 
 > [!info]- Clause-by-clause breakdown of the filtered wait-stats query
 >
@@ -310,10 +307,7 @@ The first branch of Flowchart 2 depends on whether the failing pipeline has a di
 
 #### Group current user sessions by program name and login
 
-**When to run:** Immediately after a pipeline task reports failure, before reading SQL query logs, to prove whether the task ever reached the database engine.
-**Trigger:** Orchestrator or job runner raises a task failure and it is unclear whether the root cause is client-side (network, auth, driver), server-side (timeout, deadlock, error), or a data issue in between.
-**Context:** T-SQL session against the target instance, read-only, requires `VIEW SERVER STATE`. Produces a single coarse group-by that completes in milliseconds on any instance, safe to run while the incident is live.
-**Purpose:** Confirm whether the failing pipeline client has a distinct `Application Name` identity in SQL Server, count its current connected sessions, and split them into sleeping versus actively running to localize the failure before touching query-level DMVs.
+Immediately after a pipeline task reports failure, before reading SQL query logs, to prove whether the task ever reached the database engine. It is typically triggered by orchestrator or job runner raises a task failure and it is unclear whether the root cause is client-side (network, auth, driver), server-side (timeout, deadlock, error), or a data issue in between. T-SQL session against the target instance, read-only, requires `VIEW SERVER STATE`. Produces a single coarse group-by that completes in milliseconds on any instance, safe to run while the incident is live. Confirm whether the failing pipeline client has a distinct `Application Name` identity in SQL Server, count its current connected sessions, and split them into sleeping versus actively running to localize the failure before touching query-level DMVs.
 
 > [!info]- Clause-by-clause breakdown of the session footprint query
 >
@@ -446,10 +440,7 @@ The first branch of Flowchart 3 depends on whether the optimizer has recorded cr
 
 #### Inspect credible missing-index signals for the current database
 
-**When to run:** After a slow-query candidate has been identified and you need a second, instance-wide opinion on whether adding an index is a plausible remediation — or after a developer asks "should I just add an index?" and you need evidence to accept or reject the idea.
-**Trigger:** Slow query investigation reaches the "what to change" step; execution plan shows a scan or key lookup; missing-index hint appears in SSMS plan tooltip.
-**Context:** T-SQL session against the target database, read-only, requires `VIEW SERVER STATE`. All three DMVs reset when SQL Server restarts, so a freshly-bounced instance will return thin or empty results. Safe to run during an incident.
-**Purpose:** Judge whether the missing-index evidence for the current database is strong enough to continue down the indexing branch at all, or whether the problem is elsewhere (stats, memory, parameter sniffing, waits). The output is an ordered priority list, not a prescription.
+After a slow-query candidate has been identified and you need a second, instance-wide opinion on whether adding an index is a plausible remediation — or after a developer asks "should I just add an index?" and you need evidence to accept or reject the idea. It is typically triggered by slow query investigation reaches the "what to change" step; execution plan shows a scan or key lookup; missing-index hint appears in SSMS plan tooltip. T-SQL session against the target database, read-only, requires `VIEW SERVER STATE`. All three DMVs reset when SQL Server restarts, so a freshly-bounced instance will return thin or empty results. Safe to run during an incident. Judge whether the missing-index evidence for the current database is strong enough to continue down the indexing branch at all, or whether the problem is elsewhere (stats, memory, parameter sniffing, waits). The output is an ordered priority list, not a prescription.
 
 > [!info]- Clause-by-clause breakdown of the missing-index heuristic query
 >
@@ -596,10 +587,7 @@ The first branch of Flowchart 4 depends on whether the pressure is inside a sing
 
 #### Inspect file-level and host-volume free space together
 
-**When to run:** As soon as a low-space alert fires or a write operation fails with an out-of-space error, before any shrink, growth, or truncation action.
-**Trigger:** File-growth alert, failed write returning `1105` (`Could not allocate space`) or `9002` (`transaction log for database is full`), monitoring red alert on database or volume free space, suspicious log-file growth during a long-running transaction.
-**Context:** T-SQL session against the target database, read-only, requires `VIEW SERVER STATE` for the volume DMV. `sys.dm_os_volume_stats` is a dynamic management function that queries the operating system, so it reflects real host-volume state and not stale cache. Safe to run during an active incident, completes in under a second.
-**Purpose:** Distinguish file-level pressure from volume-level pressure in a single result set, so the operator can pick the correct remediation branch (file-level: fix sizing, growth, or log reuse; host-level: free the volume before touching the database).
+As soon as a low-space alert fires or a write operation fails with an out-of-space error, before any shrink, growth, or truncation action. It is typically triggered by file-growth alert, failed write returning `1105` (`Could not allocate space`) or `9002` (`transaction log for database is full`), monitoring red alert on database or volume free space, suspicious log-file growth during a long-running transaction. T-SQL session against the target database, read-only, requires `VIEW SERVER STATE` for the volume DMV. `sys.dm_os_volume_stats` is a dynamic management function that queries the operating system, so it reflects real host-volume state and not stale cache. Safe to run during an active incident, completes in under a second. Distinguish file-level pressure from volume-level pressure in a single result set, so the operator can pick the correct remediation branch (file-level: fix sizing, growth, or log reuse; host-level: free the volume before touching the database).
 
 > [!info]- Clause-by-clause breakdown of the file and volume query
 >
@@ -737,10 +725,7 @@ The `system_health` Extended Events session ships pre-created and running on eve
 
 #### Extract recent deadlock reports from the ring buffer
 
-**When to run:** Immediately after the application reports error `1205`, or when monitoring alerts on a deadlock count spike.
-**Trigger:** Client-side `DeadlockVictim` exception, sudden cluster of error `1205` in the application log, or scheduled deadlock-pattern audit.
-**Context:** T-SQL session against the target instance, read-only, requires `VIEW SERVER STATE` on SQL Server 2019 and earlier, `VIEW SERVER PERFORMANCE STATE` on SQL Server 2022 and later. The query reads the in-memory ring buffer only — it does not touch any file or allocate significant memory.
-**Purpose:** Return the minimum information an operator needs to decide whether the deadlock is a one-off under load (retry-policy fix) or a repeating cycle (server-side code fix), without needing to open SSMS or decode the raw XML graph by hand.
+Immediately after the application reports error `1205`, or when monitoring alerts on a deadlock count spike. It is typically triggered by client-side `DeadlockVictim` exception, sudden cluster of error `1205` in the application log, or scheduled deadlock-pattern audit. T-SQL session against the target instance, read-only, requires `VIEW SERVER STATE` on SQL Server 2019 and earlier, `VIEW SERVER PERFORMANCE STATE` on SQL Server 2022 and later. The query reads the in-memory ring buffer only — it does not touch any file or allocate significant memory. Return the minimum information an operator needs to decide whether the deadlock is a one-off under load (retry-policy fix) or a repeating cycle (server-side code fix), without needing to open SSMS or decode the raw XML graph by hand.
 
 > [!info]- Clause-by-clause breakdown of the deadlock extraction query
 >
@@ -879,10 +864,7 @@ flowchart TD
 
 #### Summarize tempdb allocation split and file count
 
-**When to run:** At the start of any `tempdb`-related investigation and as a baseline during any instance-health review.
-**Trigger:** Spike in `PAGELATCH_UP` waits on pages in database ID 2, failed write to `tempdb`, sudden slowness during sort/hash operations, suspected snapshot-isolation pressure.
-**Context:** T-SQL session against the target instance, read-only, requires `VIEW SERVER STATE`. The DMV reads an in-memory structure so the query completes in under a millisecond even under active pressure.
-**Purpose:** Classify `tempdb` pressure into one of four buckets (allocator contention, workspace overflow, worktable/spool spill, version-store growth) with one query, and confirm the file count matches the baseline guidance before any other tuning action.
+At the start of any `tempdb`-related investigation and as a baseline during any instance-health review. It is typically triggered by spike in `PAGELATCH_UP` waits on pages in database ID 2, failed write to `tempdb`, sudden slowness during sort/hash operations, suspected snapshot-isolation pressure. T-SQL session against the target instance, read-only, requires `VIEW SERVER STATE`. The DMV reads an in-memory structure so the query completes in under a millisecond even under active pressure. Classify `tempdb` pressure into one of four buckets (allocator contention, workspace overflow, worktable/spool spill, version-store growth) with one query, and confirm the file count matches the baseline guidance before any other tuning action.
 
 > [!info]- Clause-by-clause breakdown of the tempdb allocation-split query
 >
@@ -1040,10 +1022,7 @@ flowchart TD
 
 #### Decompose AG health by replica and database
 
-**When to run:** As soon as an AG health alert fires, or during any routine AG review.
-**Trigger:** AG dashboard turns yellow or red, spike in `HADR_SYNC_COMMIT` waits, read-intent connection refused on a secondary, monitoring alert on send or redo queue thresholds.
-**Context:** T-SQL session on the primary replica (the view is metadata-scoped and returns data across all replicas when read from the primary), read-only, requires `VIEW SERVER STATE`. Completes in milliseconds; safe during an active incident.
-**Purpose:** Decompose AG health into per-replica send-queue, redo-queue, and synchronization state so the correct remediation branch (network/endpoint vs secondary CPU/IO vs role/endpoint) is selected before any action.
+As soon as an AG health alert fires, or during any routine AG review. It is typically triggered by AG dashboard turns yellow or red, spike in `HADR_SYNC_COMMIT` waits, read-intent connection refused on a secondary, monitoring alert on send or redo queue thresholds. T-SQL session on the primary replica (the view is metadata-scoped and returns data across all replicas when read from the primary), read-only, requires `VIEW SERVER STATE`. Completes in milliseconds; safe during an active incident. Decompose AG health into per-replica send-queue, redo-queue, and synchronization state so the correct remediation branch (network/endpoint vs secondary CPU/IO vs role/endpoint) is selected before any action.
 
 > [!info]- Clause-by-clause breakdown of the AG health query
 >

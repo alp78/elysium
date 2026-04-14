@@ -117,10 +117,7 @@ This subsection answers the first operational question on any incident: which se
 
 #### Engine version banner via @@VERSION
 
-**When to run:** First step on every connection to an unfamiliar instance, before running any diagnostic or change.
-**Trigger:** Incident triage, new onboarding, post-patch verification, or any time there is ambiguity about which server the session is attached to.
-**Context:** Read-only, runs in a user database or `master`, requires only `PUBLIC` privileges. Returns a single string column.
-**Purpose:** Capture the full product banner in one line so the exact build, edition, platform, and OS distribution can be pasted verbatim into an incident ticket or compared against the latest security update bulletin.
+First step on every connection to an unfamiliar instance, before running any diagnostic or change. It is typically triggered by incident triage, new onboarding, post-patch verification, or any time there is ambiguity about which server the session is attached to. Read-only, runs in a user database or `master`, requires only `PUBLIC` privileges. Returns a single string column. Capture the full product banner in one line so the exact build, edition, platform, and OS distribution can be pasted verbatim into an incident ticket or compared against the latest security update bulletin.
 
 > [!info]- @@VERSION banner fields
 >
@@ -152,10 +149,7 @@ SELECT @@VERSION AS version_string;
 
 #### Structured identity via SERVERPROPERTY
 
-**When to run:** Immediately after `@@VERSION` when you need structured values for runbooks, dashboards, or automated drift checks.
-**Trigger:** Need to confirm edition, HA posture, clustering state, licensing, or host name without parsing free-text banners.
-**Context:** Read-only, runs in any database, `PUBLIC` privileges. Each `SERVERPROPERTY` call returns a scalar `sql_variant`; this query wraps each in an explicit `CAST` because some client drivers (including pyodbc) cannot transport `sql_variant` directly.
-**Purpose:** Capture the discrete version, edition, collation, clustering, HA, and host fields that every incident report needs in structured form.
+Immediately after `@@VERSION` when you need structured values for runbooks, dashboards, or automated drift checks. It is typically triggered by need to confirm edition, HA posture, clustering state, licensing, or host name without parsing free-text banners. Read-only, runs in any database, `PUBLIC` privileges. Each `SERVERPROPERTY` call returns a scalar `sql_variant`; this query wraps each in an explicit `CAST` because some client drivers (including pyodbc) cannot transport `sql_variant` directly. Capture the discrete version, edition, collation, clustering, HA, and host fields that every incident report needs in structured form.
 
 > [!info]- SERVERPROPERTY argument reference
 >
@@ -234,10 +228,7 @@ This subsection answers which databases exist on the instance, what recovery mod
 
 #### Database state, recovery model, snapshot, CDC, and log-reuse blockers
 
-**When to run:** Immediately after identity is confirmed, and whenever a log-reuse, restore, or concurrency question comes up.
-**Trigger:** Incident reports citing "log full", "database offline", "PITR failed", "reader blocking", or any recovery-model question.
-**Context:** Read-only, runs in any database, `PUBLIC` can read `sys.databases` but some columns require `VIEW ANY DATABASE` or `CONTROL SERVER`.
-**Purpose:** Produce a single-page inventory of every database on the instance with the five flags that drive backup, restore, and concurrency behavior: state, recovery model, compatibility level, RCSI, CDC, and log-reuse wait.
+Immediately after identity is confirmed, and whenever a log-reuse, restore, or concurrency question comes up. It is typically triggered by incident reports citing "log full", "database offline", "PITR failed", "reader blocking", or any recovery-model question. Read-only, runs in any database, `PUBLIC` can read `sys.databases` but some columns require `VIEW ANY DATABASE` or `CONTROL SERVER`. Produce a single-page inventory of every database on the instance with the five flags that drive backup, restore, and concurrency behavior: state, recovery model, compatibility level, RCSI, CDC, and log-reuse wait.
 
 > [!info]- sys.databases column reference
 >
@@ -317,10 +308,7 @@ This subsection quantifies how much storage each database currently owns on disk
 
 #### Database sizes by data file, log file, and total footprint
 
-**When to run:** During routine capacity reviews, after a large import, or whenever someone asks "where is the space going?"
-**Trigger:** Out-of-space alerts, slow `BACKUP DATABASE`, unexpected disk usage on `/var/opt/mssql/data` or the Windows data drive.
-**Context:** Read-only. `sys.master_files` is instance-wide, so the query returns every database's files even when the database itself is offline or unreachable. `PUBLIC` can read it; no elevated permissions required.
-**Purpose:** Rank databases by total allocated size and split the total into data-file and log-file components so storage pressure can be attributed to the right growth vector.
+During routine capacity reviews, after a large import, or whenever someone asks "where is the space going?". It is typically triggered by out-of-space alerts, slow `BACKUP DATABASE`, unexpected disk usage on `/var/opt/mssql/data` or the Windows data drive. Read-only. `sys.master_files` is instance-wide, so the query returns every database's files even when the database itself is offline or unreachable. `PUBLIC` can read it; no elevated permissions required. Rank databases by total allocated size and split the total into data-file and log-file components so storage pressure can be attributed to the right growth vector.
 
 > [!info]- sys.master_files column reference
 >
@@ -384,10 +372,7 @@ This subsection drills from allocation (how much a file *owns*) to usage (how mu
 
 #### Data and log file used, free, growth, and max size
 
-**When to run:** After the allocation query if a file is larger than expected, or whenever a log-growth incident is being investigated.
-**Trigger:** "File is 90% full" alert, pending autogrowth event, or a planning decision about whether to shrink or preallocate.
-**Context:** Read-only, runs in the current database context. `FILEPROPERTY` only works against files that belong to the database the session is connected to, so to inspect another database you must switch with `USE`. `PUBLIC` can read the view.
-**Purpose:** Turn raw allocation into an actionable used/free/growth/max picture per file so you can tell whether the file has headroom before the next autogrowth event.
+After the allocation query if a file is larger than expected, or whenever a log-growth incident is being investigated. It is typically triggered by "File is 90% full" alert, pending autogrowth event, or a planning decision about whether to shrink or preallocate. Read-only, runs in the current database context. `FILEPROPERTY` only works against files that belong to the database the session is connected to, so to inspect another database you must switch with `USE`. `PUBLIC` can read the view. Turn raw allocation into an actionable used/free/growth/max picture per file so you can tell whether the file has headroom before the next autogrowth event.
 
 > [!info]- sys.database_files + FILEPROPERTY reference
 >
@@ -451,10 +436,7 @@ This subsection verifies that tempdb is configured with the usual equal-size mul
 
 #### TempDB file count, sizes, and growth settings
 
-**When to run:** During baseline health checks, after a service restart, or when tempdb latch contention is suspected.
-**Trigger:** PAGELATCH waits on `2:*:*` pages, workloads hitting `SGAM`/`PFS`/`GAM` contention, or a planning decision about how to resize tempdb.
-**Context:** Read-only. Runs against the `tempdb` system database via three-part name — no `USE tempdb` required. `PUBLIC` can read the view.
-**Purpose:** Confirm the file count (usually 1 data file per logical CPU, capped at 8), the equal-size pattern, and the fixed-size autogrowth setting that together drive tempdb allocation contention behavior.
+During baseline health checks, after a service restart, or when tempdb latch contention is suspected. It is typically triggered by PAGELATCH waits on `2:*:*` pages, workloads hitting `SGAM`/`PFS`/`GAM` contention, or a planning decision about how to resize tempdb. Read-only. Runs against the `tempdb` system database via three-part name — no `USE tempdb` required. `PUBLIC` can read the view. Confirm the file count (usually 1 data file per logical CPU, capped at 8), the equal-size pattern, and the fixed-size autogrowth setting that together drive tempdb allocation contention behavior.
 
 > [!info]- tempdb.sys.database_files columns and tempdb-specific gotchas
 >
@@ -516,10 +498,7 @@ This subsection answers a single sharp question: has anything on this instance d
 
 #### Non-default and high-impact configuration values
 
-**When to run:** First ten minutes of any performance incident, and whenever the current edition or build has just changed.
-**Trigger:** Reports of unexpected plan shape, parallelism, or memory behavior; post-migration verification; fresh CU install.
-**Context:** Read-only against `master.sys.configurations`. `PUBLIC` can read this view but the `value_in_use` column returns `sql_variant`, which must be `CAST` to `bigint` for portable transport (same constraint as `SERVERPROPERTY`).
-**Purpose:** Surface the eight or nine configuration knobs that most commonly change between lab, dev, and production, plus any setting where `value_in_use` differs from the configured `value` (indicating a pending `RECONFIGURE`).
+First ten minutes of any performance incident, and whenever the current edition or build has just changed. It is typically triggered by reports of unexpected plan shape, parallelism, or memory behavior; post-migration verification; fresh CU install. Read-only against `master.sys.configurations`. `PUBLIC` can read this view but the `value_in_use` column returns `sql_variant`, which must be `CAST` to `bigint` for portable transport (same constraint as `SERVERPROPERTY`). Surface the eight or nine configuration knobs that most commonly change between lab, dev, and production, plus any setting where `value_in_use` differs from the configured `value` (indicating a pending `RECONFIGURE`).
 
 > [!info]- sys.configurations column reference
 >
@@ -603,10 +582,7 @@ This subsection inventories live user connectivity. Two queries: one aggregate c
 
 #### Count of connected user sessions
 
-**When to run:** At the start of triage, and whenever connection pressure or pool exhaustion is suspected.
-**Trigger:** Application errors like "login failed, too many connections", slow logins, or reports of latency spikes that correlate with new deployment windows.
-**Context:** Read-only, runs in any database, `VIEW SERVER STATE` required to see sessions that do not belong to the current login. Without it, the filter returns only the caller's sessions.
-**Purpose:** Produce a single integer answering "is the user-session count within normal bounds for this instance?"
+At the start of triage, and whenever connection pressure or pool exhaustion is suspected. It is typically triggered by application errors like "login failed, too many connections", slow logins, or reports of latency spikes that correlate with new deployment windows. Read-only, runs in any database, `VIEW SERVER STATE` required to see sessions that do not belong to the current login. Without it, the filter returns only the caller's sessions. Produce a single integer answering "is the user-session count within normal bounds for this instance?".
 
 > [!info]- sys.dm_exec_sessions and is_user_process
 >
@@ -639,10 +615,7 @@ WHERE is_user_process = 1;
 
 #### Most recently connected user sessions with program identity
 
-**When to run:** Immediately after the session count, whenever an unexpected client or script is suspected, or when correlating activity with a deploy window.
-**Trigger:** Sudden session-count spike, alert from application tier, or need to identify the client behind a blocking session.
-**Context:** Read-only, `VIEW SERVER STATE` required to see other users' sessions. Sorting by `login_time DESC` surfaces the freshest clients first because those are the ones most likely relevant to a just-started incident.
-**Purpose:** Identify the client tool or application behind each session so you can map each `session_id` to a real person, process, or deployment.
+Immediately after the session count, whenever an unexpected client or script is suspected, or when correlating activity with a deploy window. It is typically triggered by sudden session-count spike, alert from application tier, or need to identify the client behind a blocking session. Read-only, `VIEW SERVER STATE` required to see other users' sessions. Sorting by `login_time DESC` surfaces the freshest clients first because those are the ones most likely relevant to a just-started incident. Identify the client tool or application behind each session so you can map each `session_id` to a real person, process, or deployment.
 
 *This query lists the ten most recently connected user sessions with login, host, client program, session status, and default database.*
 
@@ -685,10 +658,7 @@ This subsection surfaces the requests that are running or waiting right now. It 
 
 #### Blocked and running requests with wait, I/O, and current statement
 
-**When to run:** First five seconds of any "something is slow" ticket, and as the canonical source for blocking investigations.
-**Trigger:** Latency spike, application timeouts, blocking alerts, user reports of hung queries.
-**Context:** Read-only. `sys.dm_exec_requests` shows one row per currently executing request — a sleeping session with an open transaction does not appear here (use the head-blocker CTE or long-running transactions query instead). `VIEW SERVER STATE` required to see other users' requests. `sys.dm_exec_sql_text` returns the batch text for a given `sql_handle`; on systems with high plan-cache churn this can be slightly slow.
-**Purpose:** Capture one row per active request with enough fields — session identity, database, status, wait, timing, I/O, blocker, statement text — to make a terminate/wait decision without running any follow-up queries.
+First five seconds of any "something is slow" ticket, and as the canonical source for blocking investigations. It is typically triggered by latency spike, application timeouts, blocking alerts, user reports of hung queries. Read-only. `sys.dm_exec_requests` shows one row per currently executing request — a sleeping session with an open transaction does not appear here (use the head-blocker CTE or long-running transactions query instead). `VIEW SERVER STATE` required to see other users' requests. `sys.dm_exec_sql_text` returns the batch text for a given `sql_handle`; on systems with high plan-cache churn this can be slightly slow. Capture one row per active request with enough fields — session identity, database, status, wait, timing, I/O, blocker, statement text — to make a terminate/wait decision without running any follow-up queries.
 
 > [!info]- sys.dm_exec_requests column reference
 >
@@ -793,10 +763,7 @@ This subsection addresses the limitation of the request-based triage above: when
 
 #### Recursive head-blocker CTE rooted at sleeping blockers
 
-**When to run:** Whenever the basic triage query shows `blocking_session_id` pointing at a session that itself has no visible request, or when you suspect a multi-level blocking chain.
-**Trigger:** Blocking alerts, `LCK_M_*` wait spikes, reports of "query stuck" where the target session appears idle.
-**Context:** Read-only. Uses two DMVs: `sys.dm_exec_sessions` for the anchor (sleeping blockers still appear here) and `sys.dm_exec_requests` for the recursive descent (blocked requests always have a request row). `VIEW SERVER STATE` required. Safe to run at any time.
-**Purpose:** Walk from the root blocker down to every session it is blocking, labeled by level, so the chain is clear and terminating decisions can be made at the right level.
+Whenever the basic triage query shows `blocking_session_id` pointing at a session that itself has no visible request, or when you suspect a multi-level blocking chain. It is typically triggered by blocking alerts, `LCK_M_*` wait spikes, reports of "query stuck" where the target session appears idle. Read-only. Uses two DMVs: `sys.dm_exec_sessions` for the anchor (sleeping blockers still appear here) and `sys.dm_exec_requests` for the recursive descent (blocked requests always have a request row). `VIEW SERVER STATE` required. Safe to run at any time. Walk from the root blocker down to every session it is blocking, labeled by level, so the chain is clear and terminating decisions can be made at the right level.
 
 > [!info]- Recursive CTE anchor and recursive parts
 >
@@ -881,10 +848,7 @@ This subsection surfaces the transactions that have been open longest, joined to
 
 #### Open transactions joined to sessions and log footprint
 
-**When to run:** Whenever a sleeping session is identified as a head blocker, whenever `log_reuse_wait_desc = ACTIVE_TRANSACTION` appears, or whenever the log file is growing unexpectedly.
-**Trigger:** Head-blocker tree rooted at a sleeping session, log-file growth alert, or `log_reuse_wait_desc` surfacing `ACTIVE_TRANSACTION`.
-**Context:** Read-only. Joins four DMVs: `sys.dm_tran_active_transactions` (transaction-level metadata), `sys.dm_tran_session_transactions` (session-to-transaction mapping), `sys.dm_exec_sessions` (session identity), and `sys.dm_tran_database_transactions` (database-level log footprint). `VIEW SERVER STATE` required. Safe to run at any time.
-**Purpose:** Produce one row per user transaction with session identity, database, begin time, open duration in seconds, type, state, and the log bytes used — enough to decide whether to commit, roll back, or terminate.
+Whenever a sleeping session is identified as a head blocker, whenever `log_reuse_wait_desc = ACTIVE_TRANSACTION` appears, or whenever the log file is growing unexpectedly. It is typically triggered by head-blocker tree rooted at a sleeping session, log-file growth alert, or `log_reuse_wait_desc` surfacing `ACTIVE_TRANSACTION`. Read-only. Joins four DMVs: `sys.dm_tran_active_transactions` (transaction-level metadata), `sys.dm_tran_session_transactions` (session-to-transaction mapping), `sys.dm_exec_sessions` (session identity), and `sys.dm_tran_database_transactions` (database-level log footprint). `VIEW SERVER STATE` required. Safe to run at any time. Produce one row per user transaction with session identity, database, begin time, open duration in seconds, type, state, and the log bytes used — enough to decide whether to commit, roll back, or terminate.
 
 > [!info]- Transaction type and state domains
 >
@@ -967,10 +931,7 @@ This subsection isolates the allocation-page latch contention pattern (`PAGELATC
 
 #### PAGELATCH waits on tempdb allocation pages
 
-**When to run:** After the top waits query surfaces `PAGELATCH_SH` or `PAGELATCH_UP`, or when a bulk-insert / large-temp-table workload is misbehaving.
-**Trigger:** Latency spikes during ETL or analytics bursts, heavy tempdb usage, sustained `PAGELATCH_*` waits at the instance level.
-**Context:** Read-only. `sys.dm_os_waiting_tasks` is a point-in-time snapshot of tasks currently in a wait state. The `resource_description` filter `2:%` restricts to database_id 2 (`tempdb`); the pattern is `dbid:fileid:pageid`. `VIEW SERVER STATE` required.
-**Purpose:** Identify the sessions currently latch-waiting on tempdb allocation pages (PFS, GAM, SGAM) so you can correlate the contention with specific client workloads.
+After the top waits query surfaces `PAGELATCH_SH` or `PAGELATCH_UP`, or when a bulk-insert / large-temp-table workload is misbehaving. It is typically triggered by latency spikes during ETL or analytics bursts, heavy tempdb usage, sustained `PAGELATCH_*` waits at the instance level. Read-only. `sys.dm_os_waiting_tasks` is a point-in-time snapshot of tasks currently in a wait state. The `resource_description` filter `2:%` restricts to database_id 2 (`tempdb`); the pattern is `dbid:fileid:pageid`. `VIEW SERVER STATE` required. Identify the sessions currently latch-waiting on tempdb allocation pages (PFS, GAM, SGAM) so you can correlate the contention with specific client workloads.
 
 > [!info]- PAGELATCH, tempdb allocation pages, and resource_description format
 >
@@ -1031,10 +992,7 @@ This subsection uses cumulative waits to answer what the instance has spent time
 
 #### Top cumulative waits with idle-wait exclusions
 
-**When to run:** During workload characterization, capacity planning, or anytime a performance baseline is being established — not during an active incident where live-request data is more useful.
-**Trigger:** Periodic health check, post-deployment performance review, or an investigation where you need to know whether a specific wait class has been material over a long period.
-**Context:** Read-only. `sys.dm_os_wait_stats` has one row per wait type and accumulates since instance start or last `DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR)`. The exclusion list filters out idle and housekeeping waits that would otherwise dominate the top rows without teaching anything. `VIEW SERVER STATE` required.
-**Purpose:** Produce a ranked top-10 list of non-idle waits so the reader can tell which resource classes have accumulated the most wait time relative to everything else.
+During workload characterization, capacity planning, or anytime a performance baseline is being established — not during an active incident where live-request data is more useful. It is typically triggered by periodic health check, post-deployment performance review, or an investigation where you need to know whether a specific wait class has been material over a long period. Read-only. `sys.dm_os_wait_stats` has one row per wait type and accumulates since instance start or last `DBCC SQLPERF('sys.dm_os_wait_stats', CLEAR)`. The exclusion list filters out idle and housekeeping waits that would otherwise dominate the top rows without teaching anything. `VIEW SERVER STATE` required. Produce a ranked top-10 list of non-idle waits so the reader can tell which resource classes have accumulated the most wait time relative to everything else.
 
 > [!info]- sys.dm_os_wait_stats column reference and the idle-wait exclusion list
 >
@@ -1139,10 +1097,7 @@ This subsection confirms that recent full backups actually exist and shows their
 
 #### Recent full database backups with compression ratio
 
-**When to run:** Before a restore, before a major schema change, and during weekly backup-health reviews.
-**Trigger:** Restore request, recovery drill, DR test, or alert from a monitoring tool that a backup job has not run.
-**Context:** Read-only, reads `msdb.dbo.backupset`. `PUBLIC` typically has `SELECT` on this table because the `db_backupoperator` role is needed only to *take* backups. Filter by `type = 'D'` to isolate full backups from differentials, logs, file backups, and partials.
-**Purpose:** Prove that full backups exist for the databases you care about, when the most recent one ran, how much was written, and how effective compression was.
+Before a restore, before a major schema change, and during weekly backup-health reviews. It is typically triggered by restore request, recovery drill, DR test, or alert from a monitoring tool that a backup job has not run. Read-only, reads `msdb.dbo.backupset`. `PUBLIC` typically has `SELECT` on this table because the `db_backupoperator` role is needed only to *take* backups. Filter by `type = 'D'` to isolate full backups from differentials, logs, file backups, and partials. Prove that full backups exist for the databases you care about, when the most recent one ran, how much was written, and how effective compression was.
 
 > [!info]- msdb.dbo.backupset column reference and type domain
 >
@@ -1215,10 +1170,7 @@ This subsection joins backup history to media metadata to reveal the exact devic
 
 #### Backup media path evidence
 
-**When to run:** Before any restore, during DR planning, and whenever a "where is that .bak file" question arises.
-**Trigger:** Restore request, tape rotation question, media move, or audit of backup destinations.
-**Context:** Read-only. Joins `msdb.dbo.backupset` with `msdb.dbo.backupmediafamily` on `media_set_id`. Some backups span multiple media families (striped backups); the join returns one row per family per backupset.
-**Purpose:** Map every recent backup to its physical device path so the restore sequence knows the exact `FROM DISK = '...'` clause to use.
+Before any restore, during DR planning, and whenever a "where is that .bak file" question arises. It is typically triggered by restore request, tape rotation question, media move, or audit of backup destinations. Read-only. Joins `msdb.dbo.backupset` with `msdb.dbo.backupmediafamily` on `media_set_id`. Some backups span multiple media families (striped backups); the join returns one row per family per backupset. Map every recent backup to its physical device path so the restore sequence knows the exact `FROM DISK = '...'` clause to use.
 
 > [!info]- backupmediafamily column reference
 >
@@ -1263,10 +1215,7 @@ This subsection isolates transaction log backups, which are the engine of point-
 
 #### Recent log backups and LSN range
 
-**When to run:** After the full backup check, during any PITR investigation, and whenever `log_reuse_wait_desc` shows `LOG_BACKUP`.
-**Trigger:** Point-in-time restore request, unexpected log growth, `log_reuse_wait_desc = LOG_BACKUP` signal from the baseline queries.
-**Context:** Read-only. Same table as the full backup query, filtered to `type = 'L'`. `first_lsn` and `last_lsn` are the LSN range covered by the backup; an unbroken log chain requires each successive log backup's `first_lsn` to equal the previous one's `last_lsn` (or `database_backup_lsn` for the first log after a full).
-**Purpose:** Verify that the log chain exists, shows regular cadence, and has LSN ranges consistent with the full backup chain.
+After the full backup check, during any PITR investigation, and whenever `log_reuse_wait_desc` shows `LOG_BACKUP`. It is typically triggered by point-in-time restore request, unexpected log growth, `log_reuse_wait_desc = LOG_BACKUP` signal from the baseline queries. Read-only. Same table as the full backup query, filtered to `type = 'L'`. `first_lsn` and `last_lsn` are the LSN range covered by the backup; an unbroken log chain requires each successive log backup's `first_lsn` to equal the previous one's `last_lsn` (or `database_backup_lsn` for the first log after a full). Verify that the log chain exists, shows regular cadence, and has LSN ranges consistent with the full backup chain.
 
 > [!info]- first_lsn and last_lsn semantics
 >
@@ -1308,10 +1257,7 @@ This subsection surfaces the most recent SQL Server Agent job outcomes. It is th
 
 #### Most recent SQL Server Agent job runs
 
-**When to run:** During daily health checks, after a failed backup alert, or when investigating why a scheduled task did not produce the expected side effect.
-**Trigger:** Alert from SQL Server Agent, missing backup, missing ETL output, or a simple morning check.
-**Context:** Read-only. `msdb.dbo.sysjobhistory` holds one row per job step execution plus one summary row per outer job run (`step_id = 0`). The `SQLAgentOperatorRole` and `SQLAgentUserRole` database roles in `msdb` control who can read job history for jobs they do not own; `sysadmin` sees everything. On SQL Server on Linux, Agent is optional but is enabled on this container.
-**Purpose:** Show the ten most recent outer job runs across the instance with status, duration, and the Agent-provided outcome message so daily health checks can be automated.
+During daily health checks, after a failed backup alert, or when investigating why a scheduled task did not produce the expected side effect. It is typically triggered by alert from SQL Server Agent, missing backup, missing ETL output, or a simple morning check. Read-only. `msdb.dbo.sysjobhistory` holds one row per job step execution plus one summary row per outer job run (`step_id = 0`). The `SQLAgentOperatorRole` and `SQLAgentUserRole` database roles in `msdb` control who can read job history for jobs they do not own; `sysadmin` sees everything. On SQL Server on Linux, Agent is optional but is enabled on this container. Show the ten most recent outer job runs across the instance with status, duration, and the Agent-provided outcome message so daily health checks can be automated.
 
 > [!info]- sysjobhistory column reference and run_status domain
 >
@@ -1370,10 +1316,7 @@ This subsection surfaces the current log allocation and the amount of log genera
 
 #### Current log allocation and log-since-last-backup
 
-**When to run:** Every time `log_reuse_wait_desc` shows anything other than `NOTHING`, during log growth incidents, and as a routine check during the backup review.
-**Trigger:** Log growth alert, `LOG_BACKUP` log-reuse wait, missed log backup, or unexplained slow commit on a FULL recovery database.
-**Context:** Read-only. `sys.dm_db_log_space_usage` returns one row per database on SQL Server 2022. It is the modern replacement for `DBCC SQLPERF(LOGSPACE)` and returns byte-precise values instead of the rounded percentages of the older DBCC.
-**Purpose:** Produce the three log metrics that drive log-backup and growth decisions: total log size, used size, and the portion generated since the last backup.
+Every time `log_reuse_wait_desc` shows anything other than `NOTHING`, during log growth incidents, and as a routine check during the backup review. It is typically triggered by log growth alert, `LOG_BACKUP` log-reuse wait, missed log backup, or unexplained slow commit on a FULL recovery database. Read-only. `sys.dm_db_log_space_usage` returns one row per database on SQL Server 2022. It is the modern replacement for `DBCC SQLPERF(LOGSPACE)` and returns byte-precise values instead of the rounded percentages of the older DBCC. Produce the three log metrics that drive log-backup and growth decisions: total log size, used size, and the portion generated since the last backup.
 
 > [!info]- sys.dm_db_log_space_usage columns and byte conversion
 >
@@ -1420,10 +1363,7 @@ This subsection ranks tables by reserved space so you know which objects dominat
 
 #### Top tables by reserved space and row count
 
-**When to run:** During capacity reviews, storage-growth investigations, and before scheduled index maintenance.
-**Trigger:** Database size growth alert, slow backup, out-of-space warning, or a planning question like "which tables should we compress first?"
-**Context:** Read-only. `sys.dm_db_partition_stats` is a DMV rather than a catalog view, but it does not require `VIEW SERVER STATE` — any user with `SELECT` on the base table can read its partition stats. `index_id IN (0, 1)` restricts to heaps (`0`) and clustered indexes (`1`), which together cover every row exactly once.
-**Purpose:** Rank tables by total allocated space and row count so capacity conversations focus on the objects that actually matter.
+During capacity reviews, storage-growth investigations, and before scheduled index maintenance. It is typically triggered by database size growth alert, slow backup, out-of-space warning, or a planning question like "which tables should we compress first?". Read-only. `sys.dm_db_partition_stats` is a DMV rather than a catalog view, but it does not require `VIEW SERVER STATE` — any user with `SELECT` on the base table can read its partition stats. `index_id IN (0, 1)` restricts to heaps (`0`) and clustered indexes (`1`), which together cover every row exactly once. Rank tables by total allocated space and row count so capacity conversations focus on the objects that actually matter.
 
 > [!info]- sys.dm_db_partition_stats columns and index_id semantics
 >
@@ -1484,10 +1424,7 @@ This subsection drills from tables to individual indexes. Clustered indexes usua
 
 #### Top indexes by used space
 
-**When to run:** During index maintenance planning, after a schema change that added indexes, or when the clustered-vs-nonclustered split is unclear.
-**Trigger:** Capacity alert, discussion about dropping unused nonclustered indexes, or a columnstore rebuild question.
-**Context:** Read-only. Same source DMV as the table query; this one joins `sys.indexes` and groups by individual `(object_id, index_id)` pair. `i.object_id > 100` excludes system objects (their `object_id` values are ≤ 100).
-**Purpose:** Rank every index on the database by used space so index-maintenance windows target the objects that actually consume space.
+During index maintenance planning, after a schema change that added indexes, or when the clustered-vs-nonclustered split is unclear. It is typically triggered by capacity alert, discussion about dropping unused nonclustered indexes, or a columnstore rebuild question. Read-only. Same source DMV as the table query; this one joins `sys.indexes` and groups by individual `(object_id, index_id)` pair. `i.object_id > 100` excludes system objects (their `object_id` values are ≤ 100). Rank every index on the database by used space so index-maintenance windows target the objects that actually consume space.
 
 *This query ranks individual indexes by used space and labels each with its `type_desc` so clustered, nonclustered, and columnstore footprints can be compared.*
 
@@ -1538,10 +1475,7 @@ This subsection measures leaf-level fragmentation on indexes. Fragmentation come
 
 #### Leaf-level fragmentation for rowstore indexes
 
-**When to run:** During scheduled index maintenance planning, after bulk-insert or bulk-delete operations, and when users report slow scans.
-**Trigger:** Capacity review, index-maintenance job design, slow range scan, or migration from a workload with different update patterns.
-**Context:** Read-only, but the cost depends heavily on the `mode` argument. `LIMITED` (used here) scans the parent-level of each index and is fast; `SAMPLED` scans ~1% of leaf pages; `DETAILED` scans every leaf page and can be expensive on large indexes. Filter to `index_level = 0` (leaf) and exclude small indexes (`page_count >= 1000`) to avoid noise.
-**Purpose:** Identify which indexes are fragmented enough to warrant `REORGANIZE` (10-30% fragmentation) or `REBUILD` (>30%) during the next maintenance window.
+During scheduled index maintenance planning, after bulk-insert or bulk-delete operations, and when users report slow scans. It is typically triggered by capacity review, index-maintenance job design, slow range scan, or migration from a workload with different update patterns. Read-only, but the cost depends heavily on the `mode` argument. `LIMITED` (used here) scans the parent-level of each index and is fast; `SAMPLED` scans ~1% of leaf pages; `DETAILED` scans every leaf page and can be expensive on large indexes. Filter to `index_level = 0` (leaf) and exclude small indexes (`page_count >= 1000`) to avoid noise. Identify which indexes are fragmented enough to warrant `REORGANIZE` (10-30% fragmentation) or `REBUILD` (>30%) during the next maintenance window.
 
 > [!info]- sys.dm_db_index_physical_stats modes and costs
 >
@@ -1616,10 +1550,7 @@ This subsection surfaces missing-index hints the query optimizer has recorded si
 
 #### Missing index DMV with improvement score
 
-**When to run:** After a workload run, before tuning decisions, and during query-performance reviews.
-**Trigger:** Slow-query reports, plan cache showing repeated full scans, or a tuning window with budget for new indexes.
-**Context:** Read-only. The three DMVs — `sys.dm_db_missing_index_details`, `sys.dm_db_missing_index_groups`, `sys.dm_db_missing_index_group_stats` — accumulate since instance start and are flushed on restart. `VIEW SERVER STATE` required.
-**Purpose:** Rank missing-index suggestions by `improvement_score` (cost × impact × usage) so tuning effort targets the predicates that matter.
+After a workload run, before tuning decisions, and during query-performance reviews. It is typically triggered by slow-query reports, plan cache showing repeated full scans, or a tuning window with budget for new indexes. Read-only. The three DMVs — `sys.dm_db_missing_index_details`, `sys.dm_db_missing_index_groups`, `sys.dm_db_missing_index_group_stats` — accumulate since instance start and are flushed on restart. `VIEW SERVER STATE` required. Rank missing-index suggestions by `improvement_score` (cost × impact × usage) so tuning effort targets the predicates that matter.
 
 > [!info]- Three-table join and improvement score formula
 >
@@ -1686,10 +1617,7 @@ This subsection reads the SQL Server error log tail. On Linux the error log is `
 
 #### Last ten lines of the current error log
 
-**When to run:** During incident triage, after a service restart, when investigating login failures, or when checking for `I/O taking longer than 15 seconds` warnings.
-**Trigger:** Unexpected restart, login failure spike, I/O latency alert, corruption suspicion.
-**Context:** `xp_readerrorlog` is an undocumented-but-stable extended stored procedure. Requires `securityadmin` or `sysadmin` on most builds. Signature: `xp_readerrorlog @archiveNumber, @logType, @searchText1, @searchText2, @startDate, @endDate, @sortOrder`. `@archiveNumber = 0` reads the current error log; `@logType = 1` reads the SQL Server error log (vs `2` for the Agent log).
-**Purpose:** Show the tail of the current error log as a T-SQL rowset so it can be consumed by tooling that does not have file-system access to the log directory.
+During incident triage, after a service restart, when investigating login failures, or when checking for `I/O taking longer than 15 seconds` warnings. It is typically triggered by unexpected restart, login failure spike, I/O latency alert, corruption suspicion. `xp_readerrorlog` is an undocumented-but-stable extended stored procedure. Requires `securityadmin` or `sysadmin` on most builds. Signature: `xp_readerrorlog @archiveNumber, @logType, @searchText1, @searchText2, @startDate, @endDate, @sortOrder`. `@archiveNumber = 0` reads the current error log; `@logType = 1` reads the SQL Server error log (vs `2` for the Agent log). Show the tail of the current error log as a T-SQL rowset so it can be consumed by tooling that does not have file-system access to the log directory.
 
 *This query captures the ten most recent SQL Server error log entries into a table variable and returns them sorted by timestamp descending.*
 

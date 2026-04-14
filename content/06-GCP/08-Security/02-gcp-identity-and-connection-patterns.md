@@ -231,10 +231,7 @@ This subsection proves what the workstation is authenticated as right now and wh
 
 #### List the active CLI account
 
-**When to run:** Before any operator action that changes IAM, secrets, or infrastructure.
-**Trigger:** You need to confirm which human identity the CLI will use.
-**Context:** Read-only inspection of the local `gcloud` credential store.
-**Purpose:** Avoid applying changes under the wrong user session.
+Before any operator action that changes IAM, secrets, or infrastructure. It is typically triggered by you need to confirm which human identity the CLI will use. Read-only inspection of the local `gcloud` credential store. Avoid applying changes under the wrong user session.
 
 ```bash
 gcloud auth list \
@@ -250,10 +247,7 @@ This is the `gcloud auth login` side of the world: the CLI is acting as the huma
 
 #### Read the active project and account from the local SDK config
 
-**When to run:** At the start of any shell session or incident-response console.
-**Trigger:** You want to see whether the local SDK context matches the project you intended to touch.
-**Context:** Read-only local config lookup.
-**Purpose:** Confirm project, account, and default region in one place.
+At the start of any shell session or incident-response console. It is typically triggered by you want to see whether the local SDK context matches the project you intended to touch. Read-only local config lookup. Confirm project, account, and default region in one place.
 
 ```bash
 gcloud config list \
@@ -280,10 +274,7 @@ This is local workstation state, not an IAM policy. Changing it affects what the
 
 #### Prove that ADC is available for client libraries
 
-**When to run:** Before running Python, C#, Go, or Terraform code that relies on Google client libraries.
-**Trigger:** You need to know whether local application code can obtain a token without a service-account key.
-**Context:** Read-only token mint from the ADC credential store.
-**Purpose:** Distinguish "the CLI works" from "application code can authenticate."
+Before running Python, C#, Go, or Terraform code that relies on Google client libraries. It is typically triggered by you need to know whether local application code can obtain a token without a service-account key. Read-only token mint from the ADC credential store. Distinguish "the CLI works" from "application code can authenticate.".
 
 ```bash
 gcloud auth application-default print-access-token
@@ -312,10 +303,7 @@ This subsection proves which machine identities exist and how the GitHub Actions
 
 #### List the current project service accounts
 
-**When to run:** At the start of least-privilege review or service-account cleanup.
-**Trigger:** You need an inventory of machine identities already present in the project.
-**Context:** Read-only IAM lookup on the project.
-**Purpose:** Identify which principals should be considered runtime identities versus one-off lab principals.
+At the start of least-privilege review or service-account cleanup. It is typically triggered by you need an inventory of machine identities already present in the project. Read-only IAM lookup on the project. Identify which principals should be considered runtime identities versus one-off lab principals.
 
 ```bash
 gcloud iam service-accounts list \
@@ -336,10 +324,7 @@ This confirms the project already uses dedicated service accounts rather than on
 
 #### List the current WIF pools
 
-**When to run:** Before reviewing CI/CD access or external workload access.
-**Trigger:** You want to confirm whether the project already has federation configured.
-**Context:** Read-only IAM lookup on the project's workload-identity-pool collection.
-**Purpose:** Identify external trust boundaries that can authenticate into the project without JSON keys.
+Before reviewing CI/CD access or external workload access. It is typically triggered by you want to confirm whether the project already has federation configured. Read-only IAM lookup on the project's workload-identity-pool collection. Identify external trust boundaries that can authenticate into the project without JSON keys.
 
 ```bash
 gcloud iam workload-identity-pools list \
@@ -357,10 +342,7 @@ There is exactly one pool, and it is dedicated to GitHub Actions.
 
 #### Describe the GitHub provider inside the WIF pool
 
-**When to run:** When validating which external OIDC issuer and claims are trusted.
-**Trigger:** A repository deployment workflow needs to be audited or debugged.
-**Context:** Read-only provider lookup.
-**Purpose:** Show the exact issuer, attribute mapping, and provider-side condition used for GitHub federation.
+When validating which external OIDC issuer and claims are trusted. It is typically triggered by A repository deployment workflow needs to be audited or debugged. Read-only provider lookup. Show the exact issuer, attribute mapping, and provider-side condition used for GitHub federation.
 
 ```bash
 gcloud iam workload-identity-pools providers describe github \
@@ -395,10 +377,7 @@ This shows two independent guardrails:
 
 #### Inspect which repository can impersonate the GitHub Actions service account
 
-**When to run:** After reviewing the provider and before approving repository access.
-**Trigger:** You need to know which repository can actually exchange WIF into the target service account.
-**Context:** Read-only IAM policy lookup on the service account.
-**Purpose:** Confirm the repo-level trust binding.
+After reviewing the provider and before approving repository access. It is typically triggered by you need to know which repository can actually exchange WIF into the target service account. Read-only IAM policy lookup on the service account. Confirm the repo-level trust binding.
 
 ```bash
 gcloud iam service-accounts get-iam-policy \
@@ -441,10 +420,7 @@ This subsection proves the difference between an access token for Google APIs an
 
 #### Mint an access token as the lab service account
 
-**When to run:** Before testing Google API access as a workload identity.
-**Trigger:** You need to reproduce workload behavior without exporting a key file.
-**Context:** Read-only IAM Credentials token mint.
-**Purpose:** Get a short-lived OAuth 2.0 access token for Google APIs as the target service account.
+Before testing Google API access as a workload identity. It is typically triggered by you need to reproduce workload behavior without exporting a key file. Read-only IAM Credentials token mint. Get a short-lived OAuth 2.0 access token for Google APIs as the target service account.
 
 ```bash
 gcloud auth print-access-token \
@@ -460,10 +436,7 @@ This token is for Google APIs such as BigQuery, Cloud Storage, Secret Manager, a
 
 #### Mint an audience-bound ID token as the same service account
 
-**When to run:** Before calling an HTTPS endpoint that validates identity tokens instead of generic Google API access tokens.
-**Trigger:** You need a token for Cloud Run invoker-style or IAP-protected HTTP flows.
-**Context:** Read-only IAM Credentials token mint.
-**Purpose:** Show the difference between "authenticate to Google APIs" and "authenticate to an audience-bound receiver."
+Before calling an HTTPS endpoint that validates identity tokens instead of generic Google API access tokens. It is typically triggered by you need a token for Cloud Run invoker-style or IAP-protected HTTP flows. Read-only IAM Credentials token mint. Show the difference between "authenticate to Google APIs" and "authenticate to an audience-bound receiver.".
 
 ```bash
 gcloud auth print-identity-token \

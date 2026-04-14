@@ -516,10 +516,7 @@ The first thing to do when starting work — or before any commit — is to unde
 
 #### Show full working directory state
 
-**When to run:** at the start of a work session, before staging, before committing, and after any operation that modifies files.
-**Trigger:** beginning of any workflow step, or after pull/merge/rebase to verify the result.
-**Context:** runs locally, read-only, no side effects.
-**Purpose:** see which files are modified, staged, untracked, or in conflict — the starting point for every decision.
+At the start of a work session, before staging, before committing, and after any operation that modifies files. It is typically triggered by beginning of any workflow step, or after pull/merge/rebase to verify the result. Runs locally, read-only, no side effects. See which files are modified, staged, untracked, or in conflict — the starting point for every decision.
 
 *Display current branch, staged changes, unstaged changes, and untracked files.*
 
@@ -545,10 +542,7 @@ The output has four zones: (1) branch name and tracking status, (2) staged chang
 
 #### Show compact one-line-per-file status
 
-**When to run:** when the full output is too verbose and you need a quick scan.
-**Trigger:** routine check during rapid iteration.
-**Context:** read-only. The two-column format uses position to encode state: left column = staging area, right column = working tree.
-**Purpose:** fast overview of all changed files in a scannable format.
+When the full output is too verbose and you need a quick scan. It is typically triggered by routine check during rapid iteration. Read-only. The two-column format uses position to encode state: left column = staging area, right column = working tree. Fast overview of all changed files in a scannable format.
 
 *Display one file per line with two-character status codes.*
 
@@ -576,10 +570,7 @@ git status -s
 
 #### View unstaged changes
 
-**When to run:** before `git add`, to review what you have modified.
-**Trigger:** after editing files, before staging.
-**Context:** read-only. Compares working tree against the staging area.
-**Purpose:** verify exactly what changed before deciding what to stage.
+Before `git add`, to review what you have modified. It is typically triggered after editing files, before staging. Read-only. Compares working tree against the staging area. Verify exactly what changed before deciding what to stage.
 
 *Show the line-by-line difference between working tree and staging area.*
 
@@ -608,10 +599,7 @@ Lines prefixed with `+` are additions. Lines prefixed with `-` are deletions. Th
 
 #### View staged changes before committing
 
-**When to run:** after `git add`, as a final review before `git commit`.
-**Trigger:** pre-commit verification.
-**Context:** read-only. Compares the staging area against the last commit — shows exactly what will be committed.
-**Purpose:** confirm the commit will contain exactly the intended changes, nothing more.
+After `git add`, as a final review before `git commit`. It is typically triggered by pre-commit verification. Read-only. Compares the staging area against the last commit — shows exactly what will be committed. Confirm the commit will contain exactly the intended changes, nothing more.
 
 *Show the difference between the staging area and the last commit.*
 
@@ -637,10 +625,7 @@ index 0000000..e329523
 
 #### Preview all branch changes for a PR
 
-**When to run:** before opening a pull request, to review the full diff between your branch and `main`.
-**Trigger:** PR preparation.
-**Context:** read-only. The three-dot syntax (`main...HEAD`) shows changes since the branch diverged from main, excluding changes that landed on main after branching.
-**Purpose:** see the complete set of changes that the PR will introduce.
+Before opening a pull request, to review the full diff between your branch and `main`. It is typically triggered by PR preparation. Read-only. The three-dot syntax (`main...HEAD`) shows changes since the branch diverged from main, excluding changes that landed on main after branching. See the complete set of changes that the PR will introduce.
 
 *Show all changes accumulated on the current branch relative to main.*
 
@@ -659,10 +644,7 @@ git diff main...HEAD --stat
 
 #### View recent commit history (compact)
 
-**When to run:** to check what has happened on the branch recently.
-**Trigger:** before starting work, after pulling, or when investigating history.
-**Context:** read-only. Shows one commit per line in `<short-sha> <subject>` format.
-**Purpose:** quick, scannable overview of recent commits.
+To check what has happened on the branch recently. It is typically triggered before starting work, after pulling, or when investigating history. Read-only. Shows one commit per line in `<short-sha> <subject>` format. Quick, scannable overview of recent commits.
 
 *Display the last 10 commits in one-line format.*
 
@@ -680,10 +662,7 @@ f322cce feat: add momentum signal module with ROC and RSI
 
 #### View history with branch topology
 
-**When to run:** to understand how branches have diverged, merged, or where HEAD sits relative to the remote.
-**Trigger:** investigating branch relationships, after fetch, or when debugging history.
-**Context:** read-only. Adds an ASCII branch graph and branch/tag labels to each commit line.
-**Purpose:** visualize the DAG structure — where branches split, where they merged, and which commits are only on which branches.
+To understand how branches have diverged, merged, or where HEAD sits relative to the remote. It is typically triggered by investigating branch relationships, after fetch, or when debugging history. Read-only. Adds an ASCII branch graph and branch/tag labels to each commit line. Visualize the DAG structure — where branches split, where they merged, and which commits are only on which branches.
 
 *Display commit graph with branch labels.*
 
@@ -725,10 +704,7 @@ Staging is the act of selecting which changes to include in the next commit. The
 
 #### Stage a specific file
 
-**When to run:** after editing a file, when you want to include that file in the next commit.
-**Trigger:** ready to commit a specific change.
-**Context:** state-changing — copies the current file content into the staging area. Does not create a commit.
-**Purpose:** mark a specific file for inclusion in the next commit.
+After editing a file, when you want to include that file in the next commit. It is typically triggered by ready to commit a specific change. State-changing — copies the current file content into the staging area. Does not create a commit. Mark a specific file for inclusion in the next commit.
 
 *Stage a single file by name.*
 
@@ -738,10 +714,7 @@ git add src/signals/momentum.py
 
 #### Stage all changes in a directory
 
-**When to run:** when all changes under a directory belong in the same commit.
-**Trigger:** completing work on a module or package.
-**Context:** stages all modified, new, and deleted files under the specified paths.
-**Purpose:** batch-stage an entire directory without naming each file.
+When all changes under a directory belong in the same commit. It is typically triggered by completing work on a module or package. Stages all modified, new, and deleted files under the specified paths. Batch-stage an entire directory without naming each file.
 
 *Stage all files under the specified directories.*
 
@@ -751,10 +724,7 @@ git add src/signals/ tests/
 
 #### Stage all changes in the entire repo
 
-**When to run:** when every change in the repo belongs in the next commit.
-**Trigger:** rarely — typically only in personal repos or after careful review.
-**Context:** `-A` stages every change across the entire repo: new, modified, and deleted files.
-**Purpose:** stage everything at once.
+When every change in the repo belongs in the next commit. It is typically triggered by rarely — typically only in personal repos or after careful review. `-A` stages every change across the entire repo: new, modified, and deleted files. Stage everything at once.
 
 *Stage all new, modified, and deleted files in the repository.*
 
@@ -772,10 +742,7 @@ git add -A
 
 #### Interactive staging — choose hunks within files
 
-**When to run:** when a file contains multiple unrelated changes and you want to commit them separately.
-**Trigger:** a file has both a bug fix and a new feature, or formatting changes mixed with logic changes.
-**Context:** patch mode presents each change hunk and prompts `y/n/s/e` to stage, skip, split, or edit it.
-**Purpose:** craft atomic commits by selecting specific hunks from a file, not the entire file.
+When a file contains multiple unrelated changes and you want to commit them separately. It is typically triggered by a file has both a bug fix and a new feature, or formatting changes mixed with logic changes. Patch mode presents each change hunk and prompts `y/n/s/e` to stage, skip, split, or edit it. Craft atomic commits by selecting specific hunks from a file, not the entire file.
 
 > [!info]- Hunk selection options in patch mode
 >
@@ -794,10 +761,7 @@ git add -p
 
 #### Unstage a file — keep working changes
 
-**When to run:** after accidentally staging a file that should not be in the next commit.
-**Trigger:** `git status` shows a file under "Changes to be committed" that does not belong there.
-**Context:** removes the file from the staging area but keeps the working tree changes intact. `git restore --staged` (Git 2.23+) is the modern form; `git reset HEAD <file>` is the legacy equivalent.
-**Purpose:** undo a `git add` without losing your edits.
+After accidentally staging a file that should not be in the next commit. It is typically triggered by `git status` shows a file under "Changes to be committed" that does not belong there. Removes the file from the staging area but keeps the working tree changes intact. `git restore --staged` (Git 2.23+) is the modern form; `git reset HEAD <file>` is the legacy equivalent. Undo a `git add` without losing your edits.
 
 *Remove a file from the staging area without discarding changes.*
 
@@ -844,10 +808,7 @@ gitGraph TB:
 
 #### Create a commit with an inline message
 
-**When to run:** after staging the changes you want to record.
-**Trigger:** `git diff --staged` confirms the right changes are staged.
-**Context:** state-changing — creates a new commit object in `.git`. The commit is local until pushed.
-**Purpose:** permanently record the staged snapshot with a descriptive message.
+After staging the changes you want to record. It is typically triggered by `git diff --staged` confirms the right changes are staged. State-changing — creates a new commit object in `.git`. The commit is local until pushed. Permanently record the staged snapshot with a descriptive message.
 
 *Create a commit with the specified message.*
 
@@ -866,10 +827,7 @@ The output shows: the branch, the short SHA, the message, and a summary of files
 
 #### Create a commit with title and body
 
-**When to run:** when the commit needs a longer explanation — motivation, context, caveats, or a link to an issue.
-**Trigger:** complex changes that a one-line subject cannot explain.
-**Context:** pass a second `-m` flag to add a body below the subject line. Git separates them with a blank line in the commit object. The subject should be under 72 characters.
-**Purpose:** provide context for reviewers and future investigators.
+When the commit needs a longer explanation — motivation, context, caveats, or a link to an issue. It is typically triggered by complex changes that a one-line subject cannot explain. Pass a second `-m` flag to add a body below the subject line. Git separates them with a blank line in the commit object. The subject should be under 72 characters. Provide context for reviewers and future investigators.
 
 *Create a commit with a subject line and a description body.*
 
@@ -884,10 +842,7 @@ git commit -m "feat: add validate function to pipeline" -m "Validates transforme
 
 #### Amend the last commit
 
-**When to run:** to fix a typo in the last commit message, or to add a forgotten file to the last commit.
-**Trigger:** immediately after committing, before pushing, when you notice an error.
-**Context:** state-changing — replaces the last commit with a new one. The old commit gets a new SHA and is removed from the branch tip, but survives in the reflog for ~90 days.
-**Purpose:** correct the most recent commit without creating a new one.
+To fix a typo in the last commit message, or to add a forgotten file to the last commit. It is typically triggered by immediately after committing, before pushing, when you notice an error. State-changing — replaces the last commit with a new one. The old commit gets a new SHA and is removed from the branch tip, but survives in the reflog for ~90 days. Correct the most recent commit without creating a new one.
 
 **Before amend:**
 
@@ -978,10 +933,7 @@ Pushing uploads local commits to the remote repository so teammates can see them
 
 #### Push commits on a tracked branch
 
-**When to run:** after committing, when you are ready for the team to see the changes.
-**Trigger:** work is ready for review or collaboration.
-**Context:** state-changing on the remote. Sends your local commits to the tracked remote branch. Fails if the remote has commits you do not have (non-fast-forward rejection).
-**Purpose:** share your commits with the team.
+After committing, when you are ready for the team to see the changes. It is typically triggered by work is ready for review or collaboration. State-changing on the remote. Sends your local commits to the tracked remote branch. Fails if the remote has commits you do not have (non-fast-forward rejection). Share your commits with the team.
 
 *Upload local commits to the remote tracking branch.*
 
@@ -996,10 +948,7 @@ To https://github.com/alp78/git-lab.git
 
 #### Push a new branch and set upstream tracking
 
-**When to run:** the first time you push a branch that does not yet exist on the remote.
-**Trigger:** after creating a feature branch and making the first commit.
-**Context:** `-u` (or `--set-upstream`) creates the remote branch and links the local branch to it. After this, plain `git push` works without specifying the remote or branch name.
-**Purpose:** publish a new branch to the remote and establish tracking.
+The first time you push a branch that does not yet exist on the remote. It is typically triggered after creating a feature branch and making the first commit. `-u` (or `--set-upstream`) creates the remote branch and links the local branch to it. After this, plain `git push` works without specifying the remote or branch name. Publish a new branch to the remote and establish tracking.
 
 *Push a new branch to the remote and set upstream tracking.*
 
@@ -1015,10 +964,7 @@ branch 'feat/add-signals' set up to track 'origin/feat/add-signals'.
 
 #### Delete a remote branch
 
-**When to run:** after a PR has been merged and the branch is no longer needed.
-**Trigger:** post-merge cleanup.
-**Context:** state-changing on the remote — removes the branch from the hosting platform. The `--delete-branch` flag in `gh pr merge` does this automatically.
-**Purpose:** keep the remote tidy by removing stale branches.
+After a PR has been merged and the branch is no longer needed. It is typically triggered by post-merge cleanup. State-changing on the remote — removes the branch from the hosting platform. The `--delete-branch` flag in `gh pr merge` does this automatically. Keep the remote tidy by removing stale branches.
 
 *Remove a branch from the remote repository.*
 
@@ -1044,10 +990,7 @@ Pulling downloads new commits from the remote and integrates them into your curr
 
 #### Fetch all new data from the remote
 
-**When to run:** to check what teammates have pushed without modifying your local branches or working tree.
-**Trigger:** start of a work session, before deciding to merge or rebase.
-**Context:** read-only locally. Downloads new commits, branches, and tags. Updates remote-tracking branches (`origin/main`, etc.) but does not touch your files or local branches.
-**Purpose:** safely inspect what has changed on the remote before integrating.
+To check what teammates have pushed without modifying your local branches or working tree. It is typically triggered by start of a work session, before deciding to merge or rebase. Read-only locally. Downloads new commits, branches, and tags. Updates remote-tracking branches (`origin/main`, etc.) but does not touch your files or local branches. Safely inspect what has changed on the remote before integrating.
 
 *Download new data from the remote without merging.*
 
@@ -1076,10 +1019,7 @@ git log main..origin/main --oneline
 
 #### Pull with merge (default)
 
-**When to run:** when you want to integrate remote changes into your current branch.
-**Trigger:** after `git fetch` shows new commits, or directly when starting work.
-**Context:** state-changing — equivalent to `git fetch` + `git merge`. If your local branch has diverged from the remote, creates a merge commit. May cause merge conflicts.
-**Purpose:** bring your local branch up to date with the remote.
+When you want to integrate remote changes into your current branch. It is typically triggered after `git fetch` shows new commits, or directly when starting work. State-changing — equivalent to `git fetch` + `git merge`. If your local branch has diverged from the remote, creates a merge commit. May cause merge conflicts. Bring your local branch up to date with the remote.
 
 *Download and merge the latest remote changes.*
 
@@ -1100,10 +1040,7 @@ When the output says "Fast-forward," your branch had no local commits that the r
 
 #### Pull with rebase for linear history
 
-**When to run:** when you want to integrate remote changes without creating a merge commit — keeping history linear.
-**Trigger:** your branch has local commits and the remote has new commits (divergence).
-**Context:** equivalent to `git fetch` + `git rebase`. Replays your local commits on top of the remote commits, rewriting their SHAs. May cause conflicts that must be resolved per-commit during the rebase.
-**Purpose:** maintain a clean, linear commit history without noise merge commits.
+When you want to integrate remote changes without creating a merge commit — keeping history linear. It is typically triggered by your branch has local commits and the remote has new commits (divergence). Equivalent to `git fetch` + `git rebase`. Replays your local commits on top of the remote commits, rewriting their SHAs. May cause conflicts that must be resolved per-commit during the rebase. Maintain a clean, linear commit history without noise merge commits.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -1218,10 +1155,7 @@ gitGraph TB:
 
 #### Start a feature branch from updated main
 
-**When to run:** at the start of a new task or feature.
-**Trigger:** a ticket, task, or idea is ready to be worked on.
-**Context:** `git switch -c` creates a new branch and switches to it. Always branch from an up-to-date `main` to avoid inheriting stale code.
-**Purpose:** isolate your work from the main line of development.
+At the start of a new task or feature. It is typically triggered by a ticket, task, or idea is ready to be worked on. `git switch -c` creates a new branch and switches to it. Always branch from an up-to-date `main` to avoid inheriting stale code. Isolate your work from the main line of development.
 
 > [!todo] Complete feature branch lifecycle
 >
@@ -1265,10 +1199,7 @@ Switched to a new branch 'feat/add-signals'
 
 #### Create a pull request from the command line
 
-**When to run:** after pushing a feature branch, when the work is ready for review.
-**Trigger:** `git push -u origin feat/add-signals` succeeded.
-**Context:** requires GitHub CLI (`gh`). Creates the PR on GitHub with title, body, and optionally reviewers, labels, and milestones.
-**Purpose:** open a pull request for code review without leaving the terminal.
+After pushing a feature branch, when the work is ready for review. It is typically triggered by `git push -u origin feat/add-signals` succeeded. Requires GitHub CLI (`gh`). Creates the PR on GitHub with title, body, and optionally reviewers, labels, and milestones. Open a pull request for code review without leaving the terminal.
 
 *Create a PR for the current branch.*
 
@@ -1290,10 +1221,7 @@ https://github.com/alp78/git-lab/pull/1
 
 #### Merge a PR with squash and delete the branch
 
-**When to run:** after the PR is approved and CI passes.
-**Trigger:** approval and green CI status.
-**Context:** `--squash` combines all branch commits into a single commit on `main`. `--delete-branch` removes the remote branch after merging.
-**Purpose:** land the feature on main as a single clean commit.
+After the PR is approved and CI passes. It is typically triggered by approval and green CI status. `--squash` combines all branch commits into a single commit on `main`. `--delete-branch` removes the remote branch after merging. Land the feature on main as a single clean commit.
 
 *Squash-merge the PR and delete the remote branch.*
 
@@ -1350,10 +1278,7 @@ Interactive rebase lets you edit, reorder, squash, or drop individual commits on
 
 #### Clean up a feature branch before opening a PR
 
-**When to run:** after development is complete, before opening or updating a PR.
-**Trigger:** the branch has accumulated WIP commits, typo fixes, or debug commits that should not appear in the final review.
-**Context:** local operation that rewrites history. Only safe on branches where you are the sole contributor, or branches that have not been pulled by others. After rebasing, you must force-push with `--force-with-lease`.
-**Purpose:** produce a clean, reviewable commit history that tells a coherent story.
+After development is complete, before opening or updating a PR. It is typically triggered by the branch has accumulated WIP commits, typo fixes, or debug commits that should not appear in the final review. Local operation that rewrites history. Only safe on branches where you are the sole contributor, or branches that have not been pulled by others. After rebasing, you must force-push with `--force-with-lease`. Produce a clean, reviewable commit history that tells a coherent story.
 
 *View the commits on the branch before cleanup.*
 
@@ -1373,10 +1298,7 @@ The branch has three commits: the main feature (data quality checks), a fixup co
 
 #### Use --autosquash to automatically fold fixup commits
 
-**When to run:** when your branch has commits prefixed with `fixup!` or `squash!` that match earlier commit messages.
-**Trigger:** you used `git commit --fixup=<SHA>` during development to create commits that should be folded into earlier work.
-**Context:** `--autosquash` automatically reorders and marks fixup/squash commits in the interactive editor. Requires the `-i` flag.
-**Purpose:** one-command cleanup of fixup commits without manual editor editing.
+When your branch has commits prefixed with `fixup!` or `squash!` that match earlier commit messages. It is typically triggered by you used `git commit --fixup=<SHA>` during development to create commits that should be folded into earlier work. `--autosquash` automatically reorders and marks fixup/squash commits in the interactive editor. Requires the `-i` flag. One-command cleanup of fixup commits without manual editor editing.
 
 *Run interactive rebase with autosquash to fold fixup commits.*
 
@@ -1439,10 +1361,7 @@ In real teams, engineers often need to apply a single commit from one branch to 
 
 #### Backport a hotfix to a release branch
 
-**When to run:** when a critical fix lands on `main` and must also be applied to an active release branch that cannot accept a full merge.
-**Trigger:** a production bug is fixed on `main`, and the fix must be backported to `release/2026-Q2` without merging unrelated features.
-**Context:** local operation. Creates a new commit on the target branch with the same diff but a different SHA. The `-x` flag appends "(cherry picked from commit ...)" to the message, documenting the source for auditability.
-**Purpose:** selectively apply one commit's changes to a different branch.
+When a critical fix lands on `main` and must also be applied to an active release branch that cannot accept a full merge. It is typically triggered by a production bug is fixed on `main`, and the fix must be backported to `release/2026-Q2` without merging unrelated features. Local operation. Creates a new commit on the target branch with the same diff but a different SHA. The `-x` flag appends "(cherry picked from commit ...)" to the message, documenting the source for auditability. Selectively apply one commit's changes to a different branch.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -1530,10 +1449,7 @@ When you need to work on two branches simultaneously — a hotfix while mid-feat
 
 #### Work on a hotfix without leaving your feature branch
 
-**When to run:** when you need to switch context to another branch but do not want to stash, commit WIP, or disrupt your current working tree.
-**Trigger:** urgent hotfix needed while you have uncommitted work on a feature branch, or you need to compare behavior across branches side-by-side.
-**Context:** local operation. Creates a new directory linked to the same `.git` directory. You cannot check out a branch that is already checked out in another worktree. All worktrees share the same commit history, reflog, and configuration.
-**Purpose:** eliminate the stash-switch-restore churn for parallel work.
+When you need to switch context to another branch but do not want to stash, commit WIP, or disrupt your current working tree. It is typically triggered by urgent hotfix needed while you have uncommitted work on a feature branch, or you need to compare behavior across branches side-by-side. Local operation. Creates a new directory linked to the same `.git` directory. You cannot check out a branch that is already checked out in another worktree. All worktrees share the same commit history, reflog, and configuration. Eliminate the stash-switch-restore churn for parallel work.
 
 *Create a worktree for the release branch in a sibling directory.*
 
@@ -1736,10 +1652,7 @@ git commit -m "merge: reconcile timeout and schedule changes"
 
 #### Abort a merge safely
 
-**When to run:** when you realize the merge should not proceed — the conflict is too complex, you need more information, or you started from the wrong branch.
-**Trigger:** mid-conflict, before committing.
-**Context:** `git merge --abort` restores the working tree and staging area to the state before the merge started. No data is lost.
-**Purpose:** cleanly back out of a merge without leaving partial conflict markers.
+When you realize the merge should not proceed — the conflict is too complex, you need more information, or you started from the wrong branch. It is typically triggered by mid-conflict, before committing. `git merge --abort` restores the working tree and staging area to the state before the merge started. No data is lost. Cleanly back out of a merge without leaving partial conflict markers.
 
 *Abort the merge and restore pre-merge state.*
 
@@ -1950,10 +1863,7 @@ flowchart TD
 
 #### Discard unstaged edits to one file
 
-**When to run:** when you want to throw away your working tree changes to a specific file and revert it to the last committed version.
-**Trigger:** you edited a file and want to start over on that file.
-**Context:** **destructive** — discards working tree changes permanently. Does not affect staged changes or commits.
-**Purpose:** revert a file to its last committed state.
+When you want to throw away your working tree changes to a specific file and revert it to the last committed version. It is typically triggered by you edited a file and want to start over on that file. **destructive** — discards working tree changes permanently. Does not affect staged changes or commits. Revert a file to its last committed state.
 
 *Discard all working tree changes to a specific file.*
 
@@ -1998,10 +1908,7 @@ git restore --staged src/pipeline.py
 
 #### Restore a deleted tracked file
 
-**When to run:** when you accidentally deleted a tracked file from the working tree.
-**Trigger:** `git status` shows the file as deleted.
-**Context:** restores the file from the last commit.
-**Purpose:** recover a deleted file.
+When you accidentally deleted a tracked file from the working tree. It is typically triggered by `git status` shows the file as deleted. Restores the file from the last commit. Recover a deleted file.
 
 *Restore a deleted file from the last commit.*
 
@@ -2013,10 +1920,7 @@ git restore src/pipeline.py
 
 #### Preview what would be removed
 
-**When to run:** before cleaning, to verify which files will be deleted.
-**Trigger:** untracked build artifacts, temp files, or scratch files are cluttering the working tree.
-**Context:** `-n` is a dry run — shows what would be removed without removing anything.
-**Purpose:** inspect before cleaning.
+Before cleaning, to verify which files will be deleted. It is typically triggered by untracked build artifacts, temp files, or scratch files are cluttering the working tree. `-n` is a dry run — shows what would be removed without removing anything. Inspect before cleaning.
 
 *Dry run — show which untracked files and directories would be removed.*
 
@@ -2083,10 +1987,7 @@ gitGraph TB:
 
 #### Undo the last commit — keep changes staged
 
-**When to run:** immediately after committing, when you realize the commit was wrong but want to keep the changes staged for a new commit.
-**Trigger:** bad commit message, or you committed from the wrong branch.
-**Context:** `--soft` moves the branch pointer back one commit but keeps all changes in the staging area. The commit is removed from the branch but remains in the reflog.
-**Purpose:** undo a commit without losing any work.
+Immediately after committing, when you realize the commit was wrong but want to keep the changes staged for a new commit. It is typically triggered by bad commit message, or you committed from the wrong branch. `--soft` moves the branch pointer back one commit but keeps all changes in the staging area. The commit is removed from the branch but remains in the reflog. Undo a commit without losing any work.
 
 *Move HEAD back one commit, keep changes staged.*
 
@@ -2134,10 +2035,7 @@ gitGraph TB:
 
 #### Create a reverse commit
 
-**When to run:** when you need to undo a commit that has already been pushed to a shared branch.
-**Trigger:** a bug was introduced by a specific commit, or a change needs to be rolled back in production.
-**Context:** state-changing — creates a new commit that is the exact inverse of the specified commit. Does not rewrite history.
-**Purpose:** undo a commit's changes while preserving the full audit trail.
+When you need to undo a commit that has already been pushed to a shared branch. It is typically triggered by a bug was introduced by a specific commit, or a change needs to be rolled back in production. State-changing — creates a new commit that is the exact inverse of the specified commit. Does not rewrite history. Undo a commit's changes while preserving the full audit trail.
 
 *Create a new commit that reverses the changes of the specified commit.*
 
@@ -2160,10 +2058,7 @@ git revert 9f5b14f --no-edit
 
 #### View the reflog
 
-**When to run:** when you have lost a commit — after a bad reset, a dropped stash, or an aborted rebase — and need to find it.
-**Trigger:** `git log` does not show the commit you are looking for, but you know it existed.
-**Context:** read-only. The reflog records every position HEAD has pointed to, including commits removed by reset, rebase, or amend. Entries expire after ~90 days.
-**Purpose:** find the SHA of a lost commit so you can recover it.
+When you have lost a commit — after a bad reset, a dropped stash, or an aborted rebase — and need to find it. It is typically triggered by `git log` does not show the commit you are looking for, but you know it existed. Read-only. The reflog records every position HEAD has pointed to, including commits removed by reset, rebase, or amend. Entries expire after ~90 days. Find the SHA of a lost commit so you can recover it.
 
 *Show the last 10 reflog entries.*
 
@@ -2213,10 +2108,7 @@ Stash temporarily shelves uncommitted changes so you can switch context — swit
 
 #### Save current changes to a named stash
 
-**When to run:** when you need to switch branches or pull but have uncommitted changes you do not want to commit yet.
-**Trigger:** need to context-switch (urgent bug, code review, pull from remote) while in the middle of work.
-**Context:** state-changing — saves staged and unstaged changes to tracked files into a stash stack, then reverts the working tree to the last commit state. Untracked files are not included unless `-u` is specified.
-**Purpose:** temporarily park work-in-progress without creating a commit.
+When you need to switch branches or pull but have uncommitted changes you do not want to commit yet. It is typically triggered by need to context-switch (urgent bug, code review, pull from remote) while in the middle of work. State-changing — saves staged and unstaged changes to tracked files into a stash stack, then reverts the working tree to the last commit state. Untracked files are not included unless `-u` is specified. Temporarily park work-in-progress without creating a commit.
 
 *Save tracked changes to a named stash.*
 
@@ -2269,10 +2161,7 @@ git stash show -p stash@{0}
 
 #### Apply the most recent stash — keep in stack
 
-**When to run:** when you want to restore stashed changes but keep the stash entry as a safety backup.
-**Trigger:** returning to the context you stashed.
-**Context:** applies the stash on top of the current working tree. May cause conflicts if the working tree has changed since the stash was created.
-**Purpose:** restore work-in-progress while keeping the stash entry.
+When you want to restore stashed changes but keep the stash entry as a safety backup. It is typically triggered by returning to the context you stashed. Applies the stash on top of the current working tree. May cause conflicts if the working tree has changed since the stash was created. Restore work-in-progress while keeping the stash entry.
 
 *Apply the latest stash without removing it from the stack.*
 
@@ -2327,10 +2216,7 @@ git stash clear
 
 #### Create a branch from a stash
 
-**When to run:** when stashed work has grown large enough to deserve its own branch.
-**Trigger:** the stash contains significant work that should be reviewed independently.
-**Context:** creates a new branch from the commit where the stash was originally created, applies the stash, and drops it.
-**Purpose:** convert stashed work into a proper branch.
+When stashed work has grown large enough to deserve its own branch. It is typically triggered by the stash contains significant work that should be reviewed independently. Creates a new branch from the commit where the stash was originally created, applies the stash, and drops it. Convert stashed work into a proper branch.
 
 *Create a branch from a stash entry.*
 

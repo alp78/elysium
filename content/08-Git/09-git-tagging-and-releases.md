@@ -275,10 +275,7 @@ Tags are created locally and must be explicitly pushed to a remote. By default, 
 
 #### Create a lightweight tag on HEAD
 
-**When to run:** When you need a quick local marker for a commit — a temporary bookmark during development or debugging.
-**Trigger:** You want to remember a specific commit without storing metadata.
-**Context:** Local operation only. Creates a ref under `.git/refs/tags/`. Does not push to remote. Does not create a Git object.
-**Purpose:** Mark the current `HEAD` with a named pointer that you can reference later (e.g., `git diff v0.1.0..HEAD`).
+When you need a quick local marker for a commit — a temporary bookmark during development or debugging. It is typically triggered by you want to remember a specific commit without storing metadata. Local operation only. Creates a ref under `.git/refs/tags/`. Does not push to remote. Does not create a Git object. Mark the current `HEAD` with a named pointer that you can reference later (e.g., `git diff v0.1.0..HEAD`).
 
 *Create a lightweight tag named `v0.1.0` pointing to the current HEAD commit.*
 
@@ -290,10 +287,7 @@ The `v` prefix and SemVer format are a community convention, not a Git requireme
 
 #### Create an annotated tag with a message
 
-**When to run:** When marking a production release, milestone, or any commit that needs traceable metadata.
-**Trigger:** A release is ready for publication, or a significant milestone commit needs permanent documentation.
-**Context:** Local operation. Creates a tag object in the Git database containing tagger name, email, date, and message. The `-m` flag sets the message inline; without it, Git opens the configured editor.
-**Purpose:** Create a permanent, metadata-rich marker suitable for production releases, audit trails, and CI/CD triggers.
+When marking a production release, milestone, or any commit that needs traceable metadata. It is typically triggered by A release is ready for publication, or a significant milestone commit needs permanent documentation. Local operation. Creates a tag object in the Git database containing tagger name, email, date, and message. The `-m` flag sets the message inline; without it, Git opens the configured editor. Create a permanent, metadata-rich marker suitable for production releases, audit trails, and CI/CD triggers.
 
 *Create an annotated tag `v1.0.0` with a release message.*
 
@@ -303,10 +297,7 @@ git tag -a v1.0.0 -m "First production release — config validation, risk calcu
 
 #### Tag a specific past commit
 
-**When to run:** When a release should have been tagged at a prior commit but was not.
-**Trigger:** Retrospective tagging after confirming the correct commit SHA via `git log --oneline`.
-**Context:** Local operation. The commit SHA must exist in the local repository. Use `git log --oneline` to locate the target.
-**Purpose:** Apply a version tag to a historical commit without altering any existing history.
+When a release should have been tagged at a prior commit but was not. It is typically triggered by retrospective tagging after confirming the correct commit SHA via `git log --oneline`. Local operation. The commit SHA must exist in the local repository. Use `git log --oneline` to locate the target. Apply a version tag to a historical commit without altering any existing history.
 
 *Tag commit `06f13ca` retroactively as `v0.2.0`.*
 
@@ -316,10 +307,7 @@ git tag -a v0.2.0 -m "Add GICS sector mapper and market holiday calendar" 06f13c
 
 #### Inspect the full metadata of an annotated tag
 
-**When to run:** When you need to verify who created a tag, when it was created, and what message was recorded.
-**Trigger:** Audit review, incident investigation, or release verification.
-**Context:** Local read-only operation. For annotated tags, `git show` displays the tag object metadata followed by the tagged commit's diff. For lightweight tags, it shows only the commit.
-**Purpose:** Confirm tagger identity, timestamp, and message before deploying from a tag.
+When you need to verify who created a tag, when it was created, and what message was recorded. It is typically triggered by audit review, incident investigation, or release verification. Local read-only operation. For annotated tags, `git show` displays the tag object metadata followed by the tagged commit's diff. For lightweight tags, it shows only the commit. Confirm tagger identity, timestamp, and message before deploying from a tag.
 
 *Display the tag object metadata and tagged commit details for `v1.0.0`.*
 
@@ -363,10 +351,7 @@ The output has two parts. The first block (lines starting with `tag`, `Tagger`, 
 
 #### Inspect the raw tag object
 
-**When to run:** When you need the machine-readable tag object contents without the commit diff.
-**Trigger:** Scripting, automation, or debugging tag storage internals.
-**Context:** Local read-only operation. `git cat-file -p` prints the raw object contents.
-**Purpose:** See the exact object SHA the tag targets, the object type, tagger identity, and message in a parseable format.
+When you need the machine-readable tag object contents without the commit diff. It is typically triggered by scripting, automation, or debugging tag storage internals. Local read-only operation. `git cat-file -p` prints the raw object contents. See the exact object SHA the tag targets, the object type, tagger identity, and message in a parseable format.
 
 *Print the raw contents of the `v1.0.0` tag object.*
 
@@ -407,10 +392,7 @@ Tags are listed alphabetically by default. Use flags to filter by pattern, sort 
 
 #### List all tags
 
-**When to run:** To see every tag in the repository.
-**Trigger:** Reviewing the release history or checking if a tag exists before creating one.
-**Context:** Local read-only operation.
-**Purpose:** Get a complete list of all tag names in alphabetical order.
+To see every tag in the repository. It is typically triggered by reviewing the release history or checking if a tag exists before creating one. Local read-only operation. Get a complete list of all tag names in alphabetical order.
 
 *List all tags in the repository.*
 
@@ -430,10 +412,7 @@ v1.2.0-rc.1
 
 #### List tags with annotation messages
 
-**When to run:** When you need to see what each release contains without running `git show` on each tag individually.
-**Trigger:** Release audit, changelog review, or team status check.
-**Context:** Local read-only operation. For annotated tags, displays the first line of the tag message. For lightweight tags, displays the first line of the tagged commit message.
-**Purpose:** Get a quick overview of what each release version contains.
+When you need to see what each release contains without running `git show` on each tag individually. It is typically triggered by release audit, changelog review, or team status check. Local read-only operation. For annotated tags, displays the first line of the tag message. For lightweight tags, displays the first line of the tagged commit message. Get a quick overview of what each release version contains.
 
 *Display each tag name followed by the first line of its message.*
 
@@ -455,10 +434,7 @@ Notice that `v0.1.0` (a lightweight tag) shows the commit message, while the ann
 
 #### Filter tags by glob pattern
 
-**When to run:** When you only want to see tags matching a specific version range or prefix.
-**Trigger:** Finding all v1.x releases, or checking if a specific version already exists.
-**Context:** Local read-only operation. The `-l` flag accepts standard glob patterns (`*`, `?`, `[...]`).
-**Purpose:** Narrow the tag list to a specific range without manual scanning.
+When you only want to see tags matching a specific version range or prefix. It is typically triggered by finding all v1.x releases, or checking if a specific version already exists. Local read-only operation. The `-l` flag accepts standard glob patterns (`*`, `?`, `[...]`). Narrow the tag list to a specific range without manual scanning.
 
 *List only tags starting with `v1.`.*
 
@@ -475,10 +451,7 @@ v1.2.0-rc.1
 
 #### Sort tags by version in reverse order
 
-**When to run:** When you need to find the latest release tag quickly.
-**Trigger:** Deployment scripts, CI/CD pipelines, or manual release verification.
-**Context:** Local read-only operation. The `--sort=-version:refname` flag sorts by semantic version (respecting numeric ordering) in descending order. Without `version:refname`, tags sort lexicographically (where `v9.0.0` would sort after `v10.0.0`).
-**Purpose:** Identify the most recent release version.
+When you need to find the latest release tag quickly. It is typically triggered by deployment scripts, CI/CD pipelines, or manual release verification. Local read-only operation. The `--sort=-version:refname` flag sorts by semantic version (respecting numeric ordering) in descending order. Without `version:refname`, tags sort lexicographically (where `v9.0.0` would sort after `v10.0.0`). Identify the most recent release version.
 
 *List all tags sorted by version, latest first.*
 
@@ -498,10 +471,7 @@ v0.1.0
 
 #### Find tags that contain a specific commit
 
-**When to run:** When you need to know which releases include a particular commit — for example, confirming a bug fix has been released.
-**Trigger:** Incident investigation ("which releases contain the fix for this bug?") or deployment verification.
-**Context:** Local read-only operation. `--contains` lists every tag whose tagged commit is an ancestor of, or is, the specified commit.
-**Purpose:** Trace which releases include a specific change.
+When you need to know which releases include a particular commit — for example, confirming a bug fix has been released. It is typically triggered by incident investigation ("which releases contain the fix for this bug?") or deployment verification. Local read-only operation. `--contains` lists every tag whose tagged commit is an ancestor of, or is, the specified commit. Trace which releases include a specific change.
 
 *List all tags that contain commit `5644c58` (the v1.0.0 commit).*
 
@@ -519,10 +489,7 @@ All three tags are listed because `v1.1.0` and `v1.1.1` are tagged on commits th
 
 #### Describe the current commit relative to tags
 
-**When to run:** When you need a human-readable version string for the current `HEAD` — useful in build systems, Docker image tags, and deployment metadata.
-**Trigger:** CI/CD build step, version stamping in artifacts, or identifying what version is currently checked out.
-**Context:** Local read-only operation. `git describe --tags` finds the most recent tag reachable from `HEAD` and appends the number of additional commits and the abbreviated SHA if `HEAD` is not exactly at a tag.
-**Purpose:** Generate a version string like `v1.1.1` (if on the tag) or `v1.1.1-3-gabcdef` (if 3 commits ahead of the tag).
+When you need a human-readable version string for the current `HEAD` — useful in build systems, Docker image tags, and deployment metadata. It is typically triggered by CI/CD build step, version stamping in artifacts, or identifying what version is currently checked out. Local read-only operation. `git describe --tags` finds the most recent tag reachable from `HEAD` and appends the number of additional commits and the abbreviated SHA if `HEAD` is not exactly at a tag. Generate a version string like `v1.1.1` (if on the tag) or `v1.1.1-3-gabcdef` (if 3 commits ahead of the tag).
 
 *Describe the current HEAD relative to the nearest tag.*
 
@@ -546,10 +513,7 @@ The output is exactly `v1.1.1` because `HEAD` is at the tagged commit. If there 
 
 #### List tags with detailed metadata
 
-**When to run:** When you need a structured view of all tags showing object types, SHAs, and dates — useful for auditing and scripting.
-**Trigger:** Release audit, CI/CD tag verification, or debugging tag types.
-**Context:** Local read-only operation. `git for-each-ref` iterates over refs with custom format strings.
-**Purpose:** Display tag name, object type (tag vs commit), object SHA, dereferenced commit SHA, and creation date in a single table.
+When you need a structured view of all tags showing object types, SHAs, and dates — useful for auditing and scripting. It is typically triggered by release audit, CI/CD tag verification, or debugging tag types. Local read-only operation. `git for-each-ref` iterates over refs with custom format strings. Display tag name, object type (tag vs commit), object SHA, dereferenced commit SHA, and creation date in a single table.
 
 > [!info]- Command Breakdown
 >
@@ -601,10 +565,7 @@ Pushing a tag uploads the tag ref (and the tag object for annotated tags) to the
 
 #### Push a single tag by name
 
-**When to run:** When a release tag has been created and verified locally, and you are ready to publish it.
-**Trigger:** Release workflow step — after creating the annotated tag on `main` and confirming the correct commit.
-**Context:** Network operation. Pushes one named tag to the specified remote. This is the preferred method for controlled release workflows — only the explicitly named tag is sent. Requires push access to the remote.
-**Purpose:** Publish a specific release tag to GitHub without affecting any other local tags.
+When a release tag has been created and verified locally, and you are ready to publish it. It is typically triggered by release workflow step — after creating the annotated tag on `main` and confirming the correct commit. Network operation. Pushes one named tag to the specified remote. This is the preferred method for controlled release workflows — only the explicitly named tag is sent. Requires push access to the remote. Publish a specific release tag to GitHub without affecting any other local tags.
 
 *Push the `v1.0.0` tag to origin.*
 
@@ -619,10 +580,7 @@ To https://github.com/alp78/git-lab.git
 
 #### Push all local tags at once
 
-**When to run:** When multiple tags need to be pushed and you have verified that no draft or test tags exist locally.
-**Trigger:** Initial repository setup, or after bulk-creating historical tags on a repository with no prior tags.
-**Context:** Network operation. Pushes every local tag that does not yet exist on the remote. This includes lightweight tags, annotated tags, draft tags, and test tags — everything.
-**Purpose:** Publish all unpushed tags in a single command.
+When multiple tags need to be pushed and you have verified that no draft or test tags exist locally. It is typically triggered by initial repository setup, or after bulk-creating historical tags on a repository with no prior tags. Network operation. Pushes every local tag that does not yet exist on the remote. This includes lightweight tags, annotated tags, draft tags, and test tags — everything. Publish all unpushed tags in a single command.
 
 *Push all local tags to origin.*
 
@@ -649,10 +607,7 @@ To https://github.com/alp78/git-lab.git
 
 #### Push commits and reachable annotated tags together
 
-**When to run:** When you want to push new commits and any annotated tags reachable from those commits in a single command — without pushing lightweight or unreachable tags.
-**Trigger:** Regular development push where you also want to publish annotated release tags without a separate push step.
-**Context:** Network operation. `--follow-tags` is safer than `--tags` because it only pushes annotated tags that are reachable from the commits being pushed. Lightweight tags are ignored. Tags on commits not being pushed are ignored.
-**Purpose:** Combine commit push and annotated tag push in one operation, reducing the chance of publishing stray tags.
+When you want to push new commits and any annotated tags reachable from those commits in a single command — without pushing lightweight or unreachable tags. It is typically triggered by regular development push where you also want to publish annotated release tags without a separate push step. Network operation. `--follow-tags` is safer than `--tags` because it only pushes annotated tags that are reachable from the commits being pushed. Lightweight tags are ignored. Tags on commits not being pushed are ignored. Combine commit push and annotated tag push in one operation, reducing the chance of publishing stray tags.
 
 *Push commits and any reachable annotated tags.*
 
@@ -743,10 +698,7 @@ GitHub Releases can be created through the web UI or the `gh` CLI. The CLI appro
 
 #### Create a release from an existing tag
 
-**When to run:** After pushing an annotated tag to origin.
-**Trigger:** Release workflow — the tag exists on the remote and you are ready to publish the release with notes.
-**Context:** Network operation. Requires `gh` CLI authenticated with push access. Creates a GitHub Release associated with the specified tag. The release appears in the Releases tab immediately.
-**Purpose:** Publish a production release with descriptive release notes visible to all repository visitors.
+After pushing an annotated tag to origin. It is typically triggered by release workflow — the tag exists on the remote and you are ready to publish the release with notes. Network operation. Requires `gh` CLI authenticated with push access. Creates a GitHub Release associated with the specified tag. The release appears in the Releases tab immediately. Publish a production release with descriptive release notes visible to all repository visitors.
 
 > [!info]- Command Breakdown
 >
@@ -783,10 +735,7 @@ The command returns the URL of the created release.
 
 #### Create a pre-release
 
-**When to run:** When publishing a release candidate or beta version that should not be marked as the latest stable release.
-**Trigger:** Release candidate (RC) is ready for testing but not yet approved for production.
-**Context:** Network operation. The `--prerelease` flag marks the release with a "Pre-release" badge and prevents it from being shown as "Latest" in the Releases tab.
-**Purpose:** Publish a version for testing while clearly signaling it is not production-ready.
+When publishing a release candidate or beta version that should not be marked as the latest stable release. It is typically triggered by release candidate (RC) is ready for testing but not yet approved for production. Network operation. The `--prerelease` flag marks the release with a "Pre-release" badge and prevents it from being shown as "Latest" in the Releases tab. Publish a version for testing while clearly signaling it is not production-ready.
 
 *Create a pre-release for a release candidate tag.*
 
@@ -803,10 +752,7 @@ https://github.com/alp78/git-lab/releases/tag/v1.2.0-rc.1
 
 #### List all releases
 
-**When to run:** To review the current release history on GitHub.
-**Trigger:** Release audit, deployment planning, or verifying that a release was published correctly.
-**Context:** Network operation. Reads from GitHub API.
-**Purpose:** Get a summary of all published releases with their tags, titles, and dates.
+To review the current release history on GitHub. It is typically triggered by release audit, deployment planning, or verifying that a release was published correctly. Network operation. Reads from GitHub API. Get a summary of all published releases with their tags, titles, and dates.
 
 *List all releases on the repository.*
 
@@ -825,10 +771,7 @@ Each row shows the release title, status label (Latest, Pre-release, or blank), 
 
 #### View release details
 
-**When to run:** When you need the full release notes, metadata, and attached assets for a specific release.
-**Trigger:** Deployment verification, incident response, or comparing release contents.
-**Context:** Network operation. Reads the release object from GitHub API.
-**Purpose:** Inspect the complete release record including author, dates, and release notes body.
+When you need the full release notes, metadata, and attached assets for a specific release. It is typically triggered by deployment verification, incident response, or comparing release contents. Network operation. Reads the release object from GitHub API. Inspect the complete release record including author, dates, and release notes body.
 
 *View the full details of the v1.0.0 release.*
 
@@ -864,10 +807,7 @@ url:        https://github.com/alp78/git-lab/releases/tag/v1.0.0
 
 #### View commits between two releases
 
-**When to run:** When generating a changelog or understanding exactly what changed between two versions.
-**Trigger:** Writing release notes, reviewing a release scope, or investigating when a change was introduced.
-**Context:** Local read-only operation. The `tag1..tag2` range syntax shows all commits reachable from `tag2` but not from `tag1`.
-**Purpose:** List the exact commits that a release version adds compared to its predecessor.
+When generating a changelog or understanding exactly what changed between two versions. It is typically triggered by writing release notes, reviewing a release scope, or investigating when a change was introduced. Local read-only operation. The `tag1..tag2` range syntax shows all commits reachable from `tag2` but not from `tag1`. List the exact commits that a release version adds compared to its predecessor.
 
 *Show all commits between v1.0.0 and v1.1.0.*
 
@@ -970,10 +910,7 @@ flowchart TD
 
 #### Step 1 — Switch to main and pull latest
 
-**When to run:** At the start of every release.
-**Trigger:** All planned PRs for this release have been merged.
-**Context:** Local operation. Ensures you are tagging the correct, up-to-date commit. Tagging a stale local copy misses commits merged by teammates.
-**Purpose:** Guarantee the tag points to the latest `main` HEAD including all merged PRs.
+At the start of every release. It is typically triggered by all planned PRs for this release have been merged. Local operation. Ensures you are tagging the correct, up-to-date commit. Tagging a stale local copy misses commits merged by teammates. Guarantee the tag points to the latest `main` HEAD including all merged PRs.
 
 *Switch to main and pull the latest commits.*
 
@@ -983,10 +920,7 @@ git checkout main && git pull
 
 #### Step 2 — Create the annotated release tag
 
-**When to run:** After confirming `main` is up to date and the commit log matches expectations.
-**Trigger:** The release scope is finalized and ready for deployment.
-**Context:** Local operation. Creates a tag object with metadata.
-**Purpose:** Mark the exact commit that constitutes this release.
+After confirming `main` is up to date and the commit log matches expectations. It is typically triggered by the release scope is finalized and ready for deployment. Local operation. Creates a tag object with metadata. Mark the exact commit that constitutes this release.
 
 *Create an annotated tag for v1.1.1 with a descriptive message.*
 
@@ -996,10 +930,7 @@ git tag -a v1.1.1 -m "Set log level to INFO for production"
 
 #### Step 3 — Push the tag to origin
 
-**When to run:** After creating the tag locally and verifying it with `git show <tag>`.
-**Trigger:** Tag verified, ready to publish.
-**Context:** Network operation. Once pushed, the tag is visible to all collaborators and may trigger CI/CD.
-**Purpose:** Publish the release tag to GitHub.
+After creating the tag locally and verifying it with `git show <tag>`. It is typically triggered by tag verified, ready to publish. Network operation. Once pushed, the tag is visible to all collaborators and may trigger CI/CD. Publish the release tag to GitHub.
 
 *Push the v1.1.1 tag to the remote.*
 
@@ -1009,10 +940,7 @@ git push origin v1.1.1
 
 #### Step 4 — Create the GitHub Release
 
-**When to run:** After the tag is visible on GitHub.
-**Trigger:** Tag push confirmed.
-**Context:** Network operation via `gh` CLI.
-**Purpose:** Attach release notes, metadata, and optional binary assets to the tag.
+After the tag is visible on GitHub. It is typically triggered by tag push confirmed. Network operation via `gh` CLI. Attach release notes, metadata, and optional binary assets to the tag.
 
 *Create the GitHub Release for v1.1.1.*
 
@@ -1096,10 +1024,7 @@ A workflow `on.push.tags` filter triggers the pipeline when a pushed ref matches
 
 #### Tag-triggered workflow configuration
 
-**When to run:** When setting up CI/CD for a repository that uses tag-based releases.
-**Trigger:** Repository setup or release automation design.
-**Context:** Edit the workflow YAML file in `.github/workflows/`. The `on.push.tags` trigger fires only when a matching tag is pushed to the remote — local tag creation does not trigger it.
-**Purpose:** Automate build, test, and deployment on every release tag push.
+When setting up CI/CD for a repository that uses tag-based releases. It is typically triggered by repository setup or release automation design. Edit the workflow YAML file in `.github/workflows/`. The `on.push.tags` trigger fires only when a matching tag is pushed to the remote — local tag creation does not trigger it. Automate build, test, and deployment on every release tag push.
 
 *Add this trigger block to a workflow YAML to fire on any tag starting with `v`.*
 
@@ -1222,10 +1147,7 @@ Tags should rarely be deleted once pushed. Deleting a published tag breaks repro
 
 #### Delete a local tag
 
-**When to run:** When a local draft or test tag is no longer needed and should be cleaned up before using `git push --tags`.
-**Trigger:** Local cleanup before a release push, or removing a mistakenly created tag that has not been pushed.
-**Context:** Local operation only. Does not affect the remote. The tagged commit is not deleted — only the named ref.
-**Purpose:** Remove a local tag reference that is no longer needed.
+When a local draft or test tag is no longer needed and should be cleaned up before using `git push --tags`. It is typically triggered by local cleanup before a release push, or removing a mistakenly created tag that has not been pushed. Local operation only. Does not affect the remote. The tagged commit is not deleted — only the named ref. Remove a local tag reference that is no longer needed.
 
 *Delete the local tag `v1.0.0-draft`.*
 
@@ -1241,10 +1163,7 @@ The output confirms the tag name and the commit SHA it pointed to. The commit `3
 
 #### Delete a remote tag
 
-**When to run:** When a tag was accidentally pushed and must be removed from the remote — only for unpublished or draft tags.
-**Trigger:** A test tag or pre-release was accidentally pushed and is confusing consumers or triggering unwanted CI/CD.
-**Context:** Network operation. Removes the tag from the remote. Collaborators who already fetched the tag retain it locally until they run `git fetch --prune --tags`. Coordinate with the team before deleting.
-**Purpose:** Remove a mistakenly pushed tag from the remote.
+When a tag was accidentally pushed and must be removed from the remote — only for unpublished or draft tags. It is typically triggered by A test tag or pre-release was accidentally pushed and is confusing consumers or triggering unwanted CI/CD. Network operation. Removes the tag from the remote. Collaborators who already fetched the tag retain it locally until they run `git fetch --prune --tags`. Coordinate with the team before deleting. Remove a mistakenly pushed tag from the remote.
 
 *Delete the tag `v0.0.1-test` from origin.*
 

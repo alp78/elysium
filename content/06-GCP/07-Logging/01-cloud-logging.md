@@ -324,10 +324,7 @@ Use these commands before you change retention, IAM, routing, or analytics postu
 
 #### Inspect the `_Default` bucket
 
-**When to run:** Before changing retention or explaining why logs disappear after a fixed number of days.
-**Trigger:** The reader needs to know where ordinary application and platform logs are stored.
-**Context:** Run in a shell with project-level Logging read access. Read-only.
-**Purpose:** Confirm the bucket name, location, lifecycle state, and retention policy for the main project bucket.
+Before changing retention or explaining why logs disappear after a fixed number of days. It is typically triggered by the reader needs to know where ordinary application and platform logs are stored. Run in a shell with project-level Logging read access. Read-only. Confirm the bucket name, location, lifecycle state, and retention policy for the main project bucket.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -355,10 +352,7 @@ This confirms the expected default retention posture: ordinary logs stay in `_De
 
 #### Inspect the `_Required` bucket
 
-**When to run:** Before discussing audit retention, security evidence, or immutable default routing.
-**Trigger:** The reader needs to know where Google-required logs are stored and why that bucket behaves differently.
-**Context:** Run in a shell with project-level Logging read access. Read-only.
-**Purpose:** Verify the fixed audit bucket attributes that are not controlled like `_Default`.
+Before discussing audit retention, security evidence, or immutable default routing. It is typically triggered by the reader needs to know where Google-required logs are stored and why that bucket behaves differently. Run in a shell with project-level Logging read access. Read-only. Verify the fixed audit bucket attributes that are not controlled like `_Default`.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -388,10 +382,7 @@ The `locked: true` field is the operational difference that matters most. `_Requ
 
 #### Inspect default routing
 
-**When to run:** Before diagnosing missing logs, planning export paths, or teaching the difference between buckets and sinks.
-**Trigger:** A reader sees logs in buckets and assumes that storage and routing are the same thing.
-**Context:** Run in a shell with project-level Logging read access. Read-only.
-**Purpose:** Show the actual router filters that split required versus non-required log traffic.
+Before diagnosing missing logs, planning export paths, or teaching the difference between buckets and sinks. It is typically triggered by A reader sees logs in buckets and assumes that storage and routing are the same thing. Run in a shell with project-level Logging read access. Read-only. Show the actual router filters that split required versus non-required log traffic.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -434,10 +425,7 @@ These two sink definitions are the cleanest live proof that the Log Router is po
 
 #### Inspect views, scopes, and analytics links
 
-**When to run:** Before troubleshooting access gaps, explaining why one reader sees fewer logs than another, or evaluating whether Log Analytics is already enabled.
-**Trigger:** A query result seems incomplete even though the bucket clearly stores the data.
-**Context:** Run in a shell with project-level Logging read access. Read-only.
-**Purpose:** Distinguish bucket contents from view filters, log scopes, and linked datasets.
+Before troubleshooting access gaps, explaining why one reader sees fewer logs than another, or evaluating whether Log Analytics is already enabled. It is typically triggered by A query result seems incomplete even though the bucket clearly stores the data. Run in a shell with project-level Logging read access. Read-only. Distinguish bucket contents from view filters, log scopes, and linked datasets.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -498,10 +486,7 @@ Use `gcloud logging read` for incident triage, audit review, and payload inspect
 
 #### Read recent audit logs in table form
 
-**When to run:** At the start of a security review or when you need a fast audit timeline.
-**Trigger:** You know the event class is audit-related but not yet the exact method or resource.
-**Context:** Run in a shell with `roles/logging.viewer` or `roles/logging.privateLogViewer`, depending on whether Data Access entries must be visible. Read-only.
-**Purpose:** Surface the actor, service, method, and timestamp of recent audit events without reading full JSON first.
+At the start of a security review or when you need a fast audit timeline. It is typically triggered by you know the event class is audit-related but not yet the exact method or resource. Run in a shell with `roles/logging.viewer` or `roles/logging.privateLogViewer`, depending on whether Data Access entries must be visible. Read-only. Surface the actor, service, method, and timestamp of recent audit events without reading full JSON first.
 
 | Column | Source field | Meaning |
 |---|---|---|
@@ -532,10 +517,7 @@ This output shows both control-plane and data-access activity in the same invest
 
 #### Inspect a full `protoPayload` audit entry
 
-**When to run:** After the table view tells you which service and method matter.
-**Trigger:** You need request or authorization detail, not only the high-level timeline.
-**Context:** Same permissions as the previous command. Read-only.
-**Purpose:** Read the nested `AuditLog` object stored in `protoPayload`.
+After the table view tells you which service and method matter. It is typically triggered by you need request or authorization detail, not only the high-level timeline. Same permissions as the previous command. Read-only. Read the nested `AuditLog` object stored in `protoPayload`.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -601,10 +583,7 @@ This entry is the concrete example of why audit logs use `protoPayload`. The eve
 
 #### Read a live `textPayload` entry
 
-**When to run:** When you need to verify unstructured application or ad hoc shell logging.
-**Trigger:** You know the log name and only need the message text and severity.
-**Context:** Read-only. The log was intentionally written during this refactor for verification.
-**Purpose:** Show what an unstructured custom log entry looks like in Cloud Logging.
+When you need to verify unstructured application or ad hoc shell logging. It is typically triggered by you know the log name and only need the message text and severity. Read-only. The log was intentionally written during this refactor for verification. Show what an unstructured custom log entry looks like in Cloud Logging.
 
 | Column | Source field | Meaning |
 |---|---|---|
@@ -628,10 +607,7 @@ This is the simplest `LogEntry` payload shape. It is useful for quick operator m
 
 #### Read a live `jsonPayload` entry
 
-**When to run:** When you need structured application telemetry.
-**Trigger:** The investigation requires field-level filtering, grouping, or future metric extraction.
-**Context:** Read-only. The log was intentionally written during this refactor for verification.
-**Purpose:** Show a structured custom entry that can be filtered by JSON path.
+When you need structured application telemetry. It is typically triggered by the investigation requires field-level filtering, grouping, or future metric extraction. Read-only. The log was intentionally written during this refactor for verification. Show a structured custom entry that can be filtered by JSON path.
 
 | Column | Source field | Meaning |
 |---|---|---|
@@ -669,10 +645,7 @@ Use `gcloud logging write` when a shell script, break-glass runbook, or one-off 
 
 #### Write a text log entry
 
-**When to run:** During controlled verification of routing or to leave a shell-origin event marker.
-**Trigger:** You need a human-readable log entry immediately from the CLI.
-**Context:** State-changing. Writes one new log entry into the active project.
-**Purpose:** Confirm that the project accepts direct CLI log writes and that the chosen log name becomes queryable.
+During controlled verification of routing or to leave a shell-origin event marker. It is typically triggered by you need a human-readable log entry immediately from the CLI. State-changing. Writes one new log entry into the active project. Confirm that the project accepts direct CLI log writes and that the chosen log name becomes queryable.
 
 | Argument | Meaning |
 |---|---|
@@ -694,10 +667,7 @@ The command output is intentionally minimal. Success means the event was accepte
 
 #### Write a JSON log entry
 
-**When to run:** When you need a structured event from a shell context.
-**Trigger:** The downstream consumer needs stable keys instead of message parsing.
-**Context:** State-changing. Writes one new JSON log entry into the active project.
-**Purpose:** Demonstrate how `gcloud logging write` can produce `jsonPayload`.
+When you need a structured event from a shell context. It is typically triggered by the downstream consumer needs stable keys instead of message parsing. State-changing. Writes one new JSON log entry into the active project. Demonstrate how `gcloud logging write` can produce `jsonPayload`.
 
 | Argument | Meaning |
 |---|---|
@@ -730,10 +700,7 @@ Historically, many Cloud Logging guides present `gcloud logging tail` as a stabl
 
 #### Verify the stable command surface
 
-**When to run:** Before copying a `tail` command from older documentation into an operator runbook.
-**Trigger:** A guide claims that `gcloud logging tail` is available on the stable surface.
-**Context:** Read-only. This command intentionally checks CLI behavior.
-**Purpose:** Confirm whether live tailing is a stable command in the installed Cloud SDK.
+Before copying a `tail` command from older documentation into an operator runbook. It is typically triggered by A guide claims that `gcloud logging tail` is available on the stable surface. Read-only. This command intentionally checks CLI behavior. Confirm whether live tailing is a stable command in the installed Cloud SDK.
 
 *Ask the stable CLI to run `tail` and capture the current behavior.*
 
@@ -752,10 +719,7 @@ This is a live correction to the older note. In this SDK build, stable `gcloud l
 
 #### Verify the alpha tail surface
 
-**When to run:** When you need to confirm whether streaming exists at all in the installed SDK.
-**Trigger:** The stable surface rejected `tail`.
-**Context:** Read-only with respect to the tail command itself, but the session below was paired with a deliberate verification write. The streaming capture was attempted under non-interactive automation.
-**Purpose:** Confirm that the alpha surface exists and starts a tail session, while documenting the automation limitation honestly.
+When you need to confirm whether streaming exists at all in the installed SDK. It is typically triggered by the stable surface rejected `tail`. Read-only with respect to the tail command itself, but the session below was paired with a deliberate verification write. The streaming capture was attempted under non-interactive automation. Confirm that the alpha surface exists and starts a tail session, while documenting the automation limitation honestly.
 
 *Start the alpha tail command in the current environment.*
 
@@ -782,10 +746,7 @@ Log-based metrics are the narrow bridge between event streams and alertable nume
 
 #### Inspect the current log-based metric inventory
 
-**When to run:** Before designing a new alert or dashboard from logs.
-**Trigger:** You need to know whether the project already derives metrics from logs.
-**Context:** Run in a shell with Logging read access. Read-only.
-**Purpose:** Show whether user-defined log-based metrics already exist in the active project.
+Before designing a new alert or dashboard from logs. It is typically triggered by you need to know whether the project already derives metrics from logs. Run in a shell with Logging read access. Read-only. Show whether user-defined log-based metrics already exist in the active project.
 
 | Field | Type | Meaning |
 |---|---|---|

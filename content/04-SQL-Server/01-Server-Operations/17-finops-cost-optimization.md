@@ -104,19 +104,13 @@ FinOps organizes work into three phases that repeat continuously over the life o
 
 #### Phase 1 — Inform
 
-**When to run:** Before any optimization decision. Inform is the phase that earns the right to act on the other two phases.
-**Trigger:** New workload, new quarter, budget review, cost anomaly alert, or architectural change that invalidates prior cost assumptions.
-**Context:** Inform is about visibility — who owns which resources, how much they cost, what they are compared to (benchmark), and what the budget says they should cost. It runs wherever the bill lives (GCP Billing, BigQuery billing export, cost dashboards).
-**Purpose:** Give every stakeholder the same picture of current spend, attribution, and variance against budget, so optimization is a discussion about shared facts rather than anecdotes.
+Before any optimization decision. Inform is the phase that earns the right to act on the other two phases. It is typically triggered by new workload, new quarter, budget review, cost anomaly alert, or architectural change that invalidates prior cost assumptions. Inform is about visibility — who owns which resources, how much they cost, what they are compared to (benchmark), and what the budget says they should cost. It runs wherever the bill lives (GCP Billing, BigQuery billing export, cost dashboards). Give every stakeholder the same picture of current spend, attribution, and variance against budget, so optimization is a discussion about shared facts rather than anecdotes.
 
 For SQL Server specifically, Inform means answering questions such as: how much persistent disk does this instance allocate, how much of that is actually used, what is the daily snapshot storage footprint, what does the full backup chain cost per month in GCS, what is the committed use discount coverage for this VM. The first H2 section of this note is essentially the Inform phase for a single SQL Server instance.
 
 #### Phase 2 — Optimize
 
-**When to run:** After Inform has produced a credible baseline and named the biggest line items.
-**Trigger:** A cost signal in the Inform baseline that exceeds the budget, exceeds the benchmark for that workload class, or does not match the business value the workload delivers.
-**Context:** Optimize is where the engineering actions happen. It splits cleanly into three lever categories — rate optimization (buying cheaper units), usage optimization (consuming fewer units), and architecture changes (changing what the workload does).
-**Purpose:** Reduce spend, improve price-performance, or free budget for higher-value work, without sacrificing the reliability and latency targets the business actually needs.
+After Inform has produced a credible baseline and named the biggest line items. It is typically triggered by A cost signal in the Inform baseline that exceeds the budget, exceeds the benchmark for that workload class, or does not match the business value the workload delivers. Optimize is where the engineering actions happen. It splits cleanly into three lever categories — rate optimization (buying cheaper units), usage optimization (consuming fewer units), and architecture changes (changing what the workload does). Reduce spend, improve price-performance, or free budget for higher-value work, without sacrificing the reliability and latency targets the business actually needs.
 
 For SQL Server on GCP the three lever categories map to:
 
@@ -126,10 +120,7 @@ For SQL Server on GCP the three lever categories map to:
 
 #### Phase 3 — Operate
 
-**When to run:** Continuously, after the first Optimize pass has landed.
-**Trigger:** Drift. A cost that was optimized tends to regress over time as engineers add workloads, forget to re-tag resources, let log files grow, or skip lifecycle-policy updates.
-**Context:** Operate is policy and automation — the guardrails that keep optimized state from decaying. It runs in GCP Organization Policy, budget alerts, lifecycle rules, tagging policies, and scheduled jobs.
-**Purpose:** Lock in the gains from Optimize, detect regressions within hours or days rather than months, and shift future decisions toward the cheaper path by default.
+Continuously, after the first Optimize pass has landed. It is typically triggered by drift. A cost that was optimized tends to regress over time as engineers add workloads, forget to re-tag resources, let log files grow, or skip lifecycle-policy updates. Operate is policy and automation — the guardrails that keep optimized state from decaying. It runs in GCP Organization Policy, budget alerts, lifecycle rules, tagging policies, and scheduled jobs. Lock in the gains from Optimize, detect regressions within hours or days rather than months, and shift future decisions toward the cheaper path by default.
 
 For SQL Server, Operate looks like: GCS lifecycle rules that force cold backups off Standard class, Cloud Scheduler jobs that stop non-prod VMs overnight, budget alerts tied to project labels, Recommender policies that flag oversized machine types, and scheduled queries against `msdb.dbo.backupset` that alert when the compression ratio drops unexpectedly.
 
@@ -218,10 +209,7 @@ Storage footprint is the first place cost waste hides, because allocated SQL Ser
 
 #### Audit database data and log allocation across the instance
 
-**When to run:** Start of any FinOps review, quarterly cost audit, or before right-sizing persistent disk on a GCE VM.
-**Trigger:** New instance under FinOps management, unexplained disk cost growth, or preparation for a VM migration.
-**Context:** Runs in any T-SQL session with `VIEW SERVER STATE`. Read-only. Single round trip against `sys.master_files` joined to `sys.databases`. No restart or downtime implication.
-**Purpose:** Produce the instance-level allocation summary that identifies which databases actually own storage cost and which are noise. Every cost discussion that follows references this baseline.
+Start of any FinOps review, quarterly cost audit, or before right-sizing persistent disk on a GCE VM. It is typically triggered by new instance under FinOps management, unexplained disk cost growth, or preparation for a VM migration. Runs in any T-SQL session with `VIEW SERVER STATE`. Read-only. Single round trip against `sys.master_files` joined to `sys.databases`. No restart or downtime implication. Produce the instance-level allocation summary that identifies which databases actually own storage cost and which are noise. Every cost discussion that follows references this baseline.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -278,10 +266,7 @@ ORDER BY total_size_mb DESC;
 
 #### Audit file-level allocation and growth setting for stoxx
 
-**When to run:** After the instance-level audit has pointed at a specific database; before changing file layout, enabling auto-growth, or moving files.
-**Trigger:** A database with unbalanced log/data ratio, a rebuild plan, or preparation for a persistent disk re-layout on GCE.
-**Context:** Runs as a read-only T-SQL query against `sys.master_files`. Requires `VIEW SERVER STATE` in SQL Server 2019 and earlier, `VIEW SERVER PERFORMANCE STATE` in SQL Server 2022+.
-**Purpose:** Inspect how many physical files a database has, where each one lives, how big it is, and how it grows — the level of detail needed to reason about file-placement decisions and persistent disk layout.
+After the instance-level audit has pointed at a specific database; before changing file layout, enabling auto-growth, or moving files. It is typically triggered by A database with unbalanced log/data ratio, a rebuild plan, or preparation for a persistent disk re-layout on GCE. Runs as a read-only T-SQL query against `sys.master_files`. Requires `VIEW SERVER STATE` in SQL Server 2019 and earlier, `VIEW SERVER PERFORMANCE STATE` in SQL Server 2022+. Inspect how many physical files a database has, where each one lives, how big it is, and how it grows — the level of detail needed to reason about file-placement decisions and persistent disk layout.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -332,10 +317,7 @@ ORDER BY mf.type, mf.file_id;
 
 #### Audit current log size and usage for stoxx
 
-**When to run:** After file-level audit has identified an oversized or undersized log file; during log-growth investigation; before changing log-backup cadence.
-**Trigger:** Log file occupies more disk than data file, log space since last backup is rising, unexplained log growth events in the error log.
-**Context:** Runs as a read-only T-SQL query against `sys.dm_db_log_space_usage`. The DMV is database-scoped — it returns a single row combining all log files of the **current database**. Must be run inside the `stoxx` database context (not from `master`). Requires `VIEW SERVER STATE` (2019-) or `VIEW SERVER PERFORMANCE STATE` (2022+).
-**Purpose:** Quantify exactly how much of the allocated log space is actually in use right now and how much has accumulated since the last log backup, so log-sizing and backup-cadence decisions are driven by numbers rather than guesswork.
+After file-level audit has identified an oversized or undersized log file; during log-growth investigation; before changing log-backup cadence. It is typically triggered by log file occupies more disk than data file, log space since last backup is rising, unexplained log growth events in the error log. Runs as a read-only T-SQL query against `sys.dm_db_log_space_usage`. The DMV is database-scoped — it returns a single row combining all log files of the **current database**. Must be run inside the `stoxx` database context (not from `master`). Requires `VIEW SERVER STATE` (2019-) or `VIEW SERVER PERFORMANCE STATE` (2022+). Quantify exactly how much of the allocated log space is actually in use right now and how much has accumulated since the last log backup, so log-sizing and backup-cadence decisions are driven by numbers rather than guesswork.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -382,10 +364,7 @@ FROM sys.dm_db_log_space_usage;
 
 #### Audit VLF count and size distribution for stoxx
 
-**When to run:** After observing slow log backups, slow database startup, or after multiple auto-growth events; before any log-file shrink/regrow operation.
-**Trigger:** Log file shows signs of fragmentation, frequent auto-growth events in the error log, or before re-sizing the log.
-**Context:** Read-only T-SQL against the `sys.dm_db_log_info()` table-valued function, which requires a `database_id` argument. Runs from any database context but the argument must identify the target. Requires `VIEW DATABASE STATE`.
-**Purpose:** Quantify how fragmented the transaction log is at the Virtual Log File level. VLF count matters because too many small VLFs degrade log-operation performance (log backups, replication, database startup), while too few large VLFs make truncation suboptimal.
+After observing slow log backups, slow database startup, or after multiple auto-growth events; before any log-file shrink/regrow operation. It is typically triggered by log file shows signs of fragmentation, frequent auto-growth events in the error log, or before re-sizing the log. Read-only T-SQL against the `sys.dm_db_log_info()` table-valued function, which requires a `database_id` argument. Runs from any database context but the argument must identify the target. Requires `VIEW DATABASE STATE`. Quantify how fragmented the transaction log is at the Virtual Log File level. VLF count matters because too many small VLFs degrade log-operation performance (log backups, replication, database startup), while too few large VLFs make truncation suboptimal.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -424,10 +403,7 @@ FROM sys.dm_db_log_info(DB_ID('stoxx')) AS li;
 
 #### Audit used vs. free space inside each data file for stoxx
 
-**When to run:** After the database-level audit has identified a database that owns material storage cost; before any `DBCC SHRINKFILE` or file-layout change.
-**Trigger:** A data file that appears oversized relative to workload, or preparation for a persistent disk downsize.
-**Context:** Read-only T-SQL against `stoxx.sys.database_files` joined with `FILEPROPERTY(..., 'SpaceUsed')`. The three-part name is required because `sys.database_files` is **database-scoped** — unlike `sys.master_files`, it only sees files of the current database, so `stoxx.sys.database_files` reaches into `stoxx` without a `USE` statement.
-**Purpose:** Distinguish between allocated and actually-used space inside each file. This is the signal that decides whether a file is oversized (shrink candidate) or genuinely full (grow candidate).
+After the database-level audit has identified a database that owns material storage cost; before any `DBCC SHRINKFILE` or file-layout change. It is typically triggered by A data file that appears oversized relative to workload, or preparation for a persistent disk downsize. Read-only T-SQL against `stoxx.sys.database_files` joined with `FILEPROPERTY(..., 'SpaceUsed')`. The three-part name is required because `sys.database_files` is **database-scoped** — unlike `sys.master_files`, it only sees files of the current database, so `stoxx.sys.database_files` reaches into `stoxx` without a `USE` statement. Distinguish between allocated and actually-used space inside each file. This is the signal that decides whether a file is oversized (shrink candidate) or genuinely full (grow candidate).
 
 | Field | Source | Unit / type | Meaning |
 |---|---|---|---|
@@ -474,10 +450,7 @@ ORDER BY df.type, df.file_id;
 
 #### Audit tempdb file layout and growth
 
-**When to run:** During initial instance configuration review or after observing PAGELATCH contention on `tempdb` allocation pages.
-**Trigger:** New instance under FinOps management, or performance investigation flagging `PAGELATCH_EX` on `2:1:1` / `2:1:2` / `2:1:3` (GAM/SGAM/PFS of tempdb).
-**Context:** Read-only T-SQL against `sys.master_files` filtered to `DB_ID('tempdb')`. The setting of file count and size is instance-level (via startup parameters or `ALTER DATABASE`), and it survives restart.
-**Purpose:** Confirm that `tempdb` has the right number of equally-sized data files for the core count and that the growth setting is sensible. `tempdb` is a cost signal because it is the one database whose storage is actively re-used and whose I/O characteristics drive persistent-disk IOPS choice.
+During initial instance configuration review or after observing PAGELATCH contention on `tempdb` allocation pages. It is typically triggered by new instance under FinOps management, or performance investigation flagging `PAGELATCH_EX` on `2:1:1` / `2:1:2` / `2:1:3` (GAM/SGAM/PFS of tempdb). Read-only T-SQL against `sys.master_files` filtered to `DB_ID('tempdb')`. The setting of file count and size is instance-level (via startup parameters or `ALTER DATABASE`), and it survives restart. Confirm that `tempdb` has the right number of equally-sized data files for the core count and that the growth setting is sensible. `tempdb` is a cost signal because it is the one database whose storage is actively re-used and whose I/O characteristics drive persistent-disk IOPS choice.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -530,10 +503,7 @@ Backup storage is the second place FinOps gains compound. SQL Server already pro
 
 #### Audit historical backup size and observed compression ratio
 
-**When to run:** As part of any FinOps storage review; before changing backup cadence, retention, or GCS storage class; after migrating backup jobs.
-**Trigger:** Growing GCS backup bucket cost, observed inconsistencies in backup size, or before enabling backup compression by default.
-**Context:** Read-only T-SQL against `msdb.dbo.backupset`. Runs in any session with `db_owner` or `SELECT` on the `msdb` backup tables (typically granted via the `db_backupoperator` role in `msdb`).
-**Purpose:** Produce a realistic picture of recent backup sizes, both compressed and uncompressed, to compute the actual compression ratio and verify backup type mix (full / differential / log).
+As part of any FinOps storage review; before changing backup cadence, retention, or GCS storage class; after migrating backup jobs. It is typically triggered by growing GCS backup bucket cost, observed inconsistencies in backup size, or before enabling backup compression by default. Read-only T-SQL against `msdb.dbo.backupset`. Runs in any session with `db_owner` or `SELECT` on the `msdb` backup tables (typically granted via the `db_backupoperator` role in `msdb`). Produce a realistic picture of recent backup sizes, both compressed and uncompressed, to compute the actual compression ratio and verify backup type mix (full / differential / log).
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -607,10 +577,7 @@ ORDER BY backup_finish_date DESC;
 
 #### Audit current backup compression default setting
 
-**When to run:** Before deciding whether to enable backup compression by default, as part of instance configuration review, or after restoring system databases.
-**Trigger:** `backup compression default` may have drifted from the platform standard (typically `1`), or a new instance has not been configured yet.
-**Context:** Read-only T-SQL against `sys.configurations`. The query also audits related memory and parallelism knobs because they interact with compression CPU cost. Requires `VIEW SERVER STATE`. `value` and `value_in_use` are `sql_variant` columns and must be cast to a concrete type (here `int`) before pyodbc can consume them.
-**Purpose:** Confirm the current instance-level setting before deciding whether to flip it, and surface neighbouring memory/MAXDOP knobs that often drift at the same time.
+Before deciding whether to enable backup compression by default, as part of instance configuration review, or after restoring system databases. It is typically triggered by `backup compression default` may have drifted from the platform standard (typically `1`), or a new instance has not been configured yet. Read-only T-SQL against `sys.configurations`. The query also audits related memory and parallelism knobs because they interact with compression CPU cost. Requires `VIEW SERVER STATE`. `value` and `value_in_use` are `sql_variant` columns and must be cast to a concrete type (here `int`) before pyodbc can consume them. Confirm the current instance-level setting before deciding whether to flip it, and surface neighbouring memory/MAXDOP knobs that often drift at the same time.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -659,10 +626,7 @@ ORDER BY name;
 
 #### Enable backup compression by default
 
-**When to run:** After the historical backup audit has shown that observed compression ratios are ≥ 2 and CPU headroom exists during the backup window.
-**Trigger:** Instance-level standardization, new instance bring-up, or cost review finding that backup jobs forget `WITH COMPRESSION`.
-**Context:** State-changing T-SQL against `sp_configure` followed by `RECONFIGURE`. Instance-level. Dynamic — takes effect immediately on the next backup command without a restart. Requires the `ALTER SETTINGS` server-level permission (held by `sysadmin` and `serveradmin`).
-**Purpose:** Make compressed backups the default behaviour so every job inherits compression automatically. Explicit `WITH NO_COMPRESSION` in an individual backup command still overrides the default.
+After the historical backup audit has shown that observed compression ratios are ≥ 2 and CPU headroom exists during the backup window. It is typically triggered by instance-level standardization, new instance bring-up, or cost review finding that backup jobs forget `WITH COMPRESSION`. State-changing T-SQL against `sp_configure` followed by `RECONFIGURE`. Instance-level. Dynamic — takes effect immediately on the next backup command without a restart. Requires the `ALTER SETTINGS` server-level permission (held by `sysadmin` and `serveradmin`). Make compressed backups the default behaviour so every job inherits compression automatically. Explicit `WITH NO_COMPRESSION` in an individual backup command still overrides the default.
 
 > [!warning] Backup compression is CPU-heavy; validate before enabling in production
 >
@@ -702,10 +666,7 @@ Backup compression reduces the size of backups. Data compression (row, page, col
 
 #### Audit current data compression coverage for user tables in stoxx
 
-**When to run:** Before deciding whether to apply data compression; as part of periodic storage reviews; after a schema migration.
-**Trigger:** Persistent disk cost is material and the backup compression lever has already been pulled; or a specific table is known to be a hot spot.
-**Context:** Read-only T-SQL against `stoxx.sys.partitions` joined with `sys.indexes`, `sys.tables`, `sys.schemas`, and `sys.allocation_units`. Runs in any database context because of the three-part names. Requires `VIEW DEFINITION` at the database level.
-**Purpose:** Identify which tables and indexes are already compressed, which are not, and how much space each uncompressed structure owns — ranked by size so the biggest candidates surface first.
+Before deciding whether to apply data compression; as part of periodic storage reviews; after a schema migration. It is typically triggered by persistent disk cost is material and the backup compression lever has already been pulled; or a specific table is known to be a hot spot. Read-only T-SQL against `stoxx.sys.partitions` joined with `sys.indexes`, `sys.tables`, `sys.schemas`, and `sys.allocation_units`. Runs in any database context because of the three-part names. Requires `VIEW DEFINITION` at the database level. Identify which tables and indexes are already compressed, which are not, and how much space each uncompressed structure owns — ranked by size so the biggest candidates surface first.
 
 | Field | Source | Unit / type | Meaning |
 |---|---|---|---|
@@ -766,10 +727,7 @@ ORDER BY total_mb DESC;
 
 #### Estimate page compression savings on the largest silver table
 
-**When to run:** After identifying a specific table as a compression candidate from the coverage audit.
-**Trigger:** A user table with `data_compression_desc = NONE` that is large enough to matter (typically > 50 MB) and is accessed predominantly via seeks rather than full scans.
-**Context:** Read-only-ish T-SQL via `sp_estimate_data_compression_savings`. The stored procedure acquires an intent-shared (IS) lock on the table, reads a sample into tempdb, and runs the compression algorithm on the sample to estimate the final size. Does not actually compress anything. Can produce non-trivial tempdb and CPU load on large tables — avoid running at peak hours on very large tables.
-**Purpose:** Produce an evidence-based estimate of storage savings from page compression before committing to a rebuild. Works for row, page, columnstore, and columnstore archival.
+After identifying a specific table as a compression candidate from the coverage audit. It is typically triggered by A user table with `data_compression_desc = NONE` that is large enough to matter (typically > 50 MB) and is accessed predominantly via seeks rather than full scans. Read-only-ish T-SQL via `sp_estimate_data_compression_savings`. The stored procedure acquires an intent-shared (IS) lock on the table, reads a sample into tempdb, and runs the compression algorithm on the sample to estimate the final size. Does not actually compress anything. Can produce non-trivial tempdb and CPU load on large tables — avoid running at peak hours on very large tables. Produce an evidence-based estimate of storage savings from page compression before committing to a rebuild. Works for row, page, columnstore, and columnstore archival.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -809,10 +767,7 @@ EXEC sp_estimate_data_compression_savings
 
 #### Apply page compression to a candidate table
 
-**When to run:** After the estimate has confirmed meaningful savings and a maintenance window is scheduled.
-**Trigger:** Compression estimate shows > 30% savings and no blocker (CPU headroom, locking window, Enterprise-only feature dependency).
-**Context:** State-changing T-SQL. `ALTER TABLE ... REBUILD WITH (DATA_COMPRESSION = PAGE)` performs an offline rebuild of the heap or clustered index plus all nonclustered indexes. On Enterprise edition, use `ONLINE = ON` for non-blocking rebuild; on Standard, the rebuild takes a schema-modification lock on the table for the duration. Requires `ALTER` permission on the table.
-**Purpose:** Apply page compression to the base table and all its nonclustered indexes in a single statement, so subsequent reads, writes, and backups operate on the compressed footprint.
+After the estimate has confirmed meaningful savings and a maintenance window is scheduled. It is typically triggered by compression estimate shows > 30% savings and no blocker (CPU headroom, locking window, Enterprise-only feature dependency). State-changing T-SQL. `ALTER TABLE ... REBUILD WITH (DATA_COMPRESSION = PAGE)` performs an offline rebuild of the heap or clustered index plus all nonclustered indexes. On Enterprise edition, use `ONLINE = ON` for non-blocking rebuild; on Standard, the rebuild takes a schema-modification lock on the table for the duration. Requires `ALTER` permission on the table. Apply page compression to the base table and all its nonclustered indexes in a single statement, so subsequent reads, writes, and backups operate on the compressed footprint.
 
 > [!warning] Offline rebuild is blocking on Standard edition
 >
@@ -850,10 +805,7 @@ REBUILD WITH (DATA_COMPRESSION = PAGE);
 
 #### Audit persisted Enterprise-only features before changing edition
 
-**When to run:** Before planning an edition change (Enterprise → Standard), a migration to a lower-tier Cloud SQL instance, or a licensing-cost audit.
-**Trigger:** Cost review asking whether the workload can be downgraded to Standard; licensing renewal; migration planning.
-**Context:** Read-only T-SQL against `sys.dm_db_persisted_sku_features`, which is **database-scoped** — it must be queried in the context of each user database. Requires `VIEW DATABASE STATE` (2019-) or `VIEW DATABASE PERFORMANCE STATE` (2022+).
-**Purpose:** Identify features currently enabled in the database that would block restore to a lower edition, so the licensing conversation is grounded in facts.
+Before planning an edition change (Enterprise → Standard), a migration to a lower-tier Cloud SQL instance, or a licensing-cost audit. It is typically triggered by cost review asking whether the workload can be downgraded to Standard; licensing renewal; migration planning. Read-only T-SQL against `sys.dm_db_persisted_sku_features`, which is **database-scoped** — it must be queried in the context of each user database. Requires `VIEW DATABASE STATE` (2019-) or `VIEW DATABASE PERFORMANCE STATE` (2022+). Identify features currently enabled in the database that would block restore to a lower edition, so the licensing conversation is grounded in facts.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -889,10 +841,7 @@ The final storage signal is what the volume itself looks like. SQL Server report
 
 #### Audit persistent volume capacity and free space
 
-**When to run:** Before resizing a persistent disk up or down; during capacity planning; after observing growth alerts.
-**Trigger:** Approaching disk full, or the opposite — a disk that is oversized relative to the data it contains.
-**Context:** Read-only T-SQL against `sys.dm_os_volume_stats()`. The function is called via `CROSS APPLY` because it takes `(database_id, file_id)` parameters that come from `sys.master_files`. On Linux and containerised SQL Server deployments, Windows-specific metadata columns (`volume_mount_point`, `file_system_type`, `supports_compression`, `is_compressed`) return NULL, but `total_bytes` and `available_bytes` are always populated.
-**Purpose:** Show how much physical volume is under the instance and how much of it is free, so persistent disk right-sizing is grounded in the OS-level numbers the hypervisor bills on.
+Before resizing a persistent disk up or down; during capacity planning; after observing growth alerts. It is typically triggered by approaching disk full, or the opposite — a disk that is oversized relative to the data it contains. Read-only T-SQL against `sys.dm_os_volume_stats()`. The function is called via `CROSS APPLY` because it takes `(database_id, file_id)` parameters that come from `sys.master_files`. On Linux and containerised SQL Server deployments, Windows-specific metadata columns (`volume_mount_point`, `file_system_type`, `supports_compression`, `is_compressed`) return NULL, but `total_bytes` and `available_bytes` are always populated. Show how much physical volume is under the instance and how much of it is free, so persistent disk right-sizing is grounded in the OS-level numbers the hypervisor bills on.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -941,10 +890,7 @@ The last category of in-database signals are the settings that decide **how much
 
 #### Audit current process memory and buffer pool state
 
-**When to run:** Before right-sizing the VM, before capping `max server memory`, or after observing OOM events.
-**Trigger:** Cost review considering a VM downsize; stability incident; preparing a right-sizing recommendation to present to platform.
-**Context:** Read-only T-SQL against `sys.dm_os_process_memory`. Requires `VIEW SERVER STATE` (2019-) or `VIEW SERVER PERFORMANCE STATE` (2022+). This DMV reports memory from SQL Server's process perspective, distinct from `sys.dm_os_sys_memory` which reports host-level metrics.
-**Purpose:** Measure the actual memory footprint SQL Server is currently consuming so right-sizing decisions are grounded in observed usage, not in `max server memory` settings that may be far above what the workload needs.
+Before right-sizing the VM, before capping `max server memory`, or after observing OOM events. It is typically triggered by cost review considering a VM downsize; stability incident; preparing a right-sizing recommendation to present to platform. Read-only T-SQL against `sys.dm_os_process_memory`. Requires `VIEW SERVER STATE` (2019-) or `VIEW SERVER PERFORMANCE STATE` (2022+). This DMV reports memory from SQL Server's process perspective, distinct from `sys.dm_os_sys_memory` which reports host-level metrics. Measure the actual memory footprint SQL Server is currently consuming so right-sizing decisions are grounded in observed usage, not in `max server memory` settings that may be far above what the workload needs.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -987,10 +933,7 @@ FROM sys.dm_os_process_memory;
 
 #### Audit plan cache size
 
-**When to run:** After observing high compile times, during memory investigations, or as part of capacity review.
-**Trigger:** Plan cache growth is suspected of pressuring buffer pool; or the workload is ad-hoc-heavy and plan cache bloat is plausible.
-**Context:** Read-only T-SQL against `sys.dm_exec_cached_plans`. Requires `VIEW SERVER STATE`. Lightweight query — a single aggregate.
-**Purpose:** Quantify how much memory is currently held by cached plans, as one of the cost-relevant signals for deciding between `OPTIMIZE FOR AD HOC WORKLOADS` and leaving the default.
+After observing high compile times, during memory investigations, or as part of capacity review. It is typically triggered by plan cache growth is suspected of pressuring buffer pool; or the workload is ad-hoc-heavy and plan cache bloat is plausible. Read-only T-SQL against `sys.dm_exec_cached_plans`. Requires `VIEW SERVER STATE`. Lightweight query — a single aggregate. Quantify how much memory is currently held by cached plans, as one of the cost-relevant signals for deciding between `OPTIMIZE FOR AD HOC WORKLOADS` and leaving the default.
 
 *This query returns the total plan cache size and the number of cached plans.*
 
@@ -1014,10 +957,7 @@ Indexes that are never read but are still maintained on writes are a double cost
 
 #### Audit never-used nonclustered indexes in stoxx
 
-**When to run:** After the instance has been running for long enough to have accumulated representative workload (typically weeks).
-**Trigger:** Storage review looking for easy wins; performance review after a schema migration; pre-migration audit.
-**Context:** Read-only T-SQL joining `sys.indexes`, `sys.dm_db_index_usage_stats`, `sys.partitions`, and `sys.allocation_units`. Must filter out primary keys, unique constraints, and clustered indexes. Usage counters reset on instance restart, so interpret the numbers relative to instance uptime.
-**Purpose:** Identify nonclustered indexes that have received zero reads (`user_seeks + user_scans + user_lookups = 0`) since the last instance restart, ordered by size.
+After the instance has been running for long enough to have accumulated representative workload (typically weeks). It is typically triggered by storage review looking for easy wins; performance review after a schema migration; pre-migration audit. Read-only T-SQL joining `sys.indexes`, `sys.dm_db_index_usage_stats`, `sys.partitions`, and `sys.allocation_units`. Must filter out primary keys, unique constraints, and clustered indexes. Usage counters reset on instance restart, so interpret the numbers relative to instance uptime. Identify nonclustered indexes that have received zero reads (`user_seeks + user_scans + user_lookups = 0`) since the last instance restart, ordered by size.
 
 > [!warning] Usage counters reset on every SQL Server restart
 >
@@ -1097,10 +1037,7 @@ The persistent disk choice affects two cost lines at once: the per-GB-month stor
 
 #### Compare persistent disk families at a glance
 
-**When to run:** Before provisioning a new SQL Server VM or migrating an existing one to a different disk family.
-**Trigger:** New instance request, cost review recommending a disk family change, or a workload that has outgrown its current IOPS envelope.
-**Context:** Reference decision. The persistent-disk choice is made at disk-creation time in the GCP console or `gcloud compute disks create` and is immutable in type — changing disk type requires creating a new disk and copying data over.
-**Purpose:** Pick the cheapest disk that meets the workload's IOPS, throughput, and latency requirements.
+Before provisioning a new SQL Server VM or migrating an existing one to a different disk family. It is typically triggered by new instance request, cost review recommending a disk family change, or a workload that has outgrown its current IOPS envelope. Reference decision. The persistent-disk choice is made at disk-creation time in the GCP console or `gcloud compute disks create` and is immutable in type — changing disk type requires creating a new disk and copying data over. Pick the cheapest disk that meets the workload's IOPS, throughput, and latency requirements.
 
 | Disk type | Approximate $/GB-month (us-central1) | IOPS model | Typical use for SQL Server |
 |---|---:|---|---|
@@ -1125,10 +1062,7 @@ The persistent disk choice affects two cost lines at once: the per-GB-month stor
 
 #### Create a new persistent disk for a SQL Server data volume
 
-**When to run:** During new SQL Server VM provisioning, disk expansion, or clone-and-cutover rebuild.
-**Trigger:** New instance, migration, or disk replacement.
-**Context:** Runs in Cloud Shell or any authenticated `gcloud` session. Requires the `compute.disks.create` IAM permission (covered by the `roles/compute.instanceAdmin` role). State-changing — creates a billable resource immediately.
-**Purpose:** Provision a new persistent disk of a specific type, size, and zone ready to be attached to a SQL Server VM.
+During new SQL Server VM provisioning, disk expansion, or clone-and-cutover rebuild. It is typically triggered by new instance, migration, or disk replacement. Runs in Cloud Shell or any authenticated `gcloud` session. Requires the `compute.disks.create` IAM permission (covered by the `roles/compute.instanceAdmin` role). State-changing — creates a billable resource immediately. Provision a new persistent disk of a specific type, size, and zone ready to be attached to a SQL Server VM.
 
 *This command creates a 256 GB hyperdisk-balanced disk named `sql-data-01` in `europe-west1-b`.*
 
@@ -1159,10 +1093,7 @@ gcloud compute disks create sql-data-01 \
 
 #### Resize a persistent disk up
 
-**When to run:** When SQL Server has grown into less than 20% headroom on the current disk.
-**Trigger:** Disk free-percent falls below threshold; scheduled growth; addition of a new database or partition.
-**Context:** Runs in Cloud Shell or any authenticated `gcloud` session. Requires `compute.disks.resize` (in `roles/compute.instanceAdmin`). The resize operation is online — the VM stays up — but the filesystem inside the VM must be extended separately afterwards (`resize2fs`, `xfs_growfs`, or `Extend-Volume` on Windows).
-**Purpose:** Grow the persistent disk without downtime so SQL Server data files can continue to auto-grow.
+When SQL Server has grown into less than 20% headroom on the current disk. It is typically triggered by disk free-percent falls below threshold; scheduled growth; addition of a new database or partition. Runs in Cloud Shell or any authenticated `gcloud` session. Requires `compute.disks.resize` (in `roles/compute.instanceAdmin`). The resize operation is online — the VM stays up — but the filesystem inside the VM must be extended separately afterwards (`resize2fs`, `xfs_growfs`, or `Extend-Volume` on Windows). Grow the persistent disk without downtime so SQL Server data files can continue to auto-grow.
 
 *This command grows an existing persistent disk to 512 GB.*
 
@@ -1195,10 +1126,7 @@ SQL Server backups and GCP persistent disk snapshots solve different problems. T
 
 #### Compare SQL Server backups and GCP disk snapshots at the mechanism level
 
-**When to run:** Once per design review, when justifying the backup architecture to platform or finance.
-**Trigger:** New workload under FinOps management, architectural review, or a recovery objective conversation.
-**Context:** Reference decision. Both layers are configured outside the database — SQL Server backups via `BACKUP DATABASE` and Agent jobs, snapshots via `gcloud compute` or resource policies.
-**Purpose:** Clarify which recovery operations each layer actually supports, so retention and cadence decisions are made once per workload rather than repeatedly renegotiated.
+Once per design review, when justifying the backup architecture to platform or finance. It is typically triggered by new workload under FinOps management, architectural review, or a recovery objective conversation. Reference decision. Both layers are configured outside the database — SQL Server backups via `BACKUP DATABASE` and Agent jobs, snapshots via `gcloud compute` or resource policies. Clarify which recovery operations each layer actually supports, so retention and cadence decisions are made once per workload rather than repeatedly renegotiated.
 
 | Mechanism | Granularity | Point-in-time recovery | Restore speed | Application consistency | Typical use |
 |---|---|---|---|---|---|
@@ -1221,10 +1149,7 @@ SQL Server backups and GCP persistent disk snapshots solve different problems. T
 
 #### Create a snapshot schedule (resource policy) for the SQL Server data disk
 
-**When to run:** Once per new SQL Server VM, or when the recovery cadence needs to change.
-**Trigger:** New instance needs automated snapshots, or existing cadence is wrong (too frequent for cost, or too infrequent for RPO).
-**Context:** Runs as a `gcloud` command in Cloud Shell or any authenticated session. Requires `compute.resourcePolicies.create`. The policy exists in a region; it does nothing until attached to a specific disk.
-**Purpose:** Define a reusable snapshot cadence that can be applied to one or many disks.
+Once per new SQL Server VM, or when the recovery cadence needs to change. It is typically triggered by new instance needs automated snapshots, or existing cadence is wrong (too frequent for cost, or too infrequent for RPO). Runs as a `gcloud` command in Cloud Shell or any authenticated session. Requires `compute.resourcePolicies.create`. The policy exists in a region; it does nothing until attached to a specific disk. Define a reusable snapshot cadence that can be applied to one or many disks.
 
 *This command creates a daily snapshot schedule retained for 14 days, running at 03:00 in the `europe-west1` region.*
 
@@ -1254,10 +1179,7 @@ gcloud compute resource-policies create snapshot-schedule sql-daily \
 
 #### Attach the snapshot schedule to the data disk
 
-**When to run:** Immediately after creating the resource policy and before the first expected snapshot window.
-**Trigger:** Policy created but not yet effective; new disk that should inherit the existing schedule.
-**Context:** Runs as a `gcloud compute disks add-resource-policies` command. Requires `compute.disks.addResourcePolicies`. The disk can have at most one snapshot schedule attached at a time.
-**Purpose:** Make the snapshot schedule take effect on a specific disk so automated snapshots begin on the next scheduled window.
+Immediately after creating the resource policy and before the first expected snapshot window. It is typically triggered by policy created but not yet effective; new disk that should inherit the existing schedule. Runs as a `gcloud compute disks add-resource-policies` command. Requires `compute.disks.addResourcePolicies`. The disk can have at most one snapshot schedule attached at a time. Make the snapshot schedule take effect on a specific disk so automated snapshots begin on the next scheduled window.
 
 *This command attaches the `sql-daily` policy to the `sql-data-01` persistent disk.*
 
@@ -1284,10 +1206,7 @@ gcloud compute disks describe sql-data-01 \
 
 #### Take an application-consistent snapshot on SQL Server 2022+
 
-**When to run:** During the regular snapshot window; in an automation script triggered by Cloud Scheduler or Cloud Workflows; as a manual pre-change safety snapshot.
-**Trigger:** Scheduled snapshot window, pre-change safety, or ad-hoc recovery point creation.
-**Context:** Three-step orchestration: (1) T-SQL `ALTER DATABASE` to suspend writes, (2) `gcloud` to capture the snapshot, (3) T-SQL `BACKUP DATABASE ... WITH SNAPSHOT, METADATA_ONLY` to emit the backup set record and auto-resume writes. Requires `ALTER` on the database and `compute.disks.createSnapshot`. Write-freeze window is typically 400–800 ms, well under the 1-second threshold most applications tolerate.
-**Purpose:** Produce a snapshot that can be rehydrated into a SQL Server instance with a valid recovery chain, without stalling reads and with a tiny write-freeze window.
+During the regular snapshot window; in an automation script triggered by Cloud Scheduler or Cloud Workflows; as a manual pre-change safety snapshot. It is typically triggered by scheduled snapshot window, pre-change safety, or ad-hoc recovery point creation. Three-step orchestration: (1) T-SQL `ALTER DATABASE` to suspend writes, (2) `gcloud` to capture the snapshot, (3) T-SQL `BACKUP DATABASE ... WITH SNAPSHOT, METADATA_ONLY` to emit the backup set record and auto-resume writes. Requires `ALTER` on the database and `compute.disks.createSnapshot`. Write-freeze window is typically 400–800 ms, well under the 1-second threshold most applications tolerate. Produce a snapshot that can be rehydrated into a SQL Server instance with a valid recovery chain, without stalling reads and with a tiny write-freeze window.
 
 > [!warning] A long write freeze blocks every writer on the database
 >
@@ -1349,10 +1268,7 @@ Persistent disks hold the live database and in-place snapshots. The SQL Server f
 
 #### Choose a GCS storage class for each tier of backup
 
-**When to run:** Once per backup bucket, during bucket creation or policy review.
-**Trigger:** New backup repository, retention review, or GCS bill exceeding expectations.
-**Context:** Reference decision. Storage class is set per object, and can be changed over time by lifecycle policies.
-**Purpose:** Match each tier of backup to the cheapest storage class that still meets its access and retention requirements.
+Once per backup bucket, during bucket creation or policy review. It is typically triggered by new backup repository, retention review, or GCS bill exceeding expectations. Reference decision. Storage class is set per object, and can be changed over time by lifecycle policies. Match each tier of backup to the cheapest storage class that still meets its access and retention requirements.
 
 | Class | $/GB-month (US, approx) | Minimum storage duration | Retrieval fee | Typical SQL Server use |
 |---|---:|---|---:|---|
@@ -1375,10 +1291,7 @@ Persistent disks hold the live database and in-place snapshots. The SQL Server f
 
 #### Create a backup bucket with versioning and public-access prevention
 
-**When to run:** Once, during initial setup of the SQL Server backup repository on GCS.
-**Trigger:** New SQL Server workload under FinOps management, or migration from an on-prem backup target.
-**Context:** Runs as a `gcloud storage buckets create` command. Requires `storage.buckets.create` (in `roles/storage.admin`). State-changing.
-**Purpose:** Provision a GCS bucket ready to receive SQL Server backups with sensible defaults for safety and FinOps.
+Once, during initial setup of the SQL Server backup repository on GCS. It is typically triggered by new SQL Server workload under FinOps management, or migration from an on-prem backup target. Runs as a `gcloud storage buckets create` command. Requires `storage.buckets.create` (in `roles/storage.admin`). State-changing. Provision a GCS bucket ready to receive SQL Server backups with sensible defaults for safety and FinOps.
 
 *This command creates a regional bucket with uniform bucket-level access, object versioning, and public-access prevention.*
 
@@ -1406,10 +1319,7 @@ gcloud storage buckets create gs://sql-backups-prod \
 
 #### Apply an object lifecycle policy to the backup bucket
 
-**When to run:** After the bucket is created and the retention policy has been agreed with application and compliance owners.
-**Trigger:** New bucket, retention policy change, or cost review flagging an oversized bucket.
-**Context:** Runs as `gcloud storage buckets update --lifecycle-file=<file>`. Requires `storage.buckets.update`. The JSON file defines the rules declaratively; GCS then enforces them on its own schedule.
-**Purpose:** Automate storage-class transitions and object expiration so backup age drives cost automatically without an operator in the loop.
+After the bucket is created and the retention policy has been agreed with application and compliance owners. It is typically triggered by new bucket, retention policy change, or cost review flagging an oversized bucket. Runs as `gcloud storage buckets update --lifecycle-file=<file>`. Requires `storage.buckets.update`. The JSON file defines the rules declaratively; GCS then enforces them on its own schedule. Automate storage-class transitions and object expiration so backup age drives cost automatically without an operator in the loop.
 
 *This is the `lifecycle.json` file that transitions objects through Standard → Nearline → Coldline → Archive and finally deletes at 3 years.*
 
@@ -1466,10 +1376,7 @@ gcloud storage buckets describe gs://sql-backups-prod \
 
 #### Enable bucket lock for compliance retention
 
-**When to run:** Only when the workload genuinely requires WORM (write once, read many) retention for compliance — typically SEC 17a-4, FINRA, or CFTC.
-**Trigger:** Regulatory requirement, audit finding, or data protection policy.
-**Context:** Runs as `gcloud storage buckets update` with a retention period. Bucket Lock is a two-step operation — first set the retention period, then **lock** it. Once locked, the retention period can never be reduced or removed. Requires `storage.buckets.update` and `storage.buckets.lockRetentionPolicy`.
-**Purpose:** Prevent any backup object — by any identity, including project admins — from being deleted or overwritten before the retention period expires.
+Only when the workload genuinely requires WORM (write once, read many) retention for compliance — typically SEC 17a-4, FINRA, or CFTC. It is typically triggered by regulatory requirement, audit finding, or data protection policy. Runs as `gcloud storage buckets update` with a retention period. Bucket Lock is a two-step operation — first set the retention period, then **lock** it. Once locked, the retention period can never be reduced or removed. Requires `storage.buckets.update` and `storage.buckets.lockRetentionPolicy`. Prevent any backup object — by any identity, including project admins — from being deleted or overwritten before the retention period expires.
 
 > [!danger] Locking a retention policy is irreversible and permanent
 >
@@ -1515,10 +1422,7 @@ The biggest rate-optimization lever on GCE is committed use discounts. CUDs are 
 
 #### Compare compute purchase models
 
-**When to run:** Before provisioning a new SQL Server VM or before renewing a CUD.
-**Trigger:** New instance, CUD renewal cycle, workload stability review.
-**Context:** Reference decision. CUDs are irrevocable once purchased — you pay the monthly fee for the full term whether you use the capacity or not.
-**Purpose:** Choose the purchase model that matches the workload's stability profile and the business's tolerance for committing capital in advance.
+Before provisioning a new SQL Server VM or before renewing a CUD. It is typically triggered by new instance, CUD renewal cycle, workload stability review. Reference decision. CUDs are irrevocable once purchased — you pay the monthly fee for the full term whether you use the capacity or not. Choose the purchase model that matches the workload's stability profile and the business's tolerance for committing capital in advance.
 
 | Purchase model | Typical discount | Commitment term | Reversible? | When to use |
 |---|---:|---|---|---|
@@ -1542,10 +1446,7 @@ The biggest rate-optimization lever on GCE is committed use discounts. CUDs are 
 
 #### Calculate CUD break-even
 
-**When to run:** Before signing a 1-year or 3-year resource CUD.
-**Trigger:** Utilization has been stable for long enough that a commitment is plausible; budget cycle.
-**Context:** Pencil-and-paper math against observed utilization. Compare the CUD monthly cost to the on-demand cost at the VM's observed utilization, accounting for SUDs.
-**Purpose:** Decide whether the CUD actually saves money at the workload's real utilization pattern, not at the theoretical maximum.
+Before signing a 1-year or 3-year resource CUD. It is typically triggered by utilization has been stable for long enough that a commitment is plausible; budget cycle. Pencil-and-paper math against observed utilization. Compare the CUD monthly cost to the on-demand cost at the VM's observed utilization, accounting for SUDs. Decide whether the CUD actually saves money at the workload's real utilization pattern, not at the theoretical maximum.
 
 | Utilization | CUD vs on-demand math (approximate) |
 |---|---|
@@ -1558,10 +1459,7 @@ The biggest rate-optimization lever on GCE is committed use discounts. CUDs are 
 
 #### Request machine-type right-sizing recommendations from GCP Recommender
 
-**When to run:** After the VM has been running for at least 8 days with representative workload.
-**Trigger:** Cost review, quarterly right-sizing cadence, or budget variance alert.
-**Context:** Runs as `gcloud recommender recommendations list`. Requires `recommender.computeInstanceMachineTypeRecommendations.get`. Read-only — emits recommendations, does not apply them. The recommender needs at least 8 days of metrics, uses 60-second averages, and only emits a recommendation when the estimated saving is ≥ $10/month.
-**Purpose:** Surface the specific VMs where observed utilization is below the machine type and the recommender thinks a smaller type would save money.
+After the VM has been running for at least 8 days with representative workload. It is typically triggered by cost review, quarterly right-sizing cadence, or budget variance alert. Runs as `gcloud recommender recommendations list`. Requires `recommender.computeInstanceMachineTypeRecommendations.get`. Read-only — emits recommendations, does not apply them. The recommender needs at least 8 days of metrics, uses 60-second averages, and only emits a recommendation when the estimated saving is ≥ $10/month. Surface the specific VMs where observed utilization is below the machine type and the recommender thinks a smaller type would save money.
 
 *This command lists machine-type recommendations for a specific zone and project.*
 
@@ -1615,10 +1513,7 @@ gcloud recommender recommendations mark-claimed \
 
 #### Stop non-production VMs on a schedule
 
-**When to run:** Once per non-production workload that has idle windows — typically nights and weekends.
-**Trigger:** Cost review flagging non-prod VMs as a significant line item; SRE policy enforcement.
-**Context:** Two operations — a Cloud Scheduler job that emits an event, and a Cloud Run service (or Cloud Function) that stops the VM on the event. Requires `cloudscheduler.jobs.create` and `compute.instances.stop`. A simpler pattern uses `gcloud compute instances stop` directly in a `cron` on a management VM.
-**Purpose:** Eliminate the cost of non-production VMs during idle windows without forcing engineers to stop them manually.
+Once per non-production workload that has idle windows — typically nights and weekends. It is typically triggered by cost review flagging non-prod VMs as a significant line item; SRE policy enforcement. Two operations — a Cloud Scheduler job that emits an event, and a Cloud Run service (or Cloud Function) that stops the VM on the event. Requires `cloudscheduler.jobs.create` and `compute.instances.stop`. A simpler pattern uses `gcloud compute instances stop` directly in a `cron` on a management VM. Eliminate the cost of non-production VMs during idle windows without forcing engineers to stop them manually.
 
 *This command stops a VM on demand.*
 
@@ -1665,10 +1560,7 @@ Licensing is the largest irreversible cost decision for SQL Server workloads. On
 
 #### Compare licensing models for SQL Server on GCE
 
-**When to run:** Before provisioning a new SQL Server VM or before a licensing renewal decision.
-**Trigger:** New workload, SA renewal, migration planning, or cost review flagging licensing as the dominant line item.
-**Context:** Reference decision. Cannot be changed on a running VM — BYOL and license-included GCE images use different disk images entirely.
-**Purpose:** Pick the licensing path that minimises total cost while meeting edition, version, and compliance requirements.
+Before provisioning a new SQL Server VM or before a licensing renewal decision. It is typically triggered by new workload, SA renewal, migration planning, or cost review flagging licensing as the dominant line item. Reference decision. Cannot be changed on a running VM — BYOL and license-included GCE images use different disk images entirely. Pick the licensing path that minimises total cost while meeting edition, version, and compliance requirements.
 
 | Model | How it works | Cost characteristic | Edition choices |
 |---|---|---|---|
@@ -1690,10 +1582,7 @@ Licensing is the largest irreversible cost decision for SQL Server workloads. On
 
 #### Audit which edition is actually required by the workload
 
-**When to run:** During any cost review considering a licensing change or downgrade.
-**Trigger:** Cost review, migration planning, or a proposal to consolidate workloads on cheaper editions.
-**Context:** Read-only T-SQL against `sys.dm_db_persisted_sku_features` (database-scoped), plus a review of instance-level features. Combine with the persisted SKU feature audit from the previous section.
-**Purpose:** Produce a concrete list of features the workload uses that are gated on specific editions, so the edition choice is driven by actual requirements rather than "we picked Enterprise five years ago."
+During any cost review considering a licensing change or downgrade. It is typically triggered by cost review, migration planning, or a proposal to consolidate workloads on cheaper editions. Read-only T-SQL against `sys.dm_db_persisted_sku_features` (database-scoped), plus a review of instance-level features. Combine with the persisted SKU feature audit from the previous section. Produce a concrete list of features the workload uses that are gated on specific editions, so the edition choice is driven by actual requirements rather than "we picked Enterprise five years ago.".
 
 | Feature | Standard | Enterprise | Cost-relevance |
 |---|:---:|:---:|---|
@@ -1750,10 +1639,7 @@ Labels are the backbone of chargeback and showback. A cost line item without a t
 
 #### Apply labels at resource creation time
 
-**When to run:** On every `gcloud compute instances create`, `gcloud compute disks create`, and `gcloud storage buckets create` command.
-**Trigger:** Any new resource provisioning.
-**Context:** Labels are specified via `--labels` on create commands, or added later via `update` commands. Labels are key-value pairs; both keys and values are lowercase alphanumeric-plus-dash-plus-underscore. Maximum 64 labels per resource.
-**Purpose:** Tag every resource with enough metadata to attribute cost, enforce policy, and filter the billing export by team, environment, and workload.
+On every `gcloud compute instances create`, `gcloud compute disks create`, and `gcloud storage buckets create` command. It is typically triggered by any new resource provisioning. Labels are specified via `--labels` on create commands, or added later via `update` commands. Labels are key-value pairs; both keys and values are lowercase alphanumeric-plus-dash-plus-underscore. Maximum 64 labels per resource. Tag every resource with enough metadata to attribute cost, enforce policy, and filter the billing export by team, environment, and workload.
 
 *This command creates a VM with the standard label set.*
 
@@ -1809,10 +1695,7 @@ Billing export is the one step that turns GCP cost data from monthly PDF into qu
 
 #### Enable billing export to BigQuery
 
-**When to run:** Once per billing account, during initial FinOps setup.
-**Trigger:** New FinOps practice, new billing account, or migration from a legacy export.
-**Context:** Configured in the Cloud Console under Billing → Billing export → BigQuery export. Requires Billing Account Administrator permission. The export is an organizational-level data flow from GCP Billing into a BigQuery dataset you own, refreshed several times per day.
-**Purpose:** Stream daily cost data into BigQuery so FinOps dashboards and alerts can query it.
+Once per billing account, during initial FinOps setup. It is typically triggered by new FinOps practice, new billing account, or migration from a legacy export. Configured in the Cloud Console under Billing → Billing export → BigQuery export. Requires Billing Account Administrator permission. The export is an organizational-level data flow from GCP Billing into a BigQuery dataset you own, refreshed several times per day. Stream daily cost data into BigQuery so FinOps dashboards and alerts can query it.
 
 *There are two export tables. The standard export is lighter-weight; the detailed export adds resource-level granularity.*
 
@@ -1824,10 +1707,7 @@ Billing export is the one step that turns GCP cost data from monthly PDF into qu
 
 #### Query monthly spend by team label
 
-**When to run:** At the start of each FinOps cadence (weekly or monthly), or on demand when investigating a cost spike.
-**Trigger:** Scheduled review, variance alert, or ad-hoc question.
-**Context:** Runs as a BigQuery SQL query against the standard export table. Requires `bigquery.jobs.create` and `bigquery.tables.getData` on the billing dataset. Read-only.
-**Purpose:** Aggregate monthly cost by `team` label so every team sees its own line items and can challenge or explain them.
+At the start of each FinOps cadence (weekly or monthly), or on demand when investigating a cost spike. It is typically triggered by scheduled review, variance alert, or ad-hoc question. Runs as a BigQuery SQL query against the standard export table. Requires `bigquery.jobs.create` and `bigquery.tables.getData` on the billing dataset. Read-only. Aggregate monthly cost by `team` label so every team sees its own line items and can challenge or explain them.
 
 | Field | Source | Meaning |
 |---|---|---|
@@ -1872,10 +1752,7 @@ ORDER BY invoice.month DESC, net_cost_eur DESC;
 
 #### Query monthly spend for SQL Server workloads specifically
 
-**When to run:** Weekly or monthly during the FinOps review, or when investigating a SQL Server-specific cost change.
-**Trigger:** Cost review, variance alert, or right-sizing evaluation.
-**Context:** BigQuery SQL query filtering on the `workload` label. Read-only.
-**Purpose:** Produce a SQL Server-scoped cost summary so the FinOps review has a single number for the whole estate.
+Weekly or monthly during the FinOps review, or when investigating a SQL Server-specific cost change. It is typically triggered by cost review, variance alert, or right-sizing evaluation. BigQuery SQL query filtering on the `workload` label. Read-only. Produce a SQL Server-scoped cost summary so the FinOps review has a single number for the whole estate.
 
 *This query aggregates last-30-days cost for all resources labelled `workload=sql-server`, broken down by service.*
 
@@ -1912,10 +1789,7 @@ Budgets are the guardrail that catches drift before the monthly invoice arrives.
 
 #### Create a budget scoped to a project and label
 
-**When to run:** Once per project during FinOps setup, or when a new cost-owning label is introduced.
-**Trigger:** New project, new team, or annual budget review.
-**Context:** Runs as `gcloud billing budgets create` or via the Cloud Console. Requires `billing.budgets.create` on the billing account. The budget itself does not block spending; it only triggers notifications.
-**Purpose:** Define a monthly budget and threshold alerts so any team exceeding its envelope is notified before month-end.
+Once per project during FinOps setup, or when a new cost-owning label is introduced. It is typically triggered by new project, new team, or annual budget review. Runs as `gcloud billing budgets create` or via the Cloud Console. Requires `billing.budgets.create` on the billing account. The budget itself does not block spending; it only triggers notifications. Define a monthly budget and threshold alerts so any team exceeding its envelope is notified before month-end.
 
 *This command creates a €5,000 monthly budget for the data-platform team with 50%, 90%, and 100% threshold alerts.*
 
@@ -1957,10 +1831,7 @@ gcloud billing budgets create \
 
 #### Detect cost anomalies with scheduled BigQuery queries
 
-**When to run:** Daily, via a BigQuery scheduled query.
-**Trigger:** Continuous monitoring; designed to fire before the monthly invoice cycle.
-**Context:** Runs as a BigQuery scheduled query against the billing export, comparing yesterday's cost to the preceding 7-day average per team or per service.
-**Purpose:** Surface cost anomalies quickly — the day after an unexpected VM spins up, not a month later.
+Daily, via a BigQuery scheduled query. It is typically triggered by continuous monitoring; designed to fire before the monthly invoice cycle. Runs as a BigQuery scheduled query against the billing export, comparing yesterday's cost to the preceding 7-day average per team or per service. Surface cost anomalies quickly — the day after an unexpected VM spins up, not a month later.
 
 *This query returns teams whose yesterday cost exceeded the 7-day average by more than 50%.*
 

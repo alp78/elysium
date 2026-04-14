@@ -423,11 +423,7 @@ Every workflow lives at `.github/workflows/<name>.yml`. GitHub discovers all YAM
 
 ### GitHub Actions | workflow | defaults and shell selection
 
-**When to configure:** When most steps in the workflow share a shell or working directory.
-**Trigger:** Any workflow where you want consistent shell behavior.
-**Context:** Applies to all `run:` steps unless overridden at the step level.
-**Purpose:** Avoid repeating `shell:` and `working-directory:` on every step.
-
+Set `defaults.run` at workflow scope when most steps share the same shell or working directory. It becomes relevant in any workflow where you want predictable shell behavior without repeating `shell:` and `working-directory:` on every step. The setting applies to `run:` steps only and can still be overridden locally when a step needs different execution semantics.
 > [!info]- Workflow YAML breakdown
 >
 > - `defaults.run.shell`: sets the default shell for all `run:` steps. Common values: `bash`, `pwsh`, `python3 {0}`, `sh`
@@ -502,7 +498,7 @@ The `on:` key defines which repository events activate the workflow. Each trigge
 
 ### GitHub Actions | triggers | push event
 
-**When to use:** Continuous integration — validate code quality and tests on every push.
+Use this pattern when continuous integration — validate code quality and tests on every push.
 **Trust boundary:** Runs code from the pushed commit. Secrets are available.
 
 > [!info]- Workflow YAML breakdown
@@ -565,7 +561,7 @@ Commit message: Add GitHub Actions demo workflows for Elysium vault chapter 10
 
 ### GitHub Actions | triggers | pull_request event
 
-**When to use:** CI validation on pull requests — lint, test, and check before merge.
+Use this pattern when CI validation on pull requests — lint, test, and check before merge.
 **Trust boundary:** For PRs from the same repo, runs against a **temporary merge commit** (the PR head merged into the base). Secrets are available. For fork PRs, secrets are NOT available.
 
 > [!info]- Workflow YAML breakdown
@@ -625,7 +621,7 @@ Secrets are available ONLY for PRs from the same repo, not forks.
 
 ### GitHub Actions | triggers | pull_request_target event
 
-**When to use:** Processing fork PRs that need write access or secrets — labels, comments, deployments.
+Use this pattern when processing fork PRs that need write access or secrets — labels, comments, deployments.
 **Trust boundary:** Runs workflow code from the **base branch** (not the PR head), with full secrets and write permissions.
 
 > [!danger] pull_request_target runs untrusted code with full privileges
@@ -640,7 +636,7 @@ Secrets are available ONLY for PRs from the same repo, not forks.
 
 ### GitHub Actions | triggers | schedule
 
-**When to use:** Recurring tasks — nightly builds, weekly reports, periodic cleanup, SLA monitoring.
+Use this pattern when recurring tasks — nightly builds, weekly reports, periodic cleanup, SLA monitoring.
 **Trust boundary:** Always runs on the **default branch** (main). Full secrets available.
 
 > [!info]- Workflow YAML breakdown
@@ -698,7 +694,7 @@ Schedule expression: 45 * * * *
 
 ### GitHub Actions | triggers | workflow_dispatch
 
-**When to use:** Manual triggers — ad-hoc deploys, backfills, on-demand reports, debugging.
+Use this pattern when manual triggers — ad-hoc deploys, backfills, on-demand reports, debugging.
 **Trust boundary:** Runs on the branch selected in the UI or API call. Full secrets available.
 
 > [!info]- Workflow YAML breakdown
@@ -788,7 +784,7 @@ DRY RUN MODE — no changes will be made
 
 ### GitHub Actions | triggers | repository_dispatch
 
-**When to use:** External system integration — triggering workflows from webhooks, APIs, other repos, or CI/CD orchestrators.
+Use this pattern when external system integration — triggering workflows from webhooks, APIs, other repos, or CI/CD orchestrators.
 **Trust boundary:** Always runs on the **default branch** (main). Full secrets available.
 
 > [!info]- Workflow YAML breakdown
@@ -834,7 +830,7 @@ Use cases:
 
 ### GitHub Actions | triggers | release
 
-**When to use:** Release-driven deployment — trigger a deploy, publish, or changelog generation when a GitHub release is created.
+Use this pattern when release-driven deployment — trigger a deploy, publish, or changelog generation when a GitHub release is created.
 **Trust boundary:** Runs on the tag/branch associated with the release. Full secrets available.
 
 ```yaml
@@ -847,7 +843,7 @@ The `github.event.release` object contains the tag name, release name, body, and
 
 ### GitHub Actions | triggers | workflow_call (reusable workflow)
 
-**When to use:** Sharing workflow logic across repositories or within a monorepo. The called workflow receives inputs and can return outputs.
+Use this pattern when sharing workflow logic across repositories or within a monorepo. The called workflow receives inputs and can return outputs.
 **Trust boundary:** Inherits the caller's `GITHUB_TOKEN` permissions. Secrets must be explicitly passed.
 
 > [!info]- Workflow YAML breakdown
@@ -943,7 +939,7 @@ Deploy URL from reusable workflow: https://staging.example.com
 
 ### GitHub Actions | triggers | workflow_run
 
-**When to use:** Chaining workflows — run a deployment after CI passes, aggregate results from fork PR workflows, or post-process artifacts.
+Use this pattern when chaining workflows — run a deployment after CI passes, aggregate results from fork PR workflows, or post-process artifacts.
 **Trust boundary:** Always runs on the **default branch** (main), regardless of the triggering workflow's branch. Full secrets available.
 
 > [!info]- Workflow YAML breakdown
@@ -999,7 +995,7 @@ This has security implications — the called workflow is trusted code.
 
 ### GitHub Actions | triggers | merge_group
 
-**When to use:** Repos with merge queues enabled. The `merge_group` event fires when a PR is added to the merge queue, running checks against the tentative merge result.
+Use this pattern when repos with merge queues enabled. The `merge_group` event fires when a PR is added to the merge queue, running checks against the tentative merge result.
 
 ```yaml
 on:
@@ -1022,7 +1018,7 @@ on:
 
 ### GitHub Actions | triggers | issue_comment
 
-**When to use:** Slash-command bots — `/deploy`, `/rerun`, `/approve` comments that trigger workflows.
+Use this pattern when slash-command bots — `/deploy`, `/rerun`, `/approve` comments that trigger workflows.
 **Trust boundary:** Fires for comments on both issues and PRs. **Runs on the default branch** with full secrets.
 
 > [!danger] issue_comment runs on the default branch, not the PR branch
@@ -1068,7 +1064,7 @@ GitHub provides managed, ephemeral VMs with pre-installed tools. The VM is creat
 
 ### GitHub Actions | runners | self-hosted runners
 
-**When to use:** GPU workloads, private network access, compliance requirements, or cost savings at scale.
+Use this pattern when GPU workloads, private network access, compliance requirements, or cost savings at scale.
 
 > [!danger] Self-hosted runners without isolation are a security risk
 >
@@ -1124,8 +1120,7 @@ Without `needs:`, all three jobs would run in parallel.
 
 ### GitHub Actions | jobs | matrix strategy
 
-**When to use:** Testing across multiple Python versions, OS combinations, or configuration variants.
-**Purpose:** A single job definition generates multiple parallel instances with different parameter values.
+Use a matrix when the same job must run across multiple Python versions, operating systems, or configuration variants. One job definition expands into multiple parallel job instances, each with a different parameter combination.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1227,8 +1222,7 @@ jobs:
 
 ### GitHub Actions | jobs | job containers and service containers
 
-**When to use:** Integration testing with real databases, message queues, or other services.
-**Purpose:** Attach Docker containers alongside the job runner for end-to-end testing without mocks.
+Use this pattern when integration testing with real databases, message queues, or other services. The operational goal is to attach Docker containers alongside the job runner for end-to-end testing without mocks.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1335,8 +1329,7 @@ steps:
 
 ### GitHub Actions | steps | continue-on-error semantics
 
-**When to use:** Allowing a step to fail without failing the job — flaky tests, optional checks, best-effort notifications.
-**Purpose:** The `continue-on-error: true` flag converts a step failure into a soft success.
+Use `continue-on-error` when a step may fail without invalidating the entire job, such as flaky diagnostics, optional checks, or best-effort notifications. The flag turns that step failure into a soft success while still preserving the failure details in the logs and UI.
 
 *Step-level vs job-level continue-on-error behavior.*
 
@@ -1569,8 +1562,7 @@ jobs:
 
 ### GitHub Actions | variables | GITHUB_OUTPUT
 
-**When to use:** Passing computed values from one step to another, or from a job to downstream jobs.
-**Purpose:** Replace the deprecated `::set-output` workflow command.
+Use this pattern when passing computed values from one step to another, or from a job to downstream jobs. The operational goal is to replace the deprecated `::set-output` workflow command.
 
 ```yaml
 - name: Set version
@@ -1601,8 +1593,7 @@ to GITHUB_OUTPUT are available via needs.<id>.outputs.
 
 ### GitHub Actions | variables | GITHUB_STEP_SUMMARY
 
-**When to use:** Generating human-readable reports (test results, build metrics, deployment status) visible on the workflow run page.
-**Purpose:** Write GitHub-flavored markdown to the job summary section.
+Use this pattern when generating human-readable reports (test results, build metrics, deployment status) visible on the workflow run page. The operational goal is to write GitHub-flavored markdown to the job summary section.
 
 ```yaml
 - name: Write summary
@@ -1678,8 +1669,7 @@ The `GITHUB_TOKEN` is automatically created for each workflow run. It authentica
 
 ### GitHub Actions | permissions | permissions block
 
-**When to use:** Every workflow. Always declare explicit permissions.
-**Purpose:** Scope the `GITHUB_TOKEN` to only the capabilities the workflow needs.
+Declare explicit `permissions` in every workflow. The goal is to scope `GITHUB_TOKEN` to only the capabilities the workflow actually needs instead of inheriting a broader default token surface.
 
 ```yaml
 permissions:
@@ -1714,7 +1704,7 @@ When you set `permissions:` at the workflow or job level, **all unspecified scop
 
 ### GitHub Actions | artifacts | upload and download
 
-**When to use:** Passing build outputs between jobs, storing test reports, retaining deployment manifests.
+Use this pattern when passing build outputs between jobs, storing test reports, retaining deployment manifests.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1804,8 +1794,7 @@ Manifest contents:
 
 ### GitHub Actions | caching | actions/cache
 
-**When to use:** Avoiding repeated downloads of dependencies (pip, npm, Docker layers) across runs.
-**Purpose:** Store and restore a directory tree keyed by a hash of a lockfile.
+Use this pattern when avoiding repeated downloads of dependencies (pip, npm, Docker layers) across runs. The operational goal is to store and restore a directory tree keyed by a hash of a lockfile.
 
 *Cache pip packages keyed by requirements.txt hash.*
 
@@ -1885,7 +1874,7 @@ Cache saved with key: pip-Linux-be654b93dbe1ff76cb7cbd515b434dad18ea380de7eb66ca
 
 ### GitHub Actions | concurrency | cancel-in-progress
 
-**When to use:** Prevent wasted CI time when a new push makes an in-progress run obsolete.
+Use concurrency cancellation when a newer push makes the current in-progress run obsolete and there is no value in finishing the older run.
 
 ```yaml
 concurrency:
@@ -1929,8 +1918,7 @@ concurrency:
 
 ### GitHub Actions | environments | protection rules
 
-**When to use:** Gating deployments behind human approval, wait timers, or branch restrictions.
-**Purpose:** Prevent accidental production deployments and enforce deployment policies.
+Use this pattern when gating deployments behind human approval, wait timers, or branch restrictions. The operational goal is to prevent accidental production deployments and enforce deployment policies.
 
 *Deploy through staging (no protection) and production (required reviewer).*
 
@@ -2253,9 +2241,9 @@ Waiting on bqjob_r5215c3ef6e9cbc1a_0000019d82c3a3be_1 ... (0s) Current status: D
 | **JavaScript action** | `action.yml` with `runs.using: node20` | `steps[].uses:` | Same runner as caller | `with:` | Yes (via env) |
 | **Docker action** | `action.yml` with `runs.using: docker` | `steps[].uses:` | Same runner (container) | `with:` | Yes (via env) |
 
-**When to choose reusable workflow:** Entire workflow logic shared across repos (CI pipeline templates, deploy flows).
-**When to choose composite action:** A sequence of steps reused within the same workflow or across repos (setup + build + test).
-**When to choose JS/Docker action:** Custom logic that needs a specific runtime or Docker image.
+Use a reusable workflow when whole job graphs or pipeline templates must be shared across repositories or standardized across teams.
+Use a composite action when you need to reuse a fixed sequence of same-runner steps such as setup, build, or test orchestration.
+Use a JavaScript or Docker action when the logic needs its own packaged runtime, dependencies, or container image.
 
 ### GitHub Actions | actions | action.yml metadata basics
 

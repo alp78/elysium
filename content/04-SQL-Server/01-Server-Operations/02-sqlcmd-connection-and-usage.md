@@ -199,10 +199,7 @@ This subsection verifies which client is installed on the current machine, decod
 
 #### Identify the installed sqlcmd binary
 
-**When to run:** during initial environment validation, or after installing or upgrading SQL Server tooling.
-**Trigger:** a new workstation, new build agent, or a ticket that reports "works on my machine" behavior diverging between two hosts.
-**Context:** runs in any OS shell. Read-only. No permissions required.
-**Purpose:** determine whether this host ships the ODBC `sqlcmd` or the Go `go-sqlcmd`, and record the exact version for reproducible automation.
+During initial environment validation, or after installing or upgrading SQL Server tooling. It is typically triggered by a new workstation, new build agent, or a ticket that reports "works on my machine" behavior diverging between two hosts. Runs in any OS shell. Read-only. No permissions required. Determine whether this host ships the ODBC `sqlcmd` or the Go `go-sqlcmd`, and record the exact version for reproducible automation.
 
 > [!info]- How to read the banner
 >
@@ -259,10 +256,7 @@ usage: Sqlcmd            [-U login id]          [-P password]
 
 #### Compare classic sqlcmd (ODBC) vs go-sqlcmd
 
-**When to run:** before porting automation between hosts, when investigating a flag that behaves differently across two hosts, or before adopting a new Microsoft Entra authentication method on Azure SQL.
-**Trigger:** a script that works on one host fails on another with "`Unknown Option`" or unexpected encryption behavior.
-**Context:** reference material, not a command. Applies to both Windows and Linux operators.
-**Purpose:** avoid mixing flags from the two variants in the same script.
+Before porting automation between hosts, when investigating a flag that behaves differently across two hosts, or before adopting a new Microsoft Entra authentication method on Azure SQL. It is typically triggered by a script that works on one host fails on another with "`Unknown Option`" or unexpected encryption behavior. Reference material, not a command. Applies to both Windows and Linux operators. Avoid mixing flags from the two variants in the same script.
 
 The behavioral deltas below are the ones that bite most often in real deployments. The full back-compat tracker lives on the [go-sqlcmd GitHub discussion](https://github.com/microsoft/go-sqlcmd/discussions/292).
 
@@ -287,10 +281,7 @@ The PowerShell `Invoke-Sqlcmd` cmdlet is the object-oriented alternative to `sql
 
 #### Check whether Invoke-Sqlcmd is available
 
-**When to run:** during environment validation, or before writing a PowerShell-first automation that needs typed result sets.
-**Trigger:** a PowerShell script that currently shells out to `sqlcmd.exe` and has to reparse text, or a new operator onboarding.
-**Context:** runs in any PowerShell session. Read-only. No permissions required.
-**Purpose:** determine which SQL PowerShell module is installed and whether `Invoke-Sqlcmd` is available at all.
+During environment validation, or before writing a PowerShell-first automation that needs typed result sets. It is typically triggered by a PowerShell script that currently shells out to `sqlcmd.exe` and has to reparse text, or a new operator onboarding. Runs in any PowerShell session. Read-only. No permissions required. Determine which SQL PowerShell module is installed and whether `Invoke-Sqlcmd` is available at all.
 
 > [!info]- Two modules provide Invoke-Sqlcmd
 >
@@ -318,10 +309,7 @@ if (Get-Command Invoke-Sqlcmd -ErrorAction SilentlyContinue) {
 
 #### Install the modern SqlServer PowerShell module
 
-**When to run:** when the current host only has `SQLPS`, or when Microsoft Entra, `-AccessToken`, or strict encryption is required from a PowerShell workflow.
-**Trigger:** a ticket that needs `Invoke-Sqlcmd -TrustServerCertificate` or typed-object results for pipeline consumers, or a migration from plain-text `sqlcmd.exe` shell-outs.
-**Context:** runs in Windows PowerShell 5.1 or PowerShell 7. Writes to the user's module path under `CurrentUser` scope (no admin privileges). The `SqlServer` module loads side-by-side with `SQLPS` and takes precedence when both are present.
-**Purpose:** upgrade the session to the supported, actively-maintained SQL PowerShell module without affecting other users on the machine.
+When the current host only has `SQLPS`, or when Microsoft Entra, `-AccessToken`, or strict encryption is required from a PowerShell workflow. It is typically triggered by a ticket that needs `Invoke-Sqlcmd -TrustServerCertificate` or typed-object results for pipeline consumers, or a migration from plain-text `sqlcmd.exe` shell-outs. Runs in Windows PowerShell 5.1 or PowerShell 7. Writes to the user's module path under `CurrentUser` scope (no admin privileges). The `SqlServer` module loads side-by-side with `SQLPS` and takes precedence when both are present. Upgrade the session to the supported, actively-maintained SQL PowerShell module without affecting other users on the machine.
 
 > [!tip] Prefer CurrentUser scope on shared hosts
 >
@@ -363,10 +351,7 @@ SQL authentication is the simplest path to prove connectivity. Its footgun is cr
 
 #### Connect with a SQL login and run a one-shot query
 
-**When to run:** during routine automation, scripted health checks, backup scripts, or when proving connectivity to a newly-deployed instance.
-**Trigger:** first-time connectivity check for a new server, a post-migration validation step, or the entry point of a deployment pipeline.
-**Context:** runs in any shell. Read-only for the `SELECT DB_NAME()` probe. Requires a valid SQL login with at least `CONNECT` permission on the target database.
-**Purpose:** prove login success, network reachability, SQL execution, and database targeting in one short command.
+During routine automation, scripted health checks, backup scripts, or when proving connectivity to a newly-deployed instance. It is typically triggered by first-time connectivity check for a new server, a post-migration validation step, or the entry point of a deployment pipeline. Runs in any shell. Read-only for the `SELECT DB_NAME()` probe. Requires a valid SQL login with at least `CONNECT` permission on the target database. Prove login success, network reachability, SQL execution, and database targeting in one short command.
 
 > [!warning] Hardcoding -P leaks credentials
 >
@@ -405,10 +390,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -Q "SELECT DB_N
 
 #### Pass the password via SQLCMDPASSWORD
 
-**When to run:** every time SQL authentication is needed from automation, deployment scripts, CI pipelines, or operator consoles that might leak command lines to logs.
-**Trigger:** any script that currently hardcodes `-P`, or a security review flagging credential exposure.
-**Context:** the env var is scoped to the current process and its children. In PowerShell use `$env:SQLCMDPASSWORD = '...'`; in bash, `export SQLCMDPASSWORD=...` or the inline `VAR=... command` form. Unset immediately after use in long-lived shells.
-**Purpose:** keep the password out of process lists, command history, and CI logs while retaining the full automation flow.
+Every time SQL authentication is needed from automation, deployment scripts, CI pipelines, or operator consoles that might leak command lines to logs. It is typically triggered by any script that currently hardcodes `-P`, or a security review flagging credential exposure. The env var is scoped to the current process and its children. In PowerShell use `$env:SQLCMDPASSWORD = '...'`; in bash, `export SQLCMDPASSWORD=...` or the inline `VAR=... command` form. Unset immediately after use in long-lived shells. Keep the password out of process lists, command history, and CI logs while retaining the full automation flow.
 
 > [!info]- How sqlcmd resolves the password
 >
@@ -441,10 +423,7 @@ Windows integrated authentication is the right default for domain-joined hosts t
 
 #### Connect with Windows integrated authentication
 
-**When to run:** on domain-joined Windows hosts (or Linux hosts with properly configured Kerberos) talking to on-prem SQL Server, when the connecting principal has a mapped Windows login on the target instance.
-**Trigger:** an automation that must run under a service account, a scheduled task, or any scenario where password handling is unacceptable.
-**Context:** runs in any shell. The current Windows identity (or Kerberos ticket on Linux) is used. Requires a mapped login on the target server. Incompatible with `-U`, `-P`, `SQLCMDPASSWORD`, and `-G`.
-**Purpose:** authenticate without presenting a password on the client side, using the existing OS-level identity.
+On domain-joined Windows hosts (or Linux hosts with properly configured Kerberos) talking to on-prem SQL Server, when the connecting principal has a mapped Windows login on the target instance. It is typically triggered by an automation that must run under a service account, a scheduled task, or any scenario where password handling is unacceptable. Runs in any shell. The current Windows identity (or Kerberos ticket on Linux) is used. Requires a mapped login on the target server. Incompatible with `-U`, `-P`, `SQLCMDPASSWORD`, and `-G`. Authenticate without presenting a password on the client side, using the existing OS-level identity.
 
 > [!info]- What -E does and does not do
 >
@@ -470,10 +449,7 @@ CONTOSO\svc_sqlcmd_ops                         CONTOSO\svc_sqlcmd_ops
 
 #### Connect to Azure SQL with Microsoft Entra ID
 
-**When to run:** whenever the target is Azure SQL Database, Azure SQL Managed Instance, or Azure Synapse Analytics.
-**Trigger:** a new Azure SQL automation workflow, a cloud migration, or a security audit that mandates managed identity instead of SQL logins.
-**Context:** requires Microsoft Entra ID integration on the target (already enabled for Azure SQL). Requires an ODBC client new enough to support the `-G` flag (15.0.1000.34+ for interactive, 17.6.1+ for integrated on Linux). Login timeout must be set to at least 30 seconds (`-l 30`) because MFA and token acquisition take longer than a local TCP handshake.
-**Purpose:** authenticate to Azure SQL without managing SQL passwords on the client.
+Whenever the target is Azure SQL Database, Azure SQL Managed Instance, or Azure Synapse Analytics. It is typically triggered by a new Azure SQL automation workflow, a cloud migration, or a security audit that mandates managed identity instead of SQL logins. Requires Microsoft Entra ID integration on the target (already enabled for Azure SQL). Requires an ODBC client new enough to support the `-G` flag (15.0.1000.34+ for interactive, 17.6.1+ for integrated on Linux). Login timeout must be set to at least 30 seconds (`-l 30`) because MFA and token acquisition take longer than a local TCP handshake. Authenticate to Azure SQL without managing SQL passwords on the client.
 
 > [!info]- Four common Entra flows and how to invoke them
 >
@@ -507,10 +483,7 @@ SQL Server 2025 (17.x) changed the default encryption posture of `sqlcmd`. Previ
 
 #### Enforce strict encryption with `-N s`
 
-**When to run:** on every connection to production — Azure SQL, an on-prem server with a CA-issued certificate, or any link that crosses an untrusted network segment.
-**Trigger:** security review, TDS 8.0 rollout, compliance mandate, or a move from `TRUSTSERVERCERTIFICATE=true` patterns to strict validation.
-**Context:** runs in any shell. Requires that the server certificate is valid and chains to a trusted root, that the hostname matches the certificate CN or SAN, and that the ODBC driver is new enough to speak TDS 8.0 (18.3+).
-**Purpose:** force `sqlcmd` to abort the connection if the server cannot present a valid, trusted certificate for the target hostname.
+On every connection to production — Azure SQL, an on-prem server with a CA-issued certificate, or any link that crosses an untrusted network segment. It is typically triggered by security review, TDS 8.0 rollout, compliance mandate, or a move from `TRUSTSERVERCERTIFICATE=true` patterns to strict validation. Runs in any shell. Requires that the server certificate is valid and chains to a trusted root, that the hostname matches the certificate CN or SAN, and that the ODBC driver is new enough to speak TDS 8.0 (18.3+). Force `sqlcmd` to abort the connection if the server cannot present a valid, trusted certificate for the target hostname.
 
 > [!danger] Strict encryption breaks self-signed connections by design
 >
@@ -544,10 +517,7 @@ Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : Client unable to establ
 
 #### Validate the server certificate with `-F`
 
-**When to run:** when the SQL Server hostname differs from the certificate CN or SAN — typically behind a DNS alias, a failover listener, or a multi-subnet Availability Group.
-**Trigger:** a strict-encryption connection attempt fails with "certificate CN does not match server name," or during the initial rollout of a CA-issued cert behind a DNS alias.
-**Context:** runs in any shell. Requires that the expected CN or SAN is known in advance (read from the cert with `openssl s_client -showcerts` or the Windows Certificate Store).
-**Purpose:** tell `sqlcmd` to validate the certificate against a specific expected name instead of the connection-string hostname.
+When the SQL Server hostname differs from the certificate CN or SAN — typically behind a DNS alias, a failover listener, or a multi-subnet Availability Group. It is typically triggered by a strict-encryption connection attempt fails with "certificate CN does not match server name," or during the initial rollout of a CA-issued cert behind a DNS alias. Runs in any shell. Requires that the expected CN or SAN is known in advance (read from the cert with `openssl s_client -showcerts` or the Windows Certificate Store). Tell `sqlcmd` to validate the certificate against a specific expected name instead of the connection-string hostname.
 
 *This command connects through a DNS alias and validates the certificate against the underlying host name.*
 
@@ -573,10 +543,7 @@ Beyond the one-shot `-Q` query, `sqlcmd` runs on two very different models: non-
 
 #### Execute a script file with `-i`
 
-**When to run:** every deployment, health check, or diagnostic that ships as a versioned `.sql` file rather than inline shell text.
-**Trigger:** a CI/CD step that applies a migration, a scheduled health check, or a post-incident recovery playbook.
-**Context:** runs in any shell. File paths are resolved relative to the current working directory. On Windows, backslashes require quoting. The `-i` flag can be repeated or comma-separated to run multiple files in order. Combine with `-b` in any pipeline that should halt on failure.
-**Purpose:** execute a versioned SQL script end-to-end against the target server.
+Every deployment, health check, or diagnostic that ships as a versioned `.sql` file rather than inline shell text. It is typically triggered by a CI/CD step that applies a migration, a scheduled health check, or a post-incident recovery playbook. Runs in any shell. File paths are resolved relative to the current working directory. On Windows, backslashes require quoting. The `-i` flag can be repeated or comma-separated to run multiple files in order. Combine with `-b` in any pipeline that should halt on failure. Execute a versioned SQL script end-to-end against the target server.
 
 > [!info]- Setup steps for this demo
 >
@@ -603,10 +570,7 @@ online_user_dbs
 
 #### Include nested scripts with `:r`
 
-**When to run:** when a deployment or migration script depends on shared setup logic — variable definitions, schema prerequisites, helper procedures — that live in a separate file.
-**Trigger:** a DACPAC-style deployment pattern, a multi-environment script where only the variable file changes per environment, or a modular migration suite where each file handles one concern.
-**Context:** runs inside a SQL file passed to `-i`, or in the interactive REPL. `:r` reads the referenced file relative to the startup directory of `sqlcmd`. Each `:r` adds the file's contents to the statement cache; execution happens when the next `GO` batch terminator is encountered.
-**Purpose:** compose multiple SQL files into a single execution so that environment-specific variables and shared setup live in one place instead of being duplicated per deployment.
+When a deployment or migration script depends on shared setup logic — variable definitions, schema prerequisites, helper procedures — that live in a separate file. It is typically triggered by a DACPAC-style deployment pattern, a multi-environment script where only the variable file changes per environment, or a modular migration suite where each file handles one concern. Runs inside a SQL file passed to `-i`, or in the interactive REPL. `:r` reads the referenced file relative to the startup directory of `sqlcmd`. Each `:r` adds the file's contents to the statement cache; execution happens when the next `GO` batch terminator is encountered. Compose multiple SQL files into a single execution so that environment-specific variables and shared setup live in one place instead of being duplicated per deployment.
 
 > [!info]- How :r interacts with SQLCMD variables
 >
@@ -633,10 +597,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -W -s "|" -i "C
 
 #### Pass a variable with `-v`
 
-**When to run:** whenever the same script must target different environments, databases, or data slices and the operator wants to parameterize a single run without editing files.
-**Trigger:** a deployment script that is invoked per environment from a CI runner, or an ad-hoc recovery run that needs to parameterize a filter.
-**Context:** runs in any shell. `-v` accepts `name="value"` pairs; variables are resolved at the client before the batch is sent to SQL Server. Values precedence is: `:setvar` > `-v` > shell env > user env > system env.
-**Purpose:** parameterize a script without modifying its source.
+Whenever the same script must target different environments, databases, or data slices and the operator wants to parameterize a single run without editing files. It is typically triggered by a deployment script that is invoked per environment from a CI runner, or an ad-hoc recovery run that needs to parameterize a filter. Runs in any shell. `-v` accepts `name="value"` pairs; variables are resolved at the client before the batch is sent to SQL Server. Values precedence is: `:setvar` > `-v` > shell env > user env > system env. Parameterize a script without modifying its source.
 
 > [!warning] Text substitution is not parameterization
 >
@@ -672,10 +633,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -b -W -s "|" -Q
 
 #### Set a variable inside a script with `:setvar`
 
-**When to run:** when variables need to be set inside a script file instead of on the command line — typically for environment-specific variable files included via `:r`.
-**Trigger:** a modular deployment structure where variables change per environment but the main script does not, or an interactive REPL session where the operator wants to set a variable mid-session.
-**Context:** runs only in SQLCMD mode — inside a `.sql` file passed to `-i`, inside the interactive REPL, or inside an SSMS query window with SQLCMD mode enabled. Ignored by plain T-SQL tools.
-**Purpose:** define SQLCMD variables programmatically from inside a script.
+When variables need to be set inside a script file instead of on the command line — typically for environment-specific variable files included via `:r`. It is typically triggered by a modular deployment structure where variables change per environment but the main script does not, or an interactive REPL session where the operator wants to set a variable mid-session. Runs only in SQLCMD mode — inside a `.sql` file passed to `-i`, inside the interactive REPL, or inside an SSMS query window with SQLCMD mode enabled. Ignored by plain T-SQL tools. Define SQLCMD variables programmatically from inside a script.
 
 *This command file shows the `:setvar` usage captured in the setvars.sql demo file.*
 
@@ -703,10 +661,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -b -W -s "|" -Q
 
 #### Fail the shell on SQL error with `-b`
 
-**When to run:** on every invocation of `sqlcmd` from CI, deployment scripts, scheduled tasks, or any workflow where a downstream step must only run if the SQL step succeeded.
-**Trigger:** writing any automation that runs `sqlcmd`, auditing an existing script that does not check exit codes, or a post-incident where a silent SQL error cascaded into broken state.
-**Context:** runs in any shell. Makes `sqlcmd` exit with `ERRORLEVEL=1` on any SQL error with severity > 10, plus `1` for client-side problems like an unresolved `$(var)` when variable substitution fails.
-**Purpose:** propagate SQL errors into process exit codes so that the shell can trap them.
+On every invocation of `sqlcmd` from CI, deployment scripts, scheduled tasks, or any workflow where a downstream step must only run if the SQL step succeeded. It is typically triggered by writing any automation that runs `sqlcmd`, auditing an existing script that does not check exit codes, or a post-incident where a silent SQL error cascaded into broken state. Runs in any shell. Makes `sqlcmd` exit with `ERRORLEVEL=1` on any SQL error with severity > 10, plus `1` for client-side problems like an unresolved `$(var)` when variable substitution fails. Propagate SQL errors into process exit codes so that the shell can trap them.
 
 > [!warning] Default sqlcmd swallows SQL errors silently
 >
@@ -744,10 +699,7 @@ step 3 should not run under -b
 
 #### Set the minimum severity floor with `-V`
 
-**When to run:** when a deployment script intentionally uses low-severity `RAISERROR` calls for progress messages and those should not fail the build.
-**Trigger:** a migration that emits `RAISERROR(..., 10, 1) WITH NOWAIT` for progress telemetry, or a script that uses low-severity warnings for non-fatal conditions.
-**Context:** runs in any shell alongside `-b`. `-V` accepts a severity integer from 1 to 25; errors below that threshold are suppressed from the exit-code calculation.
-**Purpose:** distinguish fatal from informational errors in the exit-code decision.
+When a deployment script intentionally uses low-severity `RAISERROR` calls for progress messages and those should not fail the build. It is typically triggered by a migration that emits `RAISERROR(..., 10, 1) WITH NOWAIT` for progress telemetry, or a script that uses low-severity warnings for non-fatal conditions. Runs in any shell alongside `-b`. `-V` accepts a severity integer from 1 to 25; errors below that threshold are suppressed from the exit-code calculation. Distinguish fatal from informational errors in the exit-code decision.
 
 *This command combines `-b` and `-V 16` so only severity 16+ errors fail the shell.*
 
@@ -759,10 +711,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d stoxx -C -b -V 16 -i ".\d
 
 #### Route errors to stderr with `-r 1`
 
-**When to run:** when the caller needs to split `sqlcmd` output by stream — typically to capture query output on stdout and log errors to a separate file.
-**Trigger:** a CI step that pipes `sqlcmd` stdout into `jq`, a file, or another process, and needs the errors to be captured separately.
-**Context:** runs in any shell. `-r 0` sends only severity-11+ error messages to stderr. `-r 1` sends all error messages including `PRINT` output. Has no effect when combined with `-o` (which overrides the output destination entirely).
-**Purpose:** separate query result output from error output at the shell stream level.
+When the caller needs to split `sqlcmd` output by stream — typically to capture query output on stdout and log errors to a separate file. It is typically triggered by a CI step that pipes `sqlcmd` stdout into `jq`, a file, or another process, and needs the errors to be captured separately. Runs in any shell. `-r 0` sends only severity-11+ error messages to stderr. `-r 1` sends all error messages including `PRINT` output. Has no effect when combined with `-o` (which overrides the output destination entirely). Separate query result output from error output at the shell stream level.
 
 *This command routes all errors to stderr while leaving query output on stdout.*
 
@@ -789,10 +738,7 @@ Most `sqlcmd` automation either wants human-readable console output or machine-f
 
 #### Export a query result to a delimited file
 
-**When to run:** when an operational export is needed as flat text for downstream tooling — ETL pipelines, spreadsheets, ad-hoc analyses — and `bcp` or `BULK INSERT` is overkill.
-**Trigger:** a request for a "quick dump" of a table or query, a diagnostics export for offline analysis, or a CI step that compares current output against a golden baseline.
-**Context:** runs in any shell. Output is written to the file path in `-o`, overwriting any existing file. Paths with spaces must be quoted. The `-f` flag can set the output codepage if Unicode is required.
-**Purpose:** produce a reproducible delimited file suitable for downstream text processing.
+When an operational export is needed as flat text for downstream tooling — ETL pipelines, spreadsheets, ad-hoc analyses — and `bcp` or `BULK INSERT` is overkill. It is typically triggered by a request for a "quick dump" of a table or query, a diagnostics export for offline analysis, or a CI step that compares current output against a golden baseline. Runs in any shell. Output is written to the file path in `-o`, overwriting any existing file. Paths with spaces must be quoted. The `-f` flag can set the output codepage if Unicode is required. Produce a reproducible delimited file suitable for downstream text processing.
 
 > [!info]- Flag interactions that matter for clean output
 >
@@ -822,10 +768,7 @@ AI.PA|2026-04-07|181.5
 
 #### Suppress column headers with `-h -1`
 
-**When to run:** whenever downstream text processing treats the header row as a data row, or the output is being appended to a pre-existing file that already has a header.
-**Trigger:** a downstream `awk`, `jq`, or `cut` pipeline that wrongly picks up the header row as data, or a CSV consumer that concatenates multiple `sqlcmd` exports into one file.
-**Context:** runs in any shell as part of the standard output-shaping flag set.
-**Purpose:** strip the column-name header and separator line from the output.
+Whenever downstream text processing treats the header row as a data row, or the output is being appended to a pre-existing file that already has a header. It is typically triggered by a downstream `awk`, `jq`, or `cut` pipeline that wrongly picks up the header row as data, or a CSV consumer that concatenates multiple `sqlcmd` exports into one file. Runs in any shell as part of the standard output-shaping flag set. Strip the column-name header and separator line from the output.
 
 *This command omits the header line by passing `-h -1`.*
 
@@ -842,10 +785,7 @@ stoxx_db|FULL|ONLINE
 
 #### Control column widths with `-y` and `-Y`
 
-**When to run:** when the default column widths truncate wide `VARCHAR` or `NVARCHAR` columns in a way that corrupts downstream parsing, or conversely when unbounded widths blow up the file size.
-**Trigger:** a `SELECT` result where `XML`, `VARCHAR(MAX)`, or concatenated text columns are silently cut off at 256 characters.
-**Context:** runs in any shell. `-y` (lowercase) controls **variable**-length type width (`VARCHAR`, `NVARCHAR`, `VARBINARY`, `XML`, UDTs). `-Y` (uppercase) controls **fixed**-length type width (`CHAR(n)`, `NCHAR(n)`, `VARCHAR(n)` where `n ≤ 8000`). Both accept `0` for unlimited.
-**Purpose:** shape column widths so variable-length types render fully without truncation.
+When the default column widths truncate wide `VARCHAR` or `NVARCHAR` columns in a way that corrupts downstream parsing, or conversely when unbounded widths blow up the file size. It is typically triggered by a `SELECT` result where `XML`, `VARCHAR(MAX)`, or concatenated text columns are silently cut off at 256 characters. Runs in any shell. `-y` (lowercase) controls **variable**-length type width (`VARCHAR`, `NVARCHAR`, `VARBINARY`, `XML`, UDTs). `-Y` (uppercase) controls **fixed**-length type width (`CHAR(n)`, `NCHAR(n)`, `VARCHAR(n)` where `n ≤ 8000`). Both accept `0` for unlimited. Shape column widths so variable-length types render fully without truncation.
 
 *This command widens variable-length columns to 8000 characters and fixed-length columns to 4000.*
 
@@ -877,10 +817,7 @@ This subsection walks through the DAC lifecycle end-to-end: checking the current
 
 #### Check remote DAC configuration with sp_configure
 
-**When to run:** before attempting a DAC session from a remote host, or during a routine server-configuration audit.
-**Trigger:** a ticket that requires DAC access from an operator workstation, a post-migration server-configuration review, or a hardening checklist.
-**Context:** runs against the regular workload endpoint. Read-only. Requires `VIEW SERVER STATE` (for `sys.configurations`) or membership in any role with `ALTER SETTINGS` permission.
-**Purpose:** confirm whether the instance accepts DAC connections from remote clients or is restricted to local loopback only.
+Before attempting a DAC session from a remote host, or during a routine server-configuration audit. It is typically triggered by a ticket that requires DAC access from an operator workstation, a post-migration server-configuration review, or a hardening checklist. Runs against the regular workload endpoint. Read-only. Requires `VIEW SERVER STATE` (for `sys.configurations`) or membership in any role with `ALTER SETTINGS` permission. Confirm whether the instance accepts DAC connections from remote clients or is restricted to local loopback only.
 
 *This command reads the `remote admin connections` value from `sys.configurations`.*
 
@@ -896,10 +833,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -W -s "|" -Q "S
 
 #### Enable remote DAC access
 
-**When to run:** during instance initial hardening, after a cluster node failover where DAC may have been reset, or as the first step of an incident where you need DAC from an operator workstation.
-**Trigger:** an incident playbook step that requires remote DAC access, or a new instance being onboarded to the operational standard.
-**Context:** runs against the regular workload endpoint. Requires `ALTER SETTINGS` (implicit in `sysadmin` and `serveradmin`). The change is dynamic — no restart needed.
-**Purpose:** enable DAC connections from remote hosts without restarting the instance.
+During instance initial hardening, after a cluster node failover where DAC may have been reset, or as the first step of an incident where you need DAC from an operator workstation. It is typically triggered by an incident playbook step that requires remote DAC access, or a new instance being onboarded to the operational standard. Runs against the regular workload endpoint. Requires `ALTER SETTINGS` (implicit in `sysadmin` and `serveradmin`). The change is dynamic — no restart needed. Enable DAC connections from remote hosts without restarting the instance.
 
 *This command enables remote DAC access via `sp_configure`.*
 
@@ -912,10 +846,7 @@ RECONFIGURE;
 
 #### Locate the DAC port in the SQL Server errorlog
 
-**When to run:** before connecting through the DAC for the first time on a given instance, or whenever the port assignment might have changed (dynamic ports, container restart, instance rename).
-**Trigger:** a planned DAC session, a restart of the instance, or a container recreate where the DAC listener was rebound.
-**Context:** reads `/var/opt/mssql/log/errorlog` on Linux containers or `ERRORLOG` on Windows installations. Requires host-level read access to the errorlog file or `sys.xp_readerrorlog` via the regular endpoint.
-**Purpose:** discover the actual TCP port the DAC listener bound to at startup.
+Before connecting through the DAC for the first time on a given instance, or whenever the port assignment might have changed (dynamic ports, container restart, instance rename). It is typically triggered by a planned DAC session, a restart of the instance, or a container recreate where the DAC listener was rebound. Reads `/var/opt/mssql/log/errorlog` on Linux containers or `ERRORLOG` on Windows installations. Requires host-level read access to the errorlog file or `sys.xp_readerrorlog` via the regular endpoint. Discover the actual TCP port the DAC listener bound to at startup.
 
 *This command reads the DAC-announcement lines from the SQL Server errorlog via `docker exec`.*
 
@@ -932,10 +863,7 @@ docker exec stoxx-db bash -c 'grep -i "dedicated admin" /var/opt/mssql/log/error
 
 #### Connect through the DAC endpoint via docker exec
 
-**When to run:** during an incident where the regular workload endpoint is unresponsive and the instance is running inside a container, or for any planned DAC diagnostic on a containerized SQL Server.
-**Trigger:** a scheduler stall, memory pressure event, or schema-lock deadlock on a containerized instance, or a planned capacity-audit DAC session.
-**Context:** requires `docker exec` access to the host running the container, and `sysadmin` on the SQL Server instance inside. The DAC session is **local to the container** even though the operator is logged in on the host — which is exactly the isolation the DAC was designed for.
-**Purpose:** establish a diagnostic DAC session on a containerized SQL Server where DAC port publishing is not available.
+During an incident where the regular workload endpoint is unresponsive and the instance is running inside a container, or for any planned DAC diagnostic on a containerized SQL Server. It is typically triggered by a scheduler stall, memory pressure event, or schema-lock deadlock on a containerized instance, or a planned capacity-audit DAC session. Requires `docker exec` access to the host running the container, and `sysadmin` on the SQL Server instance inside. The DAC session is **local to the container** even though the operator is logged in on the host — which is exactly the isolation the DAC was designed for. Establish a diagnostic DAC session on a containerized SQL Server where DAC port publishing is not available.
 
 > [!warning] DAC is a narrow resource — coordinate before using it
 >

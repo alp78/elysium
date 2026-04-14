@@ -223,10 +223,7 @@ A view is a saved query — it stores no data and re-executes the underlying que
 
 #### Create a view wrapping ROW_NUMBER deduplication logic
 
-**When to run:** When multiple downstream consumers need the "latest price per stock" pattern and duplicating the ROW_NUMBER logic in each query is error-prone.
-**Trigger:** Identifying repeated use of the same deduplication subquery across notebooks or scheduled queries.
-**Context:** GoogleSQL DDL (`CREATE OR REPLACE VIEW`) in `stoxx_gold` dataset. State-changing — creates or replaces a named view object. Requires `bigquery.tables.create` permission. The view stores no data — it re-executes the underlying query on every SELECT.
-**Purpose:** Encapsulate the ROW_NUMBER deduplication pattern behind a clean interface so downstream queries can `SELECT * FROM v_latest_prices` without knowing the dedup logic.
+When multiple downstream consumers need the "latest price per stock" pattern and duplicating the ROW_NUMBER logic in each query is error-prone. It is typically triggered by identifying repeated use of the same deduplication subquery across notebooks or scheduled queries. GoogleSQL DDL (`CREATE OR REPLACE VIEW`) in `stoxx_gold` dataset. State-changing — creates or replaces a named view object. Requires `bigquery.tables.create` permission. The view stores no data — it re-executes the underlying query on every SELECT. Encapsulate the ROW_NUMBER deduplication pattern behind a clean interface so downstream queries can `SELECT * FROM v_latest_prices` without knowing the dedup logic.
 
 *Create a view that returns the most recent OHLCV row per stock using ROW_NUMBER deduplication.*
 
@@ -259,10 +256,7 @@ The complex `ROW_NUMBER` pattern is now hidden behind a simple `SELECT` — down
 
 #### Query the view with a simple SELECT
 
-**When to run:** Whenever you need the latest price per stock — the view hides the deduplication complexity.
-**Trigger:** Dashboard query, ad-hoc analysis, or any downstream consumer that needs the most recent OHLCV row per symbol.
-**Context:** GoogleSQL SELECT against the view `v_latest_prices`. Read-only, but scans the full base table on every read (regular views are not cached). Bytes scanned = same as running the underlying ROW_NUMBER query directly.
-**Purpose:** Demonstrate that the view simplifies consumption — one clean SELECT replaces the complex subquery pattern.
+Whenever you need the latest price per stock — the view hides the deduplication complexity. It is typically triggered by dashboard query, ad-hoc analysis, or any downstream consumer that needs the most recent OHLCV row per symbol. GoogleSQL SELECT against the view `v_latest_prices`. Read-only, but scans the full base table on every read (regular views are not cached). Bytes scanned = same as running the underlying ROW_NUMBER query directly. Demonstrate that the view simplifies consumption — one clean SELECT replaces the complex subquery pattern.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -349,10 +343,7 @@ Join multiple tables into a single business-friendly view. Dashboards query this
 
 #### Create a cross-layer dashboard view
 
-**When to run:** When setting up or updating the dashboard query layer — a one-time DDL operation, re-run only if the schema changes.
-**Trigger:** Initial dashboard setup, or after adding new columns to the scoring pipeline that should be exposed in the dashboard.
-**Context:** GoogleSQL DDL (`CREATE OR REPLACE VIEW`) in `stoxx_gold`. State-changing. The view joins `scores_daily` with `index_dim`, exposing a business-friendly interface for dashboard tools.
-**Purpose:** Create a single cross-layer view that dashboards query instead of raw tables — encapsulates the score-to-dimension join and column formatting.
+When setting up or updating the dashboard query layer — a one-time DDL operation, re-run only if the schema changes. It is typically triggered by initial dashboard setup, or after adding new columns to the scoring pipeline that should be exposed in the dashboard. GoogleSQL DDL (`CREATE OR REPLACE VIEW`) in `stoxx_gold`. State-changing. The view joins `scores_daily` with `index_dim`, exposing a business-friendly interface for dashboard tools. Create a single cross-layer view that dashboards query instead of raw tables — encapsulates the score-to-dimension join and column formatting.
 
 *Create a cross-layer dashboard view joining gold scores with silver dimension metadata.*
 
@@ -397,10 +388,7 @@ JOIN `bq-wh-nb.stoxx_silver.index_dim` d ON s.symbol = d.symbol AND d._index = s
 
 #### Query the dashboard view for the latest rankings
 
-**When to run:** When refreshing the stock ranking dashboard or validating that the scoring pipeline produced expected results.
-**Trigger:** Daily dashboard refresh, portfolio review, or post-scoring-run verification.
-**Context:** GoogleSQL SELECT against the `v_stock_dashboard` view. Read-only, but the underlying view re-scans base tables on every read. Filtered to `euro_stoxx_50` and the latest `score_date`.
-**Purpose:** Retrieve the latest ranked stock dashboard with composite scores, sub-scores, and index weights — the primary output consumed by portfolio managers.
+When refreshing the stock ranking dashboard or validating that the scoring pipeline produced expected results. It is typically triggered by daily dashboard refresh, portfolio review, or post-scoring-run verification. GoogleSQL SELECT against the `v_stock_dashboard` view. Read-only, but the underlying view re-scans base tables on every read. Filtered to `euro_stoxx_50` and the latest `score_date`. Retrieve the latest ranked stock dashboard with composite scores, sub-scores, and index weights — the primary output consumed by portfolio managers.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -539,10 +527,7 @@ The **idiomatic BigQuery pattern** for reusable parameterized logic is a CTE wit
 
 #### Parameterized top-N query with a CTE-based params row
 
-**When to run:** When you need a reusable, parameterized read pattern without creating a stored procedure or table function.
-**Trigger:** Building a notebook cell or scheduled query that fetches top-N stocks by score for a given index — parameters are defined in the CTE rather than passed as procedure arguments.
-**Context:** GoogleSQL CTE with a `params` row joined via CROSS JOIN (implicit comma syntax). Read-only. The `params` CTE acts as a single-row configuration table. This pattern avoids the jupysql limitation where `DECLARE` variables are not visible across cells.
-**Purpose:** Demonstrate BigQuery's idiomatic alternative to stored procedures for parameterized reads — change the params CTE values to reuse the same query for different indices or top-N limits.
+When you need a reusable, parameterized read pattern without creating a stored procedure or table function. It is typically triggered by building a notebook cell or scheduled query that fetches top-N stocks by score for a given index — parameters are defined in the CTE rather than passed as procedure arguments. GoogleSQL CTE with a `params` row joined via CROSS JOIN (implicit comma syntax). Read-only. The `params` CTE acts as a single-row configuration table. This pattern avoids the jupysql limitation where `DECLARE` variables are not visible across cells. Demonstrate BigQuery's idiomatic alternative to stored procedures for parameterized reads — change the params CTE values to reuse the same query for different indices or top-N limits.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -622,10 +607,7 @@ Production scripts wrap logic in `BEGIN...EXCEPTION...END` with explicit transac
 
 #### BEGIN...EXCEPTION error handling with explicit transaction
 
-**When to run:** When writing production pipeline scripts that perform multi-statement DML and need atomic rollback on failure.
-**Trigger:** Building a load script that must either succeed entirely or roll back — partial loads are unacceptable.
-**Context:** GoogleSQL scripting block with `DECLARE`, `BEGIN TRANSACTION`, `COMMIT`, `ROLLBACK`, and `EXCEPTION WHEN ERROR`. State-changing — the DML inside the block modifies data. Requires `bigquery.jobs.create` permission. Each DML statement counts against the 1,500/day quota.
-**Purpose:** Demonstrate BigQuery's error handling pattern — wrap DML in a transaction so failures trigger `ROLLBACK` and the error message is captured via `@@error.message`.
+When writing production pipeline scripts that perform multi-statement DML and need atomic rollback on failure. It is typically triggered by building a load script that must either succeed entirely or roll back — partial loads are unacceptable. GoogleSQL scripting block with `DECLARE`, `BEGIN TRANSACTION`, `COMMIT`, `ROLLBACK`, and `EXCEPTION WHEN ERROR`. State-changing — the DML inside the block modifies data. Requires `bigquery.jobs.create` permission. Each DML statement counts against the 1,500/day quota. Demonstrate BigQuery's error handling pattern — wrap DML in a transaction so failures trigger `ROLLBACK` and the error message is captured via `@@error.message`.
 
 *Wrap DML inside `BEGIN...EXCEPTION...END` with an explicit transaction and an error handler.*
 
@@ -676,10 +658,7 @@ A BigQuery **table function** (`CREATE TABLE FUNCTION`) is like a parameterized 
 
 #### Create a parameterized table function for price history
 
-**When to run:** When multiple consumers need the same parameterized query pattern and a view is insufficient because the parameters change per invocation.
-**Trigger:** Repeated use of the same "get price history for symbol X between dates Y and Z" query pattern across notebooks, scripts, or scheduled queries.
-**Context:** GoogleSQL DDL (`CREATE OR REPLACE TABLE FUNCTION`) in the `demo` dataset. State-changing — creates a reusable function object. The optimizer inlines the function body into the outer query plan, so there is no performance penalty vs a direct query.
-**Purpose:** Create a parameterized, reusable table function that returns OHLCV data for a given symbol and date range — BigQuery's equivalent of SQL Server's inline table-valued function (iTVF).
+When multiple consumers need the same parameterized query pattern and a view is insufficient because the parameters change per invocation. It is typically triggered by repeated use of the same "get price history for symbol X between dates Y and Z" query pattern across notebooks, scripts, or scheduled queries. GoogleSQL DDL (`CREATE OR REPLACE TABLE FUNCTION`) in the `demo` dataset. State-changing — creates a reusable function object. The optimizer inlines the function body into the outer query plan, so there is no performance penalty vs a direct query. Create a parameterized, reusable table function that returns OHLCV data for a given symbol and date range — BigQuery's equivalent of SQL Server's inline table-valued function (iTVF).
 
 *Create a parameterized table function that returns OHLCV data for a given symbol and date range.*
 
@@ -706,10 +685,7 @@ AS (
 
 #### Call the table function from a SELECT statement
 
-**When to run:** When querying price history for a specific symbol and date range — the table function encapsulates the filter logic.
-**Trigger:** Ad-hoc analysis, notebook exploration, or any downstream query that needs OHLCV data for a parameterized (symbol, date range) slice.
-**Context:** GoogleSQL SELECT against `demo.fn_price_history(...)`. Read-only. The optimizer inlines the function body — equivalent to running the underlying query directly, with no performance penalty.
-**Purpose:** Demonstrate that the table function returns a standard result set that can be used in any SELECT, JOIN, or CTE — the calling pattern is as simple as querying a table.
+When querying price history for a specific symbol and date range — the table function encapsulates the filter logic. It is typically triggered by ad-hoc analysis, notebook exploration, or any downstream query that needs OHLCV data for a parameterized (symbol, date range) slice. GoogleSQL SELECT against `demo.fn_price_history(...)`. Read-only. The optimizer inlines the function body — equivalent to running the underlying query directly, with no performance penalty. Demonstrate that the table function returns a standard result set that can be used in any SELECT, JOIN, or CTE — the calling pattern is as simple as querying a table.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -814,10 +790,7 @@ BigQuery has no manual index creation. Instead, inspect table metadata to verify
 
 #### Inspect clustering configuration via INFORMATION_SCHEMA
 
-**When to run:** After creating or altering a table's clustering/partitioning, or when diagnosing unexpected query performance.
-**Trigger:** Verifying that a table was created with the expected clustering columns, or investigating why partition pruning is not reducing scan cost.
-**Context:** GoogleSQL SELECT against `INFORMATION_SCHEMA.COLUMNS`. Read-only, free (metadata queries are not billed). Returns one row per column in the table.
-**Purpose:** Verify the clustering configuration of a table — which columns are clustering keys and in what order — to confirm that the physical layout supports the intended query patterns.
+After creating or altering a table's clustering/partitioning, or when diagnosing unexpected query performance. It is typically triggered by verifying that a table was created with the expected clustering columns, or investigating why partition pruning is not reducing scan cost. GoogleSQL SELECT against `INFORMATION_SCHEMA.COLUMNS`. Read-only, free (metadata queries are not billed). Returns one row per column in the table. Verify the clustering configuration of a table — which columns are clustering keys and in what order — to confirm that the physical layout supports the intended query patterns.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -935,10 +908,7 @@ This simulation shows the before/after of an SCD Type 1 overwrite: ASML's sector
 
 #### Simulate an SCD Type 1 overwrite on dimension rows
 
-**When to run:** When a non-analytical attribute needs correcting (e.g., fixing a typo in a company name) and history preservation is not required.
-**Trigger:** A dimension attribute that does not affect historical calculations needs updating — a display name correction, a metadata fix, or a classification change that should apply retroactively.
-**Context:** GoogleSQL SELECT with CASE expression against `stoxx_silver.index_dim`. Read-only simulation — in production, this would be an `UPDATE` statement. This query shows the before/after without modifying data.
-**Purpose:** Demonstrate the SCD Type 1 pattern — in-place overwrite with no history. The `scd_action` column flags which rows would be modified.
+When a non-analytical attribute needs correcting (e.g., fixing a typo in a company name) and history preservation is not required. It is typically triggered by A dimension attribute that does not affect historical calculations needs updating — a display name correction, a metadata fix, or a classification change that should apply retroactively. GoogleSQL SELECT with CASE expression against `stoxx_silver.index_dim`. Read-only simulation — in production, this would be an `UPDATE` statement. This query shows the before/after without modifying data. Demonstrate the SCD Type 1 pattern — in-place overwrite with no history. The `scd_action` column flags which rows would be modified.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1026,10 +996,7 @@ The `stoxx_silver.index_dim` table already implements SCD Type 2 with `valid_fro
 
 #### Query SCD Type 2 validity ranges
 
-**When to run:** When inspecting the history of dimension changes, or verifying that the SCD Type 2 mechanism is correctly expiring old rows and inserting new ones.
-**Trigger:** After a dimension load, to confirm that changed attributes produced the expected (expired old row + new current row) pair. Also useful for auditing historical membership.
-**Context:** GoogleSQL SELECT against `stoxx_silver.index_dim`. Read-only. The table implements SCD Type 2 with `valid_from` (TIMESTAMP), `valid_to` (TIMESTAMP, NULL for current rows), and `is_current` (BOOL).
-**Purpose:** Show the validity ranges for dimension rows — current rows have `valid_to = NULL` and `is_current = TRUE`. Historical rows show the period during which each attribute value was active.
+When inspecting the history of dimension changes, or verifying that the SCD Type 2 mechanism is correctly expiring old rows and inserting new ones. It is typically triggered after a dimension load, to confirm that changed attributes produced the expected (expired old row + new current row) pair. Also useful for auditing historical membership. GoogleSQL SELECT against `stoxx_silver.index_dim`. Read-only. The table implements SCD Type 2 with `valid_from` (TIMESTAMP), `valid_to` (TIMESTAMP, NULL for current rows), and `is_current` (BOOL). Show the validity ranges for dimension rows — current rows have `valid_to = NULL` and `is_current = TRUE`. Historical rows show the period during which each attribute value was active.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1123,10 +1090,7 @@ in a time series. Uses the difference between ROW_NUMBER and the date to group c
 
 #### Detect calendar gaps with LAG and DATE_DIFF
 
-**When to run:** After loading new data, or when investigating anomalies in rolling calculations (moving averages, volatility) that could be caused by hidden gaps.
-**Trigger:** Post-load validation, or debugging unexpected results in time-series analytics.
-**Context:** GoogleSQL window functions `LAG()` and `DATE_DIFF()` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Partitioned by symbol, ordered by date.
-**Purpose:** Detect unusual gaps in the time series — any gap > 3 calendar days exceeds a normal weekend and may indicate a holiday, data issue, or delisting event that requires investigation.
+After loading new data, or when investigating anomalies in rolling calculations (moving averages, volatility) that could be caused by hidden gaps. It is typically triggered by post-load validation, or debugging unexpected results in time-series analytics. GoogleSQL window functions `LAG()` and `DATE_DIFF()` against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Partitioned by symbol, ordered by date. Detect unusual gaps in the time series — any gap > 3 calendar days exceeds a normal weekend and may indicate a holiday, data issue, or delisting event that requires investigation.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1214,10 +1178,7 @@ The simulation below uses `UNION ALL` to create an artificial duplicate, then ap
 
 #### Identify duplicates with ROW_NUMBER and tie-breaking
 
-**When to run:** When deduplicating a table after detecting duplicate rows, or as part of a load validation step.
-**Trigger:** Quality check reveals `copies > 1` for some (symbol, date) combinations, or a re-run of the ETL job may have double-loaded data.
-**Context:** GoogleSQL CTEs with `UNION ALL` (to simulate a duplicate) and `ROW_NUMBER() OVER (PARTITION BY symbol, date ORDER BY volume DESC)`. Read-only simulation. In production, filter to `rn = 1` and write the deduplicated result to the target table using `CREATE OR REPLACE TABLE ... AS SELECT`.
-**Purpose:** Identify duplicate rows using ROW_NUMBER with volume-based tie-breaking — the row with the highest volume is kept (`rn = 1`), others are flagged for removal.
+When deduplicating a table after detecting duplicate rows, or as part of a load validation step. It is typically triggered by quality check reveals `copies > 1` for some (symbol, date) combinations, or a re-run of the ETL job may have double-loaded data. GoogleSQL CTEs with `UNION ALL` (to simulate a duplicate) and `ROW_NUMBER() OVER (PARTITION BY symbol, date ORDER BY volume DESC)`. Read-only simulation. In production, filter to `rn = 1` and write the deduplicated result to the target table using `CREATE OR REPLACE TABLE ... AS SELECT`. Identify duplicate rows using ROW_NUMBER with volume-based tie-breaking — the row with the highest volume is kept (`rn = 1`), others are flagged for removal.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1319,10 +1280,7 @@ Both queries return the same count, but the sargable version enables partition p
 
 #### Compare non-pruning (EXTRACT) vs pruning (range) predicates
 
-**When to run:** When optimizing query cost on partitioned tables, or when teaching the difference between SARGable and non-SARGable predicates in BigQuery.
-**Trigger:** Observing unexpectedly high bytes scanned on a partitioned table — the most common cause is a function wrapping the partition column.
-**Context:** GoogleSQL subqueries comparing two COUNT queries against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Both return the same count, but the `EXTRACT` version prevents partition pruning while the range predicate enables it.
-**Purpose:** Demonstrate that wrapping the partition column in a function (`EXTRACT(YEAR FROM date)`) defeats partition pruning — the range predicate `WHERE date >= '2025-01-01' AND date < '2026-01-01'` produces the same result at lower scan cost.
+When optimizing query cost on partitioned tables, or when teaching the difference between SARGable and non-SARGable predicates in BigQuery. It is typically triggered by observing unexpectedly high bytes scanned on a partitioned table — the most common cause is a function wrapping the partition column. GoogleSQL subqueries comparing two COUNT queries against `stoxx_silver.eurostoxx50_ohlcv`. Read-only. Both return the same count, but the `EXTRACT` version prevents partition pruning while the range predicate enables it. Demonstrate that wrapping the partition column in a function (`EXTRACT(YEAR FROM date)`) defeats partition pruning — the range predicate `WHERE date >= '2025-01-01' AND date < '2026-01-01'` produces the same result at lower scan cost.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1426,10 +1384,7 @@ A data freshness check across all medallion layers — if any table's `last_upda
 
 #### Check data freshness across all medallion layers
 
-**When to run:** As part of the daily pipeline monitoring routine, or when investigating why downstream dashboards show stale data.
-**Trigger:** Scheduled monitoring check, or a user reports that dashboard data appears outdated.
-**Context:** GoogleSQL UNION ALL of four MAX-timestamp queries, one per medallion-layer table. Read-only. Each query scans only the timestamp/date column used. If any `last_update` is more than 1 day behind the current date on a business day, the pipeline may have stalled.
-**Purpose:** Provide a single-query freshness overview across all medallion layers — bronze ingestion, silver signals, gold scores, and gold index performance — to detect pipeline stalls at a glance.
+As part of the daily pipeline monitoring routine, or when investigating why downstream dashboards show stale data. It is typically triggered by scheduled monitoring check, or a user reports that dashboard data appears outdated. GoogleSQL UNION ALL of four MAX-timestamp queries, one per medallion-layer table. Read-only. Each query scans only the timestamp/date column used. If any `last_update` is more than 1 day behind the current date on a business day, the pipeline may have stalled. Provide a single-query freshness overview across all medallion layers — bronze ingestion, silver signals, gold scores, and gold index performance — to detect pipeline stalls at a glance.
 
 | Field | Source / Computation | Type | Meaning |
 |---|---|---|---|
@@ -1505,10 +1460,7 @@ The OHLCV tables (~65K rows each) are too small to benefit. In production with 1
 
 #### Create a partitioned and clustered table with require_partition_filter
 
-**When to run:** When creating a new production table that will store time-series data, or migrating an existing table to a partitioned layout.
-**Trigger:** Table design phase for a new pipeline, or after observing that queries against an unpartitioned table are scanning excessive bytes.
-**Context:** GoogleSQL DDL (`CREATE TABLE IF NOT EXISTS`) in the `demo` dataset. State-changing — creates a new table. `PARTITION BY DATE_TRUNC(date, MONTH)` splits storage by month. `CLUSTER BY symbol` sorts data within each partition. `require_partition_filter = TRUE` forces all queries to include a partition predicate.
-**Purpose:** Create the recommended table layout for time-series OHLCV data — monthly partitioning for coarse scan elimination, clustering by symbol for fine-grained block pruning, and mandatory partition filter to prevent accidental full-table scans.
+When creating a new production table that will store time-series data, or migrating an existing table to a partitioned layout. It is typically triggered by table design phase for a new pipeline, or after observing that queries against an unpartitioned table are scanning excessive bytes. GoogleSQL DDL (`CREATE TABLE IF NOT EXISTS`) in the `demo` dataset. State-changing — creates a new table. `PARTITION BY DATE_TRUNC(date, MONTH)` splits storage by month. `CLUSTER BY symbol` sorts data within each partition. `require_partition_filter = TRUE` forces all queries to include a partition predicate. Create the recommended table layout for time-series OHLCV data — monthly partitioning for coarse scan elimination, clustering by symbol for fine-grained block pruning, and mandatory partition filter to prevent accidental full-table scans.
 
 *Create a partitioned and clustered OHLCV table with `require_partition_filter` enabled to enforce scan-cost discipline.*
 
@@ -1542,10 +1494,7 @@ Every view, table function, and dataset created earlier must be dropped in rever
 
 #### Drop all demo objects and the demo dataset
 
-**When to run:** At the end of a lab session, or before re-running the notebook from a clean slate.
-**Trigger:** Notebook execution complete — clean up demo objects to leave the project in its original state.
-**Context:** Python client library (`bigquery.Client`). State-changing — drops table functions, views, and the `demo` dataset. Uses `not_found_ok=True` for idempotent re-runs. `delete_contents=True` removes all remaining objects inside the dataset before dropping it.
-**Purpose:** Clean up all objects created by this notebook so the project is left in its original state and the notebook is safe to re-run from scratch.
+At the end of a lab session, or before re-running the notebook from a clean slate. It is typically triggered by notebook execution complete — clean up demo objects to leave the project in its original state. Python client library (`bigquery.Client`). State-changing — drops table functions, views, and the `demo` dataset. Uses `not_found_ok=True` for idempotent re-runs. `delete_contents=True` removes all remaining objects inside the dataset before dropping it. Clean up all objects created by this notebook so the project is left in its original state and the notebook is safe to re-run from scratch.
 
 *Drop all demo objects and the demo dataset using the BigQuery Python client.*
 

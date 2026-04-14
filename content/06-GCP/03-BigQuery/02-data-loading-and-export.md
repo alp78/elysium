@@ -279,10 +279,7 @@ Loading data from GCS into BigQuery requires two IAM roles: `bigquery.dataEditor
 
 #### bq load | CSV | load CSV from GCS
 
-**When to run:** when landing raw CSV files from an external source into a BigQuery staging table.
-**Trigger:** a pipeline step has written CSV files to a GCS bucket and the next step needs the data queryable in BigQuery.
-**Context:** runs from any shell with `bq` CLI authenticated. Creates an asynchronous load job. State-changing — creates or appends to the target table. Requires `bigquery.dataEditor` on the target dataset and `storage.objectViewer` on the source bucket.
-**Purpose:** ingest CSV data from GCS into a BigQuery table with schema auto-detection.
+When landing raw CSV files from an external source into a BigQuery staging table. It is typically triggered by a pipeline step has written CSV files to a GCS bucket and the next step needs the data queryable in BigQuery. Runs from any shell with `bq` CLI authenticated. Creates an asynchronous load job. State-changing — creates or appends to the target table. Requires `bigquery.dataEditor` on the target dataset and `storage.objectViewer` on the source bucket. Ingest CSV data from GCS into a BigQuery table with schema auto-detection.
 
 Supported source formats: `CSV`, `NEWLINE_DELIMITED_JSON`, `PARQUET`, `AVRO`, `ORC`. The `--skip_leading_rows=1` flag skips the header row, and `--autodetect` infers the schema from the first 500 rows of the data. For production, specify an explicit schema with the `--schema` flag or a `schema.json` file to eliminate sampling ambiguity.
 
@@ -317,10 +314,7 @@ The `DONE` status confirms the load job completed successfully. BigQuery created
 
 #### bq load | Parquet | load Parquet from GCS (recommended)
 
-**When to run:** when loading production data into BigQuery from GCS where the source files are in Parquet format.
-**Trigger:** a pipeline step has written Parquet files to GCS and the data needs to be queryable in BigQuery.
-**Context:** runs from any shell with `bq` CLI authenticated. Creates an asynchronous load job. State-changing — creates or appends to the target table. No `--autodetect` or `--skip_leading_rows` needed because Parquet embeds its own schema.
-**Purpose:** ingest Parquet data from GCS into a BigQuery table using the embedded schema.
+When loading production data into BigQuery from GCS where the source files are in Parquet format. It is typically triggered by a pipeline step has written Parquet files to GCS and the data needs to be queryable in BigQuery. Runs from any shell with `bq` CLI authenticated. Creates an asynchronous load job. State-changing — creates or appends to the target table. No `--autodetect` or `--skip_leading_rows` needed because Parquet embeds its own schema. Ingest Parquet data from GCS into a BigQuery table using the embedded schema.
 
 Parquet embeds its schema in the file footer, so `--autodetect` and `--skip_leading_rows` are not required and are silently ignored if passed. The columnar layout and built-in Snappy compression make Parquet the preferred format for production loads — file sizes are typically 70–90% smaller than equivalent CSV, and type mapping (dates, timestamps, decimals) is exact rather than inferred.
 
@@ -347,10 +341,7 @@ Waiting on bqjob_r742f3fd62f1cd3e5_0000019d80dfb9de_1 ... (1s) Current status: D
 
 #### bq load | Hive partitioning | load from Hive-partitioned GCS layout
 
-**When to run:** when GCS files are organized in a hive-style directory structure with key-value path segments (e.g., `year=2025/month=03/`).
-**Trigger:** the upstream pipeline writes files into date- or category-partitioned GCS directories and you want BigQuery to recognize the directory keys as partition columns.
-**Context:** runs from any shell with `bq` CLI authenticated. State-changing — creates or appends to the target table. The source URI must end with `/*` to match all partitions. Requires the same IAM roles as a standard load.
-**Purpose:** ingest files from a hive-partitioned GCS layout into a BigQuery table, automatically mapping directory segments to partition columns.
+When GCS files are organized in a hive-style directory structure with key-value path segments (e.g., `year=2025/month=03/`). It is typically triggered by the upstream pipeline writes files into date- or category-partitioned GCS directories and you want BigQuery to recognize the directory keys as partition columns. Runs from any shell with `bq` CLI authenticated. State-changing — creates or appends to the target table. The source URI must end with `/*` to match all partitions. Requires the same IAM roles as a standard load. Ingest files from a hive-partitioned GCS layout into a BigQuery table, automatically mapping directory segments to partition columns.
 
 Hive partitioning is a directory naming convention originating from Apache Hive where each subdirectory encodes a column name and value as a `key=value` path segment. For example, `gs://bucket/data/year=2025/month=03/file.parquet` encodes `year=2025` and `month=03`. The `--hive_partitioning_mode=AUTO` flag tells BigQuery to detect these segments and map them to BigQuery partition columns automatically. `AUTO` mode infers both the key names and their types; `STRINGS` mode maps all keys as STRING regardless of content; `CUSTOM` mode requires an explicit schema definition for the partition keys.
 
@@ -395,10 +386,7 @@ The `LOAD DATA` SQL statement is an alternative to `bq load` that runs entirely 
 
 #### LOAD DATA INTO | load CSV from GCS via SQL
 
-**When to run:** when loading data from GCS as part of a SQL-based pipeline or scheduled query, rather than a shell-based workflow.
-**Trigger:** a scheduled query fires, or a stored procedure reaches the ingestion step.
-**Context:** runs inside a BigQuery SQL session (console, `bq query`, or API). State-changing — creates or appends to the target table. Same IAM requirements as `bq load`.
-**Purpose:** ingest GCS data into a BigQuery table using a SQL statement that can be scheduled, versioned, and composed with other SQL steps.
+When loading data from GCS as part of a SQL-based pipeline or scheduled query, rather than a shell-based workflow. It is typically triggered by a scheduled query fires, or a stored procedure reaches the ingestion step. Runs inside a BigQuery SQL session (console, `bq query`, or API). State-changing — creates or appends to the target table. Same IAM requirements as `bq load`. Ingest GCS data into a BigQuery table using a SQL statement that can be scheduled, versioned, and composed with other SQL steps.
 
 > [!info]- Clause breakdown
 >
@@ -450,10 +438,7 @@ LIMIT 5
 
 #### bq extract | Parquet | export table to GCS as Parquet
 
-**When to run:** when exporting BigQuery table data to GCS for downstream consumption, archival, or cross-platform transfer.
-**Trigger:** a pipeline step requires data in GCS (e.g., feeding a Dataflow job, populating a data lake, or archiving for compliance).
-**Context:** runs from any shell with `bq` CLI authenticated. Creates an asynchronous extract job. Read-only on the source table. Requires `bigquery.dataViewer` and `storage.objectCreator`.
-**Purpose:** write a BigQuery table to GCS in Parquet format for downstream consumption.
+When exporting BigQuery table data to GCS for downstream consumption, archival, or cross-platform transfer. It is typically triggered by a pipeline step requires data in GCS (e.g., feeding a Dataflow job, populating a data lake, or archiving for compliance). Runs from any shell with `bq` CLI authenticated. Creates an asynchronous extract job. Read-only on the source table. Requires `bigquery.dataViewer` and `storage.objectCreator`. Write a BigQuery table to GCS in Parquet format for downstream consumption.
 
 Use the `*` wildcard in the destination URI to enable parallel sharded export. BigQuery cannot write a single output file larger than approximately 1 GB; the wildcard is required for any table that exceeds this size. For tables under 1 GB, a single-file URI (without `*`) works but limits parallelism.
 
@@ -472,10 +457,7 @@ The `DONE` status confirms the extract job completed. BigQuery wrote one shard (
 
 #### bq extract | GZIP | export with compression
 
-**When to run:** when the downstream consumer benefits from compressed files (e.g., reducing GCS storage cost, faster cross-region transfer).
-**Trigger:** export destination is a cold-storage bucket, a cross-region transfer, or a system that reads compressed CSV natively.
-**Context:** same as standard extract. The `--compression` flag adds a compression pass after export. CSV supports GZIP and DEFLATE; Parquet supports SNAPPY and ZSTD (already compressed internally by default).
-**Purpose:** export table data to GCS with an explicit compression codec applied to the output files.
+When the downstream consumer benefits from compressed files (e.g., reducing GCS storage cost, faster cross-region transfer). It is typically triggered by export destination is a cold-storage bucket, a cross-region transfer, or a system that reads compressed CSV natively. Same as standard extract. The `--compression` flag adds a compression pass after export. CSV supports GZIP and DEFLATE; Parquet supports SNAPPY and ZSTD (already compressed internally by default). Export table data to GCS with an explicit compression codec applied to the output files.
 
 GZIP compression reduces CSV export file size significantly. See [compression](https://alp78.github.io/elysium/01-Shell/02-File-Operations/04-compression) for algorithm trade-offs.
 
@@ -514,10 +496,7 @@ Time travel lets you query a table as it existed at any point within the configu
 
 #### FOR SYSTEM_TIME AS OF | query table state at a past timestamp
 
-**When to run:** when you need to inspect the state of a table at a specific point in the past — typically after discovering data corruption, an accidental DELETE, or unexpected row counts.
-**Trigger:** a pipeline audit reveals row count drift, a downstream report shows unexpected values, or an operator reports an accidental DML statement.
-**Context:** runs as a standard BigQuery SQL query. Read-only — does not modify the table. The timestamp must fall within the table's `max_time_travel_hours` window (default: 168 hours / 7 days).
-**Purpose:** retrieve the exact row count (or full contents) of a table as it existed at a specific past timestamp, without modifying the current table.
+When you need to inspect the state of a table at a specific point in the past — typically after discovering data corruption, an accidental DELETE, or unexpected row counts. It is typically triggered by a pipeline audit reveals row count drift, a downstream report shows unexpected values, or an operator reports an accidental DML statement. Runs as a standard BigQuery SQL query. Read-only — does not modify the table. The timestamp must fall within the table's `max_time_travel_hours` window (default: 168 hours / 7 days). Retrieve the exact row count (or full contents) of a table as it existed at a specific past timestamp, without modifying the current table.
 
 | Clause | Purpose | Type |
 |---|---|---|
@@ -540,10 +519,7 @@ The table contained 50 rows 3 days ago — the same as the current count, confir
 
 #### bq cp | restore table from time travel snapshot
 
-**When to run:** when a time travel query confirms that data corruption or accidental deletion occurred, and you need to restore the table to its previous state.
-**Trigger:** the `FOR SYSTEM_TIME AS OF` query reveals a pre-corruption row count or data state that you want to recover.
-**Context:** runs from any shell with `bq` CLI authenticated. State-changing — creates a new table from the historical snapshot. The source table suffix `@-Nms` references the table state N milliseconds before the current time. Does not modify the original table.
-**Purpose:** copy a historical snapshot of a table to a new table for inspection or to replace the corrupted version.
+When a time travel query confirms that data corruption or accidental deletion occurred, and you need to restore the table to its previous state. It is typically triggered by the `FOR SYSTEM_TIME AS OF` query reveals a pre-corruption row count or data state that you want to recover. Runs from any shell with `bq` CLI authenticated. State-changing — creates a new table from the historical snapshot. The source table suffix `@-Nms` references the table state N milliseconds before the current time. Does not modify the original table. Copy a historical snapshot of a table to a new table for inspection or to replace the corrupted version.
 
 The suffix `@-86400000` references the table state 86,400,000 milliseconds (24 hours) before the current time. Any millisecond offset within the `max_time_travel_hours` window is valid. You can also use an absolute timestamp with `@<unix_millis>`.
 
@@ -570,10 +546,7 @@ The `successfully copied` confirmation means BigQuery created `ohlcv_restored` a
 
 #### bq update | configure time travel window on a dataset
 
-**When to run:** when you need to adjust the time travel retention window for a dataset — either extending it for critical production data or reducing it for high-churn staging data to save storage cost.
-**Trigger:** initial dataset setup, or a storage cost audit reveals that time travel bytes on staging datasets are disproportionately large.
-**Context:** runs from any shell with `bq` CLI authenticated. State-changing — modifies the dataset's `maxTimeTravelHours` property. Applies to all existing and future tables in the dataset. Requires `bigquery.dataOwner` on the dataset.
-**Purpose:** set the time travel retention window for all tables in a dataset.
+When you need to adjust the time travel retention window for a dataset — either extending it for critical production data or reducing it for high-churn staging data to save storage cost. It is typically triggered by initial dataset setup, or a storage cost audit reveals that time travel bytes on staging datasets are disproportionately large. Runs from any shell with `bq` CLI authenticated. State-changing — modifies the dataset's `maxTimeTravelHours` property. Applies to all existing and future tables in the dataset. Requires `bigquery.dataOwner` on the dataset. Set the time travel retention window for all tables in a dataset.
 
 BigQuery stores all row versions within the time travel window. The storage overhead depends on mutation volume: a table with frequent updates or deletes accumulates more historical bytes than an append-only table. **Factors that drive overhead:** the ratio of mutated rows to total rows per load cycle, the frequency of load cycles, and the row width. An append-only table with daily loads adds roughly 14% overhead (7 daily snapshots / 50 rows × average retention). A table where 100% of rows are replaced daily (`WRITE_TRUNCATE`) stores up to 7 full copies — nearly 700% overhead. For staging tables with `--replace` loads, reducing the window to 48 hours cuts overhead to ~2 copies.
 
@@ -609,10 +582,7 @@ Table snapshots are lightweight, read-only copies of a table at a specific point
 
 #### CREATE SNAPSHOT TABLE | create a point-in-time snapshot
 
-**When to run:** before a high-risk migration, schema change, or bulk DML operation — or on a regular schedule for audit retention.
-**Trigger:** a planned DDL/DML operation that could corrupt or lose data, or a scheduled job for periodic backup.
-**Context:** runs as a BigQuery SQL statement. State-changing — creates a new snapshot table. The snapshot dataset must be in the same region and organization as the base table. Requires `bigquery.tables.create` on the target dataset and `bigquery.tables.getData` on the source table.
-**Purpose:** create a persistent, read-only copy of a table at the current point in time that survives beyond the 7-day time travel window.
+Before a high-risk migration, schema change, or bulk DML operation — or on a regular schedule for audit retention. It is typically triggered by a planned DDL/DML operation that could corrupt or lose data, or a scheduled job for periodic backup. Runs as a BigQuery SQL statement. State-changing — creates a new snapshot table. The snapshot dataset must be in the same region and organization as the base table. Requires `bigquery.tables.create` on the target dataset and `bigquery.tables.getData` on the source table. Create a persistent, read-only copy of a table at the current point in time that survives beyond the 7-day time travel window.
 
 | Clause | Purpose |
 |---|---|

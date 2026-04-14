@@ -255,10 +255,7 @@ The `bq` CLI provides three core job management operations: listing recent jobs,
 
 #### List recent jobs for the current user
 
-**When to run:** after submitting queries to check their status, or at the start of a triage session to see what ran recently.
-**Trigger:** routine check, investigating a slow or failed query, or auditing recent activity before running a cost query.
-**Context:** `bq` CLI. Read-only. Requires `roles/bigquery.jobUser` (own jobs only). No cost — metadata operations are free.
-**Purpose:** surface the most recent jobs for the authenticated user, sorted by creation time descending, to identify job IDs for further inspection or cancellation.
+After submitting queries to check their status, or at the start of a triage session to see what ran recently. It is typically triggered by routine check, investigating a slow or failed query, or auditing recent activity before running a cost query. `bq` CLI. Read-only. Requires `roles/bigquery.jobUser` (own jobs only). No cost — metadata operations are free. Surface the most recent jobs for the authenticated user, sorted by creation time descending, to identify job IDs for further inspection or cancellation.
 
 The `-j` flag switches `bq ls` from its default mode (listing datasets) to listing jobs. `--max_results` defaults to 100; `--max_results=10` limits output for quick triage.
 
@@ -295,10 +292,7 @@ Two jobs show `FAILURE` with `Duration: 0:00:00` — these failed before executi
 
 #### List all users' jobs across the project
 
-**When to run:** when investigating cost spikes or runaway queries that may have been submitted by another user or service account.
-**Trigger:** cost alert fired, or a downstream table is unexpectedly locked/modified and you need to identify the responsible job.
-**Context:** `bq` CLI. Read-only. Requires `roles/bigquery.admin` which grants `bigquery.jobs.listAll` — without it, `-a` silently returns only your own jobs.
-**Purpose:** surface all jobs across all principals in the project so you can identify which user or service account submitted a given job.
+When investigating cost spikes or runaway queries that may have been submitted by another user or service account. It is typically triggered by cost alert fired, or a downstream table is unexpectedly locked/modified and you need to identify the responsible job. `bq` CLI. Read-only. Requires `roles/bigquery.admin` which grants `bigquery.jobs.listAll` — without it, `-a` silently returns only your own jobs. Surface all jobs across all principals in the project so you can identify which user or service account submitted a given job.
 
 *List the 10 most recent jobs from all users in the project.*
 
@@ -341,10 +335,7 @@ In a single-user project like `bq-wh-nb`, the `-a` output is identical to the no
 
 #### Inspect a successful job's full resource
 
-**When to run:** after a job completes to understand its cost, slot consumption, and execution plan — or after a failure to read the error message.
-**Trigger:** a job completed with unexpected cost or duration, a job failed and you need the error detail, or you want to confirm cache behavior.
-**Context:** `bq` CLI. Read-only. Requires `roles/bigquery.jobUser` for own jobs; `roles/bigquery.admin` for another user's jobs. No cost.
-**Purpose:** retrieve the complete job JSON resource including the SQL text, bytes scanned, slot usage, timing breakdown, and error array.
+After a job completes to understand its cost, slot consumption, and execution plan — or after a failure to read the error message. It is typically triggered by a job completed with unexpected cost or duration, a job failed and you need the error detail, or you want to confirm cache behavior. `bq` CLI. Read-only. Requires `roles/bigquery.jobUser` for own jobs; `roles/bigquery.admin` for another user's jobs. No cost. Retrieve the complete job JSON resource including the SQL text, bytes scanned, slot usage, timing breakdown, and error array.
 
 Retrieves the complete job resource. Use `--format=prettyjson` for a readable JSON dump; use `--format=json` for machine parsing.
 
@@ -407,10 +398,7 @@ This job processed 4,048 bytes but was billed for 20,971,520 bytes (20 MB) — t
 
 #### Inspect a failed job's error details
 
-**When to run:** after `bq ls -j` shows a `FAILURE` row and you need the exact error message.
-**Trigger:** a job shows `FAILURE` status with `Duration: 0:00:00` in the listing.
-**Context:** same as above — `bq show -j` with the failed job's ID.
-**Purpose:** read the `status.errorResult` object to understand the failure reason and take corrective action.
+After `bq ls -j` shows a `FAILURE` row and you need the exact error message. It is typically triggered by a job shows `FAILURE` status with `Duration: 0:00:00` in the listing. Same as above — `bq show -j` with the failed job's ID. Read the `status.errorResult` object to understand the failure reason and take corrective action.
 
 *Inspect a failed job to read the error detail.*
 
@@ -479,10 +467,7 @@ The core CLI flags for direct job inspection are:
 
 #### Cancel a running or pending job
 
-**When to run:** when a query is consuming unexpected resources (visible via `bq ls -j` showing `RUNNING` state with growing duration) or when a query was submitted by mistake.
-**Trigger:** a long-running query is detected in `bq ls -j`, or a cost alert fires mid-execution.
-**Context:** `bq` CLI. State-changing — sends a cancellation request. Requires `roles/bigquery.jobUser` for own jobs; `roles/bigquery.admin` + `bigquery.jobs.cancel` for another user's jobs. The `bq cancel` command waits for the cancellation to complete by default; pass `--nosync` to return immediately.
-**Purpose:** stop a running job to prevent further byte scanning and cost accumulation.
+When a query is consuming unexpected resources (visible via `bq ls -j` showing `RUNNING` state with growing duration) or when a query was submitted by mistake. It is typically triggered by a long-running query is detected in `bq ls -j`, or a cost alert fires mid-execution. `bq` CLI. State-changing — sends a cancellation request. Requires `roles/bigquery.jobUser` for own jobs; `roles/bigquery.admin` + `bigquery.jobs.cancel` for another user's jobs. The `bq cancel` command waits for the cancellation to complete by default; pass `--nosync` to return immediately. Stop a running job to prevent further byte scanning and cost accumulation.
 
 The job ID is available from `bq ls -j` output or from the BigQuery console job history tab. The cancellation is best-effort — BigQuery may scan a small amount of additional bytes between the cancel request and actual termination.
 
@@ -584,10 +569,7 @@ This subsection demonstrates two production cost-recovery queries against `INFOR
 
 #### Aggregate cost by user for the last 30 days
 
-**When to run:** at the end of a billing cycle, or when a cost alert fires and you need to identify which principal is responsible for the spend.
-**Trigger:** monthly cost review, billing spike investigation, or onboarding a new service account.
-**Context:** `bq query` running GoogleSQL against `INFORMATION_SCHEMA.JOBS`. Read-only. Requires `roles/bigquery.jobUser` + `bigquery.jobs.listAll` (via `roles/bigquery.admin`) to see all users' jobs. The query itself is billed as a metadata scan.
-**Purpose:** attribute on-demand query cost to each user or service account over a 30-day window.
+At the end of a billing cycle, or when a cost alert fires and you need to identify which principal is responsible for the spend. It is typically triggered by monthly cost review, billing spike investigation, or onboarding a new service account. `bq query` running GoogleSQL against `INFORMATION_SCHEMA.JOBS`. Read-only. Requires `roles/bigquery.jobUser` + `bigquery.jobs.listAll` (via `roles/bigquery.admin`) to see all users' jobs. The query itself is billed as a metadata scan. Attribute on-demand query cost to each user or service account over a 30-day window.
 
 > [!info]- Clause-by-Clause Breakdown
 >
@@ -637,10 +619,7 @@ Both principals show zero cost — the `stoxx` tables are small (< 1 MB total), 
 
 #### Daily cost trend for the last 30 days
 
-**When to run:** alongside the per-user summary to identify which days had the highest spend.
-**Trigger:** cost spike on a specific date visible in billing reports — this query pinpoints the day.
-**Context:** same as above. Read-only metadata query.
-**Purpose:** break down cost by day to correlate spikes with deployments, ETL runs, or ad-hoc exploration.
+Alongside the per-user summary to identify which days had the highest spend. It is typically triggered by cost spike on a specific date visible in billing reports — this query pinpoints the day. Same as above. Read-only metadata query. Break down cost by day to correlate spikes with deployments, ETL runs, or ad-hoc exploration.
 
 | Field | Source Column | Type | Meaning |
 |---|---|---|---|

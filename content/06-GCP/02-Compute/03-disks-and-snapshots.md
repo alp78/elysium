@@ -279,10 +279,7 @@ This section creates three dedicated disks for the SQL Server production-pattern
 
 #### Create the data disk
 
-**When to run:** Before installing SQL Server on the VM.
-**Trigger:** Initial VM provisioning or adding a new SQL Server instance.
-**Context:** `gcloud` CLI, requires `roles/compute.storageAdmin`. State-changing: creates a new billable resource.
-**Purpose:** Provision a dedicated pd-ssd disk for SQL Server data files (MDF + NDF), isolated from OS and log I/O.
+Before installing SQL Server on the VM. It is typically triggered by initial VM provisioning or adding a new SQL Server instance. `gcloud` CLI, requires `roles/compute.storageAdmin`. State-changing: creates a new billable resource. Provision a dedicated pd-ssd disk for SQL Server data files (MDF + NDF), isolated from OS and log I/O.
 
 *Create a 50 GB pd-ssd disk labeled for SQL Server data files.*
 
@@ -787,10 +784,7 @@ Snapshots capture the state of a persistent disk at a point in time. They are st
 
 #### Create a manual snapshot
 
-**When to run:** Before any risky operation — OS upgrades, SQL Server updates, schema migrations, disk resizing.
-**Trigger:** Planned maintenance or pre-deployment step.
-**Context:** `gcloud` CLI, requires `roles/compute.storageAdmin`. State-changing: creates a billable snapshot resource.
-**Purpose:** Capture a point-in-time copy of the data disk that can be used to restore if the operation fails.
+Before any risky operation — OS upgrades, SQL Server updates, schema migrations, disk resizing. It is typically triggered by planned maintenance or pre-deployment step. `gcloud` CLI, requires `roles/compute.storageAdmin`. State-changing: creates a billable snapshot resource. Capture a point-in-time copy of the data disk that can be used to restore if the operation fails.
 
 *Snapshot the data disk with a descriptive name encoding the date and reason.*
 
@@ -894,10 +888,7 @@ flowchart TD
 
 #### Create a new disk from the snapshot
 
-**When to run:** After a failed operation (upgrade, migration, schema change) has corrupted or damaged data on the disk.
-**Trigger:** Data corruption confirmed, rollback decision made.
-**Context:** `gcloud` CLI. State-changing: creates a new billable disk. The source snapshot is not modified.
-**Purpose:** Create a clean replacement disk from the point-in-time snapshot to replace the damaged disk.
+After a failed operation (upgrade, migration, schema change) has corrupted or damaged data on the disk. It is typically triggered by data corruption confirmed, rollback decision made. `gcloud` CLI. State-changing: creates a new billable disk. The source snapshot is not modified. Create a clean replacement disk from the point-in-time snapshot to replace the damaged disk.
 
 *Create a new pd-ssd disk initialized from the snapshot.*
 
@@ -967,10 +958,7 @@ Snapshot schedules use resource policies to automate snapshot creation and delet
 
 #### Create the schedule policy
 
-**When to run:** After the disk layout is finalized and validated.
-**Trigger:** Production readiness milestone — disks contain data worth protecting.
-**Context:** `gcloud` CLI, requires `roles/compute.resourcePolicies.create`. State-changing: creates a policy resource.
-**Purpose:** Automate daily snapshots with 7-day retention, eliminating the risk of forgotten manual snapshots and the cost of unbounded accumulation.
+After the disk layout is finalized and validated. It is typically triggered by production readiness milestone — disks contain data worth protecting. `gcloud` CLI, requires `roles/compute.resourcePolicies.create`. State-changing: creates a policy resource. Automate daily snapshots with 7-day retention, eliminating the risk of forgotten manual snapshots and the cost of unbounded accumulation.
 
 *Create a daily snapshot schedule with 7-day retention, running at 02:00 UTC.*
 
@@ -1104,10 +1092,7 @@ Persistent disk resize is an online operation — the VM does not need to be sto
 
 #### Online resize
 
-**When to run:** When the disk is running low on space or projected growth will exceed current capacity.
-**Trigger:** Monitoring alert for disk usage exceeding 80%, or proactive capacity planning.
-**Context:** `gcloud` CLI, requires `roles/compute.storageAdmin`. State-changing: increases disk size (irreversible — disks can never be shrunk). The VM remains running.
-**Purpose:** Increase the data disk from 50 GB to 100 GB to accommodate growing SQL Server data files.
+When the disk is running low on space or projected growth will exceed current capacity. It is typically triggered by monitoring alert for disk usage exceeding 80%, or proactive capacity planning. `gcloud` CLI, requires `roles/compute.storageAdmin`. State-changing: increases disk size (irreversible — disks can never be shrunk). The VM remains running. Increase the data disk from 50 GB to 100 GB to accommodate growing SQL Server data files.
 
 *Resize the data disk from 50 GB to 100 GB while the VM is running.*
 

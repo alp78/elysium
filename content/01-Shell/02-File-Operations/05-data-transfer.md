@@ -14,8 +14,7 @@ status: complete
 
 # Data Transfer
 
-> [!quote] Transfer still obeys physics
->
+> [!quote]
 > "Never underestimate the bandwidth of a station wagon full of tapes hurtling down the highway."
 >
 > — **Andrew S. Tanenbaum**, *Computer Networks* (1981)
@@ -25,10 +24,10 @@ status: complete
 > Reference for choosing local sync, SSH copy, GCS copy, and SQL export tools in shell-heavy data workflows.
 >
 > - Use `cp` or `Copy-Item` for one-shot local files.
-> - Use `rsync` or `Robocopy` when directory state must converge, resume cleanly, or be previewed before deletion.
-> - Use `scp` only for small SSH copies, and switch to `gcloud compute scp` or `gcloud storage` when Google Cloud resource context matters.
-> - Use `bcp` for high-throughput SQL Server bulk movement, and use `sqlcmd` or `Invoke-Sqlcmd` when query-shaped exports matter more than raw load speed.
-> - Treat `--delete`, `/MIR`, and cloud-side destructive sync flags as maintenance operations that require a dry run or explicit resource validation first.
+> - Use `rsync` or `Robocopy` when directory state must converge, resume, or be previewed before deletion.
+> - Use `scp` only for small SSH copies; use `gcloud compute scp` or `gcloud storage` when Google Cloud resources are involved.
+> - Use `bcp` for bulk SQL Server export and import, and use `sqlcmd` or `Invoke-Sqlcmd` when the output is query-shaped rather than table-shaped.
+> - Treat `--delete`, `/MIR`, and `gsutil rsync -d` as destructive. The live captures below show local success paths first and explicit blocker output where cloud or SQL targets were unavailable in this worker environment.
 
 > [!note]- Glossary
 >
@@ -165,14 +164,11 @@ Use `cp` when the job is a one-shot file copy and there is no need to reconcile 
 
 `cp` is the right tool for a direct file copy on one machine. The verbose flag is enough to prove what moved without adding a separate verification command.
 
-*Copy one local file into the destination directory and print the created path.*
-
 ```bash
 mkdir -p /tmp/vault-transfer-demo-linux/cp-dest
 printf 'single\n' | tee /tmp/vault-transfer-demo-linux/single.txt >/dev/null
 cp -v /tmp/vault-transfer-demo-linux/single.txt /tmp/vault-transfer-demo-linux/cp-dest/
 ```
-
 ```text
 '/tmp/vault-transfer-demo-linux/single.txt' -> '/tmp/vault-transfer-demo-linux/cp-dest/single.txt'
 ```
@@ -180,8 +176,6 @@ cp -v /tmp/vault-transfer-demo-linux/single.txt /tmp/vault-transfer-demo-linux/c
 #### Synchronize a directory when state must converge
 
 `rsync -av` is the safer default once a directory tree has to be copied repeatedly. The archive flag preserves timestamps and permissions while the trailing slash keeps the copy scoped to the directory contents rather than nesting the source directory under the destination.
-
-*Synchronize the source tree into the destination with archive semantics and show the transferred paths.*
 
 ```bash
 rm -rf /tmp/vault-transfer-demo-linux
@@ -191,7 +185,6 @@ printf 'notes\n' > /tmp/vault-transfer-demo-linux/src/project/notes.txt
 printf 'one\n' > /tmp/vault-transfer-demo-linux/src/extra.log
 rsync -av /tmp/vault-transfer-demo-linux/src/ /tmp/vault-transfer-demo-linux/dest/
 ```
-
 ```text
 sending incremental file list
 extra.log
@@ -207,14 +200,11 @@ total size is 16  speedup is 0.04
 
 `rsync --delete` is valuable only when you are certain the destination should exactly match the source. Dry-run it first so the output shows what would be removed before anything destructive happens.
 
-*Dry-run a deletion-capable `rsync` mirror to reveal which destination files would be removed.*
-
 ```bash
 mkdir -p /tmp/vault-transfer-demo-linux/dest
 printf 'stale\n' | tee /tmp/vault-transfer-demo-linux/dest/obsolete.txt >/dev/null
 rsync -avzn --delete /tmp/vault-transfer-demo-linux/src/ /tmp/vault-transfer-demo-linux/dest/
 ```
-
 ```text
 sending incremental file list
 deleting obsolete.txt
@@ -232,15 +222,12 @@ Once the basic sync path works, `rsync` becomes the tool for precise transfer sc
 
 When only one file type belongs downstream, lead with `--include` rules and end with `--exclude='*'`. That prevents mixed staging directories from leaking support files into the transfer.
 
-*Synchronize only matching parquet files while excluding every other payload.*
-
 ```bash
 mkdir -p /tmp/vault-transfer-demo-linux/filter-src/sub /tmp/vault-transfer-demo-linux/filter-dest
 printf 'id,value\n1,10\n' > /tmp/vault-transfer-demo-linux/filter-src/sub/part-000.parquet
 printf 'skip\n' > /tmp/vault-transfer-demo-linux/filter-src/sub/readme.txt
 rsync -av --include='*.parquet' --include='*/' --exclude='*' /tmp/vault-transfer-demo-linux/filter-src/ /tmp/vault-transfer-demo-linux/filter-dest/
 ```
-
 ```text
 sending incremental file list
 sub/
@@ -254,14 +241,11 @@ total size is 14  speedup is 0.06
 
 If you omit the trailing slash on the source, `rsync` plans to create a nested `src/` directory at the destination. A dry run makes that mistake visible before you mutate the target tree.
 
-*Dry-run `rsync` without a trailing slash so the extra directory level is visible before the live copy.*
-
 ```bash
 rm -rf /tmp/vault-transfer-demo-linux/nested
 mkdir -p /tmp/vault-transfer-demo-linux/nested
 rsync -avn /tmp/vault-transfer-demo-linux/src /tmp/vault-transfer-demo-linux/nested/
 ```
-
 ```text
 sending incremental file list
 src/
@@ -295,12 +279,9 @@ Use these flags when the baseline examples need tighter control.
 
 The OpenSSH build in WSL prints usage text when invoked without arguments. That is still enough to confirm the client exists and to inspect the important switches before you connect to a real host.
 
-*Print the local OpenSSH `scp` usage header before testing connectivity.*
-
 ```bash
 scp 2>&1 | sed -n '1,4p'
 ```
-
 ```text
 usage: scp [-346ABCOpqRrsTv] [-c cipher] [-D sftp_server_path] [-F ssh_config]
            [-i identity_file] [-J destination] [-l limit] [-o ssh_option]
@@ -311,13 +292,10 @@ usage: scp [-346ABCOpqRrsTv] [-c cipher] [-D sftp_server_path] [-F ssh_config]
 
 This capture targets `127.0.0.1` deliberately so the failure happens locally and predictably. The error proves the transport failed before any copy semantics mattered.
 
-*Attempt an SSH copy to a local endpoint with no listener so the transport failure appears immediately.*
-
 ```bash
 printf 'demo\n' | tee /tmp/vault-transfer-demo-linux/scp-demo.txt >/dev/null
 scp -v -o ConnectTimeout=3 /tmp/vault-transfer-demo-linux/scp-demo.txt demo@127.0.0.1:/tmp/scp-demo.txt 2>&1 | sed -n '1,12p'
 ```
-
 ```text
 Executing: program /usr/bin/ssh host 127.0.0.1, user demo, command sftp
 OpenSSH_9.6p1 Ubuntu-3ubuntu13.15, OpenSSL 3.0.13 30 Jan 2024
@@ -352,8 +330,6 @@ Keep this lookup table nearby when you need the exact `scp` flag semantics.
 
 `/E` is the baseline flag when the destination should reproduce the source tree, including empty directories. The captured exit code is `1`, which is still a successful copy in Robocopy terms.
 
-*Replicate a directory tree with `Robocopy /E` and show the copied files plus the success exit code.*
-
 ```powershell
 $base = Join-Path $env:TEMP 'vault-transfer-demo-ps'
 $src = Join-Path $base 'src-clean'
@@ -367,7 +343,6 @@ New-Item -ItemType Directory -Path $dst -Force | Out-Null
 Robocopy $src $dst /E /R:1 /W:1
 "LASTEXITCODE=$LASTEXITCODE"
 ```
-
 ```text
 ROBOCOPY_RECURSIVE_CLEAN
 
@@ -394,8 +369,6 @@ LASTEXITCODE=1
 
 `/MIR` is the Robocopy equivalent of `rsync --delete`. Pair it with `/L` first so the job reports what it would purge without touching the destination.
 
-*Preview a `Robocopy /MIR` run so destination-only files appear before any deletion is allowed.*
-
 ```powershell
 $base = Join-Path $env:TEMP 'vault-transfer-demo-ps'
 $src = Join-Path $base 'src'
@@ -410,7 +383,6 @@ New-Item -ItemType Directory -Path $dst -Force | Out-Null
 Robocopy $src $dst /MIR /L /R:1 /W:1
 "LASTEXITCODE=$LASTEXITCODE"
 ```
-
 ```text
 ROBOCOPY_MIRROR_PREVIEW
 
@@ -435,8 +407,6 @@ LASTEXITCODE=2
 
 `/Z` keeps Robocopy in restartable mode so an interrupted job can resume instead of restarting the whole file. The live run below stays local, but the option line confirms the mode that would be used on a real network copy.
 
-*Run `Robocopy` in restartable mode and surface the copied file plus the resulting exit code.*
-
 ```powershell
 $base = Join-Path $env:TEMP 'vault-transfer-demo-ps'
 $src = Join-Path $base 'src3'
@@ -449,7 +419,6 @@ Set-Content -Path (Join-Path $src 'sub\large.txt') -Value ('x' * 5000)
 Robocopy $src $dst /E /Z /R:1 /W:1
 "LASTEXITCODE=$LASTEXITCODE"
 ```
-
 ```text
 ROBOCOPY_RESTARTABLE_ONLY
 
@@ -474,8 +443,6 @@ LASTEXITCODE=1
 
 Bandwidth throttling and multithreaded copy are separate operational choices in Robocopy. The command below fails immediately because `/IPG` and `/MT` are mutually exclusive.
 
-*Invoke `Robocopy` with `/IPG` and `/MT` together to surface the local parameter-validation failure.*
-
 ```powershell
 $base = Join-Path $env:TEMP 'vault-transfer-demo-ps'
 $src = Join-Path $base 'src2'
@@ -488,7 +455,6 @@ Set-Content -Path (Join-Path $src 'sub\large.txt') -Value ('x' * 5000)
 Robocopy $src $dst /E /Z /IPG:10 /MT:4 /R:1 /W:1
 "LASTEXITCODE=$LASTEXITCODE"
 ```
-
 ```text
 ROBOCOPY_RESTARTABLE
 
@@ -535,14 +501,11 @@ PowerShell can call the same OpenSSH `scp` client that Linux uses. The useful di
 
 The Windows OpenSSH build also prints usage text when invoked without arguments, which is enough to confirm the client is available.
 
-*Print the Windows OpenSSH `scp` usage header before testing any remote copy path.*
-
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
 $ansi = [char]27 + '\[[0-9;]*m'
 scp 2>&1 | ForEach-Object { $_.ToString() -replace $ansi, '' } | Select-Object -First 4
 ```
-
 ```text
 usage: scp [-346ABCOpqRrsTv] [-c cipher] [-D sftp_server_path] [-F ssh_config]
            [-i identity_file] [-J destination] [-l limit] [-o ssh_option]
@@ -553,8 +516,6 @@ usage: scp [-346ABCOpqRrsTv] [-c cipher] [-D sftp_server_path] [-F ssh_config]
 
 This call points at `127.0.0.1` intentionally. The refusal happens before any file-transfer logic can succeed, which is the correct signal to switch from path debugging to host or service debugging.
 
-*Attempt an SSH copy to a closed local endpoint so the refusal is isolated from file-selection logic.*
-
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
 $ansi = [char]27 + '\[[0-9;]*m'
@@ -564,7 +525,6 @@ scp -v -o ConnectTimeout=3 $demo demo@127.0.0.1:/tmp/scp-demo.txt 2>&1 |
     ForEach-Object { $_.ToString() -replace $ansi, '' } |
     Select-Object -Last 6
 ```
-
 ```text
 debug1: identity file C:\\Users\\aperi/.ssh/id_xmss-cert type -1
 debug1: identity file C:\\Users\\aperi/.ssh/id_dsa type -1
@@ -586,12 +546,9 @@ The worker environment contains the Google Cloud CLIs, so the page can show real
 
 The version check proves the local CLI surface exists before you spend time debugging project or zone errors.
 
-*Print the installed `gcloud` version block before attempting any Compute Engine copy.*
-
 ```bash
 gcloud version | sed -n '1,4p'
 ```
-
 ```text
 Google Cloud SDK 563.0.0
 alpha 2026.03.27
@@ -603,13 +560,10 @@ bq 2.1.31
 
 This dry run uses a fake project and a local file. The command never reaches a VM because the CLI stops earlier and reports the missing authenticated account explicitly.
 
-*Run `gcloud compute scp --dry-run` with fake project context so the pre-transfer blocker is explicit.*
-
 ```bash
 printf 'demo\n' | tee /tmp/vault-transfer-demo-linux/gcloud-scp.txt >/dev/null
 CLOUDSDK_CORE_DISABLE_PROMPTS=1 gcloud compute scp /tmp/vault-transfer-demo-linux/gcloud-scp.txt demo-vm:/tmp/gcloud-scp.txt --zone=europe-west1-b --project=demo-does-not-exist-123456 --dry-run 2>&1 | sed -n '1,12p'
 ```
-
 ```text
 ERROR: (gcloud.compute.scp) You do not currently have an active account selected.
 Please run:
@@ -644,12 +598,9 @@ These are the switches most likely to matter once the project and VM actually ex
 
 `gsutil version -l` is a quick preflight that proves the client, Python runtime, and WSL environment are wired correctly.
 
-*Print the installed `gsutil` version details before testing any bucket operation.*
-
 ```bash
 gsutil version -l | sed -n '1,6p'
 ```
-
 ```text
 gsutil version: 5.36
 checksum: d2b58d0fd013f0b3ec07e8a797aa6208 (OK)
@@ -663,12 +614,9 @@ multiprocessing available: True
 
 The copy path is not the first problem to solve if the bucket does not exist. The CLI fails early with a direct 404 so you can correct the resource definition before you script around it.
 
-*List a non-existent bucket so the Cloud Storage resource-definition failure is explicit.*
-
 ```bash
 gsutil ls gs://demo-does-not-exist-123456 2>&1 | sed -n '1,10p'
 ```
-
 ```text
 BucketNotFoundException: 404 gs://demo-does-not-exist-123456 bucket does not exist.
 ```
@@ -692,13 +640,10 @@ Use this lookup table when you need the legacy `gsutil` syntax on an existing co
 
 The help text proves the command group exists before you spend time debugging permissions or path spelling.
 
-*Print the active `gcloud storage` help header before using the command group in automation.*
-
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
 gcloud storage --help 2>&1 | Select-Object -First 8
 ```
-
 ```text
 NAME
     gcloud storage - create and manage Cloud Storage buckets and objects
@@ -714,13 +659,10 @@ DESCRIPTION
 
 This command fails on a deliberately fake bucket. That is still useful because it proves the CLI can run locally and shows the exact blocker you need to clear before attempting a live upload or sync.
 
-*List a non-existent bucket with `gcloud storage` so the 404 appears before any transfer logic runs.*
-
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
 gcloud storage ls gs://demo-does-not-exist-123456 2>&1 | Select-Object -First 10
 ```
-
 ```text
 ERROR: (gcloud.storage.ls) gs://demo-does-not-exist-123456 not found: 404.
 ```
@@ -748,13 +690,10 @@ This worker environment exposes the SQL Server client tools on Windows, so the l
 
 `bcp -v` is the fastest preflight when you need to confirm the client is on the Windows host before you build the export command.
 
-*Print the installed `bcp` client version before building an export or import command.*
-
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
 bcp -v 2>&1
 ```
-
 ```text
 BCP - Bulk Copy Program for Microsoft SQL Server.
 Copyright (C) Microsoft Corporation. All Rights Reserved.
@@ -765,14 +704,11 @@ Version: 17.0.1000.7
 
 This call points at `127.0.0.1,1435` intentionally so the blocker is explicit and local. The failure happens before any file is written, which is the right signal to fix connectivity before you reason about delimiters or row counts.
 
-*Attempt a query export to an unreachable SQL Server endpoint so the connection blocker is explicit.*
-
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
 bcp "SELECT 1 AS value" queryout NUL -S tcp:127.0.0.1,1435 -U sa -P badpass -d master -c -t "," -l 2 2>&1 |
     Select-Object -First 8
 ```
-
 ```text
 SQLState = 08001, NativeError = 258
 Error = [Microsoft][ODBC Driver 18 for SQL Server]TCP Provider: The wait operation timed out.
@@ -805,13 +741,10 @@ Use these flags when you are writing the real bulk-copy command against a reacha
 
 The help text confirms the installed client version and the connection flags available on this host.
 
-*Print the `sqlcmd` help header and its core connection switches before writing the export query.*
-
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
 sqlcmd -? 2>&1 | Select-Object -First 8
 ```
-
 ```text
 Microsoft (R) SQL Server Command Line Tool
 Version 17.0.1000.7 NT
@@ -827,13 +760,10 @@ usage: Sqlcmd            [-U login id]          [-P password]
 
 The login timeout below is a transport-level blocker. Until the server responds, changing `-s`, `-W`, or `-h` does nothing useful.
 
-*Attempt a `sqlcmd` query against an unreachable endpoint so the transport failure is isolated from query logic.*
-
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
 sqlcmd -S tcp:127.0.0.1,1435 -l 2 -Q "SELECT 1" 2>&1 | Select-Object -First 8
 ```
-
 ```text
 Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : TCP Provider: The wait operation timed out.
 .
@@ -861,13 +791,10 @@ These are the `sqlcmd` switches that matter most for export-oriented usage.
 
 The module was installed in this attempt so the note could capture real local client evidence rather than stopping at a missing-command blocker.
 
-*Resolve the local `Invoke-Sqlcmd` command and print the installed module version.*
-
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
 Get-Command Invoke-Sqlcmd | Format-Table -HideTableHeaders Name,Version,Source
 ```
-
 ```text
 Invoke-Sqlcmd 22.4.5.1 SqlServer
 ```
@@ -875,8 +802,6 @@ Invoke-Sqlcmd 22.4.5.1 SqlServer
 #### The cmdlet still requires a reachable SQL Server instance
 
 Once the module exists, the next blocker is exactly what it should be: the server endpoint itself. The catch block below preserves the raw connection error instead of fabricating a fake result set.
-
-*Attempt an `Invoke-Sqlcmd` query against an unreachable endpoint and print the resulting exception text.*
 
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
@@ -886,189 +811,53 @@ try {
     $_.Exception.Message
 }
 ```
-
 ```text
 A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - No connection could be made because the target machine actively refused it.)
 ```
 
 ## Transfer strategy and best practices
 
-This section turns the earlier tool reference into an operator-facing decision flow. Each subsection demonstrates the selection rule with a live command so the strategy is tied to observable behavior rather than advisory prose alone.
+### Prefer the simplest local tool that matches the job
 
-### Linux | local and SSH transfer choices | choose copy and sync semantics deliberately
+#### Use `cp` or `Copy-Item` for one-shot files
 
-The Linux transfer surface is simple only when the job is simple. The decision boundary is whether the copy is a one-shot local action, a repeatable directory reconciliation, or a remote transfer that now depends on SSH transport health.
+If the job is a single local file copy and there is no destination reconciliation, the direct file-copy tools are enough. They are faster to read, easier to audit, and do not imply mirror semantics that the operation does not need.
 
-#### Use `cp` for one-shot local files with no reconciliation
+#### Use `rsync` or `Robocopy` when directories must converge
 
-Use `cp` when the task is one file, one destination, and no destination cleanup. The command below proves the point directly: the tool emits one copied path and stops, which is exactly the behavior you want for a narrow local file move.
+Repeated directory jobs should move immediately to `rsync` or `Robocopy` because both tools can enumerate changes, preserve metadata, and show you the plan before anything destructive happens. The live `rsync -av` and `Robocopy /E` captures above are the safe defaults to start from.
 
-*Copy one local file into a destination directory and emit the copied path.*
+#### Treat mirrors as destructive maintenance operations
 
-```bash
-rm -rf /tmp/vault-transfer-strategy
-mkdir -p /tmp/vault-transfer-strategy/src /tmp/vault-transfer-strategy/dest
-cat <<'EOF' > /tmp/vault-transfer-strategy/src/file.txt
-payload
-EOF
-cp -v /tmp/vault-transfer-strategy/src/file.txt /tmp/vault-transfer-strategy/dest/
-```
+`rsync --delete` and `Robocopy /MIR` are not normal copy commands. They are reconciliation commands that remove destination-only data, so run the preview forms first and only drop `-n` or `/L` once the file list is unquestionably correct.
 
-```text
-'/tmp/vault-transfer-strategy/src/file.txt' -> '/tmp/vault-transfer-strategy/dest/file.txt'
-```
+### Choose the remote-aware client that understands the destination
 
-#### Move to `rsync` as soon as directory state must converge
+#### Use `scp` only for small, one-off SSH copies
 
-`rsync` becomes the correct tool when the job is no longer “copy this file” but “make this destination match the current source state.” A deletion-capable dry run shows the convergence plan up front, which is why `rsync` is the safer operational default for repeatable directory work.
+`scp` is appropriate when the destination is reachable over SSH and the copy is simple enough that resume, delta transfer, and preview are not required. The local connection-refused captures above show how quickly it fails when the remote service itself is absent.
 
-*Dry-run a deletion-capable `rsync` mirror to show the exact convergence plan before any files are removed.*
+#### Use `gcloud compute scp` for Compute Engine VMs
 
-```bash
-rm -rf /tmp/vault-transfer-strategy
-mkdir -p /tmp/vault-transfer-strategy/src /tmp/vault-transfer-strategy/dest
-printf 'fresh\n' > /tmp/vault-transfer-strategy/src/current.txt
-printf 'stale\n' > /tmp/vault-transfer-strategy/dest/obsolete.txt
-rsync -avzn --delete /tmp/vault-transfer-strategy/src/ /tmp/vault-transfer-strategy/dest/
-```
+Once the remote endpoint is a GCE instance, let `gcloud compute scp` carry the project, zone, and SSH-account context instead of reproducing that logic manually. The blocker output above also shows why this command is the right diagnostic surface: it tells you when auth or project state is missing before any transfer begins.
 
-```text
-sending incremental file list
-deleting obsolete.txt
-current.txt
+#### Use `gcloud storage` for new GCS automation and keep `gsutil` for legacy scripts
 
-sent 82 bytes  received 31 bytes  226.00 bytes/sec
-total size is 6  speedup is 0.05 (DRY RUN)
-```
+The CLIs overlap, but they serve different operational contexts. Keep `gsutil` where it is already embedded in runbooks, and use `gcloud storage` for new scripts so Cloud Storage work remains inside the main `gcloud` command surface.
 
-#### Keep `scp` for simple SSH copies, not resumable transfer jobs
+#### Export from SQL Server before handing the file to cloud tooling
 
-`scp` is appropriate only after the SSH transport already works and the copy does not need preview, resume, or directory reconciliation semantics. The failure below demonstrates why `scp` is not the tool that tells you how to repair a large transfer plan; it tells you only that the SSH path itself is unavailable.
+SQL Server extraction and cloud transfer are two separate responsibilities. Use `bcp`, `sqlcmd`, or `Invoke-Sqlcmd` to materialize a trustworthy file first, validate the row counts or result shape, and only then pass the artifact to GCS tooling.
 
-*Attempt an `scp` transfer to a closed SSH port to show the transport failure surface.*
+### Apply controls that protect long-running transfers
 
-```bash
-printf 'probe\n' > /tmp/vault-transfer-scp.txt
-scp -P 65000 /tmp/vault-transfer-scp.txt 127.0.0.1:/tmp/vault-transfer-scp-copy.txt 2>&1 | sed -n '1,4p'
-```
+#### Prefer restartable tools for large files
 
-```text
-ssh: connect to host 127.0.0.1 port 65000: Connection refused
-scp: Connection closed
-```
+For large transfers, restart behavior matters more than peak throughput. `rsync -P`, `Robocopy /Z`, and the resumable behavior in modern cloud CLIs reduce the operational cost of packet loss or a dropped session.
 
-### PowerShell | local and Windows-native transfer choices | prefer durable semantics once trees or retries matter
+#### Add bandwidth controls when production traffic shares the link
 
-Windows transfer workflows should make the same distinction as Linux: use the trivial tool for trivial work and switch immediately to the durable tool once retries, previews, or tree-wide reconciliation enter the picture.
-
-#### Use `Copy-Item` for one-shot local files
-
-`Copy-Item` is sufficient when the transfer is local, singular, and non-destructive. Emitting the copied object with `-PassThru` gives immediate verification without implying tree mirroring or delete semantics.
-
-*Copy one local file and emit the created destination object for verification.*
-
-```powershell
-$root = Join-Path $env:TEMP 'vault-transfer-strategy-ps'
-Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Path (Join-Path $root 'src'), (Join-Path $root 'dest') | Out-Null
-'payload' | Set-Content -Path (Join-Path $root 'src\file.txt')
-Copy-Item -Path (Join-Path $root 'src\file.txt') -Destination (Join-Path $root 'dest') -PassThru |
-    ForEach-Object { "{0}`t{1}" -f $_.Name, $_.Length }
-```
-
-```text
-file.txt	9
-```
-
-#### Use `Robocopy /MIR /L` when the directory must converge before you go live
-
-`Robocopy` is the Windows equivalent of a deliberate reconciliation tool, not a prettier `Copy-Item`. The `/L` preview is what turns `/MIR` into an auditable maintenance operation instead of a blind destructive copy.
-
-*Preview a `Robocopy /MIR` run so the extra and new files are visible before any deletion occurs.*
-
-```powershell
-$root = Join-Path $env:TEMP 'vault-transfer-strategy-ps'
-Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Path (Join-Path $root 'src'), (Join-Path $root 'dest') | Out-Null
-'fresh' | Set-Content -Path (Join-Path $root 'src\current.txt')
-'stale' | Set-Content -Path (Join-Path $root 'dest\obsolete.txt')
-robocopy (Join-Path $root 'src') (Join-Path $root 'dest') /MIR /L /NJH /NJS /NDL
-```
-
-```text
-	  *EXTRA File 		       7	C:\Users\aperi\AppData\Local\Temp\vault-transfer-strategy-ps\dest\obsolete.txt
-	    New File  		       7	C:\Users\aperi\AppData\Local\Temp\vault-transfer-strategy-ps\src\current.txt
-```
-
-### PowerShell | SQL export handoff choices | materialize a trustworthy file before any downstream copy
-
-Database extraction and file transfer are separate stages. The transport tool is not the place to discover that the export mode, delimiter choice, or reject-row handling was underspecified.
-
-#### Inspect `bcp` export modes and text-format flags before designing the handoff file
-
-The `bcp` help surface is the fastest way to confirm that the planned transfer includes an explicit export mode and explicit text-shaping flags. That matters because a cloud upload cannot repair a poorly specified extraction command after the file is already written.
-
-*Print the `bcp` syntax header so export modes and text-format switches are visible before scripting the handoff.*
-
-```powershell
-$PSStyle.OutputRendering = 'PlainText'
-bcp -? 2>&1 | Select-Object -First 12
-```
-
-```text
-usage: C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\180\Tools\Binn\bcp.exe {dbtable | query} {in | out | queryout | format} datafile
-  [-m maxerrors]            [-f formatfile]          [-e errfile]
-  [-F firstrow]             [-L lastrow]             [-b batchsize]
-  [-n native type]          [-c character type]      [-w wide character type]
-  [-N keep non-text native] [-V file format version] [-q quoted identifier]
-  [-C code page specifier]  [-t field terminator]    [-r row terminator]
-  [-i inputfile]            [-o outfile]             [-a packetsize]
-  [-S server name]          [-U username]            [-P password or tokenfile]
-  [-T trusted connection]   [-v version]             [-R regional enable]
-  [-k keep null values]     [-E keep identity values][-G Microsoft Entra ID Authentication]
-  [-h "load hints"]         [-x generate xml format file]
-  [-d database name]        [-K application intent]  [-l login timeout]
-```
-
-### PowerShell / Linux | cloud transfer choices | validate resource context before you move bytes
-
-Cloud transfer tools add project, bucket, zone, and identity context on top of plain file movement. The correct strategic move is to validate the resource context first, because a missing VM or bucket invalidates every later flag choice.
-The live captures below use the Windows host, but the `gcloud` subcommands and failure semantics are the same in Bash once the local path syntax is adjusted.
-
-#### Validate the Compute Engine target before treating the copy as an SSH problem
-
-`gcloud compute scp` is the correct transfer surface for GCE because it validates Google Cloud metadata before the SSH session starts. The dry run below fails on the instance lookup itself, which is exactly the blocker you want to isolate before any remote file copy begins.
-
-*Run `gcloud compute scp --dry-run` against a non-existent instance so the pre-transfer resource failure is explicit.*
-
-```powershell
-gcloud compute scp --dry-run "$env:TEMP\vault-transfer-strategy-ps\src\file.txt" demo-instance:/tmp/file.txt --zone=europe-west1-b 2>&1 |
-    Select-Object -First 8
-```
-
-```text
-ERROR: (gcloud.compute.scp) Could not fetch resource:
- - The resource 'projects/bq-wh-nb/zones/europe-west1-b/instances/demo-instance' was not found
-```
-
-#### Validate the bucket path before treating Cloud Storage as a transfer-speed problem
-
-A missing or misspelled bucket is a resource-definition problem, not a throughput or retry problem. The point of this check is to stop immediately when the namespace itself is wrong.
-
-*List a non-existent bucket so the Cloud Storage 404 is visible before any transfer logic runs.*
-
-```powershell
-$PSStyle.OutputRendering = 'PlainText'
-gcloud storage ls gs://demo-does-not-exist-123456 2>&1 | Select-Object -First 8
-```
-
-```text
-ERROR: (gcloud.storage.ls) gs://demo-does-not-exist-123456 not found: 404.
-```
-
-#### Decide whether compression belongs in the transfer path
-
-Transfer-time compression is a CPU tradeoff, not an automatic optimization. Use it when the payload is text-heavy or lightly compressed, and avoid it when the file format already stores compressed blocks or the platform can compress earlier in the pipeline.
+Throttle intentionally when the copy shares a business-hours link. On Linux, `rsync --bwlimit` is explicit. On Windows, `Robocopy /IPG:n` slows the sender, but the live failure above shows why it must not be combined with `/MT`.
 
 Use this table when deciding whether transfer-time compression is worth the CPU cost.
 
@@ -1081,351 +870,46 @@ Use this table when deciding whether transfer-time compression is worth the CPU 
 
 ## Warnings
 
-Warnings are useful only when they are attached to the exact command shape that creates the risk. These subsections keep the hazard, the safe pattern, and a live demonstration adjacent so the warning remains operational rather than decorative.
-
-### Linux | `rsync` and `scp` | destructive and transport boundaries
-
-Linux transfer warnings usually fall into two categories: a path-selection mistake that changes what will be copied or deleted, and a transport-selection mistake that treats `scp` as more reliable than it is.
-
-#### `rsync --delete` removes destination-only files
-
-Deletion-capable reconciliation is legitimate maintenance work, but it is not an ordinary copy. The output below is the real signal to look for before a live run: if `deleting ...` appears during the preview, the command is about to remove destination state.
-
-> [!warning] Deletion changes destination state
->
-> `rsync --delete` does not merely copy new files. It also removes files that exist only at the destination, so a wrong source path or filter set can erase valid downstream data.
-
-> [!success] Preview the reconciliation first
->
-> Start with `rsync -avzn --delete ...`, inspect every `deleting` line, and only then rerun without `-n` after the scope is unquestionably correct.
-
-*Dry-run a deletion-capable mirror and inspect the destination file that would be removed.*
-
-```bash
-rm -rf /tmp/vault-transfer-strategy
-mkdir -p /tmp/vault-transfer-strategy/src /tmp/vault-transfer-strategy/dest
-printf 'fresh\n' > /tmp/vault-transfer-strategy/src/current.txt
-printf 'stale\n' > /tmp/vault-transfer-strategy/dest/obsolete.txt
-rsync -avzn --delete /tmp/vault-transfer-strategy/src/ /tmp/vault-transfer-strategy/dest/
-```
-
-```text
-sending incremental file list
-deleting obsolete.txt
-current.txt
-
-sent 82 bytes  received 31 bytes  226.00 bytes/sec
-total size is 6  speedup is 0.05 (DRY RUN)
-```
-
-#### Omitting the trailing slash changes the copy scope
-
-The absence of a trailing slash is a scope error, not a style preference. The dry run below makes the risk visible: `src/` becomes a nested directory at the destination instead of contributing only its contents.
-
-> [!warning] The source directory itself may be copied
->
-> `rsync src dst/` and `rsync src/ dst/` are different operations. The first nests `src` under the destination, which becomes dangerous when that path later participates in reconciliation or cleanup.
-
-> [!success] Dry-run the exact source path you intend to use
->
-> Keep the trailing slash when you mean “copy the contents,” and validate the plan with `-n` whenever the source path looks ambiguous.
-
-*Dry-run `rsync` without the trailing slash so the nested directory becomes visible before the live copy.*
-
-```bash
-rm -rf /tmp/vault-transfer-troubleshoot
-mkdir -p /tmp/vault-transfer-troubleshoot/src /tmp/vault-transfer-troubleshoot/nested
-printf 'a\n' > /tmp/vault-transfer-troubleshoot/src/current.txt
-rsync -avn /tmp/vault-transfer-troubleshoot/src /tmp/vault-transfer-troubleshoot/nested/
-```
-
-```text
-sending incremental file list
-src/
-src/current.txt
-
-sent 100 bytes  received 23 bytes  246.00 bytes/sec
-total size is 2  speedup is 0.02 (DRY RUN)
-```
-
-### PowerShell | `Robocopy` and `bcp` | deletion and format boundaries
-
-Windows-side warnings are usually about two different failure classes: a directory mirror that can remove real files and a SQL export that can silently produce the wrong shape unless its text parameters are explicit.
-
-#### `/MIR` is a reconciliation command, not a harmless copy switch
-
-`Robocopy /MIR` is the Windows mirror analog of `rsync --delete`. The preview is the first control surface you should trust, because it tells you which destination-only files will be treated as extras.
-
-> [!warning] `/MIR` can delete valid destination data
->
-> `/MIR` adds purge semantics. If the destination contains files that should remain, a live mirror run will remove them unless you stop at the preview stage first.
-
-> [!success] Use `/L` until the file list is accepted
->
-> Pair `/MIR` with `/L` on the first pass, inspect `*EXTRA File` lines carefully, and remove `/L` only when the destination is truly meant to converge to the source.
-
-*Preview a `Robocopy /MIR` run so the extra and new files are visible before any deletion occurs.*
-
-```powershell
-$root = Join-Path $env:TEMP 'vault-transfer-strategy-ps'
-Remove-Item -Recurse -Force $root -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Path (Join-Path $root 'src'), (Join-Path $root 'dest') | Out-Null
-'fresh' | Set-Content -Path (Join-Path $root 'src\current.txt')
-'stale' | Set-Content -Path (Join-Path $root 'dest\obsolete.txt')
-robocopy (Join-Path $root 'src') (Join-Path $root 'dest') /MIR /L /NJH /NJS /NDL
-```
-
-```text
-	  *EXTRA File 		       7	C:\Users\aperi\AppData\Local\Temp\vault-transfer-strategy-ps\dest\obsolete.txt
-	    New File  		       7	C:\Users\aperi\AppData\Local\Temp\vault-transfer-strategy-ps\src\current.txt
-```
-
-#### `Robocopy` rejects `/IPG` together with `/MT`
-
-This is a configuration boundary, not a path or permission issue. The local failure below proves that the job never started because the flag set itself is invalid.
-
-> [!warning] Throttling and multithreading cannot be combined this way
->
-> `/IPG` slows the sender, while `/MT` requests multithreaded copy. Robocopy rejects that combination before it copies anything, so retrying the same command is wasted effort.
-
-> [!success] Choose either throughput or throttling first
->
-> Use `/MT:n` when the link can absorb the parallelism, or use `/IPG:n` when you need deliberate pacing. Do not combine them in one job definition.
-
-*Invoke `Robocopy` with `/IPG` and `/MT` together to surface the local parameter-validation failure.*
-
-```powershell
-robocopy $env:TEMP $env:TEMP /Z /IPG:10 /MT:4 /NJH /NJS
-```
-
-```text
-The /IPG option cannot be used with the /MT option.
-The /LFSM option cannot be used with the /MT or /EFSRAW options.
-Warning: Failed to query volume space; /LFSM will not monitor for low free space.
-       Simple Usage :: ROBOCOPY source destination /MIR
-
-****  /MIR can DELETE files as well as copy them !
-```
-
-#### `bcp` needs explicit text-shaping and reject-row controls for portable exports
-
-The `bcp` syntax block is the fastest proof that a portable text export is not implicit. The command surface itself tells you that delimiter, row terminator, and error-file behavior must be specified deliberately.
-
-> [!warning] Default assumptions can produce the wrong export shape
->
-> If a downstream process expects a CSV-like artifact, leaving delimiter and reject-row behavior implicit can produce a file that is technically written but operationally wrong.
-
-> [!success] Set text mode, separators, and reject handling explicitly
->
-> Use `-c`, `-t`, and `-r` for portable text exports, and add `-e` so rejected rows are captured outside the main output file instead of disappearing into operator guesswork.
-
-*Print the `bcp` syntax header so export modes and text-format switches are visible before scripting the handoff.*
-
-```powershell
-$PSStyle.OutputRendering = 'PlainText'
-bcp -? 2>&1 | Select-Object -First 12
-```
-
-```text
-usage: C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\180\Tools\Binn\bcp.exe {dbtable | query} {in | out | queryout | format} datafile
-  [-m maxerrors]            [-f formatfile]          [-e errfile]
-  [-F firstrow]             [-L lastrow]             [-b batchsize]
-  [-n native type]          [-c character type]      [-w wide character type]
-  [-N keep non-text native] [-V file format version] [-q quoted identifier]
-  [-C code page specifier]  [-t field terminator]    [-r row terminator]
-  [-i inputfile]            [-o outfile]             [-a packetsize]
-  [-S server name]          [-U username]            [-P password or tokenfile]
-  [-T trusted connection]   [-v version]             [-R regional enable]
-  [-k keep null values]     [-E keep identity values][-G Microsoft Entra ID Authentication]
-  [-h "load hints"]         [-x generate xml format file]
-  [-d database name]        [-K application intent]  [-l login timeout]
-```
-
-### PowerShell / Linux | cloud CLI warnings | validate resource names before any destructive sync
-
-Cloud transfer warnings are about namespace truth first. A fake or wrong bucket path makes every later copy or sync flag irrelevant until the resource definition is corrected.
-The examples below run from PowerShell, but the risk model is cross-platform because `gcloud` validates the same resource names and permissions in Bash.
-
-#### A Cloud Storage 404 is a naming blocker before it is a transfer blocker
-
-The live 404 below is the correct early stop. It tells you the bucket path itself is wrong, which means there is nothing useful to optimize, parallelize, or delete yet.
-
-> [!warning] A destructive cloud sync is unsafe on an unvalidated target
->
-> If the bucket or prefix is wrong, adding sync or delete behavior only increases risk. The first job is to prove the target exists and is the intended namespace.
-
-> [!success] Validate the bucket path before the real copy or sync
->
-> Run a read-only check such as `gcloud storage ls gs://bucket/...` first, then add the mutating copy or synchronization command only after the path resolves correctly.
-
-*List a non-existent bucket so the Cloud Storage 404 is visible before any transfer logic runs.*
-
-```powershell
-$PSStyle.OutputRendering = 'PlainText'
-gcloud storage ls gs://demo-does-not-exist-123456 2>&1 | Select-Object -First 8
-```
-
-```text
-ERROR: (gcloud.storage.ls) gs://demo-does-not-exist-123456 not found: 404.
-```
+- `rsync --delete` and `Robocopy /MIR` remove destination-only data. Always preview them with `-n` or `/L` first.
+- `gsutil rsync -d` deletes cloud objects that are not present at the source. There is no safety net in the note's examples because no demo bucket was available.
+- `bcp` needs explicit text-mode and delimiter flags if you expect a portable CSV-shaped file. Otherwise you can end up with output that is unreadable or difficult to parse.
+- `scp` has no resume support. If the copy is large or failure-prone, switch to `rsync` or a cloud-aware client instead of retrying from zero.
 
 ## Troubleshooting
 
-Troubleshooting should separate transport failures, path-shape mistakes, and client-readiness issues. These subsections keep each diagnostic surface close to the command that exposes it most clearly.
-
-### Linux | `rsync` and `scp` | diagnose path and transport failures separately
-
-Linux transfer failures are easiest to fix when you first decide whether the problem is path shape or transport availability. `rsync` exposes path shape clearly; `scp` exposes SSH transport clearly.
+### Local filesystem sync issues
 
 #### `rsync` created `dst/src` instead of syncing into `dst`
 
-When `rsync` nests the source directory under the destination, the usual cause is the missing trailing slash on the source path. The dry run below proves the problem directly because `src/` appears as the top-level item to be copied.
-
-*Dry-run `rsync` without the trailing slash so the nested directory becomes visible before the live copy.*
-
-```bash
-rm -rf /tmp/vault-transfer-troubleshoot
-mkdir -p /tmp/vault-transfer-troubleshoot/src /tmp/vault-transfer-troubleshoot/nested
-printf 'a\n' > /tmp/vault-transfer-troubleshoot/src/current.txt
-rsync -avn /tmp/vault-transfer-troubleshoot/src /tmp/vault-transfer-troubleshoot/nested/
-```
-
-```text
-sending incremental file list
-src/
-src/current.txt
-
-sent 100 bytes  received 23 bytes  246.00 bytes/sec
-total size is 2  speedup is 0.02 (DRY RUN)
-```
-
-#### `scp` failed with connection refused
-
-Connection refusal means the SSH transport itself never became available. Until the listener answers, neither source-path changes nor destination-path corrections matter.
-
-*Attempt an `scp` transfer to a closed SSH port so the refusal is isolated from file-selection logic.*
-
-```bash
-printf 'probe\n' > /tmp/vault-transfer-scp.txt
-scp -P 65000 /tmp/vault-transfer-scp.txt 127.0.0.1:/tmp/vault-transfer-scp-copy.txt 2>&1 | sed -n '1,4p'
-```
-
-```text
-ssh: connect to host 127.0.0.1 port 65000: Connection refused
-scp: Connection closed
-```
-
-#### `scp` or remote `rsync` failed before file transfer began
-
-Non-interactive SSH copy commands expect a clean protocol stream. If the remote shell prints banners, `echo` output, or prompt logic during login, the copy can fail before any file data moves even though authentication itself succeeded.
-
-> [!failure] Startup output can corrupt the transfer stream
->
-> `scp` and remote `rsync` treat unexpected shell output as protocol data. A banner, diagnostic `echo`, or chatty prompt script can therefore trigger errors such as `protocol error: bad mode` or `protocol version mismatch` before payload negotiation starts.
-
-> [!success] Keep non-interactive shells silent
->
-> Guard startup output so it runs only for interactive shells, or write diagnostics to a log file instead of stdout and stderr. On Bash hosts, `case "$-" in *i*) ... esac` is a safe pattern for interactive-only output.
-
-### PowerShell | `Robocopy` | distinguish invalid flags from path or permission failures
-
-`Robocopy` errors are most useful when you first decide whether the job started at all. An immediate parameter failure is a command-definition problem, not a filesystem or access problem.
+This is the trailing-slash mistake shown in the live dry run above. `rsync src dst/` copies the directory itself, whereas `rsync src/ dst/` copies the contents. If you are unsure, dry-run the exact source path before the live copy.
 
 #### `Robocopy` returned `16` before copying anything
 
-Exit code `16` is a real failure, but the output below shows what kind: the command never started because the flag set was invalid. Remove either `/IPG` or `/MT` and rerun the job before you investigate paths or permissions.
+The live `Robocopy /Z /IPG:10 /MT:4` capture shows this failure mode directly. The problem is not permissions or path spelling; it is an invalid flag combination. Remove either `/IPG` or `/MT` and rerun the job.
 
-*Invoke `Robocopy` with `/IPG` and `/MT` together to surface the local parameter-validation failure.*
+### Remote and cloud transfer issues
 
-```powershell
-robocopy $env:TEMP $env:TEMP /Z /IPG:10 /MT:4 /NJH /NJS
-```
+#### `scp` failed with connection refused
 
-```text
-The /IPG option cannot be used with the /MT option.
-The /LFSM option cannot be used with the /MT or /EFSRAW options.
-Warning: Failed to query volume space; /LFSM will not monitor for low free space.
-       Simple Usage :: ROBOCOPY source destination /MIR
+That message means the SSH service itself did not accept the session. Fix host reachability, port selection, or the remote SSH daemon first; changing source or destination paths will not help until the transport exists.
 
-****  /MIR can DELETE files as well as copy them !
-```
+#### `gcloud compute scp` could not fetch the resource
 
-### PowerShell / Linux | Google Cloud CLI | distinguish context failures from copy failures
+The worker capture stopped even earlier than VM lookup because no active Google Cloud account was selected. In real operations, clear the auth and project context first, then validate the instance name and `--zone`.
 
-Cloud CLI troubleshooting starts with resource and account context, because those checks happen before the transfer engine can even attempt the copy.
-The live captures below use PowerShell syntax, but the diagnostic sequence is the same in Bash because the CLI performs the same project, zone, and bucket validation first.
+#### GCS commands returned `404`
 
-#### `gcloud compute scp` could not fetch the VM resource
+The `gsutil ls` and `gcloud storage ls` captures show a clean resource-definition blocker. Correct the bucket name before you investigate permissions or transfer flags.
 
-This failure occurs before any SSH session starts. The correct next step is to validate the project, zone, and instance identity rather than inspecting the local file path.
+### SQL client issues
 
-*Run `gcloud compute scp --dry-run` against a non-existent instance so the pre-transfer resource failure is explicit.*
+#### `bcp` or `sqlcmd` timed out before the export began
 
-```powershell
-gcloud compute scp --dry-run "$env:TEMP\vault-transfer-strategy-ps\src\file.txt" demo-instance:/tmp/file.txt --zone=europe-west1-b 2>&1 |
-    Select-Object -First 8
-```
+Both clients failed before any query work happened because `127.0.0.1,1435` did not answer. Until the endpoint is reachable, changing delimiters, headers, or file names is noise.
 
-```text
-ERROR: (gcloud.compute.scp) Could not fetch resource:
- - The resource 'projects/bq-wh-nb/zones/europe-west1-b/instances/demo-instance' was not found
-```
+#### `Invoke-Sqlcmd` still failed after the module was installed
 
-#### `gcloud storage` returned `404`
-
-The `404` here is a namespace-resolution blocker. Fix the bucket or prefix definition first; throughput, retries, and sync flags are irrelevant until the target exists.
-
-*List a non-existent bucket so the Cloud Storage 404 is visible before any transfer logic runs.*
-
-```powershell
-$PSStyle.OutputRendering = 'PlainText'
-gcloud storage ls gs://demo-does-not-exist-123456 2>&1 | Select-Object -First 8
-```
-
-```text
-ERROR: (gcloud.storage.ls) gs://demo-does-not-exist-123456 not found: 404.
-```
-
-### PowerShell | SQL clients | separate local client readiness from server reachability
-
-SQL transfer troubleshooting should first answer two questions: is the client present locally, and is the server reachable? Mixing those checks leads directly to wasted time on delimiter or query details before the connection path even exists.
-
-#### `sqlcmd` timed out before the export began
-
-This output proves the transport failed before the query ran. Until the endpoint answers, changing separators, headers, or output file names is noise.
-
-*Attempt a `sqlcmd` query against an unreachable endpoint so the transport failure is isolated from query logic.*
-
-```powershell
-$PSStyle.OutputRendering = 'PlainText'
-sqlcmd -S tcp:127.0.0.1,1435 -l 2 -Q "SELECT 1" 2>&1 | Select-Object -First 8
-```
-
-```text
-Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : TCP Provider: The wait operation timed out.
-.
-Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : Login timeout expired.
-Sqlcmd: Error: Microsoft ODBC Driver 18 for SQL Server : A network-related or instance-specific error has occurred while establishing a connection to tcp:127.0.0.1,1435. Server is not found or not accessible. Check if instance name is correct and if SQL Server is configured to allow remote connections. For more information see SQL Server Books Online..
-```
-
-#### `Invoke-Sqlcmd` still failed after the module loaded
-
-Once the `SqlServer` module is installed, the remaining blocker is server reachability. The command below is valuable because it preserves the raw exception instead of hiding the fact that the failure is still network or instance related.
-
-*Attempt an `Invoke-Sqlcmd` query against an unreachable endpoint and print the resulting exception text.*
-
-```powershell
-$PSStyle.OutputRendering = 'PlainText'
-try {
-    Invoke-Sqlcmd -ServerInstance '127.0.0.1,1435' -Query 'SELECT 1' -TrustServerCertificate -ConnectionTimeout 2 -ErrorAction Stop
-} catch {
-    $_.Exception.Message
-}
-```
-
-```text
-A network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - No connection could be made because the target machine actively refused it.)
-```
+Installing the `SqlServer` module only clears the client-side prerequisite. The final blocker remains the same as `sqlcmd`: a reachable SQL Server instance that accepts the connection you are attempting.
 
 ## Cross-references
 

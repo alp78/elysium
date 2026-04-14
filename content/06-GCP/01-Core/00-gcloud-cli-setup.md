@@ -275,10 +275,7 @@ The apt repository method is the recommended installation path for Debian-based 
 
 #### Import the Google Cloud public key and add the repository
 
-**When to run:** On a fresh Debian/Ubuntu machine or VM that does not yet have the SDK installed.
-**Trigger:** First-time environment setup, new VM provisioning, or container image build.
-**Context:** Runs as a shell command with `sudo` privileges. State-changing — modifies the system's apt keyring and sources list.
-**Purpose:** Register the Google Cloud apt repository so that `apt-get install google-cloud-cli` resolves correctly.
+On a fresh Debian/Ubuntu machine or VM that does not yet have the SDK installed. It is typically triggered by first-time environment setup, new VM provisioning, or container image build. Runs as a shell command with `sudo` privileges. State-changing — modifies the system's apt keyring and sources list. Register the Google Cloud apt repository so that `apt-get install google-cloud-cli` resolves correctly.
 
 *Import the GPG key, add the Cloud SDK apt source, and install the CLI.*
 
@@ -295,10 +292,7 @@ sudo apt-get update && sudo apt-get install google-cloud-cli
 
 #### Install additional components via apt
 
-**When to run:** After the base `google-cloud-cli` package is installed and you need optional tools.
-**Trigger:** A workflow requires a tool not included in the base package (e.g., GKE authentication, kubectl, Pub/Sub emulator).
-**Context:** Runs with `sudo`. The `gcloud components install` command is disabled for apt-based installations — apt packages are the only supported mechanism.
-**Purpose:** Add optional SDK components through the system package manager.
+After the base `google-cloud-cli` package is installed and you need optional tools. It is typically triggered by A workflow requires a tool not included in the base package (e.g., GKE authentication, kubectl, Pub/Sub emulator). Runs with `sudo`. The `gcloud components install` command is disabled for apt-based installations — apt packages are the only supported mechanism. Add optional SDK components through the system package manager.
 
 *Install optional SDK components as apt packages.*
 
@@ -335,10 +329,7 @@ The Windows installer is a standard `.exe` that places the SDK under `%LOCALAPPD
 
 #### Download and run the installer
 
-**When to run:** On a Windows workstation or server that does not yet have the SDK installed.
-**Trigger:** First-time developer setup or provisioning a Windows-based build agent.
-**Context:** Runs as a standard Windows installer. Requires no admin privileges — installs to the current user's `%LOCALAPPDATA%`. State-changing — adds binaries to PATH and creates a config directory under `%APPDATA%\gcloud`.
-**Purpose:** Install the full Google Cloud SDK on Windows with component manager support.
+On a Windows workstation or server that does not yet have the SDK installed. It is typically triggered by first-time developer setup or provisioning a Windows-based build agent. Runs as a standard Windows installer. Requires no admin privileges — installs to the current user's `%LOCALAPPDATA%`. State-changing — adds binaries to PATH and creates a config directory under `%APPDATA%\gcloud`. Install the full Google Cloud SDK on Windows with component manager support.
 
 > [!info]- Installation steps
 >
@@ -372,10 +363,7 @@ The official `google/cloud-sdk` Docker image provides a pre-installed SDK in a c
 
 #### Run gcloud in a container
 
-**When to run:** In CI/CD pipelines, ephemeral build environments, or when the host machine should not have the SDK installed directly.
-**Trigger:** Pipeline step requiring GCP access, local testing without SDK installation, or reproducible environment requirements.
-**Context:** Requires Docker. The container runs as an isolated process. Mount volumes for credential files and working directories.
-**Purpose:** Execute gcloud commands in a self-contained, version-pinned environment.
+In CI/CD pipelines, ephemeral build environments, or when the host machine should not have the SDK installed directly. It is typically triggered by pipeline step requiring GCP access, local testing without SDK installation, or reproducible environment requirements. Requires Docker. The container runs as an isolated process. Mount volumes for credential files and working directories. Execute gcloud commands in a self-contained, version-pinned environment.
 
 *Run the SDK container with a mounted credentials directory.*
 
@@ -435,10 +423,7 @@ After installation, the SDK must be initialized to associate it with a Google Cl
 
 #### Run the initialization wizard
 
-**When to run:** Immediately after installing the SDK, or when switching to a new account/project for the first time.
-**Trigger:** Fresh SDK installation, new workstation setup, or creating a new named configuration.
-**Context:** Interactive command — prompts for user input at each step. Requires browser access for OAuth2 login (unless `--console-only` is used). State-changing — writes to the active configuration file.
-**Purpose:** Set up the foundational gcloud properties (account, project, region/zone) so all subsequent commands use the correct defaults.
+Immediately after installing the SDK, or when switching to a new account/project for the first time. It is typically triggered by fresh SDK installation, new workstation setup, or creating a new named configuration. Interactive command — prompts for user input at each step. Requires browser access for OAuth2 login (unless `--console-only` is used). State-changing — writes to the active configuration file. Set up the foundational gcloud properties (account, project, region/zone) so all subsequent commands use the correct defaults.
 
 > [!info]- What gcloud init configures
 >
@@ -572,10 +557,7 @@ Lists all installed and available SDK components with their status, name, ID, an
 
 #### List all components
 
-**When to run:** To audit which SDK tools are installed, check for available updates, or identify the component ID before installing a new tool.
-**Trigger:** Pre-installation check, post-update verification, or troubleshooting a missing command.
-**Context:** Read-only. No authentication required. Queries the local SDK manifest and compares against the remote component list.
-**Purpose:** Display the current installation state of all SDK components.
+To audit which SDK tools are installed, check for available updates, or identify the component ID before installing a new tool. It is typically triggered by pre-installation check, post-update verification, or troubleshooting a missing command. Read-only. No authentication required. Queries the local SDK manifest and compares against the remote component list. Display the current installation state of all SDK components.
 
 *List all SDK components with their installation status.*
 
@@ -644,10 +626,7 @@ Installs one or more components by their ID. The component manager resolves depe
 
 #### Install the GKE authentication plugin
 
-**When to run:** Before running any `kubectl` command against a GKE cluster, or before `gcloud container clusters get-credentials`.
-**Trigger:** Error message `gke-gcloud-auth-plugin is not installed` or first-time GKE setup.
-**Context:** Requires write access to the SDK installation directory. Not available on apt/yum installations. State-changing — downloads and extracts the component binary.
-**Purpose:** Add the GKE authentication plugin so that `kubectl` can authenticate to GKE clusters via gcloud credentials.
+Before running any `kubectl` command against a GKE cluster, or before `gcloud container clusters get-credentials`. It is typically triggered by error message `gke-gcloud-auth-plugin is not installed` or first-time GKE setup. Requires write access to the SDK installation directory. Not available on apt/yum installations. State-changing — downloads and extracts the component binary. Add the GKE authentication plugin so that `kubectl` can authenticate to GKE clusters via gcloud credentials.
 
 *Install the GKE authentication plugin.*
 
@@ -689,10 +668,7 @@ Updates the SDK and all installed components to the latest available version. If
 
 #### Update the entire SDK
 
-**When to run:** Periodically (monthly or before starting a new project) to stay current with API changes and bug fixes, or when encountering errors that may be caused by SDK version drift.
-**Trigger:** `gcloud components list` shows `Update Available`, or a gcloud command fails with an unexpected API error that may be version-related.
-**Context:** Requires write access to the SDK installation directory. State-changing — replaces binaries in the installation root. Not available on apt/yum installations.
-**Purpose:** Bring the SDK and all installed components to the latest stable release.
+Periodically (monthly or before starting a new project) to stay current with API changes and bug fixes, or when encountering errors that may be caused by SDK version drift. It is typically triggered by `gcloud components list` shows `Update Available`, or a gcloud command fails with an unexpected API error that may be version-related. Requires write access to the SDK installation directory. State-changing — replaces binaries in the installation root. Not available on apt/yum installations. Bring the SDK and all installed components to the latest stable release.
 
 *Update all installed SDK components to the latest version.*
 
@@ -725,10 +701,7 @@ Removes installed components by their ID. Dependencies are checked — removing 
 
 #### Remove a component
 
-**When to run:** When cleaning up unused components to reduce disk footprint, or when a component conflicts with another tool.
-**Trigger:** Disk space constraints, component conflict, or decommissioning a workflow that required a specific tool.
-**Context:** Requires write access to the SDK installation directory. State-changing — deletes component binaries. Not available on apt/yum installations.
-**Purpose:** Uninstall a previously installed SDK component.
+When cleaning up unused components to reduce disk footprint, or when a component conflicts with another tool. It is typically triggered by disk space constraints, component conflict, or decommissioning a workflow that required a specific tool. Requires write access to the SDK installation directory. State-changing — deletes component binaries. Not available on apt/yum installations. Uninstall a previously installed SDK component.
 
 *Remove the GKE auth plugin.*
 
@@ -749,10 +722,7 @@ Displays the SDK version and the version of every installed component. The SDK f
 
 #### Display SDK and component versions
 
-**When to run:** When filing bug reports, verifying a CI pipeline SDK version, or checking whether an update is needed.
-**Trigger:** Pre-debugging, post-update verification, or audit.
-**Context:** Read-only. No authentication required.
-**Purpose:** Confirm the exact SDK and component versions installed on this machine.
+When filing bug reports, verifying a CI pipeline SDK version, or checking whether an update is needed. It is typically triggered by pre-debugging, post-update verification, or audit. Read-only. No authentication required. Confirm the exact SDK and component versions installed on this machine.
 
 *Show the current SDK and component versions.*
 
@@ -780,10 +750,7 @@ Displays comprehensive diagnostic information about the SDK installation: platfo
 
 #### Display full diagnostic output
 
-**When to run:** When troubleshooting gcloud errors, verifying the installation is correct, or preparing a bug report.
-**Trigger:** Unexpected gcloud behavior, permission errors, Python version conflicts, or PATH issues.
-**Context:** Read-only. No authentication required for local info (account/project info shown is from the active config, not a live API call).
-**Purpose:** Show the complete SDK installation state in a single output for diagnostics.
+When troubleshooting gcloud errors, verifying the installation is correct, or preparing a bug report. It is typically triggered by unexpected gcloud behavior, permission errors, Python version conflicts, or PATH issues. Read-only. No authentication required for local info (account/project info shown is from the active config, not a live API call). Show the complete SDK installation state in a single output for diagnostics.
 
 *Display full SDK diagnostic information.*
 
@@ -852,10 +819,7 @@ Bash completion is provided by a script bundled with the SDK. The script must be
 
 #### Enable gcloud Bash completion
 
-**When to run:** Once, after installing the SDK, to enable tab-completion in all future Bash sessions.
-**Trigger:** `gcloud <TAB>` does not produce suggestions in a new terminal.
-**Context:** Modifies `~/.bashrc`. Non-destructive — adds a source line. Requires the SDK completion script to exist at the path.
-**Purpose:** Enable persistent tab-completion for gcloud, bq, and gsutil in Bash.
+Once, after installing the SDK, to enable tab-completion in all future Bash sessions. It is typically triggered by `gcloud <TAB>` does not produce suggestions in a new terminal. Modifies `~/.bashrc`. Non-destructive — adds a source line. Requires the SDK completion script to exist at the path. Enable persistent tab-completion for gcloud, bq, and gsutil in Bash.
 
 *Add the gcloud completion source line to `.bashrc`.*
 
@@ -882,10 +846,7 @@ PowerShell completion uses `Register-ArgumentCompleter` with a script block that
 
 #### Enable gcloud PowerShell completion
 
-**When to run:** Once, after installing the SDK, to enable tab-completion in all future PowerShell sessions.
-**Trigger:** `gcloud <TAB>` does not produce suggestions in a new PowerShell window.
-**Context:** Modifies `$PROFILE`. Non-destructive — adds a Register-ArgumentCompleter call.
-**Purpose:** Enable persistent tab-completion for gcloud in PowerShell.
+Once, after installing the SDK, to enable tab-completion in all future PowerShell sessions. It is typically triggered by `gcloud <TAB>` does not produce suggestions in a new PowerShell window. Modifies `$PROFILE`. Non-destructive — adds a Register-ArgumentCompleter call. Enable persistent tab-completion for gcloud in PowerShell.
 
 *Add the gcloud argument completer to the PowerShell profile.*
 
@@ -917,10 +878,7 @@ Zsh completion requires sourcing the SDK completion script and ensuring the comp
 
 #### Enable gcloud Zsh completion
 
-**When to run:** Once, after installing the SDK, to enable tab-completion in all future Zsh sessions.
-**Trigger:** `gcloud <TAB>` does not produce suggestions in Zsh.
-**Context:** Modifies `~/.zshrc`. Non-destructive.
-**Purpose:** Enable persistent tab-completion for gcloud in Zsh.
+Once, after installing the SDK, to enable tab-completion in all future Zsh sessions. It is typically triggered by `gcloud <TAB>` does not produce suggestions in Zsh. Modifies `~/.zshrc`. Non-destructive. Enable persistent tab-completion for gcloud in Zsh.
 
 *Add the gcloud completion source lines to `.zshrc`.*
 

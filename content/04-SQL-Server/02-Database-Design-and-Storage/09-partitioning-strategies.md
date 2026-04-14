@@ -166,10 +166,7 @@ The partition function and partition scheme catalogs are the authoritative sourc
 
 #### `sys.partition_schemes` + `sys.partition_functions` | count existing partition objects
 
-**When to run:** First time you connect to a database you intend to partition, or before running any demo that creates partition objects.
-**Trigger:** Confirming a clean baseline before creating new partition functions and schemes.
-**Context:** Read-only T-SQL against catalog views. Any user with `VIEW DEFINITION` can run this. No state change.
-**Purpose:** Verify that `stoxx` has zero partition functions and zero partition schemes, confirming a clean starting point.
+First time you connect to a database you intend to partition, or before running any demo that creates partition objects. It is typically triggered by confirming a clean baseline before creating new partition functions and schemes. Read-only T-SQL against catalog views. Any user with `VIEW DEFINITION` can run this. No state change. Verify that `stoxx` has zero partition functions and zero partition schemes, confirming a clean starting point.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -262,10 +259,7 @@ A **partition function** defines the boundary values. A **partition scheme** map
 
 #### `CREATE PARTITION FUNCTION` + `CREATE PARTITION SCHEME` | define monthly boundaries
 
-**When to run:** At the beginning of any partitioning demo or when designing a new partitioned table layout.
-**Trigger:** Need to establish boundary values and filegroup mapping before creating the partitioned table.
-**Context:** State-changing DDL. Requires `CREATE PARTITION FUNCTION` and `CREATE PARTITION SCHEME` permissions (granted by default to `db_ddladmin` and `db_owner`). The cleanup block drops any prior demo objects to make the script idempotent.
-**Purpose:** Create a `RANGE RIGHT` partition function with three monthly boundaries (producing four partitions) and a single-filegroup partition scheme for reproducible demo use.
+At the beginning of any partitioning demo or when designing a new partitioned table layout. It is typically triggered by need to establish boundary values and filegroup mapping before creating the partitioned table. State-changing DDL. Requires `CREATE PARTITION FUNCTION` and `CREATE PARTITION SCHEME` permissions (granted by default to `db_ddladmin` and `db_owner`). The cleanup block drops any prior demo objects to make the script idempotent. Create a `RANGE RIGHT` partition function with three monthly boundaries (producing four partitions) and a single-filegroup partition scheme for reproducible demo use.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -300,10 +294,7 @@ AS PARTITION pf_demo_market_data ALL TO ([PRIMARY]);
 
 #### `sys.partition_range_values` | inspect the boundaries
 
-**When to run:** Immediately after creating or modifying a partition function, or when diagnosing unexpected partition placement.
-**Trigger:** Verifying that the boundary values and range direction match the intended monthly layout.
-**Context:** Read-only T-SQL against catalog views. No state change. Any user with `VIEW DEFINITION` can run this.
-**Purpose:** Confirm the three boundary values and verify that `RANGE RIGHT` is active, so the reader can map each boundary to its partition number.
+Immediately after creating or modifying a partition function, or when diagnosing unexpected partition placement. It is typically triggered by verifying that the boundary values and range direction match the intended monthly layout. Read-only T-SQL against catalog views. No state change. Any user with `VIEW DEFINITION` can run this. Confirm the three boundary values and verify that `RANGE RIGHT` is active, so the reader can map each boundary to its partition number.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -346,10 +337,7 @@ The table becomes partitioned only when its clustered index or heap is placed on
 
 #### `CREATE TABLE` + aligned clustered index | build the partitioned demo table
 
-**When to run:** After the partition function and scheme are in place.
-**Trigger:** Need a partitioned table with real data to demonstrate elimination, SWITCH, and sliding-window operations.
-**Context:** State-changing DDL + DML. Creates a table, a clustered index on the partition scheme, and inserts rows from `silver.eurostoxx50_ohlcv`. The clustered index key `([date], id)` includes the partition key `[date]` as the leading column — this is required for aligned partitioning. The `INSERT ... SELECT` populates four months of data (January–April 2025).
-**Purpose:** Build a partitioned demo table with realistic row counts spread across all four partitions, enabling meaningful demonstrations of partition elimination, SWITCH, and sliding-window mechanics.
+After the partition function and scheme are in place. It is typically triggered by need a partitioned table with real data to demonstrate elimination, SWITCH, and sliding-window operations. State-changing DDL + DML. Creates a table, a clustered index on the partition scheme, and inserts rows from `silver.eurostoxx50_ohlcv`. The clustered index key `([date], id)` includes the partition key `[date]` as the leading column — this is required for aligned partitioning. The `INSERT ... SELECT` populates four months of data (January–April 2025). Build a partitioned demo table with realistic row counts spread across all four partitions, enabling meaningful demonstrations of partition elimination, SWITCH, and sliding-window mechanics.
 
 > [!info]- Statement-by-statement breakdown
 >
@@ -397,10 +385,7 @@ _The demo table now contains 4,149 rows spread across four date-based partitions
 
 #### `sys.partitions` | verify row distribution by partition
 
-**When to run:** After any bulk load, SWITCH, SPLIT, or MERGE operation to verify the resulting row distribution.
-**Trigger:** Confirming that the `INSERT ... SELECT` routed rows to the expected partitions.
-**Context:** Read-only T-SQL against `sys.partitions`. Filter on `index_id = 1` to read the clustered index (the data itself). A partitioned table with non-clustered indexes has additional rows in `sys.partitions` for each NC index — filtering on `index_id = 1` isolates the base data.
-**Purpose:** Verify that all four partitions received rows, confirming the partition function boundaries are working as designed.
+After any bulk load, SWITCH, SPLIT, or MERGE operation to verify the resulting row distribution. It is typically triggered by confirming that the `INSERT ... SELECT` routed rows to the expected partitions. Read-only T-SQL against `sys.partitions`. Filter on `index_id = 1` to read the clustered index (the data itself). A partitioned table with non-clustered indexes has additional rows in `sys.partitions` for each NC index — filtering on `index_id = 1` isolates the base data. Verify that all four partitions received rows, confirming the partition function boundaries are working as designed.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -455,10 +440,7 @@ The `$PARTITION` intrinsic function returns the partition number for a given val
 
 #### `$PARTITION` | verify elimination for a March-only predicate
 
-**When to run:** After creating a partitioned table, to verify that a specific date range maps to a single partition.
-**Trigger:** Confirming that the partition function boundaries produce the expected elimination for a typical query pattern.
-**Context:** Read-only T-SQL. `$PARTITION.pf_demo_market_data([date])` evaluates each row's `[date]` value against the partition function and returns the 1-based partition number. The `DISTINCT` reduces the output to the unique partition numbers touched.
-**Purpose:** Prove that a March-only predicate (`>= '2025-03-01' AND < '2025-04-01'`) maps exclusively to partition 3, demonstrating single-partition elimination.
+After creating a partitioned table, to verify that a specific date range maps to a single partition. It is typically triggered by confirming that the partition function boundaries produce the expected elimination for a typical query pattern. Read-only T-SQL. `$PARTITION.pf_demo_market_data([date])` evaluates each row's `[date]` value against the partition function and returns the 1-based partition number. The `DISTINCT` reduces the output to the unique partition numbers touched. Prove that a March-only predicate (`>= '2025-03-01' AND < '2025-04-01'`) maps exclusively to partition 3, demonstrating single-partition elimination.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -523,10 +505,7 @@ The archive table must have the same shape and compatible index definition.
 
 #### `ALTER TABLE ... SWITCH PARTITION` | move partition 2 out to archive
 
-**When to run:** When a partition's data has aged past its retention window and should be moved to an archive table for eventual drop, backup, or export.
-**Trigger:** Scheduled maintenance window, end-of-month archival cycle, or ad-hoc purge of old data.
-**Context:** State-changing DDL. Requires `ALTER` permission on both source and target tables. Acquires `Sch-M` lock on both tables — plan for a brief exclusive lock window. The archive table must already exist and be empty with a compatible schema and index set.
-**Purpose:** Move the February partition (partition 2) out of the partitioned table into a standalone archive table, demonstrating instant metadata-only data movement.
+When a partition's data has aged past its retention window and should be moved to an archive table for eventual drop, backup, or export. It is typically triggered by scheduled maintenance window, end-of-month archival cycle, or ad-hoc purge of old data. State-changing DDL. Requires `ALTER` permission on both source and target tables. Acquires `Sch-M` lock on both tables — plan for a brief exclusive lock window. The archive table must already exist and be empty with a compatible schema and index set. Move the February partition (partition 2) out of the partitioned table into a standalone archive table, demonstrating instant metadata-only data movement.
 
 > [!info]- Statement-by-statement breakdown
 >
@@ -587,10 +566,7 @@ The staging table must be empty after the switch, and its rows must satisfy the 
 
 #### `ALTER TABLE ... SWITCH TO ... PARTITION` | switch February rows back in
 
-**When to run:** When a prepared staging table with validated, boundary-constrained data is ready to be loaded into an empty partition.
-**Trigger:** ETL batch completion, data correction reload, or partition-level data replacement.
-**Context:** State-changing DDL. The staging table must have a `CHECK` constraint that guarantees all rows fall within the target partition's boundary range — without this constraint, SWITCH IN fails because SQL Server cannot verify at compile time that the data fits the partition. The target partition must be empty (partition 2 was emptied by the prior SWITCH OUT).
-**Purpose:** Demonstrate SWITCH IN by loading ten rows from `silver.eurostoxx50_ohlcv` into a staging table with a February-range CHECK constraint, then switching them into partition 2.
+When a prepared staging table with validated, boundary-constrained data is ready to be loaded into an empty partition. It is typically triggered by ETL batch completion, data correction reload, or partition-level data replacement. State-changing DDL. The staging table must have a `CHECK` constraint that guarantees all rows fall within the target partition's boundary range — without this constraint, SWITCH IN fails because SQL Server cannot verify at compile time that the data fits the partition. The target partition must be empty (partition 2 was emptied by the prior SWITCH OUT). Demonstrate SWITCH IN by loading ten rows from `silver.eurostoxx50_ohlcv` into a staging table with a February-range CHECK constraint, then switching them into partition 2.
 
 > [!info]- Statement-by-statement breakdown
 >
@@ -729,10 +705,7 @@ The `SPLIT RANGE` and `MERGE RANGE` subcommands of `ALTER PARTITION FUNCTION` ad
 
 #### `SPLIT RANGE` + `MERGE RANGE` | grow and shrink the partition map
 
-**When to run:** During the sliding-window maintenance cycle — typically a scheduled job that runs before the next data load window.
-**Trigger:** The current rightmost boundary is about to receive data, so a new future boundary must be added. After archival, the oldest boundary is no longer needed.
-**Context:** State-changing DDL. `ALTER PARTITION SCHEME ... NEXT USED` must be called before `SPLIT` to designate the filegroup for the new partition. Both operations acquire `Sch-M` locks. If the affected partitions are empty, the operations complete in milliseconds.
-**Purpose:** Demonstrate that SPLIT increases the partition count and MERGE decreases it, both as metadata-only operations on empty partitions.
+During the sliding-window maintenance cycle — typically a scheduled job that runs before the next data load window. It is typically triggered by the current rightmost boundary is about to receive data, so a new future boundary must be added. After archival, the oldest boundary is no longer needed. State-changing DDL. `ALTER PARTITION SCHEME ... NEXT USED` must be called before `SPLIT` to designate the filegroup for the new partition. Both operations acquire `Sch-M` locks. If the affected partitions are empty, the operations complete in milliseconds. Demonstrate that SPLIT increases the partition count and MERGE decreases it, both as metadata-only operations on empty partitions.
 
 > [!info]- Statement-by-statement breakdown
 >
@@ -809,10 +782,7 @@ The distinction matters for three reasons:
 
 #### `sys.indexes` + `sys.partition_schemes` | check alignment for all indexes on the demo table
 
-**When to run:** After creating indexes on a partitioned table, or before a SWITCH operation, to verify all indexes are aligned.
-**Trigger:** Pre-SWITCH validation, index audit, or troubleshooting error 4906.
-**Context:** Read-only T-SQL against catalog views. Joins `sys.indexes` to `sys.data_spaces` to determine whether each index is on the partition scheme or on a filegroup directly.
-**Purpose:** List every index on the demo table with its data space type, confirming alignment (type `PS` = partition scheme) or non-alignment (type `FG` = filegroup).
+After creating indexes on a partitioned table, or before a SWITCH operation, to verify all indexes are aligned. It is typically triggered by pre-SWITCH validation, index audit, or troubleshooting error 4906. Read-only T-SQL against catalog views. Joins `sys.indexes` to `sys.data_spaces` to determine whether each index is on the partition scheme or on a filegroup directly. List every index on the demo table with its data space type, confirming alignment (type `PS` = partition scheme) or non-alignment (type `FG` = filegroup).
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -868,10 +838,7 @@ For columnstore indexes, `COLUMNSTORE` (default, always on) and `COLUMNSTORE_ARC
 
 #### `ALTER INDEX ... REBUILD PARTITION` | compress partition 1 with PAGE compression
 
-**When to run:** During a maintenance window, after a partition has transitioned from hot (actively written) to cold (read-only or archival).
-**Trigger:** Scheduled lifecycle transition, storage pressure, or compression audit showing cold partitions are uncompressed.
-**Context:** State-changing DDL. `ALTER INDEX ... REBUILD PARTITION = N` rebuilds only the specified partition, not the entire index. Acquires `Sch-M` lock on the partition for the duration. Online rebuild (`WITH (ONLINE = ON)`) is available on Enterprise edition to reduce blocking.
-**Purpose:** Apply `PAGE` compression to partition 1 (the January data, now the oldest partition) and verify the compression state.
+During a maintenance window, after a partition has transitioned from hot (actively written) to cold (read-only or archival). It is typically triggered by scheduled lifecycle transition, storage pressure, or compression audit showing cold partitions are uncompressed. State-changing DDL. `ALTER INDEX ... REBUILD PARTITION = N` rebuilds only the specified partition, not the entire index. Acquires `Sch-M` lock on the partition for the duration. Online rebuild (`WITH (ONLINE = ON)`) is available on Enterprise edition to reduce blocking. Apply `PAGE` compression to partition 1 (the January data, now the oldest partition) and verify the compression state.
 
 *Apply PAGE compression to partition 1 and verify the per-partition compression state.*
 
@@ -932,10 +899,7 @@ Setting `LOCK_ESCALATION = AUTO` changes the escalation target to the **partitio
 
 #### `ALTER TABLE ... SET (LOCK_ESCALATION = AUTO)` | enable partition-level escalation
 
-**When to run:** Immediately after creating a partitioned table, or when reviewing existing partitioned tables for concurrency issues.
-**Trigger:** Observing blocking on a partitioned table where concurrent transactions access different partitions.
-**Context:** State-changing DDL. Requires `ALTER` permission on the table. The change takes effect immediately for new lock acquisitions. No restart or rebuild required.
-**Purpose:** Configure the demo table for partition-level lock escalation and verify the setting.
+Immediately after creating a partitioned table, or when reviewing existing partitioned tables for concurrency issues. It is typically triggered by observing blocking on a partitioned table where concurrent transactions access different partitions. State-changing DDL. Requires `ALTER` permission on the table. The change takes effect immediately for new lock acquisitions. No restart or rebuild required. Configure the demo table for partition-level lock escalation and verify the setting.
 
 *Set lock escalation to AUTO on the demo table and verify the setting.*
 
@@ -982,10 +946,7 @@ TRUNCATE TABLE t WITH (PARTITIONS (2, 4 TO 8));  -- range syntax
 
 #### `TRUNCATE TABLE ... WITH (PARTITIONS)` | remove partition 2 data without SWITCH
 
-**When to run:** When you need to discard all rows from a specific partition without the SWITCH staging-table pattern.
-**Trigger:** Ad-hoc purge, data correction, or partition-level data reset.
-**Context:** State-changing DML. Requires `ALTER` permission on the table. Minimal logging — faster than `DELETE` and does not generate per-row log records. All indexes must be aligned. Available in SQL Server 2016+, Azure SQL Database, Azure SQL Managed Instance.
-**Purpose:** Truncate partition 2 (the ten staged February rows) and verify the partition is empty.
+When you need to discard all rows from a specific partition without the SWITCH staging-table pattern. It is typically triggered by ad-hoc purge, data correction, or partition-level data reset. State-changing DML. Requires `ALTER` permission on the table. Minimal logging — faster than `DELETE` and does not generate per-row log records. All indexes must be aligned. Available in SQL Server 2016+, Azure SQL Database, Azure SQL Managed Instance. Truncate partition 2 (the ten staged February rows) and verify the partition is empty.
 
 *Truncate partition 2 and verify the result.*
 
@@ -1034,10 +995,7 @@ SQL Server maintains statistics objects on partitioned tables to help the query 
 
 #### `UPDATE STATISTICS` | refresh statistics with full scan after a large load
 
-**When to run:** After a significant data load into one or more partitions, or when query plans degrade due to stale statistics.
-**Trigger:** Post-ETL batch load, post-SWITCH IN, or after observing cardinality estimate mismatches in execution plans.
-**Context:** Read-only scan operation (no data modification). Can be resource-intensive on very large tables — schedule during maintenance windows. `WITH FULLSCAN` reads every row; `WITH INCREMENTAL = ON` limits the scan to changed partitions.
-**Purpose:** Refresh statistics on the demo table to ensure the optimizer has accurate row count estimates.
+After a significant data load into one or more partitions, or when query plans degrade due to stale statistics. It is typically triggered by post-ETL batch load, post-SWITCH IN, or after observing cardinality estimate mismatches in execution plans. Read-only scan operation (no data modification). Can be resource-intensive on very large tables — schedule during maintenance windows. `WITH FULLSCAN` reads every row; `WITH INCREMENTAL = ON` limits the scan to changed partitions. Refresh statistics on the demo table to ensure the optimizer has accurate row count estimates.
 
 *Update statistics on the demo table with a full scan.*
 
@@ -1067,10 +1025,7 @@ _Statistics were updated with a full scan. The `is_incremental = 0` confirms inc
 
 #### `sys.dm_db_partition_stats` | size each partition in pages and rows
 
-**When to run:** During capacity planning, compression evaluation, or when investigating partition skew.
-**Trigger:** Storage pressure, pre-compression sizing, or routine partition health audit.
-**Context:** Read-only DMV query. Requires `VIEW DATABASE STATE` permission (SQL Server 2022+: `VIEW DATABASE PERFORMANCE STATE`). The `row_count` column in this DMV is authoritative — unlike `sys.partitions.rows`, which is updated asynchronously.
-**Purpose:** Return the page count and row count for each partition of the demo table, enabling sizing and skew analysis.
+During capacity planning, compression evaluation, or when investigating partition skew. It is typically triggered by storage pressure, pre-compression sizing, or routine partition health audit. Read-only DMV query. Requires `VIEW DATABASE STATE` permission (SQL Server 2022+: `VIEW DATABASE PERFORMANCE STATE`). The `row_count` column in this DMV is authoritative — unlike `sys.partitions.rows`, which is updated asynchronously. Return the page count and row count for each partition of the demo table, enabling sizing and skew analysis.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|

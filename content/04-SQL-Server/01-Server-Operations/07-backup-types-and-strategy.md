@@ -125,8 +125,7 @@ Every SQL Server backup belongs to one of six operational types. The three main 
 
 #### Full, differential, and log backups
 
-**When to run:** During backup design, before choosing the command template for the job. **Trigger:** Any new database added to the protection scope, or any change to the restore design (RPO, RTO, PITR requirement). **Context:** Conceptual reference, not a command. **Purpose:** Map each operational requirement to the correct backup type so the chain is built deliberately rather than by habit.
-
+Reach for this material when during backup design, before choosing the command template for the job. It usually becomes relevant when any new database added to the protection scope, or any change to the restore design (RPO, RTO, PITR requirement). Conceptual reference, not a command. The operational goal is to map each operational requirement to the correct backup type so the chain is built deliberately rather than by habit.
 | Backup type | What it captures | Depends on | Resets diff base? | Typical use |
 |---|---|---|---|---|
 | **Full** (type `D`) | Entire database plus enough log for transactional consistency at backup completion | Nothing earlier in the chain | **Yes** — sets the new differential base | Baseline for every restore design |
@@ -150,8 +149,7 @@ Backups do not exist independently. They form a directed dependency graph. The r
 
 #### Visualize the chain and restore dependency flow
 
-**When to run:** When designing or explaining a restore plan. **Trigger:** New protection scope, restore drill planning, or incident response. **Context:** Conceptual diagram — no code executes. **Purpose:** Show which backup sets must survive (together) for a given restore target to remain achievable.
-
+Use this diagram when designing or explaining a restore plan. It becomes relevant during new-scope onboarding, restore-drill planning, and incident response. No code executes here; the diagram exists to show which backup sets must survive together for a specific recovery target to remain achievable.
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -184,8 +182,7 @@ A backup strategy depends on the database recovery model. A full backup works in
 
 #### Inspect the current recovery model and log reuse state
 
-**When to run:** At the very start of backup design, and before every change to a backup schedule. **Trigger:** New database, migration, restore from another environment, or investigation of a log-growth incident. **Context:** Read-only catalog view query. Requires `VIEW ANY DATABASE` or membership in a database role. Runs in any database. **Purpose:** Confirm that the target database is in the recovery model the strategy assumes and that the log is healthy enough to continue the chain.
-
+Reach for this material when at the very start of backup design, and before every change to a backup schedule. It usually becomes relevant when new database, migration, restore from another environment, or investigation of a log-growth incident. Read-only catalog view query. Requires `VIEW ANY DATABASE` or membership in a database role. Runs in any database. The operational goal is to confirm that the target database is in the recovery model the strategy assumes and that the log is healthy enough to continue the chain.
 > [!info]- Query breakdown — recovery model and log reuse
 >
 > This query reads the database-level recovery configuration from `sys.databases`, the system catalog that describes every database on the instance.
@@ -254,8 +251,7 @@ WHERE name IN ('stoxx','stoxx_db','master','msdb');
 
 #### List the recent backup history for a database
 
-**When to run:** During backup audit, job verification, and any investigation of missing or unexpected backups. **Trigger:** RPO compliance check, backup job failure alert, restore-drill preparation, or handover between DBAs. **Context:** Read-only query against `msdb.dbo.backupset`. Requires membership in `db_backupoperator` in `msdb` or higher. **Purpose:** Confirm that the scheduled chain (full, differential, log) is present and complete for a specific database, and expose the LSN range of each backup set for chain-integrity reasoning.
-
+Reach for this material when during backup audit, job verification, and any investigation of missing or unexpected backups. It usually becomes relevant when RPO compliance check, backup job failure alert, restore-drill preparation, or handover between DBAs. Read-only query against `msdb.dbo.backupset`. Requires membership in `db_backupoperator` in `msdb` or higher. The operational goal is to confirm that the scheduled chain (full, differential, log) is present and complete for a specific database, and expose the LSN range of each backup set for chain-integrity reasoning.
 > [!info]- Query breakdown — backupset chain inspection
 >
 > `msdb.dbo.backupset` contains a row per successful backup set. The fields in the `SELECT` list are the minimum every DBA reviews during a backup audit:
@@ -340,8 +336,7 @@ The `type` column is small but finite. Memorizing its domain is non-negotiable b
 
 #### Inspect the physical location and media type of each backup set
 
-**When to run:** When preparing a restore, auditing where backup files are stored, or verifying that URL backups are actually hitting object storage. **Trigger:** Restore planning, compliance audit for 3-2-1 coverage, incident where a file is missing. **Context:** Read-only join. Requires `db_backupoperator` in `msdb`. **Purpose:** Map each backup set to its concrete file path, distinguish disk-stored from URL-stored media, and see the stripe layout for striped backups.
-
+Use this check when preparing a restore, auditing where backup files are stored, or verifying that URL backups are actually landing in object storage. It becomes relevant during restore planning, 3-2-1 compliance audits, and missing-file investigations. The query is a read-only join in `msdb` and requires `db_backupoperator`. The goal is to map each backup set to its concrete file path, distinguish disk-backed media from URL-backed media, and expose stripe layout for striped backups.
 > [!info]- Query breakdown — media family join
 >
 > This query joins `backupset` to `backupmediafamily` to produce one row per physical stripe. The key fields are:
@@ -407,8 +402,7 @@ Differentials are extent-level captures anchored to a specific full backup. SQL 
 
 #### Read the current differential base LSN and GUID
 
-**When to run:** When verifying that the next scheduled differential will actually apply to the expected full backup, or when investigating why a diff restore failed. **Trigger:** Backup schedule change, surprise behavior in restore planning, or any situation where a copy-only full was recently taken. **Context:** Read-only catalog view. Runs from any database. Requires `VIEW ANY DATABASE`. **Purpose:** Confirm which conventional full backup is the current differential base for the target database.
-
+Use this query to confirm that the next scheduled differential still points at the full backup you expect, or to investigate a failed differential restore. It becomes relevant after schedule changes, surprising restore behavior, or any recent copy-only full. The query is read-only, runs from any database, and requires `VIEW ANY DATABASE`. The goal is to identify the conventional full backup that currently defines the database's differential base.
 > [!info]- Query breakdown — differential base fields
 >
 > `sys.master_files` has one row per file per database on the instance. The differential base fields are populated only on data files (`type = 0`, rows): log files always show NULL because they do not carry extent-level change tracking.
@@ -442,8 +436,7 @@ A broken log chain is the single most expensive backup failure to recover from, 
 
 #### Find gaps in the log LSN sequence
 
-**When to run:** As part of every backup audit, especially on databases where log backups run on a schedule other than the full backup schedule. **Trigger:** Suspicion that a log backup job failed silently, or preparation for a PITR restore drill. **Context:** Read-only window-function query against `msdb.dbo.backupset`. Requires `db_backupoperator` in `msdb`. **Purpose:** Verify the log chain is contiguous or report the exact gap so it can be repaired before the next restore drill.
-
+Reach for this material when as part of every backup audit, especially on databases where log backups run on a schedule other than the full backup schedule. It usually becomes relevant when suspicion that a log backup job failed silently, or preparation for a PITR restore drill. Read-only window-function query against `msdb.dbo.backupset`. Requires `db_backupoperator` in `msdb`. The operational goal is to verify the log chain is contiguous or report the exact gap so it can be repaired before the next restore drill.
 > [!info]- Query breakdown — LSN continuity window function
 >
 > The query uses `LAG()` to pull the previous row's `last_lsn` onto the current row. A contiguous chain has `first_lsn = LAG(last_lsn)` for every row after the first; any row where they differ is a gap.
@@ -519,8 +512,7 @@ ORDER BY backup_set_id;
 
 #### Verify a backup file without restoring it
 
-**When to run:** After every backup completes, and immediately before any restore operation. **Trigger:** Scheduled backup job success handler, pre-restore sanity check, or routine media-integrity audit. **Context:** Read-only against the media file. Requires permission to read the file and `CREATE DATABASE` on the instance (historical quirk — VERIFYONLY uses the same permission gate as RESTORE). **Purpose:** Confirm the backup file is structurally valid and readable before committing to a real restore.
-
+Reach for this material when after every backup completes, and immediately before any restore operation. It usually becomes relevant when scheduled backup job success handler, pre-restore sanity check, or routine media-integrity audit. Read-only against the media file. Requires permission to read the file and `CREATE DATABASE` on the instance (historical quirk — VERIFYONLY uses the same permission gate as RESTORE). The operational goal is to confirm the backup file is structurally valid and readable before committing to a real restore.
 > [!info]- VERIFYONLY validation scope
 >
 > `RESTORE VERIFYONLY` performs the following checks:
@@ -567,8 +559,7 @@ The backup set on file 1 is valid.
 
 #### Read backup set headers from a file
 
-**When to run:** Before any restore, to confirm the file contains the backup set you expect and to identify the exact `Position` to target. **Trigger:** Restore planning, file identification, or when a media file was built up with `NOINIT` and multiple sets may share the same media. **Context:** Read-only against the media file; same permissions as VERIFYONLY. **Purpose:** Identify the source database, recovery model, compression state, encryption state, LSN range, and exact backup set position inside the media file.
-
+Reach for this material when before any restore, to confirm the file contains the backup set you expect and to identify the exact `Position` to target. It usually becomes relevant when restore planning, file identification, or when a media file was built up with `NOINIT` and multiple sets may share the same media. Read-only against the media file; same permissions as VERIFYONLY. The operational goal is to identify the source database, recovery model, compression state, encryption state, LSN range, and exact backup set position inside the media file.
 > [!info]- HEADERONLY fields that matter most
 >
 > `RESTORE HEADERONLY` returns a very wide row — roughly 60 columns. In practice these are the ones you actually use:
@@ -657,8 +648,7 @@ FROM DISK = '/var/opt/mssql/backup/stoxx_full_chain.bak';
 
 #### List the data and log files inside a backup
 
-**When to run:** Before every side-by-side restore, especially when the restore target is a different instance or a different filesystem layout. **Trigger:** Restore drill, database migration, or any situation requiring `WITH MOVE`. **Context:** Read-only against the media file. Same permissions as VERIFYONLY. **Purpose:** Retrieve the exact logical file names and their original physical paths so a correct `WITH MOVE` clause can be constructed.
-
+Reach for this material when before every side-by-side restore, especially when the restore target is a different instance or a different filesystem layout. It usually becomes relevant when restore drill, database migration, or any situation requiring `WITH MOVE`. Read-only against the media file. Same permissions as VERIFYONLY. The operational goal is to retrieve the exact logical file names and their original physical paths so a correct `WITH MOVE` clause can be constructed.
 > [!info]- FILELISTONLY fields that matter
 >
 > `RESTORE FILELISTONLY` returns one row per file inside the backup set. For a typical single-data-file database the result is two rows: one data file and one log file. Memory-optimized filegroups, additional data files, FILESTREAM containers, and secondary filegroups each add more rows.
@@ -722,8 +712,7 @@ Full backups are the baseline for every restore design. There are four distinct 
 
 #### Take a conventional full backup
 
-**When to run:** On the scheduled cadence (daily or weekly, depending on workload), and as the first backup on every new database added to the protection scope. **Trigger:** Scheduled job, initial protection of a new database, or restart of the backup chain after a broken log chain. **Context:** Runs in `master` (or any database with appropriate permissions). Requires `db_backupoperator` on the target database or `sysadmin`. State-changing for backup metadata (`msdb`), not for the source database. **Purpose:** Produce a full, restorable baseline that becomes the anchor for all subsequent differentials and logs until the next conventional full.
-
+Reach for this material when on the scheduled cadence (daily or weekly, depending on workload), and as the first backup on every new database added to the protection scope. It usually becomes relevant when scheduled job, initial protection of a new database, or restart of the backup chain after a broken log chain. Runs in `master` (or any database with appropriate permissions). Requires `db_backupoperator` on the target database or `sysadmin`. State-changing for backup metadata (`msdb`), not for the source database. The operational goal is to produce a full, restorable baseline that becomes the anchor for all subsequent differentials and logs until the next conventional full.
 > [!success] Conventional full backup baseline pattern
 >
 > Use a conventional full backup as the anchor for every restore design. Always add `CHECKSUM` unless you have a tested reason not to, and always add `COMPRESSION` unless you have a specific CPU or storage reason not to. The `STATS = 25` option prints progress every 25% so the job log contains something useful if the backup hangs.
@@ -751,8 +740,7 @@ BACKUP DATABASE successfully processed 76346 pages in 0.357 seconds (1670.726 MB
 
 #### Take a copy-only full backup before risky work
 
-**When to run:** Immediately before any operation that could corrupt the database or invalidate the restore design: schema migration, bulk reload, extension install, or CU upgrade. **Trigger:** Change-management gate, pre-deployment safety net, forensic snapshot for incident investigation. **Context:** Same permissions as a conventional full. **Purpose:** Capture a complete, restorable full backup without disturbing the scheduled differential base, so the normal backup cadence is not polluted by the ad hoc snapshot.
-
+Reach for this material when immediately before any operation that could corrupt the database or invalidate the restore design: schema migration, bulk reload, extension install, or CU upgrade. It usually becomes relevant when change-management gate, pre-deployment safety net, forensic snapshot for incident investigation. Same permissions as a conventional full. The operational goal is to capture a complete, restorable full backup without disturbing the scheduled differential base, so the normal backup cadence is not polluted by the ad hoc snapshot.
 > [!warning] Copy-only is a safety net, not a replacement for scheduling
 >
 > A copy-only full is intentionally invisible to the differential base. This is its value — but it also means the next scheduled differential will **not** see the copy-only backup and will still anchor on the last conventional full. Do not use copy-only as a way to "take an extra full" and expect it to shorten subsequent differentials.
@@ -778,8 +766,7 @@ Processed 76346 pages in 0.367 seconds (1625.202 MB/sec).
 
 #### Take a three-way striped full backup
 
-**When to run:** On very large databases where a single backup file would exceed the filesystem's practical limits, or where parallel write throughput is limited by a single target device. **Trigger:** Database size crossing the point where a single-file backup becomes slow, or a multi-disk backup target that benefits from parallel writes. **Context:** Each stripe must be writable independently. If any stripe is lost, the entire backup set is unusable. **Purpose:** Split one logical backup set across multiple physical files written in parallel so total write time is reduced and per-file size stays bounded.
-
+Reach for this material when on very large databases where a single backup file would exceed the filesystem's practical limits, or where parallel write throughput is limited by a single target device. It usually becomes relevant when database size crossing the point where a single-file backup becomes slow, or a multi-disk backup target that benefits from parallel writes. Each stripe must be writable independently. If any stripe is lost, the entire backup set is unusable. The operational goal is to split one logical backup set across multiple physical files written in parallel so total write time is reduced and per-file size stays bounded.
 > [!warning] All stripes must survive together
 >
 > A striped backup is a single logical backup set represented across multiple physical files. Losing any one stripe makes the other stripes useless — you cannot partially restore from `stoxx_striped_1.bak` and `stoxx_striped_2.bak` alone if `stoxx_striped_3.bak` is missing. Store all stripes together and restore all stripes together.
@@ -810,8 +797,7 @@ Processed 76354 pages in 0.268 seconds (2225.789 MB/sec).
 
 #### Take an encrypted full backup with AES-256
 
-**When to run:** On any database where the backup files may be stored on shared or externally accessible media, or where compliance requires encryption at rest for database backups. **Trigger:** Compliance mandate (PCI, HIPAA, GDPR), backup target on shared infrastructure, or preparation for cross-environment transfer. **Context:** Requires a database master key in `master` and a server certificate. State-changing in `master` only for the initial setup; the backup itself is read-only against `stoxx`. **Purpose:** Produce a backup file that is encrypted at rest and cannot be restored without the corresponding certificate and private key.
-
+Reach for this material when on any database where the backup files may be stored on shared or externally accessible media, or where compliance requires encryption at rest for database backups. It usually becomes relevant when compliance mandate (PCI, HIPAA, GDPR), backup target on shared infrastructure, or preparation for cross-environment transfer. Requires a database master key in `master` and a server certificate. State-changing in `master` only for the initial setup; the backup itself is read-only against `stoxx`. The operational goal is to produce a backup file that is encrypted at rest and cannot be restored without the corresponding certificate and private key.
 > [!danger] Losing the certificate makes the backup unrestorable
 >
 > SQL Server encrypts the backup using a key derived from the server certificate. If the certificate is lost and its private key was not backed up separately, the backup file is cryptographically unrecoverable — no Microsoft support escalation can read it. The moment you take the first encrypted backup, back up the certificate and private key to a location disjoint from the backup files themselves.
@@ -909,8 +895,7 @@ A differential backup captures every extent changed since the current differenti
 
 #### Take a differential backup
 
-**When to run:** On the scheduled differential cadence, between conventional full backups. **Trigger:** Scheduled job, or pre-deployment snapshot inside an already-established full-backup window. **Context:** Same permissions as a full backup. Requires an existing conventional full as the base. **Purpose:** Capture only the extents changed since the last conventional full, reducing restore time compared to replaying every log backup from the full to now.
-
+Reach for this material when on the scheduled differential cadence, between conventional full backups. It usually becomes relevant when scheduled job, or pre-deployment snapshot inside an already-established full-backup window. Same permissions as a full backup. Requires an existing conventional full as the base. The operational goal is to capture only the extents changed since the last conventional full, reducing restore time compared to replaying every log backup from the full to now.
 > [!info]- Differential backup mechanics
 >
 > SQL Server tracks changed extents via the differential changed map (DCM) page — one DCM page per 64,000 extents (4 GB of data). When a differential backup runs, it reads the DCM to identify which extents have changed since the `differential_base_lsn` and backs up only those extents plus enough log for transactional consistency.
@@ -942,8 +927,7 @@ Log backups are the only backup type that enforces chain continuity. Each log ba
 
 #### Take a transaction log backup
 
-**When to run:** On the scheduled log-backup cadence, usually every 5–15 minutes for OLTP workloads. **Trigger:** Scheduled job, or ad hoc when log reuse is blocked and a log backup would release space. **Context:** Requires the database to be in `FULL` or `BULK_LOGGED` recovery model and an existing conventional full backup as the chain anchor. **Purpose:** Capture log records since the previous log backup, advance the minimum LSN, and contribute one link to the restore chain.
-
+Reach for this material when on the scheduled log-backup cadence, usually every 5–15 minutes for OLTP workloads. It usually becomes relevant when scheduled job, or ad hoc when log reuse is blocked and a log backup would release space. Requires the database to be in `FULL` or `BULK_LOGGED` recovery model and an existing conventional full backup as the chain anchor. The operational goal is to capture log records since the previous log backup, advance the minimum LSN, and contribute one link to the restore chain.
 > [!warning] Log backups are only valid under FULL or BULK_LOGGED
 >
 > Running `BACKUP LOG` against a database in `SIMPLE` recovery model fails with error 4208. Before taking the first log backup on a new database, confirm the recovery model is `FULL` or `BULK_LOGGED` via the `sys.databases` query earlier in this note.
@@ -993,8 +977,7 @@ Three GCP configuration steps must be completed before SQL Server can write a si
 
 #### Create the GCS bucket with uniform access and public-access prevention
 
-**When to run:** Once per backup target, before any SQL Server configuration. **Trigger:** New project onboarding, new protection scope, or adoption of object storage as a backup tier. **Context:** GCP console or `gcloud` CLI, authenticated against the target project. Requires `roles/storage.admin` on the project (or explicit `storage.buckets.create` permission). **Purpose:** Provision a bucket that will hold SQL Server backup files, with the security posture expected of a production backup target.
-
+Reach for this material when once per backup target, before any SQL Server configuration. It usually becomes relevant when new project onboarding, new protection scope, or adoption of object storage as a backup tier. GCP console or `gcloud` CLI, authenticated against the target project. Requires `roles/storage.admin` on the project (or explicit `storage.buckets.create` permission). The operational goal is to provision a bucket that will hold SQL Server backup files, with the security posture expected of a production backup target.
 > [!info]- Bucket configuration that matters for SQL Server backup
 >
 > The bucket settings that affect SQL Server's backup behavior are:
@@ -1044,8 +1027,7 @@ gcloud storage buckets describe gs://stoxx-sql-bucket --format=json
 
 #### Grant the service account storage.admin and storage.objectUser
 
-**When to run:** Immediately after the bucket is created, once per service account that will be used by SQL Server. **Trigger:** New backup target onboarding. **Context:** `gcloud` CLI or GCP console, authenticated as a project owner or IAM admin. **Purpose:** Give the service account the minimum permissions required to write, read, list, and delete backup objects in the bucket.
-
+Reach for this material when immediately after the bucket is created, once per service account that will be used by SQL Server. It usually becomes relevant when new backup target onboarding. `gcloud` CLI or GCP console, authenticated as a project owner or IAM admin. The operational goal is to give the service account the minimum permissions required to write, read, list, and delete backup objects in the bucket.
 > [!info]- Required roles and why
 >
 > The SQL Server S3 connector needs to `PUT`, `GET`, `LIST`, and `DELETE` objects in the bucket. The two GCP roles that cover this surface are:
@@ -1089,8 +1071,7 @@ roles/storage.objectUser
 
 #### Generate an HMAC interoperability key for the service account
 
-**When to run:** Once per backup target, after the service account exists. **Trigger:** Initial SQL Server backup setup, or HMAC key rotation on the documented cadence. **Context:** `gcloud` CLI authenticated as a project owner or a service account admin. **Purpose:** Create an HMAC access key + secret pair bound to the service account, which SQL Server's S3 connector will use to sign every API request to GCS.
-
+Reach for this material when once per backup target, after the service account exists. It usually becomes relevant when initial SQL Server backup setup, or HMAC key rotation on the documented cadence. `gcloud` CLI authenticated as a project owner or a service account admin. The operational goal is to create an HMAC access key + secret pair bound to the service account, which SQL Server's S3 connector will use to sign every API request to GCS.
 > [!danger] The HMAC secret is shown exactly once
 >
 > GCP returns the HMAC secret exactly once, in the response to the `hmac create` command. If the secret is lost, there is no way to retrieve it — the only remedy is to deactivate and delete the old key and create a new one. Capture both the `accessId` and the `secret` immediately and store them in a secrets manager before closing the terminal.
@@ -1122,8 +1103,7 @@ secret: <40-character-base64-secret-shown-once>
 
 #### Inspect HMAC key state and rotation policy
 
-**When to run:** As part of regular key hygiene audits or when troubleshooting authentication errors. **Trigger:** Authentication failure during backup, scheduled key rotation, or compliance audit. **Context:** `gcloud` CLI. Read-only. **Purpose:** Confirm which HMAC keys exist for a project, which service accounts they are bound to, and whether each key is `ACTIVE`, `INACTIVE`, or `DELETED`.
-
+Reach for this material when as part of regular key hygiene audits or when troubleshooting authentication errors. It usually becomes relevant when authentication failure during backup, scheduled key rotation, or compliance audit. `gcloud` CLI. Read-only. The operational goal is to confirm which HMAC keys exist for a project, which service accounts they are bound to, and whether each key is `ACTIVE`, `INACTIVE`, or `DELETED`.
 *This command lists every HMAC key in the project and its state.*
 
 ```bash
@@ -1158,8 +1138,7 @@ A SQL Server credential is the bridge between the T-SQL `BACKUP TO URL` command 
 
 #### Create the credential with URL-prefix name-matching
 
-**When to run:** Once per bucket (or per logical path inside a bucket), after the HMAC key exists. **Trigger:** Initial backup target setup, or after an HMAC key rotation. **Context:** T-SQL `CREATE CREDENTIAL` in the `master` database. Requires `ALTER ANY CREDENTIAL` or `sysadmin`. State-changing in `master`. **Purpose:** Persist the HMAC access ID and secret in SQL Server's credential store so `BACKUP TO URL` commands under the matching URL prefix can authenticate to GCS automatically, without specifying `WITH CREDENTIAL` on every command.
-
+Reach for this material when once per bucket (or per logical path inside a bucket), after the HMAC key exists. It usually becomes relevant when initial backup target setup, or after an HMAC key rotation. T-SQL `CREATE CREDENTIAL` in the `master` database. Requires `ALTER ANY CREDENTIAL` or `sysadmin`. State-changing in `master`. The operational goal is to persist the HMAC access ID and secret in SQL Server's credential store so `BACKUP TO URL` commands under the matching URL prefix can authenticate to GCS automatically, without specifying `WITH CREDENTIAL` on every command.
 > [!info]- IDENTITY and SECRET format for the S3 connector
 >
 > For URL backup to S3-compatible storage, the `IDENTITY` and `SECRET` fields have very specific forms mandated by the S3 connector:
@@ -1188,8 +1167,7 @@ WITH IDENTITY = 'S3 Access Key',
 
 #### Verify the credential in sys.credentials
 
-**When to run:** Immediately after creating the credential, and during any audit of URL-backup readiness. **Trigger:** New credential creation, backup failure investigation, compliance audit. **Context:** Read-only catalog view query against `sys.credentials`. Requires `VIEW SERVER STATE`. **Purpose:** Confirm the credential is registered, owned by the expected identity string, and carries the correct creation timestamp.
-
+Reach for this material when immediately after creating the credential, and during any audit of URL-backup readiness. It usually becomes relevant when new credential creation, backup failure investigation, compliance audit. Read-only catalog view query against `sys.credentials`. Requires `VIEW SERVER STATE`. The operational goal is to confirm the credential is registered, owned by the expected identity string, and carries the correct creation timestamp.
 > [!info]- sys.credentials columns that matter
 >
 > `sys.credentials` stores server-level credentials — one row per credential. The secret itself is never returned by this view; only the metadata.
@@ -1220,8 +1198,7 @@ WHERE name LIKE 's3://%';
 
 #### Test the connector with a minimal master backup
 
-**When to run:** Immediately after creating the credential, before attempting any production workload backup. **Trigger:** Initial setup verification, post-rotation smoke test, or troubleshooting a backup failure. **Context:** T-SQL in `master`, requires `BACKUP DATABASE` permission. **Purpose:** Exercise the full SQL Server → S3 connector → HMAC signing → GCS endpoint → bucket write path with a tiny, fast backup that completes in seconds, so any configuration error surfaces immediately.
-
+Reach for this material when immediately after creating the credential, before attempting any production workload backup. It usually becomes relevant when initial setup verification, post-rotation smoke test, or troubleshooting a backup failure. T-SQL in `master`, requires `BACKUP DATABASE` permission. The operational goal is to exercise the full SQL Server → S3 connector → HMAC signing → GCS endpoint → bucket write path with a tiny, fast backup that completes in seconds, so any configuration error surfaces immediately.
 *This command takes a small full backup of master directly to the GCS bucket as a connectivity test.*
 
 ```sql
@@ -1249,8 +1226,7 @@ With the credential registered and the connectivity test verified, a real produc
 
 #### Take a full backup directly to a GCS bucket
 
-**When to run:** On the object-storage backup cadence, whether as the primary backup target or as a 3-2-1 off-instance copy alongside local disk backups. **Trigger:** Scheduled object-storage backup job, or manual backup ahead of a planned cross-region restore drill. **Context:** Requires the credential registered earlier, outbound HTTPS egress from the SQL Server host to `storage.googleapis.com:443`, and TLS trust for the Google Trust Services root CAs (standard on most Linux images including the SQL Server 2022 container). **Purpose:** Produce a full backup of the target database directly on GCS, without staging it on local disk first.
-
+Reach for this material when on the object-storage backup cadence, whether as the primary backup target or as a 3-2-1 off-instance copy alongside local disk backups. It usually becomes relevant when scheduled object-storage backup job, or manual backup ahead of a planned cross-region restore drill. Requires the credential registered earlier, outbound HTTPS egress from the SQL Server host to `storage.googleapis.com:443`, and TLS trust for the Google Trust Services root CAs (standard on most Linux images including the SQL Server 2022 container). The operational goal is to produce a full backup of the target database directly on GCS, without staging it on local disk first.
 > [!info]- MAXTRANSFERSIZE for URL backup
 >
 > The S3 connector's `MAXTRANSFERSIZE` controls the size of each upload chunk. The default is 10 MB (`10485760`); the allowed range is 5 MB – 20 MB. Setting a value higher than 10 MB requires `WITH COMPRESSION` to be specified explicitly — an uncompressed URL backup cannot use chunks larger than 10 MB. The `MAXTRANSFERSIZE = 20971520` (20 MB) setting used below is the maximum and typically gives the best throughput on regional buckets.
@@ -1288,8 +1264,7 @@ BACKUP DATABASE successfully processed 76354 pages in 5.232 seconds (114.012 MB/
 
 #### Inspect the uploaded object from the GCP side
 
-**When to run:** After every URL backup, as verification that the object actually landed in the bucket. **Trigger:** Post-backup audit, reconciliation between `msdb.dbo.backupset` and the bucket contents, troubleshooting a missing backup. **Context:** `gcloud` CLI, requires `storage.objects.list` on the bucket. **Purpose:** Confirm the backup object exists in the bucket, show its size and upload timestamp, and prove the SQL Server side of the backup actually made it all the way through the S3 REST API into persistent object storage.
-
+Reach for this material when after every URL backup, as verification that the object actually landed in the bucket. It usually becomes relevant when post-backup audit, reconciliation between `msdb.dbo.backupset` and the bucket contents, troubleshooting a missing backup. `gcloud` CLI, requires `storage.objects.list` on the bucket. The operational goal is to confirm the backup object exists in the bucket, show its size and upload timestamp, and prove the SQL Server side of the backup actually made it all the way through the S3 REST API into persistent object storage.
 *This command lists all objects under the stoxx full backup path.*
 
 ```bash
@@ -1330,8 +1305,7 @@ Pick backup frequency to express the recovery point objective (RPO) first, and t
 
 #### Match backup cadence to workload profile
 
-**When to run:** During initial backup design, and whenever the workload profile changes materially (new product launch, volume growth, or new compliance requirement). **Trigger:** New protection scope, schedule review, or an SLA renegotiation. **Context:** Design decision, not a command. **Purpose:** Translate stated RPO and RTO into a concrete full / differential / log cadence that the operations team can implement.
-
+Reach for this material when during initial backup design, and whenever the workload profile changes materially (new product launch, volume growth, or new compliance requirement). It usually becomes relevant when new protection scope, schedule review, or an SLA renegotiation. Design decision, not a command. The operational goal is to translate stated RPO and RTO into a concrete full / differential / log cadence that the operations team can implement.
 | Workload profile | Full backup | Differential backup | Log backup | Rationale |
 |---|---|---|---|---|
 | High-value OLTP (financial data, user-generated content) | Daily | Every 4–6 hours | Every 5–15 minutes | Low RPO dominates; frequent log backups keep the data-loss window short. Diffs shrink restore time between fulls. |
@@ -1350,8 +1324,7 @@ Local backups are operationally useful but not sufficient as a resilience design
 
 #### Implement 3-2-1 for SQL Server backup
 
-**When to run:** During initial protection design, and whenever the storage topology changes. **Trigger:** Compliance audit, disaster-recovery review, or infrastructure change. **Context:** Design decision. **Purpose:** Ensure that the loss of a single host, storage device, or region does not make the database unrecoverable.
-
+Reach for this material when during initial protection design, and whenever the storage topology changes. It usually becomes relevant when compliance audit, disaster-recovery review, or infrastructure change. Design decision. The operational goal is to ensure that the loss of a single host, storage device, or region does not make the database unrecoverable.
 | Rule element | Practical meaning for SQL Server | How the demo chain maps |
 |---|---|---|
 | 3 copies of the data | Production database + 2 independent backup copies | Live `stoxx`, `stoxx_full_chain.bak` on local disk, `stoxx_full.bak` on GCS |
@@ -1368,8 +1341,7 @@ SQL Server records retention metadata inside the backup media header via `RETAIN
 
 #### Set backup retention metadata in the command
 
-**When to run:** On every scheduled backup when the policy requires visible retention labeling. **Trigger:** Compliance audit requirement, or protection against another job's `INIT` overwrite. **Context:** T-SQL option on `BACKUP DATABASE` / `BACKUP LOG`. **Purpose:** Record a retention hint inside the backup media header so a later `BACKUP ... INIT` against the same media will refuse to overwrite it until the retention window has elapsed.
-
+Reach for this material when on every scheduled backup when the policy requires visible retention labeling. It usually becomes relevant when compliance audit requirement, or protection against another job's `INIT` overwrite. T-SQL option on `BACKUP DATABASE` / `BACKUP LOG`. The operational goal is to record a retention hint inside the backup media header so a later `BACKUP ... INIT` against the same media will refuse to overwrite it until the retention window has elapsed.
 > [!warning] RETAINDAYS does not enforce retention
 >
 > `RETAINDAYS = 30` does not mean "SQL Server will keep this file for 30 days". It means "another BACKUP command using `INIT` against this exact media file will refuse the overwrite until 30 days have passed". If you manually delete the file, or if a filesystem cleanup job deletes it, SQL Server has no visibility. For real retention enforcement, use object-storage lifecycle rules (GCS `gsutil lifecycle`, or the equivalent), filesystem retention on a backup appliance, or a backup product that owns its own catalog.
@@ -1398,8 +1370,7 @@ A restore drill is a periodic exercise in which the most recent backup chain is 
 
 #### Schedule and structure a restore drill
 
-**When to run:** Monthly at minimum for production databases; weekly for the highest-value systems. **Trigger:** Scheduled calendar event, or any change to the backup configuration (new target, new encryption, new credential). **Context:** Requires a side-by-side restore target — either a separate instance or a disposable database name on the same instance. **Purpose:** Prove that the backup chain produces a usable restored database, that the credentials still work, and that the team knows the sequence.
-
+Reach for this material when monthly at minimum for production databases; weekly for the highest-value systems. It usually becomes relevant when scheduled calendar event, or any change to the backup configuration (new target, new encryption, new credential). Requires a side-by-side restore target — either a separate instance or a disposable database name on the same instance. The operational goal is to prove that the backup chain produces a usable restored database, that the credentials still work, and that the team knows the sequence.
 > [!success] Restore drill structure
 >
 > A full drill has six stages, and skipping any of them produces a false sense of safety:

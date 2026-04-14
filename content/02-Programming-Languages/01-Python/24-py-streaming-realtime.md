@@ -1106,7 +1106,7 @@ Dedicated gateways that handle large file transfers with multiplexing, packet-le
 
 Managed service for scheduled, recurring transfers between GCS buckets, S3, Azure, or HTTP endpoints. Handles retries, bandwidth throttling, and incremental sync.
 
-**When to use:** Scheduled cross-cloud data replication (S3 → GCS nightly), large dataset migration (TB-scale, multi-day), on-prem NAS → GCS via Transfer Service for on-premises data.
+Use this service when the transfer itself needs to be treated as an operational workflow rather than a one-off script. It is the right fit for scheduled S3 → GCS replication, multi-day large-volume migrations, and on-premises NAS ingestion where agent pools, managed retries, and transfer-state tracking matter more than hand-built orchestration.
 
 ```bash
 gcloud transfer jobs create \\

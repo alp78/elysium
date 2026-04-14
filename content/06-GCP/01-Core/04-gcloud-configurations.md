@@ -79,10 +79,7 @@ Named configurations are the unit of context switching in Cloud SDK. Each config
 
 #### List the configurations currently available
 
-**When to run:** Before any multi-project or multi-account work, and before creating or deleting a configuration.
-**Trigger:** You need to see which saved contexts exist and which one is active right now.
-**Context:** Read-only `gcloud` command. It reads the local Cloud SDK configuration store and does not call a resource-specific API.
-**Purpose:** Inventory the available named configurations and confirm the current default context.
+Before any multi-project or multi-account work, and before creating or deleting a configuration. It is typically triggered by you need to see which saved contexts exist and which one is active right now. Read-only `gcloud` command. It reads the local Cloud SDK configuration store and does not call a resource-specific API. Inventory the available named configurations and confirm the current default context.
 
 *List every configuration in the current Cloud SDK root and mark the active one.*
 
@@ -99,10 +96,7 @@ The fresh SDK root already contains `default`, and that configuration is active.
 
 #### Create a scratch configuration
 
-**When to run:** When you need a separate context for another project, account, workflow, or temporary test.
-**Trigger:** You want to stop overwriting the properties of the currently active configuration.
-**Context:** State-changing local command. It writes a new `config_<name>` file under the Cloud SDK configuration root.
-**Purpose:** Create an isolated property container so different environments do not share one mutable default profile.
+When you need a separate context for another project, account, workflow, or temporary test. It is typically triggered by you want to stop overwriting the properties of the currently active configuration. State-changing local command. It writes a new `config_<name>` file under the Cloud SDK configuration root. Create an isolated property container so different environments do not share one mutable default profile.
 
 *Create a new named configuration for scratch work.*
 
@@ -119,10 +113,7 @@ Activated [p5-scratch].
 
 #### Inspect a newly created configuration
 
-**When to run:** Immediately after creation, or whenever you want to verify exactly which properties a named configuration contains.
-**Trigger:** You need to know whether a configuration is still empty or already carries inherited-looking defaults from prior edits.
-**Context:** Read-only command against the local Cloud SDK store. It does not change the active configuration.
-**Purpose:** Show the exact saved properties for one configuration file.
+Immediately after creation, or whenever you want to verify exactly which properties a named configuration contains. It is typically triggered by you need to know whether a configuration is still empty or already carries inherited-looking defaults from prior edits. Read-only command against the local Cloud SDK store. It does not change the active configuration. Show the exact saved properties for one configuration file.
 
 | Output field | Meaning |
 |---|---|
@@ -146,10 +137,7 @@ A new configuration starts empty. `gcloud` does not clone the prior configuratio
 
 #### Switch back to another saved configuration
 
-**When to run:** After temporary work is complete, or when you need to move from one environment context to another.
-**Trigger:** The active configuration does not match the environment you intend to operate on next.
-**Context:** State-changing local command. It flips the active configuration pointer but does not edit the property values inside any configuration file.
-**Purpose:** Make one saved configuration become the current default context for subsequent commands.
+After temporary work is complete, or when you need to move from one environment context to another. It is typically triggered by the active configuration does not match the environment you intend to operate on next. State-changing local command. It flips the active configuration pointer but does not edit the property values inside any configuration file. Make one saved configuration become the current default context for subsequent commands.
 
 > [!danger] Wrong-project risk after switching into production
 >
@@ -173,10 +161,7 @@ Activation changes which property file `gcloud` reads by default. It does not me
 
 #### Delete a non-active configuration
 
-**When to run:** After a temporary configuration is no longer needed and you have already switched to a different active configuration.
-**Trigger:** Scratch, migration, or incident-specific configurations have become clutter and should not remain selectable.
-**Context:** State-changing local command. The target configuration must not be active at deletion time.
-**Purpose:** Remove an unused configuration file and reduce the risk of switching into a stale context later.
+After a temporary configuration is no longer needed and you have already switched to a different active configuration. It is typically triggered by scratch, migration, or incident-specific configurations have become clutter and should not remain selectable. State-changing local command. The target configuration must not be active at deletion time. Remove an unused configuration file and reduce the risk of switching into a stale context later.
 
 *Delete the earlier scratch configuration after switching away from it.*
 
@@ -221,10 +206,7 @@ Properties are the actual values stored inside a configuration. `gcloud config c
 
 #### Inspect the active configuration's saved properties
 
-**When to run:** Before troubleshooting odd command defaults, and before changing any property.
-**Trigger:** You need to know which default values the current configuration will inject into later commands.
-**Context:** Read-only local command against the active configuration file.
-**Purpose:** Show the exact property values currently saved in the active configuration.
+Before troubleshooting odd command defaults, and before changing any property. It is typically triggered by you need to know which default values the current configuration will inject into later commands. Read-only local command against the active configuration file. Show the exact property values currently saved in the active configuration.
 
 *Print all currently set properties for the active configuration.*
 
@@ -250,10 +232,7 @@ Only properties that are currently set are shown by default. This is why `config
 
 #### Read one property directly
 
-**When to run:** When you only need one default value and do not want the full property dump.
-**Trigger:** You want a fast assertion in a script, prompt helper, or manual preflight check.
-**Context:** Read-only local command. It fetches one property from the effective configuration state.
-**Purpose:** Return a single value that can be checked, piped, or embedded in automation.
+When you only need one default value and do not want the full property dump. It is typically triggered by you want a fast assertion in a script, prompt helper, or manual preflight check. Read-only local command. It fetches one property from the effective configuration state. Return a single value that can be checked, piped, or embedded in automation.
 
 > [!info] `get-value` is a compatibility alias
 >
@@ -273,10 +252,7 @@ This is the fastest way to confirm project context before a destructive command.
 
 #### Set the default project
 
-**When to run:** During initial workstation setup, after switching to a new environment, or when a script should inherit one project implicitly.
-**Trigger:** The active configuration does not yet point at the project you intend to operate on.
-**Context:** State-changing local command. It writes `core/project` into the active configuration file.
-**Purpose:** Make future `gcloud` commands default to `bq-wh-nb` without repeating `--project`.
+During initial workstation setup, after switching to a new environment, or when a script should inherit one project implicitly. It is typically triggered by the active configuration does not yet point at the project you intend to operate on. State-changing local command. It writes `core/project` into the active configuration file. Make future `gcloud` commands default to `bq-wh-nb` without repeating `--project`.
 
 *Write the default project into the active configuration.*
 
@@ -292,10 +268,7 @@ The change is local to the active configuration unless `--installation` is used.
 
 #### Set a service-specific property
 
-**When to run:** When one command group such as Cloud Run, Compute Engine, or Dataproc should inherit a service-local default.
-**Trigger:** Repeated commands keep needing the same region or zone flag.
-**Context:** State-changing local command. It writes one non-`core` property into the active configuration file.
-**Purpose:** Reduce repeated flags for one service surface without changing unrelated defaults.
+When one command group such as Cloud Run, Compute Engine, or Dataproc should inherit a service-local default. It is typically triggered by repeated commands keep needing the same region or zone flag. State-changing local command. It writes one non-`core` property into the active configuration file. Reduce repeated flags for one service surface without changing unrelated defaults.
 
 *Set the default Cloud Run region in the active configuration.*
 
@@ -311,10 +284,7 @@ This change affects commands that respect `run/region`. It does not change Compu
 
 #### Unset a property you no longer want inherited
 
-**When to run:** When a saved default has become misleading, stale, or too specific for the next workload.
-**Trigger:** You keep inheriting a region, zone, or project that should no longer be implicit.
-**Context:** State-changing local command. It removes one property from the active configuration file.
-**Purpose:** Force future commands to require an explicit flag or to fall back to another precedence source.
+When a saved default has become misleading, stale, or too specific for the next workload. It is typically triggered by you keep inheriting a region, zone, or project that should no longer be implicit. State-changing local command. It removes one property from the active configuration file. Force future commands to require an explicit flag or to fall back to another precedence source.
 
 *Remove the saved Cloud Run region from the active configuration.*
 
@@ -369,10 +339,7 @@ For the live examples below, the session also contained a second saved configura
 
 #### Override the active configuration for one PowerShell session
 
-**When to run:** During CI, debugging, or temporary shell work where you must not persist a context switch to disk.
-**Trigger:** You need a different configuration only for the current process, not for every later shell.
-**Context:** PowerShell environment variable assignment followed by a read-only `gcloud` command. The configuration files on disk are not edited.
-**Purpose:** Make `gcloud` behave as if a different named configuration were active for this session only.
+During CI, debugging, or temporary shell work where you must not persist a context switch to disk. It is typically triggered by you need a different configuration only for the current process, not for every later shell. PowerShell environment variable assignment followed by a read-only `gcloud` command. The configuration files on disk are not edited. Make `gcloud` behave as if a different named configuration were active for this session only.
 
 *Temporarily force `gcloud` to use `p5-override` as the active configuration for this PowerShell process.*
 
@@ -391,10 +358,7 @@ The on-disk active configuration had already been switched back to `default`, bu
 
 #### Override only the project value for one PowerShell session
 
-**When to run:** When you want to keep the active configuration but temporarily replace just one property, usually `core/project`.
-**Trigger:** A wrapper script or shell session needs a different project default without editing the saved configuration file.
-**Context:** PowerShell environment variable assignment followed by a read-only `gcloud info` command that exposes the property's source metadata.
-**Purpose:** Prove that the effective project value came from the environment rather than the property file.
+When you want to keep the active configuration but temporarily replace just one property, usually `core/project`. It is typically triggered by A wrapper script or shell session needs a different project default without editing the saved configuration file. PowerShell environment variable assignment followed by a read-only `gcloud info` command that exposes the property's source metadata. Prove that the effective project value came from the environment rather than the property file.
 
 | Output field | Meaning |
 |---|---|
@@ -451,10 +415,7 @@ Every named configuration lives as a file on disk. The active file name follows 
 
 #### Print the Cloud SDK root currently in use
 
-**When to run:** When configuration behavior looks inconsistent across shells, or when you suspect a custom SDK root is in effect.
-**Trigger:** A configuration appears to exist in one shell but not in another, or paths in logs do not match the expected user profile.
-**Context:** Read-only diagnostic command. It prints metadata about the current Cloud SDK installation and active configuration root.
-**Purpose:** Show which directory `gcloud` is actually using as its configuration home.
+When configuration behavior looks inconsistent across shells, or when you suspect a custom SDK root is in effect. It is typically triggered by A configuration appears to exist in one shell but not in another, or paths in logs do not match the expected user profile. Read-only diagnostic command. It prints metadata about the current Cloud SDK installation and active configuration root. Show which directory `gcloud` is actually using as its configuration home.
 
 *Return the current Cloud SDK configuration root directory.*
 
@@ -470,10 +431,7 @@ This live output confirms that the session was running under a disposable SDK ro
 
 #### Print the exact active configuration file path
 
-**When to run:** When you need to confirm which `config_<name>` file is currently being read.
-**Trigger:** The effective configuration seems different from what `activate` last reported, or you are auditing session-level overrides.
-**Context:** Read-only diagnostic command. It prints one path projection from `gcloud info`.
-**Purpose:** Identify the exact configuration file currently backing the active context.
+When you need to confirm which `config_<name>` file is currently being read. It is typically triggered by the effective configuration seems different from what `activate` last reported, or you are auditing session-level overrides. Read-only diagnostic command. It prints one path projection from `gcloud info`. Identify the exact configuration file currently backing the active context.
 
 *Return the full path to the active configuration file.*
 

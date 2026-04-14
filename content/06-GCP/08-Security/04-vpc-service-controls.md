@@ -235,10 +235,7 @@ This subsection establishes why actual perimeter creation is out of scope for th
 
 #### List visible organizations for the current credentials
 
-**When to run:** Before any VPC-SC design work.
-**Trigger:** You need to know whether the current project is attached to an organization visible to the current principal.
-**Context:** Read-only organization inventory lookup.
-**Purpose:** Determine whether Access Context Manager policy objects are even available.
+Before any VPC-SC design work. It is typically triggered by you need to know whether the current project is attached to an organization visible to the current principal. Read-only organization inventory lookup. Determine whether Access Context Manager policy objects are even available.
 
 ```bash
 gcloud organizations list --format=json
@@ -252,10 +249,7 @@ No visible organization means there is no visible Access Context Manager policy 
 
 #### Describe the current project
 
-**When to run:** Immediately after the organization check.
-**Trigger:** You need to confirm the project identity and whether parent data is visible.
-**Context:** Read-only project metadata lookup.
-**Purpose:** Show the project number that would be added to a perimeter and prove that no parent is visible in the returned metadata.
+Immediately after the organization check. It is typically triggered by you need to confirm the project identity and whether parent data is visible. Read-only project metadata lookup. Show the project number that would be added to a perimeter and prove that no parent is visible in the returned metadata.
 
 ```bash
 gcloud projects describe \
@@ -295,10 +289,7 @@ This subsection verifies which important data-platform APIs are listed as VPC-SC
 
 #### List selected VPC-SC-supported services
 
-**When to run:** Before drafting the perimeter's restricted-services list.
-**Trigger:** You need to confirm whether the APIs you care about participate in VPC-SC.
-**Context:** Read-only lookup against the supported-services catalog.
-**Purpose:** Validate the perimeter relevance of common data-platform APIs.
+Before drafting the perimeter's restricted-services list. It is typically triggered by you need to confirm whether the APIs you care about participate in VPC-SC. Read-only lookup against the supported-services catalog. Validate the perimeter relevance of common data-platform APIs.
 
 ```bash
 gcloud access-context-manager supported-services list \
@@ -318,10 +309,7 @@ This confirms that BigQuery, Cloud Storage, Secret Manager, and Cloud Run Admin 
 
 #### Check support status for a broad BigQuery admin role
 
-**When to run:** When you want to know whether a role's permission set aligns cleanly with VPC-SC support.
-**Trigger:** A design assumes "BigQuery admin" implies uniform VPC-SC behavior.
-**Context:** Read-only supported-permissions lookup.
-**Purpose:** Surface the compatibility warning that broad roles often contain a mix of supported and unsupported permissions.
+When you want to know whether a role's permission set aligns cleanly with VPC-SC support. It is typically triggered by A design assumes "BigQuery admin" implies uniform VPC-SC behavior. Read-only supported-permissions lookup. Surface the compatibility warning that broad roles often contain a mix of supported and unsupported permissions.
 
 ```bash
 gcloud access-context-manager supported-permissions describe \
@@ -346,10 +334,7 @@ This subsection uses the CLI help output as a live control-plane map.
 
 #### Show what an access level evaluates
 
-**When to run:** Before designing trusted-ingress conditions.
-**Trigger:** You need to separate access levels from IAM and understand what attributes they use.
-**Context:** CLI help inspection.
-**Purpose:** Show the raw request attributes access levels classify.
+Before designing trusted-ingress conditions. It is typically triggered by you need to separate access levels from IAM and understand what attributes they use. CLI help inspection. Show the raw request attributes access levels classify.
 
 ```bash
 gcloud access-context-manager levels --help | Select-String -Pattern 'IP address|device identity|time of day'
@@ -363,10 +348,7 @@ Access levels classify requests by contextual attributes. They are not role bind
 
 #### Show the perimeter-create surface, including bridges and VPC accessible services
 
-**When to run:** Before writing Terraform or CLI rollout steps.
-**Trigger:** You need to verify the current SDK surface for regular perimeters, bridge perimeters, restricted services, and VPC accessible services.
-**Context:** CLI help inspection.
-**Purpose:** Confirm that the local SDK supports the flags required by the design.
+Before writing Terraform or CLI rollout steps. It is typically triggered by you need to verify the current SDK surface for regular perimeters, bridge perimeters, restricted services, and VPC accessible services. CLI help inspection. Confirm that the local SDK supports the flags required by the design.
 
 ```bash
 gcloud access-context-manager perimeters create --help | Select-String -Pattern '--perimeter-type|--resources|--restricted-services|--enable-vpc-accessible-services|--vpc-allowed-services' -Context 0,1
@@ -396,10 +378,7 @@ This is the exact live surface for:
 
 #### Show the bridge-versus-regular perimeter behavior
 
-**When to run:** When cross-project data exchange between protected projects is part of the design.
-**Trigger:** You need to know whether a regular perimeter or a bridge is the right construct.
-**Context:** CLI help inspection.
-**Purpose:** Confirm the current SDK description of bridge semantics.
+When cross-project data exchange between protected projects is part of the design. It is typically triggered by you need to know whether a regular perimeter or a bridge is the right construct. CLI help inspection. Confirm the current SDK description of bridge semantics.
 
 ```bash
 gcloud access-context-manager perimeters create --help | Select-String -Pattern 'bridge|regular' -Context 0,1
@@ -422,10 +401,7 @@ The important design takeaway is that a bridge is for controlled exchange betwee
 
 #### Show the ingress and egress policy update surface
 
-**When to run:** Before planning rollout exceptions for external callers or partner delivery.
-**Trigger:** You need to verify how the current SDK models ingress and egress policy updates.
-**Context:** CLI help inspection.
-**Purpose:** Show the exact update flags used to manage policy files.
+Before planning rollout exceptions for external callers or partner delivery. It is typically triggered by you need to verify how the current SDK models ingress and egress policy updates. CLI help inspection. Show the exact update flags used to manage policy files.
 
 ```bash
 gcloud access-context-manager perimeters update --help | Select-String -Pattern 'ingress|egress|--clear-ingress-policies|--set-ingress-policies|--clear-egress-policies|--set-egress-policies' -Context 0,1
@@ -450,10 +426,7 @@ This is the live reminder that most real VPC-SC rollouts depend on external YAML
 
 #### Show the current dry-run control surface
 
-**When to run:** Before any planned cutover into enforce mode.
-**Trigger:** You want to confirm whether the SDK supports dry-run configuration and explicit promotion into enforce mode.
-**Context:** CLI help inspection.
-**Purpose:** Verify the live dry-run workflow surface.
+Before any planned cutover into enforce mode. It is typically triggered by you want to confirm whether the SDK supports dry-run configuration and explicit promotion into enforce mode. CLI help inspection. Verify the live dry-run workflow surface.
 
 ```bash
 gcloud access-context-manager perimeters dry-run --help
@@ -489,10 +462,7 @@ This is why dry run is operationally important. Without an explicit dry-run spec
 
 #### Confirm the perimeter membership boundary
 
-**When to run:** Before assuming buckets, datasets, or service accounts can be added directly to a perimeter.
-**Trigger:** A design proposes adding something other than projects as perimeter members.
-**Context:** CLI help inspection.
-**Purpose:** Prove the membership rule enforced by the current control plane.
+Before assuming buckets, datasets, or service accounts can be added directly to a perimeter. It is typically triggered by A design proposes adding something other than projects as perimeter members. CLI help inspection. Prove the membership rule enforced by the current control plane.
 
 ```bash
 gcloud access-context-manager perimeters --help | Select-String -Pattern 'Currently, the only allowed members of a service perimeter are projects'
@@ -510,10 +480,7 @@ There is no active perimeter in this environment, so the correct current logging
 
 ### PowerShell / Linux | gcloud logging | check for current VPC-SC denial evidence
 
-**When to run:** During incident triage or after a dry-run or enforce rollout.
-**Trigger:** You need to know whether current audit logs show VPC-SC metadata.
-**Context:** Read-only Cloud Logging query.
-**Purpose:** Distinguish "no perimeter denials exist" from "the query itself failed."
+During incident triage or after a dry-run or enforce rollout. It is typically triggered by you need to know whether current audit logs show VPC-SC metadata. Read-only Cloud Logging query. Distinguish "no perimeter denials exist" from "the query itself failed.".
 
 ```bash
 gcloud logging read \

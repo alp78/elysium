@@ -137,10 +137,7 @@ The severity is maximum because every second spent full is a second of bronze in
 
 #### Audit the log reuse wait descriptor
 
-**When to run:** at the start of any incident where a user database is throwing error 9002 or any session is waiting on log space.
-**Trigger:** Airflow surfacing `9002` in a `pyodbc.Error`, SQL Server Agent job failing with "transaction log is full", or a monitoring alert on `Percent Log Used` above 85%.
-**Context:** T-SQL session against the primary instance. Read-only; safe from a second session while writes are still failing. Requires `VIEW SERVER STATE` to see databases the user does not own.
-**Purpose:** identify which database is stuck and what kind of hold is blocking log reuse, so you can pick the correct fix branch.
+At the start of any incident where a user database is throwing error 9002 or any session is waiting on log space. It is typically triggered by airflow surfacing `9002` in a `pyodbc.Error`, SQL Server Agent job failing with "transaction log is full", or a monitoring alert on `Percent Log Used` above 85%. T-SQL session against the primary instance. Read-only; safe from a second session while writes are still failing. Requires `VIEW SERVER STATE` to see databases the user does not own. Identify which database is stuck and what kind of hold is blocking log reuse, so you can pick the correct fix branch.
 
 > [!info]- Query mechanics
 >
@@ -195,10 +192,7 @@ All three user databases on `stoxx` are in `FULL` recovery with `NOTHING` as the
 
 #### Measure current log space consumption
 
-**When to run:** as the next step after the reuse-wait audit, to know whether you have minutes or seconds before the pipeline starts erroring.
-**Trigger:** `log_reuse_wait_desc` returns anything other than `NOTHING`, or an automated log-usage alert fires above 70%.
-**Context:** T-SQL session, read-only, negligible cost. `sys.dm_db_log_space_usage` returns one row per database the current session has permission to see.
-**Purpose:** decide whether the database has headroom to continue running while you investigate the reuse-wait hold, or whether you must take an emergency log backup immediately.
+As the next step after the reuse-wait audit, to know whether you have minutes or seconds before the pipeline starts erroring. It is typically triggered by `log_reuse_wait_desc` returns anything other than `NOTHING`, or an automated log-usage alert fires above 70%. T-SQL session, read-only, negligible cost. `sys.dm_db_log_space_usage` returns one row per database the current session has permission to see. Decide whether the database has headroom to continue running while you investigate the reuse-wait hold, or whether you must take an emergency log backup immediately.
 
 *Show allocated log size, used log, used percentage, and log bytes not yet captured by a log backup, per database.*
 
@@ -240,10 +234,7 @@ The stoxx log file is sized at 1 GB with 1.15% currently in use and only 1.7 MB 
 
 #### Audit database file allocation and growth policy
 
-**When to run:** when the log-usage query shows `total_log_size_mb` is pinned at a low value but writes are still failing — indicating the log cannot grow further.
-**Trigger:** error 9002 reported even though `used_log_pct` is below 100% (i.e. the log cannot autogrow), or autogrow is percent-based and causing unpredictable growth spikes.
-**Context:** T-SQL session against the affected database's instance. Read-only against `sys.master_files`, negligible cost.
-**Purpose:** confirm the log file's `MAXSIZE` setting and `FILEGROWTH` policy, so you can decide whether to widen the ceiling or fix the autogrow profile.
+When the log-usage query shows `total_log_size_mb` is pinned at a low value but writes are still failing — indicating the log cannot grow further. It is typically triggered by error 9002 reported even though `used_log_pct` is below 100% (i.e. the log cannot autogrow), or autogrow is percent-based and causing unpredictable growth spikes. T-SQL session against the affected database's instance. Read-only against `sys.master_files`, negligible cost. Confirm the log file's `MAXSIZE` setting and `FILEGROWTH` policy, so you can decide whether to widen the ceiling or fix the autogrow profile.
 
 *Show data and log file layout for the stoxx database, including max size and autogrow policy.*
 
@@ -293,10 +284,7 @@ The stoxx log file currently sits at 1032 MB with a `max_size_mb` ceiling of 2 T
 
 #### Identify sessions holding open transactions
 
-**When to run:** when `log_reuse_wait_desc` returns `ACTIVE_TRANSACTION` and you need to find the specific session to kill or wait out.
-**Trigger:** the reuse-wait audit names `ACTIVE_TRANSACTION` and log usage is climbing toward 85%.
-**Context:** T-SQL session; requires `VIEW SERVER STATE`. Read-only, negligible cost, even on busy instances.
-**Purpose:** list every session with an open transaction, the age of the transaction, and enough identifying metadata (login, host, program) to decide whether it is a legitimate long-running ETL batch or an orphaned pyodbc connection that must be killed.
+When `log_reuse_wait_desc` returns `ACTIVE_TRANSACTION` and you need to find the specific session to kill or wait out. It is typically triggered by the reuse-wait audit names `ACTIVE_TRANSACTION` and log usage is climbing toward 85%. T-SQL session; requires `VIEW SERVER STATE`. Read-only, negligible cost, even on busy instances. List every session with an open transaction, the age of the transaction, and enough identifying metadata (login, host, program) to decide whether it is a legitimate long-running ETL batch or an orphaned pyodbc connection that must be killed.
 
 *List every user session currently holding an open transaction, with transaction age in seconds.*
 
@@ -355,10 +343,7 @@ At capture time no session on `stoxx` had an open transaction, which is the heal
 >
 > Configure `filelocation.defaultbackupdir` to a dedicated backup volume (e.g. `/backup/mssql`) so that any `BACKUP LOG` without an explicit `TO DISK` path lands on a volume with guaranteed headroom. For true emergencies, stream directly to a mounted GCS FUSE bucket (`gs://stoxx-sql-bucket/stoxx/log/`) — the backup will take longer but will not compete with the failing workload for local I/O.
 
-**When to run:** after the reuse-wait audit has named `LOG_BACKUP`, and only after confirming the target backup path has free space.
-**Trigger:** used_log_pct above 85% and the log backup job has not run for more than 30 minutes.
-**Context:** T-SQL session via `sqlcmd`, `pyodbc`, or SSMS. State-changing: writes to disk. Requires `BACKUP DATABASE` permission on the target database.
-**Purpose:** free the VLFs holding already-committed log records so the log file can be reused, which is the only way to resolve error 9002 without shrinking or detaching.
+After the reuse-wait audit has named `LOG_BACKUP`, and only after confirming the target backup path has free space. It is typically triggered by used_log_pct above 85% and the log backup job has not run for more than 30 minutes. T-SQL session via `sqlcmd`, `pyodbc`, or SSMS. State-changing: writes to disk. Requires `BACKUP DATABASE` permission on the target database. Free the VLFs holding already-committed log records so the log file can be reused, which is the only way to resolve error 9002 without shrinking or detaching.
 
 *Run an emergency log backup of stoxx to the backup directory, using compression and checksum.*
 
@@ -452,10 +437,7 @@ The top two rows show consecutive log backups with contiguous LSN ranges (`last_
 >
 > After running `KILL <spid>`, poll `KILL <spid> WITH STATUSONLY` every few seconds to see the rollback percentage. If the percentage is not advancing, the session is stuck in an undoable state (e.g. waiting on I/O from a failed volume) and the correct next step is a SQL Server service restart, not more aggressive kill commands. Never use `KILL WITH STATUSONLY` as the first step — it requires the session to already be in rollback.
 
-**When to run:** only after the open-transactions query has confirmed the session is orphaned (sleeping, long-lived, program name matches a known pipeline script) and the owning team has been notified.
-**Trigger:** `log_reuse_wait_desc = ACTIVE_TRANSACTION`, `tx_age_seconds > 300`, session status `sleeping`.
-**Context:** T-SQL session, `ALTER ANY CONNECTION` or `sysadmin` required. State-changing and irreversible for the target session.
-**Purpose:** release the log hold by forcing the orphaned session to roll back, after which `log_reuse_wait_desc` should drop back to `NOTHING` within one or two checkpoint intervals.
+Only after the open-transactions query has confirmed the session is orphaned (sleeping, long-lived, program name matches a known pipeline script) and the owning team has been notified. It is typically triggered by `log_reuse_wait_desc = ACTIVE_TRANSACTION`, `tx_age_seconds > 300`, session status `sleeping`. T-SQL session, `ALTER ANY CONNECTION` or `sysadmin` required. State-changing and irreversible for the target session. Release the log hold by forcing the orphaned session to roll back, after which `log_reuse_wait_desc` should drop back to `NOTHING` within one or two checkpoint intervals.
 
 *Terminate the session holding the long-running transaction; replace 62 with the actual spid from the open-transactions query.*
 
@@ -483,10 +465,7 @@ KILL 62 WITH STATUSONLY;
 >
 > After an emergency shrink, use `ALTER DATABASE stoxx MODIFY FILE (NAME = stoxx_log, SIZE = 10240MB)` to regrow the log to its normal operational size in one allocation. This replaces the fragmented post-shrink VLFs with a clean VLF layout (16 or 32 VLFs depending on size) and prevents the fragmentation from persisting. Then schedule log backups every 15 minutes via `sp_add_schedule` so the log never fills again.
 
-**When to run:** only after `BACKUP LOG` has already succeeded and `used_log_pct` is still above 90% and the underlying disk is below the 5% free threshold.
-**Trigger:** disk-level free space alert concurrent with the log fullness incident.
-**Context:** T-SQL session against the affected database. State-changing, allocates no new pages but triggers file-level shrinking.
-**Purpose:** return freed VLF space to the operating system so the disk regains headroom, bridging until the regrow step restores a clean layout.
+Only after `BACKUP LOG` has already succeeded and `used_log_pct` is still above 90% and the underlying disk is below the 5% free threshold. It is typically triggered by disk-level free space alert concurrent with the log fullness incident. T-SQL session against the affected database. State-changing, allocates no new pages but triggers file-level shrinking. Return freed VLF space to the operating system so the disk regains headroom, bridging until the regrow step restores a clean layout.
 
 *Shrink the stoxx log file down to 1 GB; run only after a successful emergency log backup and only during a disk-space emergency.*
 
@@ -516,10 +495,7 @@ The severity is critical because a deadlock in the overnight pipeline produces a
 
 #### Reproduce a deadlock against stoxx to capture the symptoms
 
-**When to run:** during note rewrites, post-mortem reproductions, or when teaching the deadlock pattern to new engineers. Never run against a production database.
-**Trigger:** a production deadlock incident where the `system_health` ring buffer does not contain the event (ring buffer rotated) and you need a fresh captured example to compare against.
-**Context:** `race_demo.py` with two concurrent sessions. Creates and drops throwaway `dbo.race_deadlock_a` and `dbo.race_deadlock_b` tables, both state-changing. Requires `db_owner` on `stoxx`.
-**Purpose:** prove that a writer-writer deadlock produces error 1205 at the client and a corresponding `xml_deadlock_report` event in the `system_health` ring buffer, and demonstrate that `DEADLOCK_PRIORITY LOW` deterministically selects the low-priority session as the victim.
+During note rewrites, post-mortem reproductions, or when teaching the deadlock pattern to new engineers. Never run against a production database. It is typically triggered by a production deadlock incident where the `system_health` ring buffer does not contain the event (ring buffer rotated) and you need a fresh captured example to compare against. `race_demo.py` with two concurrent sessions. Creates and drops throwaway `dbo.race_deadlock_a` and `dbo.race_deadlock_b` tables, both state-changing. Requires `db_owner` on `stoxx`. Prove that a writer-writer deadlock produces error 1205 at the client and a corresponding `xml_deadlock_report` event in the `system_health` ring buffer, and demonstrate that `DEADLOCK_PRIORITY LOW` deterministically selects the low-priority session as the victim.
 
 > [!info]- Why two tables and opposite lock order
 >
@@ -584,10 +560,7 @@ Post-race state showing that session 1's update rolled back and session 2's upda
 
 #### Verify the deadlock is recorded in system_health ring buffer
 
-**When to run:** immediately after a deadlock incident has been observed by the client, or during a reproduction session to validate capture.
-**Trigger:** error 1205 observed in a pyodbc.Error, Dapper SqlException, or SQL Agent job output.
-**Context:** T-SQL session, read-only against the `system_health` Extended Events session. Requires `VIEW SERVER STATE`.
-**Purpose:** confirm that SQL Server captured the `xml_deadlock_report` event in the ring buffer so the deadlock graph can be extracted and analyzed offline.
+Immediately after a deadlock incident has been observed by the client, or during a reproduction session to validate capture. It is typically triggered by error 1205 observed in a pyodbc.Error, Dapper SqlException, or SQL Agent job output. T-SQL session, read-only against the `system_health` Extended Events session. Requires `VIEW SERVER STATE`. Confirm that SQL Server captured the `xml_deadlock_report` event in the ring buffer so the deadlock graph can be extracted and analyzed offline.
 
 > [!info]- system_health ring buffer mechanics
 >
@@ -627,10 +600,7 @@ WHERE s.name = 'system_health'
 
 #### Extract and inspect deadlock graph XML
 
-**When to run:** after confirming the ring buffer has non-zero deadlock events, to extract the actual waits-for graph and identify the resources and stored procedures involved.
-**Trigger:** follow-up step to the ring buffer count query above, usually during post-mortem analysis.
-**Context:** T-SQL session, read-only. The result set is XML — open each row in SSMS or extract with a Python XML parser for offline inspection.
-**Purpose:** find which objects (tables, pages, rows, keys) each session was holding and requesting, and which stored procedures or ad-hoc queries are producing the conflicting lock orders.
+After confirming the ring buffer has non-zero deadlock events, to extract the actual waits-for graph and identify the resources and stored procedures involved. It is typically triggered by follow-up step to the ring buffer count query above, usually during post-mortem analysis. T-SQL session, read-only. The result set is XML — open each row in SSMS or extract with a Python XML parser for offline inspection. Find which objects (tables, pages, rows, keys) each session was holding and requesting, and which stored procedures or ad-hoc queries are producing the conflicting lock orders.
 
 *Extract the xml_deadlock_report events from the system_health ring buffer as an XML column, one row per event.*
 
@@ -668,10 +638,7 @@ The `<process-list>` inside each `<deadlock>` element is the most important part
 >
 > Before enabling RCSI, pre-size tempdb to at least 4 × the largest transaction's data volume and monitor `sys.dm_tran_version_store_space_usage.reserved_space_kb` daily for the first two weeks. A busy pipeline that runs `UPDATE`-heavy transforms can grow the version store by tens of GB per hour, and if tempdb runs out of space the affected transactions fail with error 3958 or 3966. See [11-memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/memory-and-buffer-pool) for tempdb sizing guidance.
 
-**When to run:** during a planned maintenance window on a database that has reader-writer deadlocks as a recurring symptom and where tempdb capacity has been pre-sized.
-**Trigger:** multiple days of LCK_M_S or LCK_M_U deadlocks in the system_health ring buffer, or sustained blocking chain incidents from dashboard SELECT queries against the pipeline writer.
-**Context:** T-SQL session, requires `ALTER DATABASE` permission. State-changing and requires exclusive access briefly.
-**Purpose:** flip the database's default `READ_COMMITTED` isolation from locking-based to version-based so writers no longer block readers and the reader-writer class of deadlocks becomes impossible.
+During a planned maintenance window on a database that has reader-writer deadlocks as a recurring symptom and where tempdb capacity has been pre-sized. It is typically triggered by multiple days of LCK_M_S or LCK_M_U deadlocks in the system_health ring buffer, or sustained blocking chain incidents from dashboard SELECT queries against the pipeline writer. T-SQL session, requires `ALTER DATABASE` permission. State-changing and requires exclusive access briefly. Flip the database's default `READ_COMMITTED` isolation from locking-based to version-based so writers no longer block readers and the reader-writer class of deadlocks becomes impossible.
 
 *Take exclusive access, enable RCSI, return to multi-user mode. Must be run during a maintenance window — do not run against stoxx without explicit user approval.*
 
@@ -695,10 +662,7 @@ WHERE name = 'stoxx';
 
 #### Add deadlock retry logic to pipeline clients
 
-**When to run:** during code review of any new Python or C# code that writes to SQL Server from the pipeline or API layer, and as a retroactive hardening step on existing code.
-**Trigger:** first occurrence of a 1205 error in production logs, or routine code review on pipeline task PRs.
-**Context:** application code, not SQL. Python via `pyodbc`, C# via `Dapper` + `Polly`. Changes are idempotent: wrapping a block in retry logic does not affect correct behavior.
-**Purpose:** ensure that a deadlock victim retries the transaction instead of propagating the 1205 error to Airflow, which would mark the task failed and require manual intervention even when the retry would succeed.
+During code review of any new Python or C# code that writes to SQL Server from the pipeline or API layer, and as a retroactive hardening step on existing code. It is typically triggered by first occurrence of a 1205 error in production logs, or routine code review on pipeline task PRs. Application code, not SQL. Python via `pyodbc`, C# via `Dapper` + `Polly`. Changes are idempotent: wrapping a block in retry logic does not affect correct behavior. Ensure that a deadlock victim retries the transaction instead of propagating the 1205 error to Airflow, which would mark the task failed and require manual intervention even when the retry would succeed.
 
 *Python pyodbc wrapper that retries on error 1205 with exponential backoff, up to 3 attempts.*
 
@@ -775,10 +739,7 @@ The severity is critical for the same reason as log fullness: every second spent
 
 #### Audit data file allocation and free space
 
-**When to run:** during any disk-space incident on the SQL Server host, or as a weekly capacity-planning check.
-**Trigger:** disk-level free space alert, OS error 112 in the pipeline log, or `sp_spaceused` showing a filegroup above 85% utilization.
-**Context:** T-SQL session, read-only. `FILEPROPERTY` reads the file header and does not touch the file pages, so cost is negligible.
-**Purpose:** quantify allocated vs used vs free space per data file, so you can decide whether to widen the ceiling, resize the volume, or archive data.
+During any disk-space incident on the SQL Server host, or as a weekly capacity-planning check. It is typically triggered by disk-level free space alert, OS error 112 in the pipeline log, or `sp_spaceused` showing a filegroup above 85% utilization. T-SQL session, read-only. `FILEPROPERTY` reads the file header and does not touch the file pages, so cost is negligible. Quantify allocated vs used vs free space per data file, so you can decide whether to widen the ceiling, resize the volume, or archive data.
 
 *Show allocated MB, used MB, and free MB for every data and log file in the stoxx database.*
 
@@ -835,10 +796,7 @@ The stoxx data file is 83.7% full (596 MB used of 712 MB allocated) with 115 MB 
 
 #### Identify the largest tables in a filegroup
 
-**When to run:** after confirming the data file is near full, to decide which objects to archive, repartition, or move to a different filegroup.
-**Trigger:** filegroup utilization above 85% and no obvious runaway table.
-**Context:** T-SQL session, read-only. `sys.allocation_units` and `sys.partitions` are lightweight metadata reads; the query aggregates them and should return within seconds on instances with tens of thousands of objects.
-**Purpose:** produce a ranked list of tables by allocated page count, so you can target the biggest consumers with archive or compression operations first.
+After confirming the data file is near full, to decide which objects to archive, repartition, or move to a different filegroup. It is typically triggered by filegroup utilization above 85% and no obvious runaway table. T-SQL session, read-only. `sys.allocation_units` and `sys.partitions` are lightweight metadata reads; the query aggregates them and should return within seconds on instances with tens of thousands of objects. Produce a ranked list of tables by allocated page count, so you can target the biggest consumers with archive or compression operations first.
 
 *List the top 10 largest tables in stoxx by total allocated MB, with used MB, index type, and row count.*
 
@@ -896,10 +854,7 @@ ORDER BY total_mb DESC;
 >
 > Resize the disk to the next round size that gives at least 90 days of headroom at the current growth rate — not just enough to clear the immediate alert. Repeated small resize events waste operator time and leave the system in a state where every disk resize is visible as a production incident. After the resize, set an automated monitor on `sys.dm_io_virtual_file_stats` + filesystem free space and alert at 70%, 80%, and 90% utilization so the next resize is planned, not reactive.
 
-**When to run:** during a disk-full incident or proactively when the data volume crosses 80% utilization with no retention job scheduled.
-**Trigger:** filesystem alert on `/data/mssql`, or the data file audit above showing `free_mb < 15%` of `allocated_mb`.
-**Context:** GCP Console or `gcloud` CLI on a workstation with `compute.disks.update` IAM permission. State-changing on the infrastructure layer. The disk resize completes in seconds; the ext4 `resize2fs` completes in under a minute for a 500-GB volume.
-**Purpose:** give the filesystem more headroom so SQL Server's next autogrow event succeeds and normal write operations resume without any data movement.
+During a disk-full incident or proactively when the data volume crosses 80% utilization with no retention job scheduled. It is typically triggered by filesystem alert on `/data/mssql`, or the data file audit above showing `free_mb < 15%` of `allocated_mb`. GCP Console or `gcloud` CLI on a workstation with `compute.disks.update` IAM permission. State-changing on the infrastructure layer. The disk resize completes in seconds; the ext4 `resize2fs` completes in under a minute for a 500-GB volume. Give the filesystem more headroom so SQL Server's next autogrow event succeeds and normal write operations resume without any data movement.
 
 *Resize the GCE persistent disk backing /data/mssql from 500 GB to 1 TB with no downtime.*
 
@@ -923,10 +878,7 @@ df -h /data/mssql
 
 #### Raise the data file ceiling via ALTER DATABASE
 
-**When to run:** after the disk resize has succeeded and `df -h` confirms the new capacity, or as a proactive action during capacity planning when you know the workload will exceed the current `MAX_SIZE`.
-**Trigger:** data file at `max_size_mb` and autogrow failing with error 1105.
-**Context:** T-SQL session, requires `ALTER DATABASE` permission. State-changing but does not allocate pages; it only lifts the ceiling.
-**Purpose:** allow subsequent autogrow events to succeed up to the new ceiling, without requiring the DBA to intervene on every growth cycle.
+After the disk resize has succeeded and `df -h` confirms the new capacity, or as a proactive action during capacity planning when you know the workload will exceed the current `MAX_SIZE`. It is typically triggered by data file at `max_size_mb` and autogrow failing with error 1105. T-SQL session, requires `ALTER DATABASE` permission. State-changing but does not allocate pages; it only lifts the ceiling. Allow subsequent autogrow events to succeed up to the new ceiling, without requiring the DBA to intervene on every growth cycle.
 
 *Lift the stoxx data file ceiling to 400 GB and set the growth increment to 2 GB per autogrow event.*
 
@@ -960,10 +912,7 @@ The severity is maximum because a missing or corrupt backup converts any data-lo
 
 #### Take a verifiable full backup with checksum and stats
 
-**When to run:** as the routine nightly backup, or manually before any risky operation (major schema change, partition switch, DDL deployment).
-**Trigger:** scheduled SQL Server Agent job, or on-demand before a high-risk change window.
-**Context:** T-SQL session, `BACKUP DATABASE` permission. State-changing: writes to the backup device. Can run concurrently with production workload but competes for I/O; prefer scheduling outside peak hours.
-**Purpose:** produce a backup file that (a) contains data page checksums, (b) is compressed to reduce storage cost, and (c) reports its progress via `STATS` so the operator can see how far along a long-running backup is.
+As the routine nightly backup, or manually before any risky operation (major schema change, partition switch, DDL deployment). It is typically triggered by scheduled SQL Server Agent job, or on-demand before a high-risk change window. T-SQL session, `BACKUP DATABASE` permission. State-changing: writes to the backup device. Can run concurrently with production workload but competes for I/O; prefer scheduling outside peak hours. Produce a backup file that (a) contains data page checksums, (b) is compressed to reduce storage cost, and (c) reports its progress via `STATS` so the operator can see how far along a long-running backup is.
 
 *Back up the stoxx database to a checksum-verified compressed backup file on the backup volume.*
 
@@ -981,10 +930,7 @@ WITH COMPRESSION, CHECKSUM, INIT,
 
 #### Verify an existing backup without restoring it
 
-**When to run:** immediately after every `BACKUP DATABASE` or `BACKUP LOG`, and again before any restore operation when you want to confirm the backup is still intact.
-**Trigger:** routine post-backup verification step, or the first step of a disaster recovery procedure.
-**Context:** T-SQL session, requires permission to read the backup file. Read-only against the backup device; does not touch the database. Cost is proportional to the backup file size (SQL Server reads every page).
-**Purpose:** confirm the backup header is readable, the LSN range is consistent, and — when the backup was taken with `WITH CHECKSUM` — every page's checksum matches the stored value.
+Immediately after every `BACKUP DATABASE` or `BACKUP LOG`, and again before any restore operation when you want to confirm the backup is still intact. It is typically triggered by routine post-backup verification step, or the first step of a disaster recovery procedure. T-SQL session, requires permission to read the backup file. Read-only against the backup device; does not touch the database. Cost is proportional to the backup file size (SQL Server reads every page). Confirm the backup header is readable, the LSN range is consistent, and — when the backup was taken with `WITH CHECKSUM` — every page's checksum matches the stored value.
 
 *Verify an existing stoxx log backup file; this form does NOT re-check page checksums because the backup was not taken with WITH CHECKSUM.*
 
@@ -1022,10 +968,7 @@ This is the teaching moment. The first form silently succeeds, telling the opera
 
 #### Read the backup header to inspect metadata
 
-**When to run:** during disaster recovery triage (is this the backup I expect?), during routine audit of stale backup files, or when verifying that a file has been copied correctly.
-**Trigger:** uncertainty about which backup is which, unknown provenance of a backup file pulled from blob storage, or confirmation that a file is still readable after a transfer.
-**Context:** T-SQL session, read-only, fast (header is at the start of the file).
-**Purpose:** extract the backup set metadata (database name, LSN range, compatibility level, collation, checksum flag) so the operator can decide whether this file belongs to the restore sequence they are building.
+During disaster recovery triage (is this the backup I expect?), during routine audit of stale backup files, or when verifying that a file has been copied correctly. It is typically triggered by uncertainty about which backup is which, unknown provenance of a backup file pulled from blob storage, or confirmation that a file is still readable after a transfer. T-SQL session, read-only, fast (header is at the start of the file). Extract the backup set metadata (database name, LSN range, compatibility level, collation, checksum flag) so the operator can decide whether this file belongs to the restore sequence they are building.
 
 *Read the header metadata of the stoxx log backup file.*
 
@@ -1069,10 +1012,7 @@ RESTORE HEADERONLY FROM DISK = '/var/opt/mssql/backup/stoxx_log_004.trn';
 >
 > The safest pattern for busy production instances is to restore the most recent backup to a separate "dbcc" instance (different host, different volume) and run `CHECKDB` there. If CHECKDB finds corruption on the restored copy but the source database is healthy, the backup file itself is corrupt. If CHECKDB finds the same corruption on both, the source has a real physical page defect and you need to run `CHECKDB WITH REPAIR_ALLOW_DATA_LOSS` (as a last resort) or restore from an older, clean backup.
 
-**When to run:** weekly during the lowest-traffic maintenance window, or immediately after an I/O error is reported in the SQL Server error log, or before any high-stakes change that depends on the database being known-good.
-**Trigger:** scheduled maintenance job, or I/O error 824/825 in the error log, or unexplained `DBCC CHECKDB` consistency errors surfaced by other processes.
-**Context:** T-SQL session. Read-heavy; requires snapshot creation on supported editions or exclusive access otherwise. Fast on small databases; expensive on large ones.
-**Purpose:** detect and surface every logical and physical consistency error SQL Server can find, so corruption is caught at the source before it enters the backup chain and becomes an unrecoverable loss.
+Weekly during the lowest-traffic maintenance window, or immediately after an I/O error is reported in the SQL Server error log, or before any high-stakes change that depends on the database being known-good. It is typically triggered by scheduled maintenance job, or I/O error 824/825 in the error log, or unexplained `DBCC CHECKDB` consistency errors surfaced by other processes. T-SQL session. Read-heavy; requires snapshot creation on supported editions or exclusive access otherwise. Fast on small databases; expensive on large ones. Detect and surface every logical and physical consistency error SQL Server can find, so corruption is caught at the source before it enters the backup chain and becomes an unrecoverable loss.
 
 *Run a full DBCC CHECKDB against the stoxx database with no info messages and all error messages.*
 
@@ -1094,10 +1034,7 @@ The severity is maximum: an encrypted backup without the certificate is total da
 
 #### Audit TDE state on the instance and every database
 
-**When to run:** during routine security audits, before any restore or migration, and as the first step in TDE certificate rotation.
-**Trigger:** quarterly compliance audit, pre-migration checklist, or investigation after any database restore failure with error 33111.
-**Context:** T-SQL session, requires `VIEW SERVER STATE`. Read-only, negligible cost.
-**Purpose:** enumerate every database with TDE enabled, the encryption state, and the thumbprint of the certificate protecting each DEK so you can cross-reference against the certificates actually present in `master`.
+During routine security audits, before any restore or migration, and as the first step in TDE certificate rotation. It is typically triggered by quarterly compliance audit, pre-migration checklist, or investigation after any database restore failure with error 33111. T-SQL session, requires `VIEW SERVER STATE`. Read-only, negligible cost. Enumerate every database with TDE enabled, the encryption state, and the thumbprint of the certificate protecting each DEK so you can cross-reference against the certificates actually present in `master`.
 
 *Show TDE encryption state and encryptor thumbprint for every database on the instance.*
 
@@ -1149,10 +1086,7 @@ The `stoxx` instance has no databases with TDE enabled — `sys.dm_database_encr
 
 #### List certificates present in master for cross-reference
 
-**When to run:** as the second step of the TDE audit, to cross-reference which certificates actually exist on the instance against which certificates the databases expect.
-**Trigger:** follow-up to the TDE encryption keys audit; also used when preparing to back up a TDE certificate.
-**Context:** T-SQL session, read-only against `master.sys.certificates`. Requires `VIEW DEFINITION` on the certificate or `sysadmin`.
-**Purpose:** confirm the encryptor thumbprint referenced by each DEK is actually present in `master` with a usable private key, so a future `BACKUP CERTIFICATE ... WITH PRIVATE KEY` command can succeed.
+As the second step of the TDE audit, to cross-reference which certificates actually exist on the instance against which certificates the databases expect. It is typically triggered by follow-up to the TDE encryption keys audit; also used when preparing to back up a TDE certificate. T-SQL session, read-only against `master.sys.certificates`. Requires `VIEW DEFINITION` on the certificate or `sysadmin`. Confirm the encryptor thumbprint referenced by each DEK is actually present in `master` with a usable private key, so a future `BACKUP CERTIFICATE ... WITH PRIVATE KEY` command can succeed.
 
 *Show every certificate in master whose private key is present, with thumbprint, start date, and expiry date.*
 
@@ -1199,10 +1133,7 @@ Every row has `pvt_key_encryption_type_desc = NO_PRIVATE_KEY` and every `issuer_
 >
 > Automate `BACKUP CERTIFICATE` as a step in the weekly SQL Agent maintenance job, uploading both files (public `.cer` and encrypted private key `.pvk`) to a certificate-dedicated GCS bucket with a retention policy of at least 10 years (longer than the database backup retention). Store the `ENCRYPTION BY PASSWORD` secret in GCP Secret Manager or HashiCorp Vault with a separate IAM role from the one that can read the `.pvk` — separation of duties means an attacker who compromises the bucket cannot also decrypt the private key.
 
-**When to run:** immediately after creating the TDE certificate, and again after every certificate rotation.
-**Trigger:** `CREATE CERTIFICATE` executed on `master`, or scheduled weekly maintenance run.
-**Context:** T-SQL session against `master`, requires `CONTROL` on the certificate. State-changing: writes two files to disk (`.cer` public certificate and `.pvk` private key encrypted with the supplied password).
-**Purpose:** produce a recovery artifact that allows the certificate to be restored on any other SQL Server instance so TDE-protected database backups remain openable.
+Immediately after creating the TDE certificate, and again after every certificate rotation. It is typically triggered by `CREATE CERTIFICATE` executed on `master`, or scheduled weekly maintenance run. T-SQL session against `master`, requires `CONTROL` on the certificate. State-changing: writes two files to disk (`.cer` public certificate and `.pvk` private key encrypted with the supplied password). Produce a recovery artifact that allows the certificate to be restored on any other SQL Server instance so TDE-protected database backups remain openable.
 
 *Back up the demo TDE certificate TDE_analytics_cert and its private key to files on the backup volume, encrypting the private key with a password stored in Secret Manager.*
 
@@ -1223,10 +1154,7 @@ WITH PRIVATE KEY (
 
 #### Restore the TDE certificate on a new instance before restoring the database
 
-**When to run:** as the first step of disaster recovery onto a new instance, before `RESTORE DATABASE` is issued.
-**Trigger:** rebuilding a SQL Server instance from a TDE-protected backup.
-**Context:** T-SQL session against `master` on the new instance. Requires `CREATE CERTIFICATE` permission and access to the `.cer` and `.pvk` files plus the decryption password. Typically run as `sysadmin` during DR.
-**Purpose:** install the certificate into the new instance's `master` so SQL Server can decrypt the DEK embedded in the TDE-protected backup file and the subsequent `RESTORE DATABASE` succeeds.
+As the first step of disaster recovery onto a new instance, before `RESTORE DATABASE` is issued. It is typically triggered by rebuilding a SQL Server instance from a TDE-protected backup. T-SQL session against `master` on the new instance. Requires `CREATE CERTIFICATE` permission and access to the `.cer` and `.pvk` files plus the decryption password. Typically run as `sysadmin` during DR. Install the certificate into the new instance's `master` so SQL Server can decrypt the DEK embedded in the TDE-protected backup file and the subsequent `RESTORE DATABASE` succeeds.
 
 *Step 1: create a Database Master Key in master on the new instance.*
 
@@ -1283,10 +1211,7 @@ The severity is high because the bronze gap propagates downstream. Silver joins 
 
 #### Confirm database compatibility level enables verbose error 8152
 
-**When to run:** during the initial forensic pass after an 8152 error, and as a one-time audit when onboarding a new database.
-**Trigger:** 8152 error in the pipeline log without the column name attached, or stakeholder asking which column caused a batch reject.
-**Context:** T-SQL session, read-only. Requires `VIEW ANY DEFINITION` on the database.
-**Purpose:** confirm the database is at compatibility level 150 or higher so subsequent 8152 errors include the column name and truncated value in the message.
+During the initial forensic pass after an 8152 error, and as a one-time audit when onboarding a new database. It is typically triggered by 8152 error in the pipeline log without the column name attached, or stakeholder asking which column caused a batch reject. T-SQL session, read-only. Requires `VIEW ANY DEFINITION` on the database. Confirm the database is at compatibility level 150 or higher so subsequent 8152 errors include the column name and truncated value in the message.
 
 *Show the compatibility level and collation for the stoxx database.*
 
@@ -1318,10 +1243,7 @@ stoxx is at compatibility level 160 (SQL Server 2022), which means any future 81
 
 #### Probe which column would have been truncated
 
-**When to run:** as the fallback when compatibility level is below 150 and error 8152 does not name the column, or as a proactive scan before bulk loads to find over-length rows.
-**Trigger:** 8152 error without a named column, or onboarding a new vendor feed.
-**Context:** T-SQL session against the staging table. Read-only. `MAX(LEN(...))` is table-scan cost proportional to staging table row count.
-**Purpose:** identify which string column in the batch has values longer than the target column width so the fix can widen the column or the pre-load validation can reject the offending rows.
+As the fallback when compatibility level is below 150 and error 8152 does not name the column, or as a proactive scan before bulk loads to find over-length rows. It is typically triggered by 8152 error without a named column, or onboarding a new vendor feed. T-SQL session against the staging table. Read-only. `MAX(LEN(...))` is table-scan cost proportional to staging table row count. Identify which string column in the batch has values longer than the target column width so the fix can widen the column or the pre-load validation can reject the offending rows.
 
 *For every silver eurostoxx50 text column, print the maximum observed string length. Adapt the column list per table.*
 
@@ -1349,10 +1271,7 @@ All current ticker symbols on stoxx fit in 5 characters, well below the declared
 >
 > Use `NVARCHAR(MAX)` (or `VARCHAR(MAX)`) at the bronze staging layer so new vendor data never causes 8152 errors on ingestion. Enforce length constraints only at silver, where the `INSERT` applies `LEFT(NULLIF(RTRIM(x), ''), N)` and logs any truncated rows to a reject table. This design pushes length policy out of the physical schema and into the transform code, where it can be audited per-row.
 
-**When to run:** after identifying the narrow column via the max-length probe, and only after confirming the widening is a metadata-only change (same type family).
-**Trigger:** production 8152 error with an identified column and narrower ceiling than the real data range.
-**Context:** T-SQL session, `ALTER` permission on the table. State-changing: schema modification lock is acquired briefly.
-**Purpose:** expand the column width so the staging load succeeds, without rewriting the existing data.
+After identifying the narrow column via the max-length probe, and only after confirming the widening is a metadata-only change (same type family). It is typically triggered by production 8152 error with an identified column and narrower ceiling than the real data range. T-SQL session, `ALTER` permission on the table. State-changing: schema modification lock is acquired briefly. Expand the column width so the staging load succeeds, without rewriting the existing data.
 
 *Widen the hypothetical silver.company_master.company_name column from NVARCHAR(100) to NVARCHAR(500); metadata-only change.*
 
@@ -1374,10 +1293,7 @@ The severity is high because the degradation scales with concurrency. A single s
 
 #### Detect implicit conversions in the plan cache
 
-**When to run:** during any investigation of CPU-bound query performance regressions, or proactively when onboarding a new application.
-**Trigger:** unexplained CPU spike, plan cache filling with scans, or customer complaint about API latency.
-**Context:** T-SQL session, requires `VIEW SERVER STATE`. The `LIKE '%CONVERT_IMPLICIT%'` filter against `query_plan` XML is expensive on large plan caches — run it during a low-traffic window if the instance has tens of thousands of cached plans.
-**Purpose:** count (and optionally list) all cached plans containing a `CONVERT_IMPLICIT` warning, so the highest-impact offenders can be prioritized for parameter binding fixes.
+During any investigation of CPU-bound query performance regressions, or proactively when onboarding a new application. It is typically triggered by unexplained CPU spike, plan cache filling with scans, or customer complaint about API latency. T-SQL session, requires `VIEW SERVER STATE`. The `LIKE '%CONVERT_IMPLICIT%'` filter against `query_plan` XML is expensive on large plan caches — run it during a low-traffic window if the instance has tens of thousands of cached plans. Count (and optionally list) all cached plans containing a `CONVERT_IMPLICIT` warning, so the highest-impact offenders can be prioritized for parameter binding fixes.
 
 *Count cached plans that contain a CONVERT_IMPLICIT warning. On a production instance, extend the query with TOP N ORDER BY avg_logical_reads to list the worst offenders with their SQL text.*
 
@@ -1402,10 +1318,7 @@ There are 256 cached plans on stoxx that contain a `CONVERT_IMPLICIT` operation 
 
 #### Bind string parameters as VARCHAR explicitly from client code
 
-**When to run:** during code review of new queries, or as a retroactive fix after the plan-cache probe identifies a specific query as the offender.
-**Trigger:** `CONVERT_IMPLICIT` warning in the execution plan of a high-frequency query.
-**Context:** application code (Python `pyodbc` or C# `Dapper`). Requires a redeploy of the client binary.
-**Purpose:** force the driver to send the parameter as ASCII `VARCHAR`, eliminating the type mismatch that triggers the column-side conversion.
+During code review of new queries, or as a retroactive fix after the plan-cache probe identifies a specific query as the offender. It is typically triggered by `CONVERT_IMPLICIT` warning in the execution plan of a high-frequency query. Application code (Python `pyodbc` or C# `Dapper`). Requires a redeploy of the client binary. Force the driver to send the parameter as ASCII `VARCHAR`, eliminating the type mismatch that triggers the column-side conversion.
 
 *Python pyodbc using setinputsizes to force the first parameter to VARCHAR.*
 
@@ -1483,10 +1396,7 @@ Identifier columns (`batch_id`, `symbol`, `schema_version`, `stage`) are all `va
 
 #### Flush the cached plan after the fix
 
-**When to run:** immediately after deploying the parameter binding fix, so the first execution recompiles with the correct types.
-**Trigger:** code deployment of the Dapper/pyodbc fix.
-**Context:** T-SQL session, requires `ALTER` permission on the referenced object. State-changing on the plan cache only.
-**Purpose:** evict the bad cached plan so the next execution builds a new plan using the corrected parameter binding, which will now produce a seek instead of a scan.
+Immediately after deploying the parameter binding fix, so the first execution recompiles with the correct types. It is typically triggered by code deployment of the Dapper/pyodbc fix. T-SQL session, requires `ALTER` permission on the referenced object. State-changing on the plan cache only. Evict the bad cached plan so the next execution builds a new plan using the corrected parameter binding, which will now produce a seek instead of a scan.
 
 *Mark a table's cached plans for recompile; the next query that references gold.index_constituents will produce a fresh plan.*
 
@@ -1508,10 +1418,7 @@ The severity is high because it makes execution time non-deterministic and break
 
 #### Audit Query Store state on the database
 
-**When to run:** as the first step of any performance-regression investigation, or during the initial health check on a new production database.
-**Trigger:** a query runtime has visibly changed day over day, or forensic review of yesterday's slow period.
-**Context:** T-SQL session, read-only against `sys.database_query_store_options`. Requires `VIEW DATABASE STATE`.
-**Purpose:** confirm Query Store is active, in read-write mode, has sufficient storage, and is not in cleanup mode that would have discarded the historical plans needed for root cause analysis.
+As the first step of any performance-regression investigation, or during the initial health check on a new production database. It is typically triggered by a query runtime has visibly changed day over day, or forensic review of yesterday's slow period. T-SQL session, read-only against `sys.database_query_store_options`. Requires `VIEW DATABASE STATE`. Confirm Query Store is active, in read-write mode, has sufficient storage, and is not in cleanup mode that would have discarded the historical plans needed for root cause analysis.
 
 *Show the current Query Store options for the active database.*
 
@@ -1560,10 +1467,7 @@ stoxx has Query Store fully enabled: `READ_WRITE` state, 10 MB used of a 1000 MB
 
 #### List the slowest queries by Query Store average duration
 
-**When to run:** during triage of a performance regression, or as part of a weekly top-N-slow-queries report.
-**Trigger:** a user-visible latency spike, or proactive hygiene on a new workload.
-**Context:** T-SQL session, read-only against Query Store catalog views. Cost is proportional to the number of queries tracked; fast on databases with thousands of queries, slow on those with hundreds of thousands.
-**Purpose:** identify the top offenders by average duration so the parameter-sniffing candidates can be isolated and inspected.
+During triage of a performance regression, or as part of a weekly top-N-slow-queries report. It is typically triggered by a user-visible latency spike, or proactive hygiene on a new workload. T-SQL session, read-only against Query Store catalog views. Cost is proportional to the number of queries tracked; fast on databases with thousands of queries, slow on those with hundreds of thousands. Identify the top offenders by average duration so the parameter-sniffing candidates can be isolated and inspected.
 
 *Top 5 queries from Query Store ordered by average duration, joined to the plan and runtime stats.*
 
@@ -1611,10 +1515,7 @@ Every query in the top 5 is from the `blocking-and-locking` teaching note's work
 >
 > Apply `OPTION(RECOMPILE)` at the statement level inside the procedure, not as a procedure-level `WITH RECOMPILE`. The statement-level form only recompiles the affected statement, preserving cached plans for other statements in the same procedure. A procedure-level `WITH RECOMPILE` recompiles the entire procedure on every call, which is much more expensive.
 
-**When to run:** after Query Store has confirmed a specific procedure shows bimodal `avg_duration` across parameter values, and after measuring the call rate to ensure compilation cost will not dominate.
-**Trigger:** parameter-sniffing regression confirmed in Query Store.
-**Context:** T-SQL session, requires `ALTER` on the procedure. State-changing on schema.
-**Purpose:** remove the cached plan dependency and recompile per call, producing a plan optimized for each actual parameter value rather than the first sniffed value.
+After Query Store has confirmed a specific procedure shows bimodal `avg_duration` across parameter values, and after measuring the call rate to ensure compilation cost will not dominate. It is typically triggered by parameter-sniffing regression confirmed in Query Store. T-SQL session, requires `ALTER` on the procedure. State-changing on schema. Remove the cached plan dependency and recompile per call, producing a plan optimized for each actual parameter value rather than the first sniffed value.
 
 *Add OPTION(RECOMPILE) to the affected statement inside the procedure definition.*
 
@@ -1655,10 +1556,7 @@ The severity is high because blocking chains cascade: one long reader blocks man
 
 #### Identify the head blocker and all blocked sessions
 
-**When to run:** as soon as a blocking incident is suspected — pipeline tasks hanging, user reports of timeouts, `LCK_M_*` waits on sys.dm_os_waiting_tasks.
-**Trigger:** Airflow task timeout on a known-writer task, or a monitoring alert on blocking-session count.
-**Context:** T-SQL session, read-only, requires `VIEW SERVER STATE`. Safe to run from a second session even while the workload is frozen.
-**Purpose:** produce the waits-for graph at the session level (who is blocking whom), identify the head blocker, and gather the SQL text of the blocking and blocked statements so the operator can decide whether to kill, wait, or retry.
+As soon as a blocking incident is suspected — pipeline tasks hanging, user reports of timeouts, `LCK_M_*` waits on sys.dm_os_waiting_tasks. It is typically triggered by airflow task timeout on a known-writer task, or a monitoring alert on blocking-session count. T-SQL session, read-only, requires `VIEW SERVER STATE`. Safe to run from a second session even while the workload is frozen. Produce the waits-for graph at the session level (who is blocking whom), identify the head blocker, and gather the SQL text of the blocking and blocked statements so the operator can decide whether to kill, wait, or retry.
 
 *List every blocked session with its blocker, wait type, wait duration, and the SQL text of the statement it is waiting on.*
 
@@ -1723,10 +1621,7 @@ See [15-blocking-and-locking](https://alp78.github.io/elysium/04-SQL-Server/03-Q
 >
 > The alternative to killing is to let the waiters fail fast via `SET LOCK_TIMEOUT 30000` in every pipeline session's connection setup. After 30 seconds of waiting for a lock, the session raises error 1222 (`Lock request time out period exceeded`) and the application can retry or escalate. This avoids the judgment call of whether to kill a production session and converts indefinite hangs into retriable failures.
 
-**When to run:** after the head blocker query has identified the session and the operator has decided that killing it (and triggering rollback) is acceptable.
-**Trigger:** an identified head blocker that is either orphaned, rogue, or the correct session to terminate per incident runbook.
-**Context:** T-SQL session, requires `ALTER ANY CONNECTION` or `sysadmin`. State-changing and irreversible for the target session.
-**Purpose:** release the lock hold so the blocked chain can drain.
+After the head blocker query has identified the session and the operator has decided that killing it (and triggering rollback) is acceptable. It is typically triggered by an identified head blocker that is either orphaned, rogue, or the correct session to terminate per incident runbook. T-SQL session, requires `ALTER ANY CONNECTION` or `sysadmin`. State-changing and irreversible for the target session. Release the lock hold so the blocked chain can drain.
 
 *Terminate the head blocker session; replace the spid with the one returned by the head-blocker query above.*
 
@@ -1758,10 +1653,7 @@ The severity is high because the regression appears after a routine data load �
 
 #### Audit statistics age and modification counter for the hot tables
 
-**When to run:** as the first diagnostic step for any "worked yesterday, slow today" performance regression, or as a nightly health check on high-churn tables.
-**Trigger:** sudden query runtime increase without a schema or code change, unexpected `UPDATE STATISTICS` entries in the error log, or a suspect `sp_updatestats` completion.
-**Context:** T-SQL session, read-only. `sys.dm_db_stats_properties` is a DMF that must be called per statistic object; a CROSS APPLY over `sys.stats` is the standard pattern.
-**Purpose:** list every statistic on the hot tables with its last-updated timestamp, sample percentage, and modification counter so the operator can decide which statistics need a fresh update.
+As the first diagnostic step for any "worked yesterday, slow today" performance regression, or as a nightly health check on high-churn tables. It is typically triggered by sudden query runtime increase without a schema or code change, unexpected `UPDATE STATISTICS` entries in the error log, or a suspect `sp_updatestats` completion. T-SQL session, read-only. `sys.dm_db_stats_properties` is a DMF that must be called per statistic object; a CROSS APPLY over `sys.stats` is the standard pattern. List every statistic on the hot tables with its last-updated timestamp, sample percentage, and modification counter so the operator can decide which statistics need a fresh update.
 
 *Show the top 10 statistics on silver OHLCV tables by row count, ordered by row count descending.*
 
@@ -1828,10 +1720,7 @@ The two most recently updated statistics (`_WA_Sys_00000005` and `_WA_Sys_000000
 >
 > Instead of `UPDATE STATISTICS <table>` (which updates every statistic on the table), target the specific offending statistic: `UPDATE STATISTICS <table> <stat_name>`. On a table with 50 columns and 30 statistics, this reduces the I/O cost by 90%. The stat_name to target is always visible in the suboptimal plan's `StatsCollection` element.
 
-**When to run:** after the audit query has identified a statistic with high modification drift, and after confirming the query regressing is driven by bad cardinality estimates (check the plan's estimated-vs-actual row counts).
-**Trigger:** identified stale histogram + confirmed bad cardinality estimate.
-**Context:** T-SQL session, `ALTER` permission on the table. Read-heavy I/O cost; can run concurrently with the workload but competes for buffer pool.
-**Purpose:** rebuild the histogram so the optimizer's cardinality estimates match reality, triggering plan recompilation on next execution.
+After the audit query has identified a statistic with high modification drift, and after confirming the query regressing is driven by bad cardinality estimates (check the plan's estimated-vs-actual row counts). It is typically triggered by identified stale histogram + confirmed bad cardinality estimate. T-SQL session, `ALTER` permission on the table. Read-heavy I/O cost; can run concurrently with the workload but competes for buffer pool. Rebuild the histogram so the optimizer's cardinality estimates match reality, triggering plan recompilation on next execution.
 
 *Update one specific statistic on silver.eurostoxx50_ohlcv with a full scan.*
 
@@ -1859,10 +1748,7 @@ The severity is high because the regression sneaks up: fragmentation grows slowl
 
 #### Query fragmentation for the largest indexes on stoxx
 
-**When to run:** as the first diagnostic when queries against a specific table have slowed down, or as a nightly/weekly maintenance health check.
-**Trigger:** high logical-reads ratio reported by Query Store or `SET STATISTICS IO`, or calendar-driven maintenance window.
-**Context:** T-SQL session, read-only. `sys.dm_db_index_physical_stats` is a DMF; with `'SAMPLED'` mode it reads roughly 1% of pages and returns in seconds even on large databases. `'DETAILED'` mode reads every page and is minutes-to-hours on large databases.
-**Purpose:** rank indexes by fragmentation percentage so the worst offenders can be targeted for rebuild or reorganize.
+As the first diagnostic when queries against a specific table have slowed down, or as a nightly/weekly maintenance health check. It is typically triggered by high logical-reads ratio reported by Query Store or `SET STATISTICS IO`, or calendar-driven maintenance window. T-SQL session, read-only. `sys.dm_db_index_physical_stats` is a DMF; with `'SAMPLED'` mode it reads roughly 1% of pages and returns in seconds even on large databases. `'DETAILED'` mode reads every page and is minutes-to-hours on large databases. Rank indexes by fragmentation percentage so the worst offenders can be targeted for rebuild or reorganize.
 
 *List the top 10 indexes in stoxx by logical fragmentation percentage, filtered to indexes with more than 100 pages (below that threshold fragmentation is irrelevant).*
 
@@ -1926,10 +1812,7 @@ The top row is `dbo.demo_idxmaint_rowstore.CIX_demo_idxmaint_row_guid` at 99.31%
 >
 > `ALTER INDEX ... REORGANIZE` is always online, uses minimal log space, and can be interrupted safely. Use it as the default for indexes between 10% and 30% fragmentation. Reserve `REBUILD` for indexes above 30% or for situations where you need to reset the fill factor, change the data compression setting, or rebuild after a column add/drop.
 
-**When to run:** after the fragmentation audit has named the worst offenders and during a maintenance window with confirmed tempdb and log file headroom.
-**Trigger:** scheduled weekly maintenance or the audit query above showing an index above 30% fragmentation.
-**Context:** T-SQL session, `ALTER` permission. State-changing; online rebuild allows concurrent reads and writes, offline rebuild acquires a schema modification lock.
-**Purpose:** restore the index to a sequential page order so reads are cheaper and the buffer pool is used efficiently.
+After the fragmentation audit has named the worst offenders and during a maintenance window with confirmed tempdb and log file headroom. It is typically triggered by scheduled weekly maintenance or the audit query above showing an index above 30% fragmentation. T-SQL session, `ALTER` permission. State-changing; online rebuild allows concurrent reads and writes, offline rebuild acquires a schema modification lock. Restore the index to a sequential page order so reads are cheaper and the buffer pool is used efficiently.
 
 *Online-rebuild a single index on a production table; ONLINE=ON is supported on SQL Server 2022 for most index types including those with LOB columns.*
 
@@ -1961,10 +1844,7 @@ The severity is high because the symptom is cross-tenant: the API, the pipeline,
 
 #### Count connections by login and program
 
-**When to run:** during a connection-exhaustion incident, or as a daily health check.
-**Trigger:** login timeout errors in pipeline or API logs, or sustained growth in session count without workload growth.
-**Context:** T-SQL session, read-only against `sys.dm_exec_sessions`. Requires `VIEW SERVER STATE`.
-**Purpose:** identify which login + program combination owns the runaway connection count so the leaking process can be found and fixed.
+During a connection-exhaustion incident, or as a daily health check. It is typically triggered by login timeout errors in pipeline or API logs, or sustained growth in session count without workload growth. T-SQL session, read-only against `sys.dm_exec_sessions`. Requires `VIEW SERVER STATE`. Identify which login + program combination owns the runaway connection count so the leaking process can be found and fixed.
 
 *Count user sessions grouped by login and program name, ordered by connection count descending.*
 
@@ -2014,10 +1894,7 @@ Five user sessions total, each from a distinct program. `sa` from `Python` is th
 >
 > For any Python code that opens more than a handful of connections per minute, use `sqlalchemy.create_engine` with `pool_size`, `max_overflow`, `pool_timeout`, and `pool_recycle` parameters. The QueuePool keeps a bounded set of connections open, serves them to callers, and recycles them on a schedule. This makes the per-call cost near-zero and guarantees the total connection count stays within the pool bound regardless of caller behavior.
 
-**When to run:** during code review of any new Python pipeline code, and retroactively on any existing code that uses `pyodbc.connect()` in a loop.
-**Trigger:** new task PR, connection leak discovered via the audit query above.
-**Context:** Python application code. Requires redeploy.
-**Purpose:** eliminate leaked connections by binding their lifetime to a context manager and bounding the total count via a pool.
+During code review of any new Python pipeline code, and retroactively on any existing code that uses `pyodbc.connect()` in a loop. It is typically triggered by new task PR, connection leak discovered via the audit query above. Python application code. Requires redeploy. Eliminate leaked connections by binding their lifetime to a context manager and bounding the total count via a pool.
 
 *Python pyodbc context manager: the connection is closed when the with block exits, even on exception.*
 
@@ -2067,10 +1944,7 @@ The severity is high because the failure is silent: no errors, no retries, just 
 
 #### Detect duplicates on the business key
 
-**When to run:** as part of nightly data-quality checks, or immediately when downstream numbers look wrong.
-**Trigger:** gold aggregation values look inflated, or a BI user reports doubled totals.
-**Context:** T-SQL session, read-only. Scan cost proportional to target table size.
-**Purpose:** find any business keys with more than one row, identifying the exact rows that need deduplication.
+As part of nightly data-quality checks, or immediately when downstream numbers look wrong. It is typically triggered by gold aggregation values look inflated, or a BI user reports doubled totals. T-SQL session, read-only. Scan cost proportional to target table size. Find any business keys with more than one row, identifying the exact rows that need deduplication.
 
 *Find any duplicate rows in silver.esg_scores grouped by the business key (instrument + date).*
 
@@ -2095,10 +1969,7 @@ HAVING COUNT(*) > 1;
 >
 > The deterministic alternative is `BEGIN TRAN; DELETE FROM target WITH (HOLDLOCK) WHERE <range>; INSERT INTO target SELECT ... FROM source; COMMIT;`. `HOLDLOCK` forces range locks that prevent phantom inserts from other sessions, `DELETE + INSERT` gives SQL Server an unambiguous sequence with no matching phase, and the combined transaction ensures the whole operation is atomic. Add a `UNIQUE` constraint on the business key as a belt-and-braces defense.
 
-**When to run:** when designing a new ETL merge operation, or when remediating an existing `MERGE` that has produced duplicates under concurrency.
-**Trigger:** new ETL task, or dedupe incident caused by concurrent `MERGE`.
-**Context:** T-SQL, requires write access to the target. State-changing and atomic inside the transaction.
-**Purpose:** provide a deterministic upsert that is safe under concurrency and does not rely on `MERGE` semantics.
+When designing a new ETL merge operation, or when remediating an existing `MERGE` that has produced duplicates under concurrency. It is typically triggered by new ETL task, or dedupe incident caused by concurrent `MERGE`. T-SQL, requires write access to the target. State-changing and atomic inside the transaction. Provide a deterministic upsert that is safe under concurrency and does not rely on `MERGE` semantics.
 
 *Replace MERGE with an explicit DELETE + INSERT inside an atomic transaction, using HOLDLOCK to prevent concurrent inserts.*
 
@@ -2149,10 +2020,7 @@ The severity is moderate because the batch fails loudly and can be retried after
 
 #### Audit DECIMAL column precision and observed value range
 
-**When to run:** during schema review, or after any `8115` error in the pipeline log.
-**Trigger:** `Arithmetic overflow error converting expression to data type decimal` in any INSERT or aggregation.
-**Context:** T-SQL session, read-only.
-**Purpose:** verify the column precision is wide enough to hold not only the stored value but also any derived calculations the pipeline performs on it.
+During schema review, or after any `8115` error in the pipeline log. It is typically triggered by `Arithmetic overflow error converting expression to data type decimal` in any INSERT or aggregation. T-SQL session, read-only. Verify the column precision is wide enough to hold not only the stored value but also any derived calculations the pipeline performs on it.
 
 *List all DECIMAL columns in silver and gold with their precision, scale, and an example max-value probe.*
 
@@ -2194,10 +2062,7 @@ ORDER BY table_name, column_name;
 >
 > `DECIMAL(28,2)` covers up to about $99 quadrillion, more than any real-world market cap; `DECIMAL(28,6)` adds 4 digits of scale for intermediate calculations. Standardize this precision in the schema-layering style guide so new tables do not drift back to `DECIMAL(18,2)`.
 
-**When to run:** after observing an 8115 error or during proactive schema hardening.
-**Trigger:** identified narrow column or 8115 error.
-**Context:** T-SQL, `ALTER` permission. Metadata-only on widening.
-**Purpose:** give the column enough precision to hold the largest realistic value plus calculation headroom.
+After observing an 8115 error or during proactive schema hardening. It is typically triggered by identified narrow column or 8115 error. T-SQL, `ALTER` permission. Metadata-only on widening. Give the column enough precision to hold the largest realistic value plus calculation headroom.
 
 *Widen a hypothetical bronze.market_cap_usd column from DECIMAL(18,2) to DECIMAL(28,2).*
 
@@ -2215,10 +2080,7 @@ The severity is moderate because the symptom is wrong numbers, not a crash. The 
 
 #### Audit for legacy DATETIME columns
 
-**When to run:** during any schema review, or after observing empty results from a date-join query.
-**Trigger:** empty result from a `DATE = DATETIME` join, or the presence of a legacy column type.
-**Context:** T-SQL session, read-only.
-**Purpose:** list every column using the legacy `datetime` or `smalldatetime` types so they can be migrated to `datetime2` or `date`.
+During any schema review, or after observing empty results from a date-join query. It is typically triggered by empty result from a `DATE = DATETIME` join, or the presence of a legacy column type. T-SQL session, read-only. List every column using the legacy `datetime` or `smalldatetime` types so they can be migrated to `datetime2` or `date`.
 
 *Find all columns using the legacy datetime or smalldatetime types in silver and gold schemas on stoxx.*
 
@@ -2259,10 +2121,7 @@ ORDER BY table_name, column_name;
 >
 > For equality joins, cast the timestamp column to `DATE`: `ON ca.ex_date = CAST(ph.trade_timestamp AS DATE)`. For range filters, always use half-open intervals: `WHERE ts >= '2026-01-01' AND ts < '2026-02-01'` instead of `BETWEEN '2026-01-01' AND '2026-01-31'`, which misses rows with timestamps after midnight on the end date.
 
-**When to run:** as the fix for any query that joins a `DATE` column to a `DATETIME`/`DATETIME2` column.
-**Trigger:** empty result from a date-join query, or code review flagging the pattern.
-**Context:** T-SQL query text. Non-invasive change.
-**Purpose:** produce the intended match result without relying on implicit conversion.
+As the fix for any query that joins a `DATE` column to a `DATETIME`/`DATETIME2` column. It is typically triggered by empty result from a date-join query, or code review flagging the pattern. T-SQL query text. Non-invasive change. Produce the intended match result without relying on implicit conversion.
 
 *Join on DATE equality after explicitly casting the DATETIME2 side down to DATE.*
 
@@ -2288,10 +2147,7 @@ The severity is moderate because the workaround (add tempdb files) is well known
 
 #### Audit tempdb file layout
 
-**When to run:** during initial instance setup, after any `PAGELATCH_UP` wait spike, or when onboarding a new analytics workload.
-**Trigger:** suspected tempdb latch contention, or pre-deployment health check.
-**Context:** T-SQL session, read-only.
-**Purpose:** count the tempdb data files and their sizes so you can verify the multi-file configuration matches the core count.
+During initial instance setup, after any `PAGELATCH_UP` wait spike, or when onboarding a new analytics workload. It is typically triggered by suspected tempdb latch contention, or pre-deployment health check. T-SQL session, read-only. Count the tempdb data files and their sizes so you can verify the multi-file configuration matches the core count.
 
 *Show every tempdb file with size, growth, and max size.*
 
@@ -2341,10 +2197,7 @@ stoxx tempdb has 8 data files (`tempdev` through `tempdev8`) each at 8 MB with 6
 >
 > SQL Server's proportional-fill algorithm directs allocations to the file with the most free space. If tempdb files are different sizes, the biggest one receives the most allocations, which defeats the purpose of multiple files. Pre-create all files at the same initial size during the same maintenance window and let them grow in lockstep.
 
-**When to run:** during a planned maintenance window on an instance that has a single tempdb data file and shows PFS/GAM latch contention.
-**Trigger:** confirmed single-file tempdb and confirmed `PAGELATCH_UP` waits on tempdb pages.
-**Context:** T-SQL session, `ALTER DATABASE` permission. State-changing. Requires restart to take effect.
-**Purpose:** create the multi-file tempdb configuration so the proportional-fill algorithm spreads allocations across files and reduces contention on any single file's PFS/GAM pages.
+During a planned maintenance window on an instance that has a single tempdb data file and shows PFS/GAM latch contention. It is typically triggered by confirmed single-file tempdb and confirmed `PAGELATCH_UP` waits on tempdb pages. T-SQL session, `ALTER DATABASE` permission. State-changing. Requires restart to take effect. Create the multi-file tempdb configuration so the proportional-fill algorithm spreads allocations across files and reduces contention on any single file's PFS/GAM pages.
 
 *Add 7 additional tempdb data files to a single-file instance; repeat for each file with sequential names.*
 
@@ -2369,10 +2222,7 @@ The severity is moderate because the fix is deterministic (force the good plan) 
 
 #### Enable automatic plan correction
 
-**When to run:** once per database, during initial Query Store setup on SQL Server 2017+.
-**Trigger:** database onboarding, or first observed plan regression that required manual intervention.
-**Context:** T-SQL session, `ALTER DATABASE` permission.
-**Purpose:** let Query Store automatically detect a plan regression (3× slower than the previous plan) and force the previous good plan without operator intervention.
+Once per database, during initial Query Store setup on SQL Server 2017+. It is typically triggered by database onboarding, or first observed plan regression that required manual intervention. T-SQL session, `ALTER DATABASE` permission. Let Query Store automatically detect a plan regression (3× slower than the previous plan) and force the previous good plan without operator intervention.
 
 *Enable FORCE_LAST_GOOD_PLAN on the stoxx database.*
 
@@ -2402,10 +2252,7 @@ FROM sys.database_automatic_tuning_options;
 >
 > Maintain a wiki or Notion page listing every plan currently forced on the instance: `query_id`, `plan_id`, date forced, operator, reason, and expiry date. Review weekly and unforce any plan whose root cause has been addressed or whose expiry has passed.
 
-**When to run:** after identifying a regression in Query Store and deciding that forcing the old plan is the right tactical fix.
-**Trigger:** confirmed plan regression with both good and bad plans captured in Query Store.
-**Context:** T-SQL session, `ALTER DATABASE` scope.
-**Purpose:** force the optimizer to use a specific previously-observed plan for a specific query.
+After identifying a regression in Query Store and deciding that forcing the old plan is the right tactical fix. It is typically triggered by confirmed plan regression with both good and bad plans captured in Query Store. T-SQL session, `ALTER DATABASE` scope. Force the optimizer to use a specific previously-observed plan for a specific query.
 
 *Force the old plan for query 42 back to plan 7.*
 
@@ -2429,10 +2276,7 @@ The severity is moderate because the workload still completes — just slowly an
 
 #### Audit current parallelism configuration
 
-**When to run:** during instance setup, or when investigating CPU-bound throughput complaints.
-**Trigger:** high CPU with low useful throughput, `CXPACKET` waits dominating `sys.dm_os_wait_stats`, or pre-deployment health check.
-**Context:** T-SQL session, read-only against `sys.configurations`.
-**Purpose:** confirm the current values of `max degree of parallelism` and `cost threshold for parallelism`, and flag any instance running the defaults.
+During instance setup, or when investigating CPU-bound throughput complaints. It is typically triggered by high CPU with low useful throughput, `CXPACKET` waits dominating `sys.dm_os_wait_stats`, or pre-deployment health check. T-SQL session, read-only against `sys.configurations`. Confirm the current values of `max degree of parallelism` and `cost threshold for parallelism`, and flag any instance running the defaults.
 
 *List the critical configuration knobs with their current values; sys.configurations.value and value_in_use are sql_variant and must be CAST.*
 
@@ -2491,10 +2335,7 @@ The stoxx instance ships with all defaults: `cost threshold for parallelism = 5`
 
 #### Apply production-recommended parallelism settings
 
-**When to run:** during instance hardening, or after the audit above shows defaults on an analytics-style workload.
-**Trigger:** audit confirming defaults; scheduled instance hardening.
-**Context:** T-SQL session, `ALTER SETTINGS` permission. Dynamic — `RECONFIGURE` takes effect immediately without restart.
-**Purpose:** raise `cost threshold for parallelism` to 50 and set `max degree of parallelism` to half the logical core count so small queries stay serial and large queries still parallelize.
+During instance hardening, or after the audit above shows defaults on an analytics-style workload. It is typically triggered by audit confirming defaults; scheduled instance hardening. T-SQL session, `ALTER SETTINGS` permission. Dynamic — `RECONFIGURE` takes effect immediately without restart. Raise `cost threshold for parallelism` to 50 and set `max degree of parallelism` to half the logical core count so small queries stay serial and large queries still parallelize.
 
 *Raise cost threshold to 50 and set MAXDOP to 4 on an 8-core instance.*
 
@@ -2523,10 +2364,7 @@ The defense is three layers: (1) `SET XACT_ABORT ON` inside every stored procedu
 
 #### Find sessions with open transactions in sleeping state
 
-**When to run:** whenever a pipeline task hangs without a visible error, or as a routine check during a blocking incident.
-**Trigger:** hung Airflow task, or the open-transactions audit from Problem 1 returning long-lived sleeping sessions.
-**Context:** T-SQL session, read-only, requires `VIEW SERVER STATE`.
-**Purpose:** identify sessions that are holding an open transaction but are not currently executing anything — the precise signature of an orphaned transaction.
+Whenever a pipeline task hangs without a visible error, or as a routine check during a blocking incident. It is typically triggered by hung Airflow task, or the open-transactions audit from Problem 1 returning long-lived sleeping sessions. T-SQL session, read-only, requires `VIEW SERVER STATE`. Identify sessions that are holding an open transaction but are not currently executing anything — the precise signature of an orphaned transaction.
 
 *Show every sleeping session with an open transaction, including transaction age in seconds.*
 
@@ -2565,10 +2403,7 @@ No orphaned sleeping sessions on stoxx at capture time, which is the healthy bas
 >
 > Wrap any multi-statement transaction in a stored procedure that sets `XACT_ABORT ON` and has its own `TRY/CATCH` with explicit `ROLLBACK`. Call the procedure from the client with a single `EXEC`, not via client-side `BEGIN TRAN`. This keeps transaction lifetime bound to the server and eliminates the orphan class entirely.
 
-**When to run:** during code review of any multi-statement transaction, and retroactively on existing procedures that lack it.
-**Trigger:** new procedure PR, or observed orphan.
-**Context:** T-SQL, `ALTER` on the procedure.
-**Purpose:** force automatic rollback on any runtime error so no orphaned transaction is possible inside this procedure.
+During code review of any multi-statement transaction, and retroactively on existing procedures that lack it. It is typically triggered by new procedure PR, or observed orphan. T-SQL, `ALTER` on the procedure. Force automatic rollback on any runtime error so no orphaned transaction is possible inside this procedure.
 
 *Template stored procedure with XACT_ABORT ON, TRY/CATCH, and explicit ROLLBACK on error.*
 
@@ -2603,10 +2438,7 @@ A developer creates a temp table without specifying collation: `CREATE TABLE #st
 
 #### Audit collations across server, databases, and temp tables
 
-**When to run:** during instance migration, before creating temp tables in new code, or after any error 468.
-**Trigger:** error 468 in the pipeline log, or cross-database join that unexpectedly fails.
-**Context:** T-SQL session, read-only.
-**Purpose:** identify which collation boundaries exist on the instance so temp table code can target the correct `COLLATE` clause.
+During instance migration, before creating temp tables in new code, or after any error 468. It is typically triggered by error 468 in the pipeline log, or cross-database join that unexpectedly fails. T-SQL session, read-only. Identify which collation boundaries exist on the instance so temp table code can target the correct `COLLATE` clause.
 
 *Show server collation, user database collations, and tempdb collation on a single row.*
 
@@ -2641,10 +2473,7 @@ All three collations are identical on stoxx, which is the healthy baseline and t
 >
 > `COLLATE DATABASE_DEFAULT` resolves to the collation of whatever database the code is currently running in, which is almost always the right answer. It works inside stored procedures, in ad hoc queries, and across database contexts. Make it the standard in the temp-table section of the style guide.
 
-**When to run:** as a code standard in every new query that creates a temp table with a string column.
-**Trigger:** new code writing a `CREATE TABLE #...` or `DECLARE @... TABLE`.
-**Context:** T-SQL query text.
-**Purpose:** ensure the temp table's string columns match the user database's collation so joins against permanent tables do not hit error 468.
+As a code standard in every new query that creates a temp table with a string column. It is typically triggered by new code writing a `CREATE TABLE #...` or `DECLARE @... TABLE`. T-SQL query text. Ensure the temp table's string columns match the user database's collation so joins against permanent tables do not hit error 468.
 
 *Create a temp table with every string column tagged COLLATE DATABASE_DEFAULT.*
 
@@ -2670,10 +2499,7 @@ A silver-to-gold aggregation uses `SELECT * FROM silver.esg_scores` to feed a do
 
 #### Audit stored procedures and views for SELECT *
 
-**When to run:** during a code hygiene sprint or as a nightly CI check.
-**Trigger:** backlog grooming, or after a Dapper mapping failure caused by a new column.
-**Context:** T-SQL session, read-only against `sys.sql_modules`.
-**Purpose:** produce a list of every persisted database object whose definition contains `SELECT *` so the team can refactor them.
+During a code hygiene sprint or as a nightly CI check. It is typically triggered by backlog grooming, or after a Dapper mapping failure caused by a new column. T-SQL session, read-only against `sys.sql_modules`. Produce a list of every persisted database object whose definition contains `SELECT *` so the team can refactor them.
 
 *Find every stored procedure, view, or trigger whose T-SQL body contains SELECT *.*
 
@@ -2712,10 +2538,7 @@ A pipeline performance regression is reported: the load that ran in 3 minutes la
 
 #### Enable Query Store with production defaults
 
-**When to run:** on every new production database at onboarding time, and retroactively on any database where it is not already enabled.
-**Trigger:** database creation, or discovery that a database lacks Query Store.
-**Context:** T-SQL session, `ALTER DATABASE` permission. State-changing on database options; non-destructive.
-**Purpose:** turn on Query Store in read-write mode with production-appropriate sizing and retention so historical query plans and runtime stats are captured going forward.
+On every new production database at onboarding time, and retroactively on any database where it is not already enabled. It is typically triggered by database creation, or discovery that a database lacks Query Store. T-SQL session, `ALTER DATABASE` permission. State-changing on database options; non-destructive. Turn on Query Store in read-write mode with production-appropriate sizing and retention so historical query plans and runtime stats are captured going forward.
 
 *Enable Query Store on stoxx with typical production settings.*
 
@@ -2762,10 +2585,7 @@ A developer implements index constituent weight normalization using a `DECLARE C
 >
 > The rewrite patterns are well-known: running totals use `SUM() OVER`, ranked operations use `ROW_NUMBER()`/`RANK()`/`DENSE_RANK()`, gap-filling uses recursive CTEs, per-row derived calculations use `CROSS APPLY` against a table-valued function. For the weight normalization case specifically, `SUM(raw_weight) OVER (PARTITION BY index_code)` is the direct replacement and runs roughly 300× faster than the equivalent cursor.
 
-**When to run:** during any code review that encounters a `DECLARE CURSOR`, and as a search-and-rewrite sprint for existing procedures.
-**Trigger:** cursor found in a persisted stored procedure, or slow update job.
-**Context:** T-SQL query text, `ALTER` on the procedure.
-**Purpose:** replace the row-by-row loop with a single set-based statement that runs in one execution and holds locks only for its own duration.
+During any code review that encounters a `DECLARE CURSOR`, and as a search-and-rewrite sprint for existing procedures. It is typically triggered by cursor found in a persisted stored procedure, or slow update job. T-SQL query text, `ALTER` on the procedure. Replace the row-by-row loop with a single set-based statement that runs in one execution and holds locks only for its own duration.
 
 *Set-based weight normalization using a window function — a single UPDATE, no loop, no cursor.*
 
@@ -2797,10 +2617,7 @@ A stored procedure inserts calculated weights into a gold table and then updates
 
 #### Audit stored procedures for missing error handling
 
-**When to run:** during a code hygiene sprint, or after any data-consistency incident where a procedure left the database in a partial state.
-**Trigger:** reconciliation failure, or unexplained missing/extra rows after a procedure call.
-**Context:** T-SQL, read-only against `sys.sql_modules`.
-**Purpose:** find every stored procedure whose body does not contain the strings `TRY` or `XACT_ABORT`, indicating missing error handling.
+During a code hygiene sprint, or after any data-consistency incident where a procedure left the database in a partial state. It is typically triggered by reconciliation failure, or unexplained missing/extra rows after a procedure call. T-SQL, read-only against `sys.sql_modules`. Find every stored procedure whose body does not contain the strings `TRY` or `XACT_ABORT`, indicating missing error handling.
 
 *Find stored procedures without TRY/CATCH on stoxx.*
 
@@ -2825,10 +2642,7 @@ WHERE o.type = 'P'
 >
 > `SET NOCOUNT ON; SET XACT_ABORT ON; BEGIN TRY BEGIN TRANSACTION; ... COMMIT; END TRY BEGIN CATCH IF @@TRANCOUNT > 0 ROLLBACK; THROW; END CATCH;`. This is six lines of boilerplate that eliminate the entire "partial state after error" class. Make it the first code snippet in the stored procedure style guide.
 
-**When to run:** during every new procedure creation and as the remediation for procedures identified by the audit.
-**Trigger:** new procedure PR, or audit finding.
-**Context:** T-SQL, `ALTER` on the procedure.
-**Purpose:** guarantee that any error inside the procedure rolls back all state changes atomically.
+During every new procedure creation and as the remediation for procedures identified by the audit. It is typically triggered by new procedure PR, or audit finding. T-SQL, `ALTER` on the procedure. Guarantee that any error inside the procedure rolls back all state changes atomically.
 
 *Mandatory stored procedure template with XACT_ABORT, TRY/CATCH, explicit ROLLBACK, and THROW to re-raise.*
 
@@ -2888,10 +2702,7 @@ The severity is low because each gotcha has a clear, well-documented fix; they a
 
 #### Verify mssql service ownership and permissions
 
-**When to run:** after any OS patch or migration, as part of the post-patch validation checklist.
-**Trigger:** `mssql-server` fails to start, or backup/data writes fail with permission errors.
-**Context:** Linux shell on the SQL Server host, `sudo` required.
-**Purpose:** confirm `/var/opt/mssql` and any custom data/log/backup directories are owned by `mssql:mssql` with mode `770`.
+After any OS patch or migration, as part of the post-patch validation checklist. It is typically triggered by `mssql-server` fails to start, or backup/data writes fail with permission errors. Linux shell on the SQL Server host, `sudo` required. Confirm `/var/opt/mssql` and any custom data/log/backup directories are owned by `mssql:mssql` with mode `770`.
 
 *Check ownership and permissions of the SQL Server directories.*
 
@@ -2924,10 +2735,7 @@ sudo systemctl status mssql-server
 >
 > Run `sudo /opt/mssql/bin/mssql-conf set memory.memorylimitmb <value>` to cap SQL Server at roughly 75% of physical RAM, leaving headroom for the OS, the Linux page cache, and any other services on the host. On a 32 GB VM, `28672` MB (28 GB) is a reasonable setting; on a dedicated 64 GB VM, `57344` MB. This limit is applied via the container mechanism rather than via SQL Server's `max server memory`, so both need to be set on Linux.
 
-**When to run:** during initial SQL Server Linux setup, after any change to VM memory allocation, or after observing OOM kills.
-**Trigger:** `mssql-server` service in `failed` state with OOM kill messages in `journalctl`.
-**Context:** Linux shell on the SQL Server host, `sudo` required. Requires service restart to apply.
-**Purpose:** cap SQL Server memory consumption at a safe fraction of physical RAM.
+During initial SQL Server Linux setup, after any change to VM memory allocation, or after observing OOM kills. It is typically triggered by `mssql-server` service in `failed` state with OOM kill messages in `journalctl`. Linux shell on the SQL Server host, `sudo` required. Requires service restart to apply. Cap SQL Server memory consumption at a safe fraction of physical RAM.
 
 *Set the memory limit via mssql-conf and restart the service.*
 

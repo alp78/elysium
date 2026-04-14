@@ -14,7 +14,8 @@ status: complete
 
 # Navigation and Listing
 
-> [!quote]
+> [!quote] Unix interface model
+>
 > "I think the major good idea in Unix was its clean and simple interface: open, close, read, and write."
 >
 > -- **Ken Thompson**, *Coders at Work* (2009)
@@ -107,6 +108,9 @@ Use `ls` to answer interactive questions quickly: what changed last, what is hid
 
 `ls -lhrt` keeps long-format metadata, converts sizes to human-readable units, and reverses the default newest-first time sort so the newest file is last. The output makes it easy to confirm the latest pipeline artifact without losing permissions, owner, or timestamp detail.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to list files sorted by modification time.*
 ```bash
 ls -lhrt /tmp/elysium-nav-demo/data
 ```
@@ -123,6 +127,9 @@ total 2.1M
 
 `ls -la` includes dotfiles in the listing and keeps directory metadata visible. Use it first when a configuration file appears to be missing but the application insists the path exists.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to reveal hidden dotfiles.*
 ```bash
 ls -la /tmp/elysium-nav-demo
 ```
@@ -141,6 +148,9 @@ drwxr-xr-x   4 alex alex  4096 Apr 14 10:03 project
 
 `ls -d */` lists the directory entries themselves instead of their contents. That is useful when you want a quick survey of branches under a path without mixing in file noise.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to list only directories.*
 ```bash
 ls -d /tmp/elysium-nav-demo/*/
 ```
@@ -155,6 +165,9 @@ ls -d /tmp/elysium-nav-demo/*/
 
 `ls -lhS` is the quickest way to see which files dominate a directory. The listing below also shows why `ls` is not a disk-usage tool: `sparse.bin` has the largest logical size, but that does not mean it consumed 128 MB of blocks.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to sort files by size.*
 ```bash
 ls -lhS /tmp/elysium-nav-demo/data
 ```
@@ -191,6 +204,9 @@ Use these `ls` flags as quick reference when adapting the examples.
 
 `tree -L 2 --dirsfirst` surfaces the first two levels of a hierarchy and shows directories before files. That is enough to inspect project layout without dumping every nested artifact in a deep data path.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to inspect a project tree without full recursion.*
 ```bash
 tree -L 2 --dirsfirst /tmp/elysium-nav-demo
 ```
@@ -232,6 +248,9 @@ Use `du` when the question is "what actually consumed blocks on disk?" rather th
 
 `du -h --max-depth=1 | sort -rh` ranks only the first level below the target path. That keeps the signal tight enough to identify the branch worth investigating next.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to find the largest immediate directories.*
 ```bash
 du -h --max-depth=1 /tmp/elysium-nav-demo | sort -rh
 ```
@@ -247,6 +266,9 @@ du -h --max-depth=1 /tmp/elysium-nav-demo | sort -rh
 
 `du` reports allocated blocks, not logical file length. The sparse file below occupies almost no disk even though `ls` reports a 128 MB logical size.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to show allocated blocks for a sparse file.*
 ```bash
 du -h /tmp/elysium-nav-demo/data/sparse.bin
 ```
@@ -274,6 +296,9 @@ After `du` identifies the heavy paths, use `df` to confirm whether the filesyste
 
 `df -h` reports filesystem-wide capacity for the mounted path. It tells you whether the filesystem is actually near exhaustion, not just whether one directory is large.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to check free blocks before cleanup.*
 ```bash
 df -h /tmp/elysium-nav-demo
 ```
@@ -287,6 +312,9 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 `df -i` answers the failure mode that `df -h` misses. If block usage looks healthy but writes still fail, inode exhaustion is the next thing to inspect.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to check inode usage before assuming blocks are full.*
 ```bash
 df -i /tmp/elysium-nav-demo
 ```
@@ -314,6 +342,9 @@ When `ls`, `du`, and `df` disagree, the discrepancy is usually explainable. The 
 
 `ls -lh` reports the file's logical length, which is what most applications see. Compare it with the earlier `du` output to distinguish logical size from allocated blocks.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to show the sparse file's logical size.*
 ```bash
 ls -lh /tmp/elysium-nav-demo/data/sparse.bin
 ```
@@ -326,6 +357,9 @@ ls -lh /tmp/elysium-nav-demo/data/sparse.bin
 
 `lsof +L1` lists file handles whose link count dropped below one, and `grep` narrows the result to the deleted fixture file. This is the canonical explanation when `df` still shows used space after a log file was removed.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to find deleted files still held open.*
 ```bash
 lsof +L1 | grep elysium-nav-deleted
 ```
@@ -348,6 +382,9 @@ Use `Get-ChildItem` when you want the equivalent of `ls` plus object-aware filte
 
 `Sort-Object LastWriteTime` orders the file objects by modification time. The formatted output makes it easy to verify which artifact arrived last without losing the underlying metadata.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to list items by last write time.*
 ```powershell
 Get-ChildItem -Path "$env:TEMP\elysium-nav-demo\data" | Sort-Object LastWriteTime | Format-Table Mode, LastWriteTime, Length, Name -AutoSize
 ```
@@ -363,6 +400,9 @@ Mode   LastWriteTime     Length Name
 
 PowerShell does not have a native `-h` switch, so a calculated property is the standard way to convert byte counts into readable units. The command below keeps the pipeline object-based while presenting sizes the way an operator expects to read them.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to format human-readable sizes.*
 ```powershell
 Get-ChildItem -Path "$env:TEMP\elysium-nav-demo\data" | Sort-Object Length -Descending | Select-Object Name, @{N='Size';E={ if ($_.Length -ge 1MB) { '{0:N1} MB' -f ($_.Length / 1MB) } elseif ($_.Length -ge 1KB) { '{0:N1} KB' -f ($_.Length / 1KB) } else { '{0} B' -f $_.Length } }}, LastWriteTime | Format-Table -AutoSize
 ```
@@ -378,6 +418,9 @@ daily.csv      64.0 KB  14-Apr-26 8:15:00
 
 `Get-ChildItem` skips hidden items unless you add `-Force`. Use this before concluding that a configuration file is absent on Windows.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to reveal hidden configuration files.*
 ```powershell
 Get-ChildItem -Force -Path "$env:TEMP\elysium-nav-demo" | Format-Table Mode, Length, Name -AutoSize
 ```
@@ -395,6 +438,9 @@ d-----        project
 
 `Measure-Object -Sum` totals the `Length` property across all files under the path. Wrapping the expression in `[math]::Round()` produces a single numeric result that can feed alerting or threshold logic.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to measure a directory recursively.*
 ```powershell
 [math]::Round(((Get-ChildItem -Path "$env:TEMP\elysium-nav-demo" -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1KB), 1)
 ```
@@ -427,6 +473,9 @@ These parameters cover the cases used most often when exploring or measuring a W
 
 The calculated properties below convert raw byte counts into gigabytes and keep the result concise enough for routine checks. This is the PowerShell equivalent of a human-readable filesystem-capacity report.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to report used and free space by drive.*
 ```powershell
 Get-PSDrive -PSProvider FileSystem | Select-Object Name, @{N='Used(GB)';E={[math]::Round($_.Used / 1GB, 1)}}, @{N='Free(GB)';E={[math]::Round($_.Free / 1GB, 1)}} | Format-Table -AutoSize
 ```
@@ -441,6 +490,9 @@ C      1655.6    250.3
 
 A simple percentage threshold turns the same drive data into an operational check. The example below surfaces only drives already above 80 percent used, which is a sensible point to alert before a filesystem hard-fails.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to flag drives above an alert threshold.*
 ```powershell
 Get-PSDrive -PSProvider FileSystem | Where-Object { (($_.Used / ($_.Used + $_.Free)) * 100) -ge 80 } | Select-Object Name, @{N='UsedPct';E={[math]::Round((($_.Used / ($_.Used + $_.Free)) * 100), 1)}} | Format-Table -AutoSize
 ```

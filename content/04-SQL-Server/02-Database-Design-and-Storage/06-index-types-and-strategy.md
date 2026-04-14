@@ -376,10 +376,7 @@ Index strategy starts with inventory. Before adding or dropping anything, establ
 
 #### `sys.indexes` + `sys.index_columns` | list the real indexes on `silver.eurostoxx50_ohlcv`
 
-**When to run:** Any time you need an authoritative list of indexes on a specific table before changing them.
-**Trigger:** Starting an index review, diagnosing a slow query, or validating that a deployment added the expected indexes.
-**Context:** Read-only T-SQL session. Requires `VIEW DEFINITION` on the target. No locking impact — catalog views read from metadata cache.
-**Purpose:** Return the full set of rowstore index definitions with key columns, INCLUDE columns, uniqueness, primary-key backing, and filter predicate.
+Any time you need an authoritative list of indexes on a specific table before changing them. It is typically triggered by starting an index review, diagnosing a slow query, or validating that a deployment added the expected indexes. Read-only T-SQL session. Requires `VIEW DEFINITION` on the target. No locking impact — catalog views read from metadata cache. Return the full set of rowstore index definitions with key columns, INCLUDE columns, uniqueness, primary-key backing, and filter predicate.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -447,10 +444,7 @@ This query ranks real non-demo indexes by used page count and size. It is the fa
 
 #### `sys.dm_db_partition_stats` | rank the largest real indexes
 
-**When to run:** As part of any index audit, storage sizing exercise, or maintenance planning pass.
-**Trigger:** "Which indexes are the biggest?" or "Where is my storage going?" Also used before reorganize/rebuild scheduling to decide which structures need the most attention.
-**Context:** Read-only T-SQL session. Catalog read — no locks on base tables. Results are accurate as of the last committed metadata update; no need for a checkpoint.
-**Purpose:** Rank every user-table index by physical size and row count, so storage investment can be matched against read/write value delivered.
+As part of any index audit, storage sizing exercise, or maintenance planning pass. It is typically triggered by "Which indexes are the biggest?" or "Where is my storage going?" Also used before reorganize/rebuild scheduling to decide which structures need the most attention. Read-only T-SQL session. Catalog read — no locks on base tables. Results are accurate as of the last committed metadata update; no need for a checkpoint. Rank every user-table index by physical size and row count, so storage investment can be matched against read/write value delivered.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -513,10 +507,7 @@ Heaps are not inherently wrong, but they are specialized. In a production system
 
 #### `sys.indexes` | identify user tables that are heaps
 
-**When to run:** During an index audit, after migration, or when chasing down forwarding-record performance issues.
-**Trigger:** "Are there any heaps I don't know about?" or an `sys.dm_db_index_physical_stats` result showing non-zero `forwarded_record_count`.
-**Context:** Read-only T-SQL session. No locks. Runs in milliseconds even on large databases.
-**Purpose:** Surface every user table with no clustered index so each one can be reviewed against the heap decision criteria from the earlier section.
+During an index audit, after migration, or when chasing down forwarding-record performance issues. It is typically triggered by "Are there any heaps I don't know about?" or an `sys.dm_db_index_physical_stats` result showing non-zero `forwarded_record_count`. Read-only T-SQL session. No locks. Runs in milliseconds even on large databases. Surface every user table with no clustered index so each one can be reviewed against the heap decision criteria from the earlier section.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -551,10 +542,7 @@ Composite index usefulness depends on key order. SQL Server only gets full seek 
 
 #### `sys.index_columns` | inspect sort direction and key order
 
-**When to run:** Before trusting that a composite index supports the predicate shape you think it does.
-**Trigger:** Query plans showing an unexpected scan when a seek was expected, or a code review of a new composite index.
-**Context:** Read-only T-SQL session. No locks. Catalog read only.
-**Purpose:** Confirm the exact ordinal position and sort direction of every key column in every index on the target table, so seek eligibility can be verified against the predicate shape.
+Before trusting that a composite index supports the predicate shape you think it does. It is typically triggered by query plans showing an unexpected scan when a seek was expected, or a code review of a new composite index. Read-only T-SQL session. No locks. Catalog read only. Confirm the exact ordinal position and sort direction of every key column in every index on the target table, so seek eligibility can be verified against the predicate shape.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -627,10 +615,7 @@ These are starting points, not absolute rules. The inputs that push you toward a
 
 #### `sys.dm_db_index_physical_stats` | check fragmentation on `silver.eurostoxx50_ohlcv`
 
-**When to run:** On a recurring schedule (weekly or nightly) during a maintenance window, or ad hoc before making an index decision.
-**Trigger:** Query plan showing scan inefficiency, maintenance review, or investigation of sudden read-latency regression.
-**Context:** Read-only DMV call. `SAMPLED` mode reads a 1 % sample of leaf pages — some I/O pressure but minimal locking.
-**Purpose:** Quantify logical fragmentation and page fullness per index so maintenance can be targeted at the structures that have actually decayed.
+On a recurring schedule (weekly or nightly) during a maintenance window, or ad hoc before making an index decision. It is typically triggered by query plan showing scan inefficiency, maintenance review, or investigation of sudden read-latency regression. Read-only DMV call. `SAMPLED` mode reads a 1 % sample of leaf pages — some I/O pressure but minimal locking. Quantify logical fragmentation and page fullness per index so maintenance can be targeted at the structures that have actually decayed.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -703,10 +688,7 @@ Usage stats are cumulative since the last SQL Server restart. They are not perma
 
 #### `sys.dm_db_index_usage_stats` | rank indexes by recent read activity
 
-**When to run:** During an index audit, budget review, or consolidation pass.
-**Trigger:** "Which indexes are actually getting read?" or "Why is my write workload slow?"
-**Context:** Read-only DMV call. Counters reset on instance restart, database detach, or index rebuild — a long uptime window (weeks or months) is required before usage_stats can support removal decisions.
-**Purpose:** Compare read-driven access (`user_seeks`, `user_scans`, `user_lookups`) against write maintenance (`user_updates`) so indexes that only cost writes can be flagged for removal review.
+During an index audit, budget review, or consolidation pass. It is typically triggered by "Which indexes are actually getting read?" or "Why is my write workload slow?". Read-only DMV call. Counters reset on instance restart, database detach, or index rebuild — a long uptime window (weeks or months) is required before usage_stats can support removal decisions. Compare read-driven access (`user_seeks`, `user_scans`, `user_lookups`) against write maintenance (`user_updates`) so indexes that only cost writes can be flagged for removal review.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -778,10 +760,7 @@ A zero-read index is not automatically wrong, but it is the first place to look 
 
 #### `sys.dm_db_index_usage_stats` | find indexes with write cost but no reads
 
-**When to run:** During a consolidation pass, after long instance uptime, or before a planned index cleanup.
-**Trigger:** "Which NC indexes have paid write cost without delivering read value?"
-**Context:** Read-only DMV call. Requires long uptime to be meaningful.
-**Purpose:** Isolate nonclustered indexes with measurable write updates but zero recorded reads since the last counter reset, as candidates for review (not immediate removal).
+During a consolidation pass, after long instance uptime, or before a planned index cleanup. It is typically triggered by "Which NC indexes have paid write cost without delivering read value?". Read-only DMV call. Requires long uptime to be meaningful. Isolate nonclustered indexes with measurable write updates but zero recorded reads since the last counter reset, as candidates for review (not immediate removal).
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -843,10 +822,7 @@ _The interesting rows are the real ones, not the demos. Several real OHLCV noncl
 
 #### `sys.dm_db_index_operational_stats` | rank indexes by contention and churn
 
-**When to run:** During a performance investigation that suspects lock/latch contention, or during an index consolidation review that wants to weigh contention alongside read counts.
-**Trigger:** Queries blocking on `KEY` or `PAGE` lock waits, rising page split counts, or unexpected `leaf_allocation_count` growth.
-**Context:** Read-only DMV call. Counters are per-index since the object was last loaded into the buffer pool (resets when the index is rebuilt or evicted).
-**Purpose:** Surface real per-index read patterns (`range_scan_count` vs `singleton_lookup_count`), write churn (`leaf_insert_count`, `leaf_update_count`, `leaf_allocation_count`), and contention waits (`row_lock_wait_count`, `page_lock_wait_in_ms`) so hot indexes can be reviewed against design choices.
+During a performance investigation that suspects lock/latch contention, or during an index consolidation review that wants to weigh contention alongside read counts. It is typically triggered by queries blocking on `KEY` or `PAGE` lock waits, rising page split counts, or unexpected `leaf_allocation_count` growth. Read-only DMV call. Counters are per-index since the object was last loaded into the buffer pool (resets when the index is rebuilt or evicted). Surface real per-index read patterns (`range_scan_count` vs `singleton_lookup_count`), write churn (`leaf_insert_count`, `leaf_update_count`, `leaf_allocation_count`), and contention waits (`row_lock_wait_count`, `page_lock_wait_in_ms`) so hot indexes can be reviewed against design choices.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -921,10 +897,7 @@ A fast second pass over the storage evidence is to compute the ratio of total no
 
 #### `sys.dm_db_partition_stats` | compute NC overhead per table
 
-**When to run:** When sizing a maintenance window, reviewing write-heavy table design, or justifying consolidation.
-**Trigger:** Growing database size that is not explained by new rows, or slow writes on a table with many NC indexes.
-**Context:** Read-only DMV call. Aggregates `used_page_count` by `index_id` group.
-**Purpose:** Quantify how much storage every table spends on nonclustered indexes as a fraction of the base table itself. A high ratio with matching read activity is healthy; a high ratio with low reads is a classic over-indexing symptom.
+When sizing a maintenance window, reviewing write-heavy table design, or justifying consolidation. It is typically triggered by growing database size that is not explained by new rows, or slow writes on a table with many NC indexes. Read-only DMV call. Aggregates `used_page_count` by `index_id` group. Quantify how much storage every table spends on nonclustered indexes as a fraction of the base table itself. A high ratio with matching read activity is healthy; a high ratio with low reads is a classic over-indexing symptom.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -999,10 +972,7 @@ Duplicate indexes waste write I/O and maintenance budget. The fastest first pass
 
 #### Duplicate key-signature check | count duplicate index definitions
 
-**When to run:** During a consolidation pass, before adding a new index, or after inheriting an unfamiliar database.
-**Trigger:** Suspicion of over-indexing, a missing-index DMV suggestion that looks similar to an existing index, or high `nc_overhead_pct` from the previous section.
-**Context:** Read-only catalog read. No locks.
-**Purpose:** Collapse every index on every user table into a signature (ordered key column list) and count the signatures that appear more than once on the same table — the fastest way to catch identical key indexes.
+During a consolidation pass, before adding a new index, or after inheriting an unfamiliar database. It is typically triggered by suspicion of over-indexing, a missing-index DMV suggestion that looks similar to an existing index, or high `nc_overhead_pct` from the previous section. Read-only catalog read. No locks. Collapse every index on every user table into a signature (ordered key column list) and count the signatures that appear more than once on the same table — the fastest way to catch identical key indexes.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -1084,10 +1054,7 @@ The missing-index DMVs are a heuristic, transient signal that the optimizer reco
 
 #### `sys.dm_db_missing_index_details` | rank the current suggestions in `stoxx`
 
-**When to run:** Once per index review, not continuously. Also useful immediately after running a representative workload against a dev copy.
-**Trigger:** Scheduled tuning review, a new report going to production, or a query that is slow despite a sensible-looking plan.
-**Context:** Read-only DMV call. Counters accumulate until the instance restarts or the table is rebuilt, so treat the snapshot as "what the optimizer noticed between restarts".
-**Purpose:** Rank current missing-index suggestions by the standard improvement-measure heuristic so the review can focus on the suggestions most likely to deliver real value.
+Once per index review, not continuously. Also useful immediately after running a representative workload against a dev copy. It is typically triggered by scheduled tuning review, a new report going to production, or a query that is slow despite a sensible-looking plan. Read-only DMV call. Counters accumulate until the instance restarts or the table is rebuilt, so treat the snapshot as "what the optimizer noticed between restarts". Rank current missing-index suggestions by the standard improvement-measure heuristic so the review can focus on the suggestions most likely to deliver real value.
 
 > [!info]- How the `improvement_measure` formula is built
 >
@@ -1170,10 +1137,7 @@ The next three subsections use disposable `dbo.demo_index_types_*` tables so the
 
 #### `CREATE TABLE` + `CREATE INDEX` | seed the covering-index demo table
 
-**When to run:** Before running the covering-index before/after demo in the next H3.
-**Trigger:** Setting up the reproducible lab table.
-**Context:** DDL + bulk `INSERT` + two `CREATE INDEX` calls. Not for production — creates a disposable object in `dbo`. Safe to rerun because the `IF OBJECT_ID ... DROP TABLE` guard resets state first.
-**Purpose:** Produce a 50,000-row rowstore table with a narrow clustered `id` and a deliberately noncovering `(symbol, date)` nonclustered index, so the next H3 can show the performance of a noncovering baseline before adding INCLUDE columns.
+Before running the covering-index before/after demo in the next H3. It is typically triggered by setting up the reproducible lab table. DDL + bulk `INSERT` + two `CREATE INDEX` calls. Not for production — creates a disposable object in `dbo`. Safe to rerun because the `IF OBJECT_ID ... DROP TABLE` guard resets state first. Produce a 50,000-row rowstore table with a narrow clustered `id` and a deliberately noncovering `(symbol, date)` nonclustered index, so the next H3 can show the performance of a noncovering baseline before adding INCLUDE columns.
 
 *Create the disposable rowstore table used for the covering-index before/after proof.*
 
@@ -1218,10 +1182,7 @@ _The covering-index demo table now exists with 50,000 rows and the intended nonc
 
 #### `CREATE TABLE` + filtered index | seed the filtered-index demo table
 
-**When to run:** Before running the filtered-index inspection queries later in this section.
-**Trigger:** Setting up the filtered-index lab with a reproducible 80/20 active split.
-**Context:** DDL + bulk `INSERT` + `CREATE CLUSTERED INDEX` + `CREATE NONCLUSTERED INDEX ... WHERE is_active = 1`. Sets `ANSI_NULLS ON` and `QUOTED_IDENTIFIER ON` explicitly because filtered indexes require them on any subsequent DML.
-**Purpose:** Create a 20,000-row table with a stable active/inactive partition (16,000 / 4,000) so the filtered-index behavior can be observed on a known subset ratio.
+Before running the filtered-index inspection queries later in this section. It is typically triggered by setting up the filtered-index lab with a reproducible 80/20 active split. DDL + bulk `INSERT` + `CREATE CLUSTERED INDEX` + `CREATE NONCLUSTERED INDEX ... WHERE is_active = 1`. Sets `ANSI_NULLS ON` and `QUOTED_IDENTIFIER ON` explicitly because filtered indexes require them on any subsequent DML. Create a 20,000-row table with a stable active/inactive partition (16,000 / 4,000) so the filtered-index behavior can be observed on a known subset ratio.
 
 > [!warning] Filtered indexes require specific session SET options
 >
@@ -1281,10 +1242,7 @@ _The filtered-index demo has a predictable 80/20 active split, which makes the s
 
 #### `CREATE CLUSTERED COLUMNSTORE INDEX` | seed the columnstore demo table
 
-**When to run:** Before inspecting rowgroup physical state in the later H3.
-**Trigger:** Setting up the reproducible clustered columnstore lab.
-**Context:** DDL + bulk `INSERT` + `CREATE CLUSTERED COLUMNSTORE INDEX`. The `INSERT ... ORDER BY id` is important: SQL Server uses the insertion order to fill rowgroups, and an ordered bulk load produces one dense compressed rowgroup instead of many small ones.
-**Purpose:** Produce a 50,000-row analytical lab table with a single compressed columnstore rowgroup so the state enumeration in the rowgroup-inspection H3 has a stable result to read.
+Before inspecting rowgroup physical state in the later H3. It is typically triggered by setting up the reproducible clustered columnstore lab. DDL + bulk `INSERT` + `CREATE CLUSTERED COLUMNSTORE INDEX`. The `INSERT ... ORDER BY id` is important: SQL Server uses the insertion order to fill rowgroups, and an ordered bulk load produces one dense compressed rowgroup instead of many small ones. Produce a 50,000-row analytical lab table with a single compressed columnstore rowgroup so the state enumeration in the rowgroup-inspection H3 has a stable result to read.
 
 *Create the disposable clustered columnstore table used for the rowgroup-state example.*
 
@@ -1344,10 +1302,7 @@ A covering index is worth its extra leaf width only when a stable, high-value qu
 
 #### Noncovering baseline | run the query against the noncovering index
 
-**When to run:** Before measuring a covering-index improvement, to establish the baseline cost.
-**Trigger:** Setting up the before/after proof for a covering index change.
-**Context:** Read-only query against the disposable demo table. `SET STATISTICS IO ON` enables the logical-read count diagnostic.
-**Purpose:** Measure the logical I/O cost of answering the query against a noncovering `(symbol, date)` nonclustered index that does not contain `[close]` or `volume`, so the reader sees how many pages the query touches before the covering change.
+Before measuring a covering-index improvement, to establish the baseline cost. It is typically triggered by setting up the before/after proof for a covering index change. Read-only query against the disposable demo table. `SET STATISTICS IO ON` enables the logical-read count diagnostic. Measure the logical I/O cost of answering the query against a noncovering `(symbol, date)` nonclustered index that does not contain `[close]` or `volume`, so the reader sees how many pages the query touches before the covering change.
 
 *Run the query against a noncovering `(symbol, date)` index so the baseline logical-read cost is visible.*
 
@@ -1373,10 +1328,7 @@ _The predicate itself is selective, but the read count is still high because the
 
 #### Plan shape summary | noncovering baseline
 
-**When to run:** Immediately after the baseline query, to inspect the operator tree without leaving the session.
-**Trigger:** Confirming whether the optimizer picked a scan, seek, or seek + lookup path.
-**Context:** Read-only query against plan cache DMVs. Requires `VIEW SERVER STATE`.
-**Purpose:** Reconstruct the operator chain of the cached plan for the noncovering query by parsing the showplan XML, so the plan shape is visible without opening SSMS.
+Immediately after the baseline query, to inspect the operator tree without leaving the session. It is typically triggered by confirming whether the optimizer picked a scan, seek, or seek + lookup path. Read-only query against plan cache DMVs. Requires `VIEW SERVER STATE`. Reconstruct the operator chain of the cached plan for the noncovering query by parsing the showplan XML, so the plan shape is visible without opening SSMS.
 
 *Summarize the operator tree for the noncovering version of the demo query from plan cache.*
 
@@ -1413,10 +1365,7 @@ _The cached shape for this short demo resolved to a clustered scan path rather t
 
 #### Convert the baseline index into a covering index
 
-**When to run:** After measuring the baseline cost, once the decision to add INCLUDE columns has been made.
-**Trigger:** A noncovering NC index driving repeated Key Lookup operators on a hot, stable query.
-**Context:** Two DDL statements: `DROP INDEX` removes the baseline; `CREATE NONCLUSTERED INDEX ... INCLUDE` adds the covering version. State-changing — makes the index temporarily unavailable between the two statements. In production prefer `CREATE INDEX ... WITH (DROP_EXISTING = ON)` to avoid the gap.
-**Purpose:** Replace the noncovering `(symbol, date)` nonclustered index with a covering variant that adds `[close]` and `volume` as INCLUDE columns so the query can be answered from the NC leaf alone.
+After measuring the baseline cost, once the decision to add INCLUDE columns has been made. It is typically triggered by A noncovering NC index driving repeated Key Lookup operators on a hot, stable query. Two DDL statements: `DROP INDEX` removes the baseline; `CREATE NONCLUSTERED INDEX ... INCLUDE` adds the covering version. State-changing — makes the index temporarily unavailable between the two statements. In production prefer `CREATE INDEX ... WITH (DROP_EXISTING = ON)` to avoid the gap. Replace the noncovering `(symbol, date)` nonclustered index with a covering variant that adds `[close]` and `volume` as INCLUDE columns so the query can be answered from the NC leaf alone.
 
 *Rebuild the demo index as a covering index by adding `[close]` and `volume` as INCLUDE columns.*
 
@@ -1458,10 +1407,7 @@ _The catalog confirms the new shape: key columns `(symbol, date)` identical to t
 
 #### Covering variant | re-run the query after adding INCLUDE columns
 
-**When to run:** Immediately after creating the covering index, to measure the improvement.
-**Trigger:** Completing the covering-index change to confirm the logical-read drop.
-**Context:** Read-only query. `SET STATISTICS IO ON` reports the new logical read count.
-**Purpose:** Re-execute the identical query shape against the covering index and compare the logical-read count with the baseline to quantify the improvement.
+Immediately after creating the covering index, to measure the improvement. It is typically triggered by completing the covering-index change to confirm the logical-read drop. Read-only query. `SET STATISTICS IO ON` reports the new logical read count. Re-execute the identical query shape against the covering index and compare the logical-read count with the baseline to quantify the improvement.
 
 *Re-run the same query after adding `[close]` and `volume` as INCLUDE columns to make the index covering.*
 
@@ -1487,10 +1433,7 @@ _The query now reads two pages instead of 280. That is a textbook covering-index
 
 #### Plan shape summary | covering variant
 
-**When to run:** Immediately after the covering query, to confirm the plan simplification.
-**Trigger:** Proving that the optimizer switched to an index-only access path.
-**Context:** Read-only query against plan cache DMVs. Requires `VIEW SERVER STATE`.
-**Purpose:** Reconstruct the operator chain of the cached plan for the covering query and confirm the Key Lookup is gone.
+Immediately after the covering query, to confirm the plan simplification. It is typically triggered by proving that the optimizer switched to an index-only access path. Read-only query against plan cache DMVs. Requires `VIEW SERVER STATE`. Reconstruct the operator chain of the cached plan for the covering query and confirm the Key Lookup is gone.
 
 *Summarize the operator tree for the covering version of the demo query from plan cache.*
 
@@ -1536,10 +1479,7 @@ Filtered indexes are best when the predicate is stable and the queried subset is
 
 #### `sys.indexes` + `sys.partitions` | list the filtered indexes currently in `stoxx`
 
-**When to run:** During index audits, when reviewing SCD2 dimensions, or when investigating a filtered-index write error 1934.
-**Trigger:** Confirming which filter predicates are in use and how small the filtered subsets are compared to the full tables.
-**Context:** Read-only catalog read plus `sys.dm_db_partition_stats` for size.
-**Purpose:** List every filtered NC index in the database with its filter predicate, row count, and page footprint so their fit can be reviewed against the stable-subset rule.
+During index audits, when reviewing SCD2 dimensions, or when investigating a filtered-index write error 1934. It is typically triggered by confirming which filter predicates are in use and how small the filtered subsets are compared to the full tables. Read-only catalog read plus `sys.dm_db_partition_stats` for size. List every filtered NC index in the database with its filter predicate, row count, and page footprint so their fit can be reviewed against the stable-subset rule.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -1592,10 +1532,7 @@ A `PRIMARY KEY` constraint defaults to a clustered index if the table has no clu
 
 #### `sys.indexes` | inspect unique, primary-key, filtered, and columnstore examples
 
-**When to run:** When auditing constraint-backed indexes, debugging unexpected uniqueness behavior, or reviewing fill_factor and `OPTIMIZE_FOR_SEQUENTIAL_KEY` usage.
-**Trigger:** Audit, migration validation, or investigation of a query plan that assumed uniqueness the table did not actually enforce.
-**Context:** Read-only catalog read.
-**Purpose:** List one representative index per major family (clustered PK, unique NC, filtered NC, clustered columnstore) so the shape of the metadata columns that matter — `is_unique`, `is_primary_key`, `has_filter`, `fill_factor`, `optimize_for_sequential_key` — is visible side by side.
+When auditing constraint-backed indexes, debugging unexpected uniqueness behavior, or reviewing fill_factor and `OPTIMIZE_FOR_SEQUENTIAL_KEY` usage. It is typically triggered by audit, migration validation, or investigation of a query plan that assumed uniqueness the table did not actually enforce. Read-only catalog read. List one representative index per major family (clustered PK, unique NC, filtered NC, clustered columnstore) so the shape of the metadata columns that matter — `is_unique`, `is_primary_key`, `has_filter`, `fill_factor`, `optimize_for_sequential_key` — is visible side by side.
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -1660,10 +1597,7 @@ A clustered columnstore index replaces the B-tree storage of a rowstore table wi
 
 #### `sys.dm_db_column_store_row_group_physical_stats` | inspect one real clustered columnstore
 
-**When to run:** When auditing a columnstore table's physical state, after a large ETL batch, or when investigating slow analytical scans.
-**Trigger:** Deltastore bloat suspected, query performance regression on a columnstore table, or post-maintenance verification.
-**Context:** Read-only DMV. Returns one row per rowgroup per index.
-**Purpose:** Surface the physical rowgroup layout — state, row count, deleted-row count, and compressed size in bytes — so the health of the columnstore structure can be reviewed against ideal steady state (dense `COMPRESSED` rowgroups, zero deleted rows).
+When auditing a columnstore table's physical state, after a large ETL batch, or when investigating slow analytical scans. It is typically triggered by deltastore bloat suspected, query performance regression on a columnstore table, or post-maintenance verification. Read-only DMV. Returns one row per rowgroup per index. Surface the physical rowgroup layout — state, row count, deleted-row count, and compressed size in bytes — so the health of the columnstore structure can be reviewed against ideal steady state (dense `COMPRESSED` rowgroups, zero deleted rows).
 
 | Field | Source column | Type | Meaning |
 |---|---|---|---|
@@ -1719,10 +1653,7 @@ A nonclustered columnstore index (NCCI) is a columnstore index built on top of a
 
 #### `CREATE TABLE` + `CREATE NONCLUSTERED COLUMNSTORE INDEX` | seed the NCCI HTAP demo table
 
-**When to run:** Before inspecting the NCCI structure in the next cell.
-**Trigger:** Setting up a reproducible HTAP lab.
-**Context:** DDL plus bulk `INSERT`. Disposable demo object — safe to rerun because the `IF OBJECT_ID ... DROP TABLE` guard resets state.
-**Purpose:** Produce a 50,000-row rowstore table with a clustered PK on `id` and a nonclustered columnstore over the analytical columns, so both storage shapes coexist on the same table.
+Before inspecting the NCCI structure in the next cell. It is typically triggered by setting up a reproducible HTAP lab. DDL plus bulk `INSERT`. Disposable demo object — safe to rerun because the `IF OBJECT_ID ... DROP TABLE` guard resets state. Produce a 50,000-row rowstore table with a clustered PK on `id` and a nonclustered columnstore over the analytical columns, so both storage shapes coexist on the same table.
 
 *Create the disposable HTAP demo table with a clustered PK and a nonclustered columnstore overlay.*
 
@@ -1759,10 +1690,7 @@ _The HTAP demo table is now populated with 50,000 rows and carries both storage 
 
 #### `sys.indexes` | confirm both structures coexist on one table
 
-**When to run:** Right after creating the HTAP table, to verify both structures are present.
-**Trigger:** Post-setup validation.
-**Context:** Read-only catalog read.
-**Purpose:** Confirm that the table hosts both a clustered rowstore index and a nonclustered columnstore index simultaneously — the defining property of the HTAP pattern.
+Right after creating the HTAP table, to verify both structures are present. It is typically triggered by post-setup validation. Read-only catalog read. Confirm that the table hosts both a clustered rowstore index and a nonclustered columnstore index simultaneously — the defining property of the HTAP pattern.
 
 *Return the indexes currently defined on the HTAP demo table.*
 
@@ -1787,10 +1715,7 @@ _Both structures exist on the same physical table. OLTP queries that seek by `id
 
 #### `sys.dm_db_partition_stats` | compare the rowstore and columnstore footprints
 
-**When to run:** Right after the HTAP table is seeded, to quantify how much storage each structure consumes.
-**Trigger:** Justifying the HTAP storage overhead against the analytical win.
-**Context:** Read-only DMV call.
-**Purpose:** Measure the compressed size of the nonclustered columnstore relative to the clustered rowstore PK so the compression ratio is visible.
+Right after the HTAP table is seeded, to quantify how much storage each structure consumes. It is typically triggered by justifying the HTAP storage overhead against the analytical win. Read-only DMV call. Measure the compressed size of the nonclustered columnstore relative to the clustered rowstore PK so the compression ratio is visible.
 
 *Compare the storage footprint of the clustered rowstore PK and the nonclustered columnstore overlay.*
 

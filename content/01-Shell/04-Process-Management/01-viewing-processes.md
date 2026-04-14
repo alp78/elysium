@@ -14,7 +14,8 @@ status: complete
 
 # Viewing Processes
 
-> [!quote]
+> [!quote] Operational discipline
+>
 > "You can have a second computer once you've shown you know how to use the first one."
 >
 > — **Paul Barham**
@@ -120,6 +121,9 @@ flowchart TD
 
 Use `ps aux` when you need a broad inventory before you decide how to filter. In documentation and scripts, piping to `head` keeps the capture readable without changing what `ps` itself reports.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to capture a point-in-time snapshot.*
 ```bash
 ps aux | head -5
 ```
@@ -138,6 +142,9 @@ The columns that matter most during triage are `PID`, `STAT`, `RSS`, `%CPU`, `%M
 
 `ps aux | grep name` always risks self-contamination because the `grep` command line is briefly visible in the process table. The bracket trick keeps the match but prevents `grep` from matching its own literal command string.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to filter by name without matching `grep` itself.*
 ```bash
 ps aux | grep "[s]ystemd"
 ```
@@ -159,6 +166,9 @@ For exact command names, `ps -C name` is usually cleaner. The `grep` pattern rem
 
 Sorting inside `ps` is cheaper and cleaner than piping to a second `sort` process. The memory-sorted capture below surfaces the heaviest resident sets first, while the CPU-sorted capture shows that this guest is mostly idle at the time of capture.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to sort the snapshot by memory or CPU usage.*
 ```bash
 ps aux --sort=-%mem | head -5
 ```
@@ -171,6 +181,7 @@ root       28971  0.0  0.0 370096 20224 ?        Ssl  15:09   0:00 /usr/libexec/
 root          42  0.0  0.0  66888 14764 ?        S<s  Apr13   0:30 /usr/lib/systemd/systemd-journald
 ```
 
+*Run the commands in this section to sort the snapshot by memory or CPU usage.*
 ```bash
 ps aux --sort=-%cpu | head -5
 ```
@@ -206,6 +217,9 @@ On a quiet host the top rows can all show `0.0` percent. That does not make the 
 
 This is the cleanest way to answer the question "does anything matching this name exist?" without parsing wide process-table output.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to return matching PIDs only.*
 ```bash
 pgrep systemd | head -5
 ```
@@ -224,6 +238,9 @@ Each line is a PID. In this guest, the first matches are the init process and se
 
 `-l` and `-a` add context when raw PIDs are not enough, while `-f` switches matching from the executable name to the full command line.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to include the process name or match the full command line.*
 ```bash
 pgrep -la systemd | head -5
 ```
@@ -236,6 +253,7 @@ pgrep -la systemd | head -5
 139 /usr/lib/systemd/systemd-resolved
 ```
 
+*Run the commands in this section to include the process name or match the full command line.*
 ```bash
 pgrep -f "/usr/lib/systemd/systemd --user"
 ```
@@ -267,6 +285,9 @@ When the problem is ancestry rather than raw resource use, `pstree` is the faste
 
 `pstree -p` gives you the broad relationship map first. Truncating the output keeps the first branches readable in documentation.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to render the top of the process tree with PIDs.*
 ```bash
 pstree -p | sed -n '1,8p'
 ```
@@ -288,6 +309,9 @@ The live capture makes the service boundaries visible immediately: `systemd` own
 
 `-s` is the focused view. It is the quickest way to answer which service or shell spawned the process you are inspecting.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to trace the ancestor chain for a specific PID.*
 ```bash
 pstree -sp $$
 ```
@@ -316,6 +340,9 @@ For a long-running worker, replace `$$` with the real PID and walk upward until 
 
 `-b -n 1` turns an interactive display into a one-shot text capture. That is the mode you want for automation, logs, and repeatable documentation.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to capture one batch-mode snapshot.*
 ```bash
 top -b -n 1 | sed -n '1,12p'
 ```
@@ -341,6 +368,9 @@ Interpret the header before you interpret the rows. `load average` tells you whe
 
 `top -u user` is the fast way to isolate one operator, service account, or application owner without losing the live header metrics.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to narrow the view to one user.*
 ```bash
 top -b -n 1 -u "$(whoami)" | sed -n '1,12p'
 ```
@@ -380,6 +410,9 @@ This is useful when you are separating your own interactive noise from system se
 
 The help surface is the cleanest verification output for a static note. It proves the installed build and shows the switches you can use before entering the full-screen UI.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to confirm that `htop` is installed before switching to the interactive view.*
 ```bash
 htop --help | sed -n '1,12p'
 ```
@@ -409,6 +442,9 @@ Process tables tell you who is waiting. `iostat` tells you whether the storage l
 
 The `-x` view exposes latency and utilization columns, while `-z` suppresses completely idle devices.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to sample extended disk statistics.*
 ```bash
 iostat -xz 1 1 | sed -n '1,12p'
 ```
@@ -451,6 +487,9 @@ When the host is healthy but one container is noisy, `docker stats` is the right
 
 Use `--no-stream` when you want one sample instead of a continuously refreshing display.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to capture a one-shot container snapshot.*
 ```bash
 docker stats --no-stream
 ```
@@ -476,6 +515,9 @@ A process in state `D` is blocked inside the kernel waiting on an uninterruptibl
 
 The quickest scan is to filter the process table by the `STAT` column. This version prints an explicit message when the system is currently clean.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to check whether any tasks are currently blocked in `D`.*
 ```bash
 ps -eo user,pid,stat,comm | awk 'BEGIN { print "USER PID STAT COMMAND" } $3 ~ /^D/ { print; found=1 } END { if (!found) print "(no processes currently in D state)" }'
 ```
@@ -491,6 +533,9 @@ No D-state tasks are visible in this capture. On a sick host, any row whose stat
 
 Once you suspect I/O trouble, the next question is what the kernel is reporting. `dmesg` is where you confirm storage, filesystem, or NFS faults.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to inspect recent kernel messages after a blocked-task check.*
 ```bash
 dmesg | tail -5
 ```
@@ -517,6 +562,9 @@ PowerShell exposes the same operational questions as Linux, but the interface is
 
 The `CPU` property is total processor seconds consumed since the process started, not instantaneous percent usage. It is still the right first sort when you want to find long-running CPU consumers quickly.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to sort running processes by cumulative CPU time.*
 ```powershell
 Get-Process | Sort-Object CPU -Descending | Select-Object -First 5 Name, Id, CPU,
     @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}} | Format-Table -AutoSize
@@ -538,6 +586,9 @@ The live host has several long-lived `Code` processes, which is why cumulative C
 
 Filtering by name is the direct equivalent of `ps -C` or `pgrep -a`. Add `-ErrorAction SilentlyContinue` when the lookup is part of a script and a missing process should not raise noise.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to query a process by name.*
 ```powershell
 Get-Process -Name 'powershell' -ErrorAction SilentlyContinue |
     Select-Object -First 3 Name, Id, CPU,
@@ -559,6 +610,9 @@ This shows three live Windows PowerShell processes on the host. When you need on
 
 Threshold filtering is the PowerShell equivalent of sorting on RSS and keeping only the heavy hitters. The built-in `MB` suffix keeps the predicate readable.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to filter processes above a working-set threshold.*
 ```powershell
 Get-Process | Where-Object { $_.WorkingSet64 -gt 100MB } |
     Sort-Object WorkingSet64 -Descending |
@@ -596,6 +650,9 @@ claude              2264  679.00
 
 `Win32_Processor` tells you how many physical and logical execution contexts the host has, which is the baseline for interpreting queue length and per-process CPU behavior.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to read CPU topology.*
 ```powershell
 Get-CimInstance -ClassName Win32_Processor |
     Select-Object Name, NumberOfCores, NumberOfLogicalProcessors |
@@ -614,6 +671,9 @@ The distinction matters: scheduler pressure should be judged against logical pro
 
 This gives you the same host-level view that `/proc/meminfo` gives on Linux, but through typed WMI properties.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to calculate memory utilization from `Win32_OperatingSystem`.*
 ```powershell
 $os = Get-CimInstance Win32_OperatingSystem
 "Total: {0:N1} GB | Free: {1:N1} GB | Used: {2:N0}%" -f
@@ -632,6 +692,9 @@ Total: 61.7 GB | Free: 36.1 GB | Used: 41%
 
 Ownership resolution is cleaner through `Win32_Process` than through `Get-Process -IncludeUserName` when you need a reliable, typed result for one process.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to resolve the owner for a specific PID.*
 ```powershell
 $proc = Get-CimInstance Win32_Process -Filter "ProcessId = $PID"
 $owner = Invoke-CimMethod -InputObject $proc -MethodName GetOwner
@@ -666,6 +729,9 @@ Windows does not have a direct 1/5/15-minute load average. You build the equival
 
 Subtracting the last boot timestamp from the current time gives you a `TimeSpan`, which is the PowerShell equivalent of `uptime`.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to calculate uptime from `LastBootUpTime`.*
 ```powershell
 (Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime |
     Select-Object Days, Hours, Minutes
@@ -683,6 +749,9 @@ Use this to judge whether the process table reflects a fresh boot, a host that h
 
 `Processor Queue Length` is not the same metric as Linux load average, but it is the quickest counter-based approximation of CPU scheduling pressure on Windows.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to read the processor queue length as a load proxy.*
 ```powershell
 (Get-Counter '\System\Processor Queue Length').CounterSamples.CookedValue
 ```
@@ -708,6 +777,9 @@ A value near zero means threads are not currently waiting for CPU service. Persi
 
 The fastest safe workflow is to identify the process, confirm its command line, and only then decide whether intervention is warranted.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to take a sorted snapshot before you reach for `kill`.*
 ```bash
 ps aux --sort=-%cpu | head -5
 ```
@@ -726,6 +798,9 @@ On a busy host, this immediately tells you whether one process dominates the sys
 
 If users report slowness but the process table shows little CPU burn, move directly to `iostat` rather than assuming a scheduler problem.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to escalate to storage metrics when load and CPU disagree.*
 ```bash
 iostat -xz 1 1 | sed -n '1,12p'
 ```
@@ -751,6 +826,9 @@ The same capture tells you whether the queue is really at the disk layer or whet
 
 If the noisy workload is containerized, host-wide process listings are only the first half of the picture.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to check container boundaries separately from host processes.*
 ```bash
 docker stats --no-stream
 ```
@@ -768,6 +846,9 @@ This lets you separate container pressure from host pressure before you go insid
 
 The PowerShell analogue of `ps aux --sort=-%cpu` is to sort process objects by `CPU` and then inspect `WorkingSet64`.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to start with cumulative CPU and working set.*
 ```powershell
 Get-Process | Sort-Object CPU -Descending | Select-Object -First 5 Name, Id, CPU,
     @{N='Mem(MB)';E={[math]::Round($_.WorkingSet64/1MB)}} | Format-Table -AutoSize
@@ -789,6 +870,9 @@ This is the fastest way to decide whether the problem is one obvious offender or
 
 Windows does not provide a Linux-style load average, so queue length is the first counter to consult when the machine feels busy but `Get-Process` does not explain it.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to use queue length when Windows feels slow but CPU percentages look ordinary.*
 ```powershell
 (Get-Counter '\System\Processor Queue Length').CounterSamples.CookedValue
 ```
@@ -807,6 +891,9 @@ A low queue length tells you CPU scheduling is not the problem at the moment of 
 
 The `top` header is the quickest place to confirm whether the host is spending time in `%wa` or simply waiting for work.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to high load with low CPU usually means blocked I/O, not a CPU emergency.*
 ```bash
 top -b -n 1 | sed -n '1,12p'
 ```
@@ -832,6 +919,9 @@ In this capture, `%wa` is `0.0`, so storage wait is not the current issue. On a 
 
 Start by checking whether any tasks are actually in uninterruptible sleep before you assume signals are being ignored.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to a process stuck in `D` will not die until the kernel returns from the blocked call.*
 ```bash
 ps -eo user,pid,stat,comm | awk 'BEGIN { print "USER PID STAT COMMAND" } $3 ~ /^D/ { print; found=1 } END { if (!found) print "(no processes currently in D state)" }'
 ```
@@ -843,6 +933,7 @@ USER PID STAT COMMAND
 
 If you do see `D`, inspect the kernel log next.
 
+*Run the commands in this section to a process stuck in `D` will not die until the kernel returns from the blocked call.*
 ```bash
 dmesg | tail -5
 ```
@@ -861,6 +952,9 @@ The remediation is at the storage or network layer, not in repeated signal deliv
 
 Zombie tasks have already exited. What remains is the unreaped process table entry, which means the parent still needs to call `wait()`.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to zombie processes require parent cleanup.*
 ```bash
 ps -eo pid,ppid,stat,comm | awk 'BEGIN { print "PID PPID STAT COMMAND" } $3 ~ /^Z/ { print; found=1 } END { if (!found) print "(no zombie processes currently visible)" }'
 ```
@@ -876,6 +970,9 @@ If you do find a zombie, investigate or restart the parent process rather than t
 
 Minimal images often omit `htop`, but that is a packaging issue rather than an observability dead end.
 
+Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+
+*Run the commands in this section to verify whether `htop` is installed before assuming the host lacks process tooling.*
 ```bash
 command -v htop
 ```

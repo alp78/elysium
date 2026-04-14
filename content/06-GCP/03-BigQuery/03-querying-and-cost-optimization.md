@@ -272,10 +272,7 @@ The `bq` command-line tool is the primary interface for running BigQuery queries
 
 #### Count all rows in a table
 
-**When to run:** any time you need a quick sanity check on table size after a load or migration.
-**Trigger:** first interaction with a new or unfamiliar table.
-**Context:** `bq` CLI, requires `roles/bigquery.jobUser` + `roles/bigquery.dataViewer`. Read-only — no table mutation.
-**Purpose:** confirm the table is populated and get a baseline row count.
+Any time you need a quick sanity check on table size after a load or migration. It is typically triggered by first interaction with a new or unfamiliar table. `bq` CLI, requires `roles/bigquery.jobUser` + `roles/bigquery.dataViewer`. Read-only — no table mutation. Confirm the table is populated and get a baseline row count.
 
 *Count total rows in the `eurostoxx50_ohlcv` bronze table.*
 
@@ -329,10 +326,7 @@ A dry run returns the estimated bytes to be scanned without executing or billing
 
 #### Dry-run a filtered column projection
 
-**When to run:** before every non-trivial query, especially on unfamiliar tables or during exploratory analysis.
-**Trigger:** any query that might scan more than 1 GB.
-**Context:** `bq` CLI with `--dry_run` flag. Free, instant, read-only — no bytes are billed.
-**Purpose:** estimate scan cost and decide whether to proceed, add filters, or narrow the column list.
+Before every non-trivial query, especially on unfamiliar tables or during exploratory analysis. It is typically triggered by any query that might scan more than 1 GB. `bq` CLI with `--dry_run` flag. Free, instant, read-only — no bytes are billed. Estimate scan cost and decide whether to proceed, add filters, or narrow the column list.
 
 *Dry-run a four-column projection filtered to 2026 — returns estimated bytes without executing.*
 
@@ -347,10 +341,7 @@ Query successfully validated. Assuming the tables are not modified, running this
 
 #### Dry-run a full-table SELECT * for cost contrast
 
-**When to run:** immediately after the filtered dry run, to quantify the savings from column selection and filtering.
-**Trigger:** when building a cost argument for partitioning or column pruning.
-**Context:** same `--dry_run` flag. Free, read-only.
-**Purpose:** show the byte difference between a pruned query and a full-table scan on the same table.
+Immediately after the filtered dry run, to quantify the savings from column selection and filtering. It is typically triggered when building a cost argument for partitioning or column pruning. Same `--dry_run` flag. Free, read-only. Show the byte difference between a pruned query and a full-table scan on the same table.
 
 *Dry-run a `SELECT *` with no filters on the same table — shows the full-table scan cost.*
 
@@ -379,10 +370,7 @@ The filtered four-column query (1,564 bytes) scans 33% of what `SELECT *` scans 
 
 #### Write an aggregation result to a destination table
 
-**When to run:** when a query result needs to persist for downstream consumption (dashboards, exports, dbt downstream models) rather than one-time inspection.
-**Trigger:** the query is expensive and will be re-read multiple times, or it feeds a downstream pipeline step.
-**Context:** `bq` CLI. Requires `roles/bigquery.dataEditor` on the destination dataset in addition to query permissions. State-changing — creates or overwrites the target table.
-**Purpose:** materialize query results to avoid re-scanning the source table on every read.
+When a query result needs to persist for downstream consumption (dashboards, exports, dbt downstream models) rather than one-time inspection. It is typically triggered by the query is expensive and will be re-read multiple times, or it feeds a downstream pipeline step. `bq` CLI. Requires `roles/bigquery.dataEditor` on the destination dataset in addition to query permissions. State-changing — creates or overwrites the target table. Materialize query results to avoid re-scanning the source table on every read.
 
 *Aggregate average close price and volume per symbol from 2026 data and write the result to `stoxx_gold.symbol_avg_2026`.*
 
@@ -438,10 +426,7 @@ Query results are cached for 24 hours. The cache is **bypassed** when:
 
 #### Filter by symbol and date using named parameters
 
-**When to run:** when building reusable queries for dashboards, APIs, or scheduled reports where the filter values change but the query shape stays constant.
-**Trigger:** a query will be executed repeatedly with different filter values (e.g., different symbols, date ranges, or thresholds).
-**Context:** `bq` CLI with one `--parameter` flag per parameter. Read-only. Parameters are type-checked at query compilation time — type mismatches fail before scanning.
-**Purpose:** leverage the query cache across executions and prevent SQL injection from externally supplied values.
+When building reusable queries for dashboards, APIs, or scheduled reports where the filter values change but the query shape stays constant. It is typically triggered by a query will be executed repeatedly with different filter values (e.g., different symbols, date ranges, or thresholds). `bq` CLI with one `--parameter` flag per parameter. Read-only. Parameters are type-checked at query compilation time — type mismatches fail before scanning. Leverage the query cache across executions and prevent SQL injection from externally supplied values.
 
 > [!info]- Clause-by-clause breakdown
 >
@@ -481,10 +466,7 @@ For queries longer than a single line, store them in a `.sql` file and pipe them
 
 #### Pipe a SQL file to bq query
 
-**When to run:** when working with multi-line queries in version-controlled `.sql` files, or in CI/CD pipelines where queries are managed as artifacts.
-**Trigger:** any query that exceeds ~3 lines or is shared across team members.
-**Context:** `bq` CLI with shell stdin redirection (`<`). The `.sql` file must contain valid GoogleSQL. Read-only unless the SQL itself contains DML.
-**Purpose:** separate query logic from shell invocation for readability, version control, and reuse.
+When working with multi-line queries in version-controlled `.sql` files, or in CI/CD pipelines where queries are managed as artifacts. It is typically triggered by any query that exceeds ~3 lines or is shared across team members. `bq` CLI with shell stdin redirection (`<`). The `.sql` file must contain valid GoogleSQL. Read-only unless the SQL itself contains DML. Separate query logic from shell invocation for readability, version control, and reuse.
 
 *Pipe a SQL file containing a multi-line query to `bq query`.*
 
@@ -496,10 +478,7 @@ The output format and behavior are identical to inline queries — `bq query` do
 
 #### Format output as prettyjson
 
-**When to run:** when debugging result shapes, inspecting nested/repeated fields, or feeding output to a JSON parser.
-**Trigger:** the default `table` format truncates wide columns or the consumer expects JSON.
-**Context:** `bq` CLI with `--format=prettyjson`. Read-only.
-**Purpose:** get machine-readable output with human-friendly indentation.
+When debugging result shapes, inspecting nested/repeated fields, or feeding output to a JSON parser. It is typically triggered by the default `table` format truncates wide columns or the consumer expects JSON. `bq` CLI with `--format=prettyjson`. Read-only. Get machine-readable output with human-friendly indentation.
 
 *Query ASML closing prices and format the result as indented JSON.*
 
@@ -521,10 +500,7 @@ bq query --use_legacy_sql=false --format=prettyjson \
 
 #### Format output as CSV
 
-**When to run:** when piping query results into downstream tools (`awk`, `cut`, pandas, Excel) or exporting to flat files.
-**Trigger:** the consumer expects delimited text, not formatted tables.
-**Context:** `bq` CLI with `--format=csv`. Read-only. Output includes a header row.
-**Purpose:** produce pipe-friendly delimited output without table-drawing characters.
+When piping query results into downstream tools (`awk`, `cut`, pandas, Excel) or exporting to flat files. It is typically triggered by the consumer expects delimited text, not formatted tables. `bq` CLI with `--format=csv`. Read-only. Output includes a header row. Produce pipe-friendly delimited output without table-drawing characters.
 
 *Same query formatted as CSV for downstream piping.*
 
@@ -549,10 +525,7 @@ ASML.AS,2026-04-07,1113.8
 
 #### Block a query that exceeds a byte budget
 
-**When to run:** as a guardrail on every exploratory or automated query, especially in shared projects where multiple users run ad-hoc queries.
-**Trigger:** setting up a new pipeline, onboarding a new analyst, or hardening an existing query workflow.
-**Context:** `bq` CLI. Read-only — the query is never executed if it exceeds the limit. The error is returned at plan time.
-**Purpose:** prevent accidental cost spikes by failing queries that would scan more data than the budget allows.
+As a guardrail on every exploratory or automated query, especially in shared projects where multiple users run ad-hoc queries. It is typically triggered by setting up a new pipeline, onboarding a new analyst, or hardening an existing query workflow. `bq` CLI. Read-only — the query is never executed if it exceeds the limit. The error is returned at plan time. Prevent accidental cost spikes by failing queries that would scan more data than the budget allows.
 
 *Set a 100-byte cap to demonstrate the error — the `eurostoxx50_ohlcv` table exceeds this limit.*
 
@@ -646,10 +619,7 @@ flowchart TD
 
 #### Aggregate cost per user over the past 30 days
 
-**When to run:** weekly or monthly as part of a cost review cycle, or ad-hoc after an unexpected billing spike.
-**Trigger:** monthly cost audit, new team onboarding, or an alert from Cloud Billing that the BigQuery budget threshold was breached.
-**Context:** GoogleSQL against the regional `INFORMATION_SCHEMA` view. Requires `roles/bigquery.resourceViewer` or `roles/bigquery.admin`. Read-only. The `region-US` qualifier must match the region where the datasets are located.
-**Purpose:** rank users by estimated on-demand cost to identify who and what is driving spend.
+Weekly or monthly as part of a cost review cycle, or ad-hoc after an unexpected billing spike. It is typically triggered by monthly cost audit, new team onboarding, or an alert from Cloud Billing that the BigQuery budget threshold was breached. GoogleSQL against the regional `INFORMATION_SCHEMA` view. Requires `roles/bigquery.resourceViewer` or `roles/bigquery.admin`. Read-only. The `region-US` qualifier must match the region where the datasets are located. Rank users by estimated on-demand cost to identify who and what is driving spend.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|

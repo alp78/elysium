@@ -511,10 +511,7 @@ The matrix strategy creates multiple parallel instances of a job by computing th
 
 #### Define a static matrix with include and exclude
 
-**When to run:** When a job must run against multiple versions, platforms, or configurations.
-**Trigger:** Any event — matrix applies at the job level regardless of trigger.
-**Context:** Each matrix combination gets its own runner. All combinations share the same workflow run ID.
-**Purpose:** Validate compatibility across Python versions, OS variants, or database backends without writing separate jobs.
+When a job must run against multiple versions, platforms, or configurations. It is typically triggered by any event — matrix applies at the job level regardless of trigger. Each matrix combination gets its own runner. All combinations share the same workflow run ID. Validate compatibility across Python versions, OS variants, or database backends without writing separate jobs.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -630,10 +627,7 @@ A reusable workflow is a complete workflow file with `on: workflow_call` that an
 
 #### Define a reusable workflow (callee)
 
-**When to run:** When multiple repositories or workflows need the same job logic (e.g., deploy, test, validate).
-**Trigger:** `workflow_call` — this workflow cannot be triggered directly, only by a caller.
-**Context:** Runs on its own runner. Has access to the caller's repository code and the caller's `GITHUB_TOKEN` permissions.
-**Purpose:** Centralize and standardize workflow logic so teams share a single tested implementation.
+When multiple repositories or workflows need the same job logic (e.g., deploy, test, validate). It is typically triggered by `workflow_call` — this workflow cannot be triggered directly, only by a caller. Runs on its own runner. Has access to the caller's repository code and the caller's `GITHUB_TOKEN` permissions. Centralize and standardize workflow logic so teams share a single tested implementation.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -695,10 +689,7 @@ jobs:
 
 #### Call a reusable workflow (caller)
 
-**When to run:** When your workflow needs to invoke shared logic from another workflow file.
-**Trigger:** Any event on the caller side — `push`, `workflow_dispatch`, `pull_request`, etc.
-**Context:** The `uses:` key at the job level (not step level) references the callee. Inputs go in `with:`, secrets in `secrets:`.
-**Purpose:** Invoke the standardized deploy workflow with environment-specific parameters.
+When your workflow needs to invoke shared logic from another workflow file. It is typically triggered by any event on the caller side — `push`, `workflow_dispatch`, `pull_request`, etc. The `uses:` key at the job level (not step level) references the callee. Inputs go in `with:`, secrets in `secrets:`. Invoke the standardized deploy workflow with environment-specific parameters.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -809,10 +800,7 @@ A composite action bundles multiple steps into a single reusable step defined in
 
 #### Create a composite action
 
-**When to run:** When multiple workflows repeat the same step sequence (setup, validation, notification).
-**Trigger:** Not triggered independently — invoked with `uses:` at the step level.
-**Context:** Runs in the caller's job, on the caller's runner. Has access to the caller's workspace, environment variables, and `GITHUB_TOKEN`.
-**Purpose:** Encapsulate Python setup + pip cache + dependency install into a single reusable step.
+When multiple workflows repeat the same step sequence (setup, validation, notification). It is typically triggered by not triggered independently — invoked with `uses:` at the step level. Runs in the caller's job, on the caller's runner. Has access to the caller's workspace, environment variables, and `GITHUB_TOKEN`. Encapsulate Python setup + pip cache + dependency install into a single reusable step.
 
 > [!info]- action.yml breakdown
 >
@@ -883,10 +871,7 @@ runs:
 
 #### Use the composite action in a workflow
 
-**When to run:** When a workflow needs the Python environment setup without repeating the step sequence.
-**Trigger:** Any workflow event — the composite action is called at the step level.
-**Context:** Runs on the same runner as the calling job. The action's steps appear in the calling job's logs.
-**Purpose:** Replace three manual steps (setup-python, cache, pip install) with a single `uses:` step.
+When a workflow needs the Python environment setup without repeating the step sequence. It is typically triggered by any workflow event — the composite action is called at the step level. Runs on the same runner as the calling job. The action's steps appear in the calling job's logs. Replace three manual steps (setup-python, cache, pip install) with a single `uses:` step.
 
 *Call the composite action with default inputs, then with custom Python 3.11.*
 
@@ -986,10 +971,7 @@ Workflow chaining coordinates independent workflows by triggering one workflow a
 
 #### Chain workflows with workflow_run
 
-**When to run:** When a workflow should execute after another workflow completes (e.g., deploy after CI).
-**Trigger:** `workflow_run` event — fires when the named workflow completes, succeeds, or fails.
-**Context:** Always runs on the default branch (main), not the triggering branch. This is a security feature — the chained workflow uses trusted code from main.
-**Purpose:** Decouple CI from deployment: let CI run on the PR branch, then trigger deployment from main after success.
+When a workflow should execute after another workflow completes (e.g., deploy after CI). It is typically triggered by `workflow_run` event — fires when the named workflow completes, succeeds, or fails. Always runs on the default branch (main), not the triggering branch. This is a security feature — the chained workflow uses trusted code from main. Decouple CI from deployment: let CI run on the PR branch, then trigger deployment from main after success.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1084,10 +1066,7 @@ Steps within a job communicate through `$GITHUB_OUTPUT` (step outputs) and `$GIT
 
 #### Pass data between steps and jobs
 
-**When to run:** When a step produces a value (version string, timestamp, computed path) that later steps or jobs need.
-**Trigger:** Any event — data flow is independent of the trigger.
-**Context:** `GITHUB_OUTPUT` and `GITHUB_ENV` are scoped to the current job. Only values promoted to `jobs.<id>.outputs` are visible to downstream jobs via `needs.<id>.outputs.<name>`.
-**Purpose:** Propagate build metadata from a producer job to a consumer job without using artifacts.
+When a step produces a value (version string, timestamp, computed path) that later steps or jobs need. It is typically triggered by any event — data flow is independent of the trigger. `GITHUB_OUTPUT` and `GITHUB_ENV` are scoped to the current job. Only values promoted to `jobs.<id>.outputs` are visible to downstream jobs via `needs.<id>.outputs.<name>`. Propagate build metadata from a producer job to a consumer job without using artifacts.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1213,10 +1192,7 @@ Artifacts are files uploaded during a workflow run that persist beyond the job's
 
 #### Upload and download artifacts across jobs
 
-**When to run:** When a build job produces files that a deploy or test job needs, or when you need to preserve test reports for later inspection.
-**Trigger:** Any event — artifacts are a data flow mechanism.
-**Context:** Artifacts are scoped to the workflow run. Cross-run artifact sharing requires the GitHub API. Different artifact names within the same run are independent.
-**Purpose:** Pass build outputs from a build job to a deploy job, and preserve test reports with longer retention.
+When a build job produces files that a deploy or test job needs, or when you need to preserve test reports for later inspection. It is typically triggered by any event — artifacts are a data flow mechanism. Artifacts are scoped to the workflow run. Cross-run artifact sharing requires the GitHub API. Different artifact names within the same run are independent. Pass build outputs from a build job to a deploy job, and preserve test reports with longer retention.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1357,10 +1333,7 @@ Caching persists dependencies and build outputs across workflow runs to avoid re
 
 #### Design cache keys with fallback
 
-**When to run:** When a workflow installs dependencies (pip, npm, Maven) or builds artifacts that rarely change.
-**Trigger:** Any event — caching applies at the step level.
-**Context:** Caches are scoped to the branch and the default branch. A PR branch can read caches from `main` but not from other PR branches. Cache entries expire after 7 days of no access, with a 10 GB total limit per repository.
-**Purpose:** Avoid downloading and installing the same pip packages on every run.
+When a workflow installs dependencies (pip, npm, Maven) or builds artifacts that rarely change. It is typically triggered by any event — caching applies at the step level. Caches are scoped to the branch and the default branch. A PR branch can read caches from `main` but not from other PR branches. Cache entries expire after 7 days of no access, with a 10 GB total limit per repository. Avoid downloading and installing the same pip packages on every run.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1462,10 +1435,7 @@ Job summaries write GitHub-flavored markdown to the workflow run page. Annotatio
 
 #### Write a markdown job summary
 
-**When to run:** When a workflow produces human-readable results (test reports, build stats, deployment URLs) that should be visible without downloading artifacts.
-**Trigger:** Any event.
-**Context:** `$GITHUB_STEP_SUMMARY` is a file path that accepts markdown. Multiple steps can append to it. Maximum 1 MiB per step, 1 MiB total per job.
-**Purpose:** Surface a build report with run metadata directly on the workflow run page.
+When a workflow produces human-readable results (test reports, build stats, deployment URLs) that should be visible without downloading artifacts. It is typically triggered by any event. `$GITHUB_STEP_SUMMARY` is a file path that accepts markdown. Multiple steps can append to it. Maximum 1 MiB per step, 1 MiB total per job. Surface a build report with run metadata directly on the workflow run page.
 
 *Write a markdown table and additional notes to the job summary.*
 
@@ -1625,10 +1595,7 @@ The `concurrency:` key serializes or cancels workflow runs sharing the same grou
 
 #### Configure concurrency groups
 
-**When to run:** When parallel runs of the same workflow on the same branch would conflict (e.g., deploying to the same environment).
-**Trigger:** Any event — concurrency applies at the workflow or job level.
-**Context:** Concurrency groups are global to the repository. The group identifier is a string that can include expressions.
-**Purpose:** Cancel redundant CI runs on push, or serialize deployments to prevent conflicts.
+When parallel runs of the same workflow on the same branch would conflict (e.g., deploying to the same environment). It is typically triggered by any event — concurrency applies at the workflow or job level. Concurrency groups are global to the repository. The group identifier is a string that can include expressions. Cancel redundant CI runs on push, or serialize deployments to prevent conflicts.
 
 > [!info]- Workflow YAML breakdown
 >
@@ -1713,10 +1680,7 @@ Timeouts prevent runaway jobs from consuming runner hours. The `continue-on-erro
 
 #### Configure timeouts and continue-on-error
 
-**When to run:** When a job or step could hang indefinitely, or when a step's failure should not block the rest of the job.
-**Trigger:** Any event.
-**Context:** Default timeout is 360 minutes (6 hours). Step-level timeout overrides job-level for that step. `continue-on-error` applies independently of timeouts.
-**Purpose:** Prevent stuck jobs from burning runner hours and allow flaky steps to fail without blocking the pipeline.
+When a job or step could hang indefinitely, or when a step's failure should not block the rest of the job. It is typically triggered by any event. Default timeout is 360 minutes (6 hours). Step-level timeout overrides job-level for that step. `continue-on-error` applies independently of timeouts. Prevent stuck jobs from burning runner hours and allow flaky steps to fail without blocking the pipeline.
 
 > [!info]- Workflow YAML breakdown (timeout)
 >
@@ -2000,10 +1964,7 @@ Release automation patterns standardize how versions are bumped, changelogs are 
 
 #### Automate releases with Release Please
 
-**When to run:** After merging Conventional Commits to main — Release Please creates a release PR that bumps the version and generates a changelog.
-**Trigger:** `push` to main (for the Release Please action) and `release: published` (for publishing).
-**Context:** Requires `contents: write` and `pull-requests: write` permissions.
-**Purpose:** Remove manual version management — merge PRs with conventional commit messages, and Release Please handles the rest.
+After merging Conventional Commits to main — Release Please creates a release PR that bumps the version and generates a changelog. It is typically triggered by `push` to main (for the Release Please action) and `release: published` (for publishing). Requires `contents: write` and `pull-requests: write` permissions. Remove manual version management — merge PRs with conventional commit messages, and Release Please handles the rest.
 
 *Release Please + PyPI publish with OIDC trusted publishing.*
 

@@ -10,7 +10,8 @@ status: complete
 
 # DateTime, Math & Utilities - Python
 
-> [!quote]
+> [!quote]- Skeet On Datetime Handling
+>
 > "There are two hard problems in datetime handling: timezone conversions, daylight saving transitions, and off-by-one errors."
 >
 > — **Jon Skeet**
@@ -238,6 +239,7 @@ Python's `datetime` module provides `datetime` (date + time), `date` (date only)
 > - Use `zoneinfo.ZoneInfo` (Python 3.9+) for timezone-aware local times
 > - Keep datetimes aware throughout the pipeline; convert to local time only for display
 
+*Example: datetime module — creating date, time, datetime, timedelta objects.*
 ```python
 # Creating date and time objects
 from datetime import datetime, date, time, timedelta
@@ -281,20 +283,23 @@ t  # Specific time
 dt_micro  # With microseconds
 ```
 
-    2026-03-25 05:48:19.510467
-    2026-03-25
-    05:48:19.510467
-    <class 'datetime.datetime'>
-    
-    2024-03-15 14:30:45
-    2024-03-15
-    14:30:45
-    2024-03-15 14:30:45.123456
+```text
+2026-03-25 05:48:19.510467
+2026-03-25
+05:48:19.510467
+<class 'datetime.datetime'>
+
+2024-03-15 14:30:45
+2024-03-15
+14:30:45
+2024-03-15 14:30:45.123456
+```
 
 #### datetime .year, .month, .day, .hour — accessing components
 
 Access individual components as attributes: `.year`, `.month`, `.day`, `.hour`, `.minute`, `.second`, `.microsecond`. `.weekday()` returns 0=Monday through 6=Sunday; `.isoweekday()` returns 1=Monday through 7=Sunday.
 
+*Example: datetime .year, .month, .day, .hour — accessing components.*
 ```python
 
 dt = datetime(2024, 3, 15, 14, 30, 45, 123456)
@@ -312,17 +317,19 @@ dt.timetuple().tm_yday  # Day of year
 dt.isocalendar()[1]  # Week number
 ```
 
-    2024
-    3
-    15
-    14
-    30
-    45
-    123456
-    4
-    5
-    75
-    11
+```text
+2024
+3
+15
+14
+30
+45
+123456
+4
+5
+75
+11
+```
 
 ### Unix timestamps
 
@@ -330,6 +337,7 @@ dt.isocalendar()[1]  # Week number
 
 `.timestamp()` converts a datetime to a float of seconds since the Unix epoch (1970-01-01 UTC). `datetime.fromtimestamp(ts, tz=timezone.utc)` converts back — always pass `tz=timezone.utc` to get an aware datetime.
 
+*Example: Timestamp (Unix epoch) conversions.*
 ```python
 
 now = datetime.now()
@@ -355,15 +363,17 @@ epoch  # Epoch
 print(f"{(now_utc - epoch).total_seconds():.0f}")  # Seconds since epoch
 ```
 
-    1774414099.520628
-    1774414099
-    
-    2026-03-25 05:48:19.520628
-    2026-03-25 04:48:19.520628+00:00
-    
-    1774414099.5206285
-    1970-01-01 00:00:00+00:00
-    1774414100
+```text
+1774414099.520628
+1774414099
+
+2026-03-25 05:48:19.520628
+2026-03-25 04:48:19.520628+00:00
+
+1774414099.5206285
+1970-01-01 00:00:00+00:00
+1774414100
+```
 
 ### Parsing and formatting
 
@@ -371,6 +381,7 @@ print(f"{(now_utc - epoch).total_seconds():.0f}")  # Seconds since epoch
 
 `datetime.strptime(string, format)` parses a date string using format codes: `%Y` (4-digit year), `%m` (month), `%d` (day), `%H` (24h hour), `%M` (minute), `%S` (second), `%f` (microsecond), `%p` (AM/PM).
 
+*Example: Parsing strings -> datetime (strptime).*
 ```python
 
 s1 = "2024-03-15 14:30:45"
@@ -395,17 +406,20 @@ print(f"'{s5}' -> {dt5}")
 print(f"'{s6}' -> {dt6}")
 ```
 
-    '2024-03-15 14:30:45' -> 2024-03-15 14:30:45
-    '15/03/2024' -> 2024-03-15 00:00:00
-    'March 15, 2024 2:30 PM' -> 2024-03-15 14:30:00
-    '2024-03-15T14:30:45' -> 2024-03-15 14:30:45
-    '2024-03-15T14:30:45.123456' -> 2024-03-15 14:30:45.123456
-    'Fri, 15 Mar 2024 14:30:45' -> 2024-03-15 14:30:45
+```text
+'2024-03-15 14:30:45' -> 2024-03-15 14:30:45
+'15/03/2024' -> 2024-03-15 00:00:00
+'March 15, 2024 2:30 PM' -> 2024-03-15 14:30:00
+'2024-03-15T14:30:45' -> 2024-03-15 14:30:45
+'2024-03-15T14:30:45.123456' -> 2024-03-15 14:30:45.123456
+'Fri, 15 Mar 2024 14:30:45' -> 2024-03-15 14:30:45
+```
 
 #### Formatting datetime -> string (strftime)
 
 `dt.strftime(format)` formats a datetime as a string. Same format codes as `strptime`. Common patterns: `'%Y-%m-%dT%H:%M:%S'` (ISO 8601), `'%Y-%m-%d'` (date only), `'%I:%M %p'` (12-hour with AM/PM).
 
+*Example: Formatting datetime -> string (strftime).*
 ```python
 
 dt = datetime(2024, 3, 15, 14, 30, 45, 123456)
@@ -425,24 +439,29 @@ dt.strftime('%a, %d %b %Y %H:%M:%S')  # RFC 2822
 dt.strftime('%Y%m%d%H%M%S')  # Compact
 ```
 
-    2024-03-15T14:30:45
-    2024-03-15
-    14:30:45
-    03/15/2024
-    15/03/2024
-    March 15, 2024
-    Mar 15, 2024
-    02:30 PM
-    Friday
-    Fri
-    2024-03-15T14:30:45.123456
-    Fri, 15 Mar 2024 14:30:45
-    20240315143045
+```text
+2024-03-15T14:30:45
+2024-03-15
+14:30:45
+03/15/2024
+15/03/2024
+March 15, 2024
+Mar 15, 2024
+02:30 PM
+Friday
+Fri
+2024-03-15T14:30:45.123456
+Fri, 15 Mar 2024 14:30:45
+20240315143045
+```
 
-#### strftime code reference
+#### Common `strftime()` format codes
 
+Use `strftime()` directives selectively. This list covers the format codes exercised elsewhere in the note rather than every platform-dependent directive.
+
+*Example: Common `strftime()` format codes.*
 ```python
-# strftime code reference — complete list of format codes
+# Common strftime codes used in this note
 
 codes = {
     "%Y": "4-digit year",      "%y": "2-digit year",
@@ -461,27 +480,29 @@ for code, desc in codes.items():
     print(f"  {code:4s} = {dt.strftime(code):20s}  ({desc})")
 ```
 
-      %Y   = 2024                  (4-digit year)
-      %y   = 24                    (2-digit year)
-      %m   = 03                    (Month (01-12))
-      %B   = March                 (Month name (full))
-      %b   = Mar                   (Month name (abbr))
-      %d   = 15                    (Day (01-31))
-      %H   = 14                    (Hour 24h (00-23))
-      %I   = 02                    (Hour 12h (01-12))
-      %M   = 30                    (Minute (00-59))
-      %S   = 45                    (Second (00-59))
-      %f   = 123456                (Microsecond)
-      %p   = PM                    (AM/PM)
-      %A   = Friday                (Weekday (full))
-      %a   = Fri                   (Weekday (abbr))
-      %w   = 5                     (Weekday (0=Sun))
-      %j   = 075                   (Day of year)
-      %U   = 10                    (Week# (Sun start))
-      %W   = 11                    (Week# (Mon start))
-      %Z   =                       (Timezone name)
-      %z   =                       (UTC offset)
-      %%   = %                     (Literal %)
+```text
+  %Y   = 2024                  (4-digit year)
+  %y   = 24                    (2-digit year)
+  %m   = 03                    (Month (01-12))
+  %B   = March                 (Month name (full))
+  %b   = Mar                   (Month name (abbr))
+  %d   = 15                    (Day (01-31))
+  %H   = 14                    (Hour 24h (00-23))
+  %I   = 02                    (Hour 12h (01-12))
+  %M   = 30                    (Minute (00-59))
+  %S   = 45                    (Second (00-59))
+  %f   = 123456                (Microsecond)
+  %p   = PM                    (AM/PM)
+  %A   = Friday                (Weekday (full))
+  %a   = Fri                   (Weekday (abbr))
+  %w   = 5                     (Weekday (0=Sun))
+  %j   = 075                   (Day of year)
+  %U   = 10                    (Week# (Sun start))
+  %W   = 11                    (Week# (Mon start))
+  %Z   =                       (Timezone name)
+  %z   =                       (UTC offset)
+  %%   = %                     (Literal %)
+```
 
 ### ISO 8601 and timezone handling
 
@@ -489,6 +510,7 @@ for code, desc in codes.items():
 
 `.isoformat()` returns ISO 8601 format. `datetime.fromisoformat()` parses it back. Python 3.7+ supports offset strings (`+05:30`); Python 3.11+ supports `Z` (UTC marker).
 
+*Example: ISO 8601 conversions | isoformat() and fromisoformat().*
 ```python
 
 dt = datetime(2024, 3, 15, 14, 30, 45, 123456)
@@ -512,22 +534,25 @@ from_iso_z = datetime.fromisoformat("2024-03-15T14:30:45Z")
 from_iso_z  # With Z (UTC)
 ```
 
-    2024-03-15T14:30:45.123456
-    2024-03-15
-    14:30:45.123456
-    
-    2024-03-15 14:30:45.123456
-    2024-03-15 14:30:45+05:30
-    2024-03-15 14:30:45+00:00
+```text
+2024-03-15T14:30:45.123456
+2024-03-15
+14:30:45.123456
+
+2024-03-15 14:30:45.123456
+2024-03-15 14:30:45+05:30
+2024-03-15 14:30:45+00:00
+```
 
 #### zoneinfo.ZoneInfo — timezone-aware datetime creation
 
 Pass `tzinfo=ZoneInfo("America/New_York")` to the `datetime` constructor to create a timezone-aware datetime. `timezone.utc` is the built-in UTC timezone. Naive datetimes (no `tzinfo`) should be avoided in pipelines.
 
+*Example: zoneinfo.ZoneInfo — timezone-aware datetime creation.*
 ```python
 
 naive = datetime(2024, 3, 15, 14, 30, 45)
-print(f"Naive (no tz):   {naive}, tzinfo={naive.tzinfo}")
+print(f"{naive}, tzinfo={naive.tzinfo}")
 
 # Creating timezone-aware datetimes
 utc_dt = datetime(2024, 3, 15, 14, 30, 45, tzinfo=timezone.utc)
@@ -543,18 +568,21 @@ tokyo_dt  # Tokyo
 india_dt  # India
 ```
 
-    2024-03-15 14:30:45, tzinfo=None
-    
-    2024-03-15 14:30:45+00:00
-    2024-03-15 14:30:45-04:00
-    2024-03-15 14:30:45+00:00
-    2024-03-15 14:30:45+09:00
-    2024-03-15 14:30:45+05:30
+```text
+2024-03-15 14:30:45, tzinfo=None
+
+2024-03-15 14:30:45+00:00
+2024-03-15 14:30:45-04:00
+2024-03-15 14:30:45+00:00
+2024-03-15 14:30:45+09:00
+2024-03-15 14:30:45+05:30
+```
 
 #### datetime.astimezone — converting between timezones
 
 `.astimezone(ZoneInfo('timezone'))` converts an aware datetime to a different timezone while preserving the same instant in time. The underlying UTC value stays the same — only the offset and display change.
 
+*Example: datetime.astimezone — converting between timezones.*
 ```python
 
 utc_now = datetime.now(timezone.utc)
@@ -568,19 +596,22 @@ utc_now.astimezone(ZoneInfo('Asia/Dubai'))  # -> Dubai
 utc_now.astimezone(ZoneInfo('America/Sao_Paulo'))  # -> São Paulo
 ```
 
-    2026-03-25 04:48:19.547681+00:00
-    2026-03-25 00:48:19.547681-04:00
-    2026-03-25 04:48:19.547681+00:00
-    2026-03-25 13:48:19.547681+09:00
-    2026-03-25 15:48:19.547681+11:00
-    2026-03-25 10:18:19.547681+05:30
-    2026-03-25 08:48:19.547681+04:00
-    2026-03-25 01:48:19.547681-03:00
+```text
+2026-03-25 04:48:19.547681+00:00
+2026-03-25 00:48:19.547681-04:00
+2026-03-25 04:48:19.547681+00:00
+2026-03-25 13:48:19.547681+09:00
+2026-03-25 15:48:19.547681+11:00
+2026-03-25 10:18:19.547681+05:30
+2026-03-25 08:48:19.547681+04:00
+2026-03-25 01:48:19.547681-03:00
+```
 
-#### DateTimeOffset equivalent — localize naive datetime
+#### Attaching `tzinfo` to a local wall-clock value
 
-`.replace(tzinfo=ZoneInfo(...))` attaches a timezone to a naive datetime without changing the time value. `timezone(timedelta(hours=5, minutes=30))` creates a fixed-offset timezone for systems that don't use IANA timezone names.
+`naive.replace(tzinfo=ZoneInfo(...))` should only be used when the naive value already represents local wall-clock time in that zone. It annotates the clock reading without converting the underlying instant. `timezone(timedelta(hours=5, minutes=30))` creates a fixed-offset timezone for systems that do not use IANA timezone names.
 
+*Example: Attaching `tzinfo` to a local wall-clock value.*
 ```python
 
 naive = datetime(2024, 3, 15, 14, 30, 45)
@@ -593,8 +624,10 @@ dt_offset = datetime(2024, 3, 15, 14, 30, 45, tzinfo=offset_5_30)
 dt_offset  # Fixed +5:30
 ```
 
-    2024-03-15 14:30:45-04:00
-    2024-03-15 14:30:45+05:30
+```text
+2024-03-15 14:30:45-04:00
+2024-03-15 14:30:45+05:30
+```
 
 ### Date/time arithmetic
 
@@ -602,6 +635,7 @@ dt_offset  # Fixed +5:30
 
 `timedelta(days=, hours=, minutes=, seconds=, weeks=)` creates an interval. Add or subtract from a `datetime` with `+` and `-`. Subtracting two datetimes returns a `timedelta`. `.days` gives whole days; `.total_seconds()` gives the total interval in seconds.
 
+*Example: Date/time arithmetic with timedelta | add and subtract intervals.*
 ```python
 
 dt = datetime(2024, 3, 15, 14, 30, 45)
@@ -631,25 +665,30 @@ print(f"dt1 == dt2:  {dt1 == dt2}")
 dt1 > dt2
 ```
 
-    2024-03-15 14:30:45
-    2024-03-22 14:30:45
-    2024-02-14 14:30:45
-    2024-03-15 16:30:45
-    2024-03-15 16:00:45
-    2024-03-22 18:00:45
-    2023-09-17 14:30:45
-    
-    From 2024-03-15 to 2024-12-25
-    285 days, 0:00:00
-    285
-    24624000.0
-    
-    True
-    False
-    False
+```text
+2024-03-15 14:30:45
+2024-03-22 14:30:45
+2024-02-14 14:30:45
+2024-03-15 16:30:45
+2024-03-15 16:00:45
+2024-03-22 18:00:45
+2023-09-17 14:30:45
 
-#### datetime: supports full arithmetic
+From 2024-03-15 to 2024-12-25
+285 days, 0:00:00
+285
+24624000.0
 
+True
+False
+False
+```
+
+#### `datetime` values support full `timedelta` arithmetic
+
+`datetime` accepts both day-level and sub-day `timedelta` components, so additions and subtractions keep the calendar date and clock fields aligned in one operation.
+
+*Example: `datetime` values support full `timedelta` arithmetic.*
 ```python
 # datetime arithmetic — full add/subtract with timedelta
 
@@ -664,17 +703,22 @@ dt + timedelta(days=1.5)  # + 1.5 days
 dt + timedelta(days=1, hours=2, minutes=30, seconds=15)  # Combined
 ```
 
-    2024-03-15 14:30:45
-    2024-03-16 14:30:45
-    2024-03-15 12:30:45
-    2024-03-15 15:00:45
-    2024-03-15 14:31:30
-    2024-03-15 14:30:45.500000
-    2024-03-17 02:30:45
-    2024-03-16 17:01:00
+```text
+2024-03-15 14:30:45
+2024-03-16 14:30:45
+2024-03-15 12:30:45
+2024-03-15 15:00:45
+2024-03-15 14:31:30
+2024-03-15 14:30:45.500000
+2024-03-17 02:30:45
+2024-03-16 17:01:00
+```
 
-#### date: only days, no hours/minutes
+#### `date` values ignore sub-day `timedelta` components
 
+`date` arithmetic tracks whole days only. If you need hour or minute offsets, promote the value to `datetime` before doing the calculation.
+
+*Example: `date` values ignore sub-day `timedelta` components.*
 ```python
 # date arithmetic — only days, no hours or minutes
 
@@ -691,15 +735,19 @@ diff = d2 - d
 print(f"Diff {d} to {d2}: {diff.days} days")
 ```
 
-    2024-03-15
-    2024-03-22
-    2024-02-14
-    2024-03-22
-    Diff 2024-03-15 to 2024-12-25: 285 days
+```text
+2024-03-15
+2024-03-22
+2024-02-14
+2024-03-22
+Diff 2024-03-15 to 2024-12-25: 285 days
+```
 
-#### time: NO arithmetic support
+#### `time` values require `datetime.combine()` for arithmetic
 
-> [!warning] time Has No Arithmetic
+A `time` value has no date context, so Python requires you to combine it with a `date` before adding or subtracting offsets.
+
+> [!warning] `time` Arithmetic Requires a Date Context
 >
 > `time + timedelta(hours=1)` raises `TypeError`. Workaround: combine with a dummy date, do the arithmetic on the datetime, then extract the time component.
 
@@ -707,6 +755,7 @@ print(f"Diff {d} to {d2}: {diff.days} days")
 >
 > Combine `time` with a dummy date via `datetime.combine(date.today(), t)`, perform the arithmetic on the resulting `datetime`, then extract `.time()`. This is the standard workaround.
 
+*Example: `time` values require `datetime.combine()` for arithmetic.*
 ```python
 # time arithmetic — must convert to datetime first
 
@@ -719,12 +768,17 @@ new_time2 = (dummy - timedelta(minutes=45)).time()
 new_time2  # - 45m
 ```
 
-    14:30:45
-    16:45:45
-    13:45:45
+```text
+14:30:45
+16:45:45
+13:45:45
+```
 
-#### timestamp: just a float, arithmetic is trivial
+#### Unix timestamps use numeric second offsets
 
+A Unix timestamp is a numeric count of seconds since the epoch. Offset math is straightforward, but you must restore timezone context explicitly when converting back to `datetime`.
+
+*Example: Unix timestamps use numeric second offsets.*
 ```python
 # Timestamp arithmetic — float math on epoch seconds
 
@@ -737,40 +791,45 @@ ts + 45  # + 45 seconds
 datetime.fromtimestamp(ts + 86400)  # Back to datetime
 ```
 
-    1710509445.0
-    1710595845.0
-    1710513045.0
-    1710511245.0
-    1710509490.0
-    2024-03-16 14:30:45
+```text
+1710509445.0
+1710595845.0
+1710513045.0
+1710511245.0
+1710509490.0
+2024-03-16 14:30:45
+```
 
 #### dateutil.relativedelta — add months and years to dates
 
-`timedelta` doesn't support months or years (variable-length intervals). `dateutil.relativedelta` handles this — `relativedelta(months=1)` correctly handles month-end clamping (Jan 31 + 1 month = Feb 29 in leap year). Install via `pip install python-dateutil`.
+`timedelta` does not support months or years because those units have variable lengths. `dateutil.relativedelta` handles calendar-aware math such as month-end clamping, so `relativedelta(months=1)` turns January 31 into February 29 in a leap year. Install it with `pip install python-dateutil`.
 
+*Example: dateutil.relativedelta — add months and years to dates.*
 ```python
 
 dt = datetime(2024, 1, 31, 14, 30, 0)
 dt  # Original
-dt + relativedelta(months=1)  # + 1 month — Feb 29 (leap year!)
+dt + relativedelta(months=1)  # + 1 month — month-end clamped to Feb 29
 dt + relativedelta(months=6)  # + 6 months
 dt + relativedelta(years=1)  # + 1 year
 dt - relativedelta(months=3)  # - 3 months
 dt + relativedelta(years=1, months=2, days=3)  # + 1y 2m 3d
 ```
 
-    2024-01-31 14:30:00
-    2024-02-29 14:30:00
-    2024-07-31 14:30:00
-    2025-01-31 14:30:00
-    2023-10-31 14:30:00
-    2025-04-03 14:30:00
+```text
+2024-01-31 14:30:00
+2024-02-29 14:30:00
+2024-07-31 14:30:00
+2025-01-31 14:30:00
+2023-10-31 14:30:00
+2025-04-03 14:30:00
+```
 
 ## Math and Random
 
 ### Math built-ins and math module
 
-#### Built-in math — abs(), max(), min(), divmod(), clamp
+#### Built-in numeric helpers — `abs()`, `max()`, `min()`, and clamp patterns
 
 > [!info] Math built-ins
 >
@@ -780,8 +839,9 @@ dt + relativedelta(years=1, months=2, days=3)  # + 1y 2m 3d
 > - `math` module adds `floor`, `ceil`, `sqrt`, `log`, `pow`, and trig functions
 > - For vectorized array math, use NumPy instead
 
+*Example: Built-in numeric helpers — `abs()`, `max()`, `min()`, and clamp patterns.*
 ```python
-# Basic math — abs, max, min are built-in; clamp uses max(lo, min(val, hi))
+# Basic numeric helpers — abs, max, min; clamp uses max(lo, min(val, hi))
 
 abs(-42)
 max(10, 20)
@@ -789,13 +849,18 @@ min(10, 20)
 max(0, min(15, 10))  # clamp(15, 0,10)
 ```
 
-    42
-    20
-    10
-    10
+```text
+42
+20
+10
+10
+```
 
-#### math.floor, math.ceil, round — rounding strategies
+#### `math.floor()`, `math.ceil()`, and `round()` handle different rounding cases
 
+`math.floor()`, `math.ceil()`, and `round()` solve different rounding problems, especially around tie handling and truncation.
+
+*Example: `math.floor()`, `math.ceil()`, and `round()` handle different rounding cases.*
 ```python
 # Rounding — floor, ceil, round with banker's rounding default
 
@@ -807,15 +872,20 @@ math.trunc(3.9)  # → 3
 int(3.9)
 ```
 
-    3
-    4
-    4
-    2
-    3
-    3
+```text
+3
+4
+4
+2
+3
+3
+```
 
-#### math.sqrt, math.log, math.pow — powers, roots, logarithms
+#### `math.sqrt()`, `math.log()`, and `math.pow()` cover power and log transforms
 
+Choose between operators and `math` helpers based on whether you need integer preservation, floating-point behavior, or logarithmic transforms.
+
+*Example: `math.sqrt()`, `math.log()`, and `math.pow()` cover power and log transforms.*
 ```python
 # Powers, roots, logarithms — ** operator, math.sqrt, math.log
 
@@ -832,18 +902,23 @@ math.log2(1024)
 math.exp(1)
 ```
 
-    1024
-    1024.0
-    1024
-    12.0
-    12
-    4.605170185988092
-    2.0
-    10.0
-    2.718281828459045
+```text
+1024
+1024.0
+1024
+12.0
+12
+4.605170185988092
+2.0
+10.0
+2.718281828459045
+```
 
-#### math.sin, math.cos, math.pi, math.e — trigonometry and constants
+#### `math.sin()`, `math.cos()`, `math.pi`, and `math.e` support trigonometric work
 
+The `math` module exposes both numeric constants and radian-based trigonometric helpers for geometry and signal-processing tasks.
+
+*Example: `math.sin()`, `math.cos()`, `math.pi`, and `math.e` support trigonometric work.*
 ```python
 # Trigonometry and constants — pi, e, tau, sin, cos, atan2
 
@@ -857,17 +932,22 @@ math.degrees(math.pi)  # math.degrees(π)
 math.radians(180)
 ```
 
-    3.141592653589793
-    2.718281828459045
-    6.283185307179586
-    1.0
-    1.0
-    0.7853981633974483
-    180.0
-    3.141592653589793
+```text
+3.141592653589793
+2.718281828459045
+6.283185307179586
+1.0
+1.0
+0.7853981633974483
+180.0
+3.141592653589793
+```
 
-#### math.inf, math.nan, math.isnan — special float values
+#### `math.inf`, `math.nan`, and `math.isnan()` require explicit checks
 
+`inf` and `nan` are valid float sentinel values, but they require explicit guards such as `math.isnan()` and `math.isfinite()` in comparison-heavy code.
+
+*Example: `math.inf`, `math.nan`, and `math.isnan()` require explicit checks.*
 ```python
 # Special float values — inf, nan, and detection functions
 
@@ -878,14 +958,19 @@ math.isinf(math.inf)  # math.isinf(inf)
 math.isfinite(42)
 ```
 
-    inf
-    nan
-    True
-    True
-    True
+```text
+inf
+nan
+True
+True
+True
+```
 
-#### statistics.quantiles — percentile calculation
+#### `statistics.quantiles()` gives lightweight percentile cut points
 
+`statistics.quantiles()` is convenient for small in-memory samples when you need percentile-style cut points without pulling in NumPy.
+
+*Example: `statistics.quantiles()` gives lightweight percentile cut points.*
 ```python
 # Percentile calculation — statistics module for distribution analysis
 
@@ -900,11 +985,13 @@ quantiles = statistics.quantiles(latencies, n=20)  # 5% increments
 print(f"{quantiles[-1]:.2f} ms")  # P95
 ```
 
-    [3.1, 6.7, 12.5, 15.3, 22.0, 33.4, 45.2, 51.8, 78.9, 99.1]
-    36.80
-    27.70
-    32.10
-    108.19 ms
+```text
+[3.1, 6.7, 12.5, 15.3, 22.0, 33.4, 45.2, 51.8, 78.9, 99.1]
+36.80
+27.70
+32.10
+108.19 ms
+```
 
 ### Random number generation
 
@@ -912,12 +999,13 @@ print(f"{quantiles[-1]:.2f} ms")  # P95
 
 `random.seed(n)` makes results reproducible. `randint(a, b)` returns `[a, b]` inclusive. `random()` returns `[0.0, 1.0)`. `choice()` picks one element; `choices(k=n)` picks n with replacement; `sample(k=n)` picks n without replacement. `shuffle()` reorders in place.
 
+*Example: random module | pseudo-random numbers with seed for reproducibility.*
 ```python
 
-random.seed(42)  # seed for reproducibility (like C# new Random(42))
+random.seed(42)  # seed for reproducibility
 
 [random.randint(1, 100) for _ in range(5)]  # [1, 100] inclusive both ends
-[random.randrange(1, 101) for _ in range(5)]  # [1, 101) — like C# Next(1, 101)
+[random.randrange(1, 101) for _ in range(5)]  # [1, 101) upper bound excluded
 
 [round(random.random(), 4) for _ in range(5)]  # [0.0, 1.0)
 [round(random.uniform(1.0, 10.0), 2) for _ in range(5)]  # [1.0, 10.0]
@@ -933,23 +1021,26 @@ random.shuffle(items)
 items  # Shuffled
 ```
 
-    [82, 15, 4, 95, 36]
-    [32, 29, 18, 95, 14]
-    
-    [0.6767, 0.8922, 0.0869, 0.4219, 0.0298]
-    [2.97, 5.55, 1.24, 2.79, 6.85]
-    
-    yellow
-    ['red', 'blue', 'yellow']
-    ['red', 'yellow']
-    
-    ['A', 'B', 'C', 'D', 'E']
-    ['E', 'A', 'B', 'C', 'D']
+```text
+[82, 15, 4, 95, 36]
+[32, 29, 18, 95, 14]
+
+[0.6767, 0.8922, 0.0869, 0.4219, 0.0298]
+[2.97, 5.55, 1.24, 2.79, 6.85]
+
+yellow
+['red', 'blue', 'yellow']
+['red', 'yellow']
+
+['A', 'B', 'C', 'D', 'E']
+['E', 'A', 'B', 'C', 'D']
+```
 
 #### random.choices weights= — weighted random selection
 
 Pass `weights=` to `random.choices` for non-uniform sampling. Weights don't need to sum to 100 — they're relative. Useful for generating realistic test data with skewed distributions (e.g., 60% page_view, 10% purchase).
 
+*Example: random.choices weights= — weighted random selection.*
 ```python
 
 events = ["page_view", "click", "purchase", "signup"]
@@ -959,17 +1050,22 @@ picks  # Weighted picks (20)
 dict(Counter(picks))  # Distribution
 ```
 
-    ['page_view', 'click', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'purchase', 'page_view', 'page_view', 'click', 'purchase', 'page_view', 'page_view', 'page_view', 'click', 'click']
-    {'page_view': 14, 'click': 4, 'purchase': 2}
+```text
+['page_view', 'click', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'page_view', 'purchase', 'page_view', 'page_view', 'click', 'purchase', 'page_view', 'page_view', 'page_view', 'click', 'click']
+{'page_view': 14, 'click': 4, 'purchase': 2}
+```
 
-#### random + datetime — synthetic OHLCV test data generation
+#### `random.Random()` can generate deterministic synthetic event records
 
+A dedicated `random.Random()` instance keeps generator state isolated from global calls, which is useful when test fixtures need deterministic event streams.
+
+*Example: `random.Random()` can generate deterministic synthetic event records.*
 ```python
 # Synthetic test data generation — realistic event records for pipelines
 
 event_types = ["page_view", "click", "purchase", "signup"]
 regions = ["us-east-1", "eu-west-1", "ap-south-1"]
-rng = random.Random(123)  # independent RNG instance (like C# new Random(123))
+rng = random.Random(123)  # independent RNG instance
 
 print(f"{'event_id':<12} {'type':<12} {'region':<12} {'revenue':>8}")
 for i in range(8):
@@ -980,16 +1076,18 @@ for i in range(8):
     print(f"{event_id:<12} {evt_type:<12} {region:<12} {revenue:>8.2f}")
 ```
 
-    event_id     type         region        revenue
-    ────────────────────────────────────────────────
-    evt_0001     page_view    eu-west-1        0.00
-    evt_0002     page_view    eu-west-1        0.00
-    evt_0003     purchase     us-east-1      168.51
-    evt_0004     page_view    eu-west-1        0.00
-    evt_0005     purchase     eu-west-1      171.16
-    evt_0006     click        us-east-1        0.00
-    evt_0007     purchase     ap-south-1      70.09
-    evt_0008     click        us-east-1        0.00
+```text
+event_id     type         region        revenue
+────────────────────────────────────────────────
+evt_0001     page_view    eu-west-1        0.00
+evt_0002     page_view    eu-west-1        0.00
+evt_0003     purchase     us-east-1      168.51
+evt_0004     page_view    eu-west-1        0.00
+evt_0005     purchase     eu-west-1      171.16
+evt_0006     click        us-east-1        0.00
+evt_0007     purchase     ap-south-1      70.09
+evt_0008     click        us-east-1        0.00
+```
 
 ## Logging
 
@@ -1011,6 +1109,7 @@ Loggers form a hierarchy (root > app > app.module) — set level on parent, chil
 > - Call `logging.basicConfig` once in the application entry point, never in library modules
 > - Use `logging.getLogger(__name__)` in each module for automatic hierarchy and filtering
 
+*Example: logging module — levels, handlers, formatters, basicConfig.*
 ```python
 # ── Basic logging setup ──
 logger = logging.getLogger("PipelineDemo")
@@ -1035,14 +1134,19 @@ logger.error("Error: failed partition %s", "2024-03-15")      # shown
 logger.critical("Critical: pipeline halted")                   # shown
 ```
 
-    05:52:00 [DEBUG   ] PipelineDemo: Debug: starting pipeline
-    05:52:00 [INFO    ] PipelineDemo: Info: processed 42 rows
-    05:52:00 [WARNING ] PipelineDemo: Warning: schema drift in events_raw
-    05:52:00 [ERROR   ] PipelineDemo: Error: failed partition 2024-03-15
-    05:52:00 [CRITICAL] PipelineDemo: Critical: pipeline halted
+```text
+05:52:00 [DEBUG   ] PipelineDemo: Debug: starting pipeline
+05:52:00 [INFO    ] PipelineDemo: Info: processed 42 rows
+05:52:00 [WARNING ] PipelineDemo: Warning: schema drift in events_raw
+05:52:00 [ERROR   ] PipelineDemo: Error: failed partition 2024-03-15
+05:52:00 [CRITICAL] PipelineDemo: Critical: pipeline halted
+```
 
-#### logging.getLogger — simulating a pipeline run with structured logs
+#### `logging.getLogger()` keeps subsystem logs scoped and configurable
 
+`logging.getLogger()` gives each subsystem a stable logger name while still inheriting shared handler and level configuration.
+
+*Example: `logging.getLogger()` keeps subsystem logs scoped and configurable.*
 ```python
 # Simulating a pipeline run with logging — practical ETL example
 
@@ -1071,14 +1175,19 @@ logger.info("Pipeline completed")
 # ── JSON logging (for production / cloud) ──
 ```
 
-    05:52:09 [INFO    ] ETL: Pipeline started
-    05:52:09 [INFO    ] ETL: Loaded events_raw: 1924 rows in 404ms
-    05:52:09 [INFO    ] ETL: Loaded users: 4606 rows in 2206ms
-    05:52:09 [INFO    ] ETL: Loaded transactions: 3757 rows in 1343ms
-    05:52:09 [INFO    ] ETL: Pipeline completed
+```text
+05:52:09 [INFO    ] ETL: Pipeline started
+05:52:09 [INFO    ] ETL: Loaded events_raw: 1924 rows in 404ms
+05:52:09 [INFO    ] ETL: Loaded users: 4606 rows in 2206ms
+05:52:09 [INFO    ] ETL: Loaded transactions: 3757 rows in 1343ms
+05:52:09 [INFO    ] ETL: Pipeline completed
+```
 
-#### logging.Formatter — JSON structured log output
+#### Custom `logging.Formatter` implementations can emit JSON
 
+A custom `logging.Formatter` can emit JSON for downstream systems that index `timestamp`, `level`, and message fields.
+
+*Example: Custom `logging.Formatter` implementations can emit JSON.*
 ```python
 # JSON log formatter — machine-parseable logs for ELK/CloudWatch/Datadog
 
@@ -1105,8 +1214,10 @@ json_logger.info("Loaded %s: %d rows in %dms", "events_raw", 8500, 1200)
 json_logger.warning("Schema drift detected in %s", "users")
 ```
 
-    {"timestamp": "2026-03-25T05:52:11", "level": "INFO", "logger": "ETL.json", "message": "Loaded events_raw: 8500 rows in 1200ms"}
-    {"timestamp": "2026-03-25T05:52:11", "level": "WARNING", "logger": "ETL.json", "message": "Schema drift detected in users"}
+```text
+{"timestamp": "2026-03-25T05:52:11", "level": "INFO", "logger": "ETL.json", "message": "Loaded events_raw: 8500 rows in 1200ms"}
+{"timestamp": "2026-03-25T05:52:11", "level": "WARNING", "logger": "ETL.json", "message": "Schema drift detected in users"}
+```
 
 ## Configuration and Environment Variables
 
@@ -1133,6 +1244,7 @@ json_logger.warning("Schema drift detected in %s", "users")
 > - Store secrets in environment variables or a secrets manager — never in source code or config files committed to git
 > - Validate required env vars at startup so the process fails immediately with a clear error, not deep in the pipeline
 
+*Example: os.environ — reading and setting environment variables.*
 ```python
 # Environment variables — the simplest config mechanism.
 # Used everywhere: Docker, Kubernetes, CI/CD, cloud functions.
@@ -1157,21 +1269,27 @@ del os.environ["PIPELINE_ENV"]
 os.getenv('PIPELINE_ENV', 'not set')  # After delete
 ```
 
+```text
+Alex
+ELYSIUM
+c:\Users\aperi\DEV\LANG\.lang\Scripts;C:\Users\aperi\DEV\LANG\.lang\Scripts;C:\U...
+
+localhost
+not set
+staging
+not set
+```
+
 > [!info] os.environ vs os.getenv
 >
 > `os.environ["KEY"]` raises `KeyError` if missing. `os.getenv("KEY", default)` returns the default silently. Use `os.environ` when the variable MUST exist (fail-fast); use `os.getenv` for optional configuration.
 
-    Alex
-    ELYSIUM
-    c:\Users\aperi\DEV\LANG\.lang\Scripts;C:\Users\aperi\DEV\LANG\.lang\Scripts;C:\U...
-    
-    localhost
-    not set
-    staging
-    not set
 
-#### os.environ.items() — list all environment variables
+#### `os.environ.items()` helps with environment diagnostics
 
+`os.environ.items()` is useful for diagnostics, but truncate values before printing so the dump stays readable and avoids spraying long secrets.
+
+*Example: `os.environ.items()` helps with environment diagnostics.*
 ```python
 # List all environment variables — diagnostic inspection
 
@@ -1182,17 +1300,19 @@ for i, (key, val) in enumerate(os.environ.items()):
 print(f"... ({len(os.environ)} total)")
 ```
 
-      3DVPATH = C:\AMD\Chipset_Software\Binaries\3D_V-Cache_Performance_Opti...
-      ACSETUPSVCPORT = 23210
-      ALLUSERSPROFILE = C:\ProgramData
-      APPDATA = C:\Users\aperi\AppData\Roaming
-      APPLICATIONINSIGHTS_CONFIGURATION_CONTENT = {}
-      APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
-      ASL.LOG = Destination=file
-      CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_6836_LBXSBGYJGPFYPULP
-      CLAUDE_AGENT_SDK_VERSION = 0.2.81
-      CLAUDE_CODE_MAX_OUTPUT_TOKENS = 64000
-      ... (85 total)
+```text
+  3DVPATH = C:\AMD\Chipset_Software\Binaries\3D_V-Cache_Performance_Opti...
+  ACSETUPSVCPORT = 23210
+  ALLUSERSPROFILE = C:\ProgramData
+  APPDATA = C:\Users\aperi\AppData\Roaming
+  APPLICATIONINSIGHTS_CONFIGURATION_CONTENT = {}
+  APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+  ASL.LOG = Destination=file
+  CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_6836_LBXSBGYJGPFYPULP
+  CLAUDE_AGENT_SDK_VERSION = 0.2.81
+  CLAUDE_CODE_MAX_OUTPUT_TOKENS = 64000
+  ... (85 total)
+```
 
 ### Config files — configparser, TOML, .env
 
@@ -1200,6 +1320,7 @@ print(f"... ({len(os.environ)} total)")
 
 `configparser` reads INI-format files (sections with `[name]`, key-value pairs). All values are strings — use `.getint()`, `.getboolean()`, `.getfloat()` for type-safe access with optional `fallback=` defaults. Built-in, no dependencies.
 
+*Example: configparser — INI-style configuration.*
 ```python
 
 tmp_dir = tempfile.mkdtemp(prefix="config_demo_")
@@ -1237,31 +1358,37 @@ config['logging']['level']  # Log level
 config.getint('pipeline', 'timeout', fallback=30)  # Timeout
 ```
 
-    events_etl
-    5000
-    3
-    True
-    prod-db
-    INFO
-    30
+```text
+events_etl
+5000
+3
+True
+prod-db
+INFO
+30
+```
 
 #### configparser.sections, .get — reading config sections and keys
 
 `.sections()` lists all section names. Access keys with `config['section']['key']` or `config.get('section', 'key', fallback=default)`.
 
+*Example: configparser.sections, .get — reading config sections and keys.*
 ```python
 
 config.sections()  # Sections
 list(config['pipeline'].keys())  # Pipeline keys
 ```
 
-    ['pipeline', 'database', 'logging']
-    ['name', 'batch_size', 'max_retries', 'enabled']
+```text
+['pipeline', 'database', 'logging']
+['name', 'batch_size', 'max_retries', 'enabled']
+```
 
 #### tomllib — TOML modern config format (Python 3.11+)
 
 `tomllib` (read-only, built-in since Python 3.11) parses TOML files into dicts. Unlike `configparser`, TOML preserves native types: `int`, `bool`, `list`, `datetime`. Open in binary mode (`"rb"`). For writing TOML, use `tomli-w` (third-party).
 
+*Example: tomllib — TOML modern config format (Python 3.11+).*
 ```python
 
 toml_path = os.path.join(tmp_dir, "pipeline.toml")
@@ -1291,10 +1418,12 @@ toml_config['database']['port']  # DB port — native int!
 # ── .env files (python-dotenv) ──
 ```
 
-    {'name': 'events_etl', 'batch_size': 5000, 'max_retries': 3, 'enabled': True, 'tags': ['production', 'clickstream']}
-    events_etl
-    ['production', 'clickstream']
-    5432
+```text
+{'name': 'events_etl', 'batch_size': 5000, 'max_retries': 3, 'enabled': True, 'tags': ['production', 'clickstream']}
+events_etl
+['production', 'clickstream']
+5432
+```
 
 #### .env files
 
@@ -1306,6 +1435,7 @@ toml_config['database']['port']  # DB port — native int!
 >
 > Add `.env` to `.gitignore` immediately when creating the file. Use `python-dotenv` only for local development. In CI/CD and production, inject secrets through the platform's secret management (GCP Secret Manager, AWS Secrets Manager, GitHub Actions secrets, K8s Secrets).
 
+*Example: .env files.*
 ```python
 # .env files — local secrets with python-dotenv
 
@@ -1329,55 +1459,341 @@ shutil.rmtree(tmp_dir)
 tmp_dir  # Cleaned up
 ```
 
-      DATABASE_HOST = localhost
-      DATABASE_PORT = 5432
-      API_KEY = sk-test-abc123
-    
-    C:\Users\aperi\AppData\Local\Temp\config_demo_s32pafzs
+```text
+  DATABASE_HOST = localhost
+  DATABASE_PORT = 5432
+  API_KEY = sk-test-abc123
 
-## Warnings
+C:\Users\aperi\AppData\Local\Temp\config_demo_s32pafzs
+```
 
-> [!warning] Naive datetimes lose timezone information
->
-> `datetime.now()` returns a naive datetime (no timezone). Comparing or subtracting naive and aware datetimes raises `TypeError`. Storing naive timestamps leads to ambiguous data.
+## Operational Risks
 
-> [!success] Correct pattern
->
-> Always use `datetime.now(timezone.utc)` for UTC timestamps. Convert to local time only for display using `dt.astimezone(ZoneInfo("Europe/Amsterdam"))`.
+### Timezone semantics
 
-> [!warning] `random` module is not cryptographically secure
->
-> `random.random()` uses a Mersenne Twister PRNG — predictable given enough output. Never use for passwords, tokens, or security-sensitive applications.
+#### `replace(tzinfo=...)` reinterprets wall-clock time instead of converting an instant
 
-> [!success] Correct pattern
->
-> Use `secrets.token_hex()` or `secrets.token_urlsafe()` for security tokens. Use `secrets.choice()` for cryptographically secure random selection.
+Use `replace(tzinfo=...)` only when the naive value already belongs to the target zone. If the source value is already an absolute instant such as `timezone.utc`, use `astimezone()` for conversion.
 
-> [!warning] `print()` instead of `logging` in production code
->
-> `print()` has no log levels, no routing, no structured output, and no way to disable it per-module. It makes debugging production issues nearly impossible.
+*Example: `replace(tzinfo=...)` reinterprets wall-clock time instead of converting an instant.*
+```python
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
-> [!success] Correct pattern
->
-> Use `logging.getLogger(__name__)` with appropriate levels. Configure handlers for stdout, files, or structured JSON output.
+utc_stamp = datetime(2024, 3, 15, 12, 0, 0, tzinfo=timezone.utc)
+wrong = utc_stamp.replace(tzinfo=ZoneInfo("America/New_York"))
+right = utc_stamp.astimezone(ZoneInfo("America/New_York"))
+print(wrong.isoformat())
+print(right.isoformat())
+```
 
-## Recommendations
+```text
+2024-03-15T12:00:00-04:00
+2024-03-15T08:00:00-04:00
+```
 
-- **Store all timestamps in UTC** — convert to local time only for display. This prevents DST ambiguity and simplifies cross-timezone operations.
-- **Use `zoneinfo.ZoneInfo` (Python 3.9+)** instead of `pytz` — it's built-in, follows the standard `datetime` API, and doesn't require `.localize()`.
-- **Use `Decimal` for financial calculations** — `float` introduces rounding errors. `Decimal('0.1') + Decimal('0.2') == Decimal('0.3')`.
-- **Use `secrets` for security-sensitive randomness** — tokens, passwords, API keys.
-- **Use structured logging** — `logging` with `JSONFormatter` or `structlog` for machine-parseable log output.
-- **Use environment variables for deployment config** — `os.environ.get('KEY', 'default')` with `.env` files for local development.
+### Predictability and observability
+
+#### Fixed `random` seeds make sequences reproducible to anyone who knows the seed
+
+A fixed `random.Random(42)` stream is useful in tests, but it is a liability for tokens, secrets, or any user-visible identifier that should not repeat.
+
+*Example: Fixed `random` seeds make sequences reproducible to anyone who knows the seed.*
+```python
+import random
+
+first = random.Random(42)
+second = random.Random(42)
+seq_a = [first.randint(1, 100) for _ in range(3)]
+seq_b = [second.randint(1, 100) for _ in range(3)]
+print(seq_a)
+print(seq_b)
+print(seq_a == seq_b)
+```
+
+```text
+[82, 15, 4]
+[82, 15, 4]
+True
+```
+
+#### `print()` does not replace structured `logging`
+
+`print()` emits an unlabeled string, while `logging` can carry a level and logger name that downstream tooling can filter and route.
+
+*Example: `print()` does not replace structured `logging`.*
+```python
+import logging
+import sys
+
+print("print: pipeline started")
+logger = logging.getLogger("demo.risk")
+logger.handlers.clear()
+logger.propagate = False
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(logging.Formatter("%(levelname)s %(name)s %(message)s"))
+logger.addHandler(handler)
+logger.info("pipeline started")
+```
+
+```text
+print: pipeline started
+INFO demo.risk pipeline started
+```
+
+## Recommended Patterns
+
+### Time and numeric correctness
+
+#### Store canonical timestamps in `timezone.utc` and render with `ZoneInfo`
+
+Keep storage and interchange values in `timezone.utc`, then project them into a presentation zone such as `ZoneInfo("Europe/Amsterdam")` only at the display boundary.
+
+*Example: Store canonical timestamps in `timezone.utc` and render with `ZoneInfo`.*
+```python
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+
+stamp = datetime(2024, 3, 15, 12, 0, 0, tzinfo=timezone.utc)
+print(stamp.isoformat())
+print(stamp.astimezone(ZoneInfo("Europe/Amsterdam")).isoformat())
+```
+
+```text
+2024-03-15T12:00:00+00:00
+2024-03-15T13:00:00+01:00
+```
+
+#### Use `Decimal` when binary `float` rounding drift is unacceptable
+
+For financial or precision-sensitive calculations, `Decimal("0.1")` preserves the exact decimal value that `0.1` as a binary float cannot represent.
+
+*Example: Use `Decimal` when binary `float` rounding drift is unacceptable.*
+```python
+from decimal import Decimal
+
+print(0.1 + 0.2)
+print(Decimal("0.1") + Decimal("0.2"))
+```
+
+```text
+0.30000000000000004
+0.3
+```
+
+### Secure randomness and runtime diagnostics
+
+#### Use `secrets` for token material instead of `random`
+
+`secrets` pulls from the operating system's secure random source, so it is the correct choice for API keys, reset links, and session secrets.
+
+*Example: Use `secrets` for token material instead of `random`.*
+```python
+import secrets
+
+token = secrets.token_hex(8)
+print(len(token))
+print(all(ch in "0123456789abcdef" for ch in token))
+```
+
+```text
+16
+True
+```
+
+#### Emit machine-readable records with `logging.Formatter`
+
+A JSON `logging.Formatter` keeps `level`, logger name, and message fields explicit, which makes ingestion into log indexes and alerting rules straightforward.
+
+*Example: Emit machine-readable records with `logging.Formatter`.*
+```python
+import json
+import logging
+import sys
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        return json.dumps({
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        })
+
+logger = logging.getLogger("demo.json")
+logger.handlers.clear()
+logger.propagate = False
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(JsonFormatter())
+logger.addHandler(handler)
+logger.warning("schema drift detected")
+```
+
+```text
+{"level": "WARNING", "logger": "demo.json", "message": "schema drift detected"}
+```
+
+### Configuration defaults
+
+#### Prefer `os.getenv()` for optional settings and reserve `os.environ[...]` for required ones
+
+Use `os.getenv()` when a missing value should fall back to a default, and keep direct `os.environ[...]` lookups for fail-fast settings that must be present at startup.
+
+*Example: Prefer `os.getenv()` for optional settings and reserve `os.environ[...]` for required ones.*
+```python
+import os
+
+os.environ.pop("APP_MODE", None)
+print(os.getenv("APP_MODE", "local"))
+os.environ["APP_MODE"] = "staging"
+print(os.getenv("APP_MODE", "local"))
+del os.environ["APP_MODE"]
+```
+
+```text
+local
+staging
+```
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `TypeError: can't compare offset-naive and offset-aware datetimes` | Mixing naive and aware datetimes | Make all datetimes aware: `dt.replace(tzinfo=timezone.utc)` |
-| `strptime` returns naive datetime | `strptime` doesn't parse timezone by default | Attach timezone manually or parse with `dateutil.parser.parse()` |
-| Float arithmetic produces wrong result (`0.1 + 0.2 != 0.3`) | IEEE 754 floating-point representation | Use `Decimal` for exact arithmetic or `math.isclose()` for comparisons |
-| `KeyError` on `os.environ['MISSING']` | Environment variable not set | Use `os.environ.get('KEY', 'default')` for safe access |
-| Logging output not appearing | Logger not configured or level too high | Call `logging.basicConfig(level=logging.DEBUG)` at startup |
-| `random.seed()` produces same sequence | Seed set to fixed value | Remove fixed seed for production; use fixed seed only for reproducible tests |
+### Datetime parsing and comparison
 
+#### `TypeError` when a naive `datetime` meets an aware `datetime`
+
+This error means one value has `tzinfo=None` and the other is timezone-aware. Normalize both sides to the same timezone model before comparing or subtracting them.
+
+*Example: `TypeError` when a naive `datetime` meets an aware `datetime`.*
+```python
+from datetime import datetime, timezone
+
+naive = datetime(2024, 3, 15, 12, 0, 0)
+aware = datetime(2024, 3, 15, 12, 0, 0, tzinfo=timezone.utc)
+try:
+    print(naive < aware)
+except TypeError as exc:
+    print(type(exc).__name__)
+    print(exc)
+```
+
+```text
+TypeError
+can't compare offset-naive and offset-aware datetimes
+```
+
+#### `strptime()` returns a naive `datetime` unless the format includes timezone data
+
+If you parse text without `%z`, Python has no offset information to attach. Include `%z` in the format string or assign the correct timezone in a separate step when the wall-clock context is known.
+
+*Example: `strptime()` returns a naive `datetime` unless the format includes timezone data.*
+```python
+from datetime import datetime
+
+naive = datetime.strptime("2024-03-15 14:30:45", "%Y-%m-%d %H:%M:%S")
+aware = datetime.strptime("2024-03-15 14:30:45 +0000", "%Y-%m-%d %H:%M:%S %z")
+print(naive.tzinfo is None)
+print(aware.tzinfo)
+```
+
+```text
+True
+UTC
+```
+
+### Numeric and configuration issues
+
+#### `float` equality fails for `0.1 + 0.2`
+
+This is standard IEEE 754 behavior. Use `math.isclose()` for approximate comparisons or `Decimal` when the calculation itself must stay exact.
+
+*Example: `float` equality fails for `0.1 + 0.2`.*
+```python
+import math
+from decimal import Decimal
+
+print(0.1 + 0.2 == 0.3)
+print(math.isclose(0.1 + 0.2, 0.3))
+print(Decimal("0.1") + Decimal("0.2") == Decimal("0.3"))
+```
+
+```text
+False
+True
+True
+```
+
+#### `os.environ['KEY']` raises `KeyError` when the variable is absent
+
+Direct indexing is appropriate for required settings, but it will fail immediately when the variable is not defined. Use `os.getenv()` when a default is acceptable.
+
+*Example: `os.environ['KEY']` raises `KeyError` when the variable is absent.*
+```python
+import os
+
+os.environ.pop("MISSING_KEY", None)
+try:
+    print(os.environ["MISSING_KEY"])
+except KeyError as exc:
+    print(type(exc).__name__)
+    print(exc.args[0])
+print(os.getenv("MISSING_KEY", "default"))
+```
+
+```text
+KeyError
+MISSING_KEY
+default
+```
+
+### Logging and randomness
+
+#### Missing `logging` output usually means no handler is attached
+
+If a logger has no handler and propagation is disabled, emitted records go nowhere. Attach a handler explicitly or let the logger propagate to a configured parent.
+
+*Example: Missing `logging` output usually means no handler is attached.*
+```python
+import logging
+import sys
+
+logger = logging.getLogger("demo.troubleshoot")
+logger.handlers.clear()
+logger.propagate = False
+logger.setLevel(logging.INFO)
+print(len(logger.handlers))
+if not logger.handlers:
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(logging.Formatter("%(levelname)s %(message)s"))
+    logger.addHandler(handler)
+logger.info("handler attached")
+```
+
+```text
+0
+INFO handler attached
+```
+
+#### `random.seed()` repeats the same sequence by design
+
+A fixed seed is correct for reproducible tests, but production code should avoid it unless repeatability is part of the requirement.
+
+*Example: `random.seed()` repeats the same sequence by design.*
+```python
+import random
+
+first = random.Random(7)
+second = random.Random(7)
+seq1 = [first.randint(1, 9) for _ in range(4)]
+seq2 = [second.randint(1, 9) for _ in range(4)]
+print(seq1)
+print(seq2)
+print(seq1 == seq2)
+```
+
+```text
+[6, 3, 7, 1]
+[6, 3, 7, 1]
+True
+```

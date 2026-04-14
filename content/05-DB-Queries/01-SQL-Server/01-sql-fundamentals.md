@@ -258,10 +258,7 @@ This query joins `sys.tables`, `sys.schemas`, and `sys.partitions` to list every
 
 #### List all tables with row counts per medallion schema
 
-**When to run:** first step when connecting to an unfamiliar database or verifying that a pipeline deployment created the expected tables.
-**Trigger:** initial database orientation, post-deployment verification, or onboarding a new team member.
-**Context:** read-only T-SQL query against system catalog views. No permissions beyond `VIEW DEFINITION` required. Safe to run in production.
-**Purpose:** produce a complete inventory of tables across all medallion-layer schemas with their row counts, confirming the expected bronze/silver/gold structure exists and is populated.
+First step when connecting to an unfamiliar database or verifying that a pipeline deployment created the expected tables. It is typically triggered by initial database orientation, post-deployment verification, or onboarding a new team member. Read-only T-SQL query against system catalog views. No permissions beyond `VIEW DEFINITION` required. Safe to run in production. Produce a complete inventory of tables across all medallion-layer schemas with their row counts, confirming the expected bronze/silver/gold structure exists and is populated.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -307,10 +304,7 @@ The `INFORMATION_SCHEMA.COLUMNS` view is the ANSI-standard metadata interface �
 
 #### Inspect column names, types, and nullability with INFORMATION_SCHEMA
 
-**When to run:** after identifying a table in the schema inventory, before writing any queries against it.
-**Trigger:** need to verify column data types (e.g., is `close` stored as `float` or `decimal`?), check nullability constraints, or confirm column naming conventions.
-**Context:** read-only query against the ANSI-standard `INFORMATION_SCHEMA.COLUMNS` view. No special permissions required. Portable across SQL Server, PostgreSQL, and MySQL.
-**Purpose:** enumerate column names, data types, maximum lengths, and nullability for a specific table — the prerequisite for writing correct `SELECT`, `JOIN`, and `WHERE` clauses.
+After identifying a table in the schema inventory, before writing any queries against it. It is typically triggered by need to verify column data types (e.g., is `close` stored as `float` or `decimal`?), check nullability constraints, or confirm column naming conventions. Read-only query against the ANSI-standard `INFORMATION_SCHEMA.COLUMNS` view. No special permissions required. Portable across SQL Server, PostgreSQL, and MySQL. Enumerate column names, data types, maximum lengths, and nullability for a specific table — the prerequisite for writing correct `SELECT`, `JOIN`, and `WHERE` clauses.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -388,10 +382,7 @@ The fundamental query: pick columns, filter rows, sort results. `TOP N` limits o
 
 #### Retrieve the 10 most recent ASML trading days
 
-**When to run:** whenever you need to inspect the most recent price data for a specific stock — verifying that today's data loaded, checking the latest close, or confirming the date range available.
-**Trigger:** ad-hoc exploration, post-load verification, or building a quick price snapshot for a single symbol.
-**Context:** read-only T-SQL query against the silver OHLCV table. No special permissions. Deterministic with `ORDER BY date DESC`.
-**Purpose:** retrieve the most recent OHLCV rows for a single stock, sorted by date descending, to inspect current price levels and trading activity.
+Whenever you need to inspect the most recent price data for a specific stock — verifying that today's data loaded, checking the latest close, or confirming the date range available. It is typically triggered by ad-hoc exploration, post-load verification, or building a quick price snapshot for a single symbol. Read-only T-SQL query against the silver OHLCV table. No special permissions. Deterministic with `ORDER BY date DESC`. Retrieve the most recent OHLCV rows for a single stock, sorted by date descending, to inspect current price levels and trading activity.
 
 *Retrieve the 10 most recent ASML trading days with full OHLCV columns.*
 
@@ -433,10 +424,7 @@ Combine conditions with `AND` / `OR`. Use `ABS()` for absolute values. This quer
 
 #### Find high-volume days with large intraday price swings
 
-**When to run:** when screening for breakout or crash days — sessions with extreme intraday price movement on high volume.
-**Trigger:** market event analysis, anomaly detection, or building a dataset of high-impact trading days for signal backtesting.
-**Context:** read-only T-SQL query against `silver.eurostoxx50_ohlcv`. Combines three `WHERE` conditions with `AND`. The `ABS()` function on the computed expression is acceptable in `WHERE` because it operates on an expression, not a bare indexed column.
-**Purpose:** identify trading sessions where volume exceeded 5 million shares and the open-to-close price swing exceeded 3% — potential breakout or crash events worth further investigation.
+When screening for breakout or crash days — sessions with extreme intraday price movement on high volume. It is typically triggered by market event analysis, anomaly detection, or building a dataset of high-impact trading days for signal backtesting. Read-only T-SQL query against `silver.eurostoxx50_ohlcv`. Combines three `WHERE` conditions with `AND`. The `ABS()` function on the computed expression is acceptable in `WHERE` because it operates on an expression, not a bare indexed column. Identify trading sessions where volume exceeded 5 million shares and the open-to-close price swing exceeded 3% — potential breakout or crash events worth further investigation.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -491,10 +479,7 @@ The results reveal extreme single-day events: Infineon (IFX.DE) dropped 13.78% o
 
 #### Rank stocks by average daily trading volume
 
-**When to run:** when building a liquidity ranking across the index — identifying which stocks are the most and least actively traded.
-**Trigger:** index rebalancing analysis, liquidity screening, or sizing trade execution assumptions.
-**Context:** read-only T-SQL query. Groups all rows by `symbol` across the full OHLCV history. The `CAST(volume AS FLOAT)` prevents integer overflow when summing large volume values before averaging.
-**Purpose:** produce a per-stock summary of average daily volume, average close price, and date range — a standard liquidity profile for the index.
+When building a liquidity ranking across the index — identifying which stocks are the most and least actively traded. It is typically triggered by index rebalancing analysis, liquidity screening, or sizing trade execution assumptions. Read-only T-SQL query. Groups all rows by `symbol` across the full OHLCV history. The `CAST(volume AS FLOAT)` prevents integer overflow when summing large volume values before averaging. Produce a per-stock summary of average daily volume, average close price, and date range — a standard liquidity profile for the index.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -548,10 +533,7 @@ Group by `YEAR(date), MONTH(date)` to build time-series summaries. Shows monthly
 
 #### Build a monthly time-series summary per stock
 
-**When to run:** when building periodic performance reports — monthly, quarterly, or yearly summaries of price range and trading activity.
-**Trigger:** scheduled reporting, trend analysis, or comparing month-over-month price behavior for a stock.
-**Context:** read-only T-SQL query. Groups by `YEAR(date)` and `MONTH(date)` — these function calls in `GROUP BY` are acceptable (no index needed for grouping, only for filtering). The `WHERE` uses a SARGable range predicate on `date`.
-**Purpose:** produce a monthly time-series profile for a single stock: trading day count, price range (high/low), average close, and total volume — the foundation for monthly performance dashboards.
+When building periodic performance reports — monthly, quarterly, or yearly summaries of price range and trading activity. It is typically triggered by scheduled reporting, trend analysis, or comparing month-over-month price behavior for a stock. Read-only T-SQL query. Groups by `YEAR(date)` and `MONTH(date)` — these function calls in `GROUP BY` are acceptable (no index needed for grouping, only for filtering). The `WHERE` uses a SARGable range predicate on `date`. Produce a monthly time-series profile for a single stock: trading day count, price range (high/low), average close, and total volume — the foundation for monthly performance dashboards.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -638,10 +620,7 @@ The subquery with `ROW_NUMBER()` picks only the most recent price per symbol.
 
 #### Join latest price per stock with company dimension metadata
 
-**When to run:** when building a snapshot of current prices enriched with company metadata — the typical shape of a stock screener or dashboard query.
-**Trigger:** dashboard refresh, end-of-day reporting, or building a denormalized export for downstream consumers.
-**Context:** read-only T-SQL query joining silver OHLCV (price facts) with silver dimension (company metadata). The inner subquery uses `ROW_NUMBER()` to pick only the latest price per symbol, preventing row multiplication. The `is_current = 1` filter enforces SCD Type 2 semantics on the dimension.
-**Purpose:** produce a single row per stock with the latest close price, trading date, volume, company name, sector, and country — ready for dashboard rendering or export.
+When building a snapshot of current prices enriched with company metadata — the typical shape of a stock screener or dashboard query. It is typically triggered by dashboard refresh, end-of-day reporting, or building a denormalized export for downstream consumers. Read-only T-SQL query joining silver OHLCV (price facts) with silver dimension (company metadata). The inner subquery uses `ROW_NUMBER()` to pick only the latest price per symbol, preventing row multiplication. The `is_current = 1` filter enforces SCD Type 2 semantics on the dimension. Produce a single row per stock with the latest close price, trading date, volume, company name, sector, and country — ready for dashboard rendering or export.
 
 *Join the latest price per stock (via ROW_NUMBER deduplication) with company metadata from the dimension table.*
 
@@ -689,10 +668,7 @@ The gold layer has pre-computed composite scores. This join adds human-readable 
 
 #### Join gold composite scores with dimension labels for a ranked dashboard
 
-**When to run:** when generating the daily stock ranking dashboard — the primary analytical output of the scoring engine.
-**Trigger:** after the gold scoring pipeline completes, or on demand for ad-hoc portfolio analysis.
-**Context:** read-only cross-layer T-SQL query joining `gold.scores_daily` with `silver.index_dim`. The scalar subquery `(SELECT MAX(score_date) ...)` dynamically targets the latest scoring date. The three-part join key (`symbol`, `_index`, `is_current = 1`) prevents row multiplication from SCD Type 2 history.
-**Purpose:** produce a ranked dashboard of all Euro Stoxx 50 stocks with composite score, sub-score breakdown (value, momentum, sentiment), current price, and index weight.
+When generating the daily stock ranking dashboard — the primary analytical output of the scoring engine. It is typically triggered after the gold scoring pipeline completes, or on demand for ad-hoc portfolio analysis. Read-only cross-layer T-SQL query joining `gold.scores_daily` with `silver.index_dim`. The scalar subquery `(SELECT MAX(score_date) ...)` dynamically targets the latest scoring date. The three-part join key (`symbol`, `_index`, `is_current = 1`) prevents row multiplication from SCD Type 2 history. Produce a ranked dashboard of all Euro Stoxx 50 stocks with composite score, sub-score breakdown (value, momentum, sentiment), current price, and index weight.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -766,10 +742,7 @@ A **moving average** smooths price data over N days. Used for trend detection:
 
 #### Compute 30-day and 90-day SMAs with a sliding window
 
-**When to run:** when analyzing a stock's trend direction — whether it is trading above or below its short-term and long-term moving averages.
-**Trigger:** technical analysis, signal generation for momentum scoring, or building a price chart overlay for a dashboard.
-**Context:** read-only T-SQL query against `silver.eurostoxx50_ohlcv`. Uses `AVG() OVER` with a sliding `ROWS BETWEEN N PRECEDING AND CURRENT ROW` frame. First 29/89 rows will have shorter windows — expected behavior.
-**Purpose:** attach a 30-day and 90-day SMA to each trading day row for a single stock, enabling trend detection by comparing current price to both averages.
+When analyzing a stock's trend direction — whether it is trading above or below its short-term and long-term moving averages. It is typically triggered by technical analysis, signal generation for momentum scoring, or building a price chart overlay for a dashboard. Read-only T-SQL query against `silver.eurostoxx50_ohlcv`. Uses `AVG() OVER` with a sliding `ROWS BETWEEN N PRECEDING AND CURRENT ROW` frame. First 29/89 rows will have shorter windows — expected behavior. Attach a 30-day and 90-day SMA to each trading day row for a single stock, enabling trend detection by comparing current price to both averages.
 
 *Compute 30-day and 90-day simple moving averages for ASML's closing price.*
 
@@ -812,10 +785,7 @@ Use cases:
 
 #### Calculate daily return percentage and detect calendar gaps
 
-**When to run:** when computing daily returns for momentum scoring or detecting missing trading days in the time series.
-**Trigger:** silver-layer data validation, return calculation for the scoring pipeline, or auditing the gap-fill logic after ingestion.
-**Context:** read-only T-SQL query against `silver.eurostoxx50_ohlcv`. Uses `LAG()` three times in one SELECT — SQL Server evaluates each independently. A `days_gap > 1` indicates a weekend or holiday; `days_gap = 3` is a typical Friday-to-Monday gap.
-**Purpose:** produce daily return percentage and calendar gap size for each trading row, enabling both return-series construction and date-continuity validation.
+When computing daily returns for momentum scoring or detecting missing trading days in the time series. It is typically triggered by silver-layer data validation, return calculation for the scoring pipeline, or auditing the gap-fill logic after ingestion. Read-only T-SQL query against `silver.eurostoxx50_ohlcv`. Uses `LAG()` three times in one SELECT — SQL Server evaluates each independently. A `days_gap > 1` indicates a weekend or holiday; `days_gap = 3` is a typical Friday-to-Monday gap. Produce daily return percentage and calendar gap size for each trading row, enabling both return-series construction and date-continuity validation.
 
 *Calculate daily return percentage and detect calendar gaps using LAG on close price and date.*
 
@@ -865,10 +835,7 @@ This is the core of the gold scoring engine — rank stocks by composite score. 
 
 #### Rank stocks by YTD return and assign quartile buckets
 
-**When to run:** at the start of a new period (quarterly, annually) to benchmark stock performance and classify index members into performance quartiles.
-**Trigger:** post-rebalancing analysis, performance attribution, or seeding the quartile field in the gold scoring output.
-**Context:** read-only T-SQL query using two chained CTEs and a self-join on `silver.eurostoxx50_ohlcv` to pair each stock's first and last price of the year. `NULLIF` prevents divide-by-zero for stocks with a zero opening price.
-**Purpose:** compute YTD return per stock and assign both a performance rank (best and worst) and a quartile bucket — the foundation for quartile-based factor analysis in the scoring engine.
+At the start of a new period (quarterly, annually) to benchmark stock performance and classify index members into performance quartiles. It is typically triggered by post-rebalancing analysis, performance attribution, or seeding the quartile field in the gold scoring output. Read-only T-SQL query using two chained CTEs and a self-join on `silver.eurostoxx50_ohlcv` to pair each stock's first and last price of the year. `NULLIF` prevents divide-by-zero for stocks with a zero opening price. Compute YTD return per stock and assign both a performance rank (best and worst) and a quartile bucket — the foundation for quartile-based factor analysis in the scoring engine.
 
 *Compute YTD return per stock, then rank and assign quartile buckets using RANK and NTILE.*
 
@@ -921,10 +888,7 @@ This builds a sector heatmap: average score, best/worst rank per sector.
 
 #### Build a sector heatmap with chained CTEs
 
-**When to run:** after the daily gold scoring pipeline completes, to summarize performance and scoring by sector for reporting or investment committee review.
-**Trigger:** daily dashboard refresh, sector rotation analysis, or comparing sector-level momentum and value signals.
-**Context:** read-only T-SQL query using two chained CTEs. `latest_scores` joins `gold.scores_daily` with `silver.index_dim` to retrieve the most recent scoring day. `sector_stats` aggregates by sector. The `SELECT MAX(score_date)` scalar subquery is evaluated once by the optimizer.
-**Purpose:** produce a sector-level heatmap: stock count, average composite/value/momentum scores, and best-to-worst rank range — for identifying which sectors are scoring highest in the current market regime.
+After the daily gold scoring pipeline completes, to summarize performance and scoring by sector for reporting or investment committee review. It is typically triggered by daily dashboard refresh, sector rotation analysis, or comparing sector-level momentum and value signals. Read-only T-SQL query using two chained CTEs. `latest_scores` joins `gold.scores_daily` with `silver.index_dim` to retrieve the most recent scoring day. `sector_stats` aggregates by sector. The `SELECT MAX(score_date)` scalar subquery is evaluated once by the optimizer. Produce a sector-level heatmap: stock count, average composite/value/momentum scores, and best-to-worst rank range — for identifying which sectors are scoring highest in the current market regime.
 
 *Chain two CTEs to compute per-sector average scores and rank ranges from the latest gold scoring run.*
 
@@ -977,10 +941,7 @@ Multiple CTEs chained together, each building on the previous. This query compar
 
 #### Compare key metrics across all four indices
 
-**When to run:** when reviewing cross-index performance for a daily briefing or portfolio attribution — comparing YTD return, rolling volatility, valuation, and yield across all four tracked indices.
-**Trigger:** daily or weekly cross-index reporting, index selection decisions, or benchmarking the Euro Stoxx 50 against peer indices.
-**Context:** read-only T-SQL query using a single CTE with `ROW_NUMBER()` to pick the latest performance record per index. Joins to `bronze.dim_index` for human-readable display names. No hardcoded dates.
-**Purpose:** produce a one-row-per-index comparison of YTD return, 30-day return and volatility, stock count, average P/E, and dividend yield — the key metrics for cross-index analysis in a single result set.
+When reviewing cross-index performance for a daily briefing or portfolio attribution — comparing YTD return, rolling volatility, valuation, and yield across all four tracked indices. It is typically triggered by daily or weekly cross-index reporting, index selection decisions, or benchmarking the Euro Stoxx 50 against peer indices. Read-only T-SQL query using a single CTE with `ROW_NUMBER()` to pick the latest performance record per index. Joins to `bronze.dim_index` for human-readable display names. No hardcoded dates. Produce a one-row-per-index comparison of YTD return, 30-day return and volatility, stock count, average P/E, and dividend yield — the key metrics for cross-index analysis in a single result set.
 
 *Compare YTD return, 30-day volatility, P/E, and dividend yield across all four indices using a ROW_NUMBER dedup CTE.*
 
@@ -1027,10 +988,7 @@ Every pipeline needs quality gates. The checks below are split into two categori
 
 #### Run structural quality checks (NULLs, negatives, impossible values)
 
-**When to run:** immediately after every bronze-to-silver load, before promoting data to gold.
-**Trigger:** automated post-load validation step in the silver ingestion pipeline, or ad-hoc investigation when downstream anomalies are detected.
-**Context:** read-only T-SQL query stacking three `SELECT ... UNION ALL` checks against `silver.eurostoxx50_ohlcv`. Each check returns one named row with an issue count. Any non-zero result indicates a data integrity failure.
-**Purpose:** detect the three most critical structural defects — null prices (incomplete rows), negative prices (bad source data), and high < low (physically impossible OHLCV values) — in a single compact result set.
+Immediately after every bronze-to-silver load, before promoting data to gold. It is typically triggered by automated post-load validation step in the silver ingestion pipeline, or ad-hoc investigation when downstream anomalies are detected. Read-only T-SQL query stacking three `SELECT ... UNION ALL` checks against `silver.eurostoxx50_ohlcv`. Each check returns one named row with an issue count. Any non-zero result indicates a data integrity failure. Detect the three most critical structural defects — null prices (incomplete rows), negative prices (bad source data), and high < low (physically impossible OHLCV values) — in a single compact result set.
 
 *Run structural quality checks: null prices, negative prices, and impossible high < low.*
 
@@ -1055,10 +1013,7 @@ WHERE high < low
 
 #### Run operational freshness and gap-fill checks
 
-**When to run:** after every pipeline load, alongside the structural checks — or on demand when freshness alerts fire.
-**Trigger:** scheduled post-load validation, SLA monitoring, or investigation of stale dashboard data.
-**Context:** read-only T-SQL query using `UNION ALL` against `silver.eurostoxx50_ohlcv`. `is_filled = 1` identifies synthetic gap-filled rows (weekends/holidays). `DATEDIFF(DAY, MAX(date), GETDATE())` measures data staleness in days.
-**Purpose:** count synthetic gap-filled rows (non-zero warrants review of the gap-fill logic) and measure days since the last data update (values > 1 on a trading day indicate a failed load).
+After every pipeline load, alongside the structural checks — or on demand when freshness alerts fire. It is typically triggered by scheduled post-load validation, SLA monitoring, or investigation of stale dashboard data. Read-only T-SQL query using `UNION ALL` against `silver.eurostoxx50_ohlcv`. `is_filled = 1` identifies synthetic gap-filled rows (weekends/holidays). `DATEDIFF(DAY, MAX(date), GETDATE())` measures data staleness in days. Count synthetic gap-filled rows (non-zero warrants review of the gap-fill logic) and measure days since the last data update (values > 1 on a trading day indicate a failed load).
 
 *Run operational checks: count of gap-filled synthetic rows and days since last data update.*
 
@@ -1097,10 +1052,7 @@ The silver transform adds computed columns to raw data. Here, `LAG()` computes d
 
 #### Compute daily return with LAG and NULLIF safe division
 
-**When to run:** when building or validating the silver-layer daily return column — the primary input to momentum scoring and volatility calculations.
-**Trigger:** silver transform pipeline execution, or ad-hoc verification that LAG-based return computation is correct for a specific symbol.
-**Context:** read-only T-SQL query against `silver.eurostoxx50_ohlcv`. Uses `LAG()` twice in one SELECT — SQL Server evaluates each independently. `NULLIF(LAG([close]) ..., 0)` prevents divide-by-zero for delisted stocks. The `is_filled` flag identifies synthetic gap-fill rows where the return is meaningless.
-**Purpose:** compute the decimal daily return for each trading row and expose the `is_filled` flag — enabling the pipeline to exclude synthetic rows from return-series calculations.
+When building or validating the silver-layer daily return column — the primary input to momentum scoring and volatility calculations. It is typically triggered by silver transform pipeline execution, or ad-hoc verification that LAG-based return computation is correct for a specific symbol. Read-only T-SQL query against `silver.eurostoxx50_ohlcv`. Uses `LAG()` twice in one SELECT — SQL Server evaluates each independently. `NULLIF(LAG([close]) ..., 0)` prevents divide-by-zero for delisted stocks. The `is_filled` flag identifies synthetic gap-fill rows where the return is meaningless. Compute the decimal daily return for each trading row and expose the `is_filled` flag — enabling the pipeline to exclude synthetic rows from return-series calculations.
 
 *Compute daily return as a percentage change from the previous day's close using LAG with NULLIF safe-division.*
 
@@ -1142,10 +1094,7 @@ The gold transform normalizes scores across the index using z-scores: `(value - 
 
 #### Normalize composite scores to z-scores across the index
 
-**When to run:** after the gold scoring pipeline computes composite scores, to normalize them for cross-stock comparison and produce the final ranked output.
-**Trigger:** daily gold-layer pipeline execution, or ad-hoc validation that z-score normalization is working correctly after a scoring model change.
-**Context:** read-only T-SQL query using a CTE to compute partition-wide mean and standard deviation via `AVG() OVER ()` and `STDEV() OVER ()` (empty `OVER()` = whole result set). `NULLIF(std_score, 0)` guards against division by zero when all scores are identical. `DENSE_RANK()` produces a gap-free rank.
-**Purpose:** transform raw composite scores into z-scores (standard deviations from the index mean) and assign a dense rank — the final step of the gold scoring pipeline before results are written to the output table.
+After the gold scoring pipeline computes composite scores, to normalize them for cross-stock comparison and produce the final ranked output. It is typically triggered by daily gold-layer pipeline execution, or ad-hoc validation that z-score normalization is working correctly after a scoring model change. Read-only T-SQL query using a CTE to compute partition-wide mean and standard deviation via `AVG() OVER ()` and `STDEV() OVER ()` (empty `OVER()` = whole result set). `NULLIF(std_score, 0)` guards against division by zero when all scores are identical. `DENSE_RANK()` produces a gap-free rank. Transform raw composite scores into z-scores (standard deviations from the index mean) and assign a dense rank — the final step of the gold scoring pipeline before results are written to the output table.
 
 *Normalize composite scores to z-scores across the index and rank stocks by composite score.*
 

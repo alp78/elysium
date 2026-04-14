@@ -249,10 +249,7 @@ This section uses real resolved config and live object state rather than generic
 
 #### PowerShell | docker compose config | resolve the local compose services and named volumes
 
-**When to run:** Before `docker compose up`, before cleanup, or when you need to know which objects the local stack is supposed to create.
-**Trigger:** The compose file has changed or the local object names are unclear.
-**Context:** PowerShell on the Windows host in `C:\Users\aperi\DEV\ESG`. These are read-only config resolution commands.
-**Purpose:** Confirm the service keys and named volumes that the local compose file actually defines.
+Before `docker compose up`, before cleanup, or when you need to know which objects the local stack is supposed to create. It is typically triggered by the compose file has changed or the local object names are unclear. PowerShell on the Windows host in `C:\Users\aperi\DEV\ESG`. These are read-only config resolution commands. Confirm the service keys and named volumes that the local compose file actually defines.
 
 *Resolves the local service keys from the compose file.*
 
@@ -281,10 +278,7 @@ These outputs prove that the local stack is not an Airflow stack. It is a three-
 
 #### PowerShell | docker inspect | inspect the local SQL Server mount model
 
-**When to run:** When persistence, bootstrap scripts, or schema seed files are not behaving as expected on the local stack.
-**Trigger:** SQL Server starts but does not see bootstrap content, or data persistence is unclear.
-**Context:** PowerShell on the Windows host. This is a read-only inspect command against the existing `stoxx-db` container.
-**Purpose:** Show exactly which host files and which named volume the local SQL Server container is using.
+When persistence, bootstrap scripts, or schema seed files are not behaving as expected on the local stack. It is typically triggered by SQL Server starts but does not see bootstrap content, or data persistence is unclear. PowerShell on the Windows host. This is a read-only inspect command against the existing `stoxx-db` container. Show exactly which host files and which named volume the local SQL Server container is using.
 
 *Inspects the concrete mount set of the running local SQL Server container.*
 
@@ -315,10 +309,7 @@ This section matters because the repo still contains older Airflow documentation
 
 #### Linux | compose.yaml / .env | read the live compose file and its redacted environment keys
 
-**When to run:** Before modifying the VM stack, before restarting the Airflow services, or when a DAG or job binding seems to come from the wrong environment.
-**Trigger:** The Airflow VM behavior no longer matches the repo docs or expected service names.
-**Context:** Linux shell on `stoxx-airflow`. This is a read-only inspection of the live compose file and `.env`.
-**Purpose:** Show the actual service graph, healthchecks, bind mounts, and environment keys used by the live VM.
+Before modifying the VM stack, before restarting the Airflow services, or when a DAG or job binding seems to come from the wrong environment. It is typically triggered by the Airflow VM behavior no longer matches the repo docs or expected service names. Linux shell on `stoxx-airflow`. This is a read-only inspection of the live compose file and `.env`. Show the actual service graph, healthchecks, bind mounts, and environment keys used by the live VM.
 
 The live compose file anchors a shared `x-airflow-common` block, uses `CeleryExecutor`, and drives seven long-running services plus one one-shot init service. The VM `.env` below is shown with secrets redacted but with live operational values preserved.
 
@@ -368,10 +359,7 @@ This is a compose-based Airflow 3.2.0 stack with explicit job bindings to the cu
 
 #### Linux | systemd | read the unit that starts Compose on boot
 
-**When to run:** After reboot problems, after Compose file changes, or when you need to know how the VM converges back to the desired stack.
-**Trigger:** The VM came back but the stack composition looks wrong or stale containers remain after service edits.
-**Context:** Linux shell on `stoxx-airflow`. This is a read-only host configuration inspection.
-**Purpose:** Show the real boot-time mechanism that starts the Airflow compose project.
+After reboot problems, after Compose file changes, or when you need to know how the VM converges back to the desired stack. It is typically triggered by the VM came back but the stack composition looks wrong or stale containers remain after service edits. Linux shell on `stoxx-airflow`. This is a read-only host configuration inspection. Show the real boot-time mechanism that starts the Airflow compose project.
 
 *Shows the live systemd unit that starts the Airflow compose stack on the VM.*
 
@@ -401,10 +389,7 @@ This unit is the reason the live VM must be treated as a systemd-managed Compose
 
 #### Linux | journalctl | read the actual boot trail from systemd
 
-**When to run:** After reboot, after enabling a new service, or when `airflow-init` and health-gated dependencies do not start in the expected order.
-**Trigger:** The VM finished booting but the Airflow stack looks incomplete or misordered.
-**Context:** Linux shell on `stoxx-airflow`. This is a read-only journal query against the compose wrapper service.
-**Purpose:** Prove the real boot sequence of the current VM stack.
+After reboot, after enabling a new service, or when `airflow-init` and health-gated dependencies do not start in the expected order. It is typically triggered by the VM finished booting but the Airflow stack looks incomplete or misordered. Linux shell on `stoxx-airflow`. This is a read-only journal query against the compose wrapper service. Prove the real boot sequence of the current VM stack.
 
 *Reads the current-boot journal for the systemd unit that starts Compose on the VM.*
 
@@ -445,12 +430,9 @@ The first compose problem encountered during this chapter rewrite was not a YAML
 
 #### Linux | docker inspect | reconcile the repo-era Airflow description with the live VM
 
-**When to run:** Before changing the Airflow VM, before following older repo docs, or before documenting the runtime.
-**Trigger:** The repo says `docker run` and `stoxx-index-intelligence`, but the live host looks different.
-**Context:** Live VM inspection via `gcloud compute ssh` and Docker container labels. Read-only.
-**Purpose:** Identify the actual compose project path, compose file, and project name that the live VM is using.
+Before changing the Airflow VM, before following older repo docs, or before documenting the runtime. It is typically triggered by the repo says `docker run` and `stoxx-index-intelligence`, but the live host looks different. Live VM inspection via `gcloud compute ssh` and Docker container labels. Read-only. Identify the actual compose project path, compose file, and project name that the live VM is using.
 **Problem:** The repo still documents an older Airflow deployment pattern, while the live VM on April 13, 2026 is a Compose stack in a different GCP project.
-**Context:** The first live queries against `stoxx-index-intelligence` failed, and the repo's earlier `docker run`-based Airflow guide did not match the actual running containers.
+The first live queries against `stoxx-index-intelligence` failed, and the repo's earlier `docker run`-based Airflow guide did not match the actual running containers.
 
 *Reads the live Compose labels from the running Airflow API server container.*
 
@@ -473,12 +455,9 @@ The second compose problem is current and live. Two Airflow containers are runni
 
 #### Linux | docker inspect / docker exec | capture the false-unhealthy state and time the real probe
 
-**When to run:** When `docker compose ps` reports `unhealthy` but the container logs still show forward progress.
-**Trigger:** `airflow-dag-processor` or `airflow-triggerer` appear degraded even though the stack is otherwise functioning.
-**Context:** Linux shell on `stoxx-airflow`. Read-only inspection plus a manual execution of the same healthcheck command.
-**Purpose:** Distinguish a dead process from a slow probe.
+When `docker compose ps` reports `unhealthy` but the container logs still show forward progress. It is typically triggered by `airflow-dag-processor` or `airflow-triggerer` appear degraded even though the stack is otherwise functioning. Linux shell on `stoxx-airflow`. Read-only inspection plus a manual execution of the same healthcheck command. Distinguish a dead process from a slow probe.
 **Problem:** On April 13, 2026, `app-airflow-dag-processor-1` and `app-airflow-triggerer-1` were running but marked unhealthy.
-**Context:** The live compose file gives both services a `timeout: 10s` CLI-based healthcheck.
+The live compose file gives both services a `timeout: 10s` CLI-based healthcheck.
 
 *Reads Docker's recorded health state for the live `airflow-dag-processor` container.*
 
@@ -522,12 +501,9 @@ The repo still contains an older Airflow-on-COS deployment model. That model is 
 
 #### Linux | sed / terraform | fix CRLF line endings in the earlier startup-script deployment
 
-**When to run:** Only when working with the older metadata-startup-script deployment preserved in the repo.
-**Trigger:** The VM boot log shows the shell cannot execute the startup script even though the script is present.
-**Context:** Historical setup trail from the repo's earlier Airflow deployment model. The commands below are the actual fix path recorded during that deployment.
-**Purpose:** Keep the earlier setup history because it explains a real class of Windows-to-Linux drift.
+Only when working with the older metadata-startup-script deployment preserved in the repo. It is typically triggered by the VM boot log shows the shell cannot execute the startup script even though the script is present. Historical setup trail from the repo's earlier Airflow deployment model. The commands below are the actual fix path recorded during that deployment. Keep the earlier setup history because it explains a real class of Windows-to-Linux drift.
 **Problem:** The startup script failed with `env: 'bash\r': No such file or directory`.
-**Context:** The repo originally pushed `infra/scripts/airflow-startup.sh` into VM metadata for a `docker run`-based Airflow stack.
+The repo originally pushed `infra/scripts/airflow-startup.sh` into VM metadata for a `docker run`-based Airflow stack.
 
 _Normalizes Windows CRLF line endings in `infra/scripts/airflow-startup.sh` with `sed`, then reapplies only the Airflow VM Terraform target so the startup metadata is rewritten with Linux-safe line endings._
 
@@ -547,12 +523,9 @@ env: 'bash\r': No such file or directory
 
 #### Linux | chown / ls | fix host-path ownership in the earlier Airflow bind mounts
 
-**When to run:** When an Airflow container can see mounted DAG or log paths but cannot write to them.
-**Trigger:** Airflow containers start, but logs fail to write or DAG files do not load because ownership is wrong.
-**Context:** Historical setup trail from the earlier Airflow deployment model in the repo.
-**Purpose:** Preserve the real mount-permission fix because the same UID pattern still exists in the current Compose-based VM stack.
+When an Airflow container can see mounted DAG or log paths but cannot write to them. It is typically triggered by airflow containers start, but logs fail to write or DAG files do not load because ownership is wrong. Historical setup trail from the earlier Airflow deployment model in the repo. Preserve the real mount-permission fix because the same UID pattern still exists in the current Compose-based VM stack.
 **Problem:** Host-mounted Airflow paths failed with permission errors because they were owned by the wrong UID or GID.
-**Context:** The older Airflow stack mounted `/home/airflow/dags` and `/home/airflow/logs` into containers that ran as UID `50000`, while PostgreSQL required UID `999` on its data path.
+The older Airflow stack mounted `/home/airflow/dags` and `/home/airflow/logs` into containers that ran as UID `50000`, while PostgreSQL required UID `999` on its data path.
 
 _Reassigns the Airflow DAG and log directories to UID `50000`, reassigns PostgreSQL data to UID and GID `999`, and verifies the corrected ownership numerically with `ls -ln`._
 

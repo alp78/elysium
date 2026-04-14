@@ -265,10 +265,7 @@ Push failures occur when the local and remote branches have diverged, when authe
 
 #### Diagnose the non-fast-forward rejection
 
-**When to run:** Immediately after a `git push` fails with `non-fast-forward`.
-**Trigger:** A colleague pushed commits to the same branch after your last pull or fetch.
-**Context:** Local shell. Read-only diagnosis. No state changes.
-**Purpose:** Confirm that the remote has commits your local branch lacks, before deciding whether to rebase or merge.
+Immediately after a `git push` fails with `non-fast-forward`. It is typically triggered by A colleague pushed commits to the same branch after your last pull or fetch. Local shell. Read-only diagnosis. No state changes. Confirm that the remote has commits your local branch lacks, before deciding whether to rebase or merge.
 
 The remote branch tip is not an ancestor of your local branch tip. Git refuses to push because it would overwrite the remote commits. This is Git's primary safety mechanism against accidental data loss on shared branches.
 
@@ -314,10 +311,7 @@ hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 
 #### Fix with pull --rebase
 
-**When to run:** After confirming the push failed due to divergence, not due to permission or auth errors.
-**Trigger:** The `non-fast-forward` rejection above.
-**Context:** Local shell. State-changing — replays your local commits on top of the remote's latest state. May trigger conflicts if both sides modified the same lines.
-**Purpose:** Incorporate the remote commits, then push your work on top of them.
+After confirming the push failed due to divergence, not due to permission or auth errors. It is typically triggered by the `non-fast-forward` rejection above. Local shell. State-changing — replays your local commits on top of the remote's latest state. May trigger conflicts if both sides modified the same lines. Incorporate the remote commits, then push your work on top of them.
 
 > [!info]- Command breakdown
 >
@@ -372,10 +366,7 @@ git push
 
 #### Diagnose the post-rebase rejection
 
-**When to run:** After rebasing a branch that was already pushed to the remote.
-**Trigger:** You ran `git rebase main` (or similar) on a feature branch that already has commits on the remote.
-**Context:** Local shell. Diagnosis only.
-**Purpose:** Understand why Git rejects the push after a rebase.
+After rebasing a branch that was already pushed to the remote. It is typically triggered by you ran `git rebase main` (or similar) on a feature branch that already has commits on the remote. Local shell. Diagnosis only. Understand why Git rejects the push after a rebase.
 
 Rebase rewrites commit SHAs by replaying each commit with a new parent. The remote still has the original commits with the old SHAs. Git sees a divergence between the rewritten local history and the original remote history, and rejects the push as non-fast-forward.
 
@@ -406,10 +397,7 @@ gitGraph TB:
 
 #### Fix with force-with-lease
 
-**When to run:** After a rebase has completed successfully and the normal push is rejected.
-**Trigger:** The `non-fast-forward` rejection on a rebased branch.
-**Context:** Local shell. **State-changing and potentially destructive** — overwrites the remote branch history. Only safe on branches where you are the sole contributor.
-**Purpose:** Overwrite the remote branch with the rebased history, using a safety check.
+After a rebase has completed successfully and the normal push is rejected. It is typically triggered by the `non-fast-forward` rejection on a rebased branch. Local shell. **State-changing and potentially destructive** — overwrites the remote branch history. Only safe on branches where you are the sole contributor. Overwrite the remote branch with the rebased history, using a safety check.
 
 > [!info]- Command breakdown
 >
@@ -452,10 +440,7 @@ git push
 
 #### Update local branch to match remote
 
-**When to run:** When `git status` reports your branch is behind the remote-tracking ref.
-**Trigger:** A colleague pushed changes after your last `git fetch` or `git pull`.
-**Context:** Local shell. State-changing — integrates remote commits into your branch.
-**Purpose:** Bring your local branch up to date with the remote.
+When `git status` reports your branch is behind the remote-tracking ref. It is typically triggered by A colleague pushed changes after your last `git fetch` or `git pull`. Local shell. State-changing — integrates remote commits into your branch. Bring your local branch up to date with the remote.
 
 The message compares your local branch pointer against the remote-tracking ref (`origin/main`), which was updated by your last fetch. Your local branch has fewer commits than the remote.
 
@@ -471,10 +456,7 @@ git pull origin main
 
 #### Configure rebase-on-pull
 
-**When to run:** When `git pull` creates unwanted merge commits like "Merge branch 'main' of github.com:...".
-**Trigger:** Your local branch and the remote have diverged, and `git pull` performs a merge by default.
-**Context:** Local shell. State-changing — rewrites how future pulls integrate changes.
-**Purpose:** Eliminate merge-commit clutter by replaying local commits on top of remote changes.
+When `git pull` creates unwanted merge commits like "Merge branch 'main' of github.com:...". It is typically triggered by your local branch and the remote have diverged, and `git pull` performs a merge by default. Local shell. State-changing — rewrites how future pulls integrate changes. Eliminate merge-commit clutter by replaying local commits on top of remote changes.
 
 *Pull with rebase instead of merge.*
 
@@ -494,10 +476,7 @@ git config --global pull.rebase true
 
 #### Increase the HTTP buffer
 
-**When to run:** When a push fails with "remote end hung up unexpectedly" or "RPC failed; HTTP 413".
-**Trigger:** Pushing a repository with large files, a large initial push, or extensive binary assets. The default HTTP POST buffer is approximately 1 MB.
-**Context:** Local shell. Configuration change only — affects all future HTTP pushes.
-**Purpose:** Allow Git to send larger payloads over HTTP.
+When a push fails with "remote end hung up unexpectedly" or "RPC failed; HTTP 413". It is typically triggered by pushing a repository with large files, a large initial push, or extensive binary assets. The default HTTP POST buffer is approximately 1 MB. Local shell. Configuration change only — affects all future HTTP pushes. Allow Git to send larger payloads over HTTP.
 
 *Increase the HTTP buffer size to 500 MB.*
 
@@ -513,10 +492,7 @@ git config --global http.postBuffer 524288000
 
 #### Refresh remote-tracking refs
 
-**When to run:** When `git status` says "up to date" but you know someone pushed changes.
-**Trigger:** The `git status` comparison is against the local copy of `origin/main`, not the live remote. If someone pushed after your last fetch, you will not see their changes.
-**Context:** Local shell. Read-only (`git fetch` downloads but does not modify your branch).
-**Purpose:** Update the local remote-tracking refs so `git status` shows the true divergence.
+When `git status` says "up to date" but you know someone pushed changes. It is typically triggered by the `git status` comparison is against the local copy of `origin/main`, not the live remote. If someone pushed after your last fetch, you will not see their changes. Local shell. Read-only (`git fetch` downloads but does not modify your branch). Update the local remote-tracking refs so `git status` shows the true divergence.
 
 *Fetch to update remote-tracking refs, then check status.*
 
@@ -560,10 +536,7 @@ Branch errors arise from operating on the wrong branch, losing track of HEAD, or
 
 #### Diagnose the detached HEAD state
 
-**When to run:** Immediately after Git prints the "detached HEAD" warning.
-**Trigger:** You checked out a specific commit SHA, a tag, or a remote-tracking ref instead of a branch name.
-**Context:** Local shell. The working tree is safe — no data is lost yet. The risk begins when you make new commits in this state and then switch away.
-**Purpose:** Understand what happened and decide whether to create a branch to preserve work.
+Immediately after Git prints the "detached HEAD" warning. It is typically triggered by you checked out a specific commit SHA, a tag, or a remote-tracking ref instead of a branch name. Local shell. The working tree is safe — no data is lost yet. The risk begins when you make new commits in this state and then switch away. Understand what happened and decide whether to create a branch to preserve work.
 
 In detached HEAD state, HEAD points directly at a commit rather than at a branch pointer. Any new commits you create are not on any branch — they become orphaned (unreachable) as soon as you switch to a named branch, and will be garbage-collected after approximately 90 days.
 
@@ -641,10 +614,7 @@ gitGraph TB:
 
 #### Fix by creating a rescue branch
 
-**When to run:** Before switching away from the detached HEAD, especially if you have made commits.
-**Trigger:** You see "detached HEAD" and have work to preserve.
-**Context:** Local shell. State-changing — creates a new branch at the current position.
-**Purpose:** Anchor your commits to a named branch so they are not orphaned.
+Before switching away from the detached HEAD, especially if you have made commits. It is typically triggered by you see "detached HEAD" and have work to preserve. Local shell. State-changing — creates a new branch at the current position. Anchor your commits to a named branch so they are not orphaned.
 
 *Create a branch at the current position to rescue your commits.*
 
@@ -662,10 +632,7 @@ This creates a named branch pointing at the current commit, preventing your work
 
 #### Switch to the local branch
 
-**When to run:** When you see "HEAD detached at origin/main" after a checkout.
-**Trigger:** You ran `git checkout origin/main` (a remote-tracking ref) instead of `git checkout main` (your local branch).
-**Context:** Local shell. State-changing — moves HEAD to the local branch.
-**Purpose:** Reattach HEAD to the local branch.
+When you see "HEAD detached at origin/main" after a checkout. It is typically triggered by you ran `git checkout origin/main` (a remote-tracking ref) instead of `git checkout main` (your local branch). Local shell. State-changing — moves HEAD to the local branch. Reattach HEAD to the local branch.
 
 Remote-tracking refs like `origin/main` are read-only pointers managed by `git fetch`. Checking them out puts you in detached HEAD state because you cannot commit directly to a remote-tracking ref.
 
@@ -713,10 +680,7 @@ Your branch is ahead of 'origin/main' by 21 commits.
 
 #### Fetch and switch to the missing branch
 
-**When to run:** When `git switch` or `git checkout` fails with a pathspec or invalid reference error.
-**Trigger:** The branch does not exist locally. It may be a remote branch not yet fetched, or the name may be misspelled.
-**Context:** Local shell. `git fetch` is read-only; `git switch` is state-changing.
-**Purpose:** Make the remote branch available locally.
+When `git switch` or `git checkout` fails with a pathspec or invalid reference error. It is typically triggered by the branch does not exist locally. It may be a remote branch not yet fetched, or the name may be misspelled. Local shell. `git fetch` is read-only; `git switch` is state-changing. Make the remote branch available locally.
 
 Git searches local branches first, then local files. If neither matches, it reports the pathspec error. `git switch` can automatically create a local tracking branch if a matching remote branch exists after fetching.
 
@@ -746,10 +710,7 @@ If the branch exists on the remote, `git switch` automatically creates a local t
 
 #### Move the commit to the correct branch
 
-**When to run:** Immediately after realizing you committed to the wrong branch.
-**Trigger:** You made commits on `main` (or another branch) instead of your intended feature branch.
-**Context:** Local shell. State-changing — uses `git reset --soft` to undo the commit and move changes via stash. Only safe if the commit has not been pushed.
-**Purpose:** Move the commit's changes to the correct branch without losing any work.
+Immediately after realizing you committed to the wrong branch. It is typically triggered by you made commits on `main` (or another branch) instead of your intended feature branch. Local shell. State-changing — uses `git reset --soft` to undo the commit and move changes via stash. Only safe if the commit has not been pushed. Move the commit's changes to the correct branch without losing any work.
 
 > [!todo] Move the last commit to the correct branch
 >
@@ -832,10 +793,7 @@ git commit -m "add todo note"
 
 #### Force-delete the squash-merged branch
 
-**When to run:** After squash-merging a PR, when `git branch -d` refuses to delete the source branch.
-**Trigger:** You ran `git branch -d feature-branch` and Git warns the branch is not fully merged.
-**Context:** Local shell. State-changing — deletes the local branch.
-**Purpose:** Remove the source branch now that its changes are on the target via the squash commit.
+After squash-merging a PR, when `git branch -d` refuses to delete the source branch. It is typically triggered by you ran `git branch -d feature-branch` and Git warns the branch is not fully merged. Local shell. State-changing — deletes the local branch. Remove the source branch now that its changes are on the target via the squash commit.
 
 Squash merge creates a single new commit on the target branch with a different SHA than the original branch commits. Git's merge check compares commit SHAs — since the squashed commit has a new SHA, Git does not recognize the branch as merged, even though all the changes are on the target.
 
@@ -867,10 +825,7 @@ Deleted branch demo/squash-test (was 3c9e531).
 
 #### Restore the branch and reopen the PR
 
-**When to run:** After accidentally deleting the branch before the PR was merged.
-**Trigger:** The branch was deleted locally and/or remotely, and the PR auto-closed.
-**Context:** Local and remote. State-changing — recreates the branch and reopens the PR.
-**Purpose:** Restore the branch so the PR can be merged normally.
+After accidentally deleting the branch before the PR was merged. It is typically triggered by the branch was deleted locally and/or remotely, and the PR auto-closed. Local and remote. State-changing — recreates the branch and reopens the PR. Restore the branch so the PR can be merged normally.
 
 > [!todo] Restore the branch and reopen the PR
 >
@@ -921,10 +876,7 @@ Merge errors occur when Git cannot automatically combine changes from two branch
 
 #### Resolve merge conflicts
 
-**When to run:** When a merge, rebase, cherry-pick, or stash pop reports conflicts.
-**Trigger:** Both branches modified the same lines in the same file. Git cannot determine which version to keep.
-**Context:** Local shell. State-changing — requires editing conflicted files, staging, and committing.
-**Purpose:** Manually resolve the conflicting changes and complete the merge.
+When a merge, rebase, cherry-pick, or stash pop reports conflicts. It is typically triggered by both branches modified the same lines in the same file. Git cannot determine which version to keep. Local shell. State-changing — requires editing conflicted files, staging, and committing. Manually resolve the conflicting changes and complete the merge.
 
 Git inserts conflict markers into the file and pauses the merge for manual resolution.
 
@@ -972,10 +924,7 @@ Git auto-generates a merge commit message. See [git-merge-conflicts](https://alp
 
 #### Allow unrelated histories
 
-**When to run:** When `git pull` or `git merge` fails with "refusing to merge unrelated histories".
-**Trigger:** The two branches have no common ancestor commit. Typically happens when you initialized a repository locally with `git init` and also created a separate repository on GitHub with a README — the two repos have independent histories.
-**Context:** Local shell. State-changing — creates a merge commit combining both histories.
-**Purpose:** Combine two independent histories into one.
+When `git pull` or `git merge` fails with "refusing to merge unrelated histories". It is typically triggered by the two branches have no common ancestor commit. Typically happens when you initialized a repository locally with `git init` and also created a separate repository on GitHub with a README — the two repos have independent histories. Local shell. State-changing — creates a merge commit combining both histories. Combine two independent histories into one.
 
 *Attempt to pull from a repo with no common ancestor.*
 
@@ -1002,10 +951,7 @@ git pull origin main --allow-unrelated-histories
 
 #### Resolve a modify/delete conflict
 
-**When to run:** During a merge or rebase when one branch modified a file while the other deleted it.
-**Trigger:** Git reports `CONFLICT (modify/delete)` and pauses the operation.
-**Context:** Local shell. State-changing — you must choose whether to keep or delete the file.
-**Purpose:** Explicitly resolve the ambiguity by choosing one outcome.
+During a merge or rebase when one branch modified a file while the other deleted it. It is typically triggered by git reports `CONFLICT (modify/delete)` and pauses the operation. Local shell. State-changing — you must choose whether to keep or delete the file. Explicitly resolve the ambiguity by choosing one outcome.
 
 To accept the deletion:
 
@@ -1035,10 +981,7 @@ git rebase --continue
 
 #### Stash uncommitted changes before the operation
 
-**When to run:** When a merge, checkout, pull, or switch refuses because you have uncommitted changes in files the operation needs to modify.
-**Trigger:** Git detects uncommitted changes that would be silently overwritten.
-**Context:** Local shell. State-changing — stash saves and restores working-tree state.
-**Purpose:** Temporarily shelve your changes so the operation can proceed, then restore them.
+When a merge, checkout, pull, or switch refuses because you have uncommitted changes in files the operation needs to modify. It is typically triggered by git detects uncommitted changes that would be silently overwritten. Local shell. State-changing — stash saves and restores working-tree state. Temporarily shelve your changes so the operation can proceed, then restore them.
 
 *Attempt to switch branches with uncommitted changes.*
 
@@ -1100,10 +1043,7 @@ These errors involve accidentally committing the wrong content — wrong files, 
 
 #### Restore a deleted tracked file
 
-**When to run:** When a tracked file was deleted from the working tree (manually or by a script) but the deletion has not been committed.
-**Trigger:** `git status` shows the file as `deleted` in unstaged changes.
-**Context:** Local shell. State-changing — copies the file from HEAD back into the working tree.
-**Purpose:** Recover the file without affecting the staging area or other files.
+When a tracked file was deleted from the working tree (manually or by a script) but the deletion has not been committed. It is typically triggered by `git status` shows the file as `deleted` in unstaged changes. Local shell. State-changing — copies the file from HEAD back into the working tree. Recover the file without affecting the staging area or other files.
 
 *Check the status to confirm the deletion.*
 
@@ -1134,10 +1074,7 @@ This copies the file from HEAD back into the working tree. The staging area and 
 
 #### Revert a pushed commit
 
-**When to run:** When you need to undo a pushed commit on a shared branch without rewriting history.
-**Trigger:** A bad commit was pushed and needs to be undone. The branch is shared, so `git reset` cannot be used.
-**Context:** Local shell + remote push. State-changing — creates a new commit that inverts the original. Safe for shared branches.
-**Purpose:** Undo the changes from a specific commit while preserving the commit in history.
+When you need to undo a pushed commit on a shared branch without rewriting history. It is typically triggered by A bad commit was pushed and needs to be undone. The branch is shared, so `git reset` cannot be used. Local shell + remote push. State-changing — creates a new commit that inverts the original. Safe for shared branches. Undo the changes from a specific commit while preserving the commit in history.
 
 `git revert` creates a new commit that is the exact inverse of the target commit — it undoes the changes without rewriting history. This is safe on shared branches because it adds a commit rather than removing one.
 
@@ -1191,10 +1128,7 @@ git push
 
 #### Remove a large file from the last commit
 
-**When to run:** When a large binary or data file was committed and needs to be removed before pushing.
-**Trigger:** GitHub rejects pushes containing files over 100 MB, or you notice a large file was accidentally staged.
-**Context:** Local shell. State-changing — rewrites the last commit.
-**Purpose:** Remove the large file from tracking while keeping it on disk.
+When a large binary or data file was committed and needs to be removed before pushing. It is typically triggered by gitHub rejects pushes containing files over 100 MB, or you notice a large file was accidentally staged. Local shell. State-changing — rewrites the last commit. Remove the large file from tracking while keeping it on disk.
 
 *Undo the commit, keeping changes staged.*
 
@@ -1228,10 +1162,7 @@ git commit -m "remove large file from tracking"
 
 #### Amend the commit to include the missing file
 
-**When to run:** Immediately after committing, when you realize a file was not staged.
-**Trigger:** You committed and either have not pushed yet (safe amend) or have pushed (requires force-push).
-**Context:** Local shell. State-changing — rewrites the last commit SHA.
-**Purpose:** Add the missing file to the existing commit instead of creating a separate commit.
+Immediately after committing, when you realize a file was not staged. It is typically triggered by you committed and either have not pushed yet (safe amend) or have pushed (requires force-push). Local shell. State-changing — rewrites the last commit SHA. Add the missing file to the existing commit instead of creating a separate commit.
 
 > [!todo] Amend the commit and force-push
 >
@@ -1271,10 +1202,7 @@ git push --force-with-lease
 
 #### Stop tracking files that should be in .gitignore
 
-**When to run:** When files that should have been in `.gitignore` (binaries, secrets, build artifacts, logs) were committed and pushed.
-**Trigger:** You notice tracked files that should not be in the repository. `.gitignore` only prevents untracked files from being staged — files already committed continue to be tracked even after adding them to `.gitignore`.
-**Context:** Local shell + remote push. State-changing — removes files from Git tracking.
-**Purpose:** Stop tracking the files going forward while keeping them on disk.
+When files that should have been in `.gitignore` (binaries, secrets, build artifacts, logs) were committed and pushed. It is typically triggered by you notice tracked files that should not be in the repository. `.gitignore` only prevents untracked files from being staged — files already committed continue to be tracked even after adding them to `.gitignore`. Local shell + remote push. State-changing — removes files from Git tracking. Stop tracking the files going forward while keeping them on disk.
 
 *Add the paths to `.gitignore`.*
 
@@ -1321,10 +1249,7 @@ These errors stem from misconfigured Git settings, missing SSH keys, or corrupte
 
 #### Navigate to the correct repository
 
-**When to run:** When any Git command fails with "not a git repository".
-**Trigger:** Your shell's working directory does not contain a `.git` folder. This can also happen if the `.git` directory was accidentally deleted, the path is on a network drive that disconnected, or you are in a subdirectory outside the repo.
-**Context:** Local shell. No Git state involved — this is a filesystem navigation issue.
-**Purpose:** Find and navigate to the correct repository directory.
+When any Git command fails with "not a git repository". It is typically triggered by your shell's working directory does not contain a `.git` folder. This can also happen if the `.git` directory was accidentally deleted, the path is on a network drive that disconnected, or you are in a subdirectory outside the repo. Local shell. No Git state involved — this is a filesystem navigation issue. Find and navigate to the correct repository directory.
 
 *Running a Git command outside a repository.*
 
@@ -1352,10 +1277,7 @@ If unsure where the repo is, search for `.git` directories: `find ~ -name .git -
 
 #### Diagnose and fix SSH authentication
 
-**When to run:** When Git operations over SSH fail with "Permission denied (publickey)".
-**Trigger:** Your SSH key is not configured, not added to the SSH agent, or not registered with your GitHub account.
-**Context:** Local shell. Involves SSH agent and GitHub account configuration.
-**Purpose:** Establish SSH authentication so Git can connect to the remote.
+When Git operations over SSH fail with "Permission denied (publickey)". It is typically triggered by your SSH key is not configured, not added to the SSH agent, or not registered with your GitHub account. Local shell. Involves SSH agent and GitHub account configuration. Establish SSH authentication so Git can connect to the remote.
 
 Git over SSH requires a key pair — the private key on your machine, the public key registered with GitHub.
 
@@ -1410,10 +1332,7 @@ ssh-add ~/.ssh/id_ed25519
 
 #### Configure line ending behavior
 
-**When to run:** When Git warns about line ending conversion during `git add`.
-**Trigger:** Windows uses CRLF (`\r\n`) line endings, Unix/macOS uses LF (`\n`). Git detects the mismatch and warns about auto-conversion.
-**Context:** Local shell. Configuration change — affects how Git converts line endings during checkout and commit.
-**Purpose:** Normalize line endings to prevent noisy diffs and merge conflicts in cross-platform teams.
+When Git warns about line ending conversion during `git add`. It is typically triggered by windows uses CRLF (`\r\n`) line endings, Unix/macOS uses LF (`\n`). Git detects the mismatch and warns about auto-conversion. Local shell. Configuration change — affects how Git converts line endings during checkout and commit. Normalize line endings to prevent noisy diffs and merge conflicts in cross-platform teams.
 
 *The warning on Windows when staging a file.*
 
@@ -1455,10 +1374,7 @@ git config --global core.autocrlf input
 
 #### Remove stale lock files
 
-**When to run:** When a Git write operation fails with "cannot lock ref" or "Unable to create ... .lock".
-**Trigger:** A previous Git operation crashed mid-write and left a `.lock` file behind, or another Git process (GUI client, IDE plugin, background script) is currently running against the same repository.
-**Context:** Local shell. State-changing — removes a lock file. Risk: removing a lock while another process is actively writing can corrupt the repository.
-**Purpose:** Clear the stale lock so Git operations can proceed.
+When a Git write operation fails with "cannot lock ref" or "Unable to create ... .lock". It is typically triggered by A previous Git operation crashed mid-write and left a `.lock` file behind, or another Git process (GUI client, IDE plugin, background script) is currently running against the same repository. Local shell. State-changing — removes a lock file. Risk: removing a lock while another process is actively writing can corrupt the repository. Clear the stale lock so Git operations can proceed.
 
 *The error when a lock file blocks `git add`.*
 
@@ -1506,10 +1422,7 @@ Shallow clones (`git clone --depth N`) save bandwidth and disk space but truncat
 
 #### Diagnose shallow clone limitations
 
-**When to run:** When `git log`, `git blame`, or `git bisect` returns incomplete or unexpected results.
-**Trigger:** The repository was cloned with `--depth N`, limiting history to the most recent N commits.
-**Context:** Local shell. Read-only diagnosis.
-**Purpose:** Determine if the limited history is causing the issue.
+When `git log`, `git blame`, or `git bisect` returns incomplete or unexpected results. It is typically triggered by the repository was cloned with `--depth N`, limiting history to the most recent N commits. Local shell. Read-only diagnosis. Determine if the limited history is causing the issue.
 
 *A shallow clone shows only one commit.*
 
@@ -1540,10 +1453,7 @@ The `^` prefix on the commit SHA indicates the graft boundary — Git shows the 
 
 #### Fix by unshallowing the clone
 
-**When to run:** When shallow clone limitations block your work.
-**Trigger:** You need full history for blame, bisect, log, or merge-base operations.
-**Context:** Local shell + network. State-changing — downloads the full history.
-**Purpose:** Convert the shallow clone to a full clone.
+When shallow clone limitations block your work. It is typically triggered by you need full history for blame, bisect, log, or merge-base operations. Local shell + network. State-changing — downloads the full history. Convert the shallow clone to a full clone.
 
 *Fetch the full history.*
 
@@ -1590,10 +1500,7 @@ CI/CD-specific errors arise from misconfigured secrets, missing permissions, or 
 
 #### Diagnose and fix missing GCP secrets
 
-**When to run:** When a GitHub Actions workflow fails at the `google-github-actions/auth` step.
-**Trigger:** The `GCP_SA_KEY` repository secret is missing, empty, or inaccessible. The `${{ secrets.GCP_SA_KEY }}` expression resolves to an empty string, and the auth action fails because it receives neither authentication method.
-**Context:** GitHub Actions environment + GitHub CLI locally. State-changing — sets or verifies repository secrets.
-**Purpose:** Ensure the workflow has valid GCP credentials.
+When a GitHub Actions workflow fails at the `google-github-actions/auth` step. It is typically triggered by the `GCP_SA_KEY` repository secret is missing, empty, or inaccessible. The `${{ secrets.GCP_SA_KEY }}` expression resolves to an empty string, and the auth action fails because it receives neither authentication method. GitHub Actions environment + GitHub CLI locally. State-changing — sets or verifies repository secrets. Ensure the workflow has valid GCP credentials.
 
 GitHub Actions secrets are not passed to workflows triggered from forks (including Dependabot PRs) as a security measure — this is intentional, not a bug.
 
