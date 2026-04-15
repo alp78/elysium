@@ -133,17 +133,30 @@ These examples validate the real fixture files under `C:\Users\aperi\My Drive\VA
 
 Use this before any transform or load accepts a new file. It is typically triggered when an incoming CSV must prove that its column contract still matches the expected schema before downstream processing continues. This script compares the header row of the sampled `signals_daily` file against the golden schema file and stops immediately on any mismatch.
 
-> [!warning] Schema contract risk
+> [!warning]- Header parsing must be schema-aware
 >
-> Header comparison is only reliable when encoding and newline handling are explicit. For CSV validation, use a CSV-aware parser with `newline=''` and a declared encoding; raw shell splitting can misread quoted line breaks or BOM-affected headers.
-
-> [!failure] Wrong pattern
+> This check is trustworthy only when the parser understands CSV quoting and encoding. A byte-level split can misclassify a valid file as drifted, or miss a malformed first column.
 >
-> Comparing raw header strings with ad hoc tokenization or unspecified encoding and then treating the result as a valid schema check.
-
-> [!success] Preferred pattern
+> > [!failure] Naive comma split
+> >
+> > This ignores BOM handling and quoted delimiters in the header row.
+> >
+> > ```bash
+> > header=$(head -n 1 "$CSV_FILE")
+> > IFS=',' read -r -a columns <<< "$header"
+> > ```
 >
-> Treat the schema file as a release artifact, not an informal sample. In data engineering workflows, reject the file at the landing edge when the contract changes instead of allowing downstream transforms to guess the new shape.
+> > [!success] CSV-aware header read
+> >
+> > Read the header with `csv.reader` and `newline=''` so the validator compares parsed column names rather than raw bytes.
+> >
+> > ```bash
+> > python3 - "$CSV_FILE" <<'PY'
+> > import csv, sys
+> > with open(sys.argv[1], newline='', encoding='utf-8') as handle:
+> >     print(next(csv.reader(handle)))
+> > PY
+> > ```
 
 *Compare the sampled `signals_daily` CSV header in `incoming` against the golden schema file in `schemas`.*
 
@@ -185,18 +198,6 @@ OK - headers match schema for signals_daily_sample.csv
 
 Use this before any transform or load accepts a new file. It is typically triggered when an incoming file must prove row-level completeness before downstream processing continues. The script scans the intentionally broken `signals_daily_missing.csv` fixture and reports every row where `symbol` or `recommendation_mean` is blank.
 
-> [!warning] Null semantics risk
->
-> Empty string, whitespace, and sentinel literals such as `NULL` or `N/A` are different states unless the ingestion contract normalizes them. A null scan that does not define those semantics will miss operationally bad rows or reject valid ones inconsistently.
-
-> [!failure] Wrong pattern
->
-> Treating empty string, whitespace, and sentinel literals such as `NULL` as interchangeable without an explicit normalization rule.
-
-> [!success] Preferred pattern
->
-> Quarantine rejected rows with explicit failure reasons instead of only failing the batch. That preserves evidence for producer follow-up and avoids rerunning the entire intake just to inspect which records violated completeness rules.
-
 *Scan the broken `signals_daily_missing.csv` fixture for empty `symbol` and `recommendation_mean` fields.*
 
 ```bash
@@ -235,18 +236,6 @@ Row 9: column 'symbol' is empty
 #### Duplicate key detector
 
 Use this before any transform or load accepts a new file. It is typically triggered when the target table expects a unique business key and duplicates must be rejected early. This script reads the duplicate-symbol fixture and reports any repeated `symbol` values before a database or warehouse load is attempted.
-
-> [!warning] Duplicate-key drift
->
-> Duplicate detection can diverge from the target system if business keys are case-insensitive or trimmed during load. Validate keys under the same canonicalization rules that the destination collation or merge logic applies.
-
-> [!failure] Wrong pattern
->
-> Checking source keys before case, trim, or collation normalization and assuming the destination will behave the same way.
-
-> [!success] Preferred pattern
->
-> Pair key checks with a documented grain statement for the file, for example one row per `symbol` and `signal_date`. Data contracts that name the grain make duplicate failures easier to interpret during incident review.
 
 *Group the duplicate-symbol fixture and fail when a `signals_daily` symbol appears more than once.*
 
@@ -287,18 +276,6 @@ Total duplicated values: 2
 #### File arrival SLA checker
 
 Use this before any transform or load depends on a landing-zone drop. It is typically triggered when a scheduled ingest needs to prove that the expected file has arrived recently enough to satisfy the upstream SLA. This script refreshes the sample landing file timestamp, searches for `signals_daily_*.csv`, and reports the newest matching file.
-
-> [!warning] SLA false positive
->
-> File modification time is not the same as data freshness. A recently touched file can still contain stale business dates, partial content, or a producer-side rerun of old data.
-
-> [!failure] Wrong pattern
->
-> Approving the drop because the file is new on disk even though the business date or record volume can still be stale.
-
-> [!success] Preferred pattern
->
-> Monitor file-arrival SLA together with business-date freshness and expected row volume. The three signals together are materially stronger than any single timestamp-based gate.
 
 *Check that the landing folder contains a fresh `signals_daily_*.csv` drop within the last 60 minutes.*
 
@@ -343,18 +320,6 @@ These examples operate on the live CSV and JSON fixtures in the vault data direc
 
 Use this after validation and before the target load step. It is typically triggered when a validated dataset must be reshaped into the subset and order that the next system expects. This script projects four warehouse-facing columns from the sampled `signals_daily` extract into a new CSV under `transformed`.
 
-> [!warning] Ordinal projection risk
->
-> Column selection by ordinal position is brittle under schema drift. Once upstream producers insert or reorder fields, text tools such as `cut` can silently project the wrong data.
-
-> [!failure] Wrong pattern
->
-> Projecting columns by position with `cut` or `awk` and assuming upstream column order will never change.
-
-> [!success] Preferred pattern
->
-> Name-based projection with an explicit destination column list is the safer warehouse pattern. Fail immediately on missing source columns instead of emitting a partially mapped file.
-
 *Project four destination columns from the sampled `signals_daily` extract into `signals_daily_projection.csv`.*
 
 ```bash
@@ -391,18 +356,6 @@ OK - wrote 12 rows with 4 columns to signals_daily_projection.csv
 
 Use this after validation and before the target load step. It is typically triggered when a validated dataset is too large to load comfortably as one file or when retryable chunking is required. This script splits the full `data/signals_daily.csv` extract into 200-row chunks and preserves the header row in every chunk under `split`.
 
-> [!warning] Chunking tradeoff
->
-> Excessively small chunks increase scheduler overhead, object counts, and downstream load inefficiency. Splitting is useful only when the chunk boundary aligns with retry and parallelism requirements.
-
-> [!failure] Wrong pattern
->
-> Splitting files into arbitrarily small pieces that increase retry overhead, file-count sprawl, and downstream load inefficiency.
-
-> [!success] Preferred pattern
->
-> Choose chunk size based on the target system's load behavior and the maximum amount of work you are willing to replay on retry. Data movement boundaries should be operational decisions, not arbitrary file-size conventions.
-
 *Split the full `data/signals_daily.csv` extract into 200-row chunks under `data/powershell-automation/split`.*
 
 ```bash
@@ -437,18 +390,6 @@ OK - split into 3 chunks of up to 200 rows each
 #### JSON to CSV flattener
 
 Use this after validation and before the target load step. It is typically triggered when the source is a local JSON array but the next load step expects CSV. This script converts the `dim_country_sample.json` fixture into a flat CSV with the same two fields used later in the Firestore example.
-
-> [!warning] Lossy flattening risk
->
-> Flattening nested JSON into CSV is lossy once arrays or nested objects carry analytical meaning. Do not treat CSV as a neutral interchange format when the original payload has hierarchical semantics.
-
-> [!failure] Wrong pattern
->
-> Flattening nested JSON into CSV and discarding the raw semi-structured artifact that preserves arrays and nested objects.
-
-> [!success] Preferred pattern
->
-> Preserve the raw JSON or NDJSON artifact alongside the flattened extract whenever the source is semi-structured. That gives downstream debugging and replay a stable source of truth when CSV projections later need to change.
 
 *Flatten the local country JSON array into `transformed/dim_country_sample.csv`.*
 
@@ -486,18 +427,6 @@ OK - wrote 8 rows with 2 columns to dim_country_sample.csv
 #### CSV to NDJSON converter
 
 Use this after validation and before a consumer expects line-delimited JSON. It is typically triggered when a CSV extract must be turned into a streaming-friendly interchange format for downstream tooling. This script converts the sampled `signals_daily` CSV into one JSON document per line under `transformed`.
-
-> [!warning] Deferred typing risk
->
-> A row-to-document conversion that preserves every field as text only defers typing problems to the next system. Strict downstream schemas will still fail if dates, numerics, or null semantics were never normalized.
-
-> [!failure] Wrong pattern
->
-> Emitting every field as text and expecting downstream systems to recover correct numeric, date, and null semantics later.
-
-> [!success] Preferred pattern
->
-> Use NDJSON when append-friendly transport matters, but cast critical fields deliberately before the first durable load. A documented type boundary is easier to operate than repeated downstream coercion.
 
 *Convert the sampled CSV into `signals_daily_sample.ndjson` with one object per line.*
 
@@ -539,17 +468,33 @@ The live API examples here use Google Cloud endpoints because they are already a
 
 Use this when a script needs one read-only API response but cannot afford to fail on the first transient HTTP issue. It is typically triggered when metadata or control-plane state must be fetched before the next step can continue. This example calls the BigQuery table metadata endpoint for `stoxx_silver.signals_daily`, retries on non-2xx responses, and saves the response body locally.
 
-> [!warning] Retry safety boundary
+> [!warning]- Retry scope must stay idempotent
 >
-> Automatic retries are appropriate for idempotent reads, not for arbitrary mutating API calls. Replaying non-idempotent writes without a deduplication contract can create duplicate side effects.
-
-> [!failure] Wrong pattern
+> This wrapper is appropriate for read-only metadata calls. Once the same pattern is copied to state-changing endpoints, retries can duplicate writes, webhook effects, or load submissions.
 >
-> Reusing the same automatic retry wrapper for mutating API calls that can create duplicate side effects.
-
-> [!success] Preferred pattern
+> > [!danger] Blind POST retries
+> >
+> > A timeout after the server commits the write still looks like a local failure and can trigger a duplicate submission.
+> >
+> > ```bash
+> > for attempt in 1 2 3; do
+> >     curl -sS -X POST "$URL" -d "$payload" && break
+> > done
+> > ```
 >
-> Honor `Retry-After` when the server supplies it, add jitter to the delay schedule, and cap the total retry budget. Those controls reduce coordinated retry storms and make API behavior more predictable during incidents.
+> > [!success] Bounded GET retries
+> >
+> > Keep automatic retries on idempotent `GET` calls and stop after a defined retry budget.
+> >
+> > ```bash
+> > delay=1
+> > for attempt in 1 2 3; do
+> >     http_code=$(curl -sS -o response.json -w '%{http_code}' "$URL") || http_code=000
+> >     [[ "$http_code" == 2* ]] && break
+> >     sleep "$delay"
+> >     delay=$((delay * 2))
+> > done
+> > ```
 
 *Fetch live BigQuery table metadata with retry logic and save the response to `signals_daily_table.json`.*
 
@@ -591,18 +536,6 @@ Saved response to signals_daily_table.json
 #### Paginated API fetcher
 
 Use this when the API returns only part of the result set in each response. It is typically triggered when table lists, audit logs, or catalog endpoints page through a large collection that must be collected before downstream logic can reason about the whole dataset. This example walks the BigQuery tables list endpoint for `stoxx_silver` with `maxResults=2`, follows `nextPageToken`, and merges all pages into one local JSON file.
-
-> [!warning] Pagination truncation risk
->
-> Do not infer completion from page size. Many APIs return short pages before the final page, and stopping on record count heuristics will silently truncate the collection.
-
-> [!failure] Wrong pattern
->
-> Stopping when a page is short or when a record count looks complete instead of following the server's continuation token.
-
-> [!success] Preferred pattern
->
-> Persist the last successful page token or high-water mark after each page. That turns a long-running pull into a resumable process instead of forcing a full restart after partial failure.
 
 *Fetch the `stoxx_silver` BigQuery table list across multiple pages and write the merged result to `stoxx_silver_tables.json`.*
 
@@ -685,18 +618,6 @@ OK - fetched 3 page(s), 6 total records to stoxx_silver_tables.json
 
 Use this when an API client must survive token expiry across scheduled runs. It is typically triggered when a wrapper script needs cached credentials for repeat calls but still has to refresh before the token becomes invalid. This example keeps a token cache file under `api`, refreshes it from `gcloud auth print-access-token` when missing or near expiry, and then calls the BigQuery dataset list endpoint.
 
-> [!warning] Token-expiry race
->
-> Refreshing exactly at nominal expiry is unsafe because of clock skew and request transit time. A cache that cuts the timing margin too closely will create intermittent authentication failures that are difficult to reproduce.
-
-> [!failure] Wrong pattern
->
-> Waiting until nominal expiry or sharing one token cache across different runtimes and service identities.
-
-> [!success] Preferred pattern
->
-> Refresh access tokens early and scope the cache to the exact runtime identity and environment. Shared token files across different operators or schedulers create avoidable credential ambiguity.
-
 *Refresh the local bearer-token cache if needed and list the available BigQuery datasets in `bq-wh-nb`.*
 
 ```bash
@@ -760,18 +681,6 @@ Datasets: stoxx_bronze, stoxx_gold, stoxx_marts, stoxx_silver
 
 Use this when a remote artifact is required locally and corruption must be detected before any consumer touches the file. It is typically triggered when a dataset, model artifact, or export must be downloaded and verified as a byte-for-byte match against an expected digest. This example downloads the live GCS export through the storage media API, decompresses it into a CSV, and verifies the resulting SHA-256 checksum against the saved digest file under `api`.
 
-> [!warning] Version ambiguity risk
->
-> A checksum alone does not prove that you downloaded the intended version when the object name is mutable. If the upstream object can be replaced in place, you can validate the wrong generation successfully.
-
-> [!failure] Wrong pattern
->
-> Accepting a checksum match without pinning the remote object generation or another immutable version identifier.
-
-> [!success] Preferred pattern
->
-> Record immutable object generation together with the checksum whenever Cloud Storage is the source. Version identity and content identity are both needed for reliable replay and audit.
-
 *Download the exported `eurostoxx50_ohlcv` object, decompress it locally, and verify the CSV checksum.*
 
 ```bash
@@ -820,18 +729,6 @@ These scripts use the real SQL files under `data/powershell-automation/sql` and 
 
 Use this before a job depends on SQL Server for export or validation. It is typically triggered when the runtime must prove that the target database is reachable before spending time on upstream work. This example times a trivial query against `stoxx` and reports the round-trip latency.
 
-> [!warning] Connectivity trust tradeoff
->
-> `sqlcmd -C` trusts the server certificate presented by the endpoint. That is acceptable for this local lab path but is not the production pattern for a secured SQL Server estate.
-
-> [!failure] Wrong pattern
->
-> Treating `-C` trust-server-certificate behavior as the production pattern instead of a local convenience.
-
-> [!success] Preferred pattern
->
-> Keep the health query trivial and measure latency explicitly. A fast connectivity probe should answer only whether the dependency is reachable, not hide application logic inside the check itself.
-
 *Execute a one-row health query against the live `stoxx` SQL Server instance and time the response.*
 
 ```bash
@@ -855,17 +752,30 @@ OK - connected to localhost,1434/stoxx in 137ms
 
 Use this when SQL Server is the source system and the next step expects a portable file rather than an interactive result set. It is typically triggered by an extract, handoff, or validation workflow that needs the query results as CSV on disk. This example runs the saved `stoxx_eurostoxx_latest.sql` query, cleans the `sqlcmd` text output, and writes a real CSV under `exports`.
 
-> [!warning] Whitespace loss risk
+> [!warning]- Export switches can alter the data contract
 >
-> `sqlcmd -W` trims trailing spaces. That improves machine parsing here, but it is unsafe if fixed-width data or padded `CHAR` values carry business meaning.
-
-> [!failure] Wrong pattern
+> `sqlcmd` formatting flags are useful only when the exported values allow them. `-W` changes trailing-space semantics, so the safest export shape depends on the downstream contract.
 >
-> Using `-W` by default even when trailing spaces or fixed-width `CHAR` values are part of the data contract.
-
-> [!success] Preferred pattern
+> > [!danger] Trim by default
+> >
+> > This is unsafe for fixed-width extracts or `CHAR` columns where right-padding still carries meaning.
+> >
+> > ```bash
+> > "$SQLCMD" -W -s"," -i "$SQL_FILE_WIN" > export.csv
+> > ```
 >
-> Use machine-friendly switches only when the downstream parser and data contract allow them. When padding is significant, preserve the raw shape and validate field widths explicitly before exporting.
+> > [!success] Preserve fixed-width values
+> >
+> > Drop `-W` when padding matters and validate field widths explicitly after the export.
+> >
+> > ```bash
+> > "$SQLCMD" -s"," -i "$SQL_FILE_WIN" > "$OUTPUT_FILE"
+> > python3 - "$OUTPUT_FILE" <<'PY'
+> > import csv, sys
+> > with open(sys.argv[1], newline='', encoding='utf-8') as handle:
+> >     print(max(len(row[0]) for row in csv.reader(handle)))
+> > PY
+> > ```
 
 *Run the saved `stoxx_eurostoxx_latest.sql` query against `stoxx` and export the result set to CSV.*
 
@@ -910,17 +820,32 @@ OK - exported 12 rows with 4 columns to stoxx_eurostoxx_latest.csv
 
 Use this immediately after an export or load when row preservation matters more than raw task completion. It is typically triggered when the workflow must prove that the file on disk and the SQL query used to validate it still agree on row count. This example compares the CSV exported above with the saved count query under `sql`.
 
-> [!warning] Reconciliation blind spot
+> [!warning]- Matching counts can still hide drift
 >
-> Equal row counts do not prove that two datasets are equivalent. Key duplication, dropped columns, and value drift can still be present while counts match exactly.
-
-> [!failure] Wrong pattern
+> Count parity proves only that both sides have the same number of rows. It does not prove that keys, dates, or measures still match.
 >
-> Approving an export or load solely because the row counts match, without any control totals or key-level checks.
-
-> [!success] Preferred pattern
+> > [!failure] Count-only approval
+> >
+> > This passes even when duplicated keys or shifted measures keep the row count unchanged.
+> >
+> > ```bash
+> > [[ "$file_rows" == "$db_rows" ]]
+> > ```
 >
-> Pair row-count checks with control totals, distinct-key counts, or bounded hashes over business columns. Reconciliation is materially stronger when it validates both volume and content.
+> > [!success] Count plus control totals
+> >
+> > Pair the count check with a control total or key-level reconciliation over business columns.
+> >
+> > ```bash
+> > file_total=$(python3 - "$CSV_FILE" <<'PY'
+> > import csv, sys
+> > with open(sys.argv[1], newline='', encoding='utf-8') as handle:
+> >     print(sum(float(row["current_price"]) for row in csv.DictReader(handle)))
+> > PY
+> > )
+> > db_total=$("$SQLCMD" -S localhost,1434 -d stoxx -U sa -P 'EsgDev2026Pass1' -C -h -1 -W -Q "SET NOCOUNT ON; SELECT SUM(current_price) FROM silver.eurostoxx50_ohlcv WHERE signal_date = '2026-03-04';" | tr -d '\r' | awk 'NF {print $1; exit}')
+> > [[ "$file_rows" == "$db_rows" && "$file_total" == "$db_total" ]]
+> > ```
 
 *Compare the exported CSV row count to the saved SQL count query for the same `silver.eurostoxx50_ohlcv` slice.*
 
@@ -968,18 +893,6 @@ These examples use the actual project resources available to the vault: `stoxx-s
 
 Use this when a bucket needs a retention or hygiene check before more data is staged into it. It is typically triggered when a project bucket accumulates exports or intermediate objects and operators need a fast view of which ones are older than policy allows. This script lists objects in `gs://stoxx-bq-bucket/export` that are more than one day old.
 
-> [!warning] Retention decision risk
->
-> Object age alone is not a retention policy. Without lifecycle rules, legal-hold awareness, or downstream-consumer context, deleting old objects from a report like this can remove still-needed recovery points.
-
-> [!failure] Wrong pattern
->
-> Deleting objects directly from an age report without checking ownership, retention policy, or recovery requirements.
-
-> [!success] Preferred pattern
->
-> Use age reporting as an operator signal before codifying bucket lifecycle policy. It is most useful when paired with object prefix ownership and an explicit retention class for each landing or export path.
-
 *List GCS export objects older than one day in `gs://stoxx-bq-bucket/export`.*
 
 ```bash
@@ -1012,18 +925,6 @@ gs://stoxx-bq-bucket/export/eurostoxx50_ohlcv-000000000000.parquet       7155 by
 #### GCS stage and promote with checksum verification
 
 Use this before a file leaves the landing zone and becomes visible to downstream BigQuery loads or other consumers. It is typically triggered when a local extract or transformed file is ready to publish into the project buckets but must be verified before promotion. This script uploads the sample CSV to `stoxx-stage-bucket`, compares the local and remote MD5 digests, then copies the verified object into `stoxx-bq-bucket`.
-
-> [!warning] Promotion race condition
->
-> Overwrite-by-name is race-prone in shared buckets. Another process can replace the staged object between verification and promotion if the workflow does not use generation-based preconditions.
-
-> [!failure] Wrong pattern
->
-> Publishing to shared object names without generation-match preconditions on the stage and promote steps.
-
-> [!success] Preferred pattern
->
-> Record the immutable object generation and use generation-match preconditions on both stage and promote paths. That turns the bucket handoff into an auditable publish step instead of a best-effort copy.
 
 *Upload the sample CSV to the stage bucket, verify the checksum, and promote the verified object into the production bucket.*
 
@@ -1095,18 +996,6 @@ Checksum verified across stage and promoted copies.
 
 Use this before any non-trivial BigQuery statement runs in a scheduled or operator-driven workflow. It is typically triggered when a query touches a production dataset and cost or partition discipline must be validated before execution. This example dry-runs the saved `bq_signals_latest.sql` statement and calculates the on-demand scan estimate.
 
-> [!warning] Cost guardrail gap
->
-> A dry run is advisory, not an execution-time guardrail. The real query can still run expensively unless the production invocation also enforces a bytes-billed ceiling.
-
-> [!failure] Wrong pattern
->
-> Relying on a dry run alone and letting the execution path run without `maximum_bytes_billed` protection.
-
-> [!success] Preferred pattern
->
-> Pair dry runs with `maximum_bytes_billed` on the real query path. That combination gives operators both a pre-execution estimate and a hard stop when partition pruning fails or the query text changes unexpectedly.
-
 *Dry-run the saved BigQuery statement in `sql/bq_signals_latest.sql` and estimate the bytes scanned before execution.*
 
 ```bash
@@ -1158,17 +1047,28 @@ Estimated cost: $0.00000014 (on-demand pricing)
 
 Use this after a staged object has passed checksum verification and is ready to enter a BigQuery dataset. It is typically triggered when a batch file is present in GCS and the next workflow step is to load it into BigQuery without guessing whether the job finished cleanly. This example starts an asynchronous load into `stoxx_bronze.powershell_automation_signals_load`, polls the job state, and then verifies row count and date range with the saved SQL file.
 
-> [!warning] Autodetect schema drift
+> [!warning]- Production loads need a pinned schema
 >
-> `--autodetect` is convenient for demonstrations but fragile for production CSV contracts. Small sampling artifacts, type ambiguity, and producer-side format changes can all create unstable schemas.
-
-> [!failure] Wrong pattern
+> `--autodetect` is useful for ad hoc or lab loads. Production feeds should fail on contract change, not reinterpret the file shape during ingestion.
 >
-> Treating `--autodetect` as a stable ingestion contract for production CSV feeds.
-
-> [!success] Preferred pattern
+> > [!failure] Autodetect the contract
+> >
+> > A producer-side type change or extra column can silently alter the loaded schema.
+> >
+> > ```bash
+> > bq load --autodetect --source_format=CSV "$TABLE_ID" "$SOURCE_URI"
+> > ```
 >
-> Use explicit schemas for stable feeds and keep the bucket and dataset in the same BigQuery location. Polling plus post-load verification is the correct pattern because job submission alone does not prove that the table is usable.
+> > [!success] Pin the schema explicitly
+> >
+> > Keep the load contract in versioned schema text and require deliberate schema changes.
+> >
+> > ```bash
+> > bq load \
+> >   --schema='symbol:STRING,signal_date:DATE,current_price:FLOAT,upside_potential:FLOAT' \
+> >   --source_format=CSV \
+> >   "$TABLE_ID" "$SOURCE_URI"
+> > ```
 
 *Launch a live BigQuery load job, poll until it reaches `DONE`, and verify the loaded table with the saved SQL file.*
 
@@ -1232,18 +1132,6 @@ Distinct symbols: 12
 
 Use this immediately before a load job or schema-sensitive transform that expects a stable file contract. It is typically triggered when a producer changes a header row or a target table evolves in BigQuery. This example compares the drifted local header file against the live schema for `bq-wh-nb:stoxx_silver.signals_daily` and reports missing or extra columns explicitly.
 
-> [!warning] Unversioned schema change
->
-> Not all drift is accidental. Approved schema evolution still needs explicit version handling; otherwise a valid new producer release will look identical to an unreviewed breaking change.
-
-> [!failure] Wrong pattern
->
-> Handling every schema difference ad hoc instead of versioning the contract and approving compatible evolution explicitly.
-
-> [!success] Preferred pattern
->
-> Version file contracts and require a controlled approval path for added or renamed columns. Schema comparison is most effective when it sits behind a known compatibility policy rather than a binary allow-or-block rule.
-
 *Compare a drifted local header file to the live `stoxx_silver.signals_daily` schema and emit a drift result.*
 
 ```bash
@@ -1284,18 +1172,6 @@ Extra in file: ingested_at
 #### BigQuery table freshness checker
 
 Use this on a schedule after ingestion windows close or before dependent marts assume the latest business date is available. It is typically triggered when data readiness is defined by date lag rather than by raw job completion. This example runs the saved freshness query against `stoxx_silver.signals_daily`, compares the lag to a seven-day threshold, and emits a pass/fail status.
-
-> [!warning] Freshness-only readiness
->
-> Latest business date alone can still hide partial loads. A table may contain today's date while missing a material share of the expected rows or partitions.
-
-> [!failure] Wrong pattern
->
-> Declaring the table ready because the latest business date exists, even when the slice could still be incomplete.
-
-> [!success] Preferred pattern
->
-> Evaluate freshness together with completeness measures such as row count, key coverage, or expected partition count. Data readiness should reflect whether the slice is complete, not only whether a date value exists.
 
 *Evaluate the saved freshness query and fail only when the live lag exceeds the configured SLA threshold.*
 
@@ -1339,18 +1215,6 @@ Rows monitored: 635
 #### Pub/Sub backlog monitor
 
 Use this when a single current backlog value is enough to decide whether a subscriber is healthy. It is typically triggered by an operational check that needs to know whether a consumer is currently behind before the pipeline continues. This example reads the live `num_undelivered_messages` metric for the Eventarc subscription through the Cloud Monitoring API.
-
-> [!warning] Incomplete lag signal
->
-> Backlog count alone is an incomplete health signal. A small undelivered count can still represent unhealthy processing if message age is growing or if poison messages are cycling repeatedly.
-
-> [!failure] Wrong pattern
->
-> Alerting on `num_undelivered_messages` alone and ignoring message age or poison-message behavior.
-
-> [!success] Preferred pattern
->
-> Pair `num_undelivered_messages` with `oldest_unacked_message_age` and an explicit dead-letter policy. Subscriber lag is easier to operate when count and age move together in the alerting model.
 
 *Read the live Pub/Sub backlog metric for the Eventarc subscription from Cloud Monitoring.*
 
@@ -1396,18 +1260,6 @@ OK - eventarc-europe-west1-stoxx-firestore-control-written-sub-850: 0 undelivere
 #### Pub/Sub backlog trend monitor
 
 Use this when one backlog point is not enough and the operator needs to know whether the subscription is building debt over time. It is typically triggered when transient spikes are common and the check should alert only on sustained lag. This example reads a six-hour aligned history from Cloud Monitoring, summarizes the sample count, max backlog, average backlog, and non-zero samples, and only alerts on a persistent pattern.
-
-> [!warning] Idle window ambiguity
->
-> Zero backlog does not necessarily mean healthy consumption; it can also mean there was no publish traffic in the measurement window. Trend interpretation without expected activity context can produce false reassurance.
-
-> [!failure] Wrong pattern
->
-> Reading a zero-backlog window as healthy consumption without confirming that any messages were published.
-
-> [!success] Preferred pattern
->
-> Read backlog trends alongside publish volume or the expected event cadence for the source system. Sustained lag alerts are most useful when they distinguish idle pipelines from pipelines that are actively falling behind.
 
 *Read the aligned backlog history for the Eventarc subscription and summarize whether the backlog is sustained or transient.*
 
@@ -1484,17 +1336,26 @@ OK - no sustained backlog detected for eventarc-europe-west1-stoxx-firestore-con
 
 Use this when the project needs a quick credential-rotation audit. It is typically triggered by a periodic security check or by troubleshooting a service account with long-lived user-managed keys. This example lists the keys on `bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com`, compares their creation times to a 20-day threshold, and prints whether each key should be rotated.
 
-> [!warning] Key exposure surface
+> [!warning]- Keys should be the exception
 >
-> User-managed service account keys are a last-resort credential form because they can be copied, cached, and forgotten outside the control plane. Rotation checks mitigate age risk but do not remove the leakage surface.
-
-> [!failure] Wrong pattern
+> User-managed keys technically work, but they create a credential that can be copied outside IAM controls and linger in scripts, workstations, or CI caches.
 >
-> Treating rotation as sufficient while continuing to depend on long-lived user-managed service account keys.
-
-> [!success] Preferred pattern
+> > [!danger] Create and export a key file
+> >
+> > This moves the credential boundary from IAM into filesystem hygiene and secret-distribution discipline.
+> >
+> > ```bash
+> > gcloud iam service-accounts keys create sa-key.json --iam-account="$SERVICE_ACCOUNT"
+> > export GOOGLE_APPLICATION_CREDENTIALS=sa-key.json
+> > ```
 >
-> Prefer service account impersonation or Workload Identity Federation wherever the runtime allows it. When keys are unavoidable, restrict creation through policy and audit their age and use explicitly.
+> > [!success] Impersonate at runtime
+> >
+> > Prefer ephemeral credentials that are minted when needed and never written as reusable key files.
+> >
+> > ```bash
+> > gcloud --impersonate-service-account="$SERVICE_ACCOUNT" auth print-access-token
+> > ```
 
 *Inspect the user-managed keys on the project service account and flag keys older than 20 days.*
 
@@ -1541,18 +1402,6 @@ These examples start from local files under `C:\Users\aperi\My Drive\VAULT\data\
 
 Use this when a local export, transformed file, or partner drop must be made available to cloud consumers through a bucket path. It is typically triggered when a Bash run has produced a file on the host and the next stage expects a GCS object instead of a local path. This example uploads the projection CSV into `stoxx-stage-bucket` and then reads the object metadata back from GCS.
 
-> [!warning] Object overwrite risk
->
-> Direct host-to-bucket publishing can overwrite concurrent runs if the destination object name is shared. That is especially risky when schedulers rerun the same job name on failure.
-
-> [!failure] Wrong pattern
->
-> Publishing retries or concurrent runs to the same object path and assuming the last write is safe.
-
-> [!success] Preferred pattern
->
-> Use run-scoped object paths or generation preconditions when the same logical load can be retried. Object naming should make replay safe before downstream consumers ever read the bucket.
-
 *Upload the local projection CSV into `stoxx-stage-bucket` and confirm the created object metadata.*
 
 ```bash
@@ -1592,18 +1441,6 @@ Bytes: 588
 
 Use this when a small or medium file already exists on the host and you want an immediate table load without first staging it in GCS. It is typically triggered when a Bash job has produced a CSV locally and the next step is an agent-local BigQuery load. This example loads `signals_daily_projection.csv` straight into `stoxx_bronze.powershell_automation_local_file_load` and verifies the destination table with the saved SQL file.
 
-> [!warning] Undurable load boundary
->
-> Direct local-file loads are operationally convenient on a single runner but are not the standard handoff pattern for shared production ingestion. They bypass durable staging and make replay harder when the runner disappears.
-
-> [!failure] Wrong pattern
->
-> Making direct local-file loads the normal production handoff instead of using durable staged objects.
-
-> [!success] Preferred pattern
->
-> Reserve direct local loads for controlled operator workflows and small files. For repeatable production paths, stage to GCS first and load with an explicit schema so the ingest boundary remains durable and reviewable.
-
 *Load the local projection CSV directly into BigQuery and verify the resulting table.*
 
 ```bash
@@ -1641,18 +1478,6 @@ Max upside: 0.523479507707014
 #### Local file to SQL Server table
 
 Use this when SQL Server is the immediate next system but the source file exists only on the host running WSL. It is typically triggered when a CSV extract has landed on the runner and the target SQL Server instance cannot read that host path directly. This example prepares `dbo.powershell_automation_local_file_load`, generates `INSERT` statements from the projection CSV, executes them through `SQLCMD.EXE`, and then validates the result with the saved verification query.
-
-> [!warning] Row-by-row loading
->
-> Row-by-row `INSERT` generation does not scale for large files. It increases transaction overhead, bloats log activity, and becomes slow long before the source volume reaches ordinary warehouse batch sizes.
-
-> [!failure] Wrong pattern
->
-> Scaling row-by-row `INSERT` generation beyond small control files instead of moving to bulk-load mechanisms.
-
-> [!success] Preferred pattern
->
-> Use this pattern for controlled demos or small control files only. For larger loads, move to `BULK INSERT`, `bcp`, or another bulk-ingest path that lets SQL Server read data in set-oriented batches.
 
 *Stream the local projection CSV into `stoxx.dbo.powershell_automation_local_file_load` and verify the loaded rows.*
 
@@ -1703,18 +1528,6 @@ Max upside: 0.5234795077
 #### Local file to Firestore collection
 
 Use this when the destination is a document store and the source file already exists as local JSON on the runner. It is typically triggered when a process has produced a small dimension, control, or status file that should become Firestore documents. This example reads `dim_country_sample.json`, upserts one document per `iso_alpha2` value into Firestore Native, and then checks the live collection count through the REST API.
-
-> [!warning] Firestore write pressure
->
-> Firestore ingestion has different scaling limits than warehouse loads. Large write bursts, sequential hot keys, and oversized batches can all create throughput or contention problems quickly.
-
-> [!failure] Wrong pattern
->
-> Sending large bursts without deterministic document IDs, batch control, or hotspot-aware key design.
-
-> [!success] Preferred pattern
->
-> Use deterministic document IDs for idempotent upserts and chunk larger loads deliberately. Firestore is well suited for small control, status, and dimension datasets when write patterns are explicit and bounded.
 
 *Upsert the local country JSON file into the `powershell_automation_country_load` collection and confirm the live document count.*
 
@@ -1782,17 +1595,29 @@ Real orchestration usually crosses multiple systems in one run. The key is to ma
 
 Use this when one automation run must ingest a staged cloud file, land it in SQL Server, publish a relational summary into BigQuery, and expose the run result as a Firestore document. It is typically triggered when a bucket object has arrived and the operational requirement is a multi-system handoff rather than a single-target load. This example downloads the staged CSV, loads it into `stoxx`, exports a one-row summary to CSV, loads that summary into BigQuery, and then patches the Firestore run-status document.
 
-> [!warning] Partial-commit divergence
+> [!warning]- Multi-hop loads need a shared run ID
 >
-> Multi-system pipelines fail partially in practice. If one hop commits and the next one does not, the run can leave SQL Server, BigQuery, and Firestore in contradictory states.
-
-> [!failure] Wrong pattern
+> Once a chain touches four systems, a partial success is an operational state, not an edge case. Without a shared identifier, replay, cleanup, and audit become guesswork.
 >
-> Chaining four systems without a run identifier or idempotent write contract for each hop.
-
-> [!success] Preferred pattern
+> > [!failure] Hop-local writes
+> >
+> > Each destination is updated independently, so later operators cannot prove which BigQuery table and Firestore document belong to the same run.
+> >
+> > ```bash
+> > gcloud storage cp "$SOURCE_URI" "$LANDING_FILE"
+> > "$SQLCMD" -i "$LOAD_SQL_WIN"
+> > bq load "$TABLE_ID" "$SUMMARY_FILE"
+> > ```
 >
-> Persist a run identifier and make each hop idempotent against that identifier. Chained automation is operationally safer when every system can answer whether a specific run has already been applied.
+> > [!success] Propagate one `RUN_ID`
+> >
+> > Generate the identifier once and stamp it into filenames, SQL payloads, table rows, and Firestore document paths.
+> >
+> > ```bash
+> > RUN_ID="$(date -u +'%Y%m%dT%H%M%SZ')"
+> > SUMMARY_FILE="$DATA_ROOT/exports/chain_signal_summary_${RUN_ID}.csv"
+> > FIRESTORE_DOC="https://firestore.googleapis.com/v1/projects/bq-wh-nb/databases/main/documents/powershell_automation_pipeline_runs/${RUN_ID}"
+> > ```
 
 *Run the full chained handoff from a GCS object through SQL Server and BigQuery into a Firestore status document.*
 
@@ -1936,18 +1761,6 @@ The outputs below come from the real fixture files used by the PowerShell note. 
 
 Use this when a run has produced a flat log file and the next decision is whether the error rate is high enough to page or investigate. It is typically triggered during quick triage after a pipeline or automation wrapper finishes. This example counts `ERROR`, `WARN`, and `INFO` lines in `pipeline.log` and raises an alert when the error rate exceeds five percent.
 
-> [!warning] Text-matching blind spots
->
-> Plain-text severity counting is susceptible to false positives when message bodies contain severity words. It is acceptable for lightweight triage, but it is not a robust alerting substrate for production telemetry.
-
-> [!failure] Wrong pattern
->
-> Using `grep`-based severity counts as the primary alerting system even though message text can contain misleading severity words.
-
-> [!success] Preferred pattern
->
-> Use flat-log counting as a fast operator check and move durable alerting to structured logs with explicit severity fields. Monitoring logic should parse event structure, not only message text.
-
 *Calculate the severity distribution in `pipeline.log` and alert on an elevated error rate.*
 
 ```bash
@@ -2005,18 +1818,6 @@ INFO:  7 (58.3%)
 
 Use this when a run has produced NDJSON logs and operator decisions need to be driven from structured fields rather than text matching. It is typically triggered during triage after a failure, timeout, or unexpected side effect. This example filters the NDJSON log fixture for `ERROR` entries in a narrow UTC time window and pretty-prints the matching objects.
 
-> [!warning] Timestamp shape mismatch
->
-> Lexical timestamp comparisons are only safe when every record uses the same normalized UTC RFC 3339 shape. Mixed offsets, fractional precision, or local-time strings will break simple string-window filters.
-
-> [!failure] Wrong pattern
->
-> Comparing timestamps lexically when the source records can vary in timezone, precision, or formatting.
-
-> [!success] Preferred pattern
->
-> Standardize structured logs on zero-padded UTC timestamps and a fixed field contract. Once the log shape is stable, Bash and Python wrappers can perform precise triage without inventing parser-specific exceptions.
-
 *Filter the NDJSON log fixture for `ERROR` entries inside the selected UTC time window.*
 
 ```bash
@@ -2065,17 +1866,27 @@ PY
 
 Use this when a run has produced logs and the host needs a lightweight retention pattern without depending on system-level `logrotate`. It is typically triggered by scheduled cleanup on agents that keep flat files under a shared working directory. This example recreates aged log fixtures under `logs/archive`, compresses the old `.log` files with `gzip`, and deletes archives older than the retention threshold.
 
-> [!warning] Open-file rotation risk
+> [!warning]- Rotate only closed files
 >
-> Compressing a file that an active process still holds open can lose log continuity or duplicate content depending on how the writer behaves. Rotation policy must account for file handles, not only filenames and ages.
-
-> [!failure] Wrong pattern
+> Compression is safe only after the writer has switched off the file. Gzipping the active log can split one logical stream across file handles and lose predictable retention behavior.
 >
-> Compressing files that active writers still have open and assuming rotation is complete because the filename changed.
-
-> [!success] Preferred pattern
+> > [!danger] Compress the current logfile
+> >
+> > This assumes the producer has already released the file, which is often false for long-running agents.
+> >
+> > ```bash
+> > gzip app.log
+> > ```
 >
-> Rotate only closed files or pair rotation with an explicit reopen signal from the writer. Lightweight Bash rotation is acceptable when the ownership of file writers is clear and retention rules are simple.
+> > [!success] Move, then compress
+> >
+> > Rotate the filename first, then compress the closed archive name after the writer has moved away from it.
+> >
+> > ```bash
+> > stamp=$(date -u +'%Y%m%dT%H%M%SZ')
+> > mv app.log "app.${stamp}.log"
+> > gzip "app.${stamp}.log"
+> > ```
 
 *Compress and delete aged log fixtures under `data/powershell-automation/logs/archive`.*
 
@@ -2127,18 +1938,6 @@ The checks here reflect the actual WSL runtime used for the Bash note: Windows C
 
 Use this immediately before the job commits to work on the current host. It is typically triggered when the runtime environment must be validated before the main workload starts. This example checks the real tools required by the Bash note, including the Windows `SQLCMD.EXE` binary exposed into WSL.
 
-> [!warning] False dependency readiness
->
-> `PATH` presence does not prove that a tool is usable. A CLI can exist locally while still lacking credentials, project context, or network reachability to perform the required work.
-
-> [!failure] Wrong pattern
->
-> Assuming a binary on `PATH` proves that credentials, network access, and runtime context are also valid.
-
-> [!success] Preferred pattern
->
-> Follow binary discovery with low-cost auth or version probes for the critical tools. Pre-flight should confirm both presence and minimum operability before the main job allocates time or state.
-
 *Verify that the local Bash, checksum, locking, Google Cloud, and SQL Server tooling is available before the main workflow starts.*
 
 ```bash
@@ -2172,18 +1971,6 @@ OK - all 10 required tools are available
 
 Use this immediately before the job commits to work on the current host. It is typically triggered when the runtime environment must be validated before the main workload starts and shared settings are kept in a simple env file. This example reads `powershell-automation.env`, exports the variables into the current shell, and reports how many keys were loaded.
 
-> [!warning] Over-permissive env parsing
->
-> This loader intentionally supports only simple `KEY=VALUE` lines. Rich shell syntax, embedded command substitution, or multiline secrets belong in a more controlled configuration path.
-
-> [!failure] Wrong pattern
->
-> Feeding shell syntax, command substitution, or durable secrets into a parser that only expects simple `KEY=VALUE` lines.
-
-> [!success] Preferred pattern
->
-> Keep `.env` files limited to non-secret runtime settings and move durable secrets to Secret Manager or an equivalent store. Simple parsers are operationally safer when the file contract stays deliberately narrow.
-
 *Load the example `.env` file under `data/powershell-automation/env` into the current shell process.*
 
 ```bash
@@ -2211,18 +1998,6 @@ OK - loaded 5 variable(s) from powershell-automation.env
 #### Disk space pre-flight
 
 Use this immediately before the job commits to work on the current host. It is typically triggered when the runtime environment must be validated before the main workload starts and temporary files, downloads, or exports may consume additional space. This example checks the root filesystem and the mounted Windows volume used by the vault and fails only if either exceeds the 90 percent threshold.
-
-> [!warning] Incomplete capacity check
->
-> Percent-used checks alone can miss the real failure mode. Large jobs also fail on inode exhaustion, temp-directory placement, or writing to a different filesystem than the one that was measured.
-
-> [!failure] Wrong pattern
->
-> Checking root filesystem usage alone even though temp files or outputs may land on different mounts or exhaust inodes first.
-
-> [!success] Preferred pattern
->
-> Measure the actual temp and output filesystems that the job will use, not only the root mount. Capacity checks are more credible when they match the path where the workload will write its largest artifacts.
 
 *Check the key WSL mount points used by the workflow and fail if any exceeds the configured usage threshold.*
 
@@ -2267,18 +2042,6 @@ These examples use the helper scripts and state files under `data/powershell-aut
 
 Use this when a job moves from one-off execution into unattended scheduling. It is typically triggered when the scheduler needs overlap control so a second run does not start while the first one still holds shared state. This example acquires a `flock` lock file before running the helper script under `state`.
 
-> [!warning] Local-only lock scope
->
-> `flock` is a local filesystem coordination tool. On some shared or networked filesystems its semantics are limited or unreliable enough that overlap prevention can become a false guarantee.
-
-> [!failure] Wrong pattern
->
-> Relying on `flock` on shared or network filesystems as though it were a distributed coordination service.
-
-> [!success] Preferred pattern
->
-> Keep lock files on local storage or move coordination into the scheduler or another consensus-backed system when execution becomes distributed. Local locks solve local overlap, not distributed ownership.
-
 *Acquire a file lock before running the helper script under `data/powershell-automation/state`.*
 
 ```bash
@@ -2311,17 +2074,29 @@ OK - command completed with exit code 0
 
 Use this when a job moves from one-off execution into unattended scheduling and transient failures are expected. It is typically triggered when the scheduler needs explicit retry and backoff semantics around a flaky dependency. This example increments a counter file, fails the first two attempts on purpose, and succeeds on the third attempt after running a live SQL Server health query through `SQLCMD.EXE`.
 
-> [!warning] Non-idempotent replay risk
+> [!warning]- Retry logic needs replay safety
 >
-> Retries applied to non-idempotent work can duplicate writes, notifications, or external side effects. Retry logic is safe only when the target action is read-only or has an explicit deduplication contract.
-
-> [!failure] Wrong pattern
+> This wrapper is sound for transient read failures. It becomes unsafe when copied onto writes that can be applied more than once.
 >
-> Wrapping non-idempotent writes or notifications in blind retries without an idempotency key or deduplication contract.
-
-> [!success] Preferred pattern
+> > [!danger] Retry a non-idempotent write
+> >
+> > A timeout or broken connection after the remote side commits can still trigger a duplicate write on the next attempt.
+> >
+> > ```bash
+> > until curl -sS -X POST "$URL" -d "$payload"; do
+> >     sleep 1
+> > done
+> > ```
 >
-> Keep retry wrappers focused on transient failures, bounded backoff, and a clearly defined retry budget. If the operation changes state, require an idempotency key or another replay-safe contract first.
+> > [!success] Retry an idempotent check
+> >
+> > Keep generic retries around health checks, metadata reads, or writes protected by an idempotency key.
+> >
+> > ```bash
+> > until "$SQLCMD" -S localhost,1434 -Q "SET NOCOUNT ON; SELECT 1;"; do
+> >     sleep 1
+> > done
+> > ```
 
 *Retry a transiently failing operation until the third attempt, then complete with a live `stoxx` health query.*
 
@@ -2378,18 +2153,6 @@ OK - succeeded on attempt 3
 #### Run and alert pattern
 
 Use this when a scheduled job needs an explicit success or failure notification path in addition to its exit code. It is typically triggered when the wrapper must send a webhook after the target command completes, but the command result still has to remain visible to the scheduler. This example runs the live `stoxx` health helper, attempts to post a webhook payload to a local endpoint, and preserves the command exit code even when the notification fails.
-
-> [!warning] Alerting status inversion
->
-> Notification transport is a secondary concern, not the source of truth for job outcome. If alert delivery failure overwrites the primary exit status, the scheduler will misclassify the run.
-
-> [!failure] Wrong pattern
->
-> Letting webhook delivery determine job status instead of treating alert transport as a secondary concern.
-
-> [!success] Preferred pattern
->
-> Emit the job result independently and keep alerting best-effort unless the operational contract explicitly treats notification as mandatory. Control-plane observability should not erase the underlying workload outcome.
 
 *Run the `stoxx` health helper, attempt a webhook notification, and emit a scheduler-friendly status line.*
 

@@ -13,6 +13,13 @@
     display: grid;
     transition: grid-template-rows 0.1s cubic-bezier(0.02, 0.01, 0.47, 1);
     overflow: hidden;
+    min-width: 0;
+
+    // Let nested code blocks shrink within the grid item so their own
+    // horizontal scrolling works instead of being clipped by the callout.
+    & > * {
+      min-width: 0;
+    }
 
     & > :first-child {
       margin-top: 0;

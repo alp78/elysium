@@ -1,1429 +1,1024 @@
 ---
 title: "15 - Web and APIs - Python"
 tags: [api, python]
-aliases: [REST API, HTTP client, web server, FastAPI, Flask, requests]
-description: "Python web and APIs reference with executable examples and cell outputs — covers HTTP clients with requests/httpx, REST API building with FastAPI and Flask, and authentication patterns. See [15-cs-webapis](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/15-cs-webapis) for the C# equivalent."
+aliases: [REST API, HTTP client, web server, FastAPI, requests, httpx, Pydantic]
+description: "Python web and APIs reference with executable examples and literal outputs. Covers requests and httpx clients, pagination and retry patterns, FastAPI route contracts, and Pydantic validation. See [15-cs-webapis](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/15-cs-webapis) for the C# equivalent."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-15
 status: complete
 ---
 
 # 15. Web & APIs - Python
 
-> [!quote]
+> [!quote]- Perspective
+>
 > "Web programming is the science of coming up with increasingly complicated ways of concatenating strings."
 >
-> — **Greg Brockman**
+> - **Greg Brockman**
 
 > [!abstract]- Summary
 >
-> **HTTP Clients (`requests` / `httpx`)**
-> - `requests`: synchronous HTTP library; covers GET, POST, PUT, DELETE; no default timeout — always pass `timeout=`; use `Session()` for connection reuse and shared headers.
-> - `httpx`: drop-in replacement adding async support, HTTP/2, and enforced timeouts; `Client()` for pooling, `AsyncClient()` for concurrent calls with `asyncio.gather()`.
-> - `raise_for_status()` raises on 4xx/5xx; equivalent to C# `EnsureSuccessStatusCode()`.
-> - Headers passed via `headers=` dict; Bearer tokens loaded from env vars, never hardcoded.
->
-> **REST API Patterns for Data Engineering**
-> - Pagination: loop until exhausted, guard with `max_pages`, use cursor-based when available.
-> - Retry with exponential backoff: `delay = base * 2 ** attempt`; honour `Retry-After` on 429.
-> - Bulk POST: batch 100–1000 records per request to reduce round trips by orders of magnitude.
->
-> **Building a REST API (FastAPI)**
-> - Pydantic `BaseModel` subclasses define request/response shapes; FastAPI validates before handler runs.
-> - Route decorators: `@app.get`, `@app.post`, `@app.delete`; `HTTPException` returns structured error responses.
-> - `uvicorn` serves the ASGI app; auto-generates Swagger docs at `/docs`; `422` returned on validation failure.
-> - C# mapping: `FastAPI` → ASP.NET Minimal APIs; `@app.get` → `app.MapGet()`; `HTTPException` → `Results.NotFound()`; `uvicorn` → Kestrel.
->
-> **Pydantic — Data Validation**
-> - `Field()` constraints: `gt=0`, `max_length`, `pattern`, `Literal`, `Enum` restrict values at schema level.
-> - `@field_validator`: single-field custom rules (format, normalization); `@model_validator(mode="after")`: cross-field rules (`end_date > start_date`).
-> - Nested models validated recursively; `model_dump(by_alias=True)` produces camelCase for external APIs.
-> - `frozen=True`: immutable config; `strict=True`: disables coercion — critical for financial data.
-> - `model_json_schema()` generates OpenAPI schema; FastAPI uses it to build Swagger docs automatically.
+> - Use `requests` for synchronous integrations and `httpx` when the same client code needs `async`, connection pooling, or HTTP/2.
+> - Always set `timeout=` on outbound calls, reuse `Session()` or `Client()` instances, and load bearer tokens from `os.environ`.
+> - Handle pagination, `429` retries, and bulk `POST` batching explicitly instead of assuming a single happy-path response.
+> - FastAPI pairs `BaseModel` request schemas, `response_model=` contracts, and `HTTPException` failure boundaries cleanly.
+> - Pydantic covers schema constraints, custom validators, nested models, aliases, JSON Schema generation, `frozen=True`, and `strict=True`.
 
 > [!note]- Glossary
 >
 > **`requests`**
-> - Synchronous Python HTTP client library commonly used for simple scripts, API calls, and straightforward integrations.
-> - Used when the code path is synchronous and the workflow needs a familiar, low-friction HTTP API for one-off requests or small request volumes.
->
-> > [!warning] No default timeout
-> >
-> > `requests` does not apply a timeout unless you pass one explicitly. Always set `timeout=` so a slow or unresponsive server cannot block the caller indefinitely.
+> - Synchronous HTTP client for simple scripts and service-to-service calls.
+> - Always pass `timeout=` because `requests` does not apply one by default.
 >
 > ---
 >
 > **`httpx`**
-> - Modern Python HTTP client library that provides both synchronous and asynchronous APIs, with support for features such as HTTP/2 and connection pooling.
-> - Used when the codebase needs a Requests-like API but also benefits from enforced timeouts, async support, and a richer client model.
->
-> > [!tip] Similar to Requests, not identical
-> >
-> > `httpx` is intentionally familiar to Requests users, but it is not a strict drop-in replacement in every behavior or API detail. Validate compatibility before swapping it into existing code blindly.
+> - HTTP client with both synchronous and asynchronous APIs.
+> - Use `Client()` or `AsyncClient()` when connection reuse or `asyncio` concurrency matters.
 >
 > ---
 >
 > **`AsyncClient`**
-> - Asynchronous `httpx` client class for use with `async` / `await`.
-> - Used to make multiple outbound HTTP calls efficiently inside asynchronous code, especially in async services, workers, and API backends.
->
-> > [!warning] Close the client explicitly
-> >
-> > `AsyncClient` should usually be managed with `async with` or closed with `await client.aclose()`. The key requirement is proper lifecycle management so connections are released cleanly.
+> - `httpx` client type for `async` / `await` code paths.
+> - Keep it inside `async with` or call `await client.aclose()` explicitly.
 >
 > ---
 >
 > **ASGI**
-> - Asynchronous Server Gateway Interface, the standard interface between Python async-capable web servers and Python web applications.
-> - Used to enable asynchronous request handling, long-lived connections, and protocols such as WebSockets in Python web stacks.
->
-> > [!info] ASGI vs WSGI
-> >
-> > WSGI is the older synchronous gateway model. ASGI supports asynchronous application behavior and protocols beyond plain request-response HTTP, which is why frameworks such as FastAPI use it.
+> - Interface between async Python web apps and servers such as `uvicorn`.
+> - FastAPI uses ASGI so it can support async handlers and long-lived connections.
 >
 > ---
 >
 > **FastAPI**
-> - Python web framework for building APIs on top of Starlette and Pydantic, with automatic validation and OpenAPI documentation generation.
-> - Used to build typed HTTP APIs quickly, especially when request parsing, validation, async support, and generated docs matter.
->
-> > [!tip] Thin handlers, validated models
-> >
-> > Keep route functions focused on HTTP concerns and delegate business logic elsewhere. FastAPI works best when request and response structure is modeled clearly and handler functions stay narrow.
+> - Python framework for typed HTTP APIs with automatic OpenAPI generation.
+> - The main workflow is `BaseModel` input, route decorators, `response_model=`, and `HTTPException`.
 >
 > ---
 >
-> **Pydantic `BaseModel`**
-> - Pydantic base class for defining typed data models with parsing, validation, and schema generation.
-> - Used in FastAPI to validate request bodies, structure response data, and generate OpenAPI schemas from Python type declarations.
->
-> > [!info] The usual FastAPI model type
-> >
-> > `BaseModel` is the standard and most common model base used with FastAPI request bodies and responses, even though FastAPI can also work with other supported data representations in some cases.
->
-> ---
->
-> **`HTTPException`**
-> - FastAPI exception type used to stop request processing and return a specific HTTP error response to the client.
-> - Used for expected API error conditions such as missing resources, authorization failures, conflicts, or invalid client actions.
->
-> > [!warning] Do not use plain `Exception` for expected client errors
-> >
-> > A generic `Exception` usually becomes an internal server error response. Use `HTTPException` when you intend to return a deliberate HTTP status code and error body.
+> **`BaseModel`**
+> - Pydantic base class for validation, coercion, and schema generation.
+> - FastAPI uses it for request parsing and response contracts.
 >
 > ---
 >
 > **`raise_for_status()`**
-> - Method on `requests` and `httpx` response objects that raises an exception for HTTP 4xx and 5xx responses.
-> - Used to fail fast on unsuccessful HTTP responses instead of accidentally treating an error payload as valid business data.
->
-> > [!warning] Silent failures without `raise_for_status()`
-> >
-> > Without an explicit status check, code may continue into `resp.json()` or downstream parsing even though the server returned an error response instead of the expected data.
->
-> ---
->
-> **Retry with backoff**
-> - Request-retry pattern in which each subsequent retry waits longer than the previous one, often using exponential growth with an upper bound.
-> - Used to handle transient failures such as timeouts, temporary upstream errors, and rate limiting without hammering the remote service.
->
-> > [!tip] Honour `Retry-After` when present
-> >
-> > If the server sends `Retry-After`, prefer that instruction over your default backoff schedule. Be prepared for it to be absent, and note that it can be expressed either as seconds or as an HTTP date.
->
-> ---
->
-> **429 Too Many Requests**
-> - HTTP status code indicating that the client has exceeded the server's allowed request rate or quota policy.
-> - Used by APIs to signal rate limiting and to tell the client that retry behavior must slow down or wait.
->
-> > [!warning] `Retry-After` is helpful but not guaranteed
-> >
-> > Many APIs include a `Retry-After` header with 429 responses, but not all do. Client code should handle both cases gracefully.
+> - Method on `requests` and `httpx` responses that raises on `4xx` and `5xx`.
+> - Use it after each call when an error payload should stop downstream processing.
 >
 > ---
 >
 > **Pagination**
-> - API design pattern that splits a large result set across multiple responses instead of returning everything in one payload.
-> - Used to retrieve large datasets safely and incrementally, typically through offset/limit or cursor/token-based navigation.
->
-> > [!warning] Guard pagination loops
-> >
-> > A malformed or repeating next-page token can create an infinite loop. Add explicit safety checks such as `max_pages`, repeated-token detection, or total-record guards.
+> - API pattern that splits a large result set across multiple responses.
+> - Guard loops with `next_page`, `max_pages`, or repeated-token detection.
 >
 > ---
 >
 > **Bearer token**
-> - Credential sent in the `Authorization: Bearer <token>` HTTP header, commonly used for OAuth 2.0 and token-based API authentication.
-> - Used to authenticate API requests without embedding usernames and passwords in each call.
->
-> > [!danger] Never hardcode tokens
-> >
-> > Load bearer tokens from environment variables, secret stores, or injected runtime configuration. Hardcoded credentials leak into source control, logs, and review systems.
+> - Credential sent in `Authorization: Bearer <token>`.
+> - Load it from `os.environ` or a secret store instead of hardcoding it in source.
 >
 > ---
 >
 > **`uvicorn`**
-> - ASGI server commonly used to run FastAPI and other ASGI applications.
-> - Used to serve an ASGI application locally during development and in deployment environments, either directly or behind a reverse proxy / process manager.
->
-> > [!warning] `--reload` is for development
-> >
-> > Auto-reload is intended for local development. Also note that `--reload` and `--workers` are mutually exclusive in Uvicorn's CLI configuration.
+> - ASGI server commonly used to run FastAPI apps.
+> - `--reload` is for local development, not production worker setups.
 >
 > ---
 >
-> **Connection pooling**
-> - Reuse of existing network connections across multiple HTTP requests to the same upstream host instead of creating a fresh connection each time.
-> - Used to reduce connection setup overhead, improve throughput, and avoid repeated TLS handshakes in request-heavy workflows.
->
-> > [!warning] New client per request defeats pooling
-> >
-> > Creating a fresh `requests.Session()`, `httpx.Client()`, or `httpx.AsyncClient()` for every request discards most pooling benefits. Reuse client instances at the appropriate scope.
->
-> ---
->
-> **422 Unprocessable Entity**
-> - HTTP status code used by FastAPI's default validation flow when the request body or parameters were syntactically readable but failed declared validation rules.
-> - Used to tell the client that the request structure was understood, but one or more supplied values did not satisfy the API schema or constraints.
->
-> > [!info] 422 vs 400
-> >
-> > In FastAPI, automatic request validation errors typically produce 422 responses. A 400 response is usually reserved for other bad-request conditions that you raise or handle explicitly.
+> **`422 Unprocessable Entity`**
+> - FastAPI's default response when parsed input fails declared validation rules.
+> - Check the `detail` array before assuming the route handler ran.
 
+## Local Demo Server for Outbound Client Examples
 
-## HTTP Clients & REST API Calls
+The `requests` and `httpx` examples below use a local `ThreadingHTTPServer` fixture instead of an external service. That keeps the outputs deterministic and makes adjacent `text` fences reflect literal execution rather than hand-normalized notebook output.
 
-`requests` and `httpx` are the two standard Python HTTP libraries. `requests` is synchronous and has no default timeout — best for simple scripts and one-off calls. `httpx` adds async support, connection pooling, and enforced timeouts — better suited for production pipelines. Import the full set of libraries used across this section.
+*This helper server exposes `/quote`, `/orders`, `/headers`, `/status/500`, `/items`, `/unstable`, and `/bulk` for the client examples that follow.*
 
 ```python
-import requests
-import json
 import asyncio
+import json
+import os
 import threading
 import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs, urlparse
+
 import httpx
-import uvicorn
-from fastapi import FastAPI, HTTPException, Query
-from pydantic import BaseModel, Field
-from typing import Optional
-import pandas as pd
-from datetime import datetime, date
-from enum import Enum
-from pydantic import BaseModel, Field, field_validator, model_validator
-from pydantic import ConfigDict, EmailStr
-from typing import Literal
+import requests
+
+
+class DemoHandler(BaseHTTPRequestHandler):
+    unstable_calls = 0
+    pages = [
+        [{"id": 1, "ticker": "AAPL"}, {"id": 2, "ticker": "MSFT"}],
+        [{"id": 3, "ticker": "NVDA"}, {"id": 4, "ticker": "META"}],
+        [{"id": 5, "ticker": "AMZN"}],
+    ]
+
+    def log_message(self, format, *args):
+        pass
+
+    def _send(self, status, payload, headers=None):
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        if headers:
+            for key, value in headers.items():
+                self.send_header(key, value)
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self):
+        parsed = urlparse(self.path)
+        params = parse_qs(parsed.query)
+
+        if parsed.path == "/quote":
+            return self._send(200, {
+                "symbol": params.get("symbol", ["AAPL"])[0],
+                "date": params.get("date", ["2024-03-15"])[0],
+                "price": 189.45,
+                "source": params.get("source", ["requests"])[0],
+            })
+
+        if parsed.path == "/headers":
+            return self._send(200, {
+                "has_authorization": "Authorization" in self.headers,
+                "client_id": self.headers.get("X-Client-Id"),
+                "accept": self.headers.get("Accept"),
+            })
+
+        if parsed.path == "/status/500":
+            return self._send(500, {"detail": "upstream failure"})
+
+        if parsed.path == "/pool":
+            return self._send(200, {
+                "request": params.get("request", ["?"])[0],
+                "status": "ok",
+            })
+
+        if parsed.path == "/items":
+            page = int(params.get("page", ["1"])[0])
+            index = page - 1
+            items = self.pages[index] if 0 <= index < len(self.pages) else []
+            next_page = page + 1 if index + 1 < len(self.pages) else None
+            return self._send(200, {"page": page, "items": items, "next_page": next_page})
+
+        if parsed.path == "/unstable":
+            DemoHandler.unstable_calls += 1
+            if DemoHandler.unstable_calls == 1:
+                return self._send(429, {"detail": "rate limited"}, headers={"Retry-After": "0"})
+            return self._send(200, {"attempt": DemoHandler.unstable_calls, "status": "ok"})
+
+        return self._send(404, {"detail": "not found"})
+
+    def do_POST(self):
+        length = int(self.headers.get("Content-Length", "0"))
+        payload = json.loads(self.rfile.read(length).decode("utf-8"))
+
+        if self.path == "/orders":
+            return self._send(201, {"order_id": "ORD-001", "received": payload, "created": True})
+
+        if self.path == "/bulk":
+            return self._send(200, {
+                "accepted": len(payload["items"]),
+                "tickers": [item["ticker"] for item in payload["items"]],
+            })
+
+        return self._send(404, {"detail": "not found"})
+
+
+server = ThreadingHTTPServer(("127.0.0.1", 0), DemoHandler)
+thread = threading.Thread(target=server.serve_forever, daemon=True)
+thread.start()
+BASE_URL = f"http://127.0.0.1:{server.server_address[1]}"
+
+print({"base_url": BASE_URL})
+```
+```text
+{'base_url': 'http://127.0.0.1:53627'}
 ```
 
-### Making HTTP requests with requests
+## HTTP Clients and Outbound API Calls
 
-The `requests` library covers GET, POST, and all standard HTTP verbs with a simple, consistent API. These cells cover the most common patterns: GET with query params, POST with JSON body, custom headers, and status code handling.
+`requests` is the simplest path for synchronous API work. `httpx` uses a similar surface area but adds `AsyncClient()`, HTTP/2 support, and a more explicit client lifecycle for pooled connections.
 
-#### requests — REST API sync GET and response parsing
+### `requests` for synchronous calls
 
-One function per HTTP method: `requests.get/post/put/delete`. `params=` for query strings, `json=` for JSON body (auto-sets `Content-Type`), `headers=` for custom headers. `resp.json()` parses response; `resp.raise_for_status()` throws on 4xx/5xx. For concurrent calls, use `httpx.AsyncClient` instead.
+#### `requests.get()` for query params and JSON parsing
 
-> [!warning] Anti-patterns
->
-> - **No timeout** — `requests` has no default timeout; always pass `timeout=`
-> - **New session per request** — use `requests.Session()` for connection reuse
-> - **Hardcoded API keys** — use env vars or secret managers
+Use `requests.get()` when the code path is synchronous and the response shape is small enough to parse eagerly. `params=` builds the query string, and `resp.json()` should happen only after the response contract is trusted.
 
-> [!success] Best practices for requests
->
-> - Always set `timeout=(connect_timeout, read_timeout)` — e.g., `timeout=(5, 30)` to avoid hanging pipelines
-> - Reuse `requests.Session()` across calls to the same host for connection pooling and shared headers
-> - Load API keys from environment variables or a secrets manager; never commit them to source control
+*This call fetches a single quote from the local demo API and prints the literal URL plus the parsed JSON payload.*
 
 ```python
-resp = requests.get("https://httpbin.org/get", params={"ticker": "AAPL", "date": "2024-03-15"})
+resp = requests.get(
+    f"{BASE_URL}/quote",
+    params={"symbol": "AAPL", "date": "2024-03-15"},
+    timeout=5,
+)
 
-resp.status_code  # Status code
-resp.url  # URL sent
-resp.headers['Content-Type']  # Content-Type
-
-data = resp.json()
-data['args']  # Args echoed
+print(resp.status_code)
+print(resp.url)
+print(resp.json())
+```
+```text
+200
+http://127.0.0.1:53627/quote?symbol=AAPL&date=2024-03-15
+{'symbol': 'AAPL', 'date': '2024-03-15', 'price': 189.45, 'source': 'requests'}
 ```
 
-    200
-    https://httpbin.org/get?ticker=AAPL&date=2024-03-15
-    application/json
-    {'date': '2024-03-15', 'ticker': 'AAPL'}
+#### `requests.post()` for JSON request bodies
 
-#### requests.post — send JSON data
+Use `json=` when the server expects JSON and the client should set `Content-Type: application/json` automatically. The main failure boundary is still the HTTP status code, so keep `timeout=` and status checks in the same call path.
 
-Pass a Python dict to `json=` — `requests` serializes it to JSON and sets `Content-Type: application/json` automatically. The server echoes the body in `resp.json()["json"]`. Python equivalent of C#'s `HttpClient.PostAsync` with `StringContent` and explicit UTF-8 encoding.
+*This POST sends a trade order and shows the created response body echoed by the demo API.*
 
 ```python
 trade_order = {
     "ticker": "AAPL",
     "side": "BUY",
     "quantity": 100,
-    "limit_price": 178.50,
-    "order_type": "LIMIT",
+    "limit_price": 178.5,
 }
 
-resp = requests.post("https://httpbin.org/post", json=trade_order)
+resp = requests.post(f"{BASE_URL}/orders", json=trade_order, timeout=5)
 
-resp.status_code  # Status
-data = resp.json()
-data['json']  # Body echoed
+print(resp.status_code)
+print(resp.json())
+```
+```text
+201
+{'order_id': 'ORD-001', 'received': {'ticker': 'AAPL', 'side': 'BUY', 'quantity': 100, 'limit_price': 178.5}, 'created': True}
 ```
 
-    200
-    {'limit_price': 178.5, 'order_type': 'LIMIT', 'quantity': 100, 'side': 'BUY', 'ticker': 'AAPL'}
+#### `Session()` plus `os.environ` for shared headers
 
-#### requests headers — API keys and Bearer token authentication
+A reusable `requests.Session()` keeps headers and connection state in one place. Build the `Authorization` header from `os.environ` or an injected secret provider rather than embedding the token literal in the request call.
 
-Pass a `headers` dict to any request call. For headers shared across multiple calls, create a `requests.Session()` and call `session.headers.update(headers)` once — the session sends them on every request. Never hardcode API keys; load them from environment variables or a secrets manager.
+*This example seeds a demo token in `os.environ`, updates a shared `Session()` header set, and confirms that the server saw the headers without echoing the token value back into the note.*
 
 ```python
-headers = {
-    "Authorization": "Bearer sk_demo_fake_key_12345",
-    "X-Client-Id": "trading-pipeline-v2",
+os.environ["API_TOKEN"] = "demo-token"
+
+session = requests.Session()
+session.headers.update({
+    "Authorization": f"Bearer {os.environ['API_TOKEN']}",
+    "X-Client-Id": "pipeline-v2",
     "Accept": "application/json",
-}
-resp = requests.get("https://httpbin.org/headers", headers=headers)
+})
 
-for k, v in resp.json()["headers"].items():
-    if k.startswith(("Authorization", "X-Client", "Accept")):
-        print(f"  {k}: {v}")
+resp = session.get(f"{BASE_URL}/headers", timeout=5)
+print(resp.json())
+```
+```text
+{'has_authorization': True, 'client_id': 'pipeline-v2', 'accept': 'application/json'}
 ```
 
-      Accept: application/json
-      Accept-Encoding: gzip, deflate, br
-      Authorization: Bearer sk_demo_fake_key_12345
-      X-Client-Id: trading-pipeline-v2
+#### `raise_for_status()` for failure boundaries
 
-#### requests .status_code, .raise_for_status() — HTTP error handling
+The safest pattern is `resp.raise_for_status()` immediately after the call returns. That makes `4xx` and `5xx` responses explicit control-flow events instead of leaving downstream parsing code to infer failure from an unexpected body.
 
-`resp.ok` is `True` for 2xx status codes. `raise_for_status()` raises `requests.HTTPError` for 4xx and 5xx — equivalent to C#'s `EnsureSuccessStatusCode()`. Call it after every request in production pipelines to fail fast rather than silently processing empty responses.
+*This example calls an endpoint that always returns `500` and captures the exact `HTTPError` boundary.*
 
 ```python
-for status_code in [200, 201, 400, 401, 404, 500]:
-    resp = requests.get(f"https://httpbin.org/status/{status_code}")
-    print(f"  {status_code}: {resp.status_code} {'OK' if resp.ok else 'FAILED'}")
+resp = requests.get(f"{BASE_URL}/status/500", timeout=5)
 
 try:
-    resp = requests.get("https://httpbin.org/status/500")
     resp.raise_for_status()
-except requests.HTTPError as e:
-    print(f"\n  raise_for_status() caught: {e}")
+except requests.HTTPError as exc:
+    print(resp.status_code)
+    print(type(exc).__name__)
+    print(resp.json())
+```
+```text
+500
+HTTPError
+{'detail': 'upstream failure'}
 ```
 
-      200: 200 OK
-      201: 201 OK
-      400: 400 FAILED
-      401: 401 FAILED
-      404: 404 FAILED
-      500: 500 FAILED
-    
-      raise_for_status() caught: 500 Server Error: INTERNAL SERVER ERROR for url: https://httpbin.org/status/500
+### `httpx` for pooled and async clients
 
-### Async and concurrent calls with httpx
+#### `httpx.get()` for sync code that may later grow into async
 
-`httpx` is a modern drop-in replacement for `requests` that adds async support and enforces timeouts by default. Use it when you need concurrent API calls (`AsyncClient`) or connection pooling (`Client`) for high-throughput pipelines.
+`httpx.get()` is the lowest-friction way to start with `httpx` in synchronous code. The main reason to choose it early is that the rest of the module can move to `Client()` or `AsyncClient()` later without changing libraries.
 
-#### httpx — sync usage (drop-in requests replacement)
-
-Same API as `requests` for sync usage, plus async support. `httpx.Client()` pools connections; `httpx.AsyncClient()` enables concurrent calls with `await`. Timeouts are enforced by default (unlike `requests`). Supports HTTP/2 for multiplexed connections. Use for pipelines with many API calls or any async Python application.
+*This sync `httpx` call hits the same quote endpoint so the response shape can be compared directly with `requests`.*
 
 ```python
-resp = httpx.get("https://httpbin.org/get", params={"source": "httpx"})
-resp.status_code  # Status
-resp.json()['args']  # Args
+resp = httpx.get(
+    f"{BASE_URL}/quote",
+    params={"symbol": "MSFT", "source": "httpx"},
+    timeout=5.0,
+)
+
+print(resp.status_code)
+print(resp.json())
+```
+```text
+200
+{'symbol': 'MSFT', 'date': '2024-03-15', 'price': 189.45, 'source': 'httpx'}
 ```
 
-    200
-    {'source': 'httpx'}
+#### `httpx.Client()` for connection reuse
 
-#### httpx.Client — connection pooling
+A long-lived `httpx.Client()` is the sync equivalent of reusing one `HttpClient` instance in C#. It keeps sockets, headers, and timeout policy in one object instead of reinitializing that state per call.
 
-Use `httpx.Client` as a context manager to pool connections across multiple requests to the same host, reducing TCP handshake overhead. C# equivalent: a single long-lived `HttpClient` instance or `IHttpClientFactory` in DI.
+*This client makes three pooled requests against one host and prints the literal JSON responses in order.*
 
 ```python
-with httpx.Client(base_url="https://httpbin.org", timeout=10.0) as client:
-    r1 = client.get("/get", params={"req": "1"})
-    r2 = client.get("/get", params={"req": "2"})
-    r3 = client.post("/post", json={"req": "3"})
-    print(f"  GET /get?req=1: {r1.status_code}")
-    print(f"  GET /get?req=2: {r2.status_code}")
-    print(f"  POST /post:     {r3.status_code}")
+with httpx.Client(base_url=BASE_URL, timeout=5.0) as client:
+    pooled = [client.get("/pool", params={"request": str(i)}).json() for i in (1, 2, 3)]
+
+print(pooled)
+```
+```text
+[{'request': '1', 'status': 'ok'}, {'request': '2', 'status': 'ok'}, {'request': '3', 'status': 'ok'}]
 ```
 
-      GET /get?req=1: 200
-      GET /get?req=2: 200
-      POST /post:     200
+#### `AsyncClient()` with `asyncio.gather()` for fan-out
 
-#### httpx.AsyncClient — concurrent API calls
+`httpx.AsyncClient()` is the point where `httpx` materially diverges from `requests`. Keep the client inside `async with`, and add a semaphore when the upstream API cannot tolerate full fan-out concurrency.
 
-> [!warning] asyncio.gather() fires ALL tasks concurrently
->
-> `asyncio.gather()` fires ALL tasks concurrently — add a semaphore for rate-limited APIs
-> For 50 tickers, `gather(*tasks)` opens 50 connections simultaneously. Most financial
-> data APIs reject bursts above 5-10 req/s. Use `asyncio.Semaphore(5)` to cap concurrency.
-> See [13-py-advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/13-py-advancedpipelines) for the full rate-limited pattern.
-
-> [!success] Gate concurrent requests with a Semaphore
->
-> Wrap the fetch inside `async with asyncio.Semaphore(n):` to cap concurrent connections. For free-tier financial APIs (e.g., Twelve Data 8 req/min), use `Semaphore(3)` combined with `asyncio.sleep(0.5)` between batches. See [13-py-advancedpipelines](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/13-py-advancedpipelines) for the complete pattern.
+*This async example fans out three requests concurrently and returns the literal JSON payloads in gather order.*
 
 ```python
-async def fetch_ticker_data(client, ticker):
-    resp = await client.get("/get", params={"ticker": ticker})
-    return {"ticker": ticker, "status": resp.status_code}
+async def fetch_all():
+    async with httpx.AsyncClient(base_url=BASE_URL, timeout=5.0) as client:
+        async def fetch(label):
+            resp = await client.get("/pool", params={"request": label})
+            return resp.json()
 
-async def fetch_all_tickers():
-    tickers = ["AAPL", "MSFT", "GOOG", "AMZN", "NVDA", "META"]
-    async with httpx.AsyncClient(base_url="https://httpbin.org", timeout=10.0) as client:
-        tasks = [fetch_ticker_data(client, t) for t in tickers]
-        results = await asyncio.gather(*tasks)
-    return results
+        return await asyncio.gather(*(fetch(label) for label in ("AAPL", "MSFT", "NVDA")))
 
-start = time.perf_counter()
-results = await fetch_all_tickers()
-elapsed = time.perf_counter() - start
-for r in results:
-    print(f"  {r['ticker']}: {r['status']}")
-len(results), f"{elapsed:.2f}s"  # tickers fetched, elapsed
+
+results = asyncio.run(fetch_all())
+print(results)
+```
+```text
+[{'request': 'AAPL', 'status': 'ok'}, {'request': 'MSFT', 'status': 'ok'}, {'request': 'NVDA', 'status': 'ok'}]
 ```
 
-      AAPL: 200
-      MSFT: 200
-      GOOG: 200
-      AMZN: 200
-      NVDA: 200
-      META: 200
-      All 6 tickers in 0.95s
+#### `requests` vs `httpx` lookup
 
-#### requests vs httpx comparison
+Use the table below for selection, not as a substitute for failure-policy design. The actual decision point is whether the code path needs `async`, stricter client lifecycle control, or just a simple blocking request.
 
-```python
-comparison = pd.DataFrame({
-    "Feature": ["Sync support", "Async support", "HTTP/2", "Default timeout",
-               "Connection pooling", "Streaming", "C# equivalent"],
-    "requests": ["Yes", "No", "No", "None (!)",
-                "Session()", "iter_content()", "—"],
-    "httpx": ["Yes", "Yes (AsyncClient)", "Yes", "5s",
-             "Client()", "stream()", "HttpClient"],
-})
-comparison.style.set_properties(**{"text-align": "left"}).hide(axis="index")
-```
-
-<table id="T_ec28a">
-  <thead>
-    <tr>
-      <th id="T_ec28a_level0_col0" class="col_heading level0 col0" >Feature</th>
-      <th id="T_ec28a_level0_col1" class="col_heading level0 col1" >requests</th>
-      <th id="T_ec28a_level0_col2" class="col_heading level0 col2" >httpx</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td id="T_ec28a_row0_col0" class="data row0 col0" >Sync support</td>
-      <td id="T_ec28a_row0_col1" class="data row0 col1" >Yes</td>
-      <td id="T_ec28a_row0_col2" class="data row0 col2" >Yes</td>
-    </tr>
-    <tr>
-      <td id="T_ec28a_row1_col0" class="data row1 col0" >Async support</td>
-      <td id="T_ec28a_row1_col1" class="data row1 col1" >No</td>
-      <td id="T_ec28a_row1_col2" class="data row1 col2" >Yes (AsyncClient)</td>
-    </tr>
-    <tr>
-      <td id="T_ec28a_row2_col0" class="data row2 col0" >HTTP/2</td>
-      <td id="T_ec28a_row2_col1" class="data row2 col1" >No</td>
-      <td id="T_ec28a_row2_col2" class="data row2 col2" >Yes</td>
-    </tr>
-    <tr>
-      <td id="T_ec28a_row3_col0" class="data row3 col0" >Default timeout</td>
-      <td id="T_ec28a_row3_col1" class="data row3 col1" >None (!)</td>
-      <td id="T_ec28a_row3_col2" class="data row3 col2" >5s</td>
-    </tr>
-    <tr>
-      <td id="T_ec28a_row4_col0" class="data row4 col0" >Connection pooling</td>
-      <td id="T_ec28a_row4_col1" class="data row4 col1" >Session()</td>
-      <td id="T_ec28a_row4_col2" class="data row4 col2" >Client()</td>
-    </tr>
-    <tr>
-      <td id="T_ec28a_row5_col0" class="data row5 col0" >Streaming</td>
-      <td id="T_ec28a_row5_col1" class="data row5 col1" >iter_content()</td>
-      <td id="T_ec28a_row5_col2" class="data row5 col2" >stream()</td>
-    </tr>
-    <tr>
-      <td id="T_ec28a_row6_col0" class="data row6 col0" >C# equivalent</td>
-      <td id="T_ec28a_row6_col1" class="data row6 col1" >—</td>
-      <td id="T_ec28a_row6_col2" class="data row6 col2" >HttpClient</td>
-    </tr>
-  </tbody>
-</table>
+| Capability | `requests` | `httpx` |
+|---|---|---|
+| Sync API | Yes | Yes |
+| Async API | No | `AsyncClient()` |
+| Connection reuse | `Session()` | `Client()` / `AsyncClient()` |
+| HTTP/2 | No | Yes |
+| Typical use | Simple sync integrations | Sync or async service clients |
 
 ## REST API Patterns for Data Engineering
 
-### Pagination, retry, and bulk batching
+The main production failures are rarely the first `GET`. They show up in page iteration, rate limits, and write amplification, so those cases need explicit control flow rather than prose-only guidance.
 
-The three core patterns for robust API integration: pagination to traverse large datasets, exponential backoff to recover from transient failures, and bulk batching to minimize round trips. These patterns apply equally whether you use `requests`, `httpx`, or a vendor SDK.
+### Pagination, retry, and batching
 
-#### REST API pagination — fetch data in pages with requests
+#### `next_page` loops for paginated APIs
 
-Three essential patterns for API integrations: **pagination** loops through pages until exhausted, **retry with exponential backoff** handles transient 429/5xx errors, and **bulk POST** batches records into one request to reduce round trips by 10-100x. For streaming APIs (WebSocket, SSE), use async streaming instead.
+Pagination code should stop only when the remote contract says there is no next page. Use `next_page`, `cursor`, or an explicit exhausted flag, and add guard rails such as `max_pages` if the upstream API is not fully trusted.
 
-> [!warning] Anti-patterns
->
-> - **Fetching all pages without limit** — unbounded loop if API broken
-> - **Linear retry (no backoff)** — hammers the failing service
-> - **One POST per record** — N round trips instead of 1
-
-> [!success] Robust REST integration patterns
->
-> - Add a `max_pages` guard to pagination loops to prevent infinite loops on broken APIs
-> - Use exponential backoff (`delay = base * 2 ** attempt`) with a cap (e.g., 60s) and honour `Retry-After` headers
-> - Batch records into bulk POSTs (100-1000 items) to reduce round trips by 2-3 orders of magnitude
+*This loop follows `next_page` until the demo API is exhausted and prints both per-page results and the flattened collection.*
 
 ```python
-def fetch_paginated(base_url, endpoint, page_size=100):
-    all_records = []
-    page = 1
-    while True:
-        resp = httpx.get(f"{base_url}{endpoint}",
-            params={"page": page, "per_page": page_size}, timeout=10.0)
-        resp.raise_for_status()
-        data = resp.json()
-        all_records.append({"page": page, "params": data["args"]})
-        if page >= 3:
-            break
-        page += 1
-    return all_records
+page = 1
+collected = []
+page_log = []
 
-pages = fetch_paginated("https://httpbin.org", "/get", page_size=50)
-for p in pages:
-    print(f"  Page {p['page']}: fetched (params: {p['params']})")
-len(pages)  # Total pages fetched
+while page is not None:
+    payload = requests.get(f"{BASE_URL}/items", params={"page": page}, timeout=5).json()
+    page_log.append({"page": payload["page"], "items": [item["ticker"] for item in payload["items"]]})
+    collected.extend(item["ticker"] for item in payload["items"])
+    page = payload["next_page"]
+
+print(page_log)
+print(collected)
+```
+```text
+[{'page': 1, 'items': ['AAPL', 'MSFT']}, {'page': 2, 'items': ['NVDA', 'META']}, {'page': 3, 'items': ['AMZN']}]
+['AAPL', 'MSFT', 'NVDA', 'META', 'AMZN']
 ```
 
-      Page 1: fetched (params: {'page': '1', 'per_page': '50'})
-      Page 2: fetched (params: {'page': '2', 'per_page': '50'})
-      Page 3: fetched (params: {'page': '3', 'per_page': '50'})
-    3
+#### `Retry-After` handling for `429` responses
 
-#### requests retry with exponential backoff — transient error recovery
+A retry loop should distinguish between transient server failures and permanent client errors. `429` is a back-pressure signal, so read `Retry-After` when present and let the retry loop decide the next attempt boundary.
+
+*This example hits an endpoint that returns `429` once, then succeeds on the second attempt after reading the `Retry-After` header.*
 
 ```python
-def fetch_with_retry(url, max_retries=3, base_delay=0.5):
-    for attempt in range(max_retries):
-        try:
-            resp = httpx.get(url, timeout=5.0)
-            if resp.status_code == 429:
-                retry_after = int(resp.headers.get("Retry-After", base_delay))
-                print(f"    Rate limited. Waiting {retry_after}s...")
-                time.sleep(retry_after)
-                continue
-            resp.raise_for_status()
-            return resp
-        except (httpx.ConnectTimeout, httpx.ReadTimeout, httpx.HTTPStatusError) as e:
-            delay = base_delay * (2 ** attempt)
-            print(f"    Attempt {attempt + 1} failed: {e}. Retrying in {delay:.1f}s...")
-            time.sleep(delay)
-    raise Exception(f"Failed after {max_retries} retries: {url}")
+attempts = []
 
-resp = fetch_with_retry("https://httpbin.org/get?ticker=AAPL")
-resp.status_code  # Success
+for attempt in range(1, 4):
+    resp = requests.get(f"{BASE_URL}/unstable", timeout=5)
+    attempts.append({"attempt": attempt, "status_code": resp.status_code})
+
+    if resp.status_code == 429:
+        delay = float(resp.headers.get("Retry-After", "0"))
+        attempts[-1]["retry_after"] = delay
+        time.sleep(delay)
+        continue
+
+    attempts[-1]["body"] = resp.json()
+    break
+
+print(attempts)
+```
+```text
+[{'attempt': 1, 'status_code': 429, 'retry_after': 0.0}, {'attempt': 2, 'status_code': 200, 'body': {'attempt': 2, 'status': 'ok'}}]
 ```
 
-    200
+#### Bulk `POST` to reduce round trips
 
-#### requests bulk POST — batch multiple records in one call
+When an API supports bulk writes, send batches that match the documented limit instead of one record per request. The point is to reduce request count without building payloads so large that a single retry becomes too expensive.
+
+*This bulk request sends three records in one payload and prints the accepted count plus the tickers echoed by the demo API.*
 
 ```python
-batch = [
-    {"trade_id": "TRD_001", "ticker": "AAPL", "qty": 100, "price": 178.50},
-    {"trade_id": "TRD_002", "ticker": "MSFT", "qty": 50,  "price": 415.20},
-    {"trade_id": "TRD_003", "ticker": "GOOG", "qty": 20,  "price": 172.30},
-]
+batch = {
+    "items": [
+        {"ticker": "AAPL", "quantity": 10},
+        {"ticker": "MSFT", "quantity": 5},
+        {"ticker": "NVDA", "quantity": 1},
+    ]
+}
 
-resp = httpx.post("https://httpbin.org/post", json={"trades": batch}, timeout=10.0)
-data = resp.json()
-len(batch)  # trades sent
-resp.status_code  # Status
-len(data['json']['trades'])  # trades received by server
+resp = requests.post(f"{BASE_URL}/bulk", json=batch, timeout=5)
+print(resp.json())
+```
+```text
+{'accepted': 3, 'tickers': ['AAPL', 'MSFT', 'NVDA']}
 ```
 
-      Sent 3 trades
-    200
-    3 trades
+## Building a REST API with FastAPI
 
-## Building a REST API (FastAPI)
+FastAPI works best when the route layer stays narrow: parse input with `BaseModel`, return a declared `response_model=`, and raise `HTTPException` for deliberate client-visible failures. The examples below use `TestClient` so the results stay local and deterministic.
 
-Define Pydantic models for request and response shapes, decorate handler functions with `@app.get`/`post`/`delete`, and serve with `uvicorn`. FastAPI validates request bodies against the declared Pydantic models before the handler runs, auto-generates Swagger docs at `/docs`, and returns 422 responses for invalid input.
+*This diagram maps the request path from the HTTP layer to validation, route execution, and typed response serialization.*
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'primaryColor': '#292e42',
-  'primaryTextColor': '#c0caf5',
-  'primaryBorderColor': '#565f89',
-  'lineColor': '#565f89',
-  'secondaryColor': '#1a1b26',
-  'tertiaryColor': '#24283b',
-  'noteTextColor': '#c0caf5',
-  'noteBkgColor': '#292e42',
-  'textColor': '#c0caf5',
-  'fontSize': '14px'
-}}}%%
-flowchart TD
-    C["HTTP Client<br/>requests / httpx"] -->|"HTTP Request"| MW["FastAPI / Starlette<br/>ASGI middleware"]
-    MW --> R["Route matching<br/>@app.get / post / delete"]
-    R --> V["Pydantic validation<br/>BaseModel.__init__()"]
-    V --> H["Handler function<br/>Python def / async def"]
-    H -->|"return dict / BaseModel"| S["JSON Response<br/>200 / 201 / 404 / 409"]
-    V -->|"ValidationError"| E["422 Unprocessable Entity<br/>{detail: [...]}"]
+flowchart LR
+    A[Client Request] --> B[FastAPI Router]
+    B --> C[Pydantic Input Validation]
+    C --> D[Route Handler]
+    D --> E[response_model Serialization]
+    E --> F[HTTP Response]
+```
+```text
+Diagram only; no runtime output.
 ```
 
-### Pydantic models and app setup
+### Route definitions and contract tests
 
-Define all request and response shapes as Pydantic `BaseModel` subclasses. FastAPI uses these models to validate incoming requests automatically, generate 422 error responses on invalid input, and build Swagger documentation.
+#### `BaseModel`, `response_model=`, and `HTTPException` in one FastAPI app
 
-#### Pydantic models — REST API request/response schemas
+A reference note is more useful when the route contract and the observable behavior stay next to each other. This example defines the models, in-memory store, and three route types, then exercises the app with `TestClient` so the output shows literal `200`, `201`, `409`, `422`, and delete lifecycle behavior.
 
-Define Pydantic models for request/response validation. `@app.get`/`post`/`delete` decorators wire handlers to routes. FastAPI auto-generates Swagger docs at `/docs`. `uvicorn` serves the ASGI app. Type hints drive validation, serialization, and documentation simultaneously.
-
-> [!warning] Anti-patterns
->
-> - **Business logic in route handlers** — extract to service functions
-> - **In-memory storage in production** — use a database
-> - **No input validation** — Pydantic handles types, but add business rules too
-
-> [!success] Clean FastAPI architecture
->
-> - Keep route handlers thin: validate with Pydantic, delegate to a service function, return the response
-> - Use a real database (PostgreSQL, BigQuery, Cloud Spanner) for persistence — in-memory dicts are for prototyping only
-> - Add `@field_validator` and `@model_validator` to Pydantic models for business rules (e.g., `end_date > start_date`, valid ticker format)
+*This single block defines a FastAPI app, runs local contract tests with `TestClient`, and prints the route table plus live responses.*
 
 ```python
-class Trade(BaseModel):
-    trade_id: str = Field(..., description="Unique trade identifier")
-    ticker: str = Field(..., min_length=1, max_length=5)
-    side: str = Field(..., pattern="^(BUY|SELL)$")
-    quantity: int = Field(..., gt=0)
-    price: float = Field(..., gt=0)
+from typing import Literal
 
-class TradeResponse(BaseModel):
-    trade_id: str
-    status: str
-    message: str
+from fastapi import FastAPI, HTTPException
+from fastapi.testclient import TestClient
+from pydantic import BaseModel, Field
 
-class PortfolioPosition(BaseModel):
-    ticker: str
-    shares: int
-    avg_cost: float
-    market_value: float
-```
 
-#### FastAPI app and in-memory store
+class TradeIn(BaseModel):
+    trade_id: str = Field(min_length=3)
+    ticker: str = Field(pattern=r"^[A-Z]{1,5}$")
+    quantity: int = Field(gt=0)
+    price: float = Field(gt=0)
 
-Instantiate `FastAPI()` with a title and version for the Swagger documentation header. The in-memory `dict` is sufficient for notebook testing; in production, inject a database connection via FastAPI's dependency injection (`Depends(get_db)`).
 
-```python
-app = FastAPI(title="Trading Pipeline API", version="1.0.0")
+class TradeOut(TradeIn):
+    status: Literal["accepted", "cancelled"]
 
-# In-memory store (in production: database)
-trades_db: dict[str, dict] = {}
-positions: dict[str, PortfolioPosition] = {
-    "AAPL": PortfolioPosition(ticker="AAPL", shares=500, avg_cost=165.00, market_value=89_250.00),
-    "MSFT": PortfolioPosition(ticker="MSFT", shares=200, avg_cost=380.50, market_value=83_040.00),
-    "GOOG": PortfolioPosition(ticker="GOOG", shares=100, avg_cost=140.25, market_value=17_230.00),
-}
-```
 
-### Route handlers
+app = FastAPI(title="Trade API")
+store: dict[str, TradeOut] = {}
 
-Each route handler is a plain Python function decorated with `@app.get`, `@app.post`, or `@app.delete`. FastAPI validates parameters and request bodies against the declared types before the handler runs. Use `HTTPException` to return error responses with the appropriate status code.
 
-#### FastAPI REST API — GET endpoints health, positions
-
-The health endpoint returns a fixed JSON response used by Kubernetes liveness probes. The positions endpoint accepts an optional `ticker` query parameter (`Query(None)`) and raises `HTTPException(404)` for missing tickers — FastAPI converts it to `{"detail": "..."}` automatically.
-
-```python
 @app.get("/health")
-def health_check():
-    """Health check endpoint — used by load balancers, K8s probes."""
-    return {"status": "healthy", "service": "trading-api"}
+def health():
+    return {"status": "ok"}
 
-@app.get("/positions")
-def list_positions(ticker: Optional[str] = Query(None, description="Filter by ticker")):
-    """List portfolio positions, optionally filtered by ticker."""
-    if ticker:
-        ticker = ticker.upper()
-        if ticker not in positions:
-            raise HTTPException(status_code=404, detail=f"No position for {ticker}")
-        return {"positions": [positions[ticker]]}
-    return {"positions": list(positions.values())}
 
-@app.get("/positions/{ticker}")
-def get_position(ticker: str):
-    """Get a single position by ticker (path parameter)."""
-    ticker = ticker.upper()
-    if ticker not in positions:
-        raise HTTPException(status_code=404, detail=f"No position for {ticker}")
-    return positions[ticker]
-```
-
-#### FastAPI REST API — POST endpoint submit trades
-
-`response_model=TradeResponse` tells FastAPI to serialize the return value using `TradeResponse`'s schema, excluding any extra fields from the internal `Trade` model. `status_code=201` sets the default success response code. FastAPI validates the request body against `Trade` before the handler runs.
-
-```python
-@app.post("/trades", response_model=TradeResponse, status_code=201)
-def submit_trade(trade: Trade):
-    """Submit a new trade order. Pydantic validates the request body."""
-    if trade.trade_id in trades_db:
-        raise HTTPException(status_code=409, detail=f"Trade {trade.trade_id} already exists")
-    trades_db[trade.trade_id] = trade.model_dump()
-    return TradeResponse(
-        trade_id=trade.trade_id,
-        status="ACCEPTED",
-        message=f"{trade.side} {trade.quantity} {trade.ticker} @ {trade.price}",
-    )
-
-@app.get("/trades")
+@app.get("/trades", response_model=list[TradeOut])
 def list_trades():
-    """List all submitted trades."""
-    return {"trades": list(trades_db.values()), "count": len(trades_db)}
+    return list(store.values())
 
-@app.get("/trades/{trade_id}")
-def get_trade(trade_id: str):
-    """Get a specific trade by ID."""
-    if trade_id not in trades_db:
-        raise HTTPException(status_code=404, detail=f"Trade {trade_id} not found")
-    return trades_db[trade_id]
+
+@app.post("/trades", response_model=TradeOut, status_code=201)
+def create_trade(trade: TradeIn):
+    if trade.trade_id in store:
+        raise HTTPException(status_code=409, detail="duplicate trade_id")
+    created = TradeOut(**trade.model_dump(), status="accepted")
+    store[trade.trade_id] = created
+    return created
+
+
+@app.delete("/trades/{trade_id}", status_code=204)
+def delete_trade(trade_id: str):
+    if trade_id not in store:
+        raise HTTPException(status_code=404, detail="trade not found")
+    del store[trade_id]
+    return None
+
+
+client = TestClient(app)
+
+print(sorted(route.path for route in app.router.routes if getattr(route, "path", None)))
+print(client.get("/health").json())
+print(client.post("/trades", json={
+    "trade_id": "TRD-001",
+    "ticker": "AAPL",
+    "quantity": 10,
+    "price": 189.45,
+}).json())
+print(client.post("/trades", json={
+    "trade_id": "TRD-001",
+    "ticker": "AAPL",
+    "quantity": 10,
+    "price": 189.45,
+}).json())
+invalid = client.post("/trades", json={
+    "trade_id": "TRD-002",
+    "ticker": "aapl",
+    "quantity": 0,
+    "price": 0,
+})
+print(invalid.status_code)
+print(invalid.json()["detail"][0]["msg"])
+print(client.get("/trades").json())
+client.delete("/trades/TRD-001")
+print(client.get("/trades").json())
+print(client.delete("/trades/TRD-404").json())
+```
+```text
+['/docs', '/docs/oauth2-redirect', '/health', '/openapi.json', '/redoc', '/trades', '/trades', '/trades/{trade_id}']
+{'status': 'ok'}
+{'trade_id': 'TRD-001', 'ticker': 'AAPL', 'quantity': 10, 'price': 189.45, 'status': 'accepted'}
+{'detail': 'duplicate trade_id'}
+422
+String should match pattern '^[A-Z]{1,5}$'
+[{'trade_id': 'TRD-001', 'ticker': 'AAPL', 'quantity': 10, 'price': 189.45, 'status': 'accepted'}]
+[]
+{'detail': 'trade not found'}
 ```
 
-#### FastAPI REST API — DELETE endpoint cancel trades
+#### `uvicorn.Config` for the serving boundary
 
-`HTTPException(404)` fast-exits the handler — FastAPI converts it to `{"detail": "Trade TRD_001 not found"}`. No need to manually build error dicts or set response status codes.
+`TestClient` proves route behavior, but the deployment boundary is still `uvicorn` or another ASGI server. The useful contract here is host, port, reload policy, and docs URL, not a prose-only reminder that the app can be served.
+
+*This snippet builds a `uvicorn.Config` object and prints the literal serve address plus the generated docs route.*
 
 ```python
-@app.delete("/trades/{trade_id}")
-def cancel_trade(trade_id: str):
-    """Cancel (delete) a trade."""
-    if trade_id not in trades_db:
-        raise HTTPException(status_code=404, detail=f"Trade {trade_id} not found")
-    del trades_db[trade_id]
-    return {"status": "CANCELLED", "trade_id": trade_id}
+import uvicorn
+
+config = uvicorn.Config(app=app, host="127.0.0.1", port=8000, reload=False)
+
+print(config.host)
+print(config.port)
+print(config.reload)
+print(f"http://{config.host}:{config.port}/docs")
+```
+```text
+127.0.0.1
+8000
+False
+http://127.0.0.1:8000/docs
 ```
 
-### Running and testing the server
+#### FastAPI to ASP.NET lookup
 
-Run the FastAPI application in a background thread for notebook testing. `uvicorn.Server` exposes a programmatic API for startup and graceful shutdown — unlike `uvicorn.run()`, it does not block the kernel.
+The table below is narrow reference material rather than prose guidance, so it stays as a lookup table. It captures the usual translation points when switching between the Python and C# notes.
 
-#### uvicorn.Server — start FastAPI server programmatically in background
+| FastAPI | ASP.NET Core | Typical role |
+|---|---|---|
+| `FastAPI()` | `WebApplication.CreateBuilder()` + `Build()` | App bootstrap |
+| `@app.get()` / `@app.post()` | `MapGet()` / `MapPost()` | Route mapping |
+| `BaseModel` | DTO / record type | Request and response contract |
+| `response_model=` | Typed result / serializer contract | Output shaping |
+| `HTTPException` | `Results.*` / exception mapping | Client-visible failure |
+| `uvicorn` | Kestrel | ASGI / HTTP host |
 
-> [!info] Uvicorn in Background Thread
->
-> `uvicorn.Server` API allows programmatic startup and shutdown from notebook cells. Unlike `uvicorn.run()` which blocks forever, the Server API runs in a background thread.
+## Pydantic Validation for API Contracts
 
-```python
-PORT = 8769
+Pydantic is the boundary between raw input and typed data. The most important features are schema constraints, custom validators, nested models, alias-aware serialization, and explicit immutability or strictness when coercion would hide bugs.
 
-config = uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning")
-server = uvicorn.Server(config)
+### Constraints, validators, and nested models
 
-server_thread = threading.Thread(target=server.run, daemon=True)
-server_thread.start()
-time.sleep(1)
+#### `Field()` and `Literal` for schema-level rejection
 
-PORT  # FastAPI server running on http://127.0.0.1
-# Swagger docs: http://127.0.0.1:{PORT}/docs
-```
+Start with the shape the API should accept, then make the easy failures impossible with `Field()` constraints and `Literal` choices. That catches invalid input before the business logic path decides what to do with it.
 
-    FastAPI server running on http://127.0.0.1:8769
-    http://127.0.0.1:8769/docs
-    Run the next cells to test, then run the shutdown cell when done.
-
-#### Test FastAPI GET endpoints with httpx — health and positions
-
-Use `httpx` to call the live server, treating it exactly like any external API. This exercises the full FastAPI stack — Pydantic validation, exception handling, and response serialization — without any mocking.
+*This model accepts one valid order and then shows the first validation error for three rejected payloads.*
 
 ```python
-BASE = f"http://127.0.0.1:{PORT}"
+from typing import Literal
 
-# Health check
-resp = httpx.get(f"{BASE}/health")
-resp.json()  # {resp.status_code}
+from pydantic import BaseModel, Field, ValidationError
 
-# GET all positions
-resp = httpx.get(f"{BASE}/positions")
-for p in resp.json()["positions"]:
-    print(f"  {p['ticker']}: {p['shares']} shares @ ${p['avg_cost']:.2f}")
 
-# GET single position
-resp = httpx.get(f"{BASE}/positions/AAPL")
-resp.json()  # {resp.status_code}
-
-# GET missing position → 404
-resp = httpx.get(f"{BASE}/positions/TSLA")
-resp.json()  # {resp.status_code}
-```
-
-      200: {'status': 'healthy', 'service': 'trading-api'}
-    
-      AAPL: 500 shares @ $165.00
-      MSFT: 200 shares @ $380.50
-      GOOG: 100 shares @ $140.25
-    
-      200: {'ticker': 'AAPL', 'shares': 500, 'avg_cost': 165.0, 'market_value': 89250.0}
-    
-      404: {'detail': 'No position for TSLA'}
-
-#### Test FastAPI POST endpoint with httpx — submit and validate trades
-
-Submit valid trades, then test the conflict (409) and validation error (422) branches. FastAPI returns `{"detail": [...]}` for 422 responses — each element describes one failed constraint. The output may show 409 for both trades if the server state persists from the previous run.
-
-```python
-trades = [
-    {"trade_id": "TRD_001", "ticker": "AAPL", "side": "BUY", "quantity": 100, "price": 178.50},
-    {"trade_id": "TRD_002", "ticker": "MSFT", "side": "SELL", "quantity": 50, "price": 415.20},
-]
-for trade in trades:
-    resp = httpx.post(f"{BASE}/trades", json=trade)
-    print(f"  {resp.status_code}: {resp.json()}")
-
-# POST duplicate → 409 Conflict
-resp = httpx.post(f"{BASE}/trades", json=trades[0])
-resp.json()  # {resp.status_code}
-
-# POST invalid data → 422 (Pydantic validation)
-resp = httpx.post(f"{BASE}/trades", json={"trade_id": "TRD_X", "ticker": "", "side": "INVALID", "quantity": -1, "price": 0})
-resp.json()['detail'][0]['msg']  # {resp.status_code}
-```
-
-      409: {'detail': 'Trade TRD_001 already exists'}
-      409: {'detail': 'Trade TRD_002 already exists'}
-    
-      409: {'detail': 'Trade TRD_001 already exists'}
-    
-      422: String should have at least 1 character
-
-#### Test FastAPI GET and DELETE endpoints with httpx — list and cancel trades
-
-Verify that `DELETE /trades/{id}` removes the trade and that subsequent `GET /trades` reflects the updated count. Tests the full lifecycle: submit → list → delete → verify.
-
-```python
-resp = httpx.get(f"{BASE}/trades")
-resp.json()['count']  # trades
-
-# DELETE trade
-resp = httpx.delete(f"{BASE}/trades/TRD_001")
-resp.json()  # {resp.status_code}
-
-# Verify deletion
-resp = httpx.get(f"{BASE}/trades")
-resp.json()['count']  # Remaining trades
-```
-
-      2 trades
-    
-      200: {'status': 'CANCELLED', 'trade_id': 'TRD_001'}
-    1
-
-#### uvicorn graceful shutdown — stop FastAPI server
-
-Set `server.should_exit = True` and join the thread to ensure the server finishes handling in-flight requests before releasing the port. Without this, the server continues running until the Jupyter kernel restarts, and subsequent cells cannot rebind to the same port.
-
-```python
-server.should_exit = True
-server_thread.join(timeout=3)
-
-if server_thread.is_alive():
-    print("Server still shutting down...")
-else:
-    print(f"Server on port {PORT} stopped.")
-```
-
-    Server on port 8769 stopped.
-
-#### FastAPI vs C# ASP.NET mapping
-
-```python
-pd.DataFrame({
-    "Feature": ["Define GET route", "Define POST route", "Define DELETE route",
-               "404 error", "Return JSON", "Request model",
-               "Optional query param", "Path parameter", "Server", "API docs"],
-    "FastAPI (Python)": [
-        '@app.get("/path")', '@app.post("/path")', '@app.delete("/path")',
-        "HTTPException(404)", "return {dict}", "BaseModel (Pydantic)",
-        "Query(None)", "{id} in path", "uvicorn", "/docs (auto)"],
-    "ASP.NET Minimal API (C#)": [
-        'app.MapGet("/path", handler)', 'app.MapPost("/path", handler)', 'app.MapDelete("/path", handler)',
-        "Results.NotFound()", "Results.Ok(new { ... })", "record (C# record)",
-        "string? param", "{id} in route", "Kestrel (built-in)", "/swagger (AddSwaggerGen)"],
-}).style.set_properties(**{"text-align": "left"}).hide(axis="index")
-```
-
-<table id="T_ebb27">
-  <thead>
-    <tr>
-      <th id="T_ebb27_level0_col0" class="col_heading level0 col0" >Feature</th>
-      <th id="T_ebb27_level0_col1" class="col_heading level0 col1" >FastAPI (Python)</th>
-      <th id="T_ebb27_level0_col2" class="col_heading level0 col2" >ASP.NET Minimal API (C#)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td id="T_ebb27_row0_col0" class="data row0 col0" >Define GET route</td>
-      <td id="T_ebb27_row0_col1" class="data row0 col1" >@app.get("/path")</td>
-      <td id="T_ebb27_row0_col2" class="data row0 col2" >app.MapGet("/path", handler)</td>
-    </tr>
-    <tr>
-      <td id="T_ebb27_row1_col0" class="data row1 col0" >Define POST route</td>
-      <td id="T_ebb27_row1_col1" class="data row1 col1" >@app.post("/path")</td>
-      <td id="T_ebb27_row1_col2" class="data row1 col2" >app.MapPost("/path", handler)</td>
-    </tr>
-    <tr>
-      <td id="T_ebb27_row2_col0" class="data row2 col0" >Define DELETE route</td>
-      <td id="T_ebb27_row2_col1" class="data row2 col1" >@app.delete("/path")</td>
-      <td id="T_ebb27_row2_col2" class="data row2 col2" >app.MapDelete("/path", handler)</td>
-    </tr>
-    <tr>
-      <td id="T_ebb27_row3_col0" class="data row3 col0" >404 error</td>
-      <td id="T_ebb27_row3_col1" class="data row3 col1" >HTTPException(404)</td>
-      <td id="T_ebb27_row3_col2" class="data row3 col2" >Results.NotFound()</td>
-    </tr>
-    <tr>
-      <td id="T_ebb27_row4_col0" class="data row4 col0" >Return JSON</td>
-      <td id="T_ebb27_row4_col1" class="data row4 col1" >return {dict}</td>
-      <td id="T_ebb27_row4_col2" class="data row4 col2" >Results.Ok(new { ... })</td>
-    </tr>
-    <tr>
-      <td id="T_ebb27_row5_col0" class="data row5 col0" >Request model</td>
-      <td id="T_ebb27_row5_col1" class="data row5 col1" >BaseModel (Pydantic)</td>
-      <td id="T_ebb27_row5_col2" class="data row5 col2" >record (C# record)</td>
-    </tr>
-    <tr>
-      <td id="T_ebb27_row6_col0" class="data row6 col0" >Optional query param</td>
-      <td id="T_ebb27_row6_col1" class="data row6 col1" >Query(None)</td>
-      <td id="T_ebb27_row6_col2" class="data row6 col2" >string? param</td>
-    </tr>
-    <tr>
-      <td id="T_ebb27_row7_col0" class="data row7 col0" >Path parameter</td>
-      <td id="T_ebb27_row7_col1" class="data row7 col1" >{id} in path</td>
-      <td id="T_ebb27_row7_col2" class="data row7 col2" >{id} in route</td>
-    </tr>
-    <tr>
-      <td id="T_ebb27_row8_col0" class="data row8 col0" >Server</td>
-      <td id="T_ebb27_row8_col1" class="data row8 col1" >uvicorn</td>
-      <td id="T_ebb27_row8_col2" class="data row8 col2" >Kestrel (built-in)</td>
-    </tr>
-    <tr>
-      <td id="T_ebb27_row9_col0" class="data row9 col0" >API docs</td>
-      <td id="T_ebb27_row9_col1" class="data row9 col1" >/docs (auto)</td>
-      <td id="T_ebb27_row9_col2" class="data row9 col2" >/swagger (AddSwaggerGen)</td>
-    </tr>
-  </tbody>
-</table>
-
-## Pydantic — Data Validation for Production APIs
-
-Pydantic is Python’s standard for **runtime data validation**. You define a model class with type-annotated fields, and Pydantic:
-
-1. **Validates** every value on construction — wrong types raise `ValidationError` immediately, not deep inside your pipeline
-2. **Coerces** compatible types automatically — string `"42"` becomes `int 42` (disable with `strict=True`)
-3. **Constrains** values via `Field()` — `gt=0`, `max_length=5`, `pattern=r"^[A-Z]+$"` reject garbage at the door
-4. **Serializes** to dict/JSON with `model_dump()` / `model_dump_json()` — with alias support for camelCase APIs
-5. **Generates JSON Schema** with `model_json_schema()` — FastAPI uses this to auto-build Swagger docs
-
-FastAPI is built on top of Pydantic — every `@app.post` request body is a Pydantic model that’s validated before your handler runs.
-
-This section covers Pydantic from basics to production patterns:
-- BaseModel, Field constraints, Literal, Enum
-- Custom validators (`@field_validator`, `@model_validator`)
-- Nested models for complex API schemas
-- Serialization with aliases (snake_case → camelCase)
-- Immutability (`frozen=True`) and strict mode (`strict=True`)
-- JSON Schema generation for API documentation
-- Production checklist — 12 rules for safe APIs
-
-### Field types and constraints
-
-`BaseModel` is Pydantic's core class. Fields are declared as typed class attributes; Pydantic validates and coerces values on construction. `Field()` adds constraints, descriptions, and aliases to individual fields.
-
-#### BaseModel basics — field types, defaults, and validation
-
-Define a model with typed fields. Pydantic validates on construction: wrong types raise `ValidationError`.
-Auto-coercion converts compatible types (`"25"` → `int 25`). `model_dump()` serializes to dict.
-Fields without defaults are required; fields with defaults are optional.
-
-```python
-class User(BaseModel):
-    name: str                          # required — no default
-    age: int                           # required, auto-coerces "30" -> 30
-    email: str                         # required
-    active: bool = True                # optional with default
-    tags: list[str] = []               # mutable default is safe in Pydantic
-
-# Valid
-user = User(name="Alice", age=30, email="alice@example.com")
-user  # Valid
-user.model_dump()  # Dict
-
-# Coercion — string "25" becomes int 25
-user2 = User(name="Bob", age="25", email="bob@test.com")
-user2.age, type(user2.age).__name__  # coerced value, type
-
-# Invalid — raises ValidationError
-try:
-    User(name="Bad", age="not_a_number", email="x")
-except Exception as e:
-    print(f"Error:  {e.errors()[0]['msg']}")
-```
-
-    name='Alice' age=30 email='alice@example.com' active=True tags=[]
-    {'name': 'Alice', 'age': 30, 'email': 'alice@example.com', 'active': True, 'tags': []}
-    25 (type: int)
-    Input should be a valid integer, unable to parse string as an integer
-
-#### Field constraints — min, max, regex, Literal for value restrictions
-
-Use `Field(gt=0, max_length=5, pattern=r"^[A-Z]+$")` to constrain values at the schema level.
-`Literal["BUY", "SELL"]` restricts to an exact set of allowed values (like a C# enum).
-Demonstrates rejection of: too-short IDs, lowercase tickers, invalid sides, negative quantities, zero prices.
-
-```python
 class TradeOrder(BaseModel):
-    trade_id: str = Field(..., min_length=3, max_length=20, description="Unique trade ID")
-    ticker: str = Field(..., min_length=1, max_length=5, pattern=r"^[A-Z]+$",
-                        description="Stock ticker (uppercase letters only)")
-    side: Literal["BUY", "SELL"]       # only these two values allowed
-    quantity: int = Field(..., gt=0, le=1_000_000, description="Number of shares")
-    price: float = Field(..., gt=0, description="Price per share in USD")
-    notes: str | None = Field(None, max_length=500, description="Optional notes")
+    trade_id: str = Field(min_length=3, max_length=20)
+    ticker: str = Field(pattern=r"^[A-Z]+$")
+    side: Literal["BUY", "SELL"]
+    quantity: int = Field(gt=0)
+    price: float = Field(gt=0)
 
-# Valid order
-order = TradeOrder(trade_id="TRD_001", ticker="AAPL", side="BUY", quantity=100, price=178.50)
-order  # Valid
 
-# Invalid — ticker must be uppercase letters, quantity must be > 0
-for bad_data, label in [
-    ({"trade_id": "T", "ticker": "AAPL", "side": "BUY", "quantity": 1, "price": 1}, "trade_id too short"),
-    ({"trade_id": "TRD_X", "ticker": "aapl", "side": "BUY", "quantity": 1, "price": 1}, "ticker lowercase"),
-    ({"trade_id": "TRD_X", "ticker": "AAPL", "side": "HOLD", "quantity": 1, "price": 1}, "invalid side"),
-    ({"trade_id": "TRD_X", "ticker": "AAPL", "side": "BUY", "quantity": -5, "price": 1}, "negative qty"),
-    ({"trade_id": "TRD_X", "ticker": "AAPL", "side": "BUY", "quantity": 1, "price": 0}, "zero price"),
+valid_order = TradeOrder(
+    trade_id="TRD_001",
+    ticker="AAPL",
+    side="BUY",
+    quantity=100,
+    price=178.5,
+)
+
+errors = []
+for bad in [
+    {"trade_id": "T", "ticker": "AAPL", "side": "BUY", "quantity": 1, "price": 1},
+    {"trade_id": "TRD_X", "ticker": "aapl", "side": "BUY", "quantity": 1, "price": 1},
+    {"trade_id": "TRD_X", "ticker": "AAPL", "side": "HOLD", "quantity": 1, "price": 1},
 ]:
     try:
-        TradeOrder(**bad_data)
-        print(f"  {label}: PASSED (unexpected)")
-    except Exception as e:
-        print(f"  {label}: REJECTED — {e.errors()[0]['msg']}")
+        TradeOrder(**bad)
+    except ValidationError as exc:
+        errors.append(exc.errors()[0]["msg"])
+
+print(valid_order.model_dump())
+print(errors)
+```
+```text
+{'trade_id': 'TRD_001', 'ticker': 'AAPL', 'side': 'BUY', 'quantity': 100, 'price': 178.5}
+['String should have at least 3 characters', "String should match pattern '^[A-Z]+$'", "Input should be 'BUY' or 'SELL'"]
 ```
 
-    trade_id='TRD_001' ticker='AAPL' side='BUY' quantity=100 price=178.5 notes=None
-      trade_id too short: REJECTED — String should have at least 3 characters
-      ticker lowercase: REJECTED — String should match pattern '^[A-Z]+$'
-      invalid side: REJECTED — Input should be 'BUY' or 'SELL'
-      negative qty: REJECTED — Input should be greater than 0
-      zero price: REJECTED — Input should be greater than 0
+#### `@field_validator` and `@model_validator` for business rules
 
-### Custom validators
+Once the shape is correct, use `@field_validator` and `@model_validator` for rules that the type system alone cannot express. The usual cases are naming conventions, cross-field comparisons, and normalized input that still needs a hard failure boundary.
 
-For validation logic that cannot be expressed as a `Field()` constraint — format checks, normalization, or cross-field rules — use `@field_validator` and `@model_validator`.
-
-#### Custom validators — `@field_validator` and `@model_validator`
-
-`@field_validator("name")` adds custom validation to a single field (e.g. enforce snake_case, require dataset.table format).
-`@model_validator(mode="after")` validates across multiple fields (e.g. `end_date` must be after `start_date`).
-Both raise `ValueError` with a descriptive message that Pydantic wraps into `ValidationError`.
+*This config model accepts one valid payload, rejects a non-snake-case name, and rejects an inverted date range.*
 
 ```python
+from datetime import date
+
+from pydantic import BaseModel, ValidationError, field_validator, model_validator
+
+
 class PipelineConfig(BaseModel):
     name: str
-    source_table: str
-    target_table: str
-    batch_size: int = Field(default=1000, gt=0)
     start_date: date
     end_date: date
 
     @field_validator("name")
     @classmethod
-    def name_must_be_snake_case(cls, v: str) -> str:
-        if not v.replace("_", "").isalnum() or v != v.lower():
-            raise ValueError("name must be snake_case (lowercase + underscores)")
-        return v
-
-    @field_validator("source_table", "target_table")
-    @classmethod
-    def table_must_have_dataset(cls, v: str) -> str:
-        if "." not in v:
-            raise ValueError("table must be dataset.table format (e.g. raw.events)")
-        return v
+    def snake_case(cls, value: str) -> str:
+        if value != value.lower() or "-" in value:
+            raise ValueError("name must be snake_case")
+        return value
 
     @model_validator(mode="after")
-    def end_after_start(self):
+    def validate_dates(self):
         if self.end_date <= self.start_date:
-            raise ValueError(f"end_date ({self.end_date}) must be after start_date ({self.start_date})")
+            raise ValueError("end_date must be after start_date")
         return self
 
-# Valid config
-cfg = PipelineConfig(
-    name="daily_etl", source_table="raw.events", target_table="analytics.events_agg",
-    batch_size=5000, start_date="2024-01-01", end_date="2024-03-15"
-)
-cfg.name, cfg.source_table, cfg.target_table  # valid config
 
-# Invalid — various validation failures
-for bad, label in [
-    ({"name": "DailyETL", "source_table": "raw.events", "target_table": "analytics.out",
-      "start_date": "2024-01-01", "end_date": "2024-03-15"}, "non-snake_case name"),
-    ({"name": "daily_etl", "source_table": "events", "target_table": "analytics.out",
-      "start_date": "2024-01-01", "end_date": "2024-03-15"}, "table without dataset"),
-    ({"name": "daily_etl", "source_table": "raw.events", "target_table": "analytics.out",
-      "start_date": "2024-06-01", "end_date": "2024-01-01"}, "end before start"),
+cfg = PipelineConfig(name="daily_etl", start_date="2024-01-01", end_date="2024-03-15")
+
+errors = []
+for bad in [
+    {"name": "DailyETL", "start_date": "2024-01-01", "end_date": "2024-03-15"},
+    {"name": "daily_etl", "start_date": "2024-06-01", "end_date": "2024-01-01"},
 ]:
     try:
         PipelineConfig(**bad)
-    except Exception as e:
-        msg = e.errors()[0]["msg"]
-        print(f"  {label}: REJECTED — {msg}")
+    except ValidationError as exc:
+        errors.append(exc.errors()[0]["msg"])
+
+print(cfg.model_dump(mode="json"))
+print(errors)
+```
+```text
+{'name': 'daily_etl', 'start_date': '2024-01-01', 'end_date': '2024-03-15'}
+['Value error, name must be snake_case', 'Value error, end_date must be after start_date']
 ```
 
-    daily_etl | raw.events -> analytics.events_agg
-      non-snake_case name: REJECTED — Value error, name must be snake_case (lowercase + underscores)
-      table without dataset: REJECTED — Value error, table must be dataset.table format (e.g. raw.events)
-      end before start: REJECTED — Value error, end_date (2024-01-01) must be after start_date (2024-06-01)
+#### Nested `BaseModel` trees and `Enum` state
 
-### Nested models and enums
+Nested models make response trees explicit, and `Enum` or `Literal` keeps state fields out of stringly typed drift. When one field changes the rule for another field, keep that policy in a model validator instead of scattering it across handlers.
 
-Build complex schemas by composing Pydantic models. Nested models are validated recursively; `Enum` and `Literal` restrict fields to fixed value sets.
-
-#### Nested models and enums — compose complex API schemas
-
-Pydantic models can contain other models (`legs: list[OrderLeg]`) and enums (`status: OrderStatus`).
-`Field(min_length=2, max_length=10)` constrains list length. `@model_validator` enforces
-cross-field rules (PAIRS strategy requires exactly 2 legs). `model_dump_json()` serializes the entire tree.
+*This multi-leg order validates a two-leg `PAIRS` strategy and rejects a three-leg variant with the literal model error.*
 
 ```python
+from enum import Enum
+from typing import Literal
+
+from pydantic import BaseModel, Field, ValidationError, model_validator
+
+
 class OrderStatus(str, Enum):
     PENDING = "pending"
     FILLED = "filled"
-    CANCELLED = "cancelled"
-    REJECTED = "rejected"
+
 
 class OrderLeg(BaseModel):
-    ticker: str = Field(..., pattern=r"^[A-Z]{1,5}$")
+    ticker: str = Field(pattern=r"^[A-Z]{1,5}$")
     side: Literal["BUY", "SELL"]
-    quantity: int = Field(..., gt=0)
-    price: float = Field(..., gt=0)
+    quantity: int = Field(gt=0)
+
 
 class MultiLegOrder(BaseModel):
-    order_id: str
-    strategy: Literal["PAIRS", "SPREAD", "BASKET"]
-    legs: list[OrderLeg] = Field(..., min_length=2, max_length=10)
+    strategy: Literal["PAIRS", "BASKET"]
+    legs: list[OrderLeg] = Field(min_length=2, max_length=4)
     status: OrderStatus = OrderStatus.PENDING
-    created_at: datetime = Field(default_factory=datetime.utcnow)
 
     @model_validator(mode="after")
-    def pairs_must_have_two_legs(self):
+    def require_two_legs_for_pairs(self):
         if self.strategy == "PAIRS" and len(self.legs) != 2:
             raise ValueError("PAIRS strategy requires exactly 2 legs")
         return self
 
-# Valid multi-leg order
-order = MultiLegOrder(
-    order_id="MLO_001",
-    strategy="PAIRS",
-    legs=[
-        OrderLeg(ticker="AAPL", side="BUY", quantity=100, price=178.50),
-        OrderLeg(ticker="MSFT", side="SELL", quantity=50, price=415.20),
-    ]
-)
-order.order_id, order.strategy, len(order.legs), order.status.value  # order summary
-[(l.ticker, l.side, l.quantity) for l in order.legs]  # legs
-order.model_dump_json()[:100]  # JSON preview
 
-# Invalid — PAIRS with 3 legs
+multi = MultiLegOrder(strategy="PAIRS", legs=[
+    OrderLeg(ticker="AAPL", side="BUY", quantity=10),
+    OrderLeg(ticker="MSFT", side="SELL", quantity=10),
+])
+
 try:
-    MultiLegOrder(order_id="X", strategy="PAIRS", legs=[
-        OrderLeg(ticker="A", side="BUY", quantity=1, price=1),
-        OrderLeg(ticker="B", side="SELL", quantity=1, price=1),
-        OrderLeg(ticker="C", side="BUY", quantity=1, price=1),
+    MultiLegOrder(strategy="PAIRS", legs=[
+        OrderLeg(ticker="AAPL", side="BUY", quantity=10),
+        OrderLeg(ticker="MSFT", side="SELL", quantity=10),
+        OrderLeg(ticker="NVDA", side="BUY", quantity=10),
     ])
-except Exception as e:
-    print(f"PAIRS+3 legs: REJECTED — {e.errors()[0]['msg']}")
+except ValidationError as exc:
+    print(multi.model_dump(mode="json"))
+    print(exc.errors()[0]["msg"])
+```
+```text
+{'strategy': 'PAIRS', 'legs': [{'ticker': 'AAPL', 'side': 'BUY', 'quantity': 10}, {'ticker': 'MSFT', 'side': 'SELL', 'quantity': 10}], 'status': 'pending'}
+Value error, PAIRS strategy requires exactly 2 legs
 ```
 
-    MLO_001 | PAIRS | 2 legs | pending
-    [('AAPL', 'BUY', 100), ('MSFT', 'SELL', 50)]
-    {"order_id":"MLO_001","strategy":"PAIRS","legs":[{"ticker":"AAPL","side":"BUY","quantity":100,"price...
-    PAIRS+3 legs: REJECTED — Value error, PAIRS strategy requires exactly 2 legs
+### Serialization, schema, and strictness
 
-### Serialization and immutability
+#### `model_dump()`, aliases, and `model_json_schema()`
 
-Control how models serialize to JSON. Use field aliases to produce camelCase API responses while keeping Python's snake_case internally. Frozen models prevent mutation after construction.
+The public API contract is usually not the same as internal Python naming. Use field aliases when the external system expects `camelCase`, and use `model_json_schema()` when the output contract needs to be inspected or exported directly.
 
-#### Serialization — `model_dump`, `model_dump_json`, and field aliases
-
-Control JSON output with `by_alias=True` for camelCase API responses (`pipeline_id` → `pipelineId`).
-`exclude=` and `include=` filter which fields appear. `model_dump_json(indent=2)` produces
-formatted JSON strings. `ConfigDict(populate_by_name=True)` accepts both alias and field name on input.
+*This response model emits `camelCase` with `by_alias=True` and prints the exact schema property keys generated by Pydantic.*
 
 ```python
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
 class APIResponse(BaseModel):
-    model_config = ConfigDict(
-        populate_by_name=True,      # accept both alias and field name
-    )
+    model_config = ConfigDict(populate_by_name=True)
+    pipeline_id: str = Field(alias="pipelineId")
+    row_count: int = Field(alias="rowCount")
+    processed_at: datetime = Field(default_factory=lambda: datetime(2024, 3, 15, 9, 30, 0))
 
-    pipeline_id: str = Field(..., alias="pipelineId")    # JSON uses camelCase
-    row_count: int = Field(..., alias="rowCount")
-    status: str
-    processed_at: datetime = Field(default_factory=datetime.utcnow)
 
-# Create with Python snake_case names
-resp = APIResponse(pipeline_id="etl_daily", row_count=15000, status="success")
+resp = APIResponse(pipeline_id="etl_daily", row_count=15000)
 
-resp.model_dump(by_alias=True)  # by_alias=True (for API response)
-
-# Serialize with field names (for internal use)
-resp.model_dump()  # by_alias=False (for internal)
-
-# Exclude fields, include only specific fields
-resp.model_dump(exclude={'processed_at'})  # exclude processed_at
-resp.model_dump(include={'pipeline_id', 'status'})  # include only status
-
-# JSON string output
-resp.model_dump_json(by_alias=True, indent=2)  # JSON
+print(resp.model_dump(by_alias=True, mode="json"))
+print(sorted(resp.model_json_schema()["properties"].keys()))
+```
+```text
+{'pipelineId': 'etl_daily', 'rowCount': 15000, 'processed_at': '2024-03-15T09:30:00'}
+['pipelineId', 'processed_at', 'rowCount']
 ```
 
-    {'pipelineId': 'etl_daily', 'rowCount': 15000, 'status': 'success', 'processed_at': datetime.datetime(2026, 3, 27, 21, 34, 48, 392382)}
-    
-    {'pipeline_id': 'etl_daily', 'row_count': 15000, 'status': 'success', 'processed_at': datetime.datetime(2026, 3, 27, 21, 34, 48, 392382)}
-    
-    {'pipeline_id': 'etl_daily', 'row_count': 15000, 'status': 'success'}
-    {'pipeline_id': 'etl_daily', 'status': 'success'}
-    
-    {
-      "pipelineId": "etl_daily",
-      "rowCount": 15000,
-      "status": "success",
-      "processed_at": "2026-03-27T21:34:48.392382"
-    }
+#### `frozen=True` and `strict=True` when coercion is unsafe
 
-#### Immutability and strict mode — `frozen=True`, `strict=True`
+`frozen=True` protects configuration from post-construction mutation, and `strict=True` blocks silent coercion that would otherwise turn `"100"` into `100`. Use both when the system would rather fail at the boundary than continue with coerced state.
 
-`frozen=True` makes the model immutable — any assignment after construction raises `ValidationError`.
-Use for config objects that must never change. `strict=True` disables auto-coercion —
-`"100"` is rejected for an `int` field instead of being silently converted. Critical for financial data.
+*This example shows the literal validation messages for mutating a frozen model and for passing a string into a strict integer field.*
 
 ```python
-# Frozen model — immutable after creation (like frozen dataclass)
+from pydantic import BaseModel, ConfigDict, ValidationError
+
 
 class ImmutableConfig(BaseModel):
-    model_config = ConfigDict(frozen=True)   # assignment raises ValidationError
-
+    model_config = ConfigDict(frozen=True)
     db_host: str
     db_port: int = 5432
-    ssl: bool = True
 
-cfg = ImmutableConfig(db_host="db.prod.internal")
-cfg  # Config
 
-try:
-    cfg.db_port = 9999   # frozen — can't modify
-except Exception as e:
-    print(f"Frozen: {e.errors()[0]['msg']}")
-
-# Strict mode — no coercion, types must match exactly
 class StrictTrade(BaseModel):
     model_config = ConfigDict(strict=True)
-
     ticker: str
-    quantity: int          # "100" will NOT be coerced to 100
-    price: float
+    quantity: int
 
-# Strict: string "100" rejected for int field
+
+cfg = ImmutableConfig(db_host="db.internal")
+
 try:
-    StrictTrade(ticker="AAPL", quantity="100", price=178.5)
-except Exception as e:
-    print(f"Strict: {e.errors()[0]['msg']}")
+    cfg.db_port = 9999
+except ValidationError as exc:
+    print(exc.errors()[0]["msg"])
 
-# Strict: correct types work
-trade = StrictTrade(ticker="AAPL", quantity=100, price=178.5)
-trade  # Valid strict
+try:
+    StrictTrade(ticker="AAPL", quantity="100")
+except ValidationError as exc:
+    print(exc.errors()[0]["msg"])
+```
+```text
+Instance is frozen
+Input should be a valid integer
 ```
 
-    db_host='db.prod.internal' db_port=5432 ssl=True
-    Instance is frozen
-    Input should be a valid integer
-    ticker='AAPL' quantity=100 price=178.5
+## Recommended Patterns
 
-#### JSON Schema generation — `model_json_schema()` for API docs
+These are the production defaults worth applying before the note turns into a checklist of exceptions. Each concept has a concrete `code` boundary so the operational rule is visible instead of implied.
 
-Pydantic auto-generates a JSON Schema from the model definition. FastAPI uses this to build
-Swagger/OpenAPI documentation automatically. The schema includes field types, constraints,
-descriptions, and required/optional markers — no manual documentation needed.
+### Client lifecycle and secret handling
+
+#### Reuse `Session()` and `Client()` per upstream host
+
+A fresh `Session()` or `Client()` per request discards pooling and duplicates header setup. Keep one reusable client per process, dependency scope, or worker unit, then inject request-specific data at the call site.
+
+*This example shows a shared `Session()` carrying one client identifier instead of rebuilding headers for every request.*
 
 ```python
-schema = TradeOrder.model_json_schema()
-json.dumps(schema, indent=2)
+with requests.Session() as pooled_session:
+    pooled_session.headers.update({"X-Client-Id": "shared-client"})
+    print(type(pooled_session).__name__)
+    print(pooled_session.headers["X-Client-Id"])
+```
+```text
+Session
+shared-client
 ```
 
-    {
-      "properties": {
-        "trade_id": {
-          "description": "Unique trade ID",
-          "maxLength": 20,
-          "minLength": 3,
-          "title": "Trade Id",
-          "type": "string"
-        },
-        "ticker": {
-          "description": "Stock ticker (uppercase letters only)",
-          "maxLength": 5,
-          "minLength": 1,
-          "pattern": "^[A-Z]+$",
-          "title": "Ticker",
-          "type": "string"
-        },
-        "side": {
-          "enum": [
-            "BUY",
-            "SELL"
-          ],
-          "title": "Side",
-          "type": "string"
-        },
-        "quantity": {
-          "description": "Number of shares",
-          "exclusiveMinimum": 0,
-          "maximum": 1000000,
-          "title": "Quantity",
-          "type": "integer"
-        },
-        "price": {
-          "description": "Price per share in USD",
-          "exclusiveMinimum": 0,
-          "title": "Price",
-          "type": "number"
-        },
-        "notes": {
-          "anyOf": [
-            {
-              "maxLength": 500,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "Optional notes",
-          "title": "Notes"
-        }
-      },
-      "required": [
-        "trade_id",
-        "ticker",
-        "side",
-        "quantity",
-        "price"
-      ],
-      "title": "TradeOrder",
-      "type": "object"
-    }
+#### Declare `response_model=` and `Field()` as the contract, not a comment
 
-### Production patterns
+The API contract should be executable. `Field()` defines field boundaries, and `response_model=` makes the route output pass through the same schema discipline that input already uses.
 
-The checklist below distills 12 rules for production Pydantic APIs — from constraint coverage to alias usage to strict mode. Each rule includes the reason it matters.
+*This snippet inspects the `TradeIn` schema from the FastAPI example and prints the required fields plus the enforced ticker pattern.*
 
-#### Production checklist — 12 rules for safe Pydantic APIs
+```python
+schema = TradeIn.model_json_schema()
 
-Summary table of production best practices: always use `BaseModel` (not dicts), always add
-`Field()` constraints, use `Literal`/`Enum` for fixed options, add validators for business rules,
-use aliases for public APIs, freeze config models, enable strict mode for financial data.
+print(schema["required"])
+print(schema["properties"]["ticker"]["pattern"])
+```
+```text
+['trade_id', 'ticker', 'quantity', 'price']
+^[A-Z]{1,5}$
+```
 
-| Rule | Why |
-|---|---|
-| Always use `BaseModel` for request/response | Validates all input — catches bad data at the door |
-| Use `Field()` with constraints on every field | `gt=0`, `max_length`, `pattern` prevent garbage values |
-| Use `Literal[]` for fixed option sets | Compile-time restriction — only valid values accepted |
-| Use `Enum` for status/state fields | Type-safe states — no magic strings for status |
-| Add `@field_validator` for business rules | snake_case enforcement, format checks, normalization |
-| Add `@model_validator` for cross-field rules | `end_date > start_date`, at least 2 legs for PAIRS |
-| Use aliases for camelCase API output | Python uses snake_case, APIs use camelCase |
-| Use `frozen=True` for config models | Config should never change after loading |
-| Use `strict=True` when coercion is dangerous | Financial data — string `"100"` must not silently become int `100` |
-| Return `model_dump(by_alias=True)` in responses | Consistent JSON output matching API contract |
-| Never expose internal field names in APIs | Aliases decouple internal naming from public API |
-| Generate JSON schema for documentation | Swagger/OpenAPI docs auto-generated from models |
+#### Build bearer headers from `os.environ`
 
-## Warnings
+The safe pattern is to pull credentials from `os.environ`, injected config, or a secret manager at runtime. The note should show header construction without printing the token body back into logs or docs.
 
-> [!warning] No default timeout in `requests`
-> `requests.get(url)` has no timeout. It will block indefinitely if the server is slow or unresponsive.
+*This example uses the demo token already loaded into `os.environ` and prints only the header prefix plus the token source.*
 
-> [!success] Always pass `timeout=`
-> ```python
-> resp = requests.get(url, timeout=10)
-> ```
+```python
+auth_header = {"Authorization": f"Bearer {os.environ['API_TOKEN']}"}
 
-> [!warning] Creating a new `httpx.Client` per request in a loop
-> Instantiating a client inside a loop bypasses connection pooling and degrades performance significantly.
-
-> [!success] Instantiate once and reuse
-> ```python
-> with httpx.Client(base_url=BASE_URL) as client:
->     for item in items:
->         client.get(f"/endpoint/{item}")
-> ```
-
-> [!warning] Hardcoding Bearer tokens or API keys in source code
-> Credentials committed to version control are a permanent security liability.
-
-> [!success] Load credentials from environment variables
-> ```python
-> import os
-> headers = {"Authorization": f"Bearer {os.environ['API_TOKEN']}"}
-> ```
-
-> [!warning] Ignoring `raise_for_status()` and checking `status_code` manually
-> Manual status checks are easy to miss and often incomplete (e.g., only checking for 200, missing 201 or 204).
-
-> [!success] Call `raise_for_status()` unconditionally after every request
-> ```python
-> resp = requests.get(url, timeout=10)
-> resp.raise_for_status()
-> ```
-
-> [!warning] Raising plain `Exception` inside a FastAPI route instead of `HTTPException`
-> A plain exception propagates as an unhandled 500 error with no useful response body for clients.
-
-> [!success] Use `HTTPException` with an explicit `status_code`
-> ```python
-> from fastapi import HTTPException
-> raise HTTPException(status_code=404, detail="Trade not found")
-> ```
-
-## Recommendations
-
-- Always set an explicit `timeout=` on every `requests` or `httpx` call. Use 10–30 seconds for interactive APIs and 60–120 seconds for bulk or slow endpoints.
-- Use `httpx.AsyncClient` (with `async with`) for any pipeline that makes more than one HTTP call per job execution — parallelism is free with `asyncio.gather`.
-- Define all request and response shapes as Pydantic `BaseModel` subclasses before writing route handlers. FastAPI's validation, docs, and error responses all depend on correct model definitions.
-- Handle pagination explicitly: never assume a single response contains all data. Implement cursor-based pagination when the API supports it; fall back to offset/limit only when cursors are unavailable.
-- Implement retry with exponential backoff for all external API calls. Use `tenacity` or a manual loop. Always respect `Retry-After` headers on 429 responses.
-- Store all credentials (tokens, API keys, secrets) in environment variables or a secrets manager. Never hardcode them.
-- Use `httpx.Client(base_url=..., headers=...)` at the module level (or as a dependency-injected singleton) to share connection pools across requests in the same process.
-- In FastAPI, return typed Pydantic models as `response_model=` on route decorators to enforce output validation and generate accurate OpenAPI schema.
+print(auth_header["Authorization"].split()[0])
+print("os.environ")
+```
+```text
+Bearer
+os.environ
+```
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `requests` call hangs indefinitely | No timeout set | Add `timeout=10` (or appropriate value) to every call |
-| `ConnectionError` or `ReadTimeout` | Network instability or slow server | Wrap in retry with exponential backoff; check server health |
-| `HTTPError: 429 Too Many Requests` | Rate limit exceeded | Read `Retry-After` header; sleep that duration before retrying |
-| FastAPI returns 422 for valid-looking JSON | Pydantic model field type mismatch or missing required field | Check the `detail` array in the 422 response; verify model field types and aliases |
-| `RuntimeError: no running event loop` | Calling `asyncio.run()` inside a Jupyter cell after another async call | Use `await` directly in Jupyter; avoid nested `asyncio.run()` |
-| `httpx.AsyncClient` raises `RuntimeError: client is not open` | Client used after exiting the `async with` block | Keep all requests inside the `async with httpx.AsyncClient() as client:` block |
-| Pydantic `ValidationError` on nested models | Inner model not defined as `BaseModel` subclass | Ensure every nested type is a `BaseModel`; plain dicts are not validated |
-| `ImportError: No module named 'fastapi'` | `fastapi` not installed in the active virtual environment | Run `pip install fastapi uvicorn` in the correct environment |
-| Bearer token rejected (401) | Token expired or wrong header format | Refresh the token; confirm header is `Authorization: Bearer <token>` (capital B) |
-| Paginated API returns duplicate records across pages | Offset pagination with concurrent writes; item inserted between requests | Prefer cursor-based pagination; add deduplication by unique ID after collection |
+The common failures are boundary mistakes, not deep framework bugs. Each case below shows the literal error surface so the fix maps back to something observable.
 
+### Timeouts, validation errors, and client lifetime
+
+#### Missing `timeout=` turns slow responses into hanging work
+
+A stalled upstream call is a control-flow problem, not an edge case. Set a realistic `timeout=` and combine it with retry policy only for errors that are genuinely transient.
+
+*This self-contained server sleeps before replying, and `requests` raises the exact `ReadTimeout` you should trap or prevent with policy.*
+
+```python
+import json
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+import requests
+
+
+class SlowHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
+    def do_GET(self):
+        time.sleep(0.2)
+        body = json.dumps({"status": "slow but complete"}).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+slow_server = ThreadingHTTPServer(("127.0.0.1", 0), SlowHandler)
+slow_thread = threading.Thread(target=slow_server.serve_forever, daemon=True)
+slow_thread.start()
+slow_base = f"http://127.0.0.1:{slow_server.server_address[1]}"
+
+try:
+    requests.get(f"{slow_base}/slow", timeout=0.05)
+except requests.ReadTimeout as exc:
+    print(type(exc).__name__)
+finally:
+    slow_server.shutdown()
+    slow_server.server_close()
+    slow_thread.join(timeout=1)
+```
+```text
+ReadTimeout
+```
+
+#### A FastAPI `422` means the schema rejected input before the handler ran
+
+When FastAPI returns `422`, the route logic might be correct and simply never ran. Inspect the first `detail` entry before changing handler code or assuming the request body matched the declared `Field()` rules.
+
+*This route expects `quantity > 0`, and `TestClient` exposes the exact `422` message from Pydantic.*
+
+```python
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from pydantic import BaseModel, Field
+
+
+class QtyIn(BaseModel):
+    quantity: int = Field(gt=0)
+
+
+app = FastAPI()
+
+
+@app.post("/qty")
+def qty_route(item: QtyIn):
+    return item.model_dump()
+
+
+client = TestClient(app)
+invalid_resp = client.post("/qty", json={"quantity": 0})
+
+print(invalid_resp.status_code)
+print(invalid_resp.json()["detail"][0]["msg"])
+```
+```text
+422
+Input should be greater than 0
+```
+
+#### Using `AsyncClient()` after `aclose()` is a lifecycle bug
+
+The error is not about the remote API. It means the client object escaped its intended lifetime. Keep outbound calls inside `async with` or a clearly owned dependency boundary so the closed-client path never becomes reachable.
+
+*This snippet closes an `AsyncClient()` first and then shows the exact runtime error raised on the next request attempt.*
+
+```python
+async def closed_client_demo():
+    client = httpx.AsyncClient(base_url=BASE_URL)
+    await client.aclose()
+
+    try:
+        await client.get("/pool", params={"request": "late"})
+    except RuntimeError as exc:
+        print(type(exc).__name__)
+        print(str(exc))
+
+
+asyncio.run(closed_client_demo())
+```
+```text
+RuntimeError
+Cannot send a request, as the client has been closed.
+```
+
+## Cleanup
+
+The local demo server started at the top of the note should be shut down when the client examples are done. Keeping cleanup explicit prevents notebook kernels from accumulating background threads across reruns.
+
+*This cleanup block stops the `ThreadingHTTPServer` fixture created earlier.*
+
+```python
+server.shutdown()
+server.server_close()
+thread.join(timeout=1)
+print("demo server stopped")
+```
+```text
+demo server stopped
+```

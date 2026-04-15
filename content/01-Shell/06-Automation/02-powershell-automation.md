@@ -7,7 +7,7 @@ aliases: [powershell automation, powershell scripts, pwsh automation, data engin
 keywords: [powershell automation, pwsh scripts, CSV processing, JSON processing, API automation, database scripts, GCP automation, log parsing, scheduled task, Task Scheduler, retry, backoff, health check, data validation, ETL scripts, file intake, mutex]
 description: "28 production-ready PowerShell scripts for data engineering automation — file intake validation, data transformation, API interaction, database operations, GCP cloud ops, log parsing, environment pre-flight checks, and scheduling helpers."
 created: 2026-04-05
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -153,7 +153,27 @@ Incoming data is the single largest source of pipeline failures. A file that arr
 
 #### CSV header validator
 
-Before any transform or load accepts a new file. It is typically triggered by an incoming file must prove freshness, schema, or row integrity before downstream processing continues. Compares the header row of an incoming CSV file against a golden schema file that defines the expected column names and order. If the headers do not match exactly, the script prints the diff and exits with a non-zero code, preventing the pipeline from processing a malformed file.
+Before any transform or load accepts a new file. It is typically triggered when an incoming file must prove freshness, schema, or row integrity before downstream processing continues. Compares the header row of an incoming CSV file against a golden schema file that defines the expected column names and order. If the headers do not match exactly, the script prints the diff and exits with a non-zero code, preventing the pipeline from processing a malformed file.
+
+> [!warning]- Header parsing must be schema-aware
+>
+> This check is trustworthy only when the incoming header is parsed as CSV rather than treated as a raw byte string. Delimiter drift, BOM-prefixed first columns, or quoted commas can turn a naive split into a false drift result.
+>
+> > [!danger] Split the inbound header manually
+> >
+> > This reads bytes, not CSV fields.
+> >
+> > ```powershell
+> > $actual = (Get-Content $CsvFile -TotalCount 1).Split(',')
+> > ```
+>
+> > [!success] Read column names through a CSV parser
+> >
+> > This compares parsed field names instead of a raw header string.
+> >
+> > ```powershell
+> > $actual = (Import-Csv $CsvFile | Select-Object -First 1).PSObject.Properties.Name
+> > ```
 
 *Compare the sampled `signals_daily` CSV header in `data/powershell-automation/incoming` against the golden schema file.*
 
@@ -188,7 +208,9 @@ OK - headers match schema for signals_daily_sample.csv
 
 #### Null and empty field scanner
 
-Before any transform or load accepts a new file. It is typically triggered by an incoming file must prove freshness, schema, or row integrity before downstream processing continues. Scans a CSV file for rows where mandatory columns contain empty values. The script accepts a comma-separated list of column names that must not be empty. It reports every offending row number and the column that failed, making it easy to trace the problem back to the source system.
+Before any transform or load accepts a new file. It is typically triggered when an incoming file must prove freshness, schema, or row integrity before downstream processing continues. Scans a CSV file for rows where mandatory columns contain empty values. The script accepts a comma-separated list of column names that must not be empty. It reports every offending row number and the column that failed, making it easy to trace the problem back to the source system.
+
+Normalize business sentinels such as `NULL`, `N/A`, or `-9999` before the emptiness test if the upstream system uses placeholders instead of actual blanks. Otherwise the scanner can pass rows that are operationally null but not syntactically empty.
 
 *Scan the intentionally broken `signals_daily_missing.csv` fixture for empty `symbol` and `recommendation_mean` fields.*
 
@@ -229,7 +251,11 @@ Row 9: column 'symbol' is empty
 
 #### Duplicate key detector
 
-Before any transform or load accepts a new file. It is typically triggered by an incoming file must prove freshness, schema, or row integrity before downstream processing continues. Checks a CSV file for duplicate values in a specified key column. Data engineers loading into warehouses with primary key constraints need to detect duplicates before the load, not after a constraint violation crashes the job.
+Before any transform or load accepts a new file. It is typically triggered when an incoming file must prove freshness, schema, or row integrity before downstream processing continues. Checks a CSV file for duplicate values in a specified key column. Data engineers loading into warehouses with primary key constraints need to detect duplicates before the load, not after a constraint violation crashes the job.
+
+> [!info] Match the warehouse key semantics
+>
+> `Group-Object` only sees the exact strings in the file. If the target key is case-insensitive or trims trailing spaces, normalize the input first so values such as `ABC`, `abc`, and `ABC ` do not survive the file check only to collide at load time.
 
 *Group the duplicate-symbol fixture and fail when a `signals_daily` symbol appears more than once.*
 
@@ -266,7 +292,7 @@ Total duplicated values: 2
 
 #### File arrival SLA checker
 
-Before any transform or load accepts a new file. It is typically triggered by an incoming file must prove freshness, schema, or row integrity before downstream processing continues. Monitors a landing directory for the arrival of an expected file within a deadline. Data pipelines that depend on upstream file drops need an early alert when the file is late, rather than discovering the gap hours later when a downstream job fails.
+Before any transform or load accepts a new file. It is typically triggered when an incoming file must prove freshness, schema, or row integrity before downstream processing continues. Monitors a landing directory for the arrival of an expected file within a deadline. Data pipelines that depend on upstream file drops need an early alert when the file is late, rather than discovering the gap hours later when a downstream job fails.
 
 *Check that the landing folder contains a fresh `signals_daily_*.csv` drop within the last 60 minutes.*
 
@@ -309,7 +335,7 @@ Once a file passes validation, it often needs reshaping before it can be loaded 
 
 #### CSV column extractor and reorderer
 
-After validation and before the target load step. It is typically triggered by A validated dataset must be reshaped into the format the next system expects. Selects specific columns from a CSV file and writes them in a new order. This is essential when a source system delivers 50 columns but the target table only needs 5, or when the column order must match a schema definition.
+After validation and before the target load step. It is typically triggered when a validated dataset must be reshaped into the format the next system expects. Selects specific columns from a CSV file and writes them in a new order. This is essential when a source system delivers 50 columns but the target table only needs 5, or when the column order must match a schema definition.
 
 *Project four warehouse-facing columns from the sampled `signals_daily` extract into a new CSV.*
 
@@ -336,7 +362,11 @@ OK - wrote 12 rows with 4 columns to signals_daily_projection.csv
 
 #### Large CSV splitter
 
-After validation and before the target load step. It is typically triggered by A validated dataset must be reshaped into the format the next system expects. Splits a large CSV file into smaller chunks of N rows each, preserving the header row in every chunk. Break a large extract into smaller, repeatable batches that are easier to load, retry, or parallelize downstream.
+After validation and before the target load step. It is typically triggered when a validated dataset must be reshaped into the format the next system expects. Splits a large CSV file into smaller chunks of N rows each, preserving the header row in every chunk. Break a large extract into smaller, repeatable batches that are easier to load, retry, or parallelize downstream.
+
+> [!info] Split by row boundary, not by byte count
+>
+> CSV quoting means a file-size split can start in the middle of a record. Re-emitting complete rows is slower than a raw file split, but it preserves a valid CSV contract for retries and parallel loads.
 
 *Split the full `data/signals_daily.csv` extract into 200-row chunks under `data/powershell-automation/split`.*
 
@@ -372,9 +402,13 @@ OK - split into 3 chunks of up to 200 rows each
 
 #### JSON to CSV flattener
 
-After validation and before the target load step. It is typically triggered by A validated dataset must be reshaped into the format the next system expects. Converts a JSON array of flat objects into a CSV file. Many APIs return JSON, but warehouse bulk-load tools (BigQuery `bq load`, PostgreSQL `\COPY`) expect CSV. PowerShell's `ConvertFrom-Json` and `Export-Csv` handle this conversion natively.
+After validation and before the target load step. It is typically triggered when a validated dataset must be reshaped into the format the next system expects. Converts a JSON array of flat objects into a CSV file. Many APIs return JSON, but warehouse bulk-load tools (BigQuery `bq load`, PostgreSQL `\COPY`) expect CSV. PowerShell's `ConvertFrom-Json` and `Export-Csv` handle this conversion natively.
 
 This pattern assumes a flat object per row. If the payload contains nested arrays or objects, flatten or project the structure explicitly before exporting to CSV.
+
+> [!info] Flat CSV is a lossy target
+>
+> Nested arrays, maps, and repeated attributes usually need an explicit projection rule. When the upstream API evolves frequently, keep the raw JSON alongside the flattened CSV so downstream reprocessing does not depend on today's projection choices.
 
 *Flatten the sampled `dim_country` JSON array into a CSV that is ready for bulk-load tooling.*
 
@@ -401,7 +435,11 @@ OK - wrote 8 rows with 2 columns to dim_country_sample.csv
 
 #### CSV to NDJSON converter
 
-After validation and before the target load step. It is typically triggered by A validated dataset must be reshaped into the format the next system expects. Converts a CSV file to newline-delimited JSON (NDJSON), the format required by BigQuery streaming inserts and many modern data tools. Each CSV row becomes a single JSON object on its own line.
+After validation and before the target load step. It is typically triggered when a validated dataset must be reshaped into the format the next system expects. Converts a CSV file to newline-delimited JSON (NDJSON), a common format for JSON loads, streaming-style ingestion, and many modern data tools. Each CSV row becomes a single JSON object on its own line.
+
+> [!tip] Cast types before strict JSON loads
+>
+> `Import-Csv` returns strings for every field. If the downstream system enforces numeric, date, or boolean types, cast them before writing NDJSON so type drift is caught in the transform step rather than at the destination.
 
 *Convert the sampled `signals_daily` CSV into NDJSON records for streaming or API-based loads.*
 
@@ -442,7 +480,33 @@ API-bound automation fails most often at the network boundary: transient status 
 
 #### REST GET with retry and backoff
 
-During extraction or integration work that crosses an HTTP boundary. It is typically triggered by the pipeline depends on an external API or downloaded artifact. Fetches a URL with configurable retry count and exponential backoff. Transient failures (network blips, 502/503 responses) are the norm when calling external APIs. Without retries, a single timeout kills an entire pipeline run.
+During extraction or integration work that crosses an HTTP boundary. It is typically triggered when the pipeline depends on an external API or downloaded artifact. Fetches a URL with configurable retry count and exponential backoff. Transient failures (network blips, 502/503 responses) are the norm when calling external APIs. Without retries, a single timeout kills an entire pipeline run.
+
+> [!warning]- Retry scope must stay idempotent
+>
+> Automatic retries are safe only when replaying the same request cannot create extra side effects. HTTP `GET` is designed to be safe and idempotent; write operations need a separate idempotency design before the same wrapper is reused.
+>
+> > [!danger] Reuse the same loop for a state-changing request
+> >
+> > A timeout after the remote side commits can still produce a duplicate write on the next attempt.
+> >
+> > ```powershell
+> > while ($attempt -lt $MaxRetries) {
+> >     Invoke-RestMethod -Uri $Url -Method Post -Body $payload
+> > }
+> > ```
+>
+> > [!success] Keep generic retries on idempotent reads
+> >
+> > Use the wrapper around metadata reads, downloads, or writes protected by an idempotency key.
+> >
+> > ```powershell
+> > while ($attempt -lt $MaxRetries) {
+> >     $response = Invoke-WebRequest -Uri $Url -Headers $headers
+> > }
+> > ```
+
+In production, prefer server-provided `Retry-After` delays when they are present and add a small jitter term so many workers do not retry in lockstep.
 
 *Fetch live BigQuery table metadata over the REST API and save the JSON response under `data/powershell-automation/api`.*
 
@@ -493,7 +557,11 @@ Saved response to signals_daily_table.json
 
 #### Paginated API fetcher
 
-During extraction or integration work that crosses an HTTP boundary. It is typically triggered by the pipeline depends on an external API or downloaded artifact. Collects all pages from a cursor-based or offset-based paginated API into a single output file. Most APIs limit response size to 100–1000 records per call. This script follows the pagination chain until no `next` cursor is returned, merging all results into one JSON array.
+During extraction or integration work that crosses an HTTP boundary. It is typically triggered when the pipeline depends on an external API or downloaded artifact. Collects all pages from a cursor-based or offset-based paginated API into a single output file. Most APIs limit response size to 100–1000 records per call. This script follows the pagination chain until no `next` cursor is returned, merging all results into one JSON array.
+
+> [!info] Persist the resume token when the crawl matters
+>
+> If a paginated extraction spans minutes or hours, store the last successful page token or cursor after each page. Restarting from page 1 after a late failure can duplicate data, re-read expensive endpoints, or cross an upstream retention window.
 
 *Walk the paginated BigQuery tables API for `stoxx_silver` two tables at a time and persist the combined JSON.*
 
@@ -544,7 +612,9 @@ OK - fetched 3 page(s), 6 total records to stoxx_silver_tables.json
 
 #### Bearer token refresh wrapper
 
-During extraction or integration work that crosses an HTTP boundary. It is typically triggered by the pipeline depends on an external API or downloaded artifact. Obtains an OAuth2 bearer token using client credentials grant, caches it in a variable, and re-authenticates when the token expires or a 401 response is received. This pattern is standard for service-to-service API calls where tokens have a limited TTL (typically 3600 seconds).
+During extraction or integration work that crosses an HTTP boundary. It is typically triggered when the pipeline depends on an external API or downloaded artifact. Obtains an OAuth2 bearer token using client credentials grant, caches it in a variable, and re-authenticates when the token expires or a 401 response is received. This pattern is standard for service-to-service API calls where tokens have a limited TTL (typically 3600 seconds).
+
+Refreshing a few minutes before nominal expiry is deliberate. It absorbs clock skew between the runner and the issuer so a token does not expire mid-request even though the local cache still thinks it is valid.
 
 *Refresh a cached bearer token, then call the BigQuery datasets API with the active `gcloud` credential.*
 
@@ -600,7 +670,30 @@ Datasets: stoxx_bronze, stoxx_gold, stoxx_marts, stoxx_silver
 
 #### Download with checksum verification
 
-During extraction or integration work that crosses an HTTP boundary. It is typically triggered by the pipeline depends on an external API or downloaded artifact. Downloads a file and verifies its SHA-256 hash against an expected value. Data integrity is non-negotiable when downloading datasets, model artifacts, or binary dependencies. A corrupted file that passes silently can produce wrong results that are far harder to detect than a failed download.
+During extraction or integration work that crosses an HTTP boundary. It is typically triggered when the pipeline depends on an external API or downloaded artifact. Downloads a file and verifies its SHA-256 hash against an expected value. Data integrity is non-negotiable when downloading datasets, model artifacts, or binary dependencies. A corrupted file that passes silently can produce wrong results that are far harder to detect than a failed download.
+
+> [!warning]- Checksums need an immutable artifact reference
+>
+> A matching hash proves the bytes you downloaded match the bytes you hashed. It does not prove the object path was stable while you downloaded it. Mutable object names need a version, generation, or signed manifest strategy as well as a checksum.
+>
+> > [!danger] Validate a shared object name after the fact
+> >
+> > Another writer can replace the object between metadata lookup, download, and later reuse of the same path.
+> >
+> > ```powershell
+> > Invoke-WebRequest -Uri $Url -OutFile $OutputFile
+> > $actualHash = (Get-FileHash -Path $OutputFile -Algorithm SHA256).Hash
+> > ```
+>
+> > [!success] Pin the downloaded artifact to a version
+> >
+> > Record the object generation or another immutable identifier alongside the checksum result.
+> >
+> > ```powershell
+> > $meta = gcloud storage objects describe 'gs://stoxx-bq-bucket/exports/eurostoxx50_ohlcv.csv' --format=json | ConvertFrom-Json
+> > $generation = $meta.generation
+> > Invoke-WebRequest -Uri $Url -OutFile $OutputFile
+> > ```
 
 *Download the live `exports/eurostoxx50_ohlcv.csv` object from GCS and verify its SHA-256 manifest.*
 
@@ -646,7 +739,7 @@ These examples assume SQL Server tooling because `Invoke-Sqlcmd` returns structu
 
 #### Database connectivity health check
 
-Before, during, or immediately after a database-backed load step. It is typically triggered by A database-dependent run needs readiness, extraction, or post-load validation. Tests whether a database is reachable and responsive by executing a trivial query and measuring the round-trip time. This is the first check in any pipeline that depends on a database — there is no point starting a multi-hour ETL job if the target is unreachable.
+Before, during, or immediately after a database-backed load step. It is typically triggered when a database-dependent run needs readiness, extraction, or post-load validation. Tests whether a database is reachable and responsive by executing a trivial query and measuring the round-trip time. This is the first check in any pipeline that depends on a database — there is no point starting a multi-hour ETL job if the target is unreachable.
 
 *Run a live `SELECT 1` against `stoxx` on `localhost,1434` and report the measured round-trip time.*
 
@@ -672,7 +765,11 @@ OK - connected to localhost,1434/stoxx in 298ms
 
 #### Query to CSV exporter
 
-Before, during, or immediately after a database-backed load step. It is typically triggered by A database-dependent run needs readiness, extraction, or post-load validation. Executes a SQL file against a database and writes the result set to a CSV file. This is the standard extraction step in any EL(T) pipeline — pull data from a source database into a portable format for transfer or transformation.
+Before, during, or immediately after a database-backed load step. It is typically triggered when a database-dependent run needs readiness, extraction, or post-load validation. Executes a SQL file against a database and writes the result set to a CSV file. This is the standard extraction step in any EL(T) pipeline — pull data from a source database into a portable format for transfer or transformation.
+
+> [!info] Project business columns before `Export-Csv`
+>
+> `Invoke-Sqlcmd` returns `DataRow` objects. Selecting the output columns explicitly keeps the extract contract stable and avoids leaking row metadata or later query changes into the CSV.
 
 *Execute the saved `stoxx_eurostoxx_latest.sql` query and export the result set to CSV.*
 
@@ -702,7 +799,30 @@ OK - exported 12 rows with 4 columns to stoxx_eurostoxx_latest.csv
 
 #### Row count reconciliation
 
-Before, during, or immediately after a database-backed load step. It is typically triggered by A database-dependent run needs readiness, extraction, or post-load validation. Compares the number of data rows in a source CSV file against the row count in the target database table after a load. A mismatch means rows were lost or duplicated during the load — either case is a data quality incident that must be caught immediately.
+Before, during, or immediately after a database-backed load step. It is typically triggered when a database-dependent run needs readiness, extraction, or post-load validation. Compares the number of data rows in a source CSV file against the row count in the target database table after a load. A mismatch means rows were lost or duplicated during the load — either case is a data quality incident that must be caught immediately.
+
+> [!warning]- Matching counts can still hide drift
+>
+> Count parity proves only that both sides contain the same number of rows. It does not prove that the same business keys, dates, or measures survived the handoff.
+>
+> > [!failure] Approve the load on count parity alone
+> >
+> > This still passes when duplicated keys or shifted measures preserve the row count.
+> >
+> > ```powershell
+> > if ($fileRows -eq $dbRows) {
+> >     Write-Output 'counts match'
+> > }
+> > ```
+>
+> > [!success] Pair counts with a control total or key check
+> >
+> > Reconcile one or more business measures so the verification fails on silent content drift.
+> >
+> > ```powershell
+> > $fileTotal = (Import-Csv $CsvFile | Measure-Object -Property close -Sum).Sum
+> > $dbTotal = (Invoke-Sqlcmd -ServerInstance 'localhost,1434' -Database 'stoxx' -Username 'sa' -Password 'EsgDev2026Pass1' -TrustServerCertificate -Query 'SELECT SUM([close]) AS total_close FROM silver.eurostoxx50_ohlcv WHERE [date] = ''2026-04-07'';').total_close
+> > ```
 
 *Compare the exported CSV file with the live row count returned by the paired `stoxx_eurostoxx_latest_count.sql` statement.*
 
@@ -750,7 +870,7 @@ OK - 12 rows in stoxx_eurostoxx_latest.csv match 12 rows returned by stoxx_euros
 
 #### GCS stale object reporter
 
-During cloud operations that interrogate or guard Google Cloud resources. It is typically triggered by the job needs a direct operational check against Google Cloud resources. Lists objects in a GCS bucket that are older than a specified number of days. Stale data accumulates in landing buckets when upstream systems stop cleaning up, leading to unexpected storage costs and confusion about which files are current. This script surfaces objects past their expected retention.
+During cloud operations that interrogate or guard Google Cloud resources. It is typically triggered when the job needs a direct operational check against Google Cloud resources. Lists objects in a GCS bucket that are older than a specified number of days. Stale data accumulates in landing buckets when upstream systems stop cleaning up, leading to unexpected storage costs and confusion about which files are current. This script surfaces objects past their expected retention.
 
 *List real objects in `gs://stoxx-bq-bucket/export` that are older than the retention threshold.*
 
@@ -789,7 +909,30 @@ gs://stoxx-bq-bucket/export/eurostoxx50_ohlcv-000000000000.parquet       7155 by
 
 #### GCS stage and promote with checksum verification
 
-Before a file leaves the landing zone and becomes visible to downstream BigQuery loads or consumers. It is typically triggered by A local extract or transformed file is ready to publish into the project buckets. Uploads a local file from `C:\Users\aperi\My Drive\VAULT\data\powershell-automation\incoming` into `stoxx-stage-bucket`, compares the local and remote MD5 hashes, then copies the verified object into `stoxx-bq-bucket`. Separate file arrival from file promotion so corrupt uploads, partial rewrites, and wrong object versions are caught before production readers see them.
+Before a file leaves the landing zone and becomes visible to downstream BigQuery loads or consumers. It is typically triggered when a local extract or transformed file is ready to publish into the project buckets. Uploads a local file from `C:\Users\aperi\My Drive\VAULT\data\powershell-automation\incoming` into `stoxx-stage-bucket`, compares the local and remote MD5 hashes, then copies the verified object into `stoxx-bq-bucket`. Separate file arrival from file promotion so corrupt uploads, partial rewrites, and wrong object versions are caught before production readers see them.
+
+> [!warning]- Direct publishing can overwrite concurrent runs
+>
+> A stable destination object name is convenient, but it is also where retries and overlapping schedules collide. Checksums prove content integrity, not publish safety.
+>
+> > [!danger] Promote into a shared stable object path
+> >
+> > The copy succeeds technically, but a retried run can replace another run's output without either side noticing.
+> >
+> > ```powershell
+> > gcloud storage cp $LocalFile 'gs://stoxx-bq-bucket/powershell-automation/signals_daily_sample.csv'
+> > ```
+>
+> > [!success] Publish a run-scoped object and record its generation
+> >
+> > Make the object identity replay-safe before downstream readers consume it.
+> >
+> > ```powershell
+> > $runId = Get-Date -Format 'yyyyMMddTHHmmssZ'
+> > $dest = "gs://stoxx-bq-bucket/powershell-automation/$runId/signals_daily_sample.csv"
+> > gcloud storage cp $LocalFile $dest
+> > $meta = gcloud storage objects describe $dest --format=json | ConvertFrom-Json
+> > ```
 
 This pattern keeps staging and consumption distinct. `Get-FileHash` calculates the local checksum, `gcloud storage objects describe` returns the remote checksum and generation number, and the script refuses promotion unless the staged object matches the local file byte-for-byte.
 
@@ -838,7 +981,29 @@ Checksum verified across stage and promoted copies.
 
 #### BigQuery dry-run cost estimator
 
-During cloud operations that interrogate or guard Google Cloud resources. It is typically triggered by the job needs a direct operational check against Google Cloud resources. Estimates the bytes that a BigQuery query will scan before actually running it. Estimate scan volume before the real query runs so cost surprises and missing partition filters are caught early.
+During cloud operations that interrogate or guard Google Cloud resources. It is typically triggered when the job needs a direct operational check against Google Cloud resources. Estimates the bytes that a BigQuery query will scan before actually running it. Estimate scan volume before the real query runs so cost surprises and missing partition filters are caught early.
+
+> [!warning]- Row caps do not bound scan cost
+>
+> In BigQuery, `LIMIT` changes the returned rows, not necessarily the bytes scanned. Cost control comes from pruning partitions, reducing referenced columns, and setting an explicit bytes ceiling.
+>
+> > [!danger] Assume `LIMIT` makes the query cheap
+> >
+> > This can still scan a large table even though only a few rows come back.
+> >
+> > ```powershell
+> > 'SELECT * FROM `bq-wh-nb.stoxx_gold.signals_daily` LIMIT 10' |
+> >     bq query --use_legacy_sql=false
+> > ```
+>
+> > [!success] Dry-run and pin a maximum bytes budget
+> >
+> > Validate the scan size before execution and fail if the query would exceed the cost boundary.
+> >
+> > ```powershell
+> > $query = 'SELECT * FROM `bq-wh-nb.stoxx_gold.signals_daily` WHERE signal_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)'
+> > $query | bq query --use_legacy_sql=false --dry_run --maximum_bytes_billed=104857600
+> > ```
 
 BigQuery charges per byte scanned ($6.25/TB in on-demand pricing as of 2026). Running a `--dry_run` first prevents expensive mistakes like querying a multi-terabyte table without a partition filter.
 
@@ -873,7 +1038,28 @@ Estimated cost: $0.00000014 (on-demand pricing)
 
 #### BigQuery load job with polling and row-count verification
 
-After a staged object has passed checksum verification and is ready to enter a BigQuery dataset. It is typically triggered by A batch file is present in GCS and the next workflow step is to load it into BigQuery without guessing whether the job finished cleanly. Starts an asynchronous `bq load` job from `gs://stoxx-stage-bucket/powershell-automation/signals_daily_sample.csv` into `stoxx_bronze.powershell_automation_signals_load`, polls the job state with `bq show -j`, then runs a verification query stored under `data\powershell-automation\sql`. Turn an opaque background load into a deterministic step that exposes job completion, row count, date range, and symbol cardinality before downstream SQL reads the table.
+After a staged object has passed checksum verification and is ready to enter a BigQuery dataset. It is typically triggered when a batch file is present in GCS and the next workflow step is to load it into BigQuery without guessing whether the job finished cleanly. Starts an asynchronous `bq load` job from `gs://stoxx-stage-bucket/powershell-automation/signals_daily_sample.csv` into `stoxx_bronze.powershell_automation_signals_load`, polls the job state with `bq show -j`, then runs a verification query stored under `data\powershell-automation\sql`. Turn an opaque background load into a deterministic step that exposes job completion, row count, date range, and symbol cardinality before downstream SQL reads the table.
+
+> [!warning]- Production loads need a pinned schema
+>
+> Schema autodetection is useful for quick validation, but it is a weak contract for repeatable production loads. Column modes, record types, and subtle type changes are much easier to control with an explicit schema file.
+>
+> > [!danger] Let BigQuery infer the contract
+> >
+> > This works until an upstream file changes enough for BigQuery to infer a different type or nullable shape.
+> >
+> > ```powershell
+> > bq load --autodetect --source_format=CSV $TableId $SourceUri
+> > ```
+>
+> > [!success] Load with a checked-in schema file
+> >
+> > Keep the file contract under version control and promote changes deliberately.
+> >
+> > ```powershell
+> > $SchemaFile = Join-Path $VaultData 'powershell-automation\schemas\signals_daily_load_schema.json'
+> > bq load --source_format=CSV --skip_leading_rows=1 $TableId $SourceUri $SchemaFile
+> > ```
 
 The destination table is recreated with `WRITE_TRUNCATE` on each run, so the verification query always reflects the current file, not historical residue. The post-load query checks four operational facts: total rows loaded, earliest and latest `signal_date`, and how many distinct `symbol` values reached the table.
 
@@ -929,9 +1115,11 @@ Distinct symbols: 12
 
 #### BigQuery schema drift checker
 
-Immediately before a load job or schema-sensitive transform that expects a stable file contract. It is typically triggered by A new feed revision arrives, a producer changes a header row, or a target table has been altered in BigQuery. Reads the header fixture `C:\Users\aperi\My Drive\VAULT\data\powershell-automation\schemas\signals_daily_drift_header.csv`, fetches the live BigQuery schema for `stoxx_silver.signals_daily`, and compares both column lists in PowerShell. Fail fast on file-versus-table mismatches so a bad header never reaches `bq load`, where the failure message usually arrives later and with less context.
+Immediately before a load job or schema-sensitive transform that expects a stable file contract. It is typically triggered when a new feed revision arrives, a producer changes a header row, or a target table has been altered in BigQuery. Reads the header fixture `C:\Users\aperi\My Drive\VAULT\data\powershell-automation\schemas\signals_daily_drift_header.csv`, fetches the live BigQuery schema for `stoxx_silver.signals_daily`, and compares both column lists in PowerShell. Fail fast on file-versus-table mismatches so a bad header never reaches `bq load`, where the failure message usually arrives later and with less context.
 
 This check treats missing and extra columns as different failure modes. Missing columns mean the file cannot satisfy the table contract; extra columns usually indicate upstream schema expansion that downstream code has not yet approved.
+
+The example compares names only. Production gates should also compare data types and modes when downstream SQL depends on a specific numeric precision, repeated field shape, or nullable contract.
 
 *Compare a drifted local header file to the live `stoxx_silver.signals_daily` schema and emit a non-zero drift result.*
 
@@ -971,7 +1159,7 @@ Extra in file: ingested_at
 
 #### BigQuery table freshness checker
 
-On a schedule after ingestion windows close or before dependent marts assume the latest partition is available. It is typically triggered by A table has a freshness SLA expressed in business-date lag rather than just job completion. Runs the saved query `C:\Users\aperi\My Drive\VAULT\data\powershell-automation\sql\bq_signals_freshness.sql` against `stoxx_silver.signals_daily`, compares the returned `lag_days` to a threshold, and emits a pass/fail status. Convert a date field inside the table into an operational readiness check so downstream jobs can stop on stale data instead of processing yesterday's or last week's snapshot.
+On a schedule after ingestion windows close or before dependent marts assume the latest partition is available. It is typically triggered when a table has a freshness SLA expressed in business-date lag rather than just job completion. Runs the saved query `C:\Users\aperi\My Drive\VAULT\data\powershell-automation\sql\bq_signals_freshness.sql` against `stoxx_silver.signals_daily`, compares the returned `lag_days` to a threshold, and emits a pass/fail status. Convert a date field inside the table into an operational readiness check so downstream jobs can stop on stale data instead of processing yesterday's or last week's snapshot.
 
 The query returns three values that matter together: the latest business date present, how many days that date lags `CURRENT_DATE()`, and how many rows are in scope. A table can have recent row counts yet still be stale if the latest business date stops moving.
 
@@ -1008,7 +1196,7 @@ Rows monitored: 635
 
 #### Pub/Sub backlog monitor
 
-During cloud operations that interrogate or guard Google Cloud resources. It is typically triggered by the job needs a direct operational check against Google Cloud resources. Checks the number of undelivered messages across one or more Pub/Sub subscriptions and alerts if any exceed a threshold. A growing backlog means consumers are falling behind — this is often the first sign of a processing bottleneck or a crashed subscriber.
+During cloud operations that interrogate or guard Google Cloud resources. It is typically triggered when the job needs a direct operational check against Google Cloud resources. Checks the number of undelivered messages across one or more Pub/Sub subscriptions and alerts if any exceed a threshold. A growing backlog means consumers are falling behind — this is often the first sign of a processing bottleneck or a crashed subscriber.
 
 *Read the live Pub/Sub backlog metric from Cloud Monitoring for the project subscription.*
 
@@ -1042,7 +1230,11 @@ OK - eventarc-europe-west1-stoxx-firestore-control-written-sub-850: 0 undelivere
 
 #### Pub/Sub backlog trend monitor
 
-When a single backlog point is not enough and you need to know whether a subscription is recovering, flat, or repeatedly building debt over time. It is typically triggered by operators want a windowed signal before paging on transient spikes or overlooking a slowly growing backlog. Calls the Cloud Monitoring `timeSeries` API for `pubsub.googleapis.com/subscription/num_undelivered_messages`, aligns points into five-minute maxima over a six-hour window, then evaluates the maximum, average, and number of non-zero samples. Detect sustained subscriber lag instead of reacting to one instantaneous sample that may already have cleared by the time the check runs.
+When a single backlog point is not enough and you need to know whether a subscription is recovering, flat, or repeatedly building debt over time. It is typically triggered when operators want a windowed signal before paging on transient spikes or overlooking a slowly growing backlog. Calls the Cloud Monitoring `timeSeries` API for `pubsub.googleapis.com/subscription/num_undelivered_messages`, aligns points into five-minute maxima over a six-hour window, then evaluates the maximum, average, and number of non-zero samples. Detect sustained subscriber lag instead of reacting to one instantaneous sample that may already have cleared by the time the check runs.
+
+> [!info] Pair backlog count with message age
+>
+> A growing count and a growing oldest-unacked age together indicate subscribers are not keeping up. Count alone can spike transiently during bursts; age shows whether the backlog is actually aging toward retention risk.
 
 This version is stricter than the point-in-time monitor because it requires both a threshold breach and repeated non-zero samples before it alerts. That reduces noise during short-lived bursts while still catching a consumer that remains behind for multiple alignment windows.
 
@@ -1094,7 +1286,28 @@ OK - no sustained backlog detected for eventarc-europe-west1-stoxx-firestore-con
 
 #### Service account key age checker
 
-During cloud operations that interrogate or guard Google Cloud resources. It is typically triggered by the job needs a direct operational check against Google Cloud resources. Lists all keys for a service account and flags any that are older than a specified number of days (default: 90). Surface user-managed keys that should be rotated before they become a security exception or a forgotten long-lived credential.
+During cloud operations that interrogate or guard Google Cloud resources. It is typically triggered when the job needs a direct operational check against Google Cloud resources. Lists all keys for a service account and flags any that are older than a specified number of days (default: 90). Surface user-managed keys that should be rotated before they become a security exception or a forgotten long-lived credential.
+
+> [!warning]- Keys should be the exception
+>
+> User-managed service account keys work, but they turn IAM access into a copyable file that can survive in downloads, temp folders, CI caches, or old workstations long after the workload has changed.
+>
+> > [!danger] Create and export a key file
+> >
+> > This moves the credential boundary from IAM into filesystem hygiene and secret distribution.
+> >
+> > ```powershell
+> > gcloud iam service-accounts keys create sa-key.json --iam-account=$ServiceAccountEmail
+> > $env:GOOGLE_APPLICATION_CREDENTIALS = (Resolve-Path '.\sa-key.json')
+> > ```
+>
+> > [!success] Impersonate at runtime
+> >
+> > Prefer short-lived credentials that are minted when needed and never written as reusable key files.
+> >
+> > ```powershell
+> > gcloud --impersonate-service-account=$ServiceAccountEmail auth print-access-token
+> > ```
 
 Google recommends rotating service account keys every 90 days. Forgotten user-managed keys are a security risk because they often outlive the systems that created them.
 
@@ -1141,7 +1354,7 @@ These examples start from local files under `C:\Users\aperi\My Drive\VAULT\data\
 
 #### Local file to GCS object
 
-When a local export, transformed file, or partner drop must be made available to cloud consumers through a bucket path. It is typically triggered by A PowerShell run has produced a file on the host and the next stage expects a GCS object instead of a local path. Uploads `transformed\signals_daily_projection.csv` from the vault data directory into `gs://stoxx-stage-bucket/powershell-automation/local-file-upload/` and then reads the object metadata back from GCS. Publish a host-side file into shared cloud storage while capturing the exact object name, generation, and byte size that downstream jobs should reference.
+When a local export, transformed file, or partner drop must be made available to cloud consumers through a bucket path. It is typically triggered when a PowerShell run has produced a file on the host and the next stage expects a GCS object instead of a local path. Uploads `transformed\signals_daily_projection.csv` from the vault data directory into `gs://stoxx-stage-bucket/powershell-automation/local-file-upload/` and then reads the object metadata back from GCS. Publish a host-side file into shared cloud storage while capturing the exact object name, generation, and byte size that downstream jobs should reference.
 
 This is the direct host-to-bucket pattern. `gcloud storage cp` performs the upload and `gcloud storage objects describe` confirms which immutable object generation now exists in the bucket.
 
@@ -1172,9 +1385,13 @@ Bytes: 692
 
 #### Local file to BigQuery table
 
-When a small or medium file already exists on the host and you want an immediate table load without first staging to GCS. It is typically triggered by A PowerShell job has produced a CSV locally and the next step is an ad hoc or agent-local BigQuery load. Loads `transformed\signals_daily_projection.csv` directly into `bq-wh-nb:stoxx_bronze.powershell_automation_local_file_load`, then runs the saved verification query `sql\bq_local_file_verify.sql`. Turn a local CSV into a queryable BigQuery table in one step and verify the table shape with real row-level facts from the destination.
+When a small or medium file already exists on the host and you want an immediate table load without first staging to GCS. It is typically triggered when a PowerShell job has produced a CSV locally and the next step is an ad hoc or agent-local BigQuery load. Loads `transformed\signals_daily_projection.csv` directly into `bq-wh-nb:stoxx_bronze.powershell_automation_local_file_load`, then runs the saved verification query `sql\bq_local_file_verify.sql`. Turn a local CSV into a queryable BigQuery table in one step and verify the table shape with real row-level facts from the destination.
 
 This pattern is useful on Windows build agents and scheduled runners when the file is already present locally. For large or shared feeds, stage to GCS first; for local-only outputs, direct `bq load` removes one hop.
+
+> [!info] Direct local loads are an agent-local convenience
+>
+> They are useful for small files and one-hop automation, but they are weaker than GCS-backed loads for replay, provenance, and multi-runner portability. Promote to GCS first when more than one machine or retry boundary must be able to see the same source artifact.
 
 *Load the local projection CSV straight into BigQuery and verify the resulting table with the saved SQL file.*
 
@@ -1207,9 +1424,13 @@ Max upside: 0.523479507707014
 
 #### Local file to SQL Server table
 
-When SQL Server is the immediate next system but the source file exists only on the host running PowerShell. It is typically triggered by A CSV extract has landed on the Windows runner and the target SQL Server instance cannot read that host path directly. Reads `transformed\signals_daily_projection.csv`, prepares `dbo.powershell_automation_local_file_load` with `sql\stoxx_local_file_load_setup.sql`, streams the rows into `stoxx` over TDS with `SqlBulkCopy`, and validates the result with `sql\stoxx_local_file_load_verify.sql`. Load a host-local file into SQL Server without depending on SQL Server service account access to the host filesystem or a container bind mount.
+When SQL Server is the immediate next system but the source file exists only on the host running PowerShell. It is typically triggered when a CSV extract has landed on the Windows runner and the target SQL Server instance cannot read that host path directly. Reads `transformed\signals_daily_projection.csv`, prepares `dbo.powershell_automation_local_file_load` with `sql\stoxx_local_file_load_setup.sql`, streams the rows into `stoxx` over TDS with `SqlBulkCopy`, and validates the result with `sql\stoxx_local_file_load_verify.sql`. Load a host-local file into SQL Server without depending on SQL Server service account access to the host filesystem or a container bind mount.
 
 Because `stoxx` is running in the `stoxx-db` container, SQL Server cannot see arbitrary host file paths like `C:\Users\aperi\My Drive\VAULT\data\...`. PowerShell must read the file on the host and push the rows over the database connection. `SqlBulkCopy` is the practical high-throughput pattern for that handoff.
+
+> [!tip] Keep bulk load semantics explicit
+>
+> `SqlBulkCopy` is materially safer than row-by-row insert loops for throughput and retry visibility. For larger loads, add batch size, timeout, and destination transaction choices explicitly rather than relying on module defaults.
 
 *Stream the local projection CSV into `stoxx.dbo.powershell_automation_local_file_load` and verify the loaded rows with the saved SQL file.*
 
@@ -1264,9 +1485,13 @@ Max upside: 0.5234795077
 
 #### Local file to Firestore collection
 
-When the destination is a document store and the source file already exists as local JSON on the runner. It is typically triggered by A process has produced a small dimension, control, or status file that should become Firestore documents. Reads `json\dim_country_sample.json`, authenticates with `gcloud auth print-access-token`, and upserts one document per `iso_alpha2` value into the Firestore Native database `projects/bq-wh-nb/databases/main`. Publish structured local JSON into Firestore with deterministic document IDs so repeated runs remain idempotent.
+When the destination is a document store and the source file already exists as local JSON on the runner. It is typically triggered when a process has produced a small dimension, control, or status file that should become Firestore documents. Reads `json\dim_country_sample.json`, authenticates with `gcloud auth print-access-token`, and upserts one document per `iso_alpha2` value into the Firestore Native database `projects/bq-wh-nb/databases/main`. Publish structured local JSON into Firestore with deterministic document IDs so repeated runs remain idempotent.
 
 Firestore does not offer a simple `gcloud` equivalent of `bq load` for arbitrary local JSON arrays, so PowerShell acts as the adapter: it reads the file, maps each element into Firestore's document format, and calls the REST API with `PATCH` to create or update documents in place.
+
+> [!info] Firestore write scaling depends on document IDs and indexed fields
+>
+> Deterministic IDs are good for idempotency, but high-volume collections should avoid monotonically increasing document IDs or unnecessary indexing on sequential fields such as timestamps. This example stays far below Firestore's request-size and write-hotspot boundaries.
 
 *Upsert the local country JSON file into the `powershell_automation_country_load` collection and confirm the live document count.*
 
@@ -1315,7 +1540,31 @@ Real orchestration usually crosses multiple systems in one run. The key is to ma
 
 #### GCS to SQL Server to BigQuery to Firestore
 
-When a single automation run must ingest a staged cloud file, land it in SQL Server, publish a relational summary into BigQuery, and expose the run result as a document for downstream event-driven consumers. It is typically triggered by A bucket object has arrived and the operational requirement is a multi-system handoff rather than a single-target load. Downloads `gs://stoxx-stage-bucket/powershell-automation/signals_daily_sample.csv` into `landing\chain_signals_daily_sample.csv`, loads the rows into `stoxx.dbo.powershell_automation_chain_stage`, exports a one-row SQL summary to `exports\chain_signal_summary.csv`, loads that summary into BigQuery, and patches a Firestore run-status document. Demonstrate how PowerShell acts as the control plane between storage, relational, analytical, and document destinations while preserving a verifiable state transition at each step.
+When a single automation run must ingest a staged cloud file, land it in SQL Server, publish a relational summary into BigQuery, and expose the run result as a document for downstream event-driven consumers. It is typically triggered when a bucket object has arrived and the operational requirement is a multi-system handoff rather than a single-target load. Downloads `gs://stoxx-stage-bucket/powershell-automation/signals_daily_sample.csv` into `landing\chain_signals_daily_sample.csv`, loads the rows into `stoxx.dbo.powershell_automation_chain_stage`, exports a one-row SQL summary to `exports\chain_signal_summary.csv`, loads that summary into BigQuery, and patches a Firestore run-status document. Demonstrate how PowerShell acts as the control plane between storage, relational, analytical, and document destinations while preserving a verifiable state transition at each step.
+
+> [!warning]- Multi-hop loads need a shared run ID
+>
+> Once one automation run touches storage, SQL Server, BigQuery, and Firestore, partial success is normal operational state rather than an edge case. Without a shared identifier, replay and cleanup devolve into guesswork.
+>
+> > [!failure] Update each hop independently
+> >
+> > Later operators cannot prove which table rows, files, and Firestore document belong to the same pipeline execution.
+> >
+> > ```powershell
+> > gcloud storage cp $SourceUri $LandingFile
+> > $bulkCopy.WriteToServer($table)
+> > bq load $BqTableId $SummaryFile
+> > ```
+>
+> > [!success] Generate one `RunId` and propagate it
+> >
+> > Stamp the same identifier into filenames, SQL payloads, BigQuery rows, and Firestore document paths.
+> >
+> > ```powershell
+> > $RunId = Get-Date -Format 'yyyyMMddTHHmmssZ'
+> > $SummaryFile = Join-Path $DataRoot "exports\chain_signal_summary_$RunId.csv"
+> > $FirestoreDocUri = "https://firestore.googleapis.com/v1/projects/bq-wh-nb/databases/main/documents/powershell_automation_pipeline_runs/$RunId"
+> > ```
 
 This is not a direct service-to-service copy. PowerShell performs every boundary crossing deliberately: GCS object to host file, host file to SQL Server table, SQL summary file to BigQuery table, and BigQuery result to a Firestore document. That explicit choreography is what makes retries, validation, and alerting practical in production automation.
 
@@ -1429,7 +1678,7 @@ Pipeline logs contain the earliest signal of problems: error spikes, latency cha
 
 #### Error rate calculator
 
-When a run has produced logs and you need fast operator feedback. It is typically triggered by operational decisions need to be driven from log content rather than raw file inspection. Counts occurrences of each log level (ERROR, WARN, INFO) in a log file and reports percentages. An error rate above 5% is typically cause for investigation; above 10% indicates a systemic problem. This script provides the quick triage numbers that determine whether to escalate.
+When a run has produced logs and you need fast operator feedback. It is typically triggered when operational decisions need to be driven from log content rather than raw file inspection. Counts occurrences of each log level (ERROR, WARN, INFO) in a log file and reports percentages. An error rate above 5% is typically cause for investigation; above 10% indicates a systemic problem. This script provides the quick triage numbers that determine whether to escalate.
 
 *Calculate error, warning, and info rates from the captured `pipeline.log` fixture.*
 
@@ -1470,7 +1719,7 @@ INFO:  7 (58.3%)
 
 #### Structured JSON log filter
 
-When a run has produced logs and you need fast operator feedback. It is typically triggered by operational decisions need to be driven from log content rather than raw file inspection. Extracts log entries from an NDJSON (newline-delimited JSON) log file that match a specified severity level and fall within a time window. Modern applications emit structured logs in JSON format. Filtering these with `Select-String` loses the structure — `ConvertFrom-Json` preserves it and enables precise time-range queries.
+When a run has produced logs and you need fast operator feedback. It is typically triggered when operational decisions need to be driven from log content rather than raw file inspection. Extracts log entries from an NDJSON (newline-delimited JSON) log file that match a specified severity level and fall within a time window. Modern applications emit structured logs in JSON format. Filtering these with `Select-String` loses the structure — `ConvertFrom-Json` preserves it and enables precise time-range queries.
 
 *Filter the NDJSON log fixture for `ERROR` entries inside the selected UTC time window.*
 
@@ -1518,7 +1767,28 @@ Write-Output "--- $(@($entries).Count) $Level entries between 2026-04-14T08:00:1
 
 #### Log rotation and compression
 
-When a run has produced logs and you need fast operator feedback. It is typically triggered by operational decisions need to be driven from log content rather than raw file inspection. Compresses log files older than N days and deletes those older than M days. Without rotation, log directories grow unbounded until they fill the disk and crash the application. This script implements the two-stage lifecycle (compress → delete) that works on any Windows system without external tools.
+When a run has produced logs and you need fast operator feedback. It is typically triggered when operational decisions need to be driven from log content rather than raw file inspection. Compresses log files older than N days and deletes those older than M days. Without rotation, log directories grow unbounded until they fill the disk and crash the application. This script implements the two-stage lifecycle (compress → delete) that works on any Windows system without external tools.
+
+> [!warning]- Rotate only closed files
+>
+> Compression is a storage operation, not a log-writing primitive. Rotating a file that is still open can produce partial archives or break the writer depending on how the application holds the handle.
+>
+> > [!danger] Compress whatever matches `*.log`
+> >
+> > This is unsafe when the current process still writes to the same path.
+> >
+> > ```powershell
+> > Get-ChildItem $LogDir -Filter '*.log' | Compress-Archive -DestinationPath archive.zip
+> > ```
+>
+> > [!success] Rotate files that have aged out of active use
+> >
+> > Only compress files that are older than the active-write window and leave the current log untouched.
+> >
+> > ```powershell
+> > Get-ChildItem -Path $LogDir -Filter '*.log' -File |
+> >     Where-Object { $_.LastWriteTime -lt $compressCutoff }
+> > ```
 
 See [compression](https://alp78.github.io/elysium/01-Shell/File-Operations/compression) for broader coverage of archive formats and tradeoffs.
 
@@ -1578,7 +1848,11 @@ These scripts run before a pipeline starts to verify that the execution environm
 
 #### Dependency checker
 
-Immediately before the job commits to work on the current host. It is typically triggered by the runtime environment must be validated before the main workload starts. Verifies that all required command-line tools are installed and available on `$env:PATH` before a pipeline runs. This prevents the frustrating scenario where a job runs for 30 minutes before failing because `jq` is not installed on the new build agent.
+Immediately before the job commits to work on the current host. It is typically triggered when the runtime environment must be validated before the main workload starts. Verifies that all required command-line tools are installed and available on `$env:PATH` before a pipeline runs. This prevents the frustrating scenario where a job runs for 30 minutes before failing because `jq` is not installed on the new build agent.
+
+> [!info] Binary presence is only the first gate
+>
+> A dependency can exist on `PATH` and still be unusable because the active account, project, module version, or scheduler environment is wrong. Pair this check with one credential-aware probe for the systems that actually matter to the job.
 
 *Verify that the local PowerShell, container, database, and Google Cloud CLI dependencies are all on `PATH`.*
 
@@ -1611,7 +1885,7 @@ OK - all 7 required tools are available
 
 #### Dotenv file loader
 
-Immediately before the job commits to work on the current host. It is typically triggered by the runtime environment must be validated before the main workload starts. Parses a `.env` file and exports each key-value pair as an environment variable, skipping comments and blank lines. Environment variables are the standard way to pass configuration to scripts and containers without hardcoding secrets. This loader makes `.env` files usable outside of Docker Compose.
+Immediately before the job commits to work on the current host. It is typically triggered when the runtime environment must be validated before the main workload starts. Parses a `.env` file and exports each key-value pair as an environment variable, skipping comments and blank lines. Environment variables are the standard way to pass configuration to scripts and containers without hardcoding secrets. This loader makes `.env` files usable outside of Docker Compose.
 
 Do not commit `.env` files to version control. Add them to `.gitignore` and prefer runtime secret retrieval, such as `gcloud secrets versions access`, for production credentials.
 
@@ -1644,7 +1918,9 @@ OK - loaded 5 variable(s) from powershell-automation.env
 
 #### Disk space pre-flight
 
-Immediately before the job commits to work on the current host. It is typically triggered by the runtime environment must be validated before the main workload starts. Checks all local drives and aborts if any exceed a usage threshold (default: 80%). A full disk during a pipeline run causes silent data corruption, truncated files, and database crashes. This check takes milliseconds and prevents hours of recovery.
+Immediately before the job commits to work on the current host. It is typically triggered when the runtime environment must be validated before the main workload starts. Checks all local drives and aborts if any exceed a usage threshold (default: 80%). A full disk during a pipeline run causes silent data corruption, truncated files, and database crashes. This check takes milliseconds and prevents hours of recovery.
+
+Check the volume that holds temporary files and the volume that receives final outputs. On Windows those can diverge once Task Scheduler or a service account changes `%TEMP%`, the working directory, or a mounted drive mapping.
 
 *Check each unique filesystem root on this host and fail if any exceeds the configured usage threshold.*
 
@@ -1690,7 +1966,11 @@ These scripts solve the glue problems around job scheduling: preventing overlapp
 
 #### Mutex lock wrapper
 
-When a job moves from one-off execution into unattended scheduling. It is typically triggered by the scheduler needs extra control over overlap, retries, or notifications. Prevents overlapping executions of the same job by acquiring a system-wide named mutex before running the command. Without this, a scheduled task that takes longer than its interval will spawn a second instance, leading to duplicate data, race conditions, or resource exhaustion.
+When a job moves from one-off execution into unattended scheduling. It is typically triggered when the scheduler needs extra control over overlap, retries, or notifications. Prevents overlapping executions of the same job by acquiring a system-wide named mutex before running the command. Without this, a scheduled task that takes longer than its interval will spawn a second instance, leading to duplicate data, race conditions, or resource exhaustion.
+
+> [!info] A named mutex is host-local coordination
+>
+> It prevents overlap on the same Windows host. It does not coordinate multiple runners, containers, or VMs. Once the same job can run on more than one machine, move the lock into a shared service.
 
 *Acquire a named mutex before running the helper script under `data/powershell-automation/state`.*
 
@@ -1730,7 +2010,31 @@ OK - command completed with exit code 0
 
 #### Generic retry wrapper
 
-When a job moves from one-off execution into unattended scheduling. It is typically triggered by the scheduler needs extra control over overlap, retries, or notifications. Wraps any command with configurable retry count and exponential backoff. This is a reusable building block for any operation that may fail transiently — database connections, API calls, file transfers. The backoff prevents hammering a recovering service.
+When a job moves from one-off execution into unattended scheduling. It is typically triggered when the scheduler needs extra control over overlap, retries, or notifications. Wraps any command with configurable retry count and exponential backoff. This is a reusable building block for any operation that may fail transiently — database connections, API calls, file transfers. The backoff prevents hammering a recovering service.
+
+> [!warning]- Retry logic needs replay safety
+>
+> The wrapper is sound for transient read failures. It becomes unsafe when copied onto writes that can be applied more than once.
+>
+> > [!danger] Retry a non-idempotent write
+> >
+> > A timeout or dropped connection after the remote side commits can still produce a duplicate write on the next attempt.
+> >
+> > ```powershell
+> > while ($attempt -lt $MaxRetries) {
+> >     Invoke-RestMethod -Uri $Url -Method Post -Body $payload
+> > }
+> > ```
+>
+> > [!success] Retry an idempotent check
+> >
+> > Keep the generic wrapper around health checks, metadata reads, or writes protected by an idempotency key.
+> >
+> > ```powershell
+> > while ($attempt -lt $MaxRetries) {
+> >     Invoke-Sqlcmd -ServerInstance 'localhost,1434' -Database 'stoxx' -Username 'sa' -Password 'EsgDev2026Pass1' -TrustServerCertificate -Query 'SELECT 1 AS HealthCheck;'
+> > }
+> > ```
 
 *Retry a transiently failing operation until the third attempt, then complete with a live `stoxx` health query.*
 
@@ -1787,7 +2091,11 @@ OK - succeeded on attempt 3
 
 #### Run and alert pattern
 
-When a job moves from one-off execution into unattended scheduling. It is typically triggered by the scheduler needs extra control over overlap, retries, or notifications. Executes a command and sends a notification to a Slack webhook (or any HTTP endpoint) with the outcome — success or failure. This is the simplest possible alerting layer for scheduled tasks that run unattended. Without it, a nightly job can fail silently for days before anyone notices.
+When a job moves from one-off execution into unattended scheduling. It is typically triggered when the scheduler needs extra control over overlap, retries, or notifications. Executes a command and sends a notification to a Slack webhook (or any HTTP endpoint) with the outcome — success or failure. This is the simplest possible alerting layer for scheduled tasks that run unattended. Without it, a nightly job can fail silently for days before anyone notices.
+
+> [!warning] Alert transport is secondary to job truth
+>
+> A webhook timeout should not flip a successful data job into a failed one, and a delivered notification should not hide a failed primary command. Keep the command exit code authoritative and handle notification errors on a separate path.
 
 *Run the `stoxx` health helper, post the outcome to a local webhook listener, and emit a scheduler-friendly status line.*
 
@@ -1888,11 +2196,79 @@ Most PowerShell automation failures come from shell semantics and runtime contex
 
 #### Fail fast on PowerShell errors
 
-Set `$ErrorActionPreference = "Stop"` and `Set-StrictMode -Version Latest` near the top of automation scripts so non-terminating cmdlet failures turn into real control-flow decisions instead of console noise.
+Set `$ErrorActionPreference = 'Stop'` and `Set-StrictMode -Version Latest` near the top of automation scripts so provider and cmdlet failures become terminating control-flow decisions instead of console noise. This does not change native executable behavior, but it does stop the script before later steps consume partial state.
+
+*Run a child PowerShell script that aborts on a missing file and surfaces the resulting non-zero exit code.*
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$StateDir = 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state'
+$DemoScript = Join-Path $StateDir 'fail-fast-demo.ps1'
+Set-Content -Path $DemoScript -Value @'
+$PSStyle.OutputRendering = 'PlainText'
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+Write-Output 'before'
+try {
+    Get-Item -LiteralPath 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state\missing-demo-file.txt' | Out-Null
+    Write-Output 'after'
+}
+catch {
+    Write-Output $_.Exception.Message
+    exit 1
+}
+'@
+
+$output = & pwsh -NoProfile -File $DemoScript 2>&1
+$output | ForEach-Object { $_.ToString() }
+Write-Output "Exit code: $LASTEXITCODE"
+```
+
+```text
+before
+Cannot find path 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state\missing-demo-file.txt' because it does not exist.
+Exit code: 1
+```
 
 #### Treat native exit codes as a separate channel
 
-After `python.exe`, `sqlcmd.exe`, `bcp.exe`, `gcloud`, `bq`, or any other native executable, test `$LASTEXITCODE` explicitly and throw on non-zero values. `$ErrorActionPreference` does not cover native process failures.
+After `python.exe`, `sqlcmd.exe`, `bcp.exe`, `gcloud`, `bq`, or any other native executable, test `$LASTEXITCODE` explicitly and throw on non-zero values. `$ErrorActionPreference` does not cover native process failures because PowerShell did not create the error record.
+
+*Show that a failing native process does not enter `catch` until the script converts `$LASTEXITCODE` into an exception.*
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$StateDir = 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state'
+$DemoScript = Join-Path $StateDir 'native-exit-demo.ps1'
+Set-Content -Path $DemoScript -Value @'
+$PSStyle.OutputRendering = 'PlainText'
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+try {
+    cmd /c exit 7
+    Write-Output 'After native call'
+    Write-Output "LASTEXITCODE=$LASTEXITCODE"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Native exit $LASTEXITCODE"
+    }
+}
+catch {
+    Write-Output ('Caught: ' + $_.Exception.Message)
+}
+'@
+
+& pwsh -NoProfile -File $DemoScript
+```
+
+```text
+After native call
+LASTEXITCODE=7
+Caught: Native exit 7
+```
 
 ### Cleanup and scheduled execution
 
@@ -1900,19 +2276,144 @@ After `python.exe`, `sqlcmd.exe`, `bcp.exe`, `gcloud`, `bq`, or any other native
 
 Use `try / catch / finally` whenever the script creates temp files, acquires locks, opens connections, or writes partially complete artifacts. Cleanup belongs in `finally` so failure paths do not leak state.
 
+*Create a temp file under `state`, fail intentionally, and confirm that `finally` removes the file on exit.*
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$StateDir = 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state'
+$DemoScript = Join-Path $StateDir 'finally-cleanup-demo.ps1'
+Set-Content -Path $DemoScript -Value @'
+$PSStyle.OutputRendering = 'PlainText'
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+$tmpFile = 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state\finally-cleanup-demo.tmp'
+if (Test-Path $tmpFile) { Remove-Item $tmpFile -Force }
+try {
+    Set-Content -Path $tmpFile -Value 'temporary artifact' -NoNewline
+    Write-Output 'Temp file created'
+    throw 'Simulated failure'
+}
+catch {
+    Write-Output $_.Exception.Message
+}
+finally {
+    Remove-Item $tmpFile -Force -ErrorAction SilentlyContinue
+    Write-Output "Cleanup exists after finally: $(Test-Path $tmpFile)"
+}
+'@
+
+& pwsh -NoProfile -File $DemoScript
+```
+
+```text
+Temp file created
+Simulated failure
+Cleanup exists after finally: False
+```
+
 #### Make Task Scheduler context explicit
 
 Assume Task Scheduler is a different runtime than your shell session. Set the working directory, environment variables, execution policy, and service identity explicitly, and prefer "Run whether user is logged on or not" for unattended production jobs.
+
+*Compare a minimal scheduled-task-like launch with a run that sets the working directory and required environment explicitly.*
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$StateDir = 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state'
+$DemoScript = Join-Path $StateDir 'scheduler-context-demo.ps1'
+Set-Content -Path $DemoScript -Value @'
+$PSStyle.OutputRendering = 'PlainText'
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+if (-not $env:PIPELINE_ROOT) {
+    throw 'PIPELINE_ROOT missing'
+}
+Write-Output "PWD=$((Get-Location).Path)"
+Write-Output "PIPELINE_ROOT=$env:PIPELINE_ROOT"
+'@
+
+Write-Output 'Minimal context:'
+$output = & pwsh -NoProfile -Command @'
+try {
+    & 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state\scheduler-context-demo.ps1'
+}
+catch {
+    Write-Output $_.Exception.Message
+    exit 1
+}
+'@ 2>&1
+$output | ForEach-Object { $_.ToString() }
+Write-Output "Exit code: $LASTEXITCODE"
+
+Write-Output 'Explicit context:'
+& pwsh -NoProfile -Command @'
+Set-Location 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation'
+$env:PIPELINE_ROOT = 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation'
+& 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state\scheduler-context-demo.ps1'
+'@
+```
+
+```text
+Minimal context:
+PIPELINE_ROOT missing
+Exit code: 1
+Explicit context:
+PWD=C:\Users\aperi\My Drive\VAULT\data\powershell-automation
+PIPELINE_ROOT=C:\Users\aperi\My Drive\VAULT\data\powershell-automation
+```
 
 ### Logging and SQL Server patterns
 
 #### Stamp logs with timestamps
 
-A lightweight helper such as `function Write-Log { param($Msg) Write-Host "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] $Msg" }` is enough when you need searchable timestamps in flat-file automation and do not yet have centralized logging.
+A lightweight helper is enough when you need searchable timestamps in flat-file automation and do not yet have centralized logging. Keep the timestamp format fixed so downstream parsers and operators can sort lines lexically.
+
+*Emit two timestamped log lines with a small delay between them.*
+
+```powershell
+function Write-Log {
+    param([string]$Message)
+    Write-Output "[$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')] $Message"
+}
+
+Write-Log 'Starting load verification'
+Start-Sleep -Milliseconds 200
+Write-Log 'Completed load verification'
+```
+
+```text
+[2026-04-15 02:17:06] Starting load verification
+[2026-04-15 02:17:06] Completed load verification
+```
 
 #### Prefer `Invoke-Sqlcmd` for structured SQL Server output
 
 Install the `SqlServer` module when the next step expects objects or CSV export instead of console-formatted text. `Invoke-Sqlcmd` keeps query results in the same object pipeline as the rest of the PowerShell automation.
+
+*Return one live row from `stoxx` and show the object type and business columns that remain inside the pipeline.*
+
+```powershell
+$PSStyle.OutputRendering = 'PlainText'
+Import-Module SqlServer
+
+$rows = @(Invoke-Sqlcmd -ServerInstance 'localhost,1434' -Database 'stoxx' -Username 'sa' -Password 'EsgDev2026Pass1' -TrustServerCertificate -Query "SELECT TOP 1 symbol, [date], [close] FROM silver.eurostoxx50_ohlcv ORDER BY [date] DESC, symbol;")
+$row = $rows[0]
+$businessColumns = @('symbol', 'date', 'close')
+
+Write-Output "Type: $($row.GetType().FullName)"
+Write-Output "Columns: $(($businessColumns) -join ', ')"
+Write-Output "Row: $($row.symbol) / $($row.date.ToString('yyyy-MM-dd')) / $($row.close)"
+```
+
+```text
+Type: System.Data.DataRow
+Columns: symbol, date, close
+Row: ABI.BR / 2026-04-07 / 61.62
+```
 
 ## Troubleshooting
 
@@ -1924,22 +2425,193 @@ Use these symptoms to decide whether the failure is scheduler context, PowerShel
 
 Check the scheduled task's working directory, execution policy, user identity, and environment variables first. The command often succeeds manually because the interactive shell has profile state and credentials that the scheduled task does not inherit.
 
+*Read the same relative-path script once from its expected folder and once from `C:\Windows\System32` to simulate a scheduler launch without `Start in`.*
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$StateDir = 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state'
+$RelativeFile = Join-Path $StateDir 'scheduler-relative-input.txt'
+$RelativeScript = Join-Path $StateDir 'scheduler-relative-demo.ps1'
+Set-Content -Path $RelativeFile -Value 'relative file available' -NoNewline
+Set-Content -Path $RelativeScript -Value @'
+$PSStyle.OutputRendering = 'PlainText'
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+Get-Content '.\scheduler-relative-input.txt'
+'@
+
+Write-Output 'Interactive-style run:'
+& pwsh -NoProfile -Command @'
+Set-Location 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state'
+& 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state\scheduler-relative-demo.ps1'
+'@
+
+Write-Output 'Scheduler-style run:'
+$output = & pwsh -NoProfile -Command @'
+Set-Location 'C:\Windows\System32'
+& 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state\scheduler-relative-demo.ps1'
+'@ 2>&1
+$detail = (($output | Where-Object { $_.ToString() -like '*Cannot find path*' } | Select-Object -First 1).ToString()) -replace "`e\[[0-9;]*m", '' -replace '^\s*\|\s*', ''
+Write-Output $detail
+Write-Output "Exit code: $LASTEXITCODE"
+```
+
+```text
+Interactive-style run:
+relative file available
+Scheduler-style run:
+Cannot find path 'C:\Windows\System32\scheduler-relative-input.txt' because it does not exist.
+Exit code: 1
+```
+
 #### "Running scripts is disabled"
 
 The effective execution policy for the scheduled user is still too restrictive. Set `RemoteSigned` for the intended scope or launch PowerShell with `-ExecutionPolicy Bypass` when policy exceptions are part of the run model.
+
+*Launch a temporary script under `Restricted` to reproduce the policy failure that Task Scheduler surfaces.*
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$StateDir = 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state'
+$ScriptFile = Join-Path $StateDir 'execution-policy-demo.ps1'
+Set-Content -Path $ScriptFile -Value "Write-Output 'policy demo executed'"
+
+$output = & powershell.exe -NoProfile -ExecutionPolicy Restricted -File $ScriptFile 2>&1
+$detail = (($output | Where-Object { $_.ToString() -like '*running scripts is disabled*' } | Select-Object -First 1).ToString()) -replace "`e\[[0-9;]*m", ''
+Write-Output $detail
+Write-Output "Exit code: $LASTEXITCODE"
+```
+
+```text
+running scripts is disabled on this system. For more information, see about_Execution_Policies at
+Exit code: 1
+```
 
 ### Error handling
 
 #### `catch` never executes
 
-The failing command is still producing a non-terminating PowerShell error. Set `$ErrorActionPreference = "Stop"` before the `try` block or add `-ErrorAction Stop` to the cmdlet that is expected to fail.
+The failing command is still producing a non-terminating PowerShell error. Set `$ErrorActionPreference = 'Stop'` before the `try` block or add `-ErrorAction Stop` to the cmdlet that is expected to fail.
+
+*Compare the same missing-path cmdlet without and with `-ErrorAction Stop`.*
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$script = @'
+$PSStyle.OutputRendering = 'PlainText'
+try {
+    Get-Item -LiteralPath 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state\missing-catch-demo.txt' | Out-Null
+    Write-Output 'after try block'
+}
+catch {
+    Write-Output 'caught terminating error'
+}
+'@
+$output = & pwsh -NoProfile -Command $script 2>&1
+$detail = (($output | Where-Object { $_.ToString() -like '*Cannot find path*' } | Select-Object -First 1).ToString()) -replace "`e\[[0-9;]*m", '' -replace '^\s*\|\s*', ''
+Write-Output 'Without Stop:'
+Write-Output $detail
+if ($output -contains 'after try block') { Write-Output 'after try block' }
+
+Write-Output 'With -ErrorAction Stop:'
+& pwsh -NoProfile -Command @'
+$PSStyle.OutputRendering = 'PlainText'
+try {
+    Get-Item -LiteralPath 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state\missing-catch-demo.txt' -ErrorAction Stop | Out-Null
+    Write-Output 'after try block'
+}
+catch {
+    Write-Output 'caught terminating error'
+}
+'@
+```
+
+```text
+Without Stop:
+Cannot find path 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state\missing-catch-demo.txt' because it does not exist.
+after try block
+With -ErrorAction Stop:
+caught terminating error
+```
 
 #### Native executable failure is not caught
 
 A native process returned a non-zero exit code, but PowerShell did not throw an exception. Inspect `$LASTEXITCODE` immediately after the native call and convert non-zero values into an explicit `throw` or `exit`.
 
+*Run the same failing native command once without and once with explicit `$LASTEXITCODE` handling.*
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$script = @'
+$PSStyle.OutputRendering = 'PlainText'
+Write-Output 'Without explicit LASTEXITCODE handling:'
+try {
+    cmd /c exit 5
+    Write-Output 'catch not entered'
+}
+catch {
+    Write-Output 'caught native failure'
+}
+Write-Output "LASTEXITCODE after native call: $LASTEXITCODE"
+Write-Output 'With explicit LASTEXITCODE handling:'
+try {
+    cmd /c exit 5
+    if ($LASTEXITCODE -ne 0) {
+        throw "Native exit $LASTEXITCODE"
+    }
+}
+catch {
+    Write-Output $_.Exception.Message
+}
+'@
+
+& pwsh -NoProfile -Command $script
+```
+
+```text
+Without explicit LASTEXITCODE handling:
+catch not entered
+LASTEXITCODE after native call: 5
+With explicit LASTEXITCODE handling:
+Native exit 5
+```
+
 ### Data parsing
 
 #### `Import-Csv` returns the wrong columns
 
-The file delimiter does not match the parser expectation. Pass the correct delimiter explicitly, such as `Import-Csv -Delimiter ';'` or `Import-Csv -Delimiter "`t"`, and verify the upstream extract format before debugging the downstream logic.
+The file delimiter does not match the parser expectation. Pass the correct delimiter explicitly, such as `Import-Csv -Delimiter ';'`, `Import-Csv -Delimiter "`t"`, or `Import-Csv -UseCulture`, and verify the upstream extract format before debugging the downstream logic.
+
+*Parse a semicolon-delimited file first with the default parser and then with the correct delimiter.*
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
+$StateDir = 'C:\Users\aperi\My Drive\VAULT\data\powershell-automation\state'
+$DelimiterFile = Join-Path $StateDir 'delimiter-demo.csv'
+Set-Content -Path $DelimiterFile -Value "symbol;close;volume`r`nADS.DE;246.12;1200" -NoNewline
+
+$wrong = Import-Csv -Path $DelimiterFile
+$right = Import-Csv -Path $DelimiterFile -Delimiter ';'
+
+Write-Output "Default headers: $(($wrong[0].PSObject.Properties.Name) -join ', ')"
+Write-Output "Default row: $(($wrong[0].PSObject.Properties.Value) -join ', ')"
+Write-Output "Correct headers: $(($right[0].PSObject.Properties.Name) -join ', ')"
+Write-Output "Correct row: $($right[0].symbol) / $($right[0].close) / $($right[0].volume)"
+```
+
+```text
+Default headers: symbol;close;volume
+Default row: ADS.DE;246.12;1200
+Correct headers: symbol, close, volume
+Correct row: ADS.DE / 246.12 / 1200
+```

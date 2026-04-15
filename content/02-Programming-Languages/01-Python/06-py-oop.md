@@ -205,7 +205,7 @@ This example defines a minimal class with one shared attribute, per-instance sta
 - Use immutable class attributes or move mutable defaults into `__init__`.
 - Define both `__repr__` and `__str__` when the type will appear in logs and user output.
 
-When defining a class that owns state and behavior. It is typically triggered by you need shared class data, per-instance fields, and explicit string representations. The example stays in a single class so attribute ownership is easy to see. Show the minimal moving parts of a conventional Python object.
+Use this pattern when defining a class that owns state and behavior, especially when you need shared class data, per-instance fields, and explicit string representations. The example stays in a single class so attribute ownership is easy to see.
 
 *Defines a class with shared state, instance state, and explicit string representations.*
 ```python
@@ -234,7 +234,7 @@ class Dog:
 
 `dog1.color` exists because the instance assigned it dynamically. `dog2.color` still resolves to `None` because that attribute was initialized in `__init__` but never overwritten on the second instance.
 
-When verifying where Python resolves attributes on an object. It is typically triggered by you need to distinguish class attributes from instance attributes. Both instances share the same class attribute but diverge on instance state. Demonstrate attribute lookup and per-instance mutation.
+Use this example when you need to verify where Python resolves attributes on an object. Both instances share the same class attribute but diverge on instance state, which makes per-instance mutation easy to see.
 
 *Instantiates two dogs and exercises instance attributes, methods, and dynamic attribute assignment.*
 ```python
@@ -266,7 +266,7 @@ None
 
 Assigning to `dog1.species` does not mutate the class attribute. It creates a new instance attribute that shadows `Dog.species` only on `dog1`.
 
-When debugging surprising attribute values on one instance. It is typically triggered by an assignment to an object appears to change a shared class-level field. The same attribute name exists on both the class and the instance. Show how instance assignment creates a shadow instead of mutating the class attribute.
+Use this when debugging a value that seems to change only on one object after assignment. The class and instance share the same attribute name, so the example can show how instance assignment creates a shadow instead of mutating the class attribute.
 
 *Shows how an instance attribute can shadow a class attribute without changing the class value.*
 ```python
@@ -291,7 +291,7 @@ Canis familiaris
 
 `@property` lets callers use attribute syntax while the class still runs logic such as validation or derived-value calculation.
 
-When an attribute needs validation or derived reads without changing caller syntax. It is typically triggered by A field should look like plain attribute access but still enforce invariants. The setter validates writes and the second property computes a derived value. Show how properties preserve an object-oriented API while hiding logic behind attribute access.
+Use this when a field should look like plain attribute access while still enforcing validation or exposing a derived value. The setter validates writes and the second property computes a read-only result.
 
 *Defines a property with a validating setter and a computed read-only property.*
 ```python
@@ -342,7 +342,7 @@ Use inheritance only for stable IS-A relationships. When a class merely needs an
 
 A child class acquires all attributes and methods of a parent class and can extend or override them. `Dog` inherits `Animal` unchanged behavior plus new behavior, while `Cat` overrides `speak()` to specialize the parent implementation.
 
-When modeling a stable IS-A relationship with shared parent behavior. It is typically triggered by A child type must reuse parent state initialization and may override selected methods. The parent owns the common interface while each subclass specializes part of it. Show the baseline inheritance pattern with `super()` and method overriding.
+Use this pattern for a stable IS-A relationship where a child must reuse parent initialization and may override selected methods. The parent owns the common interface while each subclass specializes part of it.
 
 *Defines a base class plus two subclasses that extend or override behavior.*
 ```python
@@ -377,7 +377,7 @@ class Cat(Animal):
 
 The subclass constructors initialize parent state through `super()`, and the overridden `Cat.speak()` method replaces the base implementation for cat instances only.
 
-When validating that a subclass actually inherited and specialized behavior correctly. It is typically triggered by you want to confirm constructor chaining, inherited methods, and overridden methods. One subclass keeps the parent method and one replaces it. Demonstrate the observable runtime behavior of the inheritance hierarchy.
+Use this when you need to confirm that subclass construction, inherited methods, and overrides all behave as expected. One subclass keeps the parent method and one replaces it, so the runtime differences stay obvious.
 
 *Creates subclasses and demonstrates inherited methods, overridden methods, and subclass-specific behavior.*
 ```python
@@ -405,7 +405,7 @@ Python prefers duck typing: call the method and let dispatch happen. Reach for `
 
 `animal_roll_call()` accepts any object that implements `speak()`. The `isinstance()` and `issubclass()` calls at the end show the distinct runtime-type questions that Python can answer when you actually need them.
 
-When a caller should work against behavior instead of a concrete class. It is typically triggered by A function can operate on multiple object types as long as they expose the same method. The collection mixes dogs and cats while the function only cares about `speak()`. Contrast duck typing with explicit runtime hierarchy checks.
+Use this when a caller should work against behavior instead of a concrete class. The collection mixes dogs and cats while the function only cares about `speak()`, which makes the duck-typing boundary explicit.
 
 *Calls one function with multiple concrete types and then checks the runtime type hierarchy explicitly.*
 ```python
@@ -436,7 +436,7 @@ True
 
 Mixins should stay narrowly focused and avoid owning initialization. When every class in the hierarchy cooperates through `super()`, Python's C3 linearization keeps method dispatch deterministic.
 
-When a class needs multiple orthogonal capabilities without a deep monolithic hierarchy. It is typically triggered by reusable behavior belongs in small capability classes such as `Flyable` or `Swimmable`. The host class owns initialization while the mixins contribute methods only. Show multiple inheritance used as composition-by-capability instead of as a large taxonomy.
+Use this when a class needs multiple orthogonal capabilities without collapsing into a deep hierarchy. The host class owns initialization while the mixins contribute methods only, so the example shows capability-style multiple inheritance.
 
 *Builds a class from multiple parents and prints the resulting method resolution order.*
 ```python
@@ -482,7 +482,7 @@ Python offers two different contract mechanisms. Use an ABC when you need shared
 - Mark every required method with `@abstractmethod`.
 - Prefer a `Protocol` when the contract has no shared implementation.
 
-When multiple concrete types must implement the same interface and share base behavior. It is typically triggered by A contract needs both required methods and reusable logic. The base class owns `describe()` while subclasses implement geometry-specific calculations. Show why an ABC is useful when a pure structural interface is not enough.
+Use an ABC here when multiple concrete types must share both a contract and reusable base behavior. The base class owns `describe()` while subclasses implement geometry-specific calculations.
 
 *Declares an abstract base class with shared behavior and two concrete subclasses.*
 ```python
@@ -529,7 +529,7 @@ class Circle(Shape):
 
 Concrete subclasses can use the shared `describe()` implementation while supplying their own area and perimeter logic.
 
-When checking that concrete subclasses satisfy an ABC contract at runtime. It is typically triggered by you want to confirm shared methods and subclass implementations work together. Both concrete shapes expose the same interface and can be aggregated uniformly. Demonstrate the value of the abstract contract plus shared concrete behavior.
+Use this when you want to verify that concrete subclasses satisfy an ABC contract and still reuse shared base behavior. Both shapes expose the same interface and can be aggregated uniformly.
 
 *Instantiates concrete subclasses, reuses the shared ABC method, and aggregates results across a typed collection.*
 ```python
@@ -558,7 +558,7 @@ Protocols express "has these members" instead of "inherits from this base class.
 
 `Button` and `TextBox` satisfy `Drawable` without subclassing it. Because the protocol is marked `@runtime_checkable`, `isinstance()` can also verify compatibility at runtime.
 
-When unrelated classes should satisfy the same contract by shape instead of inheritance. It is typically triggered by you need static typing or optional runtime checks without introducing a shared base class. The protocol accepts any object with a compatible `draw()` method. Show structural typing in Python and the role of `@runtime_checkable`.
+Use a `Protocol` when unrelated classes should satisfy the same contract by shape instead of inheritance. The protocol accepts any object with a compatible `draw()` method, and `@runtime_checkable` makes the runtime check explicit.
 
 *Defines a structural interface and shows that unrelated classes can satisfy it by shape alone.*
 ```python
@@ -609,7 +609,7 @@ Use `_name` for implementation details that callers should not touch directly. R
 - `_name` means internal-use-only by convention.
 - `__name` becomes `_ClassName__name` and exists mainly to avoid accidental subclass overrides.
 
-When deciding how much of an object's state should be considered public API. It is typically triggered by some fields are implementation details and should not be touched directly by callers. The example mixes public data, convention-based internals, and name-mangled storage. Clarify what Python's access conventions do and do not guarantee.
+Use this when deciding how much of an object's state belongs in its public API. The example mixes public data, convention-based internals, and name-mangled storage so the access rules stay concrete.
 
 *Demonstrates public attributes, convention-based internal state, and name mangling.*
 ```python
@@ -664,7 +664,7 @@ Python and C# are not equivalent here, but the mapping below is useful when tran
 - Subclasses must also define slots if you want to preserve the memory model.
 - `@dataclass(slots=True)` is the modern way to get the same benefit for data holders.
 
-When representing large numbers of fixed-shape objects. It is typically triggered by per-instance memory overhead matters more than the ability to add ad hoc attributes. The dataclass declares a fixed schema and then attempts an invalid new attribute assignment. Show the operational tradeoff of slotted objects: less overhead, less dynamism.
+Use `__slots__` when you need large numbers of fixed-shape objects and care more about memory overhead than ad hoc attribute creation. The example fixes the schema and then shows the failure mode for adding a new attribute.
 
 *Creates a slotted dataclass, verifies that it has no instance dictionary, and shows the failure mode for a new attribute.*
 ```python
@@ -702,7 +702,7 @@ The distinction is simple: instance methods use `self`, class methods use `cls`,
 - Use `@staticmethod` only when the function belongs conceptually to the class but does not need `self` or `cls`.
 - If the function does not belong to the class at all, move it to module scope.
 
-When deciding whether a behavior belongs on the instance, the class, or neither. It is typically triggered by A class API needs an alternate constructor and a helper that does not depend on object state. One method builds objects from strings while another validates salary values. Contrast the semantics of `@classmethod` and `@staticmethod`.
+Use this distinction when deciding whether behavior belongs on the instance, the class, or neither. One method builds objects from strings while another validates salary values, so the example separates `@classmethod` from `@staticmethod`.
 
 *Declares a class with both class-level factories and static utility methods.*
 ```python
@@ -740,7 +740,7 @@ class Employee:
 
 The constructor and the factory both create `Employee` instances, but the factory turns parsing logic into a named operation instead of pushing it into `__init__`.
 
-When validating the runtime behavior of a class API that mixes constructors and helpers. It is typically triggered by you need to confirm that factories, validators, and class-level counters behave as expected. The example creates objects through two paths and then reads shared class state. Show the observable effect of each method type on a real object.
+Use this when you need to confirm that constructors, factories, validators, and class-level counters all behave as expected together. The example creates objects through two paths and then reads shared class state.
 
 *Creates employees through both constructors and class factories, then reads class-level state and validation helpers.*
 ```python
@@ -771,7 +771,7 @@ Acme Corp
 
 This is the main factory advantage of `@classmethod`: subclasses inherit the factory and still receive the correct concrete type.
 
-When a factory must remain inheritance-aware. It is typically triggered by subclasses should inherit object construction behavior without rewriting the factory. The subclass does not override the method; it only reuses the inherited classmethod. Show why `cls(...)` preserves subclass identity.
+Use this when a factory must stay inheritance-aware. The subclass does not override the inherited classmethod, so the example can show why `cls(...)` preserves subclass identity.
 
 *Calls an inherited classmethod from a subclass to show that the factory returns the subclass type.*
 ```python
@@ -814,7 +814,7 @@ Use `@dataclass` when the field set is known and callers benefit from a named ty
 
 A dictionary accepts a misspelled key immediately. A dataclass constructor rejects an unexpected field name at the point of construction.
 
-When comparing schema safety between plain dictionaries and explicit types. It is typically triggered by A misspelled field name must fail early instead of surfacing later in production. The same conceptual payload is represented once as a dict and once as a dataclass. Show that dataclass constructors reject unknown fields while dicts do not.
+Use this comparison when a misspelled field name must fail early instead of surfacing later in production. The same payload is represented once as a dict and once as a dataclass so the difference is immediate.
 
 *Demonstrates that a dict silently accepts a typo while a dataclass constructor rejects the wrong field name.*
 ```python
@@ -855,7 +855,7 @@ The advantage of a dataclass is not runtime magic; it is that the program now ha
 - Typed parameters tell the reader what fields exist before opening the implementation.
 - Renaming a dataclass field produces static breakage instead of latent runtime drift.
 
-When documenting why explicit types help beyond runtime behavior. It is typically triggered by A team needs better editor support, safer renames, or clearer function signatures. Both functions are trivial so the difference is entirely in the type surface. Show how dataclasses improve tooling and readability even without runtime validation.
+Use this contrast when the team needs better editor support, safer renames, or clearer function signatures. The functions are intentionally trivial so the difference is entirely in the type surface.
 
 *Contrasts an untyped dict signature with a typed dataclass signature.*
 ```python
@@ -870,7 +870,7 @@ def transform_typed(record: Order) -> Order:
 
 Dataclasses do not validate field types at runtime. They make the schema explicit, but bad runtime values still enter unless a type checker or validation layer catches them. That is why Pydantic belongs at system boundaries where inputs are untrusted.
 
-When deciding whether type hints alone are enough for incoming data. It is typically triggered by values arrive from an external source and may have the right field names but the wrong runtime types. The dict and dataclass both hold obviously invalid business values. Show why runtime validation belongs at trust boundaries.
+Use this when incoming data may have the right field names but the wrong runtime types. The dict and dataclass both hold obviously invalid business values, which shows why boundary validation belongs elsewhere.
 
 *Shows that both dicts and plain dataclasses can still hold semantically invalid runtime values.*
 ```python
@@ -905,7 +905,7 @@ The examples below focus on the mechanics that make dataclasses useful in produc
 
 Two dataclass instances compare by value rather than by object identity. That is the default behavior you usually want for data carriers.
 
-When a data-carrying object should compare by field values instead of object identity. It is typically triggered by the class mostly exists to hold named fields and should get predictable equality for free. Two instances contain the same coordinates and one contains different data. Show the default generated behavior of a plain dataclass.
+Use this when a data-carrying object should compare by field values instead of object identity. Two instances contain the same coordinates and one differs, so the generated equality behavior is obvious.
 
 *Creates two equal dataclass instances and one distinct instance to show generated value semantics.*
 ```python
@@ -933,7 +933,7 @@ False
 
 `field()` handles the cases where the generated defaults are not enough: mutable defaults, fields omitted from `__init__`, fields omitted from `repr`, and computed fields populated in `__post_init__`.
 
-When generated dataclass defaults are not expressive enough. It is typically triggered by A field needs `default_factory`, computed initialization, or exclusion from `repr`. The example combines a mutable default with a computed internal identifier. Show the practical role of `field()` and `__post_init__`.
+Use this when generated dataclass defaults are not expressive enough. The example combines a safe mutable default with a computed internal identifier so `field()` and `__post_init__` both have a concrete job.
 
 *Uses `default_factory` and `__post_init__` to create safe mutable defaults and a deterministic computed field.*
 ```python
@@ -962,7 +962,7 @@ Employee(name='Alice', department='Engineering', salary=95000, tags=['senior', '
 
 `frozen=True` is the right choice for configuration objects and keys that must not change after construction. With the default equality settings, the instances are hashable and can be used directly in dictionaries and sets.
 
-When an object must be immutable after construction. It is typically triggered by the value should be hashable, shareable, or safe to use as a dictionary key. The example creates one configuration object and stores it in a mapping. Show the operational effect of a frozen dataclass.
+Use this when a value must remain immutable after construction so it can safely serve as shared configuration or a dictionary key. The example stores one configuration object in a mapping to show the operational effect.
 
 *Defines an immutable dataclass and uses an instance as a dictionary key.*
 ```python
@@ -988,7 +988,7 @@ Config(host='localhost', port=5432, ssl=True)
 
 `order=True` generates comparison operators from field order. Put the highest-priority sort key first.
 
-When objects need sorting but manual comparison methods would be boilerplate. It is typically triggered by the class has a natural field order that should drive comparisons. Version objects sort lexicographically by the declared field order. Show the comparison behavior generated by `order=True`.
+Use this when objects need sorting and the class has a natural field order. The `Version` records sort lexicographically by declaration order, which makes the generated comparisons easy to inspect.
 
 *Defines an ordered dataclass and sorts a list of versions using the generated comparison methods.*
 ```python
@@ -1012,7 +1012,7 @@ Version(major=2, minor=1, patch=0)
 
 Dataclasses can still carry behavior. Use them for data-centric objects that also need lightweight derived values such as convenience predicates or normalized views.
 
-When a data holder also needs small, derived behaviors. It is typically triggered by callers should read a convenience property instead of repeating the same boolean logic. The record keeps operational fields while `is_success` derives state from them. Show that dataclasses support behavior without giving up their generated boilerplate.
+Use this when a data holder also needs lightweight derived behavior. The record keeps operational fields and computes `is_success`, so the example shows that dataclasses can still own small behaviors.
 
 *Combines generated dataclass methods with a computed property that derives operational state from the fields.*
 ```python

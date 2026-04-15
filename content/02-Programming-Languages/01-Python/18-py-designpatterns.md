@@ -10,7 +10,8 @@ status: complete
 
 # 18. Design Patterns & Architecture - Python
 
-> [!quote]
+> [!quote] Paul Graham on patterns
+>
 > "When I see patterns in my programs, I consider it a sign of trouble. The shape of a program should reflect only the problem it needs to solve."
 >
 > — **Paul Graham**, *Revenge of the Nerds*, essay (2002)
@@ -165,7 +166,7 @@ status: complete
 >
 > dbt's `ref()` and `source()` functions implement dependency injection at the SQL layer — models declare their dependencies explicitly rather than hardcoding table names, enabling the same swap-and-test pattern shown below. See [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts) for details.
 
-A class receives its dependencies (DB connection, API client, logger) through its constructor, NOT by creating them internally. This enables testability (swap real DB for mock), flexibility (swap providers), and single responsibility. In Python, no framework is needed — just pass objects via `__init__`. C# equivalent: `Microsoft.Extensions.DependencyInjection` (`builder.Services.AddXxx`).
+A class receives its dependencies (DB connection, API client, logger) through its constructor rather than creating them internally. This enables testability (swap real DB for mock), flexibility (swap providers), and single responsibility. In Python, no framework is needed — just pass objects via `__init__`. C# equivalent: `Microsoft.Extensions.DependencyInjection` (`builder.Services.AddXxx`).
 
 > [!warning] Anti-pattern — hardcoded dependencies
 >
@@ -198,6 +199,7 @@ ABCs define the contract. Every consumer — the pipeline service, tests, future
 
 Declares `get_prices` and `save_scores`. Same signature whether the backend is SQL, BigQuery, or an in-memory mock.
 
+*The shared imports and `DataRepository` ABC establish the contract used by the DI examples.*
 ```python
 from abc import ABC, abstractmethod
 from datetime import date
@@ -221,6 +223,7 @@ class DataRepository(ABC):
 
 Single-method contract for pipeline notifications.
 
+*The `NotificationService` ABC keeps outbound messaging behind a minimal contract.*
 ```python
 class NotificationService(ABC):
     """Interface for notifications — could be email, Slack, Pub/Sub, mock."""
@@ -237,6 +240,7 @@ Each concrete class implements one ABC and handles the actual I/O — database q
 
 Connects to a SQL database and implements both retrieval and persistence. Connection string is injected. In production, `get_prices` would execute a parameterized query (`cursor.execute("SELECT * FROM prices WHERE ticker=?", ticker)`) — here it returns sample data for demonstration.
 
+*The `SqlRepository` implementation models the production-facing side of the `DataRepository` contract.*
 ```python
 class SqlRepository(DataRepository):
     """Real implementation — talks to a database."""
@@ -256,6 +260,7 @@ class SqlRepository(DataRepository):
 
 Sends formatted pipeline notifications to Slack.
 
+*The `SlackNotifier` implementation turns `notify()` calls into side effects at the integration boundary.*
 ```python
 class SlackNotifier(NotificationService):
     def notify(self, message: str) -> None:
@@ -270,6 +275,7 @@ Replace production dependencies with in-memory alternatives. No database, no net
 
 Returns hardcoded prices, captures every saved score in a list. Inspect `saved` after the test.
 
+*The `MockRepository` test double records writes without touching a real database.*
 ```python
 class MockRepository(DataRepository):
     """Test implementation — no database needed."""
@@ -288,6 +294,7 @@ class MockRepository(DataRepository):
 
 Collects messages instead of sending them. Inspect `messages` after the run.
 
+*The `MockNotifier` captures notification calls so tests can assert on them later.*
 ```python
 class MockNotifier(NotificationService):
     def __init__(self):
@@ -304,6 +311,7 @@ The service class depends only on the two ABCs — it has no knowledge of SQL, S
 
 Constructor receives both dependencies via `__init__`. `run()` orchestrates: fetch prices, compute score, persist, notify.
 
+*The `PipelineService` depends only on injected abstractions and orchestrates one pipeline run.*
 ```python
 class PipelineService:
     """Orchestrates the pipeline — dependencies injected via constructor."""
@@ -327,6 +335,7 @@ The same `PipelineService` class is used in both contexts. Only the objects pass
 
 `SqlRepository` connects to prod database, `SlackNotifier` sends to team channel.
 
+*This production wiring uses the real `SqlRepository` and `SlackNotifier` implementations.*
 ```python
 prod_service = PipelineService(
     repo=SqlRepository("Server=prod-db;Database=stoxx"),
@@ -347,6 +356,7 @@ Slack: Pipeline done: ASML.AS scored 0.85
 
 Replace every dependency with a mock. `PipelineService.__init__` is identical. After the run, inspect the mock's captured state.
 
+*This test wiring swaps in `MockRepository` and `MockNotifier` without changing `PipelineService`.*
 ```python
 mock_repo = MockRepository()
 mock_notifier = MockNotifier()
@@ -369,7 +379,7 @@ Design patterns are reusable solutions to common software design problems. In da
 
 ### Singleton — ensure exactly one instance of a class
 
-Ensures a class has exactly ONE instance — useful for database connection pools, configuration managers, or loggers. In Python, the `__new__` method controls instance creation (it runs *before* `__init__`): if an instance already exists, return it instead of creating a new one. The `__init__` guard (`if self._initialized: return`) prevents re-running setup on subsequent calls. Singletons make testing harder (global state) — prefer DI with a single instance when possible.
+Ensures a class has exactly one instance — useful for database connection pools, configuration managers, or loggers. In Python, the `__new__` method controls instance creation (it runs *before* `__init__`): if an instance already exists, return it instead of creating a new one. The `__init__` guard (`if self._initialized: return`) prevents re-running setup on subsequent calls. Singletons make testing harder (global state) — prefer DI with a single instance when possible.
 
 > [!tip] Modules are natural singletons
 >
@@ -379,6 +389,7 @@ Ensures a class has exactly ONE instance — useful for database connection pool
 
 A private `_instance` class variable stores the single instance. `__new__` checks whether an instance already exists — if so, returns the existing one. The `_initialized` guard in `__init__` prevents re-running setup on subsequent calls.
 
+*The `Config` example shows the classic class-based singleton implemented with `__new__`.*
 ```python
 class Config:
     """Singleton configuration — only one instance ever created."""
@@ -404,6 +415,7 @@ class Config:
 
 Both calls to `Config()` return the same object — `__init__` runs only on the first call (the `_initialized` guard skips re-execution). `is` confirms identity. A simpler alternative is a module-level variable — Python modules are imported once, making them natural singletons without any pattern.
 
+*This check verifies that repeated `Config()` calls return the same object identity.*
 ```python
 c1 = Config()
 c2 = Config()
@@ -425,6 +437,7 @@ Creates objects without specifying the exact class — select the right implemen
 
 The abstract base class declares a single `upload` method. Three implementations — GCS, S3, and local filesystem — each format the upload result differently. Adding a new backend means adding one class and one entry in the factory.
 
+*The `StorageClient` hierarchy keeps provider-specific behavior behind one `upload()` method.*
 ```python
 class StorageClient(ABC):
     @abstractmethod
@@ -447,6 +460,7 @@ class LocalClient(StorageClient):
 
 Maps a provider string to a concrete class via dictionary dispatch. The caller gets back a `StorageClient` without knowing which class was instantiated.
 
+*The `create_storage_client()` function maps provider keys to concrete storage clients.*
 ```python
 def create_storage_client(provider: str = "gcs") -> StorageClient:
     """Factory: create storage client based on provider name."""
@@ -464,6 +478,7 @@ def create_storage_client(provider: str = "gcs") -> StorageClient:
 
 The loop creates three clients through the factory. Each upload returns a provider-specific path — the consuming code is identical regardless of backend.
 
+*This loop shows one caller using the same factory API for `gcs`, `s3`, and `local`.*
 ```python
 for provider in ["gcs", "s3", "local"]:
     client = create_storage_client(provider)
@@ -485,6 +500,7 @@ One-to-many notification: when a subject changes state, all registered observers
 
 The event bus maintains a dictionary of event names to subscriber lists. `subscribe()` registers a callback; `publish()` iterates all subscribers for that event type and invokes each one.
 
+*The `PipelineEventBus` stores subscribers by event name and fans out payloads with `publish()`.*
 ```python
 class PipelineEventBus:
     """Simple observer/event bus — subscribe to events, publish notifications."""
@@ -505,6 +521,7 @@ class PipelineEventBus:
 
 Three lightweight handlers subscribe to the same event type. `log_handler` prints every event, `metrics_handler` only fires when the event carries row counts, and `alert_handler` only fires on errors. Each handler is independent.
 
+*These observer callbacks react to the same event without depending on one another.*
 ```python
 def log_handler(data: dict):
     print(f"  [LOG]   {data}")
@@ -522,6 +539,7 @@ def metrics_handler(data: dict):
 
 All three handlers subscribe to `"step_completed"`. Publishing three pipeline events demonstrates selective handling — the ok events trigger LOG + METRIC, the error event triggers LOG + ALERT.
 
+*Publishing three `step_completed` events shows how the observer set fans out different reactions.*
 ```python
 bus = PipelineEventBus()
 bus.subscribe("step_completed", log_handler)
@@ -550,6 +568,7 @@ Swap algorithms at runtime by passing functions or objects with a common interfa
 
 The ABC declares two methods: `score()` takes a price list and returns a float, `name()` identifies the strategy. Every concrete strategy implements both.
 
+*The `ScoringStrategy` ABC defines the shared `score()` and `name()` contract.*
 ```python
 class ScoringStrategy(ABC):
     """Interface for different scoring algorithms."""
@@ -564,6 +583,7 @@ class ScoringStrategy(ABC):
 
 Scores based on the latest price relative to the mean — positive means the latest is above average, suggesting upward momentum.
 
+*The `MomentumStrategy` compares the latest close against the series mean.*
 ```python
 class MomentumStrategy(ScoringStrategy):
     """Score based on price momentum (last vs average)."""
@@ -578,6 +598,7 @@ class MomentumStrategy(ScoringStrategy):
 
 Computes coefficient of variation (std dev / mean), negated so lower volatility yields a higher (less negative) score.
 
+*The `VolatilityStrategy` favors smoother price series by returning a less negative score for lower variation.*
 ```python
 class VolatilityStrategy(ScoringStrategy):
     """Score based on price volatility (lower = better)."""
@@ -593,6 +614,7 @@ class VolatilityStrategy(ScoringStrategy):
 
 Scores based on distance below the mean — the farther the latest price is below average, the higher the score, betting on reversion to the mean.
 
+*The `MeanReversionStrategy` rewards prices that sit below the recent mean.*
 ```python
 class MeanReversionStrategy(ScoringStrategy):
     """Score based on distance from mean (farther below = higher score)."""
@@ -607,6 +629,7 @@ class MeanReversionStrategy(ScoringStrategy):
 
 The context class receives any `ScoringStrategy` via `__init__`. `evaluate()` delegates to the injected strategy — the scorer does not know or care which algorithm it uses.
 
+*The `StockScorer` delegates evaluation to whichever `ScoringStrategy` it receives.*
 ```python
 class StockScorer:
     """Scores stocks using a pluggable strategy."""
@@ -625,6 +648,7 @@ class StockScorer:
 
 The same ASML.AS price series is scored with all three strategies. Momentum and Volatility return small negatives; MeanReversion returns a small positive since the latest price is below average.
 
+*This comparison runs the same price series through three interchangeable scoring strategies.*
 ```python
 prices = [685.0, 690.0, 680.0, 695.0, 710.0, 700.0, 685.0]
 
@@ -642,11 +666,82 @@ MeanReversion   score=+0.0103
 
 ### Decorator — wrap an object with additional behavior
 
-Not to be confused with Python's `@decorator` syntax (which is a language feature). The decorator PATTERN wraps an object with additional behavior while keeping the same interface. Example: a `LoggingConnection` wraps a `DatabaseConnection`, adding logging to every query without modifying the original class. In Python, function decorators (`@functools.wraps`) are the most common form, but the OOP pattern applies when you need to compose behaviors on class instances.
+Not to be confused with Python's `@decorator` syntax (which is a language feature). The decorator pattern wraps an object with additional behavior while keeping the same interface. Example: a `LoggingConnection` wraps a `DatabaseConnection`, adding logging to every query without modifying the original class. In Python, function decorators (`@functools.wraps`) are common, but the object-wrapper pattern is still useful when you need to compose behaviors around class instances.
+
+#### LoggingStore — object-wrapper decorator
+
+`LoggingStore` implements the same `FileStore` contract as its wrapped object. The caller still invokes `write()`, but the decorator adds pre- and post-call logging around the delegated operation.
+
+*This decorator example wraps `MemoryFileStore.write()` with logging while preserving the same `FileStore` interface.*
+```python
+from abc import ABC, abstractmethod
+
+class FileStore(ABC):
+    @abstractmethod
+    def write(self, name: str, payload: bytes) -> str:
+        ...
+
+class MemoryFileStore(FileStore):
+    def write(self, name: str, payload: bytes) -> str:
+        return f"stored {name} ({len(payload)} bytes)"
+
+class LoggingStore(FileStore):
+    def __init__(self, inner: FileStore):
+        self.inner = inner
+
+    def write(self, name: str, payload: bytes) -> str:
+        print(f"LOG start -> {name}")
+        result = self.inner.write(name, payload)
+        print(f"LOG done  -> {result}")
+        return result
+
+store = LoggingStore(MemoryFileStore())
+print(store.write("scores.json", b'{"rank": 1}'))
+```
+
+```text
+LOG start -> scores.json
+LOG done  -> stored scores.json (11 bytes)
+stored scores.json (11 bytes)
+```
 
 ### Repository — abstract data access behind a clean interface
 
 Abstracts data access behind a clean interface. `repo.get_prices(symbol, date)` works whether the data comes from SQL Server, BigQuery, a CSV file, or a mock. The pipeline code depends on the interface, not the storage technology. Combined with dependency injection, this is the foundation for testable data pipelines — swap `SqlRepository` for `MockRepository` in tests without changing any pipeline logic.
+
+#### PriceRepository — swappable persistence boundary
+
+The service-level function below calculates a closing-price gap through the `PriceRepository` interface only. The `SqlPriceRepository` and `MemoryPriceRepository` implementations return different datasets, but the caller code stays identical.
+
+*This repository example keeps the `closing_gap()` function independent of whether data comes from SQL or memory.*
+```python
+from abc import ABC, abstractmethod
+
+class PriceRepository(ABC):
+    @abstractmethod
+    def latest_two_closes(self, ticker: str) -> list[float]:
+        ...
+
+class SqlPriceRepository(PriceRepository):
+    def latest_two_closes(self, ticker: str) -> list[float]:
+        return [698.5, 700.0]
+
+class MemoryPriceRepository(PriceRepository):
+    def latest_two_closes(self, ticker: str) -> list[float]:
+        return [100.0, 103.0]
+
+def closing_gap(repo: PriceRepository, ticker: str) -> float:
+    first, last = repo.latest_two_closes(ticker)
+    return round(last - first, 2)
+
+print(closing_gap(SqlPriceRepository(), "ASML.AS"))
+print(closing_gap(MemoryPriceRepository(), "TEST.XX"))
+```
+
+```text
+1.5
+3.0
+```
 
 ## Data Validation
 
@@ -669,6 +764,7 @@ Pydantic validates data at construction time. Define the schema as a class with 
 
 Each field uses `Field()` with constraints: `min_length`/`max_length` for strings, `gt`/`ge` for numeric bounds. The `@model_validator` adds a cross-field check ensuring High >= Low.
 
+*The `OhlcvRecord` model validates prices and enforces `high >= low` after field parsing.*
 ```python
 class OhlcvRecord(BaseModel):
     """Validated OHLCV record — catches bad data before pipeline ingestion."""
@@ -691,6 +787,7 @@ class OhlcvRecord(BaseModel):
 
 Configuration model with a regex pattern on `name`, bounded `batch_size` and `max_retries`, and a `dry_run` flag. Invalid config is caught before the pipeline starts.
 
+*The `PipelineConfig` model constrains pipeline names, retry limits, and storage targets.*
 ```python
 class PipelineConfig(BaseModel):
     """Validated pipeline configuration."""
@@ -706,6 +803,7 @@ class PipelineConfig(BaseModel):
 
 A well-formed OHLCV record and pipeline config. Pydantic returns the validated model; `model_dump()` serializes to dict.
 
+*This example constructs valid `OhlcvRecord` and `PipelineConfig` instances and prints their normalized values.*
 ```python
 record = OhlcvRecord(
     symbol="ASML.AS", trade_date=date(2026, 3, 20),
@@ -732,6 +830,7 @@ name='events_etl' batch_size=5000 max_retries=3 source_bucket='index-lab-2-data'
 
 Each invalid input triggers a different rule: negative price fails `gt=0`, High < Low fails the `model_validator`, empty symbol fails `min_length`, bad config name fails the regex pattern.
 
+*This loop shows `ValidationError` messages for four different boundary failures.*
 ```python
 bad_inputs = [
     {"label": "Negative price", "data": {"symbol": "X", "trade_date": "2026-01-01", "open": -5, "high": 10, "low": 8, "close": 9, "volume": 100}},
@@ -770,6 +869,7 @@ Python's introspection tools operate on any object. The `TradeOrder` class below
 
 A trade model with a class attribute `MAX_QUANTITY`, four instance attributes set in `__init__`, a computed `notional()` method, and a custom `__repr__`.
 
+*The `TradeOrder` class provides a simple object for the introspection examples that follow.*
 ```python
 class TradeOrder:
     """Sample class to inspect."""
@@ -794,6 +894,7 @@ order = TradeOrder("ASML.AS", "BUY", 100, 685.40)
 
 `type()` returns the class object itself, `type().__name__` gives the string name, `isinstance()` checks membership in a class hierarchy.
 
+*These checks show the runtime type and class membership of the `order` instance.*
 ```python
 print(type(order))
 print(type(order).__name__)
@@ -810,6 +911,7 @@ True
 
 `dir()` returns all attributes; filtering out dunder names shows the public API: class attributes, instance attributes, and methods together.
 
+*Filtering `dir(order)` reveals the public attributes and methods exposed by the instance.*
 ```python
 public = [m for m in dir(order) if not m.startswith("_")]
 print(public)
@@ -823,6 +925,7 @@ print(public)
 
 `vars()` returns the instance's `__dict__` — only attributes set in `__init__`, not class attributes or methods.
 
+*`vars(order)` isolates the instance attributes assigned by `__init__`.*
 ```python
 print(vars(order))
 ```
@@ -835,6 +938,7 @@ print(vars(order))
 
 `getattr(obj, name)` retrieves an attribute by string name — Python's equivalent of C#'s reflection `GetProperty().GetValue()`. Combined with `callable()`, it distinguishes data attributes from methods.
 
+*This loop uses `getattr()` to read both fields and methods from the same object dynamically.*
 ```python
 for attr in ["ticker", "side", "quantity", "notional"]:
     if hasattr(order, attr):
@@ -856,6 +960,7 @@ notional() = 68540.0
 
 The `inspect` module examines classes and functions: `isclass()` checks type, `getmembers()` finds methods, `getfile()` locates the source, and `signature()` extracts parameter names and type annotations.
 
+*This `inspect` example prints the class check, bound methods, source origin, and constructor signature.*
 ```python
 print(inspect.isclass(TradeOrder))
 print([m[0] for m in inspect.getmembers(order, predicate=inspect.ismethod)])
@@ -873,7 +978,7 @@ for name, param in sig.parameters.items():
 ```text
 True
 ['__init__', '__repr__', 'notional']
-<notebook cell> (no file on disk)
+  Source file: <stdin>
 
 ticker: str
 side: str
@@ -887,11 +992,12 @@ A well-organized Python project separates concerns by responsibility (fetching, 
 
 ### Recommended project layout
 
+*This reference tree shows a layered `src/`, `tests/`, and `scripts/` layout for a pipeline repository.*
 ```text
 index-pipeline/
 ├── pyproject.toml           # Project metadata, dependencies, tool config
 ├── requirements.txt         # Pinned dependencies (pip freeze)
-├── .env                     # Local env vars (NEVER commit)
+├── .env                     # Local env vars (do not commit)
 ├── .gitignore               # Ignore .env, __pycache__, .venv, *.pyc
 │
 ├── src/                     # Source code
@@ -930,20 +1036,44 @@ index-pipeline/
     └── setup_index.py       # One-time index setup
 ```
 
-### Key principles
+### Engineering Practices
 
-**Separation of concerns** — `fetchers/` only fetch, `transforms/` only transform, `loaders/` only write. No fetcher should know about BigQuery. No loader should know about yfinance.
+#### Keep `fetchers/`, `transforms/`, `loaders/`, and `services/` isolated by responsibility
 
-**Dependency injection** — `PipelineService` receives `DataRepository` and `NotificationService` via `__init__`. Tests swap in `MockRepository`. Production wires `SqlRepository`.
+Reference-style Python projects keep I/O boundaries thin and explicit: `fetchers/` obtain data, `transforms/` stay deterministic, `loaders/` write results, and `services/` orchestrate. Read configuration through `os.environ`, validate payloads as they cross boundaries, and keep tests focused on pure transformations while mocking external calls.
 
-**Validate at boundaries** — Use Pydantic models when data enters the system (API input, file parse, config). Internal code trusts the validated models — no redundant checks downstream.
+*This pipeline sketch keeps each step narrow and reads `PIPELINE_ENV` from the environment instead of hardcoding deployment state.*
+```python
+import os
 
-**Configuration from environment** — Never hardcode credentials, hosts, or bucket names. Use `os.environ.get()` with defaults, or Pydantic `BaseSettings` for typed config with automatic env-var binding.
+os.environ["PIPELINE_ENV"] = "dev"
 
-**Test the transform, mock the boundary** — Transforms are pure functions — test directly with known inputs and expected outputs. Loaders and fetchers touch external systems — mock them with `unittest.mock` or `pytest-mock`.
+def fetch_prices() -> list[float]:
+    return [100.0, 101.5]
+
+def score(prices: list[float]) -> float:
+    return round(prices[-1] - prices[0], 2)
+
+def load(score_value: float) -> str:
+    return f"loaded score={score_value}"
+
+prices = fetch_prices()
+print(prices)
+print(score(prices))
+print(load(score(prices)))
+print(os.environ["PIPELINE_ENV"])
+```
+
+```text
+[100.0, 101.5]
+1.5
+loaded score=1.5
+dev
+```
 
 ## Summary
 
+*This Mermaid flowchart maps common design pressures to the pattern that best fits them.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -989,53 +1119,120 @@ flowchart TD
 >
 > **C# equivalents:** `ABC`/`abstractmethod` → `interface` | `__init__(dep)` → constructor injection | `AddSingleton<T>()` → DI lifetime | `Pydantic` → DataAnnotations + FluentValidation | `inspect` → `System.Reflection`
 
-## Warnings
+## Anti-Patterns
 
-> [!warning] Singleton via `__init__` does not work
-> Implementing Singleton logic inside `__init__` has no effect — by the time `__init__` runs, a new object already exists. Override `__new__` to intercept creation, or prefer a module-level variable, which Python's import cache makes automatically singleton.
+### Common failures
 
-> [!success] Correct pattern — module-level singleton
-> Declare the shared resource once at module scope (`_pool = ConnectionPool()`). Every importer gets the same object. No `__new__` override, no lock, no boilerplate.
+#### Avoid `__init__`-only singletons, duplicate `subscribe()` calls, and business-heavy factories
 
-> [!warning] Injecting concrete classes breaks substitutability
-> Typing a constructor parameter as `SqlRepository` means tests must spin up a real database. Define the parameter as an `ABC` (or `Protocol`) so any conforming implementation — including `MockRepository` — can be passed in without subclassing.
+`__init__` cannot enforce singleton identity because allocation already happened before it runs. Observer-style systems also need guarded `subscribe()` logic so the same handler is not appended repeatedly during tests or reloads. Keep factory functions focused on selecting constructors such as `{"gcs": GCSClient}` rather than mixing in unrelated workflow policy.
 
-> [!success] Correct pattern — inject abstractions
-> `class ReportService: def __init__(self, repo: IRepository): ...` — the type hint documents the contract; callers pass `SqlRepository()` in production and `MockRepository()` in tests, with no changes to `ReportService`.
+*This anti-pattern check shows that plain `__init__` instances are distinct, listener registration should deduplicate, and factories should resolve to a constructor target only.*
+```python
+class BrokenConfig:
+    def __init__(self):
+        self.project = "alpha"
 
-> [!warning] Observer callbacks accumulate silently
-> If a subscriber registers its callback each time a module is reloaded or a test runs without tearing down the bus, the same handler fires multiple times per event. Always provide a matching `unsubscribe` or use weak references for long-lived buses.
+a = BrokenConfig()
+b = BrokenConfig()
+print(a is b)
 
-> [!success] Correct pattern — guard subscriptions
-> Check whether the callback is already registered before appending: `if cb not in self._listeners[event]: self._listeners[event].append(cb)`. In tests, call `bus.unsubscribe(event, cb)` in `tearDown`.
+listeners = []
+def subscribe(callback: str) -> None:
+    if callback not in listeners:
+        listeners.append(callback)
 
-> [!warning] Factory leaking construction details
-> A factory whose body contains conditional business logic (`if tier == "premium": apply_discount()`) violates single responsibility. Factories create objects; they do not process them.
+subscribe("handler")
+subscribe("handler")
+print(listeners)
 
-> [!success] Correct pattern — factories only construct
-> `return {"gcs": GCSClient, "s3": S3Client}[storage_type]()` — one lookup, one instantiation. Post-creation configuration belongs in the caller or in the created class's `__init__`.
+clients = {"gcs": "GCSClient", "s3": "S3Client"}
+print(clients["gcs"])
+```
 
-## Recommendations
+```text
+False
+['handler']
+GCSClient
+```
 
-- Use constructor injection as the default DI mechanism — it makes dependencies explicit, type-checkable, and mockable without any framework.
-- Prefer the module-level singleton idiom over class-based `__new__` singletons unless you need lazy initialisation or inheritance.
-- Define repository and service contracts as `ABC` subclasses with `@abstractmethod`; this enforces interface compliance at instantiation time and fails fast.
-- Keep Pydantic models at the boundary (API request/response, config); do not let them leak into domain logic or database layers.
-- Use `Protocol` (structural subtyping) when you cannot or do not want to inherit from an ABC — it enables duck-typed DI without a shared base class.
-- Limit `getattr`/`setattr` reflection to infrastructure code (config loaders, serialisers); avoid it in domain logic where explicit attribute access is safer and more readable.
-- When adding cross-cutting behaviour (logging, timing, retries), prefer the Decorator pattern over subclassing — composition is easier to test and combine.
-- Review `inspect.signature()` usages in production paths; introspection adds runtime overhead and can break under `@functools.wraps` if not applied correctly.
+## Recommended Patterns
+
+### Defaults that scale
+
+#### Prefer constructor injection with `ABC` contracts and keep light reflection at the boundary
+
+Default to constructor injection so dependencies stay explicit and swappable. Type those constructor parameters to an `ABC` or `Protocol`, then reserve light reflection such as `hasattr()` or `vars()` for serializers, adapters, and diagnostics rather than core domain logic.
+
+*This service example accepts a `Repo` abstraction, preserves the contract in annotations, and still allows minimal boundary reflection through `hasattr()`.*
+```python
+from abc import ABC, abstractmethod
+
+class Repo(ABC):
+    @abstractmethod
+    def name(self) -> str:
+        ...
+
+class SqlRepo(Repo):
+    def name(self) -> str:
+        return "sql"
+
+class Service:
+    def __init__(self, repo: Repo):
+        self.repo = repo
+
+svc = Service(SqlRepo())
+print(type(svc.repo).__name__)
+print(Service.__init__.__annotations__["repo"].__name__)
+print(hasattr(svc.repo, "name"))
+```
+
+```text
+SqlRepo
+Repo
+True
+```
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `TypeError: Can't instantiate abstract class X` | Subclass does not implement every `@abstractmethod` | Check `X.__abstractmethods__` to see which methods are missing and implement them |
-| Singleton returns a new instance in tests | Test creates instance before module cache is populated, or test resets `_instance` between runs | Use `importlib.reload()` carefully; prefer module-level singletons that tests do not reset |
-| Pydantic `ValidationError` on nested model | Inner model receives a `dict` instead of a model instance | Pass the nested dict — Pydantic will coerce it; or call `InnerModel(**data)` explicitly |
-| Factory raises `KeyError` for a valid type string | Type string has unexpected casing or whitespace | Normalise with `.lower().strip()` before the dict lookup; log unknown types before raising |
-| Observer handler fires twice per event | Handler registered more than once (e.g., on each test setup) | Guard registration with an `if cb not in listeners` check; tear down bus state in `tearDown` |
-| `getattr(obj, name)` returns wrong value after `setattr` | Object has `__slots__` or a descriptor that intercepts attribute access | Inspect `type(obj).__dict__` for descriptors; avoid `setattr` on slotted or frozen dataclasses |
-| Strategy produces wrong result after swap | New strategy class does not match expected interface (method name or signature differs) | Define the strategy contract as an `ABC`; add a unit test that exercises every concrete strategy |
-| Repository mock not called in unit test | Test injects the wrong instance (e.g., real repo leaked via default argument) | Never use mutable defaults in constructors; always inject explicitly in test setup |
+### Diagnostic checks
+
+#### Inspect `__abstractmethods__`, normalize keys with `.lower().strip()`, and deduplicate listener state
+
+When a pattern fails, inspect the contract or dispatch boundary before rewriting the design. `__abstractmethods__` immediately reveals which method keeps an `ABC` subclass abstract, `.lower().strip()` prevents avoidable factory misses caused by user input, and checking the listener list tells you whether setup code registered the same callback twice.
+
+*This diagnostic snippet surfaces missing abstract methods, normalizes a factory key, and confirms that duplicate listener registration collapses to one entry.*
+```python
+from abc import ABC, abstractmethod
+
+class Repo(ABC):
+    @abstractmethod
+    def get(self):
+        ...
+
+    @abstractmethod
+    def save(self):
+        ...
+
+class BrokenRepo(Repo):
+    def get(self):
+        return []
+
+clients = {"gcs": "GCSClient", "s3": "S3Client"}
+raw = " S3 "
+listeners = []
+for handler in ["metrics", "metrics"]:
+    if handler not in listeners:
+        listeners.append(handler)
+
+print(sorted(BrokenRepo.__abstractmethods__))
+print(clients[raw.lower().strip()])
+print(listeners)
+```
+
+```text
+['save']
+S3Client
+['metrics']
+```
 

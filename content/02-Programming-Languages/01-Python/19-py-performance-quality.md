@@ -10,7 +10,8 @@ status: complete
 
 # Performance and Code Quality - Python
 
-> [!quote]
+> [!quote] Prioritization principle
+>
 > "Make it correct, make it clear, make it concise, make it fast. In that order."
 >
 > — **Wes Dyer**, blog post (2007)
@@ -55,232 +56,140 @@ status: complete
 > [!note]- Glossary
 >
 > **`time.perf_counter()`**
-> - High-resolution monotonic clock in Python for measuring elapsed wall-clock time between two points in the same process.
-> - Used for one-off timing of real code paths where you need an accurate elapsed-duration measurement that is not affected by system clock changes.
->
-> > [!warning] Not a benchmarking harness
-> >
-> > A single `perf_counter()` measurement is vulnerable to cache warm-up effects, OS scheduling noise, and incidental background activity. Use it for coarse timing and stage profiling, not for comparing tiny micro-optimisations.
+> - High-resolution monotonic wall-clock timer for elapsed measurements inside one process.
+> - Use it for stage timing and one-off profiling; use `timeit` when warm-up effects or scheduler noise would distort small comparisons.
 >
 > ---
 >
 > **`timeit`**
-> - Python benchmarking utility that executes a statement many times and reports total elapsed time, typically with the cyclic garbage collector disabled during the timed portion.
-> - Used for reliable micro-benchmarks when comparing two small code snippets whose per-call cost is too small for one-off timing to be stable.
->
-> > [!warning] Compare per-call cost, not raw totals
-> >
-> > `timeit` totals depend on `number=`. If two runs use different repetition counts, divide by the number of executions before comparing them.
+> - Benchmarking helper that executes a statement repeatedly and reports total elapsed time, usually with cyclic GC disabled during the timed region.
+> - Compare `timeit` results only after normalizing by `number=`; raw totals from different run counts are not comparable.
 >
 > ---
 >
 > **`cProfile`**
-> - Built-in deterministic profiler for CPython that instruments function calls and records how often each function runs and how much time is spent in it.
-> - Used to identify which functions dominate runtime before attempting any code changes, so optimisation effort is focused on the real bottleneck.
->
-> > [!info] Start with function-level profiling
-> >
-> > `cProfile` tells you which function is expensive, not necessarily which exact line inside that function is expensive. It is usually the first profiler to run, not the last.
+> - Built-in deterministic profiler that records call counts plus inclusive and exclusive time for each function.
+> - Start with `cProfile` to locate the expensive function, then zoom in further only after the hot path is known.
 >
 > ---
 >
 > **`pstats`**
-> - Standard-library module for sorting, filtering, and printing the profiling output produced by `cProfile`.
-> - Used to interpret profiler output by ordering the results on metrics such as cumulative time or exclusive time instead of reading an unsorted call list.
->
-> > [!tip] Sort by `cumtime` first
-> >
-> > `cumtime` usually surfaces the root bottleneck function or call path. After that, `tottime` helps isolate the hottest leaf function doing the direct work.
+> - Standard-library module for sorting, filtering, and printing the output from `cProfile`.
+> - Sort by `cumtime` first to find the expensive call path, then inspect `tottime` for the hottest leaf work.
 >
 > ---
 >
 > **`tottime` / `cumtime`**
-> - `tottime` is the time spent inside a function body itself, excluding time in subcalls; `cumtime` is the total time attributable to that function including the functions it called.
-> - Used to distinguish between a slow orchestrator function and a slow leaf function, which changes where the optimisation should happen.
->
-> > [!warning] High `cumtime` does not mean the function body itself is slow
-> >
-> > A wrapper function can have very high `cumtime` simply because it calls an expensive helper. Use `tottime` to find direct local work and `cumtime` to find the expensive path.
+> - `tottime` is time spent inside the function body; `cumtime` includes subcalls.
+> - High `cumtime` on a wrapper often points to an expensive helper, so use both metrics before changing code.
 >
 > ---
 >
 > **`tracemalloc`**
-> - Built-in Python memory-allocation tracer that records where Python heap allocations originated, including source file and line number.
-> - Used to identify which statements or code paths are responsible for current and peak memory usage during a workload.
->
-> > [!warning] Stop tracing when finished
-> >
-> > Leaving `tracemalloc` active changes later measurements in the same process and adds tracing overhead. Start it deliberately, capture what you need, then stop it.
+> - Built-in allocation tracer that records where Python heap allocations originated, including file and line number.
+> - Start it before the work you want to inspect and stop it afterward so later measurements are not polluted by tracing overhead.
 >
 > ---
 >
 > **`sys.getsizeof()`**
 > - Standard-library function that returns the shallow size in bytes of one Python object.
-> - Used for quick inspection of object overhead when you need to understand the memory cost of the container itself rather than the full transitive object graph.
->
-> > [!warning] Shallow size is not total footprint
-> >
-> > For containers such as `list`, `dict`, and `set`, `sys.getsizeof()` excludes the memory occupied by the referenced elements. It is useful, but it systematically understates true heap usage for nested structures.
+> - It excludes referenced elements for containers such as `list`, `dict`, and `set`, so it understates total footprint for nested data.
 >
 > ---
 >
 > **`memoryview`**
-> - Zero-copy view object over a bytes-like buffer that lets Python code slice or expose binary data without allocating a new bytes object.
-> - Used to reduce copying overhead in binary-data pipelines, parsing code, and high-volume I/O paths where repeated slicing would otherwise allocate heavily.
->
-> > [!info] A view shares the original memory
-> >
-> > Slicing a `memoryview` usually produces another view onto the same underlying buffer. Convert explicitly to `bytes(...)` only when you actually need an independent copy.
+> - Zero-copy view over a bytes-like buffer that exposes slices without allocating a new `bytes` object.
+> - Slicing usually shares the original buffer, so convert with `bytes(...)` only when you explicitly need an independent copy.
 >
 > ---
 >
 > **Big-O notation**
-> - Mathematical notation describing how runtime or memory growth scales as input size increases, abstracting away machine-specific constants.
-> - Used to choose the right algorithm or data structure before benchmarking, because a better complexity class usually matters more than micro-level code tuning.
->
-> > [!warning] Better asymptotics are not always faster at small input sizes
-> >
-> > Constant factors still matter. A theoretically better algorithm can lose on tiny datasets, which is why algorithmic reasoning and measurement must be used together.
+> - Notation describing how runtime or memory grows as input size increases, independent of hardware-specific constants.
+> - Use it to choose the algorithm first, then validate the constant-factor tradeoff with real measurements on target input sizes.
 >
 > ---
 >
 > **`deque`**
-> - Double-ended queue type from `collections`, optimized for appending and popping at both ends.
-> - Used when a workflow needs efficient front insertion or front removal, such as sliding windows, breadth-first search queues, or ring-buffer patterns.
->
-> > [!warning] `deque` solves a different problem than `list`
-> >
-> > `deque` is excellent at both ends, but it is not a drop-in replacement for every list workload. Random indexed access and in-place middle operations are not its strength.
+> - Double-ended queue from `collections`, optimized for append and pop operations at both ends.
+> - Prefer it for front insertion, front removal, and queue workloads; `list` is still better for random indexed access.
 >
 > ---
 >
 > **Vectorisation**
-> - Replacing explicit Python-level element-by-element loops with bulk operations executed in compiled code, typically through NumPy, Pandas, or Polars.
-> - Used to remove interpreter overhead from numeric and columnar workloads, often producing order-of-magnitude speedups on large datasets.
->
-> > [!tip] Vectorise the hot path, not everything blindly
-> >
-> > Vectorisation helps when the workload is genuinely columnar or array-oriented. For tiny inputs or highly stateful branching logic, the clearest Python code may still be the right choice.
+> - Replacing Python-level element-by-element loops with bulk operations executed in compiled code, commonly through NumPy or Pandas.
+> - Vectorize the hot numeric or columnar path, not every branch-heavy workflow where plain Python remains clearer and sometimes faster.
 >
 > ---
 >
 > **Garbage collector (GC)**
-> - Python memory-management system composed of reference counting plus a cyclic garbage collector for reclaiming reference cycles.
-> - Used automatically by the runtime to release unreachable objects, but it also affects benchmark behavior and pause patterns in allocation-heavy code.
->
-> > [!warning] `timeit` changes GC behavior during measurement
-> >
-> > `timeit` disables the cyclic garbage collector for the timed section by default. That makes micro-benchmarks more stable, but it can also make GC-sensitive code look better than it behaves in production.
+> - Python memory-management system combining reference counting with a cyclic garbage collector for reference cycles.
+> - `timeit` disables cyclic GC by default, so GC-sensitive workloads can look better in micro-benchmarks than in production.
 >
 > ---
 >
 > **Generator exhaustion**
-> - One-time consumption behavior of generators and other lazy iterators: once fully iterated, they produce no values on subsequent passes.
-> - Used to explain a common correctness bug in data pipelines where a lazy iterable is accidentally consumed once and then silently reused as if it still contained data.
->
-> > [!danger] Reusing an exhausted generator usually fails silently
-> >
-> > A second iteration over the same generator typically yields nothing and raises no error. Materialize with `list()` or recreate the generator if multiple passes are required.
+> - One-time consumption behavior of generators and other lazy iterators after they have been fully iterated once.
+> - A reused generator typically fails silently by yielding nothing, so materialize with `list()` or recreate it when multiple passes are required.
 >
 > ---
 >
 > **`line_profiler`**
-> - Third-party profiler that measures time spent on each individual source line inside selected functions.
-> - Used after function-level profiling has already identified the slow function and you need to pinpoint the exact line responsible.
->
-> > [!tip] Use it after `cProfile`, not instead of it
-> >
-> > Running line-level profiling across everything is usually excessive. First find the hot function, then zoom in to the hot line.
+> - Third-party profiler that measures time spent on each line inside selected functions.
+> - Use it after `cProfile` has identified the hot function; line-level profiling everywhere is usually excessive.
 >
 > ---
 >
 > **Cyclomatic complexity**
-> - Structural metric counting the number of independent execution paths through a function, driven by branches such as `if`, `elif`, loops, and exception paths.
-> - Used as a maintainability signal because functions with many branches become harder to test exhaustively and harder to reason about safely.
->
-> > [!warning] High complexity is usually a design smell, not just a style issue
-> >
-> > A complex function is harder to test, review, and modify. Reducing complexity often improves correctness and readability before it improves speed.
+> - Structural metric counting independent execution paths through a function based on branches, loops, and exception paths.
+> - High complexity is usually a design smell because it raises testing cost, review cost, and the chance of hidden behavior changes.
 >
 > ---
 >
 > **Guard clause**
-> - Early-return pattern that handles invalid or terminating conditions immediately, instead of nesting the main logic deeper inside multiple `if` blocks.
-> - Used to flatten control flow, reduce nesting, and make each branch independently readable and testable.
->
-> > [!tip] Guard clauses improve structure more than speed
-> >
-> > Their main benefit is clarity and lower complexity, not raw runtime performance. They are a code-quality tool first.
+> - Early-return pattern that handles invalid or terminating cases immediately instead of nesting the main path.
+> - Use guard clauses to flatten control flow and reduce complexity; the primary gain is clarity rather than speed.
 >
 > ---
 >
 > **`ruff`**
-> - Fast Python linter and formatter written in Rust that can replace several older style and import-order tools in one executable.
-> - Used to catch style violations, undefined names, unused imports, and many low-cost defects before code review or runtime.
->
-> > [!info] Linting and formatting are not the same thing
-> >
-> > `ruff format` enforces code layout, while `ruff check` reports correctness and style issues. A formatter alone does not replace linting.
+> - Fast Python linter and formatter that can replace several older style and import-order tools in one executable.
+> - `ruff format` changes layout, while `ruff check` reports correctness and style issues; one does not replace the other.
 >
 > ---
 >
 > **`mypy` / `pyright`**
-> - Static type checkers that analyze Python type annotations and report mismatches without executing the program.
-> - Used to turn type hints into enforceable contracts so interface mismatches, nullable mistakes, and incorrect return-type assumptions are caught before runtime.
->
-> > [!warning] A clean run is only as strong as the configuration and annotations
-> >
-> > Weak settings or widespread untyped code allow many defects to pass through. Static checking becomes valuable only when type coverage and checker strictness are taken seriously.
+> - Static type checkers that analyze annotations without executing the program.
+> - Their value depends on strict settings and real annotation coverage; weak configs allow many interface bugs to slip through.
 >
 > ---
 >
 > **`@overload`**
-> - Typing construct for declaring multiple static call signatures for one function implementation, allowing type checkers to infer different return types from different argument patterns.
-> - Used when one runtime function can return different shapes depending on flags or input types, and that behavior needs to be expressed precisely to static analyzers.
->
-> > [!info] Overloads are for the type checker, not runtime dispatch
-> >
-> > The overload stubs describe the public contract, but only one real implementation executes at runtime. They improve editor and checker precision; they do not create multiple runtime functions.
+> - Typing construct for declaring multiple static call signatures for one runtime implementation.
+> - Overloads improve checker and editor precision only; they do not create separate runtime dispatch paths.
 >
 > ---
 >
 > **Mutable default argument**
-> - Python function-definition pitfall where a mutable default value such as `[]` or `{}` is evaluated once at definition time and then reused across calls.
-> - Used as a core correctness concept because it causes hidden shared state between calls, producing bugs that look random until the function’s lifetime semantics are understood.
->
-> > [!danger] The default is created once, not per call
-> >
-> > Use `None` as the default and create the mutable object inside the function body. Otherwise one caller can accidentally affect later callers through shared state.
+> - Function-definition pitfall where a mutable default such as `[]` or `{}` is created once and reused across calls.
+> - Use `None` as the default and allocate inside the function body so callers do not share hidden state.
 >
 > ---
 >
 > **Amdahl’s law**
-> - Performance principle stating that the overall speedup of a system is limited by the fraction of total time spent in the part you improve.
-> - Used to justify bottleneck-first optimisation: speeding up a non-dominant stage yields little total benefit even if that individual stage becomes much faster.
->
-> > [!tip] Optimise the slowest meaningful stage first
-> >
-> > If one stage dominates end-to-end runtime, that stage is where engineering effort has leverage. Improving already-fast stages can look busy while producing almost no real gain.
+> - Principle stating that total speedup is limited by the fraction of time spent in the part you improve.
+> - Optimize the slowest meaningful stage first, because speeding up a non-dominant step yields little end-to-end gain.
 >
 > ---
 >
 > **`@lru_cache`**
-> - Standard-library decorator that memoizes function results so repeated calls with the same arguments return from cache instead of recomputing.
-> - Used to eliminate repeated pure-function work, especially in recursive or repeated-lookup patterns where the same inputs recur many times.
->
-> > [!warning] Cache only deterministic, side-effect-free work
-> >
-> > Memoization is appropriate only when the function’s output depends solely on its inputs. Caching time-sensitive, I/O-bound, or side-effecting functions usually creates stale or incorrect behavior.
+> - Standard-library decorator that memoizes return values by argument tuple.
+> - Cache only deterministic, side-effect-free work; memoizing time-sensitive or I/O-bound functions usually creates stale results.
 >
 > ---
 >
 > **NumPy view**
-> - Array slice or reshaped object that shares the same underlying memory as another NumPy array instead of allocating a new independent buffer.
-> - Used to avoid copying large numeric arrays when the workload only needs another window or interpretation of the same data.
->
-> > [!warning] Mutating the view mutates the source
-> >
-> > A view is fast precisely because it shares memory. Call `.copy()` when you need an independent array that can be changed safely without affecting the original.
+> - Array slice or reshape that shares underlying storage with another NumPy array instead of allocating a new buffer.
+> - A view is fast because it shares memory, which also means writes to the view modify the source unless you call `.copy()`.
 
 ## Timing & Benchmarking
 
@@ -308,6 +217,8 @@ Accurate measurement is the foundation of every performance improvement. Python 
 
 > [!success] Use timeit or perf_counter with multiple repetitions.
 >
+> *Per-call timing pattern with `timeit` and `perf_counter()`.*
+>
 > ```python
 > import timeit, time
 > elapsed = timeit.timeit("sum(range(10_000))", number=1000) / 1000  # per-call average
@@ -316,6 +227,7 @@ Accurate measurement is the foundation of every performance improvement. Python 
 > print(time.perf_counter() - t0)
 > ```
 
+*Benchmark elapsed time with `perf_counter()` and `timeit`.*
 ```python
 import time
 import timeit
@@ -372,6 +284,7 @@ The context manager `timer` wraps any block with `yield`, measures elapsed time 
 
 `timeit.timeit(stmt, setup, number)` is the right tool for comparing two approaches to the same operation. The `setup` string runs once before the timed loop; the `stmt` string is what gets timed. Use a high `number` (≥1,000) for operations faster than 1 ms to get stable results.
 
+*Compare `list`, `set`, `sorted()`, and `.sort()` timing.*
 ```python
 setup = "data = list(range(10_000))"
 
@@ -423,6 +336,8 @@ Every object Python creates lives on the heap and is tracked by the reference-co
 
 > [!success] Use tracemalloc for total memory including contents.
 >
+> *Capture peak traced memory with `tracemalloc`.*
+>
 > ```python
 > import tracemalloc
 > tracemalloc.start()
@@ -432,6 +347,7 @@ Every object Python creates lives on the heap and is tracked by the reference-co
 > print(f"Peak: {peak / 1024:.1f} KB")
 > ```
 
+*Inspect shallow object and container sizes with `sys.getsizeof()`.*
 ```python
 print("Object sizes (bytes):")
 for obj in [42, 3.14, "hello", b"hello", True, None, [], {}, set()]:
@@ -470,6 +386,7 @@ Object sizes (bytes):
 
 `tracemalloc.start()` activates Python's built-in allocation tracker. `tracemalloc.take_snapshot()` captures all current allocations. `snapshot.statistics("lineno")` groups allocations by source file and line number. `tracemalloc.get_traced_memory()` returns `(current_bytes, peak_bytes)` — `peak` is the high-water mark since `start()`.
 
+*Track allocation hot spots with `tracemalloc` snapshots.*
 ```python
 tracemalloc.start()
 
@@ -511,6 +428,7 @@ Line 2 (`[x**2 for x in range(100_000)]`) allocated 3,907 KiB across 99,984 Pyth
 
 A list comprehension allocates all elements up front and holds them in memory simultaneously. A generator expression produces one element at a time and discards it after use, using O(1) memory regardless of the number of elements. Use generators whenever you process data sequentially and do not need to revisit elements.
 
+*Contrast list materialization, generator objects, and slotted classes.*
 ```python
 list_data = [x**2 for x in range(100_000)]
 gen_result = sum(x**2 for x in range(100_000))
@@ -560,6 +478,8 @@ __slots__ class: 48 bytes (no __dict__ overhead)
 
 > [!success] Measure __slots__ savings with tracemalloc, not sys.getsizeof.
 >
+> *Trace `__slots__` savings instead of relying on shallow size reporting.*
+>
 > ```python
 > tracemalloc.start()
 > regular = [PointRegular(i, i) for i in range(10_000)]
@@ -590,6 +510,7 @@ __slots__ class: 48 bytes (no __dict__ overhead)
 > - `cumtime` — total time including all functions called from here
 > - Focus on `cumtime` to identify the root bottleneck; use `tottime` to isolate the hottest leaf
 
+*Profile a call tree with `cProfile` and summarize it with `pstats`.*
 ```python
 def fib(n):
     if n <= 1:
@@ -633,6 +554,7 @@ print(stream.getvalue())
 
 String concatenation with `+=` is O(n²) in total operations because every concatenation copies all prior content into a new immutable string. `"".join(...)` builds the result in a single pass by pre-computing the total length and allocating once. `io.StringIO` writes to an in-memory buffer and returns the result with `.getvalue()` — similar performance to `join` for large n.
 
+*Compare `+=`, `"".join()`, and `StringIO` for string assembly.*
 ```python
 def concat_plus(n):
     s = ""
@@ -688,6 +610,7 @@ Each class in the table below describes how running time grows with input size n
 >
 > If n can grow unboundedly, O(n²) is a ticking time bomb. Fix the algorithm before optimising constants. A 2× constant speedup cannot compensate for O(n²) once n exceeds ~10,000.
 
+*Choose a collection based on dominant operation and ordering requirements.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -718,6 +641,7 @@ flowchart TD
 
 The benchmark demonstrates two of the most impactful complexity improvements: replacing a `list` linear scan with a `set` hash lookup, and replacing a nested-loop duplicate finder with a single-pass `set`-based approach.
 
+*Benchmark membership tests and duplicate-detection strategies.*
 ```python
 def measure(fn, *args, label=""):
     t0 = time.perf_counter()
@@ -800,6 +724,7 @@ Use `dict`/`set` for fast lookup, `deque` for FIFO/LIFO queues or when both ends
 
 `list.insert(0, x)` shifts all n existing elements right by one position — O(n). `deque.appendleft(x)` is O(1) because a `deque` is a doubly-linked list of fixed-size blocks, so prepending updates one pointer without moving existing elements.
 
+*Compare front insertion and removal with `list` versus `deque`.*
 ```python
 n = 100_000
 
@@ -833,17 +758,17 @@ Insert/remove front (1000x):
 
 158× speedup for front-insertion. Use `deque` whenever you need to append or pop from both ends — it is the correct tool for sliding windows, BFS queues, and ring buffers.
 
-## Golden Rules of Performance
+## Optimization Strategy
 
 These rules apply at every project scale. Rules 1–4 prevent the most common Python performance problems. Rules 5–10 are refinements for established hot paths.
 
-### Rules and caching demo
+### Bottleneck-first decisions
 
-#### Golden rules of Python performance
+#### Choose the highest-leverage optimization first
 
 Apply in priority order. Rule 4 (vectorise) is Python-specific — Python loops are ~100× slower than C loops; NumPy/Pandas/Polars call into C under the hood and bypass the interpreter entirely.
 
-> [!tip] Golden Rules of Python Performance
+> [!tip] Optimization order
 >
 > 1. **Measure before optimising** — profile first; the bottleneck is never where you think
 > 2. **Algorithm > micro-optimisation** — O(n²) → O(n log n) beats any loop unrolling
@@ -860,6 +785,7 @@ Apply in priority order. Rule 4 (vectorise) is Python-specific — Python loops 
 
 `@functools.cache` (Python 3.9+) is an unbounded memoisation cache equivalent to `@lru_cache(maxsize=None)`. It stores all return values keyed by arguments. For recursive functions with overlapping subproblems (dynamic programming), caching converts exponential time to linear. `cache_clear()` empties the cache; `cache_info()` reports hits, misses, and size.
 
+*Show the effect of `functools.cache` and `lru_cache` on recursive reuse.*
 ```python
 def fib_slow(n):
     if n <= 1: return n
@@ -892,15 +818,15 @@ Cached is 201x faster (on a 10x larger input!)
 
 `fib(30)` without caching requires 2,692,537 recursive calls. `fib(300)` with caching requires exactly 300 calls — one per unique subproblem. Use `@lru_cache(maxsize=128)` when memory is limited; use `@functools.cache` (unbounded) when correctness requires the full history.
 
-## Absolute No-Go's
+## Production Anti-Patterns
 
-The patterns below should never appear in production Python. Each is either a correctness hazard (silent data loss, shared mutable state), a security vulnerability (RCE from `eval`), or a reliability problem (resource leaks, swallowed exceptions). Item 4 (mutable default arguments) is the most commonly encountered — it is non-obvious and produces bugs that are hard to reproduce.
+The patterns below should never ship in production Python. Each creates either a correctness hazard, a security problem, or a maintenance trap that compounds under load and during incident response.
 
-### Patterns to never use in production
+### Unsafe defaults and safer replacements
 
-#### Anti-patterns and safe replacements — production Python no-go list
+#### Replace unsafe defaults before they ship
 
-The list is ordered by frequency of occurrence in real codebases. Items 3, 10 (`except: pass`) and 6 (`eval` with user input) are the most dangerous — silent exception swallowing and code injection are the most costly bugs to debug in production.
+The highest-cost failures here are `except: pass`, `eval()` on untrusted input, and shared mutable defaults such as `def f(lst=[])`. They either hide the defect or make later failures non-local and difficult to reproduce.
 
 > [!danger] Absolute no-go's — never in production Python
 >
@@ -914,10 +840,12 @@ The list is ordered by frequency of occurrence in real codebases. Items 3, 10 (`
 > 8. **Ignoring return values** — `sorted()` returns a new list; `.sort()` returns `None`.
 > 9. **Wildcard imports** — `from module import *` pollutes namespace and breaks static analysis.
 > 10. **`except: pass`** — bugs become invisible. At minimum, log the exception.
-> 11. **`is` for value comparison** — `x is 256` works by accident (CPython caches small ints). Use `==`.
+> 11. **`is` for value comparison** — `x is 256` works by accident. Use `==`.
 > 12. **Not closing resources** — `open()` without `with` leaks file handles.
 
 > [!success] Safe replacements for the most common no-go's
+>
+> *Safe replacement patterns for common production anti-patterns.*
 >
 > ```python
 > result = "".join(parts)                          # #1
@@ -928,10 +856,31 @@ The list is ordered by frequency of occurrence in real codebases. Items 3, 10 (`
 > with open("file.txt") as fh: data = fh.read()   # #12
 > ```
 
+*Use `ast.literal_eval()` and a `None` sentinel instead of shared mutable state.*
+```python
+import ast
+
+def safe_append(item, lst=None):
+    lst = [] if lst is None else lst
+    lst.append(item)
+    return lst
+
+print(ast.literal_eval("[1, 2, 3]"))
+print(safe_append("first"))
+print(safe_append("second"))
+```
+
+```text
+[1, 2, 3]
+['first']
+['second']
+```
+
 #### Demonstrate mutable default argument bug and fix
 
 Python evaluates default argument expressions once at function definition time, not on each call. A mutable default like `lst=[]` creates one list that is shared across all calls. After the first call, the "default" is no longer empty — it has grown. The `None` sentinel pattern avoids this by creating a fresh list inside the function body on each call.
 
+*Demonstrate the shared-state bug from mutable defaults and the `None` sentinel fix.*
 ```python
 def bad_append(item, lst=[]):
     lst.append(item)
@@ -966,27 +915,29 @@ Fixed:
   Call 3: [3]
 ```
 
-## Code Smells & Anti-Patterns
+## Maintainability Smells
 
-Code smells are structural indicators of deeper problems — missing abstraction, violated SRP, or hidden coupling. Unlike bugs, they do not cause immediate failures but increase the cost of every future change. The patterns below are the most common in Python data engineering codebases.
+Code smells are structural indicators of deeper problems such as hidden coupling, poor abstraction boundaries, or control flow that is difficult to test safely. Unlike a direct bug, a smell raises the cost of every later change.
 
 ### Identifying and refactoring smells
 
-#### Common code smells in Python codebases
+#### Spot smells that block safe refactoring
 
-The most impactful smells to address first are deep nesting (makes logic hard to test in isolation), boolean blindness (makes call sites unreadable), and magic numbers (no domain context for future maintainers).
+The highest-value smells to remove first are deep nesting, boolean blindness, and magic numbers. Each obscures intent at the call site or inside the control flow, which makes correctness regressions easier to introduce.
 
 > [!warning] Code smells — patterns indicating deeper problems
 >
-> 1. **God function/class** — >30 lines = doing too much. Split by single responsibility.
-> 2. **Deep nesting** — `if: if: if: for: if:` → use early returns and guard clauses.
-> 3. **Magic numbers** — `if x > 86400` → use `SECONDS_PER_DAY = 86_400`.
-> 4. **Copy-paste code** — same block in 3+ places → extract to a function (DRY).
-> 5. **Boolean blindness** — `process(data, True, False, True)` → use keyword args or `enum`.
-> 6. **Premature abstraction** — YAGNI: abstract when you see the pattern 3 times.
-> 7. **Comments explaining "what"** — `# increment x` is useless; `# retry because race condition` is valuable.
+> 1. **God function/class** — >30 lines usually means mixed responsibilities.
+> 2. **Deep nesting** — `if: if: if:` should push toward guard clauses.
+> 3. **Magic numbers** — replace values such as `86400` with a named constant.
+> 4. **Copy-paste code** — repeated blocks should become a function or helper.
+> 5. **Boolean blindness** — prefer keyword arguments over `process(data, True, False)`.
+> 6. **Premature abstraction** — abstract after the repeated pattern is real.
+> 7. **Comments explaining "what"** — keep comments for the "why" or risk.
 
 > [!success] Refactor toward clarity and single responsibility.
+>
+> *Refactor smell-heavy code toward guard clauses, named constants, and keyword arguments.*
 >
 > ```python
 > def process(item):           # #2 — guard clauses flatten deep nesting
@@ -997,10 +948,25 @@ The most impactful smells to address first are deep nesting (makes logic hard to
 > process(data, validate=True, dry_run=False, verbose=True)  # #5 — keyword args
 > ```
 
+*Replace magic values and positional booleans with named constants and keyword arguments.*
+```python
+SECONDS_PER_DAY = 86_400
+
+def process_user(*, validate: bool, dry_run: bool) -> tuple[int, bool, bool]:
+    return SECONDS_PER_DAY, validate, dry_run
+
+print(process_user(validate=True, dry_run=False))
+```
+
+```text
+(86400, True, False)
+```
+
 #### Demonstrate guard clauses — deep nesting vs flat logic
 
-Deep nesting (`if: if: if:`) requires the reader to maintain a mental stack of all the enclosing conditions to understand any one branch. Guard clauses invert the condition and return early — each branch becomes a self-contained, readable statement. The logic is identical; the structure makes it testable.
+Deep nesting (`if: if: if:`) requires the reader to maintain a mental stack of all the enclosing conditions to understand any one branch. Guard clauses invert the condition and return early so each branch stays locally readable and independently testable.
 
+*Compare deep nesting with guard-clause control flow.*
 ```python
 def process_bad(user):
     if user is not None:
@@ -1046,6 +1012,7 @@ Python is dynamically typed at runtime but supports optional static type annotat
 
 An unannotated function leaves the caller guessing about valid input types and possible return types. A typed signature is a verifiable contract. `@overload` allows a function to declare different return types depending on argument values — useful when a function can return either `dict` or `list` depending on a flag.
 
+*Annotate signatures with unions and overloads.*
 ```python
 def process(data, flag):
     if flag:
@@ -1078,6 +1045,7 @@ Overload:   {'id': 1, 'name': 'test'}
 
 These patterns cover the most common signatures in data engineering pipelines: functions that accept file paths (`str | Path`), higher-order functions with `Callable` parameters, and generator functions with `Iterator` return types.
 
+*Type annotate iterators, callables, sequences, and paths.*
 ```python
 def read_data(path: str | Path) -> list[dict[str, Any]]:
     return [{"example": True}]
@@ -1124,6 +1092,7 @@ Cyclomatic complexity (CC) is the number of independent execution paths through 
 
 A function with six nested `if`/`elif` branches has CC 6. Refactoring to guard clauses — inverting the condition and returning early — flattens the nesting without changing behaviour. Each branch becomes an independent, testable statement with no enclosing context to track.
 
+*Flatten branching logic while preserving behavior.*
 ```python
 # HIGH complexity (6 branches — nested if/elif)
 def complex_function(x, y, z):
@@ -1180,6 +1149,7 @@ Profiling a synthetic micro-benchmark rarely reveals the actual bottleneck in pr
 >
 > If read I/O is 35% of total time and filtering is 15%, spending equal effort on both is wasteful. Fix the bottleneck first. Cache the loaded DataFrame upstream (use a module-level variable or `@lru_cache`) to eliminate repeated reads — stages 2–5 drop to sub-millisecond.
 
+*Time each pipeline stage and identify the slowest step.*
 ```python
 def stage_timer(stages: dict):
     """Run each stage and report timing."""
@@ -1239,6 +1209,7 @@ A `bytes` slice creates a new `bytes` object containing a copy of the selected r
 > - `array.array` — typed C array; supports `memoryview` with format codes (`'i'`, `'d'`, etc.)
 > - `numpy.ndarray` — NumPy arrays expose the buffer protocol natively; `arr[100:200]` is always a view, never a copy
 
+*Use `memoryview` and `array.array` without copying the underlying buffer.*
 ```python
 import array
 
@@ -1283,6 +1254,7 @@ NumPy array slices are always views (zero-copy) unless you call `.copy()` explic
 >
 > `view = arr[100:200].copy()` — now `view` is independent. As a rule: slice for read-only processing, copy when you need to mutate without affecting the source.
 
+*Compare NumPy views with explicit copies.*
 ```python
 import numpy as np
 
@@ -1331,6 +1303,8 @@ Python's lazy evaluation model means generators and iterators are single-pass ob
 
 > [!success] Convert to list if you need to iterate multiple times.
 >
+> *Materialize a lazy iterator when later steps need repeated access.*
+>
 > ```python
 > gen = (x**2 for x in range(10))
 > data = list(gen)   # materialise once
@@ -1342,6 +1316,7 @@ Python's lazy evaluation model means generators and iterators are single-pass ob
 
 A generator expression consumed by one operation (e.g., `list(gen)`) is permanently exhausted. A second `list(gen)` returns an empty list with no error or warning. This is the most common generator correctness bug in production pipelines — it is invisible unless you check the output length.
 
+*Show that generators are exhausted after one full pass.*
 ```python
 gen = (x**2 for x in range(5))
 
@@ -1363,6 +1338,7 @@ Generator exhausted after first pass: True
 
 `filter()` and `map()` return lazy iterator objects, not lists (Python 3 changed both from returning lists). After one iteration they are exhausted. Passing them to two consumers — one for computation, one for logging — silently drops all data from the second consumer.
 
+*Demonstrate that `filter()` and `map()` return single-pass iterators.*
 ```python
 nums = [1, 2, 3, 4, 5, 6]
 evens = filter(lambda x: x % 2 == 0, nums)
@@ -1392,6 +1368,7 @@ Doubled after sum (exhausted): []
 
 `zip()` stops as soon as the shortest iterable is exhausted, discarding all remaining elements from longer iterables without a warning. If the first iterable is an already-exhausted generator, `zip` returns nothing at all.
 
+*Show how `zip()` truncates to the shortest iterable.*
 ```python
 gen = (x for x in range(3))
 labels = ["a", "b", "c", "d", "e"]
@@ -1418,6 +1395,8 @@ Zip with exhausted generator: []
 
 > [!success] Use itertools.zip_longest to avoid silent data loss.
 >
+> *Use `zip_longest()` when dropped tail values are unacceptable.*
+>
 > ```python
 > from itertools import zip_longest
 > result = list(zip_longest(gen, labels, fillvalue=None))
@@ -1432,8 +1411,6 @@ Zip with exhausted generator: []
 | Object size | `sys.getsizeof()` | Single object inspection |
 | Memory tracking | `tracemalloc` | Finding memory leaks |
 | CPU profiling | `cProfile` + `pstats` | Finding slow functions |
-| Query plan | Polars `.explain()` | Understanding lazy execution |
-| Execution profile | Polars `.profile()` | Per-node timing |
 | Complexity | Big-O analysis | Algorithm selection |
 | Type safety | `mypy` / `pyright` | Catching type bugs pre-runtime |
 | Linting | `ruff` | Style + bug detection |
@@ -1441,62 +1418,195 @@ Zip with exhausted generator: []
 | Zero-copy views | `memoryview` / NumPy views | Large byte payloads, array slicing |
 | Iterator safety | Generator exhaustion checks | Single-pass pipelines, `filter`/`map` |
 
-**Golden Rules:** Measure first. Algorithm > micro-optimization. Vectorize. Cache. Lazy > eager.
+**Decision rules:** Measure first. Prefer algorithmic gains over micro-tuning. Cache repeated pure work. Materialize iterators only when reuse is required.
 
-## Warnings
+## Failure Boundaries
 
-> [!warning] Never optimize code you have not measured
+> [!warning] Measure before optimizing
+>
 > Guessing at bottlenecks wastes time and frequently makes code slower. Premature optimization breaks readability without a guaranteed gain.
 
 > [!success] Correct pattern
+>
 > Profile first with `cProfile` or `timeit`, identify the single largest bottleneck, optimize only that, then re-measure before touching anything else.
 
 ---
 
 > [!warning] `sys.getsizeof()` understates memory for containers
-> `sys.getsizeof([1, 2, 3])` returns the size of the list object itself (56 bytes on CPython 3.12), not the memory of its elements. A list of one million integers appears tiny by this measure.
+>
+> `sys.getsizeof([1, 2, 3])` returns the size of the list object itself, not the memory of its elements. Large containers look artificially cheap under shallow measurement.
 
 > [!success] Correct pattern
-> Use `tracemalloc` snapshots or a recursive sizing utility (e.g., `pympler.asizeof`) to measure the true memory footprint of a container and all objects it references.
+>
+> Use `tracemalloc` snapshots or a recursive sizing utility such as `pympler.asizeof` when you need the full transitive footprint.
 
 ---
 
 > [!warning] Reusing an exhausted generator silently yields nothing
+>
 > `filter()`, `map()`, and generator expressions are single-pass iterators. Iterating a second time produces an empty sequence with no error raised.
 
 > [!success] Correct pattern
-> Convert to a list or tuple if multiple passes are needed: `results = list(filter(pred, data))`. Document single-pass intent explicitly when keeping the generator form.
+>
+> Convert to a list or tuple if multiple passes are needed: `results = list(filter(pred, data))`. Keep the lazy form only when the pipeline is intentionally single-use.
 
 ---
 
 > [!warning] `timeit` results are not comparable across different `number=` values
-> `timeit.timeit(stmt, number=1000)` returns total time for 1 000 runs. Comparing that raw figure against a result from `number=100_000` is meaningless without dividing by `number`.
+>
+> `timeit.timeit(stmt, number=1000)` returns total time for 1,000 runs. Comparing that raw figure against a result from `number=100_000` is meaningless without dividing by `number`.
 
 > [!success] Correct pattern
-> Always normalize: `per_call_us = timeit.timeit(stmt, number=100_000) / 100_000 * 1e6`. Use `timeit.repeat()` with `min()` to guard against one-off OS scheduling spikes.
+>
+> Always normalize: `per_call_us = timeit.timeit(stmt, number=100_000) / 100_000 * 1e6`. Use `timeit.repeat()` with `min()` to guard against one-off scheduling spikes.
 
-## Recommendations
+## Engineering Practices
 
-- **Profile before optimizing.** Use `cProfile` for function-level hotspot discovery and `timeit` for comparing candidate implementations. Never optimize by intuition alone.
-- **Prefer algorithmic improvements over micro-optimizations.** Replacing an O(n²) loop with an O(n log n) sort delivers orders-of-magnitude gains that no constant-factor tweak can match.
-- **Use built-in types and standard-library functions.** CPython built-ins (`sum`, `sorted`, `any`, `all`, `collections.Counter`) are implemented in C and outperform hand-written Python loops.
-- **Adopt type hints incrementally and enforce with `mypy --strict` in CI.** Even partial typing narrows the surface area for runtime `AttributeError` and `TypeError` bugs.
-- **Run `ruff` as a pre-commit hook.** Catching style, import, and logic issues locally is faster and cheaper than a CI failure cycle.
-- **Keep generator pipelines single-pass or materialize early.** Explicitly decide at the top of a pipeline whether the data will be consumed once or multiple times, and document that decision in a comment.
-- **Use `tracemalloc` in integration tests for long-running services.** A snapshot diff taken before and after a request cycle reveals allocation regressions that only appear under load.
-- **Enable `__slots__` on data-heavy classes.** For classes that create thousands of instances (e.g., row objects, event records), `__slots__` eliminates the per-instance `__dict__` and cuts memory by 30–60 %.
+### High-leverage defaults
+
+#### Choose the bottleneck with `max(...)`
+
+Use `max(results, key=results.get)` or an equivalent reduction before changing code. The slowest stage controls end-to-end latency, which is the practical application of `Amdahl's law`.
+
+*Pick the slowest stage before planning an optimization.*
+```python
+stages = {"read": 18.9, "transform": 7.4, "sort": 11.5}
+bottleneck = max(stages, key=stages.get)
+print(f"Optimize first: {bottleneck}")
+print(f"Slowest stage: {stages[bottleneck]:.1f}ms")
+```
+
+```text
+Optimize first: read
+Slowest stage: 18.9ms
+```
+
+#### Prefer built-ins behind typed interfaces
+
+Wrap the C-backed primitive such as `sum(...)` or `sorted(...)` behind a typed function signature. The combination of `list[int]` plus an explicit return type keeps the API readable without sacrificing the fast built-in implementation.
+
+*Combine a typed signature with a built-in aggregation.*
+```python
+def total(values: list[int]) -> int:
+    return sum(values)
+
+print(total([1, 2, 3, 4]))
+print(total.__annotations__)
+```
+
+```text
+10
+{'values': list[int], 'return': <class 'int'>}
+```
+
+#### Materialize shared iterators only when reuse is required
+
+If multiple consumers need the same lazy pipeline, materialize once with `list(...)` and reuse the result. If the pipeline is truly single-pass, keep the generator form and document that intent.
+
+*Materialize a filtered iterator once before reusing it.*
+```python
+nums = [1, 2, 3, 4, 5, 6]
+evens = list(filter(lambda x: x % 2 == 0, nums))
+print(evens)
+print(sum(evens))
+```
+
+```text
+[2, 4, 6]
+12
+```
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `timeit` result is much faster than wall-clock runtime | GC is disabled inside `timeit`; real workload includes GC pauses | Run `timeit` with `gc.enable()` inside the setup, or switch to `cProfile` on production-representative data |
-| `tracemalloc` shows no allocations in a loop | `tracemalloc.start()` was called after the allocating code ran | Call `tracemalloc.start()` before any code under measurement; restart Python if in a notebook |
-| `cProfile` reports high `tottime` for a function that looks trivial | The function is called millions of times; per-call cost is low but call count dominates | Reduce call frequency (cache results, lift out of loop) rather than optimizing the function body |
-| `mypy` passes cleanly but `pyright` reports errors | The two checkers implement different inference rules for edge cases | Use `pyright` as the primary checker in VS Code and `mypy --strict` in CI; fix all errors in both |
-| `ruff` reports `E501` line-too-long on generated or data strings | `ruff` enforces the default 88-character line limit from Black | Add `# noqa: E501` to generated lines, or widen `line-length` in `ruff.toml` only if the team agrees |
-| Generator pipeline produces an empty result on second call | Generator exhausted on first iteration; no error raised on reuse | Materialize with `list()` before storing in a variable that will be iterated more than once |
-| `memoryview` raises `TypeError: a bytes-like object is required` | Source object does not implement the buffer protocol (e.g., a plain list) | Use `bytes`, `bytearray`, `array.array`, or NumPy arrays as the backing object |
-| Polars `.profile()` shows short node times on test data but is slow in production | Small test frames fit in L1/L2 cache; production row counts expose memory-bandwidth pressure | Profile with a representative sample (≥ 1 M rows); use `.explain(streaming=True)` to check plan differences |
+### Common diagnostics
 
-**No-Go's:** String concat in loops. Nested loops on large data. Bare except. Mutable defaults. eval(). Hardcoded secrets. Wildcard imports.
+#### `timeit` looks better than wall-clock runtime
+
+`timeit` disables cyclic GC by default, so allocation-heavy code can benchmark better there than it does in a full workload. If GC behavior matters, enable it explicitly inside the timed statement or switch to `cProfile` on representative data.
+
+*Compare `timeit` totals with GC disabled and re-enabled.*
+```python
+import gc
+import timeit
+
+def allocate():
+    data = [0] * 10_000
+    return len(data)
+
+baseline = timeit.timeit("allocate()", globals=globals(), number=200)
+with_gc = timeit.timeit("gc.enable(); allocate()", globals=globals(), number=200)
+print(f"gc-off total: {baseline:.4f}s")
+print(f"gc-on total:  {with_gc:.4f}s")
+```
+
+```text
+gc-off total: 0.0008s
+gc-on total:  0.0010s
+```
+
+#### `tracemalloc` reports zero allocations
+
+If `tracemalloc.start()` happens after the allocating statement, the snapshot cannot see the earlier work. Start tracing before the code under inspection and compare the late-start case against the early-start case if results look suspicious.
+
+*Start `tracemalloc` before allocation if you want nonzero measurements.*
+```python
+import tracemalloc
+
+data = [1] * 10_000
+tracemalloc.start()
+current_late, peak_late = tracemalloc.get_traced_memory()
+tracemalloc.stop()
+
+tracemalloc.start()
+data = [1] * 10_000
+current_early, peak_early = tracemalloc.get_traced_memory()
+tracemalloc.stop()
+
+print(f"start late: current={current_late}, peak={peak_late}")
+print(f"start early: current={current_early}, peak={peak_early}")
+```
+
+```text
+start late: current=0, peak=0
+start early: current=80000, peak=80008
+```
+
+#### Iterators go empty on the second pass
+
+Lazy iterators such as generators, `filter(...)`, and `map(...)` are consumed once. If the same variable must feed logging, aggregation, and downstream logic, materialize it with `list(...)` before the first pass.
+
+*Show the empty second pass from a reused generator.*
+```python
+items = (x for x in range(3))
+first = list(items)
+second = list(items)
+print(first)
+print(second)
+```
+
+```text
+[0, 1, 2]
+[]
+```
+
+#### `memoryview` rejects the source object
+
+`memoryview(...)` requires a buffer-protocol object such as `bytes`, `bytearray`, `array.array`, or `numpy.ndarray`. Plain `list` instances do not implement that protocol, so the failure is structural rather than version-specific.
+
+*Use a bytes-like object when constructing `memoryview(...)`.*
+```python
+try:
+    memoryview([1, 2, 3])
+except TypeError as exc:
+    print(type(exc).__name__)
+    print(exc)
+print(bytes(memoryview(bytearray(b"abc"))))
+```
+
+```text
+TypeError
+memoryview: a bytes-like object is required, not 'list'
+b'abc'
+```
+
+**No-go summary:** String concat in loops. Nested loops on large data. Bare `except`. Mutable defaults. `eval()`. Hardcoded secrets. Wildcard imports.

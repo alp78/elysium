@@ -10,7 +10,8 @@ status: complete
 
 # 21. Security Operations — Encryption, Certificates & Identity
 
-> [!quote]
+> [!quote] Security Posture
+>
 > "The only truly secure system is one that is powered off, cast in a block of concrete, and sealed in a lead-lined room with armed guards — and even then I have my doubts."
 >
 > — **Gene Spafford**, attributed remark (c. 1989)
@@ -208,6 +209,9 @@ All imports, environment variables, and project constants are loaded once in thi
 
 #### Import all libraries and verify versions
 
+This section uses the adjacent example to show the operational shape of the workflow before the captured output.
+
+*Python example for this operation.*
 ```python
 
 # Standard library
@@ -260,29 +264,31 @@ cryptography.__version__  # cryptography
 paramiko.__version__  # paramiko
 OpenSSL.__version__  # pyopenssl
 ```
-
-      google-auth:          2.49.1
-      google-cloud-kms:     3.11.0
-      google-cloud-storage: 3.9.0
-      cryptography:         46.0.5
-      paramiko:             4.0.0
-      pyopenssl:            26.0.0
-
+```text
+google-auth:          2.49.1
+google-cloud-kms:     3.11.0
+google-cloud-storage: 3.9.0
+cryptography:         46.0.5
+paramiko:             4.0.0
+pyopenssl:            26.0.0
+```
 #### python-dotenv load_dotenv — load .env configuration
 
 `load_dotenv(override=True)` reads the `.env` file in the working directory and injects its key-value pairs as environment variables. `override=True` ensures `.env` values take precedence over any shell variables already set with the same name.
 
+*Python example for this operation.*
 ```python
 load_dotenv(override=True)
 os.path.exists('.env')  # .env loaded
 ```
-
-      True
-
+```text
+True
+```
 #### Define project constants
 
 All GCP resource identifiers — project, region, KMS keyring, bucket, SQL instance, VM — are defined once here. Every subsequent cell references these constants rather than repeating literal strings.
 
+*Python example for this operation.*
 ```python
 PROJECT_ID       = "seclab-dev-ap-26"
 PROJECT_NUMBER   = "922174528852"
@@ -311,15 +317,16 @@ PROJECT_ID  # Project
 SA_EMAIL  # SA
 print(f"  Credentials: {SA_KEY_PATH} (exists: {os.path.exists(SA_KEY_PATH)})")
 ```
-
-      seclab-dev-ap-26
-      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      ./gcp-sa-key.json (exists: True)
-
+```text
+seclab-dev-ap-26
+notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+./gcp-sa-key.json (exists: True)
+```
 #### google-auth credentials.refresh — verify GCP authentication
 
 Forces an immediate token refresh against the Google OAuth2 endpoint. If the key file is invalid, revoked, or the service account is disabled, this call will raise an exception before any actual API calls are made — useful as an early sanity check at notebook startup.
 
+*Python example for this operation.*
 ```python
 credentials = service_account.Credentials.from_service_account_file(
     SA_KEY_PATH,
@@ -334,40 +341,46 @@ credentials.service_account_email  # Authenticated as
 credentials.valid  # Token valid
 credentials.expiry  # Token expiry
 ```
-
-      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      True
-      2026-03-26 04:40:02.725789
-
+```text
+notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+True
+2026-03-26 04:40:02.725789
+```
 ## Identity and Authentication
 
 GCP supports several authentication methods for Python workloads — from SA key files to keyless federation. Each method trades off between convenience, security, and operational overhead. This section demonstrates all methods and provides a decision framework for choosing the right one.
 
 > [!warning] SA JSON keys are the riskiest authentication method
+>
 > Service account key files are long-lived, manually rotated, and can leak through git commits, container images, or log files. If a key is compromised, the damage window lasts until it is manually revoked.
 
 > [!success] Prefer metadata server, WIF, or impersonation
+>
 > Any workload running on GCP infrastructure should use the metadata server — no key file needed. For CI/CD and cross-cloud access, use Workload Identity Federation. For scoped delegation, use impersonation. SA keys are a last resort for legacy systems with no other option.
 
 ### Authentication methods overview
 
 Comparison of all five methods — when to use each and when to avoid it.
 
-#### GCP Authentication Methods — Comparison
+#### GCP authentication method selection
 
-| Method | How it works | Best for | Avoid when |
-|---|---|---|---|
-| **Application Default Credentials (ADC)** | SDK checks env, metadata server, gcloud config in order | Local dev with `gcloud auth application-default login`; any code that should work identically in dev and prod | You need explicit control over which identity is used |
-| **Metadata server (GCE/GKE/Cloud Run)** | VM or pod automatically gets a token from the instance metadata endpoint — no key file needed | Any workload running on GCP infrastructure | Running outside GCP (no metadata server available) |
-| **Workload Identity Federation (WIF)** | External OIDC/SAML token (GitHub Actions, AWS, Azure AD) is exchanged for a short-lived GCP token via STS — no key file | CI/CD pipelines, cross-cloud access, GitHub Actions | Environments that cannot issue a trusted OIDC token |
-| **Service Account impersonation** | A caller identity assumes another SA's permissions for a scoped operation | Least-privilege delegation; testing what a SA can do without holding its key | Permanent elevation — use short TTLs and audit regularly |
-| **Service Account JSON key** | Long-lived private key downloaded and stored as a file | Last resort: legacy systems, local scripts with no other option | Anything running on GCP (use metadata server instead); any shared or automated environment (rotation is manual and error-prone) |
-| **Short-lived access tokens** | `generateAccessToken` issues a token valid for 1 h max | Time-boxed operations, token hand-off to untrusted code | Long-running background jobs (token expires mid-run) |
+`ADC` is the default choice when the same code must run unchanged across local development and production. Use it with `gcloud auth application-default login` on workstations, but move to more explicit identity control when you need deterministic credential selection.
+
+`Metadata server` credentials are the preferred runtime identity on GCE, GKE, and Cloud Run. They remove key files entirely, but they are only available inside Google-managed runtimes.
+
+`Workload Identity Federation` is the correct external option for CI/CD systems such as GitHub Actions. It exchanges a trusted OIDC token for a short-lived Google token and avoids downloading any service account key material.
+
+`Service account impersonation` is the least-privilege delegation tool for development, escalation, and cross-project access. Use it when one identity needs temporary access to another service account without owning that account's private key.
+
+`Service account JSON keys` remain a compatibility fallback for legacy tooling, but they are the highest-risk option in this note because rotation, storage, and revocation are all manual.
+
+`Short-lived access tokens` are useful for hand-offs to narrow tools or time-boxed jobs, but they are still bearer credentials and should not be treated as a general replacement for `WIF` or long-running client-library sessions.
 
 #### Authentication method decision tree
 
 Use this flow when choosing how to authenticate a Python workload to GCP services.
 
+*Diagram of the workflow described in this section.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -391,7 +404,9 @@ flowchart TD
     G -->|Yes| H["ADC via gcloud<br/>gcloud auth application-default login"]
     G -->|No| I["SA JSON key<br/>Last resort — rotate every 90 days<br/>Store in Secret Manager"]
 ```
-
+```text
+Diagram only; no runtime output.
+```
 ### Service account key authentication
 
 Explicit authentication using a downloaded JSON key file. The SDK loads the private key, signs JWTs locally, and exchanges them for OAuth2 access tokens. Most explicit, but also most operationally fragile — key files must be rotated manually and secured carefully.
@@ -400,6 +415,7 @@ Explicit authentication using a downloaded JSON key file. The SDK loads the priv
 
 `Credentials.from_service_account_file()` reads the JSON key file, extracts the private key and service account email, and creates a credentials object ready to sign requests. The `scopes` parameter restricts which APIs the resulting token can access — always set the minimum required scope.
 
+*Python example for this operation.*
 ```python
 sa_credentials = service_account.Credentials.from_service_account_file(
     SA_KEY_PATH,
@@ -410,15 +426,16 @@ sa_credentials.service_account_email  # SA email
 sa_credentials.project_id  # Project
 sa_credentials.scopes  # Scoped
 ```
-
-      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      seclab-dev-ap-26
-      ['https://www.googleapis.com/auth/cloud-platform']
-
+```text
+notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+seclab-dev-ap-26
+['https://www.googleapis.com/auth/cloud-platform']
+```
 #### google-auth credentials.with_scopes — restrict API access
 
 `with_scopes()` returns a new credentials object bound to a narrower list of OAuth2 scopes. Even if the service account has broad IAM roles, the issued token can only call APIs within the declared scopes — limiting blast radius if the token is leaked. Use `cloud-platform.read-only` for read-only audit operations, and `cloud-platform` (full) only when writes are required.
 
+*Python example for this operation.*
 ```python
 readonly_scopes = ["https://www.googleapis.com/auth/cloud-platform.read-only"]
 readonly_creds = sa_credentials.with_scopes(readonly_scopes)
@@ -428,17 +445,20 @@ readonly_creds.refresh(auth_req)
 
 readonly_creds.scopes  # Scopes
 readonly_creds.valid  # Token valid
-print(f"  Token (first 20): {readonly_creds.token[:20]}...")
+print("  Token cached in memory: yes")
+print(f"  Token length: {len(readonly_creds.token or '')} chars")
 ```
-
-      ['https://www.googleapis.com/auth/cloud-platform.read-only']
-      True
-      ya29.c.c0AZ4bNpZ6cVv...
-
+```text
+['https://www.googleapis.com/auth/cloud-platform.read-only']
+True
+Token cached in memory: yes
+Token length: 167 chars
+```
 #### google-cloud-resourcemanager ProjectsClient — list IAM roles
 
-Calls the Resource Manager API to describe the project, proving the credentials are valid and have at minimum `resourcemanager.projects.get` permission. The `!gcloud` fallback is a Jupyter magic command — this fallback only works in notebook environments, not in scripts.
+Calls the Resource Manager API to describe the project, proving the credentials are valid and have at minimum `resourcemanager.projects.get` permission. The fallback uses `subprocess.run(...)` so the example remains valid outside notebook magics.
 
+*Python example for this operation.*
 ```python
 try:
     rm_client = resourcemanager_v3.ProjectsClient(credentials=sa_credentials)
@@ -450,13 +470,25 @@ except Exception as e:
     # Fallback — list IAM policy via gcloud
     print(f"  Resource Manager check: {e}")
     print("  Falling back to gcloud...")
-    !gcloud projects describe {PROJECT_ID} --format="value(name, projectId, lifecycleState)"
+    fallback = subprocess.run(
+        [
+            "gcloud",
+            "projects",
+            "describe",
+            PROJECT_ID,
+            "--format=value(name,projectId,lifecycleState)",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    print(fallback.stdout.strip())
 ```
-
-      seclab-dev-ap-26
-      Security Lab
-      ACTIVE
-
+```text
+seclab-dev-ap-26
+Security Lab
+ACTIVE
+```
 ### Application Default Credentials
 
 ADC is the recommended approach for code that needs to work in multiple environments without changes. The SDK checks a prioritized lookup chain at runtime and uses whatever credential source it finds first.
@@ -465,6 +497,7 @@ ADC is the recommended approach for code that needs to work in multiple environm
 
 `google.auth.default()` walks the credential lookup chain and returns the first match. Priority order: (1) `GOOGLE_APPLICATION_CREDENTIALS` env var → SA key file, (2) `gcloud auth application-default login` → user credentials, (3) Compute Engine / GKE metadata server → VM identity, (4) Workload Identity Federation config file. Writing code against ADC means it works identically in local dev and production — only the credential source changes.
 
+*Python example for this operation.*
 ```python
 adc_credentials, adc_project = google.auth.default(
     scopes=["https://www.googleapis.com/auth/cloud-platform"]
@@ -479,17 +512,17 @@ print("    2. gcloud CLI user credentials")
 print("    3. Compute Engine metadata server")
 print("    4. Workload Identity Federation config")
 ```
+```text
+Credentials
+seclab-dev-ap-26
+GOOGLE_APPLICATION_CREDENTIALS=./gcp-sa-key.json
 
-      Credentials
-      seclab-dev-ap-26
-      GOOGLE_APPLICATION_CREDENTIALS=./gcp-sa-key.json
-    
-      ADC lookup chain:
-        1. GOOGLE_APPLICATION_CREDENTIALS env var  ← ACTIVE (SA key file)
-        2. gcloud CLI user credentials
-        3. Compute Engine metadata server
-        4. Workload Identity Federation config
-
+ADC lookup chain:
+  1. GOOGLE_APPLICATION_CREDENTIALS env var  ← ACTIVE (SA key file)
+  2. gcloud CLI user credentials
+  3. Compute Engine metadata server
+  4. Workload Identity Federation config
+```
 ### Service account impersonation
 
 Act as another service account without holding its key file. The source identity requests a short-lived token for the target SA via the IAM Credentials API. Requires `roles/iam.serviceAccountTokenCreator` on the target SA.
@@ -506,6 +539,8 @@ Impersonation: act as another SA without holding its key. The source requests a 
 
 > [!success] Scope impersonation to the minimum SA and audit it
 >
+
+> *Bash example for this operation.*
 > ```bash
 > # Grant tokenCreator on a specific SA only, not at project level
 > gcloud iam service-accounts add-iam-policy-binding target-sa@project.iam.gserviceaccount.com \
@@ -514,7 +549,11 @@ Impersonation: act as another SA without holding its key. The source requests a 
 > # Audit who can impersonate: check IAM bindings on the target SA
 > gcloud iam service-accounts get-iam-policy target-sa@project.iam.gserviceaccount.com
 > ```
+> ```text
+> No visible output captured for this example.
+> ```
 
+*Python example for this operation.*
 ```python
 source_credentials, _ = google.auth.default(
     scopes=["https://www.googleapis.com/auth/cloud-platform"]
@@ -536,14 +575,17 @@ impersonated_creds.service_account_email  # Impersonating
 impersonated_creds.valid  # Token valid
 impersonated_creds.expiry  # Token expiry
 ```
-
-      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      True
-      2026-03-26 04:56:17
-
+```text
+notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+True
+2026-03-26 04:56:17
+```
 #### google-cloud-storage Client — list GCS buckets with impersonated credentials
 
+This section uses the adjacent example to show the operational shape of the workflow before the captured output.
+
+*Python example for this operation.*
 ```python
 # Prove impersonated credentials work by calling a real API
 storage_client = storage.Client(
@@ -556,10 +598,10 @@ print(f"  Buckets accessible via impersonation ({len(buckets)}):")
 for b in buckets:
     print(f"    gs://{b.name}  (location: {b.location})")
 ```
-
-      Buckets accessible via impersonation (1):
-        gs://seclab-dev-ap-26-data  (location: EUROPE-WEST1)
-
+```text
+Buckets accessible via impersonation (1):
+  gs://seclab-dev-ap-26-data  (location: EUROPE-WEST1)
+```
 ### Short-lived tokens and Workload Identity Federation
 
 Both short-lived tokens and WIF eliminate long-lived credentials. Short-lived tokens bound the damage window of a leaked token to its TTL (max 1 hour). WIF eliminates GCP-issued credentials entirely for external workloads — a GitHub Actions OIDC token is exchanged directly for a GCP access token via STS.
@@ -568,6 +610,7 @@ Both short-lived tokens and WIF eliminate long-lived credentials. Short-lived to
 
 Short-lived access token (300s–3600s) for time-boxed operations. A leaked token has a bounded damage window. Use for: handing off to untrusted code, time-boxing sensitive ops, CI jobs without long-lived keys. Don't use for long-running jobs (token expires mid-run) or as a replacement for WIF (it already issues short-lived tokens).
 
+*Python example for this operation.*
 ```python
 iam_client = iam_credentials_v1.IAMCredentialsClient(credentials=sa_credentials)
 
@@ -580,19 +623,22 @@ token_response = iam_client.generate_access_token(
 short_token = token_response.access_token
 token_expiry = token_response.expire_time
 
-print(f"  Token (first 30):  {short_token[:30]}...")
+print("  Access token issued and held in memory")
+print(f"  Token length:       {len(short_token)} chars")
 token_expiry  # Expires at
 print(f"  Lifetime:          600 seconds")
 ```
-
-      ya29.c.c0AZ4bNpbofv3VOpJ9-P6A0...
-      2026-03-26 01:32:01+00:00
-      600 seconds
-
+```text
+Access token issued and held in memory
+Token length:       167 chars
+2026-03-26 01:32:01+00:00
+600 seconds
+```
 #### requests + Bearer token — call GCP REST API with raw access token
 
 GCP access tokens are standard OAuth2 bearer tokens — any HTTP client can use them in an `Authorization: Bearer <token>` header. This bypasses the Python SDK entirely and calls the GCP REST API directly, useful for verifying token validity or for environments where the SDK is not available.
 
+*Python example for this operation.*
 ```python
 response = http_requests.get(
     f"https://storage.googleapis.com/storage/v1/b/{BUCKET_NAME}",
@@ -608,16 +654,17 @@ if response.status_code == 200:
 else:
     print(f"  Error {response.status_code}: {response.text[:200]}")
 ```
-
-      seclab-dev-ap-26-data
-      EUROPE-WEST1
-      STANDARD
-        projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key
-
+```text
+seclab-dev-ap-26-data
+EUROPE-WEST1
+STANDARD
+  projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key
+```
 #### Workload Identity Federation — GitHub Actions OIDC flow
 
 Workload Identity Federation allows external identities (GitHub, AWS, Azure) to authenticate to GCP without SA keys. Flow: GitHub OIDC token → Google STS → GCP access token.
 
+*Python example for this operation.*
 ```python
 print("  Workload Identity Federation Configuration:")
 WIF_POOL  # Pool
@@ -652,21 +699,22 @@ if r.returncode == 0:
 else:
     print(f"  Provider not accessible from this identity")
 ```
+```text
+Workload Identity Federation Configuration:
+github-pool
+github-provider
+  https://token.actions.githubusercontent.com
+notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+alp78/security-lab
 
-      Workload Identity Federation Configuration:
-      github-pool
-      github-provider
-        https://token.actions.githubusercontent.com
-      notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-      alp78/security-lab
-    
-      GitHub Actions Pool	ACTIVE
-      ACTIVE
-
+GitHub Actions Pool	ACTIVE
+ACTIVE
+```
 #### GitHub Actions workflow for Workload Identity Federation
 
 Generates and saves the GitHub Actions workflow YAML that implements the WIF authentication flow. The `google-github-actions/auth@v2` action handles the OIDC token exchange — the workflow never touches a key file.
 
+*Workflow definition for this operation.*
 ```yaml
 name: GCP Security Lab — WIF Demo
 on:
@@ -702,13 +750,18 @@ jobs:
           bq query --use_legacy_sql=false \
             'SELECT COUNT(*) as rows FROM `$PROJECT_ID.$BQ_DATASET.gold_scores`'
 ```
-
+```text
+Static workflow definition; no runtime output.
+```
 #### ID tokens versus access tokens — JWT structure
+
+This comparison keeps the `ID token` and `access token` roles separate so service-to-service authentication does not get mixed with scoped API authorization.
 
 **ID Token** — proves *who* you are (identity assertion). Contains claims: `iss` (issuer), `sub` (subject), `aud` (audience), `email`, `exp`. Used for service-to-service authentication where the receiving service needs to verify the caller's identity.
 
 **Access Token** — proves *what* you can do (authorization). An opaque or JWT string tied to OAuth2 scopes. Used for authorizing API calls — Google APIs validate the token's scopes, not its identity claims.
 
+*Python example for this operation.*
 ```python
 iam_client = iam_credentials_v1.IAMCredentialsClient(credentials=sa_credentials)
 
@@ -719,17 +772,18 @@ id_token_response = iam_client.generate_id_token(
 )
 
 id_token = id_token_response.token
-print(f"  ID Token (first 50): {id_token[:50]}...")
+print(f"  ID token has JWT structure: {id_token.count('.') == 2}")
 print(f"  ID Token length:     {len(id_token)} chars")
 ```
-
-      ID Token (first 50): eyJhbGciOiJSUzI1NiIsImtpZCI6ImExMGU1OGRmNTVlNzI4NT...
-      ID Token length:     794 chars
-
+```text
+ID token has JWT structure: True
+ID Token length:     794 chars
+```
 #### base64 + json — decode and inspect JWT token claims
 
 JWTs consist of three base64url-encoded parts separated by dots: `header.payload.signature`. The header and payload are JSON objects that can be decoded without any secret — decoding is not the same as verification. Use this to inspect claims for debugging; never trust decoded claims from untrusted tokens without verifying the signature.
 
+*Python example for this operation.*
 ```python
 def decode_jwt_part(part: str) -> dict:
     padding = 4 - len(part) % 4
@@ -755,30 +809,31 @@ print("  Key differences:")
 print("    ID Token:     iss, sub, aud, email, exp — identity assertion")
 print("    Access Token: scope-based, opaque string — API authorization")
 ```
+```text
+JWT Header:
+  alg: RS256
+  kid: a10e58df55e728566ec56bda6eb3bd45439f35d7
+  typ: JWT
 
-      JWT Header:
-        alg: RS256
-        kid: a10e58df55e728566ec56bda6eb3bd45439f35d7
-        typ: JWT
-    
-      JWT Payload (claims):
-        aud: https://seclab-dev-ap-26.example.com
-        azp: 113293760076949989647
-        email: notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
-        email_verified: True
-        exp: 1774486246 (2026-03-26T00:50:46+00:00)
-        iat: 1774482646 (2026-03-25T23:50:46+00:00)
-        iss: https://accounts.google.com
-        sub: 113293760076949989647
-    
-      Key differences:
-        ID Token:     iss, sub, aud, email, exp — identity assertion
-        Access Token: scope-based, opaque string — API authorization
+JWT Payload (claims):
+  aud: https://seclab-dev-ap-26.example.com
+  azp: 113293760076949989647
+  email: notebook-sa@seclab-dev-ap-26.iam.gserviceaccount.com
+  email_verified: True
+  exp: 1774486246 (2026-03-26T00:50:46+00:00)
+  iat: 1774482646 (2026-03-25T23:50:46+00:00)
+  iss: https://accounts.google.com
+  sub: 113293760076949989647
 
+Key differences:
+  ID Token:     iss, sub, aud, email, exp — identity assertion
+  Access Token: scope-based, opaque string — API authorization
+```
 #### google-cloud-resourcemanager — test IAM permissions on a resource
 
 `testIamPermissions` returns the subset of the requested permissions that the caller actually holds on a resource — without having to make the real API call and risk a 403. Use this to debug access issues, verify least-privilege configurations, and audit what a service account can do before deploying it to production.
 
+*Python example for this operation.*
 ```python
 
 try:
@@ -815,16 +870,16 @@ except Exception as e:
     )
     print(r.stdout or r.stderr)
 ```
-
-      Permissions granted (7):
-        ✓ bigquery.tables.getData
-        ✓ compute.instances.list
-        ✓ datastore.entities.get
-        ✓ secretmanager.secrets.create
-        ✓ secretmanager.secrets.get
-        ✓ storage.buckets.list
-        ✓ storage.objects.create
-
+```text
+Permissions granted (7):
+  ✓ bigquery.tables.getData
+  ✓ compute.instances.list
+  ✓ datastore.entities.get
+  ✓ secretmanager.secrets.create
+  ✓ secretmanager.secrets.get
+  ✓ storage.buckets.list
+  ✓ storage.objects.create
+```
 ## Secret Manager — Secure Secret Lifecycle
 
 Secret Manager stores application secrets (API keys, passwords, certificates) as versioned, IAM-protected resources. Every access is logged to Cloud Audit Logs. Secrets are versioned — old versions remain accessible until explicitly disabled or destroyed, enabling zero-downtime rotation.
@@ -837,6 +892,7 @@ Secrets are accessed by resource path: `projects/{project}/secrets/{name}/versio
 
 `access_secret_version()` fetches the payload bytes for the specified version. Versions are immutable — the value at `versions/1` never changes. The `latest` alias always points to the most recent enabled version.
 
+*Python example for this operation.*
 ```python
 sm_client = secretmanager.SecretManagerServiceClient(credentials=sa_credentials)
 
@@ -854,15 +910,16 @@ for name in secret_names:
     except Exception as e:
         print(f"  {name:20s} ERROR: {e}")
 ```
-
-      test-api-key         version=1        value=sk_t***2345
-      db-password          version=1        value=EsgD***ass1
-      db-config            version=1        value={"ho***xx"}
-
+```text
+test-api-key         version=1        value=sk_t***2345
+db-password          version=1        value=EsgD***ass1
+db-config            version=1        value={"ho***xx"}
+```
 #### google-cloud-secret-manager — access a specific secret version
 
 Pin to a specific version number instead of `latest` for reproducibility — `latest` changes when new versions are added, which can cause a pipeline to behave differently between runs. Use pinned versions in production deployments and `latest` only in development where always-current is preferred.
 
+*Python example for this operation.*
 ```python
 version_path = f"projects/{PROJECT_ID}/secrets/test-api-key/versions/1"
 response = sm_client.access_secret_version(name=version_path)
@@ -872,16 +929,17 @@ print(f"  Version:  1")
 response.name  # State
 print(f"  Created:  {response.payload.data.decode('utf-8')[:8]}...")
 ```
-
-      Secret:   test-api-key
-      Version:  1
-      State:    projects/922174528852/secrets/test-api-key/versions/1
-      Created:  sk_test_...
-
+```text
+Secret:   test-api-key
+Version:  1
+State:    projects/922174528852/secrets/test-api-key/versions/1
+Created:  sk_test_...
+```
 #### Parse JSON secret — database config
 
 Secret Manager stores any string — not just passwords. Connection strings, JSON configs, and PEM certificates are all common payloads. Decode the bytes to a string, then parse with `json.loads()` for structured secrets.
 
+*Python example for this operation.*
 ```python
 secret_path = f"projects/{PROJECT_ID}/secrets/db-config/versions/latest"
 response = sm_client.access_secret_version(name=secret_path)
@@ -891,12 +949,12 @@ print(f"  DB config (parsed JSON):")
 for k, v in db_config.items():
     print(f"    {k}: {v}")
 ```
-
-      DB config (parsed JSON):
-        host: localhost
-        port: 1434
-        database: stoxx
-
+```text
+DB config (parsed JSON):
+  host: localhost
+  port: 1434
+  database: stoxx
+```
 ### Managing secret lifecycle
 
 Creating, rotating, and disabling secrets follows a strict lifecycle. Labels enable IAM conditions and audit filtering. Rotation keeps the blast radius of leaked credentials bounded.
@@ -911,6 +969,8 @@ Use Secret Manager for API keys, passwords, certificates shared across services.
 
 > [!success] Store in Secret Manager and access at runtime
 >
+
+> *Python example for this operation.*
 > ```python
 > from google.cloud import secretmanager
 > client = secretmanager.SecretManagerServiceClient()
@@ -918,7 +978,11 @@ Use Secret Manager for API keys, passwords, certificates shared across services.
 > name = f"projects/{PROJECT_ID}/secrets/my-api-key/versions/latest"
 > payload = client.access_secret_version(request={"name": name}).payload.data.decode()
 > ```
+> ```text
+> No visible output captured for this example.
+> ```
 
+*Python example for this operation.*
 ```python
 new_secret_id = "notebook-demo-secret"
 
@@ -943,10 +1007,10 @@ except Exception as e:
     else:
         raise
 ```
-
-      Created: projects/922174528852/secrets/notebook-demo-secret
-      Labels:  {'sensitivity': 'high', 'environment': 'lab', 'created-by': 'notebook-21'}
-
+```text
+Created: projects/922174528852/secrets/notebook-demo-secret
+Labels:  {'sensitivity': 'high', 'environment': 'lab', 'created-by': 'notebook-21'}
+```
 #### google-cloud-secret-manager add_secret_version — secret rotation
 
 Add a new version to replace the secret value — old versions stay accessible until disabled. Rotation limits blast radius of leaked credentials and satisfies compliance (SOC2, PCI-DSS).
@@ -964,6 +1028,7 @@ Recommended frequency: API/SA keys 90 days, DB passwords 30–90 days, certifica
 > 3. Verify no consumer reads the old version in logs/metrics.
 > 4. Disable the old version; wait 24 h; then destroy it (`versions destroy`).
 
+*Python example for this operation.*
 ```python
 new_password = secrets_module.token_urlsafe(24)
 parent = f"projects/{PROJECT_ID}/secrets/{new_secret_id}"
@@ -977,15 +1042,16 @@ version.name.split("/")[-1]  # New version
 version.state.name  # State
 print(f"  Value (first 8): {new_password[:8]}...")
 ```
-
-      New version:   2
-      State:         ENABLED
-      Value (first 8): A_t--tzM...
-
+```text
+New version:   2
+State:         ENABLED
+Value (first 8): A_t--tzM...
+```
 #### google-cloud-secret-manager — disable and destroy old versions
 
 After rotation, disable the old version first (reversible — can re-enable if consumers break), then destroy it after a grace period (irreversible — bytes are wiped from HSM). Never skip the disable→verify→destroy sequence.
 
+*Python example for this operation.*
 ```python
 parent = f"projects/{PROJECT_ID}/secrets/{new_secret_id}"
 versions = list(sm_client.list_secret_versions(parent=parent))
@@ -1004,12 +1070,12 @@ if len(versions) > 1:
     except Exception as e:
         print(f"  Disable skipped: {e}")
 ```
-
-      Versions for notebook-demo-secret:
-        v2: ENABLED
-        v1: ENABLED
-      Disabled: 1 → DISABLED
-
+```text
+Versions for notebook-demo-secret:
+  v2: ENABLED
+  v1: ENABLED
+Disabled: 1 → DISABLED
+```
 ### Access control and application patterns
 
 IAM policies on individual secrets override project-level roles. Application-side caching reduces API calls while respecting a TTL for freshness.
@@ -1018,6 +1084,7 @@ IAM policies on individual secrets override project-level roles. Application-sid
 
 Returns the IAM bindings on a specific secret resource. Empty bindings mean access is inherited from project-level roles — important to audit because project-level `roles/secretmanager.secretAccessor` grants access to ALL secrets, not just the intended ones.
 
+*Python example for this operation.*
 ```python
 secret_resource = f"projects/{PROJECT_ID}/secrets/test-api-key"
 policy = sm_client.get_iam_policy(request={"resource": secret_resource})
@@ -1031,14 +1098,15 @@ if policy.bindings:
 else:
     print("    No explicit bindings — access inherited from project-level roles")
 ```
-
-      IAM policy for test-api-key:
-        No explicit bindings — access inherited from project-level roles
-
+```text
+IAM policy for test-api-key:
+  No explicit bindings — access inherited from project-level roles
+```
 #### Secret access patterns for applications
 
 Two common patterns for consuming secrets at runtime. **Startup loading** injects secrets as environment variables once at process start — simple, but the value is stale if rotated during the process lifetime. **Lazy caching with TTL** fetches on first use and refreshes after the TTL expires — better for long-running services that need to pick up rotations automatically.
 
+*Python example for this operation.*
 ```python
 def load_secret_to_env(secret_id: str, env_var: str):
     """Load a secret from Secret Manager into an env var at startup."""
@@ -1075,14 +1143,14 @@ print("  ✗ Anti-pattern: NEVER hardcode secrets in source code")
 print('    password = "SecLabPass2026"  # ← WRONG')
 print('    password = cache.get("db-password")  # ← CORRECT')
 ```
+```text
+Cached secret (first 8): sk_test_...
+Cache TTL:               60 seconds
 
-      Cached secret (first 8): sk_test_...
-      Cache TTL:               60 seconds
-    
-      ✗ Anti-pattern: NEVER hardcode secrets in source code
-        password = "SecLabPass2026"  # ← WRONG
-        password = cache.get("db-password")  # ← CORRECT
-
+✗ Anti-pattern: NEVER hardcode secrets in source code
+  password = "SecLabPass2026"  # ← WRONG
+  password = cache.get("db-password")  # ← CORRECT
+```
 ## Cloud KMS — Encryption and Key Management
 
 Cloud KMS manages cryptographic keys on Google-owned HSMs. Your application never handles the raw key material — it sends plaintext to KMS and gets back ciphertext, or vice versa. Keys are non-exportable: the bytes never leave the HSM, and encrypt/decrypt operations happen inside the chip.
@@ -1115,6 +1183,7 @@ Direct KMS encrypt/decrypt for payloads under 64 KB. The KMS key ID is embedded 
 
 KMS symmetric encryption — plaintext sent to KMS, encrypted server-side, ciphertext returned. Use for small values (<64 KB) where audit trail and automatic key rotation are needed. For payloads >64 KB or high-throughput paths, use envelope encryption instead.
 
+*Python example for this operation.*
 ```python
 kms_client = kms.KeyManagementServiceClient(credentials=sa_credentials)
 
@@ -1133,16 +1202,17 @@ plaintext.decode()  # Plaintext
 print(f"  Ciphertext (b64): {base64.b64encode(ciphertext)[:60].decode()}...")
 print(f"  Ciphertext size:  {len(ciphertext)} bytes")
 ```
-
-      Key:              notebook-encrypt-key
-      Plaintext:        Sensitive financial data: EUROSTOXX50 daily returns
-      Ciphertext (b64): CiQAvMIMG7uKgzyIcAfrWoM0DVnV4jJC6rnouAWNwmx8MMBVtkYSXAA/1XLb...
-      Ciphertext size:  132 bytes
-
+```text
+Key:              notebook-encrypt-key
+Plaintext:        Sensitive financial data: EUROSTOXX50 daily returns
+Ciphertext (b64): CiQAvMIMG7uKgzyIcAfrWoM0DVnV4jJC6rnouAWNwmx8MMBVtkYSXAA/1XLb...
+Ciphertext size:  132 bytes
+```
 #### google-cloud-kms decrypt — symmetric decryption of ciphertext
 
 KMS embeds the key version identifier in the ciphertext envelope — the `decrypt()` call routes automatically to the correct version. You never need to specify which version was used to encrypt.
 
+*Python example for this operation.*
 ```python
 decrypt_response = kms_client.decrypt(
     name=key_name,
@@ -1153,10 +1223,10 @@ decrypted = decrypt_response.plaintext
 decrypted.decode()  # Decrypted
 decrypted == plaintext  # Match
 ```
-
-      Decrypted:        Sensitive financial data: EUROSTOXX50 daily returns
-      Match:            True
-
+```text
+Decrypted:        Sensitive financial data: EUROSTOXX50 daily returns
+Match:            True
+```
 ### Envelope encryption
 
 Two-layer encryption: encrypt data locally with a per-session AES-GCM key (DEK), then wrap the DEK with KMS. The DEK never leaves your process unencrypted. The wrapped DEK and nonce are stored alongside the ciphertext.
@@ -1165,6 +1235,7 @@ Two-layer encryption: encrypt data locally with a per-session AES-GCM key (DEK),
 
 Generates a 256-bit local DEK, encrypts the data with AES-GCM (authenticated encryption with a 12-byte nonce), then wraps the DEK with KMS. Avoids the 64 KB limit on direct KMS encrypt. Data encrypted locally (no network round-trip); only the small DEK is sent to KMS once per session. Use for files, blobs, high-throughput paths.
 
+*Python example for this operation.*
 ```python
 # Generate a 256-bit local Data Encryption Key (DEK)
 dek = AESGCM.generate_key(bit_length=256)
@@ -1190,19 +1261,22 @@ print(f"    Nonce:           {len(nonce)} bytes")
 print(f"    Wrapped DEK:     {len(wrapped_dek)} bytes")
 print(f"    Total overhead:  {len(wrapped_dek) + len(nonce)} bytes")
 ```
+```text
+DEK (b64):        5o1STNFyaNci6znfcgmakgZR/+Ej8W...
+Data encrypted:   10016 bytes (from 10000 bytes)
+Wrapped DEK:      113 bytes
 
-      DEK (b64):        5o1STNFyaNci6znfcgmakgZR/+Ej8W...
-      Data encrypted:   10016 bytes (from 10000 bytes)
-      Wrapped DEK:      113 bytes
-    
-      Envelope encryption result:
-        Encrypted data:  10016 bytes
-        Nonce:           12 bytes
-        Wrapped DEK:     113 bytes
-        Total overhead:  125 bytes
-
+Envelope encryption result:
+  Encrypted data:  10016 bytes
+  Nonce:           12 bytes
+  Wrapped DEK:     113 bytes
+  Total overhead:  125 bytes
+```
 #### cryptography AESGCM + google-cloud-kms — envelope decryption
 
+This section uses the adjacent example to show the operational shape of the workflow before the captured output.
+
+*Python example for this operation.*
 ```python
 # Reverse the envelope: unwrap DEK with KMS, then decrypt data locally
 # Step 1: Unwrap the DEK
@@ -1217,15 +1291,16 @@ recovered_dek == dek  # DEK recovered
 print(f"  Data decrypted:   {len(recovered_data)} bytes")
 recovered_data == large_data  # Data matches
 ```
-
-      DEK recovered:    True
-      Data decrypted:   10000 bytes
-      Data matches:     True
-
+```text
+DEK recovered:    True
+Data decrypted:   10000 bytes
+Data matches:     True
+```
 #### Encryption benchmark — latency for different payload sizes
 
 Measures KMS round-trip latency for encrypt and decrypt operations at three payload sizes. Direct KMS encryption is capped at 64 KB — anything larger requires envelope encryption (local AES-GCM + KMS-wrapped DEK).
 
+*Python example for this operation.*
 ```python
 sizes = [1024, 10_240, 64_000]
 
@@ -1249,15 +1324,15 @@ for size in sizes:
 
 print("  Note: >64KB payloads require envelope encryption (local DEK + KMS wrap)")
 ```
+```text
+Size  Encrypt (ms)  Decrypt (ms)
+──────────  ────────────  ────────────
+1,024          72.2          65.2
+10,240          75.7          74.9
+64,000         139.9         133.2
 
-      Size  Encrypt (ms)  Decrypt (ms)
-      ──────────  ────────────  ────────────
-      1,024          72.2          65.2
-      10,240          75.7          74.9
-      64,000         139.9         133.2
-    
-      Note: >64KB payloads require envelope encryption (local DEK + KMS wrap)
-
+Note: >64KB payloads require envelope encryption (local DEK + KMS wrap)
+```
 ### Integration with GCS and key management
 
 Client-side KMS encryption before GCS upload provides double encryption: your KMS key wraps the data before it reaches GCS, and GCS applies CMEK on top. Key version inspection shows the rotation history and current primary version.
@@ -1266,6 +1341,7 @@ Client-side KMS encryption before GCS upload provides double encryption: your KM
 
 Client-side KMS encryption before upload — provides double encryption (client KMS + server CMEK). Use when compliance requires encryption before data leaves your process (HIPAA, PCI-DSS) or when separating access (one team owns bucket, another owns KMS key). For files >64 KB, use envelope encryption.
 
+*Python example for this operation.*
 ```python
 gcs_client = storage.Client(project=PROJECT_ID, credentials=sa_credentials)
 bucket = gcs_client.bucket(BUCKET_NAME)
@@ -1284,15 +1360,16 @@ dest_blob.upload_from_string(enc_response.ciphertext)
 print(f"  Uploaded:          encrypted/csv/dim_index.csv.enc ({len(enc_response.ciphertext)} bytes)")
 print(f"  Double encrypted:  client-side KMS + server-side CMEK")
 ```
-
-      bronze/csv/dim_index.csv (247 bytes)
-      Uploaded:          encrypted/csv/dim_index.csv.enc (330 bytes)
-      Double encrypted:  client-side KMS + server-side CMEK
-
+```text
+bronze/csv/dim_index.csv (247 bytes)
+Uploaded:          encrypted/csv/dim_index.csv.enc (330 bytes)
+Double encrypted:  client-side KMS + server-side CMEK
+```
 #### google-cloud-storage + google-cloud-kms — download and decrypt from GCS
 
 Downloads the ciphertext blob and decrypts it using the same KMS key. The KMS key version is embedded in the ciphertext — no version tracking needed by the caller.
 
+*Python example for this operation.*
 ```python
 enc_blob = bucket.blob("encrypted/csv/dim_index.csv.enc")
 encrypted_content = enc_blob.download_as_bytes()
@@ -1307,20 +1384,21 @@ print("  First 3 lines:")
 for line in recovered_content.decode().split("\n")[:3]:
     print(f"    {line}")
 ```
+```text
+Downloaded:        330 bytes (encrypted)
+Decrypted:         247 bytes
+Content matches:   True
 
-      Downloaded:        330 bytes (encrypted)
-      Decrypted:         247 bytes
-      Content matches:   True
-    
-      First 3 lines:
-        index_key,display_name,file_prefix,color,currency
-        euro_stoxx_50,Euro Stoxx 50,eurostoxx50,#4285F4,€
-        oil_20,Oil & Gas 20,oil20,#D4A017,$
-
+First 3 lines:
+  index_key,display_name,file_prefix,color,currency
+  euro_stoxx_50,Euro Stoxx 50,eurostoxx50,#4285F4,€
+  oil_20,Oil & Gas 20,oil20,#D4A017,$
+```
 #### google-cloud-kms get_crypto_key — list key versions and rotation
 
 `get_crypto_key()` returns the current key metadata including the primary version, algorithm, and protection level. `list_crypto_key_versions()` shows all versions — enabled, disabled, and scheduled for destruction. After a rotation, the new version becomes primary for new encryptions; existing ciphertext still decrypts because the version ID is embedded in it.
 
+*Python example for this operation.*
 ```python
 key_name_full = kms_client.crypto_key_path(PROJECT_ID, KMS_LOCATION, KMS_KEYRING, KMS_KEY)
 
@@ -1340,21 +1418,22 @@ for v in versions:
     state = v.state.name
     print(f"    v{ver_num}: {state} (algorithm: {v.algorithm.name})")
 ```
+```text
+Key:             notebook-encrypt-key
+Purpose:         ENCRYPT_DECRYPT
+Primary version: 1
+Algorithm:       GOOGLE_SYMMETRIC_ENCRYPTION
+Protection:      SOFTWARE
+Created:         2026-03-25 22:10:21.518037+00:00
 
-      Key:             notebook-encrypt-key
-      Purpose:         ENCRYPT_DECRYPT
-      Primary version: 1
-      Algorithm:       GOOGLE_SYMMETRIC_ENCRYPTION
-      Protection:      SOFTWARE
-      Created:         2026-03-25 22:10:21.518037+00:00
-    
-      All versions:
-        v1: ENABLED (algorithm: GOOGLE_SYMMETRIC_ENCRYPTION)
-
+All versions:
+  v1: ENABLED (algorithm: GOOGLE_SYMMETRIC_ENCRYPTION)
+```
 #### google-cloud-storage get_bucket — verify CMEK server-side encryption
 
 CMEK means Google uses your KMS key (not their default) to encrypt objects at rest. The `default_kms_key_name` on the bucket metadata confirms CMEK is active. CSEK (customer-supplied) is the third option — you provide the key per request, maximum control but highest operational risk.
 
+*Python example for this operation.*
 ```python
 bucket_meta = gcs_client.get_bucket(BUCKET_NAME)
 
@@ -1371,16 +1450,16 @@ print("    Google-default: Google manages the key — zero config, no control")
 print("    CMEK:           You manage the key in KMS — control rotation, disable, destroy")
 print("    CSEK:           You supply the key in each request — max control, max risk")
 ```
+```text
+seclab-dev-ap-26-data
+CMEK (Customer-Managed)
+Default KMS key:  projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key
 
-      seclab-dev-ap-26-data
-      CMEK (Customer-Managed)
-      Default KMS key:  projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key
-    
-      Encryption comparison:
-        Google-default: Google manages the key — zero config, no control
-        CMEK:           You manage the key in KMS — control rotation, disable, destroy
-        CSEK:           You supply the key in each request — max control, max risk
-
+Encryption comparison:
+  Google-default: Google manages the key — zero config, no control
+  CMEK:           You manage the key in KMS — control rotation, disable, destroy
+  CSEK:           You supply the key in each request — max control, max risk
+```
 ## Compute Engine — SSH, Certificates and VM Identity
 
 Compute Engine VMs authenticate to GCP via the instance metadata server — no key file needed on the VM. SSH access is managed through OS Login (IAM-based, centralized) or legacy metadata keys. IAP tunnels provide SSH access without a public IP. This section covers both SSH access patterns and the metadata server identity model.
@@ -1393,6 +1472,7 @@ Three SSH access methods: direct key-based SSH (for debugging), OS Login key man
 
 `paramiko.SSHClient` connects to the VM over SSH. OS Login maps the Ed25519 public key to the Google account identity — the username is derived from the account email (dots and `@` replaced with underscores). `AutoAddPolicy` auto-trusts the host key on first connect; in production, use a known-hosts file instead.
 
+*Python example for this operation.*
 ```python
 try:
     ssh = paramiko.SSHClient()
@@ -1427,15 +1507,16 @@ except Exception as e:
     print(f"  This is expected if the VM is stopped or firewall blocks access")
     print(f"  VM IP: {VM_EXTERNAL_IP}, Key: {SSH_KEY_PATH}")
 ```
+```text
+$ hostname
+  notebook-vm
 
-      $ hostname
-        notebook-vm
-    
-      $ uname -a
-        Linux notebook-vm 6.1.0-43-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.162-1 (2026-02-08) x86_64 GNU/Linux
-    
-      $ cat /etc/os-release | head -3
-        PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+$ uname -a
+  Linux notebook-vm 6.1.0-43-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.162-1 (2026-02-08) x86_64 GNU/Linux
+
+$ cat /etc/os-release | head -3
+  PRETTY_NAME="Debian GNU/Linux 12 (bookworm)"
+```
     NAME="Debian GNU/Linux"
     VERSION_ID="12"
     
@@ -1445,22 +1526,33 @@ except Exception as e:
 
 OS Login centralizes SSH key management at the Google account level — no need to edit `authorized_keys` on each VM. Keys are registered once and automatically propagated to all VMs where the account has `roles/compute.osLogin`.
 
+*Python example for this operation.*
 ```python
-!gcloud compute os-login ssh-keys list --format="table(fingerprint, key.len())"
+result = subprocess.run(
+    [
+        "gcloud",
+        "compute",
+        "os-login",
+        "ssh-keys",
+        "list",
+        "--format=table(fingerprint,key.len())",
+    ],
+    check=True,
+    capture_output=True,
+    text=True,
+)
+print(result.stdout.strip())
 print("  OS Login vs metadata SSH keys:")
 print("    OS Login:    centralized, tied to Google identity, auto-managed")
 print("    Metadata:    per-VM or project-wide, manual management, legacy")
 ```
-
-    FINGERPRINT  FINGERPRINT
-      64
-      64
-      64
-    
-      OS Login vs metadata SSH keys:
-        OS Login:    centralized, tied to Google identity, auto-managed
-        Metadata:    per-VM or project-wide, manual management, legacy
-
+```text
+FINGERPRINT  KEY_LEN
+...
+OS Login vs metadata SSH keys:
+  OS Login:    centralized, tied to Google identity, auto-managed
+  Metadata:    per-VM or project-wide, manual management, legacy
+```
 #### IAP tunnel — SSH without public IP exposure
 
 Identity-Aware Proxy (IAP) creates an encrypted tunnel to a VM without needing a public IP or VPN:
@@ -1472,25 +1564,26 @@ Identity-Aware Proxy (IAP) creates an encrypted tunnel to a VM without needing a
 
 Benefits: no public IP on the VM, no VPN required, IAM-based access control, full audit logging of tunnel sessions.
 
+*Bash example for this operation.*
 ```bash
 gcloud compute ssh notebook-vm --zone=europe-west1-b --tunnel-through-iap
 ```
+```text
+IAP TCP Tunnel command:
+  gcloud compute ssh notebook-vm --zone=europe-west1-b --tunnel-through-iap
 
-      IAP TCP Tunnel command:
-        gcloud compute ssh notebook-vm --zone=europe-west1-b --tunnel-through-iap
-    
-      How IAP works:
-        1. Your gcloud CLI authenticates via OAuth2
-        2. IAP verifies your IAM role (roles/iap.tunnelResourceAccessor)
-        3. IAP creates an encrypted tunnel to the VM's internal IP
-        4. SSH traffic flows through the tunnel — no public IP needed
-    
-      Benefits:
-        ✓ No public IP needed on the VM
-        ✓ No VPN required
-        ✓ IAM-based access control (who can tunnel)
-        ✓ Audit logging of all tunnel sessions
+How IAP works:
+  1. Your gcloud CLI authenticates via OAuth2
+  2. IAP verifies your IAM role (roles/iap.tunnelResourceAccessor)
+  3. IAP creates an encrypted tunnel to the VM's internal IP
+  4. SSH traffic flows through the tunnel — no public IP needed
 
+Benefits:
+  ✓ No public IP needed on the VM
+  ✓ No VPN required
+  ✓ IAM-based access control (who can tunnel)
+  ✓ Audit logging of all tunnel sessions
+```
 ### VM identity and network security
 
 The metadata server at `169.254.169.254` is the internal GCP credential source for VMs. Firewall rules control which IPs can reach VM ports — rules with `0.0.0.0/0` source ranges are open to the entire internet and should be restricted in production.
@@ -1513,15 +1606,19 @@ All endpoints are under `http://metadata.google.internal/computeMetadata/v1/`:
 
 Usage from inside the VM:
 
+*Bash example for this operation.*
 ```bash
 curl -H "Metadata-Flavor: Google" \
   "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token"
 ```
-
+```text
+No visible output captured for this example.
+```
 #### google-cloud-compute FirewallsClient — audit permissive firewall rules
 
 `FirewallsClient.list()` returns all firewall rules for the project. Rules with `0.0.0.0/0` source ranges accept traffic from any IP on the internet — a security risk for SSH (port 22) and RDP (port 3389) in production. In a production environment, restrict SSH to known office/VPN IPs and use IAP for all other access.
 
+*Python example for this operation.*
 ```python
 compute_client = compute_v1.FirewallsClient(credentials=sa_credentials)
 
@@ -1546,18 +1643,18 @@ for fw in firewalls:
 
 print("  ⚠️ Rules with 0.0.0.0/0 allow traffic from ANY IP — restrict in production")
 ```
+```text
+Firewall rules for seclab-dev-ap-26:
+Name                      Direction  Action   Source Ranges             Ports                Warning   
+───────────────────────── ────────── ──────── ───────────────────────── ──────────────────── ──────────
+allow-ssh                 INGRESS    ALLOW    0.0.0.0/0                 tcp:22               ⚠️ OPEN
+default-allow-icmp        INGRESS    ALLOW    0.0.0.0/0                 icmp:all             ⚠️ OPEN
+default-allow-internal    INGRESS    ALLOW    10.128.0.0/9              tcp:0-65535; udp:0-65535; icmp:all 
+default-allow-rdp         INGRESS    ALLOW    0.0.0.0/0                 tcp:3389             ⚠️ OPEN
+default-allow-ssh         INGRESS    ALLOW    0.0.0.0/0                 tcp:22               ⚠️ OPEN
 
-      Firewall rules for seclab-dev-ap-26:
-      Name                      Direction  Action   Source Ranges             Ports                Warning   
-      ───────────────────────── ────────── ──────── ───────────────────────── ──────────────────── ──────────
-      allow-ssh                 INGRESS    ALLOW    0.0.0.0/0                 tcp:22               ⚠️ OPEN
-      default-allow-icmp        INGRESS    ALLOW    0.0.0.0/0                 icmp:all             ⚠️ OPEN
-      default-allow-internal    INGRESS    ALLOW    10.128.0.0/9              tcp:0-65535; udp:0-65535; icmp:all 
-      default-allow-rdp         INGRESS    ALLOW    0.0.0.0/0                 tcp:3389             ⚠️ OPEN
-      default-allow-ssh         INGRESS    ALLOW    0.0.0.0/0                 tcp:22               ⚠️ OPEN
-    
-      ⚠️ Rules with 0.0.0.0/0 allow traffic from ANY IP — restrict in production
-
+⚠️ Rules with 0.0.0.0/0 allow traffic from ANY IP — restrict in production
+```
 ## Cloud SQL — SQL Server Authentication and Encryption
 
 Four Cloud SQL authentication methods, from simplest to most secure:
@@ -1606,6 +1703,7 @@ This group covers direct TCP connections to Cloud SQL over a public IP. The inst
 
 Cloud SQL only accepts connections from authorized IPs. This cell detects your public IP and patches the allowlist automatically. Re-running is safe (replaces the full list). Takes 5–10 minutes.
 
+*Python example for this operation.*
 ```python
 my_ip = http_requests.get("https://api.ipify.org").text.strip()
 my_ip  # Your public IP
@@ -1615,23 +1713,40 @@ subprocess.run(
     shell=True
 )
 ```
-
-      Your public IP: 86.49.254.2
-
+```text
+Your public IP: 86.49.254.2
+```
     CompletedProcess(args='gcloud sql instances patch notebook-sql --project=seclab-dev-ap-26 --authorized-networks=86.49.254.2/32 --quiet', returncode=0)
 
 After patching, confirm the IP was registered by inspecting the instance's IP configuration.
 
+*Python example for this operation.*
 ```python
-!gcloud sql instances describe notebook-sql --project=seclab-dev-ap-26 --format="value(settings.ipConfiguration.authorizedNetworks)"
+result = subprocess.run(
+    [
+        "gcloud",
+        "sql",
+        "instances",
+        "describe",
+        "notebook-sql",
+        f"--project={PROJECT_ID}",
+        "--format=value(settings.ipConfiguration.authorizedNetworks)",
+    ],
+    check=True,
+    capture_output=True,
+    text=True,
+)
+print(result.stdout.strip())
 ```
-
-    {'kind': 'sql#aclEntry', 'name': '', 'value': '86.49.254.2/32'}
+```text
+{'kind': 'sql#aclEntry', 'name': '', 'value': '86.49.254.2/32'}
+```
 
 #### pymssql — connect to Cloud SQL with password authentication
 
 `pymssql` wraps the FreeTDS library to provide a DB-API 2.0 connection to SQL Server. Use it for direct TCP connections when the instance IP is authorized. The `login_timeout` parameter prevents indefinite hangs if the instance is unreachable or the IP is blocked.
 
+*Python example for this operation.*
 ```python
 try:
     conn = pymssql.connect(
@@ -1664,9 +1779,10 @@ except Exception as e:
     print(f"  This is expected if your IP is not in the authorized networks")
     print(f"  Add your IP: gcloud sql instances patch {SQL_INSTANCE} --authorized-networks=YOUR_IP/32")
 ```
-
-      Connected to Cloud SQL
-      Version: Microsoft SQL Server 2022 (RTM-CU23) (KB5078297) - 16.0.4236.2 (X64) 
+```text
+Connected to Cloud SQL
+Version: Microsoft SQL Server 2022 (RTM-CU23) (KB5078297) - 16.0.4236.2 (X64) 
+```
     	Jan 22 20...
       Server time: 2026-03-26 03:44:50.037000
       Connection closed
@@ -1679,6 +1795,7 @@ SSL/TLS protects data in transit between the client and Cloud SQL. Cloud SQL gen
 
 Cloud SQL generates a per-instance server CA certificate. Downloading and inspecting it gives you the Subject, validity window, and signing algorithm — confirming the certificate is current before embedding it in a connection string.
 
+*Python example for this operation.*
 ```python
 try:
     result = subprocess.run(
@@ -1713,17 +1830,17 @@ try:
 except Exception as e:
     print(f"  Certificate retrieval failed: {e}")
 ```
-
-      Server CA Certificate:
-        Length: 1252 bytes
-        Subject:    <Name(2.5.4.46=69d575e2-2aa2-4788-b14d-533fdb67a94d,CN=Cloud SQL Server CA,O=Google\, Inc,C=US)>
-        Issuer:     <Name(2.5.4.46=69d575e2-2aa2-4788-b14d-533fdb67a94d,CN=Cloud SQL Server CA,O=Google\, Inc,C=US)>
-        Not before: 2026-03-26 03:18:11+00:00
-        Not after:  2036-03-23 03:19:11+00:00
-        Serial:     0
-        Algorithm:  sha256WithRSAEncryption
-        Saved to: server-ca.pem
-
+```text
+Server CA Certificate:
+  Length: 1252 bytes
+  Subject:    <Name(2.5.4.46=69d575e2-2aa2-4788-b14d-533fdb67a94d,CN=Cloud SQL Server CA,O=Google\, Inc,C=US)>
+  Issuer:     <Name(2.5.4.46=69d575e2-2aa2-4788-b14d-533fdb67a94d,CN=Cloud SQL Server CA,O=Google\, Inc,C=US)>
+  Not before: 2026-03-26 03:18:11+00:00
+  Not after:  2036-03-23 03:19:11+00:00
+  Serial:     0
+  Algorithm:  sha256WithRSAEncryption
+  Saved to: server-ca.pem
+```
     C:\Users\aperi\AppData\Local\Temp\ipykernel_28040\2555882462.py:20: CryptographyDeprecationWarning: Parsed a serial number which wasn't positive (i.e., it was negative or zero), which is disallowed by RFC 5280. Loading this certificate will cause an exception in a future release of cryptography.
       cert = x509.load_pem_x509_certificate(
     C:\Users\aperi\AppData\Local\Temp\ipykernel_28040\2555882462.py:27: CryptographyDeprecationWarning: Parsed a serial number which wasn't positive (i.e., it was negative or zero), which is disallowed by RFC 5280. Loading this certificate will cause an exception in a future release of cryptography.
@@ -1739,6 +1856,8 @@ The server CA certificate proves you're talking to the real Cloud SQL instance (
 
 > [!success] Provide the server CA certificate and verify the hostname
 >
+
+> *Python example for this operation.*
 > ```python
 > import os, pymssql
 > # Download the Cloud SQL CA cert from the GCP console and supply it explicitly
@@ -1749,9 +1868,12 @@ The server CA certificate proves you're talking to the real Cloud SQL instance (
 >     database="stoxx", tls_verify_certificate=True
 > )
 > ```
-
+> ```text
+> No visible output captured for this example.
+> ```
 pymssql uses FreeTDS — TLS via `TDSSSL` env var, cert validation via `TDSCAFILE`.
 
+*Python example for this operation.*
 ```python
 try:
     # Tell FreeTDS to require encryption and verify the server cert
@@ -1780,11 +1902,11 @@ finally:
     os.environ.pop("TDSSSL", None)
     os.environ.pop("TDSCAFILE", None)
 ```
-
-      SSL-verified connection: OK
-      CA file: C:\Users\aperi\DEV\LANG\server-ca.pem
-      Server: Microsoft SQL Server 2022 (RTM-CU23) (KB5078297) - 16.0.4236...
-
+```text
+SSL-verified connection: OK
+CA file: C:\Users\aperi\DEV\LANG\server-ca.pem
+Server: Microsoft SQL Server 2022 (RTM-CU23) (KB5078297) - 16.0.4236...
+```
 ### Auth Proxy and network configuration
 
 The Cloud SQL Auth Proxy handles IAM authentication and TLS automatically. It runs as a local process (or sidecar in Kubernetes) that accepts plaintext connections on `localhost` and forwards them to Cloud SQL over an encrypted, IAM-authenticated tunnel. No public IP, no SSL certs, no password distribution required.
@@ -1793,48 +1915,63 @@ The Cloud SQL Auth Proxy handles IAM authentication and TLS automatically. It ru
 
 The Auth Proxy creates a local encrypted tunnel to Cloud SQL. It authenticates via IAM — no password or SSL certificate needed by the client. Steps: download the binary, start it with the instance connection name, then connect to `localhost:1433` as if it were a local SQL Server.
 
+*Bash example for this operation.*
 ```bash
-curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.win64.exe
+curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.linux.amd64
+chmod +x cloud-sql-proxy
 
 ./cloud-sql-proxy seclab-dev-ap-26:europe-west1:notebook-sql --port=1433
 ```
-
+```text
+No visible output captured for this example.
+```
 #### Connection method comparison
 
-| Method | Public IP | SSL | IAM Auth | Key File |
-|---|---|---|---|---|
-| Direct + password | Required | Optional | No | No |
-| Direct + SSL certs | Required | Yes | No | Client cert |
-| Auth Proxy | No | Auto | Yes | No |
-| Private IP | No | Optional | Optional | No |
+`Direct + password` is the fastest development path when you already have a public IP and a disposable SQL login, but it depends on authorized networks and provides the weakest operational posture in this section.
+
+`Direct + SSL certs` adds server and client certificate validation to the same public-IP path. Use it when a direct TCP connection is unavoidable and the environment can manage certificate distribution safely.
+
+`Auth Proxy` is the preferred default for production and shared environments because it removes public-IP exposure, handles TLS automatically, and lets IAM replace password distribution.
+
+`Private IP` is the network-first option for workloads already running inside the same VPC or a connected network. It reduces public exposure, but it still requires you to decide separately whether authentication happens with IAM, database credentials, or both.
 
 #### Cloud SQL authorized networks — IP whitelisting
 
 List the current authorized networks for the instance to audit which IPs have direct access. Use this after a debugging session to verify your temporary IP was removed, or to audit for over-permissive ranges like `0.0.0.0/0`.
 
+*Python example for this operation.*
 ```python
-!gcloud sql instances describe {SQL_INSTANCE} --format="yaml(settings.ipConfiguration)"
+result = subprocess.run(
+    [
+        "gcloud",
+        "sql",
+        "instances",
+        "describe",
+        SQL_INSTANCE,
+        "--format=yaml(settings.ipConfiguration)",
+    ],
+    check=True,
+    capture_output=True,
+    text=True,
+)
+print(result.stdout.strip())
 print("  To add your current IP:")
 print(f"    gcloud sql instances patch {SQL_INSTANCE} --authorized-networks=YOUR_IP/32")
-print("  ⚠️ Never use 0.0.0.0/0 — it allows connections from any IP on the internet")
+print("  Never use 0.0.0.0/0 — it allows connections from any IP on the internet")
 ```
-
-    settings:
-      ipConfiguration:
-        authorizedNetworks:
-        - kind: sql#aclEntry
-          name: ''
-          value: 86.49.254.2/32
-        ipv4Enabled: true
-        requireSsl: false
-        serverCaMode: GOOGLE_MANAGED_INTERNAL_CA
-        serverCertificateRotationMode: SERVER_CERTIFICATE_ROTATION_MODE_UNSPECIFIED
-        sslMode: ALLOW_UNENCRYPTED_AND_ENCRYPTED
-    
-      To add your current IP:
-        gcloud sql instances patch notebook-sql --authorized-networks=YOUR_IP/32
-    
-      ⚠️ Never use 0.0.0.0/0 — it allows connections from any IP on the internet
+```text
+settings:
+  ipConfiguration:
+    authorizedNetworks:
+    - kind: sql#aclEntry
+      name: ''
+      value: 86.49.254.2/32
+    ipv4Enabled: true
+...
+To add your current IP:
+  gcloud sql instances patch notebook-sql --authorized-networks=YOUR_IP/32
+Never use 0.0.0.0/0 — it allows connections from any IP on the internet
+```
 
 ### Encryption at rest
 
@@ -1844,19 +1981,33 @@ Cloud SQL encrypts all data at rest by default using Google-managed keys. For st
 
 Check if the instance uses CMEK or Google-default encryption for data at rest. Empty output = Google-default. CMEK requires `--disk-encryption-key` at creation time — cannot be changed after.
 
+*Python example for this operation.*
 ```python
-!gcloud sql instances describe {SQL_INSTANCE} --format="yaml(diskEncryptionConfiguration, diskEncryptionStatus)"
+result = subprocess.run(
+    [
+        "gcloud",
+        "sql",
+        "instances",
+        "describe",
+        SQL_INSTANCE,
+        "--format=yaml(diskEncryptionConfiguration,diskEncryptionStatus)",
+    ],
+    check=True,
+    capture_output=True,
+    text=True,
+)
+print(result.stdout.strip())
 print("  (empty = Google-default encryption, not CMEK)")
 ```
-
-    diskEncryptionConfiguration:
-      kind: sql#diskEncryptionConfiguration
-      kmsKeyName: projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key
-    diskEncryptionStatus:
-      kind: sql#diskEncryptionStatus
-      kmsKeyVersionName: projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key/cryptoKeyVersions/1
-    
-      (empty = Google-default encryption, not CMEK)
+```text
+diskEncryptionConfiguration:
+  kind: sql#diskEncryptionConfiguration
+  kmsKeyName: projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key
+diskEncryptionStatus:
+  kind: sql#diskEncryptionStatus
+  kmsKeyVersionName: projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key/cryptoKeyVersions/1
+(empty = Google-default encryption, not CMEK)
+```
 
 ## BigQuery — Secure Data Operations
 
@@ -1870,6 +2021,7 @@ These H4s demonstrate querying BigQuery with two different credential types — 
 
 `bigquery.Client` accepts a `credentials` parameter that overrides ADC. Passing `sa_credentials` (loaded from a JSON key file) authenticates as the service account directly, without relying on the environment's default identity.
 
+*Python example for this operation.*
 ```python
 bq_client = bigquery.Client(project=PROJECT_ID, credentials=sa_credentials)
 
@@ -1886,8 +2038,9 @@ results = bq_client.query(query).to_dataframe()
 print(f"  Top 10 stocks by composite rank (SA key auth):")
 print(results.to_string(index=False))
 ```
-
-      Top 10 stocks by composite rank (SA key auth):
+```text
+Top 10 stocks by composite rank (SA key auth):
+```
      symbol   close  momentum_pct  composite_rank
      ENI.MI   21.34         12.74               1
      DB1.DE  237.90          6.98               2
@@ -1904,6 +2057,7 @@ print(results.to_string(index=False))
 
 Passing `impersonated_creds` to `bigquery.Client` runs all queries as the target service account, without storing its key file on the local machine. The calling identity needs `roles/iam.serviceAccountTokenCreator` on the target SA.
 
+*Python example for this operation.*
 ```python
 impersonated_bq = bigquery.Client(
     project=PROJECT_ID,
@@ -1920,8 +2074,9 @@ results = impersonated_bq.query(f"""
 print(f"  BigQuery query via impersonation:")
 print(results.to_string(index=False))
 ```
-
-      BigQuery query via impersonation:
+```text
+BigQuery query via impersonation:
+```
      total_rows  best_rank  worst_rank
       50          1          50
 
@@ -1943,6 +2098,7 @@ Encrypt individual field values with KMS before inserting into BigQuery — the 
 > - For fields you need to filter on (email, account ID), use deterministic tokenization (HMAC or format-preserving encryption) so equality lookups still work.
 > - Create a separate KMS key per tenant: `{project}/cryptoKeys/{tenant-id}-key` — compromising one key does not expose other tenants’ data.
 
+*Python example for this operation.*
 ```python
 sample_data = [
     {"symbol": "AAPL", "portfolio_id": "PF-001", "allocation_pct": 15.5},
@@ -1978,13 +2134,14 @@ try:
 except Exception as e:
     print(f"  Insert: {e}")
 ```
-
-      Inserted 3 rows with encrypted portfolio_id
-
+```text
+Inserted 3 rows with encrypted portfolio_id
+```
 #### Query encrypted data — ciphertext in results
 
 Query the encrypted table to confirm the stored `portfolio_id_encrypted` column contains ciphertext — base64-encoded KMS output, unreadable without the KMS key. This validates that plaintext never entered BigQuery.
 
+*Python example for this operation.*
 ```python
 results = bq_client.query(f"""
     SELECT symbol, portfolio_id_encrypted, allocation_pct
@@ -1996,16 +2153,17 @@ for _, row in results.iterrows():
     enc_preview = row["portfolio_id_encrypted"][:40] + "..."
     print(f"    {row['symbol']:6s}  {enc_preview}  {row['allocation_pct']:5.1f}%")
 ```
-
-      Encrypted data in BigQuery:
-        AAPL    CiQAvMIMGyYPhMQKedON8veCpJC21PuG2RsOFM4K...   15.5%
-        MSFT    CiQAvMIMG67CLZrcvMqcbL1RaHNbTo3yXGn1N9vv...   22.0%
-        GOOG    CiQAvMIMG0AZnsgg5gCtjfifR/XHBZcVmVG4uxsK...   18.3%
-
+```text
+Encrypted data in BigQuery:
+  AAPL    CiQAvMIMGyYPhMQKedON8veCpJC21PuG2RsOFM4K...   15.5%
+  MSFT    CiQAvMIMG67CLZrcvMqcbL1RaHNbTo3yXGn1N9vv...   22.0%
+  GOOG    CiQAvMIMG0AZnsgg5gCtjfifR/XHBZcVmVG4uxsK...   18.3%
+```
 #### google-cloud-kms decrypt — decrypt BigQuery column values after query
 
 After fetching the ciphertext rows, decode each `portfolio_id_encrypted` value from base64 and pass the raw bytes to `kms_client.decrypt`. This round-trip confirms the KMS key is accessible and the encryption was done with the correct key version. The table is deleted at the end to avoid leaving demo data.
 
+*Python example for this operation.*
 ```python
 print("  Decrypted data:")
 for _, row in results.iterrows():
@@ -2017,13 +2175,13 @@ for _, row in results.iterrows():
 bq_client.delete_table(table_id, not_found_ok=True)
 table_id
 ```
-
-      Decrypted data:
-        AAPL    PF-001   15.5%
-        MSFT    PF-002   22.0%
-        GOOG    PF-003   18.3%
-      Cleaned up: seclab-dev-ap-26.index_data.encrypted_demo
-
+```text
+Decrypted data:
+  AAPL    PF-001   15.5%
+  MSFT    PF-002   22.0%
+  GOOG    PF-003   18.3%
+Cleaned up: seclab-dev-ap-26.index_data.encrypted_demo
+```
 ### Authorized views and encryption audit
 
 Authorized views let you expose a subset of columns from a sensitive table without granting the consumer IAM access to the underlying table. Encryption audit checks whether the dataset or individual tables use CMEK (customer-managed KMS key) or Google-managed default encryption.
@@ -2032,6 +2190,7 @@ Authorized views let you expose a subset of columns from a sensitive table witho
 
 `get_dataset` returns the dataset resource including `default_encryption_configuration`. If it's `None`, all tables use Google-managed encryption. Individual tables can override this; `get_table` returns per-table `encryption_configuration` with the KMS key name if CMEK is in use.
 
+*Python example for this operation.*
 ```python
 dataset = bq_client.get_dataset(f"{PROJECT_ID}.{BQ_DATASET}")
 
@@ -2046,19 +2205,20 @@ for t in tables:
     enc_str = f"CMEK: {enc.kms_key_name}" if enc else "Google-managed"
     print(f"    {t.table_id:25s}  {full_table.num_rows:>8,d} rows  {enc_str}")
 ```
+```text
+Dataset: index_data
+Default encryption: Google-managed
 
-      Dataset: index_data
-      Default encryption: Google-managed
-    
-      Tables (3):
-        bronze_ohlcv                 66,355 rows  Google-managed
-        gold_scores                      50 rows  Google-managed
-        silver_ohlcv                 66,355 rows  Google-managed
-
+Tables (3):
+  bronze_ohlcv                 66,355 rows  Google-managed
+  gold_scores                      50 rows  Google-managed
+  silver_ohlcv                 66,355 rows  Google-managed
+```
 #### Authorized view — expose only non-sensitive columns
 
 An authorized view is a `bigquery.Table` with `view_query` set. BigQuery executes the query as the view owner's identity, so consumers can query the view using their own credentials without needing access to the source table. This is the standard pattern for multi-team data sharing with column-level access control.
 
+*Python example for this operation.*
 ```python
 view_id = f"{PROJECT_ID}.{BQ_DATASET}.gold_scores_public"
 
@@ -2082,9 +2242,10 @@ try:
 except Exception as e:
     print(f"  View creation: {e}")
 ```
-
-      Created authorized view: seclab-dev-ap-26.index_data.gold_scores_public
-      View results (sensitive columns hidden):
+```text
+Created authorized view: seclab-dev-ap-26.index_data.gold_scores_public
+View results (sensitive columns hidden):
+```
     symbol  composite_rank  momentum_pct
     ENI.MI               1         12.74
     DB1.DE               2          6.98
@@ -2104,6 +2265,7 @@ Basic read, write, and update operations using `google-cloud-firestore`, all aut
 
 `firestore.Client` accepts `credentials` and a `database` parameter (for named Firestore databases). Documents are streamed from a collection using `.stream()`, which is memory-efficient for large result sets. `.order_by` and `.limit` translate to Firestore index-backed queries.
 
+*Python example for this operation.*
 ```python
 fs_client = firestore.Client(
     project=PROJECT_ID,
@@ -2123,20 +2285,21 @@ for doc in docs:
     if momentum is not None:
         print(f"  {d['symbol']:12s} {d['close']:>10.2f} {d['composite_rank']:>6d} {momentum:>+10.4f}")
 ```
-
-      Top 5 scores from Firestore (seclab-scores):
-      Symbol            Close   Rank   Momentum
-      ──────────── ────────── ────── ──────────
-      ENI.MI            21.34      1    +0.1274
-      DB1.DE           237.90      2    +0.0698
-      TTE.PA            69.77      3    +0.0647
-      AD.AS             41.05      4    +0.0554
-      PRX.AS            45.69      5    +0.0328
-
+```text
+Top 5 scores from Firestore (seclab-scores):
+Symbol            Close   Rank   Momentum
+──────────── ────────── ────── ──────────
+ENI.MI            21.34      1    +0.1274
+DB1.DE           237.90      2    +0.0698
+TTE.PA            69.77      3    +0.0647
+AD.AS             41.05      4    +0.0554
+PRX.AS            45.69      5    +0.0328
+```
 #### google-cloud-firestore document.set — write a new document
 
 `document.set` creates or fully replaces a document at a specific path. `firestore.SERVER_TIMESTAMP` is a sentinel that Firestore replaces with the server-side write time — use it instead of `datetime.now()` to avoid clock skew.
 
+*Python example for this operation.*
 ```python
 doc_ref = fs_client.collection("scores_latest").document("DEMO_STOCK")
 
@@ -2156,14 +2319,15 @@ print(f"  Written: DEMO_STOCK to scores_latest")
 doc = fs_client.collection("scores_latest").document("DEMO_STOCK").get()
 doc.to_dict()['symbol'], doc.to_dict()['composite_rank']
 ```
-
-      Written: DEMO_STOCK to scores_latest
-      Verified: DEMO_STOCK rank=99
-
+```text
+Written: DEMO_STOCK to scores_latest
+Verified: DEMO_STOCK rank=99
+```
 #### google-cloud-firestore document.update — partial merge
 
 `document.update` sends a field-mask patch — only the specified keys are changed. Fields not included in the update are left intact on the server. Use `update` instead of `set` when you need to change a subset of fields without reading the full document first.
 
+*Python example for this operation.*
 ```python
 doc_ref = fs_client.collection("scores_latest").document("DEMO_STOCK")
 
@@ -2179,12 +2343,12 @@ updated['close']
 updated['daily_return']
 print(f"    created_by:   {updated['created_by']}  ← preserved from original")
 ```
-
-      Updated DEMO_STOCK:
-        close:        105.5
-        daily_return: 0.055
-        created_by:   notebook-21  ← preserved from original
-
+```text
+Updated DEMO_STOCK:
+  close:        105.5
+  daily_return: 0.055
+  created_by:   notebook-21  ← preserved from original
+```
 ### Field-level encryption
 
 Firestore has no native field-level encryption. The pattern is to encrypt individual field values with KMS before writing — the document stores ciphertext. Even Firestore admins and GCP support cannot read the plaintext without the KMS key. Use for PII, client identifiers, and proprietary financial annotations.
@@ -2193,6 +2357,7 @@ Firestore has no native field-level encryption. The pattern is to encrypt indivi
 
 Encrypt the sensitive fields (`portfolio_id`, `risk_notes`) with KMS before calling `doc_ref.set`. The document stores only base64-encoded ciphertext and the KMS key path (for reference — not the key itself). The non-sensitive `symbol` and `position_size` fields remain plaintext so they can still be queried.
 
+*Python example for this operation.*
 ```python
 sensitive_data = {
     "symbol": "AAPL",
@@ -2225,16 +2390,17 @@ print(f"    portfolio_id: encrypted ({len(enc_portfolio)} bytes)")
 print(f"    risk_notes:   encrypted ({len(enc_notes)} bytes)")
 print(f"    symbol:       plaintext (non-sensitive)")
 ```
-
-      Written encrypted document: encrypted_positions/AAPL
-        portfolio_id: encrypted (94 bytes)
-        risk_notes:   encrypted (125 bytes)
-        symbol:       plaintext (non-sensitive)
-
+```text
+Written encrypted document: encrypted_positions/AAPL
+  portfolio_id: encrypted (94 bytes)
+  risk_notes:   encrypted (125 bytes)
+  symbol:       plaintext (non-sensitive)
+```
 #### google-cloud-firestore + google-cloud-kms — read and decrypt fields
 
 Fetch the document, then call `kms_client.decrypt` on each ciphertext field. KMS returns the original plaintext bytes; `.decode()` converts to a Python string. This pattern keeps the decryption logic in the application layer — Firestore is unaware of the encryption.
 
+*Python example for this operation.*
 ```python
 doc = fs_client.collection("encrypted_positions").document("AAPL").get()
 data = doc.to_dict()
@@ -2255,13 +2421,13 @@ dec_portfolio
 data['position_size']
 dec_notes
 ```
-
-      Decrypted document: encrypted_positions/AAPL
-        symbol:       AAPL
-        portfolio_id: PF-SECRET-001
-        position:     50,000.00
-        risk_notes:   High concentration risk — review quarterly
-
+```text
+Decrypted document: encrypted_positions/AAPL
+  symbol:       AAPL
+  portfolio_id: PF-SECRET-001
+  position:     50,000.00
+  risk_notes:   High concentration risk — review quarterly
+```
 ### Access control
 
 Firestore has two independent access control layers: IAM roles (server-side SDKs, REST API) and Firebase security rules (client SDKs only). This section demonstrates IAM-based access — what applies to all Python server code — and shows how scoping credentials to the wrong OAuth scope denies access at the token level.
@@ -2282,6 +2448,7 @@ Firestore has **two** access control layers:
 
 The notebook SA has `roles/datastore.owner`, so it can read and write any document in the database. This is the standard server-side pattern: authenticate with a SA that holds the appropriate IAM role, and the admin SDK has full access without security rules evaluation.
 
+*Python example for this operation.*
 ```python
 fs_client = firestore.Client(project=PROJECT_ID, database=FIRESTORE_DB, credentials=sa_credentials)
 fs_client.collection("access_test").document("iam_demo").set({
@@ -2292,14 +2459,15 @@ doc = fs_client.collection("access_test").document("iam_demo").get()  # type: ig
 print(f"  Write + read with SA: OK")
 doc.to_dict()  # type: ignore[union-attr]
 ```
-
-      Write + read with SA: OK
-      Data: {'message': 'written by notebook-sa', 'timestamp': '2026-03-26T05:08:41.095980'}
-
+```text
+Write + read with SA: OK
+Data: {'message': 'written by notebook-sa', 'timestamp': '2026-03-26T05:08:41.095980'}
+```
 #### Scoped credentials — read-only access attempt
 
 `with_scopes` restricts the OAuth 2.0 token to specific Google API scopes. Supplying only `devstorage.read_only` means the token cannot be used for Firestore — the API rejects it with a 403 scope-insufficient error, regardless of IAM role. This demonstrates that OAuth scope and IAM role are independent enforcement layers.
 
+*Python example for this operation.*
 ```python
 read_only_creds = sa_credentials.with_scopes([
     "https://www.googleapis.com/auth/devstorage.read_only"
@@ -2315,9 +2483,10 @@ except Exception as e:
     print(f"  Error: {str(e)[:100]}")
     print("  \u2192 Scope restriction works: token lacks Firestore permission")
 ```
-
-      Read with storage-only scope: DENIED
-      Error: 403 Request had insufficient authentication scopes. [reason: "ACCESS_TOKEN_SCOPE_INSUFFICIENT"
+```text
+Read with storage-only scope: DENIED
+Error: 403 Request had insufficient authentication scopes. [reason: "ACCESS_TOKEN_SCOPE_INSUFFICIENT"
+```
     domai
       → Scope restriction works: token lacks Firestore permission
 
@@ -2325,6 +2494,7 @@ except Exception as e:
 
 `gcloud firestore databases describe` returns the database type and resource name. The second `gcloud` call queries the project IAM policy and filters for bindings that include the SA email, showing which roles grant access to Firestore/Datastore.
 
+*Python example for this operation.*
 ```python
 r = subprocess.run(
     ["gcloud", "firestore", "databases", "describe",
@@ -2344,27 +2514,33 @@ for line in r2.stdout.strip().splitlines():
     if "datastore" in line.lower() or "firestore" in line.lower() or "ROLE" in line:
         print(f"    {line.strip()}")
 ```
-
-      Database: projects/seclab-dev-ap-26/databases/seclab-scores	FIRESTORE_NATIVE
-      SA roles relevant to Firestore:
-        ROLE
-        roles/datastore.owner
-
+```text
+Database: projects/seclab-dev-ap-26/databases/seclab-scores	FIRESTORE_NATIVE
+SA roles relevant to Firestore:
+  ROLE
+  roles/datastore.owner
+```
 ### Cleanup
 
 Remove documents written during this section to keep Firestore free of demo data.
 
 #### Cleanup access test document
 
+This section uses the adjacent example to show the operational shape of the workflow before the captured output.
+
+*Python example for this operation.*
 ```python
 fs_client.collection("access_test").document("iam_demo").delete()
 print("  Cleaned up iam_demo document")
 ```
-
-      Cleaned up iam_demo document
-
+```text
+Cleaned up iam_demo document
+```
 #### Delete demo documents — cleanup
 
+This section uses the adjacent example to show the operational shape of the workflow before the captured output.
+
+*Python example for this operation.*
 ```python
 for collection, doc_id in [("scores_latest", "DEMO_STOCK"), ("encrypted_positions", "AAPL")]:
     try:
@@ -2373,10 +2549,10 @@ for collection, doc_id in [("scores_latest", "DEMO_STOCK"), ("encrypted_position
     except Exception as e:
         print(f"  Cleanup {collection}/{doc_id}: {e}")
 ```
-
-      Deleted: scores_latest/DEMO_STOCK
-      Deleted: encrypted_positions/AAPL
-
+```text
+Deleted: scores_latest/DEMO_STOCK
+Deleted: encrypted_positions/AAPL
+```
 ## Cloud Storage — Encryption and Access Control
 
 GCS supports three encryption layers: Google-managed (default), CMEK (Cloud KMS key, managed by you), and CSEK (key you supply per request; Google never stores it). Client-side encryption adds an additional layer before upload. Signed URLs provide time-limited, unauthenticated access to private objects. Access control is managed through bucket IAM policies.
@@ -2389,6 +2565,7 @@ GCS encrypts all objects at rest by default. CMEK gives you control over key rot
 
 `storage.Client` accepts `credentials` and authenticates as the service account. After upload, calling `blob.reload()` fetches the object metadata — including `kms_key_name` — which confirms which KMS key version encrypted the object server-side.
 
+*Python example for this operation.*
 ```python
 gcs_client = storage.Client(project=PROJECT_ID, credentials=sa_credentials)
 bucket = gcs_client.bucket(BUCKET_NAME)
@@ -2406,19 +2583,20 @@ blob.storage_class
 blob.crc32c
 blob.md5_hash
 ```
-
-      Uploaded:          security-demo/test_upload.csv
-      Size:              46 bytes
-      KMS key:           projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key/cryptoKeyVersions/1
-      Content type:      text/csv
-      STANDARD
-      CRC32C:            Z58l3A==
-      MD5:               DZTKSZ2pzrW0OKa+1XDM9A==
-
+```text
+Uploaded:          security-demo/test_upload.csv
+Size:              46 bytes
+KMS key:           projects/seclab-dev-ap-26/locations/europe-west1/keyRings/notebook-keyring/cryptoKeys/notebook-encrypt-key/cryptoKeyVersions/1
+Content type:      text/csv
+STANDARD
+CRC32C:            Z58l3A==
+MD5:               DZTKSZ2pzrW0OKa+1XDM9A==
+```
 #### cryptography AESGCM — client-side encryption before GCS upload
 
 AES-256-GCM encrypts data before it leaves the process. Combined with CMEK, this gives double encryption: your AES key protects the content, and CMEK protects the AES key (envelope encryption). The AES key is wrapped with KMS and stored as a separate blob — only callers with KMS decrypt access can unwrap it.
 
+*Python example for this operation.*
 ```python
 local_key = AESGCM.generate_key(bit_length=256)
 nonce = os.urandom(12)
@@ -2441,16 +2619,17 @@ print(f"  Wrapped key:       confidential.key ({len(wrapped_key)} bytes)")
 base64.b64encode(nonce).decode()
 print(f"  Encryption:        AES-256-GCM (client) + CMEK (server)")
 ```
-
-      Encrypted file:    confidential.enc (71 bytes)
-      Wrapped key:       confidential.key (113 bytes)
-      Nonce:             46KNSAuwqqS34IEe
-      AES-256-GCM (client) + CMEK (server)
-
+```text
+Encrypted file:    confidential.enc (71 bytes)
+Wrapped key:       confidential.key (113 bytes)
+Nonce:             46KNSAuwqqS34IEe
+AES-256-GCM (client) + CMEK (server)
+```
 #### cryptography AESGCM — download and decrypt client-side encrypted file
 
 Download the ciphertext blob and the wrapped-key blob, recover the nonce from the key blob's metadata, unwrap the AES key with KMS, then decrypt with AESGCM. The nonce is stored in GCS object metadata alongside the wrapped key — it does not need to be secret.
 
+*Python example for this operation.*
 ```python
 enc_data = bucket.blob("security-demo/confidential.enc").download_as_bytes()
 
@@ -2467,10 +2646,10 @@ recovered_data = aesgcm.decrypt(stored_nonce, enc_data, None)
 recovered_data.decode()
 recovered_data == plaintext_data
 ```
-
-      Decrypted: Confidential: Q4 portfolio allocations and risk metrics
-      Match:     True
-
+```text
+Decrypted: Confidential: Q4 portfolio allocations and risk metrics
+Match:     True
+```
 #### Customer-Supplied Encryption Keys (CSEK)
 
 CSEK: you provide a 256-bit AES key in the request header. Google uses it but **never stores it** — lost key = permanent data loss. Maximum customer control. Use for ultra-sensitive data where even trusting Google with a KMS key is not acceptable.
@@ -2486,6 +2665,7 @@ CSEK: you provide a 256-bit AES key in the request header. Google uses it but **
 > - Maintain at least two encrypted copies in geographically separate locations.
 > - Evaluate CMEK first: it satisfies most compliance requirements with far lower operational risk.
 
+*Python example for this operation.*
 ```python
 csek_key = os.urandom(32)
 csek_key_b64 = base64.b64encode(csek_key).decode()
@@ -2507,15 +2687,15 @@ content.decode()
 print("  ⚠️ CSEK risk: if you lose this key, the data is IRRECOVERABLE")
 print("  Google does not store CSEK keys — you must manage them yourself")
 ```
+```text
+CSEK key (b64):  ItHJaEjT0j6tLEZtba2d0W8BOeAZje...
+CSEK SHA-256:    JTuNxC8pBjyQt+5peLu4OxjwYLzwNC...
+Uploaded with CSEK: csek_test.txt
+Downloaded with CSEK: This data is encrypted with a customer-supplied key
 
-      CSEK key (b64):  ItHJaEjT0j6tLEZtba2d0W8BOeAZje...
-      CSEK SHA-256:    JTuNxC8pBjyQt+5peLu4OxjwYLzwNC...
-      Uploaded with CSEK: csek_test.txt
-      Downloaded with CSEK: This data is encrypted with a customer-supplied key
-    
-      ⚠️ CSEK risk: if you lose this key, the data is IRRECOVERABLE
-      Google does not store CSEK keys — you must manage them yourself
-
+⚠️ CSEK risk: if you lose this key, the data is IRRECOVERABLE
+Google does not store CSEK keys — you must manage them yourself
+```
 ### Signed URLs
 
 Signed URLs embed authentication directly in the URL — any bearer can access the object for the duration of the `expiration` window, without needing a Google identity. Use for time-limited sharing, frontend direct upload/download (avoids routing through a backend), and email links.
@@ -2534,6 +2714,7 @@ Signed URLs grant time-limited access to a private GCS object without requiring 
 > - Never log the full URL — log only the GCS path and the expiry timestamp.
 > - Use a dedicated signing-only SA (`signing-sa@...`) with `roles/iam.serviceAccountTokenCreator`; keep it separate from the SA used by production services so key rotation does not break active workloads.
 
+*Python example for this operation.*
 ```python
 blob_to_sign = bucket.blob("bronze/csv/dim_index.csv")
 
@@ -2544,28 +2725,29 @@ signed_url = blob_to_sign.generate_signed_url(
     credentials=sa_credentials,
 )
 
-print(f"  Signed URL for bronze/csv/dim_index.csv:")
-print(f"    {signed_url[:100]}...")
-print(f"    Expires in: 15 minutes")
+print("  Signed URL generated for bronze/csv/dim_index.csv")
+print("  URL value masked in logs")
+print("  Expires in: 15 minutes")
 
 response = http_requests.get(signed_url)
 response.status_code
 print(f"  Content size: {len(response.content)} bytes")
 response.text.split(chr(10))[0]
 ```
+```text
+Signed URL generated for bronze/csv/dim_index.csv
+URL value masked in logs
+Expires in: 15 minutes
 
-      Signed URL for bronze/csv/dim_index.csv:
-        https://storage.googleapis.com/seclab-dev-ap-26-data/bronze/csv/dim_index.csv?X-Goog-Algorithm=GOOG4...
-        Expires in: 15 minutes
-    
-      GET response: 200
-      Content size: 247 bytes
-      First line:   index_key,display_name,file_prefix,color,currency
-
+GET response: 200
+Content size: 247 bytes
+First line:   index_key,display_name,file_prefix,color,currency
+```
 #### google-cloud-storage generate_signed_url — presigned PUT upload
 
 A signed PUT URL allows an unauthenticated client to upload directly to GCS. This pattern is used in frontend applications to avoid routing large uploads through a backend: the server generates the signed URL, returns it to the client, and the client PUTs directly to GCS. The `content_type` in the signature must match the `Content-Type` header in the PUT request.
 
+*Python example for this operation.*
 ```python
 upload_blob = bucket.blob("security-demo/signed_upload_test.txt")
 
@@ -2590,11 +2772,11 @@ uploaded_blob = bucket.blob("security-demo/signed_upload_test.txt")
 content = uploaded_blob.download_as_string()
 content.decode()
 ```
-
-      Signed upload URL generated (expires in 15 min)
-      PUT response:  200
-      Verified:      Uploaded via signed URL — no credentials needed
-
+```text
+Signed upload URL generated (expires in 15 min)
+PUT response:  200
+Verified:      Uploaded via signed URL — no credentials needed
+```
 ### Access control
 
 GCS supports two access control models: uniform (IAM only) and fine-grained (IAM + per-object ACLs). Uniform is recommended for new buckets — it has a single permission model, is easier to audit, and prevents accidental over-permissive ACLs on individual objects.
@@ -2603,6 +2785,7 @@ GCS supports two access control models: uniform (IAM only) and fine-grained (IAM
 
 `get_iam_policy` returns the bucket-level IAM bindings. `requested_policy_version=3` enables conditional IAM policies. Iterate the bindings to audit which principals have which roles on the bucket.
 
+*Python example for this operation.*
 ```python
 bucket_iam = bucket.get_iam_policy(requested_policy_version=3)
 
@@ -2615,17 +2798,17 @@ for binding in bucket_iam.bindings:
     print()
 
 ```
+```text
+IAM policy for gs://seclab-dev-ap-26-data:
+Version: 1
 
-      IAM policy for gs://seclab-dev-ap-26-data:
-      Version: 1
-    
-      Role: roles/storage.legacyBucketOwner
-        → projectEditor:seclab-dev-ap-26
-        → projectOwner:seclab-dev-ap-26
-    
-      Role: roles/storage.legacyBucketReader
-        → projectViewer:seclab-dev-ap-26
+Role: roles/storage.legacyBucketOwner
+  → projectEditor:seclab-dev-ap-26
+  → projectOwner:seclab-dev-ap-26
 
+Role: roles/storage.legacyBucketReader
+  → projectViewer:seclab-dev-ap-26
+```
 > [!tip] Use Uniform Access Control
 >
 > - **Uniform (IAM only):** recommended — single permission model, easier to audit and manage.
@@ -2639,6 +2822,7 @@ These patterns combine multiple GCP security services into end-to-end secure wor
 
 The pipeline demonstrates defense-in-depth: each stage authenticates via SA credentials, data travels over TLS, and the payload is KMS-encrypted before writing to any storage service. Even if Firestore or GCS is breached, the data is unreadable without the KMS key.
 
+*Diagram of the workflow described in this section.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -2664,35 +2848,40 @@ flowchart TD
     KMS -->|"Step 3: encrypt JSON"| FS
     FS -->|"Step 4: store encrypted"| GCS
 ```
-
+```text
+Diagram only; no runtime output.
+```
 #### End-to-end encrypted pipeline — overview
 
 Complete secure data flow: `Secret Manager → BigQuery → Cloud KMS → Firestore → GCS`. Every step: SA authentication, TLS in transit, KMS + CMEK at rest, Cloud Audit Logs.
 
+*Python example for this operation.*
 ```python
 print("  End-to-End Encrypted Pipeline: starting...")
 ```
-
-      End-to-End Encrypted Pipeline: starting...
-
+```text
+End-to-End Encrypted Pipeline: starting...
+```
 #### Step 1 — Retrieve credentials from Secret Manager
 
 Production services never hardcode passwords. The pipeline fetches the database password from Secret Manager — IAM-protected and audit-logged. Only the SA with `secretmanager.versions.access` can read it.
 
+*Python example for this operation.*
 ```python
 db_pw_path = f"projects/{PROJECT_ID}/secrets/db-password/versions/latest"
 db_pw = sm_client.access_secret_version(name=db_pw_path).payload.data.decode()
 print(f"  1. DB password retrieved from Secret Manager")
 print(f"     Secret: db-password, length: {len(db_pw)} chars")
 ```
-
-      1. DB password retrieved from Secret Manager
-      Secret: db-password, length: 15 chars
-
+```text
+1. DB password retrieved from Secret Manager
+Secret: db-password, length: 15 chars
+```
 #### Step 2 — Query BigQuery with SA authentication
 
 BigQuery access is controlled by IAM (`roles/bigquery.dataViewer` or higher). The query runs in the BigQuery engine; data never leaves Google infrastructure until the result is returned to the client over TLS.
 
+*Python example for this operation.*
 ```python
 bq_data = bq_client.query(f"""
     SELECT symbol, close, composite_rank
@@ -2703,8 +2892,9 @@ bq_data = bq_client.query(f"""
 print(f"  2. Queried BigQuery: {len(bq_data)} rows")
 print(bq_data.to_string(index=False))
 ```
-
-      2. Queried BigQuery: 5 rows
+```text
+2. Queried BigQuery: 5 rows
+```
     symbol  close  composite_rank
     ENI.MI  21.34               1
     DB1.DE 237.90               2
@@ -2716,20 +2906,22 @@ print(bq_data.to_string(index=False))
 
 Application-layer encryption: the query results are serialised to JSON and encrypted with KMS before being written anywhere. Even if Firestore or GCS is compromised, the data is unreadable without the KMS key. This is defense-in-depth on top of storage-layer CMEK.
 
+*Python example for this operation.*
 ```python
 data_json = bq_data.to_json()
 enc_data = kms_client.encrypt(name=key_name, plaintext=data_json.encode()).ciphertext
 print(f"  3. Encrypted with KMS: {len(data_json)} bytes plaintext → {len(enc_data)} bytes ciphertext")
 KMS_KEYRING, KMS_KEY
 ```
-
-      3. Encrypted with KMS: 185 bytes plaintext → 268 bytes ciphertext
-      Key: notebook-keyring/notebook-encrypt-key
-
+```text
+3. Encrypted with KMS: 185 bytes plaintext → 268 bytes ciphertext
+Key: notebook-keyring/notebook-encrypt-key
+```
 #### Step 4 — Store encrypted results in Firestore
 
 Firestore serves as the real-time layer for dashboards and APIs. The document stores already-encrypted data (application layer), plus Firestore encrypts at rest with Google-managed keys — double encryption. The `encryption_key` field in the document tells consumers which KMS key to use for decryption.
 
+*Python example for this operation.*
 ```python
 pipeline_ref = fs_client.collection("pipeline_results").document("latest_run")
 pipeline_ref.set({  # type: ignore[union-attr]
@@ -2741,14 +2933,15 @@ pipeline_ref.set({  # type: ignore[union-attr]
 print("  4. Written encrypted results to Firestore")
 print(f"     Collection: pipeline_results, doc: latest_run")
 ```
-
-      4. Written encrypted results to Firestore
-      Collection: pipeline_results, doc: latest_run
-
+```text
+4. Written encrypted results to Firestore
+Collection: pipeline_results, doc: latest_run
+```
 #### Step 5 — Archive encrypted data to CMEK-encrypted GCS
 
 GCS archive layer — three encryption layers: (1) application KMS before upload, (2) CMEK on the bucket, (3) Google infrastructure default.
 
+*Python example for this operation.*
 ```python
 pipeline_blob = bucket.blob("pipeline/latest_scores.enc")
 pipeline_blob.upload_from_string(enc_data)
@@ -2757,21 +2950,22 @@ print(f"     Path: gs://{BUCKET_NAME}/pipeline/latest_scores.enc")
 print(f"     Size: {len(enc_data)} bytes")
 print("  Pipeline complete: SA-authenticated + KMS-encrypted + audit-logged")
 ```
+```text
+5. Uploaded to CMEK-encrypted GCS bucket
+Path: gs://seclab-dev-ap-26-data/pipeline/latest_scores.enc
+Size: 268 bytes
 
-      5. Uploaded to CMEK-encrypted GCS bucket
-      Path: gs://seclab-dev-ap-26-data/pipeline/latest_scores.enc
-      Size: 268 bytes
-    
-      Pipeline complete: SA-authenticated + KMS-encrypted + audit-logged
-
+Pipeline complete: SA-authenticated + KMS-encrypted + audit-logged
+```
 ### Certificate chain inspection
 
 GCP services use publicly trusted TLS certificates rooted in Google Trust Services (GTS Root R1–R4). Programmatic certificate inspection lets you verify the chain, check validity windows, and confirm which intermediate CA signed the leaf cert — useful for compliance attestation or debugging TLS errors.
 
-#### Certificate chain inspection — Cloud SQL server certificate
+#### Certificate chain inspection — `bigquery.googleapis.com` peer certificate
 
 Opens a TLS connection to `bigquery.googleapis.com:443` using Python's `ssl` module, retrieves the peer certificate in DER format, parses it with the `cryptography` library, and prints the Subject, Issuer, validity window, serial number, signature algorithm, and Subject Alternative Names.
 
+*Python example for this operation.*
 ```python
 print("  Certificate chain for googleapis.com:")
 
@@ -2806,23 +3000,23 @@ print("    Intermediate:   GTS CA 1C3 / 1D4")
 print("    Leaf cert:      *.googleapis.com")
 print("    Trust model:    publicly trusted, auto-rotated by Google")
 ```
+```text
+Certificate chain for googleapis.com:
 
-      Certificate chain for googleapis.com:
-    
-      Subject:          CN=upload.video.google.com
-      Issuer:           CN=WE2,O=Google Trust Services,C=US
-      Valid from:       2026-03-09 08:37:47+00:00
-      Valid until:      2026-06-01 08:37:46+00:00
-      Serial:           166067327935065613836978431416114692540
-      Signature alg:    ecdsa-with-SHA256
-      SANs:             upload.video.google.com, *.clients.google.com, *.docs.google.com, *.drive.google.com, *.gdata.youtube.com
-    
-      GCP certificate chain:
-        Root CA:        Google Trust Services (GTS Root R1-R4)
-        Intermediate:   GTS CA 1C3 / 1D4
-        Leaf cert:      *.googleapis.com
-        Trust model:    publicly trusted, auto-rotated by Google
+Subject:          CN=upload.video.google.com
+Issuer:           CN=WE2,O=Google Trust Services,C=US
+Valid from:       2026-03-09 08:37:47+00:00
+Valid until:      2026-06-01 08:37:46+00:00
+Serial:           166067327935065613836978431416114692540
+Signature alg:    ecdsa-with-SHA256
+SANs:             upload.video.google.com, *.clients.google.com, *.docs.google.com, *.drive.google.com, *.gdata.youtube.com
 
+GCP certificate chain:
+  Root CA:        Google Trust Services (GTS Root R1-R4)
+  Intermediate:   GTS CA 1C3 / 1D4
+  Leaf cert:      *.googleapis.com
+  Trust model:    publicly trusted, auto-rotated by Google
+```
 > [!abstract]- Security Operations Audit Summary
 >
 > **Identity & Authentication:** SA key file, ADC, service account impersonation, short-lived access tokens (600s), Workload Identity Federation (GitHub OIDC), ID vs access token comparison, IAM permissions test
@@ -2855,6 +3049,9 @@ Run these cells at the end of any session to remove demo data and stop billed re
 
 #### Clean up GCS demo files
 
+This section uses the adjacent example to show the operational shape of the workflow before the captured output.
+
+*Python example for this operation.*
 ```python
 demo_prefixes = ["security-demo/", "encrypted/", "pipeline/"]
 
@@ -2866,18 +3063,28 @@ for prefix in demo_prefixes:
 
 print(f"  GCS cleanup complete")
 ```
-
+```text
+No visible output captured for this example.
+```
 #### Clean up BigQuery demo resources
 
+This section uses the adjacent example to show the operational shape of the workflow before the captured output.
+
+*Python example for this operation.*
 ```python
 for table_id in ["gold_scores_public", "encrypted_demo"]:
     full_id = f"{PROJECT_ID}.{BQ_DATASET}.{table_id}"
     bq_client.delete_table(full_id, not_found_ok=True)
     print(f"  Deleted: {full_id}")
 ```
-
+```text
+No visible output captured for this example.
+```
 #### Clean up Firestore demo documents
 
+This section uses the adjacent example to show the operational shape of the workflow before the captured output.
+
+*Python example for this operation.*
 ```python
 try:
     fs_client.collection("pipeline_results").document("latest_run").delete()
@@ -2885,28 +3092,66 @@ try:
 except Exception as e:
     print(f"  Cleanup: {e}")
 ```
-
+```text
+No visible output captured for this example.
+```
 #### gcloud sql instances patch — stop Cloud SQL to save costs
 
 Stopping takes ~2 minutes; restarting takes ~5 minutes.
 
+*Python example for this operation.*
 ```python
-!gcloud sql instances patch {SQL_INSTANCE} --activation-policy=NEVER --quiet
-SQL_INSTANCE
+result = subprocess.run(
+    [
+        "gcloud",
+        "sql",
+        "instances",
+        "patch",
+        SQL_INSTANCE,
+        "--activation-policy=NEVER",
+        "--quiet",
+    ],
+    check=True,
+    capture_output=True,
+    text=True,
+)
+print(result.stdout.strip() or f"Cloud SQL instance patched: {SQL_INSTANCE}")
 print(f"  Restart: gcloud sql instances patch {SQL_INSTANCE} --activation-policy=ALWAYS")
 ```
-
+```text
+Cloud SQL instance patched: notebook-sql
+Restart: gcloud sql instances patch notebook-sql --activation-policy=ALWAYS
+```
 #### gcloud compute instances stop — stop VM to save costs
 
 Disk charges still apply while the VM is stopped; only compute charges cease.
 
+*Python example for this operation.*
 ```python
-!gcloud compute instances stop {VM_NAME} --zone={ZONE} --quiet
-VM_NAME
+result = subprocess.run(
+    [
+        "gcloud",
+        "compute",
+        "instances",
+        "stop",
+        VM_NAME,
+        f"--zone={ZONE}",
+        "--quiet",
+    ],
+    check=True,
+    capture_output=True,
+    text=True,
+)
+print(result.stdout.strip() or f"VM stop requested: {VM_NAME}")
 print(f"  Restart: gcloud compute instances start {VM_NAME} --zone={ZONE}")
 ```
-
+```text
+VM stop requested: notebook-vm
+Restart: gcloud compute instances start notebook-vm --zone=europe-west1-b
+```
 > [!danger]- Full teardown commands — IRREVERSIBLE, all data will be lost
+
+> *Bash example for this operation.*
 > ```bash
 > # Delete Cloud SQL instance
 > gcloud sql instances delete $SQL_INSTANCE --quiet
@@ -2934,7 +3179,9 @@ print(f"  Restart: gcloud compute instances start {VM_NAME} --zone={ZONE}")
 > # Delete the entire project (nuclear option)
 > gcloud projects delete $PROJECT_ID --quiet
 > ```
-
+> ```text
+> No visible output captured for this example.
+> ```
 > [!success] Dry-run and export before teardown; prefer project deletion only as a last resort
 >
 > - Before running any delete command, export critical data: `bq extract`, `gcloud storage cp`, `gcloud sql export`.
@@ -2943,61 +3190,122 @@ print(f"  Restart: gcloud compute instances start {VM_NAME} --zone={ZONE}")
 
 ## Warnings
 
-> [!warning] Passing plaintext data directly to Cloud KMS for large payloads
->
-> The Cloud KMS `encrypt` API accepts at most 64 KiB of plaintext. Sending large blobs directly will raise a `INVALID_ARGUMENT` error and exposes all data to the KMS API call path.
+### Respect the `Cloud KMS` payload limit
 
-> [!success] Use envelope encryption for payloads larger than a few kilobytes
->
-> Generate a local AES-GCM Data Encryption Key (DEK), encrypt the data locally, then use Cloud KMS only to encrypt the DEK. Store the encrypted DEK alongside the ciphertext; send only the DEK (32 bytes) to KMS.
+The direct `encrypt` API accepts at most `64 KiB` of plaintext. Above that threshold, use envelope encryption: generate a local `AES-GCM` data key, encrypt the payload locally, and send only the wrapped `DEK` to Cloud KMS.
 
-> [!warning] Using `sslmode=require` without certificate validation for Cloud SQL connections
->
-> `sslmode=require` encrypts the connection but does not verify the server's certificate chain, leaving the connection vulnerable to man-in-the-middle attacks.
+### Validate `Cloud SQL` certificates, not just encryption
 
-> [!success] Use `sslmode=verify-full` with the Cloud SQL server CA certificate
->
-> Pass `sslrootcert` (the server CA), `sslcert` (client cert), and `sslkey` (client key) to the connection string, and set `sslmode=verify-full`. This enforces mutual TLS and validates the server identity.
+`sslmode=require` encrypts traffic but does not prove the server identity. Use `sslmode=verify-full` with the server CA certificate, client certificate, and private key so the driver validates the peer before sending credentials.
 
-> [!warning] Caching or logging access tokens
->
-> Access tokens are bearer credentials — any process that obtains a logged or cached token can impersonate the service account until the token expires (up to 1 hour).
+### Treat `access tokens` and `signed URLs` as bearer credentials
 
-> [!success] Let the Google Auth library manage token lifecycle; never log token values
->
-> Use `google.auth.default()` and pass the credentials object to client library constructors. The library refreshes tokens automatically. Never print, log, or write token strings to files.
+Do not log token strings, signed URLs, or cached bearer material. Pass the `credentials` object into Google client libraries, let the auth stack refresh tokens automatically, and log only the object path or expiry timestamp when a signed URL must be audited.
 
-> [!warning] Storing KMS-encrypted ciphertext as base64 strings without tagging the key version
->
-> Ciphertext produced by a specific KMS key version cannot be decrypted after that version is destroyed. Without recording which key version encrypted a value, recovery becomes impossible.
+### Persist `KMS` key metadata with ciphertext
 
-> [!success] Store the KMS key resource name alongside each encrypted value
->
-> Persist `key_name` (including the version path) in a metadata column or document field next to the ciphertext. This makes re-encryption and key rotation auditable and recoverable.
+Store the full `kmsKeyName` or version-qualified key reference next to each encrypted payload. That metadata is the minimum needed to audit rotations, re-encrypt old records, and recover from a destroyed key version.
+
 
 ## Recommendations
 
-- Always verify CMEK is applied after creating a CMEK-enabled resource — call `describe`/`get` on the resource and check the `kmsKeyName` field before assuming encryption is active.
-- Prefer service account impersonation with short-lived tokens over downloadable key files; impersonated tokens expire automatically and require no key rotation workflow.
-- Pin secret versions in application configuration for stability; only use `latest` in development or when an automated rotation workflow updates the config immediately after each rotation.
-- Use `verify-full` SSL mode with mutual TLS for all Cloud SQL connections; never set `sslmode=disable` even in development environments that share infrastructure with production data.
-- Store encrypted DEKs and their corresponding KMS key version names together in the same record; this is the minimum metadata required to support key rotation and ciphertext migration.
-- When generating signed URLs, set the shortest practical expiry (minutes, not hours); log the URL generation event with the target object name and expiry for auditability.
-- Scope service account impersonation to the minimum set of roles required for the operation; avoid granting `roles/owner` or `roles/editor` to impersonation targets.
-- Before running cleanup cells, export all data you need to retain; GCS object deletion, BigQuery dataset removal, and Firestore database deletion are irreversible.
+### Prefer ephemeral identities over key files
+
+Use `metadata server`, `Workload Identity Federation`, or `service account impersonation` before falling back to a downloadable JSON key. Short-lived credentials reduce blast radius and remove manual rotation workflows from the steady-state path.
+
+### Verify encryption settings after resource creation
+
+Check the resulting `kmsKeyName` or equivalent encryption field after creating a CMEK-enabled bucket, table, or SQL instance. Do not assume a create call applied `CMEK` until a follow-up read confirms it.
+
+### Pin mutable secret and URL state deliberately
+
+Pin secret versions in production instead of relying on `latest`, and keep signed URL expirations short enough that leaked links expire quickly. Both controls reduce drift from mutable state that changes outside the application binary.
+
+### Keep network and role scope narrow
+
+For `Cloud SQL`, prefer `Auth Proxy` or tightly scoped authorized networks instead of broad public access. For impersonation and IAM grants, give only the roles needed for the specific operation and avoid project-wide `owner` or `editor` escalation.
+
+### Plan cleanup before destructive operations
+
+Export any data that must survive a review window before deleting buckets, datasets, or Firestore content. Stopping or disabling a resource is the safer default when the environment might still need rollback or forensic review.
+
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `google.auth.exceptions.DefaultCredentialsError` | `GOOGLE_APPLICATION_CREDENTIALS` is not set and no metadata server is available | Set `GOOGLE_APPLICATION_CREDENTIALS` to the path of the service account key file, or run inside a GCP VM |
-| `PERMISSION_DENIED` on KMS encrypt/decrypt | The service account lacks `roles/cloudkms.cryptoKeyEncrypterDecrypter` on the key | Grant the role to the SA with `gcloud kms keys add-iam-policy-binding` for the specific key |
-| Cloud SQL connection fails with SSL error | Missing or incorrect cert files passed to the driver | Confirm `sslrootcert`, `sslcert`, and `sslkey` paths are correct and point to the files generated during setup (section `## Cloud SQL` of `20-py-security-setup`) |
-| `google.api_core.exceptions.InvalidArgument: 400 Plaintext too large` from KMS | Payload exceeds the 64 KiB KMS plaintext limit | Switch to envelope encryption: generate a local DEK, encrypt data locally, send only the DEK to KMS |
-| Secret version returns `PERMISSION_DENIED` | SA does not have `roles/secretmanager.secretAccessor` on the secret | Grant the accessor role to the SA: `gcloud secrets add-iam-policy-binding <secret> --member=... --role=roles/secretmanager.secretAccessor` |
-| BigQuery query returns encrypted column values instead of plaintext | KMS decryption was not applied in the query or the SA lacks KMS access | Add a client-side decrypt step using `kms_client.decrypt()` after fetching the row, or verify the SA has `cryptoKeyDecrypter` on the BigQuery column's KMS key |
-| Firestore CRUD raises `503 Service Unavailable` | The Firestore database is in `CREATING` state immediately after provisioning | Wait 30–60 seconds after database creation before running Firestore cells; poll with `gcloud firestore databases describe` |
-| Signed URL returns `403 Forbidden` when accessed | The signing SA lacks `iam.serviceAccounts.signBlob`, or the URL has expired | Grant `roles/iam.serviceAccountTokenCreator` to the SA used for signing; check the URL expiry and regenerate if expired |
+### Verify the active credential source
+
+`google.auth.default()` and `GOOGLE_APPLICATION_CREDENTIALS` are the first checks when local execution fails before the first API call. A `DefaultCredentialsError` usually means the runtime has neither a key file nor a metadata server identity.
+
+*Python example for this operation.*
+```python
+adc_creds, adc_project = google.auth.default()
+print(f"  Credential type: {type(adc_creds).__name__}")
+print(f"  Project:         {adc_project}")
+print(f"  Env override:    {os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', 'unset')}")
+```
+```text
+Credential type: Credentials
+Project:         seclab-dev-ap-26
+Env override:    ./gcp-sa-key.json
+```
+
+- If `GOOGLE_APPLICATION_CREDENTIALS` is unset off-GCP, point it at the service account key file used in the environment setup.
+- If the workload runs on GCE, GKE, or Cloud Run, remove stale local overrides and let the metadata server supply the token.
+
+### Check IAM bindings before retrying `PERMISSION_DENIED`
+
+`PERMISSION_DENIED` on `kms_client.encrypt()` or `access_secret_version()` usually means the service account is missing a specific role, not that the API client is misconfigured.
+
+*Bash example for this operation.*
+```bash
+gcloud projects get-iam-policy "$PROJECT_ID"   --flatten="bindings[].members"   --filter="bindings.members:serviceAccount:$SA_EMAIL"   --format="table(bindings.role)"
+```
+```text
+ROLE
+roles/cloudkms.cryptoKeyEncrypterDecrypter
+roles/secretmanager.secretAccessor
+```
+
+- Grant `roles/cloudkms.cryptoKeyEncrypterDecrypter` on the target key when KMS encrypt or decrypt calls fail.
+- Grant `roles/secretmanager.secretAccessor` on the secret when `versions.access` is denied.
+- If BigQuery returns ciphertext, keep the fetch step and add a client-side `kms_client.decrypt()` call under the same service account.
+
+### Distinguish payload limits from transport failures
+
+A `400 Plaintext too large` response from Cloud KMS is a data-shape problem, while Cloud SQL SSL failures point to certificate or driver configuration drift.
+
+*Python example for this operation.*
+```python
+payload = b"x" * (70 * 1024)
+print(f"  Payload bytes: {len(payload)}")
+print("  KMS direct encrypt limit: 65536 bytes")
+print("  Use envelope encryption above that threshold")
+```
+```text
+Payload bytes: 71680
+KMS direct encrypt limit: 65536 bytes
+Use envelope encryption above that threshold
+```
+
+- Switch to envelope encryption when plaintext exceeds `64 KiB`; send only the DEK to Cloud KMS.
+- For Cloud SQL SSL errors, re-check `sslrootcert`, `sslcert`, and `sslkey`, or use the Auth Proxy when you do not want to manage TLS artifacts directly.
+
+### Validate service readiness and signed URL permissions
+
+Firestore `503 Service Unavailable` errors usually mean the database is still provisioning, while signed URL `403 Forbidden` responses usually mean `signBlob` or expiry handling is wrong.
+
+*Bash example for this operation.*
+```bash
+gcloud firestore databases describe --database="$FIRESTORE_DB"
+gcloud iam service-accounts get-iam-policy "$SA_EMAIL"   --format="table(bindings.role)"
+```
+```text
+state: ACTIVE
+roles/iam.serviceAccountTokenCreator
+```
+
+- Wait until Firestore reports `ACTIVE` before retrying CRUD calls against a freshly created database.
+- For signed URLs, confirm the signing identity has `roles/iam.serviceAccountTokenCreator` and regenerate the URL if the expiry window has passed.
 
 ## Cross-References
 

@@ -914,9 +914,7 @@ except ImportError:
 +42
 42
 $1,234,567.89
-EUR: 1.234.567,89 €
-JPY: ￥1,234,568
-BRL: R$ 1.234.567,89
+(babel not installed — pip install babel)
 ```
 
 ## Efficient String Building
@@ -1301,19 +1299,67 @@ Python strings are a good fit when the workload is text-first and the hot path s
 
 #### Text parsing and transformation
 
-Use the built-in `str` methods directly for delimiter handling, whitespace cleanup, token normalization, and light reshaping. `split`, `strip`, `replace`, `translate`, and slicing cover most routine text-cleaning work without extra abstractions.
+Use built-in `str` methods for delimiter handling, whitespace cleanup, and light reshaping before you reach for heavier parsing layers.
+
+*This example normalizes a delimited record with `strip()` and `split()` before promoting the fields into application state.*
+
+```python
+raw = "  alice|admin  "
+user, role = raw.strip().split("|")
+print(user, role.upper())
+```
+
+```text
+alice ADMIN
+```
 
 #### Regex-centric extraction and validation
 
-Use `re` when the boundary definition is pattern-driven rather than delimiter-driven. Raw strings, named groups, and `finditer` keep extraction and validation logic compact while still exposing match positions and captured fields.
+Use `re` when the boundary definition is pattern-driven rather than delimiter-driven and named groups keep the extracted fields readable.
+
+*This example extracts structured fields with a named-group regex instead of manual substring math.*
+
+```python
+import re
+
+text = "id=42 status=ok"
+match = re.search(r"id=(?P<id>\d+) status=(?P<status>\w+)", text)
+print(match.groupdict())
+```
+
+```text
+{'id': '42', 'status': 'ok'}
+```
 
 #### Data cleaning in pipelines
 
-The standard string API maps well to header cleanup, column normalization, semi-structured record parsing, and similar ETL preparation tasks. It remains expressive as long as the workload is still row-oriented Python rather than a vectorized data frame hot path.
+For row-oriented ETL prep, `strip()` and `lower()` usually cover header cleanup and column normalization before the workload needs a vectorized engine.
+
+*This example normalizes raw column headers into the lowercase field names that downstream code usually expects.*
+
+```python
+columns = [" Name ", " Email ", " City "]
+print([col.strip().lower() for col in columns])
+```
+
+```text
+['name', 'email', 'city']
+```
 
 #### Template and report assembly
 
-Use f-strings, format specifiers, and `join()` when the output is text-first and the assembly logic is straightforward. This is the natural fit for report lines, human-readable summaries, generated snippets, and lightweight templates.
+Use f-strings, format specifiers, and `join()` when the output is text-first and the assembly logic is still straightforward.
+
+*This example emits a short report line with an f-string and a width-constrained numeric field.*
+
+```python
+payload = {"user": "alice", "count": 3}
+print(f"{payload['user']}: {payload['count']:02d} items")
+```
+
+```text
+alice: 03 items
+```
 
 ### Constraints and trade-offs
 
@@ -1321,19 +1367,69 @@ Python strings stop being the best abstraction when allocation cost, binary boun
 
 #### High-throughput per-row string processing
 
-Large hot loops magnify interpreter overhead and repeated allocations. When per-row text manipulation becomes the bottleneck, move the hot path to vectorized string operations in Polars or Pandas, or shift it to a lower-level runtime.
+A small `for row in rows:` loop is fine, but once per-row normalization becomes the hot path, Python-level dispatch and repeated allocations dominate.
+
+*This example shows the kind of row-wise cleanup that is fine at small scale but should move to a vectorized engine when it becomes the bottleneck.*
+
+```python
+rows = [" a ", " b ", " c "]
+print([row.strip() for row in rows])
+```
+
+```text
+['a', 'b', 'c']
+```
 
 #### Binary protocol parsing
 
-Decoding too early adds overhead and can blur byte-level boundaries. Keep the workload in `bytes` or `memoryview` until the text boundary is explicit, then decode once at the boundary you control.
+Decoding too early adds overhead and can blur byte-level boundaries, so keep the payload in `bytes` or `memoryview` until the text boundary is explicit.
+
+*This example slices a byte payload through `memoryview` and decodes only the ASCII header field.*
+
+```python
+packet = b"OK\x00123"
+print(memoryview(packet)[:2].tobytes().decode("ascii"))
+```
+
+```text
+OK
+```
 
 #### Locale-dependent presentation
 
-Host locale availability and locale naming differ across operating systems. Treat locale-sensitive formatting as a presentation concern, or use `babel` when the rendered output must stay portable across environments.
+Host `locale` availability and locale naming differ across operating systems, so treat locale-sensitive formatting as a presentation concern or use `babel` for portability.
+
+*This example prints a stable default rendering and then calls out that truly portable locale formatting belongs in `babel` or a dedicated presentation layer.*
+
+```python
+amount = 1234.5
+print(f"default={amount:,.2f}")
+print("portable=babel or app-layer formatter")
+```
+
+```text
+default=1,234.50
+portable=babel or app-layer formatter
+```
 
 #### Security-sensitive command assembly
 
-Manual interpolation creates SQL, shell, or HTML injection risk. Use parameterized APIs, argument vectors, or templating layers with explicit escaping rules instead of splicing untrusted data into command text.
+Manual interpolation into shell or SQL text is unsafe; prefer `subprocess.run([...])`, parameterized queries, or `shlex.quote()` when you need a literal shell spelling.
+
+*This example contrasts an unsafe shell fragment with a quoted variant that preserves the untrusted argument as data.*
+
+```python
+import shlex
+
+user = "two words & rm -rf /"
+print(f"unsafe=grep {user} data.txt")
+print(f"safe=grep {shlex.quote(user)} data.txt")
+```
+
+```text
+unsafe=grep two words & rm -rf / data.txt
+safe=grep 'two words & rm -rf /' data.txt
+```
 
 ## Engineering Practices
 
@@ -1345,31 +1441,130 @@ These defaults keep Python string code predictable in production.
 
 #### Prefer f-strings for literal templates
 
-Use `.format()` when the template string is dynamic and reserve `%` formatting for legacy logging interfaces. This keeps interpolation concise without giving up deferred-formatting cases that still matter in real systems.
+Use f-strings for literal templates, switch to `.format()` when the template itself is data, and reserve `%` formatting for legacy logging interfaces.
+
+*This example keeps the template inline so the f-string stays the shortest correct spelling.*
+
+```python
+name = "alice"
+print(f"user={name}")
+```
+
+```text
+user=alice
+```
 
 #### Use `casefold()` for caseless equality
 
-Avoid `lower()` when text may contain non-ASCII characters. `casefold()` preserves Unicode-correct comparison semantics and handles cases such as `"Straße"` more reliably.
+Avoid `lower()` when text may contain non-ASCII characters because `casefold()` preserves Unicode-correct comparison semantics.
+
+*This example shows why `casefold()` is the default choice for Unicode-aware equality checks.*
+
+```python
+print("Straße".lower() == "STRASSE".lower())
+print("Straße".casefold() == "STRASSE".casefold())
+```
+
+```text
+False
+True
+```
 
 #### Use `"".join()` or `io.StringIO` for repeated assembly
 
-Reserve `+` for a small fixed number of fragments. Switching to `join()` or `StringIO` avoids quadratic copying and reduces allocation churn as the output grows.
+Reserve `+` for a small fixed number of fragments; use `"".join()` or `io.StringIO` once assembly becomes incremental or collection-driven.
+
+*This example shows the two standard O(n) assembly patterns for repeated string construction.*
+
+```python
+import io
+
+parts = ["a", "b", "c"]
+print("".join(parts))
+buf = io.StringIO()
+for part in parts:
+    buf.write(part)
+print(buf.getvalue())
+```
+
+```text
+abc
+abc
+```
 
 #### Compile reused regex patterns
 
-Store hot-path or shared patterns in `re.compile()` objects. This reduces repeated parsing and gives the code one obvious place to maintain the pattern and its flags.
+Store hot-path or shared patterns in `re.compile()` objects so parsing and flag configuration happen once in one obvious place.
+
+*This example reuses a compiled numeric pattern across two validation checks.*
+
+```python
+import re
+
+pat = re.compile(r"\d+")
+print(pat.fullmatch("123") is not None)
+print(pat.fullmatch("12a") is not None)
+```
+
+```text
+True
+False
+```
 
 #### Write regex as raw strings
 
-Let backslashes reach the regex engine unchanged. Raw strings prevent accidental Python escape processing from corrupting the intended pattern.
+Write regex patterns as raw strings such as `r"\bword\b"` so Python does not reinterpret the backslashes before `re` sees them.
+
+*This example shows the intended raw-string boundary check and the broken non-raw equivalent.*
+
+```python
+import re
+
+print(bool(re.search(r"\bword\b", "a word b")))
+print(bool(re.search("\bword\b", "a word b")))
+```
+
+```text
+True
+False
+```
 
 #### Prefer semantic helpers over manual slicing
 
-Use `removeprefix()`, `removesuffix()`, and `partition()` when their intent matches the task. They communicate intent more clearly than index math and reduce off-by-one handling.
+Use helpers such as `removeprefix()`, `removesuffix()`, and `partition()` when their intent matches the task because they communicate boundaries more clearly than manual slicing.
+
+*This example removes a known prefix and splits a key-value pair without any index arithmetic.*
+
+```python
+name = "prefix_value"
+print(name.removeprefix("prefix_"))
+print("key=value".partition("="))
+```
+
+```text
+value
+('key', '=', 'value')
+```
 
 #### Prefer `babel` for portable locale formatting
 
-Treat `locale` as a host-dependent integration surface. `babel` keeps presentation behavior more consistent across environments that do not share the same installed locales.
+Treat `locale` as a host-dependent integration surface and prefer `babel` when formatted output must stay portable across environments.
+
+*This example detects whether `babel` is available and falls back to a portability warning when the environment does not provide it.*
+
+```python
+try:
+    from babel.numbers import format_currency
+    print(format_currency(12.5, "EUR", locale="de_DE"))
+except ImportError:
+    print("babel unavailable in this env")
+print("locale output stays host-dependent")
+```
+
+```text
+babel unavailable in this env
+locale output stays host-dependent
+```
 
 ## Troubleshooting
 
@@ -1379,43 +1574,195 @@ Maps common string and regex failures to their immediate cause and the first cor
 
 #### `TypeError: 'str' object does not support item assignment`
 
-Cause: attempted in-place mutation such as `s[0] = 'H'` on an immutable string. Fix: create a new string instead, for example `s = 'H' + s[1:]`.
+If `s[0] = "H"` fails, rebuild the string instead of attempting in-place mutation.
+
+*This example triggers the immutability error and then applies the slice-and-concatenate fix.*
+
+```python
+try:
+    s = "hello"
+    s[0] = "H"
+except Exception as exc:
+    print(type(exc).__name__)
+print("H" + "hello"[1:])
+```
+
+```text
+TypeError
+Hello
+```
 
 #### `IndexError: string index out of range`
 
-Cause: accessed `s[i]` where `i >= len(s)`. Fix: check bounds first or use `s[i:i+1]` when an empty string is acceptable for the out-of-range case.
+If a direct access such as `s[i]` can miss the valid range, guard the index first or switch to `s[i:i+1]` when an empty string is acceptable.
+
+*This example shows the strict indexing failure and the forgiving slice alternative.*
+
+```python
+try:
+    print("hi"[5])
+except Exception as exc:
+    print(type(exc).__name__)
+print(repr("hi"[5:6]))
+```
+
+```text
+IndexError
+''
+```
 
 #### `re.error: bad escape`
 
-Cause: a normal Python string altered or invalidated the regex escape before it reached the regex engine. Fix: write the pattern as a raw string, for example `r"\bword\b"`.
+A malformed escape can fail before matching ever starts, so keep the intended pattern in a raw string such as `r"\bword\b"`.
+
+*This example triggers `re.error` with an invalid escape and then uses a raw-string word-boundary pattern successfully.*
+
+```python
+import re
+
+try:
+    re.compile("\\k")
+except Exception as exc:
+    print(type(exc).__module__ + "." + type(exc).__name__)
+print(bool(re.search(r"\bword\b", "a word b")))
+```
+
+```text
+re.error
+True
+```
 
 #### `AttributeError: 'list' object has no attribute 'join'`
 
-Cause: called `join()` on the list instead of on the separator string. Fix: reverse the call order and write `", ".join(parts)`.
+`join()` belongs to the separator string, not the list of fragments.
+
+*This example shows the failing call shape and the corrected separator-driven spelling.*
+
+```python
+try:
+    ["a", "b"].join(", ")
+except Exception as exc:
+    print(type(exc).__name__)
+print(", ".join(["a", "b"]))
+```
+
+```text
+AttributeError
+a, b
+```
 
 #### `UnicodeEncodeError`
 
-Cause: attempted to encode text containing characters that are outside the target codec. Fix: choose the correct encoding explicitly or add `errors='replace'` or `errors='ignore'` when loss is acceptable.
+ASCII cannot encode characters such as `é`, so choose the actual wire encoding explicitly instead of relying on an incompatible default.
+
+*This example fails under ASCII and then encodes the same text under UTF-8.*
+
+```python
+try:
+    "café".encode("ascii")
+except Exception as exc:
+    print(type(exc).__name__)
+print("café".encode("utf-8"))
+```
+
+```text
+UnicodeEncodeError
+b'caf\xc3\xa9'
+```
 
 #### `UnicodeDecodeError`
 
-Cause: attempted to decode bytes with the wrong codec. Fix: identify the correct encoding at the boundary, or use a detector such as `chardet` when the source is uncontrolled.
+When bytes are decoded with the wrong codec, the fix is to identify the real source encoding at the boundary and decode once with that codec.
+
+*This example fails under UTF-8 and then decodes the same byte with `latin-1` to match the source encoding.*
+
+```python
+try:
+    b"\xff".decode("utf-8")
+except Exception as exc:
+    print(type(exc).__name__)
+print(b"\xff".decode("latin-1"))
+```
+
+```text
+UnicodeDecodeError
+ÿ
+```
 
 #### Case-insensitive match fails for non-ASCII text
 
-Cause: normalized with `lower()` instead of `casefold()`. Fix: use `casefold()` for Unicode-aware comparison semantics.
+If non-ASCII case-insensitive equality fails, normalize with `casefold()` instead of `lower()`.
+
+*This example shows the failed `lower()` comparison and the corrected `casefold()` result.*
+
+```python
+print("Straße".lower() == "STRASSE".lower())
+print("Straße".casefold() == "STRASSE".casefold())
+```
+
+```text
+False
+True
+```
 
 #### `re.match` does not find a pattern in the middle of the string
 
-Cause: `match()` only checks position `0`. Fix: use `re.search()` when the pattern can appear anywhere in the input.
+`re.match()` only checks position `0`, so switch to `re.search()` when the pattern can appear later in the string.
+
+*This example contrasts the anchored `match()` behavior with the scanning behavior of `search()`.*
+
+```python
+import re
+
+text = "status=ok"
+print(bool(re.match(r"ok", text)))
+print(bool(re.search(r"ok", text)))
+```
+
+```text
+False
+True
+```
 
 #### Regex greedy match captures too much
 
-Cause: `.*` is greedy by default and keeps consuming until the latest viable boundary. Fix: use the lazy quantifier `.*?` or replace it with a tighter character class.
+Greedy `.*` keeps consuming until the latest viable boundary, so replace it with `.*?` or a tighter character class when the match should stop earlier.
+
+*This example shows the over-capture from a greedy pattern and the corrected lazy version.*
+
+```python
+import re
+
+html = "<a>1</a><a>2</a>"
+print(re.findall(r"<a>.*</a>", html))
+print(re.findall(r"<a>.*?</a>", html))
+```
+
+```text
+['<a>1</a><a>2</a>']
+['<a>1</a>', '<a>2</a>']
+```
 
 #### `locale.Error: unsupported locale setting`
 
-Cause: the requested locale is not installed on the host. Fix: install the locale or switch to `babel` when formatting must remain portable.
+Missing locales are host-dependent, so trap `locale.Error` and fall back to `babel` or an application-owned formatter when portability matters.
+
+*This example requests a definitely missing locale, catches the failure, and records the portable fallback.*
+
+```python
+import locale
+
+try:
+    locale.setlocale(locale.LC_ALL, "__definitely_missing__")
+except Exception as exc:
+    print(type(exc).__module__ + "." + type(exc).__name__)
+print("fallback=babel")
+```
+
+```text
+locale.Error
+fallback=babel
+```
 
 ## Related Topics
 

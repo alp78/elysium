@@ -89,14 +89,14 @@ pre code {
 
 [saved-theme="dark"] :not(pre) > code {
   font-family: var(--codeFont) !important;
-  background-color: #0d0f14 !important;
+  background-color: #22252c !important;
   color: #c0caf5 !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
 }
 
 [saved-theme="dark"] :not(pre) > code[data-theme*=" "] {
-  background-color: #0d0f14 !important;
+  background-color: #22252c !important;
   color: #c0caf5 !important;
 }
 
@@ -115,14 +115,14 @@ pre code {
 }
 
 [saved-theme="light"] :not(pre) > code {
-  background-color: #3a3d4a !important;
+  background-color: #22252c !important;
   color: #f0f0f2 !important;
   padding: 2px 6px !important;
   border-radius: 4px !important;
 }
 
 [saved-theme="light"] :not(pre) > code[data-theme*=" "] {
-  background-color: #3a3d4a !important;
+  background-color: #22252c !important;
 }
 
 /* Reduce gaps between code blocks and output */

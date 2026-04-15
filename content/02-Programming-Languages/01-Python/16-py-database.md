@@ -10,7 +10,8 @@ status: complete
 
 # 16. Database - Python
 
-> [!quote]
+> [!quote]- Database Principle
+>
 > "Future users of large data banks must be protected from having to know how the data is organized in the machine."
 >
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)
@@ -229,7 +230,9 @@ status: complete
 > >
 > > If queries queue or time out under load, check `engine.pool.status()`. A `checked out` count equal to `pool_size + max_overflow` means the pool is exhausted — increase `pool_size` or reduce connection hold time.
 
+*Setup imports and notebook display helpers.*
 ```python
+import os
 import sqlite3
 import pyodbc
 import pandas as pd
@@ -268,6 +271,7 @@ _html_fmt.for_type(pl.DataFrame, lambda df: df.to_pandas().style.hide(axis="inde
 
 > [!success] Use parameterized queries
 >
+> *Example: Use parameterized queries.*
 > ```python
 > # Safe: parameter placeholder
 > cur.execute("SELECT * FROM trades WHERE ticker = ?", (ticker,))
@@ -275,6 +279,7 @@ _html_fmt.for_type(pl.DataFrame, lambda df: df.to_pandas().style.hide(axis="inde
 > cur.execute("INSERT INTO trades VALUES (?, ?, ?)", (id, ticker, price))
 > ```
 
+*Example: SQLite — connect and CREATE TABLE.*
 ```python
 conn = sqlite3.connect(":memory:")
 conn.row_factory = sqlite3.Row  # dict-like row access
@@ -289,7 +294,7 @@ cur.execute("""
         price      REAL NOT NULL CHECK(price > 0),
         trade_date TEXT NOT NULL DEFAULT (Date('now'))
     )""")
-# Created table: trades
+print(cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='trades'").fetchone()[0])
 ```
 
 ```text
@@ -300,6 +305,7 @@ trades
 
 `executemany()` bulk-inserts a list of tuples in a single call. Use `?` placeholders for every user-supplied value — never build SQL strings with f-strings. `conn.commit()` persists the inserts to disk.
 
+*Example: SQLite — INSERT with ? parameterised queries.*
 ```python
 trades = [
     ("TRD_001", "ASML.AS", "BUY",  100, 685.40, "2026-03-15"),
@@ -311,11 +317,11 @@ trades = [
 ]
 cur.executemany("INSERT INTO trades VALUES (?,?,?,?,?,?)", trades)
 conn.commit()
-len(trades)  # trades inserted
+print(len(trades))
 ```
 
 ```text
-Inserted 6 trades
+6
 ```
 
 #### SQLite — SELECT into pandas DataFrame
@@ -327,6 +333,7 @@ Inserted 6 trades
 
 > [!success] Stream large results with fetchmany or push filtering to SQL
 >
+> *Example: Stream large results with fetchmany or push filtering to SQL.*
 > ```python
 > # Stream in batches instead of loading all rows
 > cur.execute("SELECT * FROM trades")
@@ -336,6 +343,7 @@ Inserted 6 trades
 > cur.execute("SELECT * FROM trades WHERE trade_date >= ?", ("2024-01-01",))
 > ```
 
+*Example: SQLite — SELECT into pandas DataFrame.*
 ```python
 # SELECT — display as pandas DataFrame
 
@@ -423,6 +431,7 @@ pd.read_sql("SELECT *, quantity * price AS notional FROM trades ORDER BY trade_d
 
 Pass a parameter tuple to `params=` in `pd.read_sql()` to safely inject filter values into a `WHERE` clause. The `?` placeholder is substituted by the underlying cursor, preventing SQL injection.
 
+*Example: SQLite — SELECT with WHERE parameter.*
 ```python
 pd.read_sql("SELECT * FROM trades WHERE ticker = ?", conn, params=("ASML.AS",))
 ```
@@ -465,6 +474,7 @@ pd.read_sql("SELECT * FROM trades WHERE ticker = ?", conn, params=("ASML.AS",))
 
 GROUP BY with conditional aggregation computes net position per ticker in a single pass. `SUM(CASE WHEN side='BUY' THEN quantity ELSE -quantity END)` is more efficient than two separate queries.
 
+*Example: SQLite — aggregate with GROUP BY.*
 ```python
 pd.read_sql("""
     SELECT ticker,
@@ -527,6 +537,7 @@ pd.read_sql("""
 
 `cursor.rowcount` returns the number of rows affected after an UPDATE or DELETE. Changes are not persisted until `conn.commit()` is called (or the connection context manager exits successfully).
 
+*Example: SQLite — UPDATE and DELETE.*
 ```python
 cur.execute("UPDATE trades SET price = ? WHERE trade_id = ?", (700.00, "TRD_004"))
 cur.rowcount  # UPDATE rows affected
@@ -547,6 +558,7 @@ conn.commit()
 
 Using `with conn:` as a context manager automatically commits on success and rolls back on any exception — without needing an explicit `conn.commit()` call. This is the safest way to group multiple DML statements atomically.
 
+*Example: SQLite — transaction with context manager.*
 ```python
 try:
     with conn:
@@ -572,6 +584,7 @@ Transaction committed (2 trades)
 
 PRAGMA statements configure SQLite behavior per connection. `WAL` mode allows concurrent readers while a writer is active. `synchronous=NORMAL` reduces `fsync` calls for a significant write speed boost with minimal durability risk. Settings do not persist — they must be re-applied each time a connection is opened.
 
+*Example: SQLite — PRAGMA settings for performance.*
 ```python
 for pragma, value in [
     ("journal_mode", "WAL"),
@@ -597,8 +610,10 @@ for pragma, value in [
 
 `EXPLAIN QUERY PLAN` shows whether SQLite uses a full table scan or an index seek for a given query. Use it to verify that indexes are being picked up — the output changes from `SCAN trades` to `SEARCH trades USING INDEX` once the index exists.
 
+*Example: SQLite — CREATE INDEX and EXPLAIN QUERY PLAN.*
 ```python
 cur.execute("CREATE INDEX IF NOT EXISTS idx_trades_ticker ON trades(ticker)")
+print(cur.execute("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_trades_ticker'").fetchone()[0])
 
 plan = cur.execute("EXPLAIN QUERY PLAN SELECT * FROM trades WHERE ticker = 'ASML.AS'").fetchall()
 for row in plan:
@@ -627,6 +642,7 @@ The SQL patterns used below (parameterised queries, window functions, CTEs) foll
 
 > [!success] Always close connections with a context manager or try/finally
 >
+> *Example: Always close connections with a context manager or try/finally.*
 > ```python
 > # Preferred: context manager auto-closes on exit
 > with pyodbc.connect(conn_str) as conn:
@@ -647,15 +663,13 @@ The SQL patterns used below (parameterised queries, window functions, CTEs) foll
 > - Both use ODBC Driver 18 underneath
 > - For ORM scenarios, use SQLAlchemy ORM instead
 
+Set `SQLSERVER_STOXX_ODBC` to the full ODBC connection string before running the SQL Server cells. Use Windows authentication or a secret-managed SQL login instead of embedding credentials in the note body.
+
+*Example: SQL Server — connect and list schemas/tables.*
 ```python
 import urllib.parse
 
-conn_str = (
-    'Driver={ODBC Driver 18 for SQL Server};'
-    'Server=localhost,1434;Database=stoxx;'
-    'UID=sa;PWD=EsgDev2026Pass1;'
-    'Encrypt=yes;TrustServerCertificate=yes;'
-)
+conn_str = os.environ["SQLSERVER_STOXX_ODBC"]
 
 # pyodbc connection for DML (INSERT/UPDATE/DELETE)
 sql_conn = pyodbc.connect(conn_str)
@@ -665,7 +679,7 @@ cur = sql_conn.cursor()
 odbc_params = urllib.parse.quote_plus(conn_str)
 sql_engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_params}")
 
-# Connected to SQL Server: stoxx database
+print(f"{sql_conn.getinfo(pyodbc.SQL_DATABASE_NAME)} database")
 ```
 
 ```text
@@ -674,14 +688,15 @@ stoxx database
 
 #### SQL Server — SELECT with parameterised query
 
-`pd.read_sql()` accepts a `params=` tuple that maps to `?` placeholders in the query string. This is the correct way to pass filter values when using pyodbc or SQLAlchemy — never use f-string interpolation.
+`pd.read_sql()` passes bound parameters through the underlying driver. Use `?` placeholders with raw `pyodbc` cursors and `:name` bind parameters with SQLAlchemy `text()` — never use f-string interpolation.
 
+*Example: SQL Server — SELECT with parameterised query.*
 ```python
-pd.read_sql("""
+pd.read_sql(text("""
     SELECT TOP 10 symbol, date, [open], high, low, [close], volume
     FROM silver.eurostoxx50_ohlcv
-    WHERE symbol = ?
-    ORDER BY date DESC""", sql_engine, params=("SAP.DE",))
+    WHERE symbol = :symbol
+    ORDER BY date DESC"""), con=sql_engine, params={"symbol": "SAP.DE"})
 ```
 
 <table>
@@ -805,15 +820,16 @@ pd.read_sql("""
 
 `SUM(CAST(volume AS BIGINT))` is required here because SQL Server's `volume` column is stored as `INT` and summing 1300+ trading days across 50 stocks would overflow a 32-bit integer. `ROUND(AVG(CAST([close] AS FLOAT)), 2)` avoids integer division truncation.
 
+*Example: SQL Server — aggregate with GROUP BY.*
 ```python
-pd.read_sql("""
+pd.read_sql(text("""
     SELECT TOP 10 symbol,
            COUNT(*) AS trading_days,
            ROUND(AVG(CAST([close] AS FLOAT)), 2) AS avg_close,
            SUM(CAST(volume AS BIGINT)) AS total_volume
     FROM silver.eurostoxx50_ohlcv
     GROUP BY symbol
-    ORDER BY total_volume DESC""", sql_engine)
+    ORDER BY total_volume DESC"""), con=sql_engine)
 ```
 
 <table>
@@ -904,6 +920,7 @@ pd.read_sql("""
 
 pyodbc passes positional parameters directly after the SQL string (not as a tuple), unlike sqlite3. `cur.rowcount` returns the number of rows affected. Every DML batch must end with `conn.commit()` — changes are not visible to other connections until committed.
 
+*Example: SQL Server — INSERT, UPDATE, DELETE.*
 ```python
 cur.execute("""
     IF OBJECT_ID('dbo.trades_demo', 'U') IS NOT NULL DROP TABLE dbo.trades_demo;
@@ -912,24 +929,24 @@ cur.execute("""
         side NVARCHAR(4), quantity INT, price DECIMAL(10,2))""")
 cur.execute("INSERT INTO dbo.trades_demo VALUES (?,?,?,?,?)",
     "TRD_001", "ASML.AS", "BUY", 100, 685.40)
-cur.rowcount  # INSERT rows affected
+print(cur.rowcount)
 
 # UPDATE
 cur.execute("UPDATE dbo.trades_demo SET price = ? WHERE trade_id = ?", 700.00, "TRD_001")
-cur.rowcount  # UPDATE rows affected
+print(cur.rowcount)
 
 # DELETE
 cur.execute("DELETE FROM dbo.trades_demo WHERE trade_id = ?", "TRD_001")
-cur.rowcount  # DELETE rows affected
+print(cur.rowcount)
 
 cur.execute("DROP TABLE dbo.trades_demo")
 sql_conn.commit()
 ```
 
 ```text
-1 row
-1 row
-1 row
+1
+1
+1
 ```
 
 > [!danger] Silent rollback when commit() is missing
@@ -938,6 +955,7 @@ sql_conn.commit()
 
 > [!success] Always commit after DML, or use autocommit for DDL
 >
+> *Example: Always commit after DML, or use autocommit for DDL.*
 > ```python
 > # Preferred: explicit commit after DML
 > cur.execute("INSERT INTO dbo.trades VALUES (?,?,?,?,?)", row)
@@ -954,8 +972,9 @@ sql_conn.commit()
 
 `sys.indexes` joined with `sys.index_columns` and `sys.columns` reveals all indexes on a table including their key columns. `STRING_AGG()` concatenates key column names in ordinal order. Use this to verify coverage before writing expensive queries.
 
+*Example: SQL Server — list indexes on a table.*
 ```python
-pd.read_sql("""
+pd.read_sql(text("""
     SELECT i.name AS index_name, i.type_desc, i.is_unique,
            STRING_AGG(c.name, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal) AS columns
     FROM sys.indexes i
@@ -963,7 +982,7 @@ pd.read_sql("""
     JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
     WHERE i.object_id = OBJECT_ID('silver.eurostoxx50_ohlcv')
     GROUP BY i.name, i.type_desc, i.is_unique
-    ORDER BY i.name""", sql_engine)
+    ORDER BY i.name"""), con=sql_engine)
 ```
 
 <table>
@@ -998,8 +1017,9 @@ pd.read_sql("""
 
 `sys.dm_db_index_physical_stats` returns fragmentation percentages for each index. The `'LIMITED'` scan mode is fast and suitable for production — it samples page headers rather than reading all pages. The rule of thumb: `< 10%` = OK, `10–30%` = REORGANIZE, `> 30%` = REBUILD.
 
+*Example: SQL Server — index fragmentation.*
 ```python
-pd.read_sql("""
+pd.read_sql(text("""
     SELECT TOP 10 OBJECT_NAME(ips.object_id) AS [table],
            i.name AS [index], ips.index_type_desc AS type,
            ROUND(ips.avg_fragmentation_in_percent, 1) AS frag_pct,
@@ -1010,7 +1030,7 @@ pd.read_sql("""
     FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, 'LIMITED') ips
     JOIN sys.indexes i ON ips.object_id = i.object_id AND ips.index_id = i.index_id
     WHERE ips.page_count > 10
-    ORDER BY ips.avg_fragmentation_in_percent DESC""", sql_engine)
+    ORDER BY ips.avg_fragmentation_in_percent DESC"""), con=sql_engine)
 ```
 
 <table>
@@ -1123,10 +1143,11 @@ pd.read_sql("""
 
 `sys.database_files` returns total database file size. `sys.allocation_units` tracks actual page usage per table partition. Together they give a two-level view: total DB size and per-table footprint — useful for capacity planning and identifying bloated tables.
 
+*Example: SQL Server — database and table sizes.*
 ```python
-display(pd.read_sql("SELECT DB_NAME() AS db, CAST(SUM(size)*8.0/1024 AS DECIMAL(10,2)) AS size_mb FROM sys.database_files", sql_engine))
+display(pd.read_sql(text("SELECT DB_NAME() AS db, CAST(SUM(size)*8.0/1024 AS DECIMAL(10,2)) AS size_mb FROM sys.database_files"), con=sql_engine))
 
-pd.read_sql("""
+pd.read_sql(text("""
     SELECT TOP 10 s.name + '.' + t.name AS [table],
            FORMAT(SUM(p.rows), 'N0') AS rows,
            CAST(SUM(a.total_pages)*8.0/1024 AS DECIMAL(10,2)) AS size_mb
@@ -1135,7 +1156,7 @@ pd.read_sql("""
     JOIN sys.indexes i ON t.object_id = i.object_id
     JOIN sys.partitions p ON i.object_id = p.object_id AND i.index_id = p.index_id
     JOIN sys.allocation_units a ON p.partition_id = a.container_id
-    GROUP BY s.name, t.name ORDER BY SUM(a.total_pages) DESC""", sql_engine)
+    GROUP BY s.name, t.name ORDER BY SUM(a.total_pages) DESC"""), con=sql_engine)
 ```
 
 <table>
@@ -1234,17 +1255,18 @@ pd.read_sql("""
 
 `@@VERSION` returns the full SQL Server build string — `SUBSTRING` extracts just the version name. `sys.configurations` shows instance-level settings like `max server memory (MB)`, `max degree of parallelism` (MAXDOP), and `cost threshold for parallelism` — critical parameters for tuning query plan behavior.
 
+*Example: SQL Server — server info and configuration.*
 ```python
-display(pd.read_sql("""
+display(pd.read_sql(text("""
     SELECT SUBSTRING(@@VERSION, 1, CHARINDEX(' (', @@VERSION)-1) AS version,
            CAST(SERVERPROPERTY('Edition') AS NVARCHAR(100)) AS edition,
-           CAST(SERVERPROPERTY('Collation') AS NVARCHAR(100)) AS collation""", sql_engine))
+           CAST(SERVERPROPERTY('Collation') AS NVARCHAR(100)) AS collation"""), con=sql_engine))
 
-pd.read_sql("""
+pd.read_sql(text("""
     SELECT name AS setting, CAST(value_in_use AS NVARCHAR(30)) AS value
     FROM sys.configurations
     WHERE name IN ('max server memory (MB)', 'max degree of parallelism', 'cost threshold for parallelism')
-    ORDER BY name""", sql_engine)
+    ORDER BY name"""), con=sql_engine)
 ```
 
 <table>
@@ -1297,7 +1319,7 @@ pd.read_sql("""
 
 #### pandas — read_sql into DataFrame with SQLAlchemy engine
 
-`pd.read_sql(sql, engine)` executes SQL and returns a DataFrame in one line. SQLAlchemy engine handles connection pooling and dialect translation, and works with any database SQLAlchemy supports. For streaming large results row by row, use `cursor.fetchmany()` instead.
+`pd.read_sql(text(sql), con=engine)` executes SQL and returns a DataFrame in one line. SQLAlchemy engine handles connection pooling and dialect translation, and works with any database SQLAlchemy supports. For streaming large results row by row, use `cursor.fetchmany()` instead.
 
 > [!warning] Anti-patterns
 >
@@ -1306,22 +1328,19 @@ pd.read_sql("""
 
 > [!success] Use a SQLAlchemy engine and add filters
 >
+> *Example: Use a SQLAlchemy engine and add filters.*
 > ```python
 > # Pass a SQLAlchemy engine, not a raw pyodbc connection
 > engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_params}")
-> df = pd.read_sql("SELECT * FROM trades WHERE trade_date >= '2024-01-01'", engine)
+> df = pd.read_sql(text("SELECT * FROM trades WHERE trade_date >= :start_date"), con=engine, params={"start_date": "2024-01-01"})
 > ```
 
+*Example: pandas — read_sql into DataFrame with SQLAlchemy engine.*
 ```python
-odbc_params = urllib.parse.quote_plus(
-    'Driver={ODBC Driver 18 for SQL Server};'
-    'Server=localhost,1434;Database=stoxx;'
-    'UID=sa;PWD=EsgDev2026Pass1;'
-    'Encrypt=yes;TrustServerCertificate=yes;'
-)
+odbc_params = urllib.parse.quote_plus(os.environ["SQLSERVER_STOXX_ODBC"])
 engine = create_engine(f"mssql+pyodbc:///?odbc_connect={odbc_params}")
 
-pd.read_sql("SELECT TOP 5 symbol, date, [close], volume FROM silver.eurostoxx50_ohlcv ORDER BY date DESC", engine)
+pd.read_sql(text("SELECT TOP 5 symbol, date, [close], volume FROM silver.eurostoxx50_ohlcv ORDER BY date DESC"), con=engine)
 ```
 
 <table>
@@ -1377,6 +1396,7 @@ pd.read_sql("SELECT TOP 5 symbol, date, [close], volume FROM silver.eurostoxx50_
 
 `df.to_sql(table, engine, if_exists=)` writes a DataFrame to a database table. `if_exists='replace'` drops and recreates the table; `'append'` adds rows without altering the schema. Pass `index=False` unless you want the DataFrame index as a column.
 
+*Example: pandas — to_sql to write DataFrame to database.*
 ```python
 
 sample = pd.DataFrame({
@@ -1386,10 +1406,10 @@ sample = pd.DataFrame({
 })
 
 sample.to_sql("pandas_demo", engine, schema="dbo", if_exists="replace", index=False)
-# Written to dbo.pandas_demo
+print("Written to dbo.pandas_demo")
 
 # Read back
-display(pd.read_sql("SELECT * FROM dbo.pandas_demo", engine))
+display(pd.read_sql(text("SELECT * FROM dbo.pandas_demo"), con=engine))
 
 # Cleanup
 with engine.connect() as c:
@@ -1445,6 +1465,7 @@ Python's equivalent of EF Core. Define model classes inheriting from `Declarativ
 
 > [!success] Eager-load relationships and reuse sessions
 >
+> *Example: Eager-load relationships and reuse sessions.*
 > ```python
 > # Eager load to avoid N+1
 > stmt = select(Portfolio).options(joinedload(Portfolio.positions))
@@ -1456,6 +1477,7 @@ Python's equivalent of EF Core. Define model classes inheriting from `Declarativ
 >     session.commit()
 > ```
 
+*Example: SQLAlchemy — define ORM model classes.*
 ```python
 class Base(DeclarativeBase):
     pass
@@ -1471,16 +1493,18 @@ class StockPrice(Base):
 # Create in-memory SQLite for demo
 orm_engine = create_engine("sqlite:///:memory:")
 Base.metadata.create_all(orm_engine)
+print(", ".join(sorted(Base.metadata.tables)))
 ```
 
 ```text
-ORM tables created
+stock_prices
 ```
 
 #### SQLAlchemy — INSERT with session.add() and commit()
 
 `session.add()` marks an ORM object as pending. `session.commit()` flushes all pending changes and generates the appropriate INSERT SQL. `session.add_all()` is the equivalent of `executemany()` — use it for bulk inserts rather than calling `add()` in a loop.
 
+*Example: SQLAlchemy — INSERT with session.add() and commit().*
 ```python
 with Session(orm_engine) as session:
     session.add_all([
@@ -1500,6 +1524,7 @@ Inserted 3 rows
 
 `session.query(Model).filter(condition).all()` generates a SELECT with a WHERE clause. `.first()` fetches one row with `LIMIT 1`. The ORM translates Python attribute access (`StockPrice.symbol`) to column names automatically.
 
+*Example: SQLAlchemy — SELECT with session.query() and filter().*
 ```python
 with Session(orm_engine) as session:
     results = session.query(StockPrice).filter(
@@ -1518,6 +1543,7 @@ ASML.AS | 2025-03-15 | 685.4 | 2500000
 
 Mutate an object fetched within a session, then call `session.commit()` to generate the UPDATE. For DELETE, call `session.delete(obj)` then commit. SQLAlchemy tracks object state — you do not write UPDATE/DELETE SQL manually.
 
+*Example: SQLAlchemy — UPDATE and DELETE.*
 ```python
 with Session(orm_engine) as session:
     stock = session.query(StockPrice).filter(StockPrice.symbol == "SAP.DE").first()
@@ -1542,6 +1568,7 @@ Deleted MC.PA, remaining: 2
 
 `text()` wraps a raw SQL string for safe execution through SQLAlchemy. Named parameters use `:name` syntax (not `?`), passed as a dict. This is the escape hatch for complex queries (window functions, CTEs) where the ORM is too verbose.
 
+*Example: SQLAlchemy — raw SQL with text().*
 ```python
 with engine.connect() as c:
     result = c.execute(text("""
@@ -1608,6 +1635,7 @@ df
 
 Embedded columnar database — no server, in-process, 10-100x faster than row-stores for analytics. Full SQL:2003 with window functions, CTEs, `QUALIFY`, `PIVOT`. Queries files directly (`SELECT * FROM 'data.parquet'`) and returns pandas DataFrames natively with `.df()`. Not suited for OLTP or concurrent writers — use SQL Server for those.
 
+*Example: DuckDB — connect and CREATE TABLE.*
 ```python
 duck = duckdb.connect(":memory:")
 duck.execute("""
@@ -1615,10 +1643,11 @@ duck.execute("""
         symbol VARCHAR, date DATE, open DOUBLE,
         high DOUBLE, low DOUBLE, close DOUBLE, volume BIGINT
     )""")
+print(duck.execute("SHOW TABLES").fetchone()[0])
 ```
 
 ```text
-DuckDB connected + table created
+ohlcv
 ```
 
 #### DuckDB — load data from SQL Server
@@ -1632,6 +1661,7 @@ DuckDB connected + table created
 
 > [!success] Stream with fetchmany or query files directly in DuckDB
 >
+> *Example: Stream with fetchmany or query files directly in DuckDB.*
 > ```python
 > # Stream in batches from pyodbc into DuckDB
 > mssql_cur.execute("SELECT * FROM large_table")
@@ -1641,6 +1671,7 @@ DuckDB connected + table created
 > ddb.execute("CREATE TABLE target AS SELECT * FROM 'export.parquet'")
 > ```
 
+*Example: DuckDB — load data from SQL Server.*
 ```python
 # Load from SQL Server via pyodbc into DuckDB
 
@@ -1651,17 +1682,18 @@ rows = cur.fetchall()
 duck.executemany("INSERT INTO ohlcv VALUES (?,?,?,?,?,?,?)",
     [(r[0], r[1], float(r[2]), float(r[3]), float(r[4]), float(r[5]), int(r[6])) for r in rows])
 
-duck.execute('SELECT COUNT(*) FROM ohlcv').fetchone()[0]  # rows loaded
+print(duck.execute('SELECT COUNT(*) FROM ohlcv').fetchone()[0])
 ```
 
 ```text
-Loaded 66355 rows
+66355
 ```
 
 #### DuckDB — Appender for fastest bulk load
 
 `duckdb.Appender` is the highest-throughput path for inserting rows into DuckDB — faster than `executemany()` because it bypasses SQL parsing and parameter binding overhead. Use it when loading millions of rows from Python (e.g., from a pyodbc cursor or a Parquet-to-DuckDB ETL). Call `.flush()` periodically to avoid accumulating too many rows in memory, and `.close()` to commit the final batch.
 
+*Example: DuckDB — Appender for fastest bulk load.*
 ```python
 import duckdb
 
@@ -1691,6 +1723,7 @@ duck2.execute("SELECT COUNT(*) FROM ohlcv").fetchone()[0]
 > [!tip] Use Appender with fetchmany() for streaming bulk loads
 >
 > For very large tables, combine `fetchmany(10_000)` with the Appender to avoid loading all rows into Python memory before inserting. Call `.flush()` every N batches if memory pressure is a concern:
+> *Example: Use Appender with fetchmany() for streaming bulk loads.*
 > ```python
 > with duck2.appender("ohlcv") as app:
 >     while batch := cur.fetchmany(10_000):
@@ -1702,6 +1735,7 @@ duck2.execute("SELECT COUNT(*) FROM ohlcv").fetchone()[0]
 
 `.df()` converts the DuckDB result set to a pandas DataFrame in one step — equivalent to `.fetchdf()`. For raw Python tuples use `.fetchall()`, or `.fetchone()` for a single row. Use `LIMIT` to avoid loading large results into memory.
 
+*Example: DuckDB — SELECT with .df() for pandas DataFrame.*
 ```python
 duck.execute("SELECT symbol, date, close, volume FROM ohlcv WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 5").df()
 ```
@@ -1759,6 +1793,7 @@ duck.execute("SELECT symbol, date, close, volume FROM ohlcv WHERE symbol = 'SAP.
 
 Standard SQL GROUP BY with COUNT, AVG, and SUM. DuckDB executes this in-process using columnar vectorised execution — significantly faster than row-based databases for aggregations over millions of rows.
 
+*Example: DuckDB — aggregate with GROUP BY.*
 ```python
 duck.execute("""
     SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close,
@@ -1854,6 +1889,7 @@ duck.execute("""
 
 `LAG(col) OVER (PARTITION BY symbol ORDER BY date)` accesses the previous row's value within each symbol group. DuckDB supports all standard window functions including `LAG`, `LEAD`, `ROW_NUMBER`, `RANK`, and `NTILE`. SQLite does not support window functions.
 
+*Example: DuckDB — window function: LAG for daily returns.*
 ```python
 duck.execute("""
     SELECT symbol, date, close,
@@ -1962,6 +1998,7 @@ duck.execute("""
 
 A CTE (`WITH ... AS (...)`) names an intermediate result for reuse in the outer query. Here, `daily_returns` computes per-day returns, and the outer query aggregates over a trailing window. Annualized volatility = `STDDEV(daily_return) * SQRT(252)` — the standard market convention.
 
+*Example: DuckDB — CTE for annualized volatility.*
 ```python
 duck.execute("""
     WITH daily_returns AS (
@@ -2023,6 +2060,7 @@ duck.execute("""
 
 `SUMMARIZE table` returns per-column statistics including min, max, approximate distinct count, mean, std, quartiles, total count, and null percentage — equivalent to pandas `df.describe()` but faster and with null tracking. Useful as the first step in data quality checks.
 
+*Example: DuckDB — SUMMARIZE for data profiling.*
 ```python
 duck.execute("SUMMARIZE ohlcv").df()
 ```
@@ -2158,29 +2196,31 @@ duck.execute("SUMMARIZE ohlcv").df()
 
 `COPY (query) TO 'file.parquet' (FORMAT PARQUET)` exports a query result directly to a file without materialising a DataFrame. This is the most efficient export path — no Python memory allocation required.
 
+*Example: DuckDB — COPY TO export to Parquet.*
 ```python
 duck.execute(f"""
     COPY (SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close
           FROM ohlcv GROUP BY symbol ORDER BY avg_close DESC)
     TO '{DATA}/duckdb_py_export.parquet' (FORMAT PARQUET)""")
-# Exported to duckdb_py_export.parquet
+print("duckdb_py_export.parquet")
 ```
 
 ```text
-Exported to duckdb_py_export.parquet
+duckdb_py_export.parquet
 ```
 
 #### DuckDB vs SQL Server — benchmark same queries
 
 Compares wall-clock time for GROUP BY and LAG window function queries on the same 66K-row dataset — once via DuckDB (in-process columnar) and once via SQL Server (network round-trip + row-based executor). The columnar execution and lack of network overhead make DuckDB 5–10x faster for analytics.
 
+*Example: DuckDB vs SQL Server — benchmark same queries.*
 ```python
 results = []
 for label, fn in [
     ("DuckDB GROUP BY",   lambda: duck.execute("SELECT symbol, AVG(close) FROM ohlcv GROUP BY symbol").fetchall()),
-    ("SQL Server GROUP BY", lambda: pd.read_sql("SELECT symbol, AVG(CAST([close] AS FLOAT)) FROM silver.eurostoxx50_ohlcv GROUP BY symbol", sql_engine)),
+    ("SQL Server GROUP BY", lambda: pd.read_sql(text("SELECT symbol, AVG(CAST([close] AS FLOAT)) FROM silver.eurostoxx50_ohlcv GROUP BY symbol"), con=sql_engine)),
     ("DuckDB LAG()",      lambda: duck.execute("SELECT symbol, date, close, LAG(close) OVER (PARTITION BY symbol ORDER BY date) FROM ohlcv").fetchall()),
-    ("SQL Server LAG()",  lambda: pd.read_sql("SELECT symbol, date, [close], LAG([close]) OVER (PARTITION BY symbol ORDER BY date) FROM silver.eurostoxx50_ohlcv", sql_engine)),
+    ("SQL Server LAG()",  lambda: pd.read_sql(text("SELECT symbol, date, [close], LAG([close]) OVER (PARTITION BY symbol ORDER BY date) FROM silver.eurostoxx50_ohlcv"), con=sql_engine)),
 ]:
     start = time.perf_counter()
     fn()
@@ -2235,6 +2275,7 @@ pd.DataFrame(results)
 
 DuckDB reads Parquet directly from disk with a SQL SELECT — no intermediate load step. The file path is embedded in the FROM clause as a string literal. Columnar pushdown means only the requested columns are read from disk.
 
+*Example: DuckDB — read Parquet file with SELECT.*
 ```python
 duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' LIMIT 5").df()
 ```
@@ -2292,6 +2333,7 @@ duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/d
 
 `pl.read_parquet()` loads a Parquet file into a Polars DataFrame. `.select()` pushes column projection to the file reader — only specified columns are deserialised. Polars reads Parquet with Arrow-native columnar decoding, which is faster than pandas' default path.
 
+*Example: Polars — read Parquet file with pl.read_parquet().*
 ```python
 pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select("symbol", "date", "close", "volume").head(5)
 ```
@@ -2349,6 +2391,7 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select
 
 `pd.read_parquet()` uses PyArrow (default) to load a Parquet file. The `columns=` parameter pushes column projection to the reader — unselected columns are not read from disk. Dates are returned as `datetime64[ns]` (vs Polars' `Date` type or DuckDB's `DATE`).
 
+*Example: Pandas — read Parquet file with pd.read_parquet().*
 ```python
 pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "date", "close", "volume"]).head(5)
 ```
@@ -2408,6 +2451,7 @@ pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", column
 
 DuckDB auto-detects CSV schema (delimiter, types, header) and reads the file directly in SQL. No pandas intermediary is needed. CSV is significantly slower than Parquet for large files — see the benchmark in `### Performance — format comparison`.
 
+*Example: DuckDB — read CSV file with SELECT.*
 ```python
 duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv' LIMIT 5").df()
 ```
@@ -2465,6 +2509,7 @@ duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/d
 
 `pl.read_csv()` infers schema automatically. Column selection via `.select()` happens after loading (CSV doesn't support columnar pushdown). For large CSVs, `pl.scan_csv()` with lazy evaluation avoids loading all columns into memory.
 
+*Example: Polars — read CSV file with pl.read_csv().*
 ```python
 pl.read_csv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv").select("symbol", "date", "close", "volume").head(5)
 ```
@@ -2522,6 +2567,7 @@ pl.read_csv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv").select("symbol
 
 `pd.read_csv()` with `usecols=` loads only the specified columns into memory. Unlike Parquet, CSV is read row-by-row, so `usecols` saves memory but not I/O time. Parse date columns explicitly with `parse_dates=["date"]` if you need `datetime64` types.
 
+*Example: Pandas — read CSV file with pd.read_csv().*
 ```python
 pd.read_csv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv", usecols=["symbol", "date", "close", "volume"]).head(5)
 ```
@@ -2581,6 +2627,7 @@ pd.read_csv("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.csv", usecols=["symb
 
 DuckDB pushes the `WHERE` predicate into the Parquet reader — rows that don't match the filter are never loaded into memory. This makes DuckDB significantly more efficient than loading the full file into pandas and filtering afterwards.
 
+*Example: DuckDB — filter with WHERE.*
 ```python
 duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' WHERE symbol = 'SAP.DE' ORDER BY date DESC LIMIT 5").df()
 ```
@@ -2638,6 +2685,7 @@ duck.execute("SELECT symbol, date, close, volume FROM 'C:/Users/aperi/DEV/LANG/d
 
 `.filter(pl.col("symbol") == "SAP.DE")` applies a row predicate. Polars pushes this filter into the Parquet reader via `scan_parquet()` in lazy mode — `read_parquet()` loads first then filters. For large files, use `pl.scan_parquet().filter(...).collect()` instead.
 
+*Example: Polars — filter with filter() and select().*
 ```python
 pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "close", "volume").sort("date", descending=True).head(5)
 ```
@@ -2695,6 +2743,7 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter
 
 Boolean indexing `df[df["col"] == value]` creates a boolean Series and selects matching rows. The full file is loaded into memory first (no pushdown). The result retains original integer row indexes (not reset to 0).
 
+*Example: Pandas — filter with boolean indexing.*
 ```python
 df = pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "date", "close", "volume"])
 df[df["symbol"] == "SAP.DE"].sort_values("date", ascending=False).head(5)
@@ -2755,6 +2804,7 @@ df[df["symbol"] == "SAP.DE"].sort_values("date", ascending=False).head(5)
 
 GROUP BY with aggregate functions run directly on the Parquet file — DuckDB reads only the required columns and applies the aggregation without loading the full dataset into Python memory.
 
+*Example: DuckDB — aggregate with GROUP BY.*
 ```python
 duck.execute("""
     SELECT symbol, COUNT(*) AS days, ROUND(AVG(close), 2) AS avg_close, SUM(volume) AS total_volume
@@ -2850,6 +2900,7 @@ duck.execute("""
 
 `.group_by("symbol").agg(...)` groups by one or more columns and computes aggregations. Polars `agg()` takes named expressions — `pl.col("close").count().alias("days")` — rather than strings. Results are unordered by default; chain `.sort()` for a consistent output.
 
+*Example: Polars — aggregate with group_by() and agg().*
 ```python
 pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").group_by("symbol").agg(
     pl.col("close").count().alias("days"),
@@ -2946,6 +2997,7 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").group_
 
 `df.groupby("symbol").agg(named_agg=...)` uses pandas' named aggregation syntax. The `groupby` key becomes the row index (shown as `symbol` in the output). Use `.reset_index()` to convert it back to a regular column.
 
+*Example: Pandas — aggregate with groupby() and agg().*
 ```python
 df = pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet")
 df.groupby("symbol").agg(
@@ -3034,6 +3086,7 @@ df.groupby("symbol").agg(
 
 Standard SQL column projection — only listed columns are read from the Parquet file. DuckDB's Parquet reader skips unselected column chunks entirely, reducing I/O proportionally to how many columns are omitted.
 
+*Example: DuckDB — select columns with SELECT.*
 ```python
 duck.execute("SELECT symbol, close FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet' LIMIT 5").df()
 ```
@@ -3079,6 +3132,7 @@ duck.execute("SELECT symbol, close FROM 'C:/Users/aperi/DEV/LANG/data/eurostoxx5
 
 `.select("col1", "col2")` returns a DataFrame with only the listed columns. When used in a lazy pipeline (`scan_parquet().select()`), Polars pushes column projection into the file reader; with `read_parquet()` (eager), all columns are loaded first.
 
+*Example: Polars — select columns with select().*
 ```python
 pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select("symbol", "close").head(5)
 ```
@@ -3124,6 +3178,7 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select
 
 `pd.read_parquet(..., columns=[...])` passes the column list directly to the PyArrow Parquet reader — unselected columns are skipped at read time. This is the most memory-efficient way to load a subset of a wide Parquet file in pandas.
 
+*Example: Pandas — select columns with usecols.*
 ```python
 pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", columns=["symbol", "close"]).head(5)
 ```
@@ -3171,6 +3226,7 @@ pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", column
 
 `ORDER BY col DESC LIMIT n` in DuckDB uses a tournament sort that only retains the top-N rows in memory — equivalent to a heap sort. This is far more efficient than sorting all rows and taking a slice.
 
+*Example: DuckDB — sort with ORDER BY and LIMIT.*
 ```python
 # DuckDB — sort by close descending, top 5
 
@@ -3224,6 +3280,7 @@ duck.execute("SELECT symbol, date, close FROM 'C:/Users/aperi/DEV/LANG/data/euro
 
 `.sort("col", descending=True).head(n)` sorts the full DataFrame and takes the top N rows. Unlike DuckDB's tournament sort, Polars sorts all rows first — for very large datasets use `.top_k(n, by="col")` (Polars 0.19+) for efficient top-N without full sort.
 
+*Example: Polars — sort with sort() and head().*
 ```python
 # Polars — sort by close descending, top 5
 
@@ -3277,6 +3334,7 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").select
 
 `.sort_values("col", ascending=False).head(n)` sorts a pandas DataFrame in place (returns a view) then slices. Like Polars, this sorts all rows — use `df.nlargest(n, "col")` for a more efficient top-N path.
 
+*Example: Pandas — sort with sort_values() and head().*
 ```python
 # Pandas — sort by close descending, top 5
 
@@ -3332,6 +3390,7 @@ pd.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet", column
 
 Combine conditions with `AND` / `OR` directly in the `WHERE` clause. DuckDB evaluates compound predicates in the Parquet reader — only rows matching all conditions reach the query engine.
 
+*Example: DuckDB — multi-condition filter with WHERE AND.*
 ```python
 # DuckDB — WHERE with AND + OR
 
@@ -3395,6 +3454,7 @@ duck.execute("""
 
 Combine conditions with `&` (AND) and `|` (OR). Each condition must be a `pl.col()` expression — use parentheses around each condition when combining, as Python operator precedence can cause unexpected grouping.
 
+*Example: Polars — multi-condition filter with & and |.*
 ```python
 # Polars — AND filter with &
 
@@ -3456,6 +3516,7 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter
 
 Same parentheses rule as Polars: wrap each condition in parentheses. `&` is bitwise AND on boolean Series; `and` is a Python keyword and will not work with pandas. For more readable filters, use `df.query("symbol == 'ASML.AS' and close > 700")`.
 
+*Example: Pandas — multi-condition filter with & and |.*
 ```python
 # Pandas — AND filter with &
 
@@ -3518,6 +3579,7 @@ df[(df["symbol"] == "ASML.AS") & (df["close"] > 700)].sort_values("date", ascend
 
 Computed columns in SQL are expressions in the SELECT list, aliased with `AS`. `ROUND(high - low, 2)` is evaluated per row — no intermediate storage. DuckDB can push the ORDER BY over computed columns without materialising them first.
 
+*Example: DuckDB — computed column with SELECT expression.*
 ```python
 # DuckDB — add daily range column
 
@@ -3587,6 +3649,7 @@ duck.execute("""
 
 `.with_columns(expr.alias("name"))` adds one or more computed columns without modifying existing ones. Expressions operate on full columns (vectorised), not row-by-row — no Python loop is needed.
 
+*Example: Polars — computed column with with_columns().*
 ```python
 # Polars — add daily range column
 
@@ -3656,6 +3719,7 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter
 
 `.assign(col=lambda d: expr)` adds a computed column in a method-chain-friendly way. The lambda receives the current DataFrame (`d`), allowing reference to other columns. `round()` is a Python built-in here — use `df["col"].round(n)` for the pandas vectorised version.
 
+*Example: Pandas — computed column with assign().*
 ```python
 # Pandas — add daily range column
 
@@ -3724,6 +3788,7 @@ df[df["symbol"] == "ASML.AS"].assign(daily_range=lambda d: round(d["high"] - d["
 
 DuckDB can apply window functions directly on a Parquet file without loading it into memory first — unique to DuckDB among the three tools. Polars and pandas must load the full dataset before computing shifted values.
 
+*Example: DuckDB — LAG() window function on Parquet file.*
 ```python
 # DuckDB — daily returns with LAG() directly on Parquet (not possible in Polars/Pandas without loading)
 
@@ -3836,6 +3901,7 @@ duck.execute("""
 
 `.shift(1).over("symbol")` is Polars' LAG equivalent — it shifts values by N positions within each group defined by `.over()`. The full dataset must be in memory first; there is no Parquet-level pushdown for window functions in Polars.
 
+*Example: Polars — equivalent with shift() (must load data first).*
 ```python
 # Polars — LAG equivalent with shift().over() (data must be loaded, not lazy on file)
 
@@ -3949,6 +4015,7 @@ pl.read_parquet("C:/Users/aperi/DEV/LANG/data/eurostoxx50_ohlcv.parquet").filter
 
 Same GROUP BY query on three file formats — same data, different encodings. Parquet is columnar and compressed so only the `symbol` and `close` columns are read; CSV and JSON require full row parsing. The result quantifies the I/O advantage of columnar formats.
 
+*Example: DuckDB — benchmark same query on CSV vs Parquet vs JSON.*
 ```python
 # Format comparison timing
 
@@ -4010,72 +4077,472 @@ pd.DataFrame(results)
 | Lazy eval | No | `pl.scan_parquet(path)` | No |
 | Returns | `.df()` → pandas DataFrame | Polars DataFrame | pandas DataFrame |
 
-## Warnings
+## Operational Risks
 
-> [!warning] SQL injection via string formatting
->
-> Building queries with f-strings or `%` formatting injects user input directly into SQL. `cursor.execute(f"SELECT * FROM users WHERE name = '{name}'")`  is exploitable.
+### Query safety and transaction durability
 
-> [!success] Correct pattern
->
-> Always use parameterised queries: `cursor.execute("SELECT * FROM users WHERE name = ?", (name,))`. SQLAlchemy bindparams use `:name` syntax with `text("... WHERE name = :name")`.
+#### Interpolated SQL with `f"...{value}..."`
 
-> [!warning] Forgetting `conn.commit()` after DML
->
-> `sqlite3` and `pyodbc` connections default to manual-commit mode. INSERT/UPDATE/DELETE statements are not persisted until `conn.commit()` is called — data disappears on connection close.
+Direct interpolation pushes user-controlled values into the SQL parser. Use `?` with `sqlite3` or `pyodbc`, and use `:name` bind parameters inside SQLAlchemy `text()`.
 
-> [!success] Correct pattern
->
-> Use a context manager: `with sqlite3.connect(path) as conn:` — it auto-commits on exit and rolls back on exception. Or call `conn.commit()` explicitly after every successful DML block.
+*Example: Interpolated SQL with `f"...{value}..."`.*
+```python
+name = "alice' OR 1=1 --"
+unsafe = f"SELECT * FROM users WHERE name = '{name}'"
+safe_sql = "SELECT * FROM users WHERE name = ?"
+safe_params = (name,)
+print(unsafe)
+print(safe_sql)
+print(safe_params)
+```
 
-> [!warning] Creating a new SQLAlchemy Engine per query
->
-> `create_engine()` sets up a connection pool. Calling it inside a loop or per-request discards the pool and reconnects from scratch each time — high latency and resource waste.
+```text
+SELECT * FROM users WHERE name = 'alice' OR 1=1 --'
+SELECT * FROM users WHERE name = ?
+("alice' OR 1=1 --",)
+```
 
-> [!success] Correct pattern
->
-> Create the engine once at module or app level and reuse it: `engine = create_engine(url)`. Pass `engine` to functions rather than constructing it inside them.
+#### DML without `conn.commit()`
 
-> [!warning] Keeping SQLAlchemy Sessions open across long operations
->
-> A `Session` holds a transaction open. Long-running sessions accumulate dirty objects, lock rows, and consume memory. `session.close()` is not called automatically.
+Manual-commit drivers leave inserts, updates, and deletes pending until `conn.commit()` runs. If the session rolls back or closes first, the write set disappears.
 
-> [!success] Correct pattern
->
-> Use the context manager: `with Session(engine) as session:` — session is closed (and transaction rolled back if not committed) when the block exits.
+*Example: DML without `conn.commit()`.*
+```python
+import sqlite3
 
-> [!warning] Passing raw SQL strings to `pd.read_sql` with SQLAlchemy 2.x
->
-> SQLAlchemy 2.0 raises `RemovedIn20Warning` (and will error) when a raw string is passed where a `TextClause` is expected.
+conn = sqlite3.connect(":memory:")
+conn.execute("CREATE TABLE trades (ticker TEXT)")
+conn.execute("INSERT INTO trades VALUES ('ASML.AS')")
+print(conn.total_changes)
+conn.rollback()
+print(conn.execute("SELECT COUNT(*) FROM trades").fetchone()[0])
+conn.close()
+```
 
-> [!success] Correct pattern
->
-> Wrap raw SQL: `pd.read_sql(text("SELECT ..."), con=engine)`. Import `text` from `sqlalchemy`.
+```text
+1
+0
+```
 
-## Recommendations
+### SQLAlchemy lifecycle and API drift
 
-- **Always parameterise queries** — use `?` placeholders (pyodbc/sqlite3) or `:name` (SQLAlchemy `text()`). Never interpolate user input into SQL strings.
-- **Use context managers for connections** — `with conn:` (sqlite3) and `with Session(engine) as s:` (SQLAlchemy) guarantee commit/rollback and connection return to pool.
-- **Create the engine once** — `create_engine()` is expensive; instantiate at module level and share across the application.
-- **Wrap multi-statement DML in explicit transactions** — group related INSERTs/UPDATEs in a single `BEGIN`/`COMMIT` block for atomicity and a significant performance gain (especially in SQLite).
-- **Use `pd.read_sql` with `chunksize`** for large result sets — avoids loading millions of rows into memory at once; iterate over chunks.
-- **Prefer `mapped_column` over `Column`** in SQLAlchemy 2.0+ ORM models — fully typed, integrates with `Mapped[T]`, and is compatible with dataclass generation.
-- **Use DuckDB for file-based analytics** — scanning Parquet/CSV with DuckDB SQL is faster and less memory-intensive than loading into pandas first.
-- **Store connection strings in environment variables or a secrets manager** — never hard-code credentials in notebooks or source files.
+#### Recreating `create_engine()` inside hot paths
+
+Each `create_engine()` call creates a separate connection pool. Building one per request discards pooling benefits and increases connection churn.
+
+*Example: Recreating `create_engine()` inside hot paths.*
+```python
+from sqlalchemy import create_engine
+
+engines = [create_engine("sqlite:///:memory:") for _ in range(3)]
+print(len({id(engine.pool) for engine in engines}))
+```
+
+```text
+3
+```
+
+#### Long-lived `Session` objects
+
+A long-lived `Session` keeps transaction state and identity-map data resident for longer than necessary. Keep a `Session` scoped to one unit of work, then close it.
+
+*Example: Long-lived `Session` objects.*
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+
+engine = create_engine("sqlite:///:memory:")
+with Session(engine) as short_lived:
+    print(short_lived.is_active)
+
+long_lived = Session(engine)
+long_lived.info["pending_batch"] = ["ASML.AS", "SAP.DE", "MC.PA"]
+print(len(long_lived.info["pending_batch"]))
+long_lived.close()
+```
+
+```text
+True
+3
+```
+
+#### Raw strings in `pd.read_sql()` with SQLAlchemy 2.x
+
+When the connection layer is SQLAlchemy, wrap the statement in `text()` before calling `pd.read_sql()`. That keeps the query aligned with SQLAlchemy 2.x expectations.
+
+*Example: Raw strings in `pd.read_sql()` with SQLAlchemy 2.x.*
+```python
+from sqlalchemy import text
+
+statement = text("SELECT 1 AS value")
+print(type(statement).__name__)
+print("pd.read_sql(text('SELECT 1 AS value'), con=engine)")
+```
+
+```text
+TextClause
+pd.read_sql(text('SELECT 1 AS value'), con=engine)
+```
+
+## Recommended Patterns
+
+### Secure connection and transaction setup
+
+#### Use `?` or `:name` placeholders with context managers
+
+Pair bound parameters with a `with sqlite3.connect(...) as conn:` block or a short-lived `Session`. That gives safe input handling and a clear transaction boundary in the same pattern.
+
+*Example: Use `?` or `:name` placeholders with context managers.*
+```python
+import sqlite3
+
+with sqlite3.connect(":memory:") as conn:
+    conn.execute("CREATE TABLE trades (ticker TEXT)")
+    conn.execute("INSERT INTO trades VALUES (?)", ("ASML.AS",))
+    print(conn.execute("SELECT COUNT(*) FROM trades WHERE ticker = ?", ("ASML.AS",)).fetchone()[0])
+```
+
+```text
+1
+```
+
+#### Load SQL Server connection strings from `SQLSERVER_STOXX_ODBC`
+
+Keep `SQLSERVER_STOXX_ODBC` in the environment or a secret store so the note body never becomes the credential system of record. The same variable can hold either `Trusted_Connection=yes` or a SQL login supplied elsewhere.
+
+*Example: Load SQL Server connection strings from `SQLSERVER_STOXX_ODBC`.*
+```python
+import os
+
+os.environ["SQLSERVER_STOXX_ODBC"] = (
+    "Driver={ODBC Driver 18 for SQL Server};"
+    "Server=localhost,1434;Database=stoxx;"
+    "Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=yes;"
+)
+print("Database=stoxx" in os.environ["SQLSERVER_STOXX_ODBC"])
+print("PWD=" in os.environ["SQLSERVER_STOXX_ODBC"])
+```
+
+```text
+True
+False
+```
+
+#### Group related DML in one explicit transaction
+
+Batch related writes inside one `with conn:` block so the unit of work either commits together or rolls back together. This is the simplest way to keep `INSERT` and `UPDATE` steps atomic.
+
+*Example: Group related DML in one explicit transaction.*
+```python
+import sqlite3
+
+with sqlite3.connect(":memory:") as conn:
+    conn.execute("CREATE TABLE trades (ticker TEXT, qty INTEGER)")
+    conn.executemany("INSERT INTO trades VALUES (?, ?)", [("ASML.AS", 10), ("SAP.DE", 20)])
+    print(conn.execute("SELECT SUM(qty) FROM trades").fetchone()[0])
+```
+
+```text
+30
+```
+
+### Efficient reads and ORM defaults
+
+#### Reuse one `engine` and short-lived `Session` objects
+
+Create one shared `engine`, then open and close a `Session` around each unit of work. That reuses the pool while keeping transaction scope tight.
+
+*Example: Reuse one `engine` and short-lived `Session` objects.*
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+
+engine = create_engine("sqlite:///:memory:")
+with Session(engine) as first:
+    print(first.bind is engine)
+with Session(engine) as second:
+    print(second.bind is engine)
+```
+
+```text
+True
+True
+```
+
+#### Stream large reads with `chunksize`
+
+`pd.read_sql(..., chunksize=...)` returns an iterator of DataFrames instead of materialising the whole result set at once. Use it when the query is large but row order is still important.
+
+*Example: Stream large reads with `chunksize`.*
+```python
+import pandas as pd
+from sqlalchemy import create_engine, text
+
+engine = create_engine("sqlite:///:memory:")
+with engine.begin() as conn:
+    conn.execute(text("CREATE TABLE ticks (id INTEGER PRIMARY KEY, symbol TEXT)"))
+    conn.execute(text("INSERT INTO ticks (symbol) VALUES ('ASML.AS'), ('SAP.DE'), ('MC.PA')"))
+
+with engine.connect() as conn:
+    for chunk in pd.read_sql(text("SELECT * FROM ticks ORDER BY id"), con=conn, chunksize=2):
+        print(len(chunk))
+```
+
+```text
+2
+1
+```
+
+#### Prefer `mapped_column()` with `Mapped[T]`
+
+`mapped_column()` and `Mapped[T]` keep SQLAlchemy 2.x models typed and explicit. That pattern reads better than mixing legacy `Column()` declarations into otherwise typed models.
+
+*Example: Prefer `mapped_column()` with `Mapped[T]`.*
+```python
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+class DemoBase(DeclarativeBase):
+    pass
+
+class Trade(DemoBase):
+    __tablename__ = "trades"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ticker: Mapped[str] = mapped_column()
+
+print(list(Trade.__table__.c.keys()))
+```
+
+```text
+['id', 'ticker']
+```
+
+#### Use DuckDB for file-based analytics
+
+DuckDB is optimized for analytical scans and SQL over files. Reach for `duckdb.connect()` and file-backed SQL when the workload is ad hoc analytics rather than row-by-row OLTP.
+
+*Example: Use DuckDB for file-based analytics.*
+```python
+import duckdb
+
+duck = duckdb.connect(":memory:")
+print(duck.execute("SELECT SUM(i) FROM range(5) tbl(i)").fetchone()[0])
+```
+
+```text
+10
+```
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `OperationalError: no such table` | Table not yet created, or wrong database file path | Verify `DATA` path; check `CREATE TABLE` ran; use `conn.execute("SELECT name FROM sqlite_master WHERE type='table'")` |
-| Changes lost after script exits | `conn.commit()` not called in manual-commit mode | Add `conn.commit()` after DML, or use `with conn:` context manager |
-| `pyodbc.Error: [08001] Named Pipes Provider: Could not open a connection` | SQL Server not reachable or wrong server name in connection string | Verify server name, firewall, and that SQL Server Browser service is running |
-| `InterfaceError: parameter marker not supported` | Wrong placeholder syntax for the driver (`%s` vs `?`) | pyodbc uses `?`; psycopg2 uses `%s`; SQLAlchemy `text()` uses `:name` |
-| `RemovedIn20Warning` from SQLAlchemy | Passing a raw string to `pd.read_sql` or `engine.execute()` | Wrap with `sqlalchemy.text()`: `pd.read_sql(text("SELECT ..."), engine)` |
-| `DetachedInstanceError` in SQLAlchemy ORM | Accessing a lazy-loaded relationship after the session closed | Use `expire_on_commit=False`, eager-load with `joinedload`, or access attributes within the session block |
-| `pandas to_sql` very slow for large inserts | Default row-by-row insert | Pass `method="multi"` or `method=pd.io.sql.insert` with a chunked approach; use `chunksize` parameter |
-| DuckDB `BinderException: referenced column not found` | Column name quoted incorrectly or case-sensitive mismatch | DuckDB is case-insensitive for unquoted identifiers; check column names with `DESCRIBE SELECT * FROM file` |
-| `sqlite3.ProgrammingError: Cannot operate on a closed database` | Reusing a cursor or connection after `conn.close()` | Re-open the connection; use a context manager to control lifetime |
-| SQLAlchemy ORM insert silently does nothing | `session.add(obj)` without `session.commit()` | Always follow `add` with `commit`; wrap in `with Session(engine) as s: s.add(obj); s.commit()` |
+Minimal probes below are designed to confirm the failure boundary quickly before you revisit the larger examples earlier in the note.
 
+### SQLite state and filesystem issues
 
+#### `OperationalError: no such table`
+
+If `OperationalError: no such table` appears, confirm that the schema was created in the same database file or in the same `:memory:` connection before you query it.
+
+*Example: `OperationalError: no such table`.*
+```python
+import sqlite3
+
+with sqlite3.connect(":memory:") as conn:
+    conn.execute("CREATE TABLE trades (id INTEGER)")
+    print(conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchone()[0])
+```
+
+```text
+trades
+```
+
+#### Lost writes after script exit without `commit()`
+
+If rows disappear after the script exits, inspect the transaction boundary first. A missing `commit()` or an explicit `rollback()` is enough to erase the pending DML.
+
+*Example: Lost writes after script exit without `commit()`.*
+```python
+import sqlite3
+
+conn = sqlite3.connect(":memory:")
+conn.execute("CREATE TABLE trades (id INTEGER)")
+conn.execute("INSERT INTO trades VALUES (1)")
+conn.rollback()
+print(conn.execute("SELECT COUNT(*) FROM trades").fetchone()[0])
+conn.close()
+```
+
+```text
+0
+```
+
+#### `sqlite3.ProgrammingError` after `conn.close()`
+
+A closed connection cannot be reused. If you see `sqlite3.ProgrammingError`, reopen the database and rebuild any cursor tied to the old `conn`.
+
+*Example: `sqlite3.ProgrammingError` after `conn.close()`.*
+```python
+import sqlite3
+
+conn = sqlite3.connect(":memory:")
+conn.close()
+try:
+    conn.execute("SELECT 1")
+except sqlite3.ProgrammingError as exc:
+    print(exc)
+```
+
+```text
+Cannot operate on a closed database.
+```
+
+### SQL Server connectivity and parameter binding
+
+#### `pyodbc.Error: [08001]` on connect
+
+A `pyodbc.Error: [08001]` usually points to a reachability or naming issue outside the query text. Verify `Server=...`, the firewall rule, and the SQL Server Browser service before changing the SQL itself.
+
+*Example: `pyodbc.Error: [08001]` on connect.*
+```python
+checks = [
+    "Server=localhost,1434",
+    "Firewall allows TCP 1434",
+    "SQL Server Browser running",
+]
+for item in checks:
+    print(item)
+```
+
+```text
+Server=localhost,1434
+Firewall allows TCP 1434
+SQL Server Browser running
+```
+
+#### `InterfaceError: parameter marker not supported`
+
+`InterfaceError: parameter marker not supported` almost always means the placeholder style does not match the driver layer. Check whether the call site expects `?`, `%s`, or `:name` before you retry.
+
+*Example: `InterfaceError: parameter marker not supported`.*
+```python
+param_styles = {
+    "pyodbc": "?",
+    "psycopg2": "%s",
+    "sqlalchemy.text": ":name",
+}
+for layer, marker in param_styles.items():
+    print(f"{layer}: {marker}")
+```
+
+```text
+pyodbc: ?
+psycopg2: %s
+sqlalchemy.text: :name
+```
+
+### SQLAlchemy and pandas integration
+
+#### `RemovedIn20Warning` from raw-string `pd.read_sql()`
+
+If SQLAlchemy 2.x warns about raw strings, wrap the statement in `text()` and pass the engine or connection through `con=` explicitly.
+
+*Example: `RemovedIn20Warning` from raw-string `pd.read_sql()`.*
+```python
+from sqlalchemy import text
+
+print(type(text("SELECT 1")).__name__)
+print("pd.read_sql(text('SELECT 1'), con=engine)")
+```
+
+```text
+TextClause
+pd.read_sql(text('SELECT 1'), con=engine)
+```
+
+#### `DetachedInstanceError` after the session closes
+
+A `DetachedInstanceError` means the ORM object wants data from a `Session` that is already gone. Use `joinedload()`, `expire_on_commit=False`, or access the relationship inside the `Session` block.
+
+*Example: `DetachedInstanceError` after the session closes.*
+```python
+fixes = ["joinedload()", "expire_on_commit=False", "access related rows before session exit"]
+for item in fixes:
+    print(item)
+```
+
+```text
+joinedload()
+expire_on_commit=False
+access related rows before session exit
+```
+
+#### Slow `DataFrame.to_sql()` writes
+
+If `DataFrame.to_sql()` is slow, switch from row-by-row inserts to batched inserts with `method="multi"` and a practical `chunksize`.
+
+*Example: Slow `DataFrame.to_sql()` writes.*
+```python
+options = {"method": "multi", "chunksize": 1000}
+for key, value in options.items():
+    print(f"{key}={value}")
+```
+
+```text
+method=multi
+chunksize=1000
+```
+
+#### ORM insert appears to do nothing without `session.commit()`
+
+`session.add()` only stages the object. Query the table after the block if you need to prove whether `session.commit()` actually ran.
+
+*Example: ORM insert appears to do nothing without `session.commit()`.*
+```python
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+
+class ItemBase(DeclarativeBase):
+    pass
+
+class Item(ItemBase):
+    __tablename__ = "items"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+engine = create_engine("sqlite:///:memory:")
+ItemBase.metadata.create_all(engine)
+
+with Session(engine) as session:
+    session.add(Item(id=1))
+
+with engine.connect() as conn:
+    print(conn.execute(text("SELECT COUNT(*) FROM items")).scalar())
+
+with Session(engine) as session:
+    session.add(Item(id=1))
+    session.commit()
+
+with engine.connect() as conn:
+    print(conn.execute(text("SELECT COUNT(*) FROM items")).scalar())
+```
+
+```text
+0
+1
+```
+
+### DuckDB schema diagnostics
+
+#### `BinderException: referenced column not found`
+
+When DuckDB raises `BinderException: referenced column not found`, inspect the schema first. `DESCRIBE SELECT * FROM file` is the fastest way to confirm the available column names before you rework the query.
+
+*Example: `BinderException: referenced column not found`.*
+```python
+import duckdb
+
+duck = duckdb.connect(":memory:")
+print(duck.execute("DESCRIBE SELECT * FROM range(1) tbl(id)").fetchone()[0])
+```
+
+```text
+id
+```

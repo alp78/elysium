@@ -4,7 +4,7 @@ tags: [python]
 aliases: [variables, data types, type conversion, operators, console IO]
 description: "Python basics reference with executable examples and cell outputs — covers variables, data types, type conversion, operators, and console I/O. See [01-cs-basics](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/01-cs-basics) for the C# equivalent."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -201,6 +201,8 @@ Confirms the interpreter version, executable location, and installed packages be
 
 #### Check Python version, executable path, and hostname
 
+Use `sys.version`, `sys.executable`, and `socket.gethostname()` to confirm which interpreter produced the evidence before trusting any downstream outputs.
+
 *This example prints the Python version, interpreter path, and host name.*
 
 ```python
@@ -225,7 +227,7 @@ print(socket.gethostname())   # Machine
 
 ```text
 3.12.0 (tags/v3.12.0:0fb18b0, Oct  2 2023, 13:03:39) [MSC v.1935 64 bit (AMD64)]
-C:\Users\aperi\AppData\Local\Programs\Python\Python312\python.exe
+C:\Users\aperi\My Drive\VAULT\.vault\Scripts\python.exe
 Elysium
 ```
 
@@ -258,11 +260,11 @@ for pkg in installed[:5]:
 ```
 
 ```text
+EbookLib==0.20
 Jinja2==3.1.6
 MarkupSafe==3.0.3
-PyYAML==6.0.3
-Pygments==2.19.2
-anyio==4.13.0
+PyMuPDF==1.27.2.2
+PyPika==0.51.1
 ```
 
 #### Verify that required packages can be imported
@@ -288,12 +290,12 @@ for mod in imports:
 
 ```text
   numpy: OK
-  pandas: MISSING
+  pandas: OK
   matplotlib: MISSING
-  sqlalchemy: MISSING
+  sqlalchemy: OK
   requests: OK
   fastapi: MISSING
-  pydantic: MISSING
+  pydantic: OK
   yaml: OK
   pytest: MISSING
 ```
@@ -888,6 +890,8 @@ True
 ### Type system reference — all built-in types
 
 The diagram below maps every built-in type to the common `object` root; the H4 cells that follow show each category with runtime examples.
+
+*This diagram maps Python's built-in types from the shared `object` root before the category-specific runtime examples.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -2342,23 +2346,116 @@ Python is strongest where developer throughput, library breadth, and I/O orchest
 
 #### Interactive analysis and notebooks
 
-Python is a strong default for exploratory work because the REPL, notebooks, and data libraries shorten the loop between hypothesis, inspection, and revision. That matters when analysts or engineers need to profile payloads, validate assumptions, or iterate on transformations before the logic is hardened into a service or scheduled pipeline.
+Python is a strong default for exploratory work because the `REPL`, notebooks, and data libraries shorten the loop between hypothesis, inspection, and revision. That matters when analysts or engineers need to profile payloads, validate assumptions, or iterate on transformations before the logic is hardened into a service or scheduled pipeline.
+
+*This example aggregates a small in-memory sample the way an exploratory notebook cell would before a pipeline is formalized.*
+
+```python
+sample = [
+    {"language": "python", "rows": 1200},
+    {"language": "python", "rows": 800},
+    {"language": "sql", "rows": 300},
+]
+python_rows = sum(item["rows"] for item in sample if item["language"] == "python")
+print(f"python_rows={python_rows}")
+print(f"entries={len(sample)}")
+```
+
+```text
+python_rows=2000
+entries=3
+```
 
 #### Data movement, orchestration, and automation
 
-Python fits control-plane work well: pulling data from APIs, moving files, coordinating database operations, and driving scheduled jobs. The language spends most of its time at I/O boundaries in these workloads, so the ecosystem matters more than interpreter overhead.
+Python fits control-plane work well: pulling data from APIs, moving files, coordinating database operations, and driving scheduled jobs. The language spends most of its time at I/O boundaries in these workloads, so helpers such as `pathlib.Path` matter more than interpreter overhead.
+
+*This example builds a small file handoff list for an automation step.*
+
+```python
+from pathlib import Path
+
+files = [Path("incoming/orders.json"), Path("archive/orders-2026-04-15.json")]
+for path in files:
+    print(path.as_posix())
+```
+
+```text
+incoming/orders.json
+archive/orders-2026-04-15.json
+```
 
 #### I/O-bound services and tooling
 
 Python remains effective for services and utilities that wait on networks, disks, subprocesses, or remote systems more than they saturate CPU cores. `asyncio`, mature client libraries, and concise scripting syntax make it practical for integration-heavy tooling and service endpoints.
 
+*This example overlaps two waiting tasks with `asyncio.gather()` to show the I/O-bound case where Python stays efficient.*
+
+```python
+import asyncio
+import time
+
+async def fetch(tag, delay):
+    await asyncio.sleep(delay)
+    return f"{tag}:{delay:.2f}"
+
+async def main():
+    return await asyncio.gather(fetch("api", 0.05), fetch("disk", 0.05))
+
+start = time.perf_counter()
+result = asyncio.run(main())
+elapsed = time.perf_counter() - start
+print(", ".join(result))
+print(f"elapsed={elapsed:.3f}s")
+```
+
+```text
+api:0.05, disk:0.05
+elapsed=0.054s
+```
+
 #### Rapid iteration on heterogeneous data
 
-When schemas are still evolving or inputs arrive in several formats, Python's dynamic object model reduces the ceremony required to inspect, normalize, and reshape the data. That is useful during early pipeline design, one-off migrations, and operational tooling that must tolerate uneven source quality.
+When schemas are still evolving or inputs arrive in several formats, Python's dynamic object model reduces the ceremony required to inspect, normalize, and reshape the data. That is useful during early pipeline design, one-off migrations, and operational tooling that must tolerate uneven source quality with simple `strip()` and `float()` cleanup steps.
+
+*This example normalizes mixed-shape records without introducing framework scaffolding first.*
+
+```python
+records = [
+    {"id": "  A-01 ", "amount": "19.99"},
+    {"id": "B-02", "amount": 7},
+]
+normalized = [
+    {"id": row["id"].strip().lower(), "amount": float(row["amount"])}
+    for row in records
+]
+print(normalized)
+```
+
+```text
+[{'id': 'a-01', 'amount': 19.99}, {'id': 'b-02', 'amount': 7.0}]
+```
 
 #### Glue code around optimized engines
 
-Python works well as the orchestration layer around systems that do the heavy compute elsewhere, such as NumPy, Polars, vectorized database execution, and external services. In that role, Python coordinates the workflow while optimized engines handle the expensive inner loops.
+Python works well as the orchestration layer around systems that do the heavy compute elsewhere, such as `sqlite3`, NumPy, Polars, vectorized database execution, and external services. In that role, Python coordinates the workflow while optimized engines handle the expensive inner loops.
+
+*This example lets SQLite compute the aggregate while Python owns the orchestration around it.*
+
+```python
+import sqlite3
+
+conn = sqlite3.connect(":memory:")
+conn.execute("create table orders(total real)")
+conn.executemany("insert into orders(total) values (?)", [(19.5,), (22.0,), (8.5,)])
+total = conn.execute("select sum(total) from orders").fetchone()[0]
+print(f"sql_total={total:.1f}")
+conn.close()
+```
+
+```text
+sql_total=50.0
+```
 
 ### Constraints and trade-offs
 
@@ -2366,23 +2463,115 @@ The following constraints matter when deciding whether Python should remain the 
 
 #### CPU-bound hot loops
 
-Pure Python loops pay interpreter overhead on every iteration, so tight numeric or per-record transformations often become throughput bottlenecks. When the hot path is compute-heavy, move it into NumPy, Polars, Cython, a native extension, or another runtime such as C#.
+Pure Python loops pay interpreter overhead on every iteration, so tight numeric or per-record transformations often become throughput bottlenecks. When the hot path is compute-heavy, move the repeated `sum()` or vector math into NumPy, Polars, Cython, a native extension, or another runtime such as C#.
+
+*This example shows a pure-Python numeric loop that is fast enough for a demo but still pays per-iteration interpreter cost.*
+
+```python
+import time
+
+start = time.perf_counter()
+total = sum(i * i for i in range(200000))
+elapsed = time.perf_counter() - start
+print(f"checksum={total}")
+print(f"elapsed={elapsed:.3f}s")
+```
+
+```text
+checksum=2666646666700000
+elapsed=0.015s
+```
 
 #### Memory-constrained workloads
 
-Python objects carry significant per-object overhead compared with packed arrays or lower-level runtimes. If the workload is dominated by millions of small objects, prefer vectorized structures, columnar engines, or a runtime that gives tighter control over memory layout.
+Python objects carry significant per-object overhead compared with packed arrays or lower-level runtimes. If the workload is dominated by millions of small objects, prefer vectorized structures, columnar engines, or compact containers such as `array('I')` that give tighter control over memory layout.
+
+*This example compares a Python list with a packed `array('I')` holding the same number of integers.*
+
+```python
+import sys
+from array import array
+
+ints = [0] * 1000
+packed = array("I", [0] * 1000)
+print(f"list_bytes={sys.getsizeof(ints)}")
+print(f"array_bytes={sys.getsizeof(packed)}")
+```
+
+```text
+list_bytes=8056
+array_bytes=4080
+```
 
 #### Compile-time type guarantees
 
 Python detects most type mismatches only when the code executes. Type hints, `mypy`, and `pyright` improve safety substantially, but they remain optional tooling layers rather than hard compile-time enforcement.
 
+*This example shows that an annotated function still fails only when the incompatible call reaches runtime.*
+
+```python
+def add_one(value: int) -> int:
+    return value + 1
+
+try:
+    print(add_one("1"))
+except TypeError as exc:
+    print(type(exc).__name__)
+    print(exc)
+```
+
+```text
+TypeError
+can only concatenate str (not "int") to str
+```
+
 #### Desktop and mobile GUI applications
 
-Python can support GUI work, but its ecosystem is weaker than the primary .NET and platform-native stacks for long-lived desktop or mobile applications. Choose Python only when the surrounding problem is primarily scripting or data integration and the UI surface is secondary.
+Python can support GUI work through libraries such as `tkinter`, but its ecosystem is weaker than the primary .NET and platform-native stacks for long-lived desktop or mobile applications. Choose Python only when the surrounding problem is primarily scripting or data integration and the UI surface is secondary.
+
+*This example checks the bundled Tk runtime that backs the standard-library desktop GUI path.*
+
+```python
+import tkinter as tk
+
+print(f"tk_version={tk.TkVersion}")
+print(f"tcl_version={tk.TclVersion}")
+```
+
+```text
+tk_version=8.6
+tcl_version=8.6
+```
 
 #### CPU parallelism with threads
 
 In CPython, the GIL prevents parallel execution of Python bytecode across CPU threads. Threads remain useful for I/O concurrency, but CPU-bound scaling requires `multiprocessing`, vectorized or native libraries, or a runtime without that execution model.
+
+*This example shows threads overlapping waiting work under `cpython`, which is useful for I/O but not evidence of CPU-bound speedup.*
+
+```python
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor
+
+def wait_task(tag):
+    time.sleep(0.05)
+    return tag
+
+start = time.perf_counter()
+with ThreadPoolExecutor(max_workers=2) as pool:
+    result = list(pool.map(wait_task, ["thread-a", "thread-b"]))
+elapsed = time.perf_counter() - start
+print(", ".join(result))
+print(f"implementation={sys.implementation.name}")
+print(f"elapsed={elapsed:.3f}s")
+```
+
+```text
+thread-a, thread-b
+implementation=cpython
+elapsed=0.051s
+```
 
 ## Engineering Practices
 
@@ -2438,7 +2627,7 @@ These conventions reduce dependency drift and make public contracts easier to va
 
 #### Keep dependencies inside a virtual environment
 
-Install project packages into the active virtual environment instead of the system interpreter. That isolates dependency graphs across projects and prevents toolchain drift from breaking unrelated work.
+Install project packages into the active virtual environment instead of the system interpreter, and verify both `sys.executable` and `VIRTUAL_ENV` before you install anything. That isolates dependency graphs across projects and prevents toolchain drift from breaking unrelated work.
 
 *This example records the interpreter path and active virtual environment before dependency installation.*
 
@@ -2446,8 +2635,13 @@ Install project packages into the active virtual environment instead of the syst
 import os
 import sys
 
-interpreter = sys.executable
-active_venv = os.environ.get("VIRTUAL_ENV")
+print(sys.executable)
+print(os.environ.get("VIRTUAL_ENV", "None"))
+```
+
+```text
+C:\Users\aperi\My Drive\VAULT\.vault\Scripts\python.exe
+None
 ```
 
 #### Add type hints to public APIs
@@ -2459,6 +2653,14 @@ Type hints improve code review, editor support, and refactor safety by making th
 ```python
 def normalize_id(value: str | None) -> str | None:
     return value.strip().lower() if value else None
+
+print(normalize_id("  AbC-42  "))
+print(normalize_id(None))
+```
+
+```text
+abc-42
+None
 ```
 
 ### Runtime correctness and object semantics
@@ -2842,18 +3044,33 @@ True
 import os
 import sys
 
-interpreter = sys.executable
-active_venv = os.environ.get("VIRTUAL_ENV")
+print(sys.executable)
+print(os.environ.get("VIRTUAL_ENV", "None"))
+```
+
+```text
+C:\Users\aperi\My Drive\VAULT\.vault\Scripts\python.exe
+None
 ```
 
 #### Protected interpreter installation or incorrect environment activation
 
 `PermissionError` during import or package management usually points to a protected system interpreter, a locked path, or an operation being attempted outside the intended virtual environment. Activate the project environment and avoid `sudo pip` or equivalent system-wide package mutations.
 
-*This example creates a project-local virtual environment before package installation.*
+*This example prints the exact interpreter-owned `venv` command to use instead of mutating a protected installation.*
 
-```powershell
-python -m venv .venv
+```python
+import sys
+from pathlib import Path
+
+target = Path(".venv").resolve()
+print(sys.executable)
+print(f"{sys.executable} -m venv {target}")
+```
+
+```text
+C:\Users\aperi\My Drive\VAULT\.vault\Scripts\python.exe
+C:\Users\aperi\My Drive\VAULT\.vault\Scripts\python.exe -m venv C:\Users\aperi\My Drive\VAULT\.venv
 ```
 
 ## Related Topics
