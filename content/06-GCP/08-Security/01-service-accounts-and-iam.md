@@ -2,9 +2,9 @@
 title: "01 - Service Accounts and IAM"
 tags: [gcp, security, iam]
 aliases: [GCP service accounts, IAM bindings, IAM conditional bindings, IAM deny policies, principal access boundary policies, GCP least privilege]
-description: "Service-account lifecycle, project and secret-scope IAM, conditional access, impersonation, policy analysis, and the current deny-policy and principal-access-boundary guardrails in Google Cloud."
+description: "Service-account lifecycle, project and secret-scope IAM, conditional access, impersonation, policy analysis, and the current deny-policy and principal-access-boundary guardrails in Google Cloud, anchored in an archived project."
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -12,10 +12,10 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers the service-account and IAM control plane for `bq-wh-nb`, including service-account lifecycle, project and resource bindings, custom roles, conditional access, impersonation, policy analysis, and the current deny-policy and principal-access-boundary limits in this project-only environment.
+> Covers the service-account and IAM control plane using archived operator evidence from `bq-wh-nb`, including service-account lifecycle, project and resource bindings, custom roles, conditional access, impersonation, policy analysis, and the current deny-policy and principal-access-boundary limits that shaped this project-only environment.
 >
-> **Scope and live context**
-> - Work from the live project `bq-wh-nb`, using outputs captured on April 13, 2026
+> **Scope and archived context**
+> - Work from the removed project `bq-wh-nb`, using outputs captured on April 13, 2026
 > - The capture session included one active GitHub Actions Workload Identity Federation path, two user-managed keys on `bq-wh-sa`, and a disposable lab principal `codex-sec-lab-260413@bq-wh-nb.iam.gserviceaccount.com` created to validate lifecycle, impersonation, and troubleshooting workflows
 >
 > **Service accounts and keys**
@@ -36,8 +36,12 @@ status: complete
 >
 > **Operations and safety**
 > - Warnings: wrong-principal failures often look like generic auth errors, conditional bindings can expire silently, user-managed keys are long-lived bearer credentials, and deny or PAB controls can be unavailable even when the CLI surface exists
-> - Recommendations table: the data-engineering scenarios table maps common deployment and operations cases to the correct IAM pattern, and the quick-reference table summarizes which controls are live, conceptual, or intentionally temporary in `bq-wh-nb`
+> - Recommendations table: the data-engineering scenarios table maps common deployment and operations cases to the correct IAM pattern, and the quick-reference table summarizes which controls were proven, conceptual, or intentionally temporary in `bq-wh-nb`
 > - Troubleshooting: 5 failure modes covering impersonation denial, expired conditions, secret metadata versus payload mismatches, high-blast-radius service accounts, and deny-policy authoring limits
+>
+> [!warning] Archived demo boundary
+>
+> The original project `bq-wh-nb` has been removed. The inventories, IAM policies, and command outputs in this note are preserved as archived operator reference, and this refresh did not rerun IAM commands against a replacement project.
 
 > [!note]- Glossary
 >
@@ -283,6 +287,10 @@ Compute Engine default service account  348557092514-compute@developer.gservicea
 
 The important operational point is that `bq-wh-nb` already has dedicated identities for GitHub Actions and pipeline state writes. That is a healthier pattern than reusing the default Compute Engine service account everywhere.
 
+> [!info] Current product note: default service-account guardrails
+>
+> Current Google Cloud guidance is stricter about default service accounts than many older runbooks assume. Stronger organization defaults now push teams away from privileged basic-role grants on default service accounts, so the safer design is still one dedicated service account per workload boundary.
+
 #### Describe the primary high-privilege service account
 
 Before auditing roles, keys, or impersonation rights on a production service account. It is typically triggered by A workload identity appears central to the project or carries broad permissions. Read-only metadata lookup on a service account resource. Capture the stable resource name, unique ID, and client ID for the principal you are about to audit.
@@ -321,6 +329,10 @@ During any least-privilege review, credential leak investigation, or migration a
 > [!success] Prefer impersonation, WIF, or metadata-backed tokens
 >
 > Use `--impersonate-service-account` for operator testing, Workload Identity Federation for external CI/CD, and the metadata server for Cloud Run or GCE. Keep JSON keys as a migration exception, not the steady-state design.
+
+> [!info] Current product note: key creation guardrails
+>
+> Current IAM guidance recommends enforcing organization policies that block new user-managed key creation and key upload wherever possible. The operational takeaway is simple: JSON keys should now be treated as an explicit exception path, not as normal machine-auth plumbing.
 
 *List the current key inventory on `bq-wh-sa`.*
 
@@ -755,6 +767,10 @@ gcloud iam policies list \
 
 There are no deny policies currently attached to this project.
 
+> [!info] Current product note: deny attachment points
+>
+> Deny policies are a real product feature at project, folder, and organization attachment points. The blocker in this archived environment was delegated authority on the target project, not a product-level restriction that deny policies only exist at the organization layer.
+
 #### Attempt project-scope deny-policy creation
 
 When you need to verify whether project-scope deny administration is actually available to the current principal. It is typically triggered by you want to block a dangerous permission even if an allow binding grants it. State-changing deny-policy create attempt on the project attachment point. Validate whether this environment can author deny policies at project scope.
@@ -840,6 +856,10 @@ There is no visible organization in the current credential context, and the proj
 >
 > The local SDK exposes `gcloud iam principal-access-boundary-policies` commands, but those commands require `--organization` and organization-level policy bindings. In this environment, the absence of a visible organization is the blocker, not missing CLI support.
 
+> [!info] Current product note: PAB control plane
+>
+> Principal Access Boundary policy objects are paired with policy bindings that target principal sets. In practice this keeps PAB administration organization-centric even when the runtime question you are solving feels project-local.
+
 ## Recommendations and Production Rules
 
 - Create one service account per workload boundary. GitHub deployment, Cloud Run execution, and state-writing pipelines should not share one broad identity.
@@ -871,7 +891,7 @@ There is no visible organization in the current credential context, and the proj
 
 ## Quick Reference
 
-| Control | Layer | Best use | Current live status in `bq-wh-nb` |
+| Control | Layer | Best use | Archived status in removed project |
 |---|---|---|---|
 | **Service account** | Identity | One machine identity per workload | In active use |
 | **Custom role** | Allow policy | Minimal nonstandard permission bundle | Proven live with `codexSecretMetaViewer` |
@@ -892,7 +912,9 @@ There is no visible organization in the current credential context, and the proj
 ## References
 
 - https://cloud.google.com/iam/docs/service-account-overview
+- https://cloud.google.com/iam/docs/best-practices-service-accounts
+- https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys
 - https://docs.cloud.google.com/iam/docs/troubleshoot-access
-- https://docs.cloud.google.com/iam/docs/deny-access
+- https://cloud.google.com/iam/docs/deny-overview
 - https://docs.cloud.google.com/iam/docs/principal-access-boundary-policies
 - https://cloud.google.com/asset-inventory/docs/analyzing-iam-policies

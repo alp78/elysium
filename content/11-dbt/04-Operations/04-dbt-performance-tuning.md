@@ -8,10 +8,11 @@ description: "Identifying slow models from run_results.json, BigQuery and SQL Se
 
 # dbt: Performance Tuning
 
-> [!quote]
+> [!quote] Measure before tuning
+>
 > "Bottlenecks occur in surprising places, so don't try to second guess and put in a speed hack until you have proven that's where the bottleneck is."
 >
-> — **Rob Pike**, *Notes on Programming in C* (1989)
+> Source: Rob Pike | *Notes on Programming in C* (1989)
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "Identifying slow models from run_results.json, BigQuery and SQL Se
 > - Warnings: tuning threads blindly, scanning unpartitioned history repeatedly, creating indexes or statistics without measuring impact, and masking correctness issues with aggressive performance shortcuts
 > - Recommendations: measure before changing, use adapter-native performance primitives, keep thread counts workload-aware, and treat performance artifacts as a recurring observability input rather than a one-off firefight
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Performance tuning**
 > - The process of reducing dbt runtime, resource consumption, or freshness lag by changing model logic, warehouse design, or execution settings.
@@ -152,7 +153,6 @@ description: "Identifying slow models from run_results.json, BigQuery and SQL Se
 > > [!info] Runtime is a service-level issue
 > >
 > > Slow models become operational problems when they push delivery past consumer expectations. Performance tuning is often really SLA protection in disguise.
-
 
 ## Identifying Slow Models from `run_results.json`
 
@@ -328,9 +328,16 @@ models:
     marts:
       esg:
         +post-hook:
-          - "CREATE INDEX IF NOT EXISTS ix_{{ this.identifier }}_issuer_date
-             ON {{ this }} (issuer_id, score_date)
-             INCLUDE (environmental_score, social_score, governance_score)"
+          - >
+            IF NOT EXISTS (
+              SELECT 1
+              FROM sys.indexes
+              WHERE name = 'ix_{{ this.identifier }}_issuer_date'
+                AND object_id = OBJECT_ID('{{ this }}')
+            )
+            CREATE INDEX ix_{{ this.identifier }}_issuer_date
+            ON {{ this }} (issuer_id, score_date)
+            INCLUDE (environmental_score, social_score, governance_score)
 ```
 
 For columnstore (analytical) workloads:
@@ -572,7 +579,8 @@ bq query --use_legacy_sql=false < target/compiled/.../audit_fct_index_weights.sq
 > Always run `audit_helper` comparisons in a feature branch against the production dataset before merging. For ESG benchmark models, even a 0.0001% deviation in `constituent_weight` can constitute a material change requiring Methodology Committee review.
 
 > [!success] Validation workflow
-> Build both the original and refactored models in a dev dataset, run `audit_helper.compare_relations` and `audit_helper.compare_column_values` for each key column, confirm zero row discrepancies, then open the PR. Gate the merge on these comparisons passing.
+>
+> Build both the original and refactored models in a dev dataset, run `audit_helper.compare_relations` and `audit_helper.compare_column_values` for each key column, confirm zero row discrepancies, and gate the merge on those comparison checks passing.
 
 ---
 

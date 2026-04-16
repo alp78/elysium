@@ -8,10 +8,11 @@ description: "Systematic diagnosis of dbt compilation errors, runtime failures, 
 
 # dbt: Troubleshooting
 
-> [!quote]
+> [!quote] Diagnose reality, not assumptions
+>
 > "If you aren't testing in prod you aren't testing in reality -- just a weak dime store knockoff."
 >
-> — **Charity Majors**, charity.wtf (2018)
+> Source: Charity Majors | charity.wtf (2018)
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "Systematic diagnosis of dbt compilation errors, runtime failures, 
 > - Warnings: rerunning too much too early, debugging warehouse errors as if they were Jinja problems, ignoring stored-failure context, and masking real issues by downgrading severity instead of fixing the cause
 > - Recommendations: narrow the scope first, classify the failure layer explicitly, inspect artifacts and stored failures before guessing, and treat repeated incidents as architecture feedback rather than isolated operator mistakes
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Troubleshooting workflow**
 > - The repeatable process of reproducing a failure narrowly, isolating its layer, applying a fix, and verifying the result.
@@ -153,8 +154,7 @@ description: "Systematic diagnosis of dbt compilation errors, runtime failures, 
 > >
 > > A narrow reproduction is usually the fastest route to clarity. Broad reruns add latency and noise without necessarily adding understanding.
 
-
-### dbt First Responder Commands
+## dbt First Responder Commands
 
 ```bash
 # Validate profiles.yml connection and project structure
@@ -442,7 +442,8 @@ dbt run --full-refresh --select fct_esg_scores+
 > `--full-refresh` on an incremental model drops and recreates the table. Schedule it during a maintenance window for large tables to avoid breaking downstream queries mid-execution.
 
 > [!success] Safe full-refresh procedure
-> Schedule `--full-refresh` in an off-peak window, notify downstream consumers in advance, and use `dbt run --full-refresh --select <model>` (not `<model>+`) to limit scope. Verify row counts match the expected full-history baseline before re-opening the table to consumers.
+>
+> Schedule `--full-refresh` in an off-peak window, notify downstream consumers in advance, and use `dbt run --full-refresh --select <model>` rather than `<model>+` when you can limit scope safely. Verify row counts match the expected full-history baseline before reopening the table to consumers.
 
 ---
 
@@ -504,7 +505,8 @@ dbt snapshot --full-refresh --select snap_issuer_details
 > `--full-refresh` on a snapshot drops the full history. Only do this if the source system retains the full history of changes. Coordinate with the data governance team before destroying SCD history in regulated environments.
 
 > [!success] Safe snapshot recovery
-> Before running `--full-refresh` on a snapshot, archive the existing table to a backup (`CREATE TABLE snap_issuer_details_bak AS SELECT * FROM snap_issuer_details`). Confirm the source system holds the complete change history, obtain data-governance sign-off, then rebuild. Restore from backup if the rebuilt snapshot diverges from expectations.
+>
+> Before running `--full-refresh` on a snapshot, archive the existing table to a backup such as `CREATE TABLE snap_issuer_details_bak AS SELECT * FROM snap_issuer_details`. Confirm the source system holds the complete change history, obtain data-governance sign-off, and then rebuild. Restore from backup if the rebuilt snapshot diverges from expectations.
 
 ---
 
@@ -548,10 +550,11 @@ Renders all Jinja and produces plain SQL in `target/compiled/`. Use it to:
 - Check `is_incremental()` branches in development.
 
 ```bash
-# Force incremental branch even in dev (where the table doesn't exist yet)
-dbt compile --select fct_esg_scores \
-  --vars '{is_incremental: true}'
+# Compile against a dev target and inspect the rendered SQL
+dbt compile --select fct_esg_scores --target dev
 ```
+
+`is_incremental()` is decided by dbt's execution context and whether the target relation already exists; you cannot force it by passing a regular `var()`. To inspect incremental behavior, compile or run against an environment where the model already exists, or inspect the compiled SQL from a real incremental run artifact.
 
 ---
 

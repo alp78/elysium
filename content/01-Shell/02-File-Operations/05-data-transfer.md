@@ -8,13 +8,14 @@ aliases: [rsync, scp, gcloud scp, gsutil, gcloud storage, bcp, sqlcmd export, fi
 keywords: [rsync, scp, gcloud compute scp, gsutil, gcloud storage, bcp, sqlcmd, file transfer, data movement, trailing slash, resume transfer, delta transfer, parallel transfer, bandwidth limit, checksum, GCS upload, GCS sync, SQL Server export, CSV export, bulk copy, parallel bcp, bwlimit, rsync exclude, dry run, robocopy, Robocopy MIR, Robocopy exit codes, Invoke-Sqlcmd, Export-Csv, IPG, inter-packet gap]
 description: "Complete guide to data transfer tools for data engineering: rsync and Robocopy for local/remote transfers, scp for quick copies, gcloud compute scp for GCE VMs, gsutil and gcloud storage for GCS, bcp for SQL Server bulk export/import, and sqlcmd/Invoke-Sqlcmd for query-based export."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
 # Data Transfer
 
-> [!quote]
+> [!quote] Physical bandwidth reminder
+>
 > "Never underestimate the bandwidth of a station wagon full of tapes hurtling down the highway."
 >
 > — **Andrew S. Tanenbaum**, *Computer Networks* (1981)
@@ -329,6 +330,10 @@ Keep this lookup table nearby when you need the exact `scp` flag semantics.
 #### Copy a tree and preserve empty subdirectories
 
 `/E` is the baseline flag when the destination should reproduce the source tree, including empty directories. The captured exit code is `1`, which is still a successful copy in Robocopy terms.
+
+> [!info] Robocopy status is not Unix-style success or failure
+>
+> Robocopy return codes from `0` through `7` are non-failure states that describe what happened during reconciliation. Treat `$LASTEXITCODE -ge 8` as the failure boundary; a script that treats any non-zero value as an error will misclassify normal copy results.
 
 ```powershell
 $base = Join-Path $env:TEMP 'vault-transfer-demo-ps'

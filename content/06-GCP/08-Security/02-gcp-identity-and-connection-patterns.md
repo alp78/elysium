@@ -2,9 +2,9 @@
 title: "02 - GCP Identity and Connection Patterns"
 tags: [gcp, security, identity, authentication, networking]
 aliases: [GCP identity model, GCP auth patterns, GCP connection patterns, metadata server, Workload Identity Federation]
-description: "How to choose between human auth, ADC, impersonation, runtime-attached service accounts, WIF, and network paths in Google Cloud."
+description: "How to choose between human auth, ADC, impersonation, runtime-attached service accounts, WIF, and network paths in Google Cloud, anchored in archived project examples."
 created: 2026-03-29
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -12,10 +12,10 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers the decision model for Google Cloud identity and connectivity, separating identity type, authentication path, credential material, runtime attachment, token type, and network path so local development, CI/CD, Cloud Run, GCE, Airflow, and private-service access can use the right trust pattern.
+> Covers the decision model for Google Cloud identity and connectivity, using archived operator evidence to separate identity type, authentication path, credential material, runtime attachment, token type, and network path so local development, CI/CD, Cloud Run, GCE, Airflow, and private-service access can use the right trust pattern.
 >
-> **Scope and live context**
-> - Use live examples from `bq-wh-nb`, captured on April 13, 2026, with the active CLI account `alexper.recovery@gmail.com`, local ADC enabled, one GitHub Actions WIF pool and provider, and a disposable impersonation test service account `codex-sec-lab-260413@bq-wh-nb.iam.gserviceaccount.com`
+> **Scope and archived context**
+> - Use archived examples from `bq-wh-nb`, captured on April 13, 2026, with the active CLI account `alexper.recovery@gmail.com`, local ADC enabled, one GitHub Actions WIF pool and provider, and a disposable impersonation test service account `codex-sec-lab-260413@bq-wh-nb.iam.gserviceaccount.com`
 > - Separate identity, authentication, authorization, credential material, runtime attachment, and network path so failures are classified in the correct layer
 >
 > **Local operator identity**
@@ -38,6 +38,10 @@ status: complete
 > - Warnings: CLI auth does not automatically configure ADC, identity success does not prove network reachability, WIF may still fail at the impersonation binding layer, and the metadata server only exists inside supported Google runtimes
 > - Recommendations table: the runtime decision matrix, data-engineering scenarios, and quick-reference table map runtime context, token type, network path, and recommended auth pattern to the right design choice
 > - Troubleshooting: 5 failure modes covering CLI-versus-ADC mismatches, missing WIF impersonation grants, private-SQL network failures, testing with the wrong identity, and access-token versus ID-token confusion
+>
+> [!warning] Archived demo boundary
+>
+> The original project `bq-wh-nb` has been removed. The identities, WIF configuration, and token examples in this note are preserved as archived operator reference, and this refresh did not rerun authentication or federation commands against a replacement project.
 
 > [!note]- Glossary
 >
@@ -403,6 +407,10 @@ gcloud iam service-accounts get-iam-policy \
 
 This is narrower than the provider condition. The provider trusts `alp78` as the owner. The service-account binding then narrows actual impersonation to the repository `alp78/git-lab`.
 
+> [!info] Current product note: GitHub WIF hardening
+>
+> Current IAM guidance explicitly recommends attribute conditions for multi-tenant identity providers such as GitHub. The important design rule is to constrain trust twice: first at the provider with issuer and claim conditions, then again at the target service account with the narrowest possible `principalSet` membership.
+
 | Flag | Syntax | Description |
 |---|---|---|
 | `--project` | `--project=bq-wh-nb` | Project that owns the service-account and WIF resources. |
@@ -463,7 +471,7 @@ The operational split is:
 
 The metadata server and IAP are important, but they are runtime-specific. This workstation can prove local auth, WIF, and impersonation directly. It cannot safely demonstrate a GCE metadata token or an IAP tunnel in this note because those require a running Google runtime or a live target behind IAP.
 
-> [!info] Live verified workflow
+> [!info] Archived verified workflow
 >
 > The live examples above verify:
 >
@@ -476,6 +484,10 @@ The metadata server and IAP are important, but they are runtime-specific. This w
 > [!warning] Important conceptual note not safely executed here
 >
 > The metadata server only exists inside supported runtimes such as GCE and Cloud Run. IAP tunneling only matters when the target is a private HTTPS or TCP service, such as a private VM or SQL Server host. Those runtime-specific flows are real, but they are not safely reproducible from this workstation-only note without a dedicated live target and network boundary.
+
+> [!info] Current product note: metadata tokens and GCE scopes
+>
+> Metadata-issued access tokens are still the default machine-auth path for Compute Engine, but access scopes remain part of the effective boundary on GCE. In practice, the least-surprising design is an attached service account with narrow IAM roles and a VM scope configuration that does not accidentally block the API set the workload needs.
 
 For the detailed CLI mechanics behind user auth, ADC, and WIF credential files, see [[03-gcloud-authentication]]. For IAP and private VM access patterns, see the compute chapter notes such as [[02-vm-ssh-and-file-transfer]].
 
@@ -534,5 +546,7 @@ For the detailed CLI mechanics behind user auth, ADC, and WIF credential files, 
 
 - https://cloud.google.com/docs/authentication/application-default-credentials
 - https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines
+- https://cloud.google.com/iam/docs/best-practices-for-using-workload-identity-federation
 - https://cloud.google.com/iam/docs/service-account-impersonation
 - https://cloud.google.com/compute/docs/metadata/overview
+- https://cloud.google.com/compute/docs/access/service-accounts

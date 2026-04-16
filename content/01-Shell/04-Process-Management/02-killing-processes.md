@@ -8,7 +8,7 @@ aliases: [kill, pkill, killall, SIGTERM, SIGKILL, kill -9, stop process, termina
 keywords: [kill, pkill, killall, SIGTERM, SIGKILL, kill -9, stop process, terminate, signal, graceful shutdown, force kill, process group, PGID, strace, lock file cleanup, Stop-Process]
 description: "Graceful and forceful process termination in Linux and PowerShell. Covers the correct kill escalation sequence (SIGTERM -> strace -> SIGKILL), pkill -f for pattern matching, process groups, and cleanup after force kills."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -163,8 +163,6 @@ flowchart TD
 
 Use `kill <PID>` first because the default signal is `SIGTERM`. The process has a chance to finish in-flight work and exit cleanly, and the exit code `143` in the capture below shows the shell observed termination by signal `15`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to request a clean exit with SIGTERM.*
 ```bash
 sleep 300 &
@@ -184,8 +182,6 @@ pid=30313 exit=143
 #### Escalate to SIGKILL only after a timeout
 
 Use `kill -9` only after a process has ignored `SIGTERM` or outlived the timeout you assigned to a clean shutdown. The exit code `137` in the capture below is `128 + 9`, which confirms `SIGKILL`.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to escalate to SIGKILL only after a timeout.*
 ```bash
@@ -226,8 +222,6 @@ pid=30315 exit=137
 
 The capture below starts a uniquely marked Python process, lists it with `pgrep -af`, then terminates only that command line with `pkill -f`. This is the portable pattern for "kill the specific invocation, not every Python process."
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to preview the full command line before killing by pattern.*
 ```bash
 python3 -c 'import time; time.sleep(300)' note-pkill-final-20260414 &
@@ -259,8 +253,6 @@ pid=30316 exit=143
 #### Kill every matching executable name in a Linux-only context
 
 The live capture below runs two `sleep` processes inside an isolated PID namespace and then stops both with `killall sleep`. The isolated namespace keeps the demonstration from touching unrelated processes on the host.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to kill every matching executable name in a Linux-only context.*
 ```bash
@@ -298,7 +290,9 @@ When one shell command starts several child processes, the operational unit is o
 
 The capture below starts a detached shell that owns two `sleep` children, prints the shared PGID, then sends `SIGTERM` to the whole group with `kill -- -<PGID>`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+> [!info] `--` protects the negative PGID
+>
+> A negative PID means "target this process group", but a leading `-` also looks like another command-line option to `kill`. `kill -- -"$pgid"` stops option parsing first, which keeps the group ID from being misread as a signal selector by shell builtins or wrapper scripts.
 
 *Run the commands in this section to signal the whole process group with a negative PGID.*
 ```bash
@@ -334,8 +328,6 @@ Blind `kill -9` hides root causes. If a process will not exit, inspect what it i
 
 `strace -p` shows the system call the process is blocked in. On the WSL host used for this note, non-root attach was blocked by ptrace policy, so the live capture below was run with root privileges. The important point is that the output tells you what the process is waiting on before you escalate.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to attach `strace -p` before escalating blindly.*
 ```bash
 sleep 300 &
@@ -360,8 +352,6 @@ restart_syscall(<... resuming interrupted read ...>strace: Process 30405 detache
 
 The example below starts a temporary `pwsh` process, stops it by PID, returns the stopped process object with `-PassThru`, and verifies that the PID is gone.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to stop one PID and verify that it exited.*
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
@@ -384,8 +374,6 @@ remaining=0
 #### Use `-Name` only when every matching process should stop
 
 `Stop-Process -Name` behaves like a Windows-wide name match, so it is only safe when every matching process is disposable. The capture below starts two `PING` processes, lists them, and then stops both by name.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to use `-Name` only when every matching process should stop.*
 ```powershell
@@ -435,8 +423,6 @@ When several instances share one process name, filter the process list before yo
 
 This example starts a marked `pwsh` process, filters the `pwsh` process list by `CommandLine`, prints only the matching instance, and then stops it. The final `remaining=0` line confirms that the targeted PID is gone.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to match the exact instance by `CommandLine`.*
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
@@ -479,8 +465,6 @@ When the process is a daemon or the issue is a bound port rather than a hung wor
 
 For daemons that document `SIGHUP` as a reload signal, `kill -HUP` is a configuration refresh, not a shutdown. The live capture below starts a Python process with a `SIGHUP` handler, sends `HUP`, and shows the handler running without a forced kill.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to reload a daemon with `SIGHUP` instead of killing it.*
 ```bash
 python3 - <<'PY' &
@@ -515,8 +499,6 @@ pid=30337 exit=0
 
 If a port is the operational symptom, inspect the listener first and then kill the owner explicitly. `fuser -k` is effective, but it is broad for that port, so the safety step is the `ss` inspection immediately before the kill.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to free a listening port after identifying the owner.*
 ```bash
 python3 -m http.server 18181 >/dev/null 2>&1 &
@@ -550,8 +532,6 @@ PowerShell can preview a stop before it runs it. Use that preview when the targe
 
 `-WhatIf` is the PowerShell-native dry run. The capture below shows the exact target PowerShell would stop without actually terminating it at preview time.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to preview a broad stop with `-WhatIf`.*
 ```powershell
 $PSStyle.OutputRendering = 'PlainText'
@@ -576,8 +556,6 @@ These failure modes explain why a stop command may appear to do nothing, may sto
 
 Some processes trap or ignore `SIGTERM`. The capture below starts a shell that ignores `TERM`, shows that it is still present after the signal, and then removes it with `SIGKILL`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to `SIGTERM` was ignored and the process stayed alive.*
 ```bash
 bash -c 'trap "" TERM; while :; do sleep 1; done' &
@@ -600,8 +578,6 @@ pid=30344 final_exit=137
 #### The `pkill` pattern was too broad
 
 `pkill` matches every process that satisfies the pattern you give it. The capture below starts two differently marked Python processes and then kills both with one broad pattern, which is exactly why `pgrep -af` preview is mandatory before the signal step.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to the `pkill` pattern was too broad.*
 ```bash
@@ -628,8 +604,6 @@ pid2=30679 exit2=143
 
 If `kill -9` appears ineffective, inspect the process state instead of retrying the same signal. The live check below found no `D`-state tasks on the current host, but the command is the one you use to confirm whether the problem is blocked kernel I/O.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to `kill -9` had no visible effect because the task was in `D` state.*
 ```bash
 out=$(ps -eo pid,stat,wchan:24,comm | awk '$2 ~ /^D/ { print }')
@@ -646,8 +620,6 @@ no D-state processes found
 #### The process exited but a zombie entry remained
 
 If a process is gone but still visible as `Z`, the parent has not collected the exit status yet. The command below checks for zombie entries directly; on the current host it returned none.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to the process exited but a zombie entry remained.*
 ```bash
@@ -669,8 +641,6 @@ The most common PowerShell failure mode is not a missing signal; it is a permiss
 #### `Stop-Process` returned access denied
 
 The example below safely reproduces the error by attempting to stop the Windows `Idle` process. That is the expected signal that the process is protected or owned by a higher-privilege context.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to `Stop-Process` returned access denied.*
 ```powershell

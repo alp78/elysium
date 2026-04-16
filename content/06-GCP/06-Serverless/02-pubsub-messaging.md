@@ -4,7 +4,7 @@ tags: [gcp, pubsub, messaging]
 aliases: [Pub/Sub publish, Pub/Sub consume, Pub/Sub pull, gcloud pubsub publish, message attributes, Pub/Sub backlog, ordering keys, exactly-once, idempotent]
 description: "How to publish messages to Pub/Sub topics and consume them from subscriptions — including attributes, ordering keys, backlog monitoring, and the idempotency requirements of at-least-once delivery."
 created: 2026-03-22
-updated: 2026-04-05
+updated: 2026-04-16
 status: complete
 ---
 
@@ -32,7 +32,7 @@ status: complete
 > - Compare pull and push subscription behavior so the consumer model matches either batch backpressure control or event-driven HTTP delivery
 >
 > **Backlog and delivery semantics**
-> - Monitor `numUndeliveredMessages` to detect lagging consumers and use retention settings to balance replay windows against silent storage growth
+> - Monitor `numUndeliveredMessages` and oldest-unacked age to detect lagging consumers, then use retention settings to balance replay windows against silent storage growth
 > - Understand ordering keys, exactly-once delivery, dead letter routing, and why idempotent consumer logic remains the safest default even when stronger guarantees are enabled
 >
 > **Message design**
@@ -42,6 +42,12 @@ status: complete
 > **Operations and safety**
 > - Warnings: Pub/Sub delivers at least once by default, duplicates are expected, ordering is not guaranteed without ordering keys, and backlog storage can become a hidden cost center
 > - Recommendations table: the push-versus-pull comparison and idempotency guidance map workload shape, backpressure, retry model, and endpoint type to the correct consumer design
+
+> [!warning] Knowledge-only refresh
+>
+> The original Serverless demo project used for this folder no longer exists. This note keeps its generic publish, pull, and backlog examples as operator reference, but no topics, subscriptions, or consumers were recreated during this refresh.
+>
+> The edits below only correct current Pub/Sub behavior from documentation, especially storage-pricing semantics and the precise boundaries of exactly-once delivery.
 
 > [!note]- Glossary
 >
@@ -352,13 +358,13 @@ gcloud pubsub subscriptions describe pipeline-sub \
 
 A non-zero value is normal during active processing. A *growing* value over successive checks indicates the consumer cannot keep up — scale out consumers or investigate processing bottlenecks. The same metric is available in [Cloud Monitoring](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) for alerting and dashboarding.
 
-> [!warning] Retained Messages Incur Storage Fees
+> [!warning] Backlog billing starts after the first day
 >
-> Messages retained beyond the default 7-day retention period (configurable up to 31 days) consume storage billed at the GCS Nearline rate. A large backlog combined with extended retention can accumulate significant storage costs silently.
+> Pub/Sub backlog storage is not billed at Cloud Storage Nearline rates. Under current Pub/Sub pricing, storage charges apply when unacknowledged backlog stays older than 24 hours, when acknowledged messages are deliberately retained, or when topic retention is enabled for replay. The real cost driver is backlog age plus retention policy, not just the raw message count.
 
-> [!success] Set Retention and Alerts Proactively
+> [!success] Watch age as well as count
 >
-> Set `--message-retention-duration` on the subscription to the minimum your replay requirements allow. Create a Cloud Monitoring alert on `num_undelivered_messages` exceeding a threshold to catch backlog growth before storage costs escalate.
+> Keep `--message-retention-duration` no longer than your replay requirement, prefer topic retention when several subscriptions need the same history, and alert on both `num_undelivered_messages` and `oldest_unacked_message_age` so slow consumers are caught before retention becomes billable storage.
 
 ### Ordering Keys and Exactly-Once Delivery
 
@@ -370,11 +376,17 @@ By default, Pub/Sub guarantees **at-least-once** delivery with **no ordering**. 
 >
 > 1. **Your consumers must be idempotent.** If a message is delivered twice, processing it twice must produce the same result as processing it once. Use MERGE (upsert) instead of INSERT.
 > 2. **If you need ordering**, use ordering keys: `--ordering-key=market_index` ensures all messages with the same key arrive in order, but limits throughput to a single publisher thread per key.
-> 3. **Exactly-once delivery** is available but requires enabling it on the subscription (`--enable-exactly-once-delivery`) and adds latency due to deduplication overhead.
+> 3. **Exactly-once delivery** is available only for pull subscriptions, works within a single region, and adds coordination overhead around acknowledgments.
 
 > [!success] Design for Idempotency by Default
 >
 > Write all Pub/Sub consumers to be idempotent regardless of delivery mode. Use the Pub/Sub-provided `messageId` as part of your idempotency key, write to a staging table first, then MERGE into the production table. This pattern is safe under at-least-once, exactly-once, and replayed messages alike — no delivery guarantee changes require consumer code changes.
+
+> [!info] Exactly-once still needs client discipline
+>
+> Pub/Sub exactly-once delivery prevents duplicate delivery after a successful acknowledgment, but it only applies to pull subscriptions and only when subscribers stay in the same region. Push, BigQuery, and Cloud Storage subscriptions do not support it.
+>
+> Client libraries should use acknowledgment-with-response support and keep processing state until the acknowledgment result is known. If the ack fails, the message can be redelivered even though the business work already started.
 
 ### Idempotency Patterns for At-Least-Once Delivery
 
@@ -383,6 +395,7 @@ Because Pub/Sub can redeliver messages, any pipeline stage consuming from a subs
 - Use **MERGE/UPSERT** instead of INSERT when writing to BigQuery or SQL Server
 - Include a **unique message ID** (Pub/Sub provides one in `messageId`) in your idempotency key
 - Write to a **staging table first**, then merge to production — the merge is idempotent even if repeated
+- Persist a **processed-message ledger** or deterministic business key when multiple downstream systems need the same deduplication boundary
 
 ### Message Format Best Practices
 
@@ -444,5 +457,7 @@ flowchart TD
 
 - [Publishing messages](https://cloud.google.com/pubsub/docs/publisher)
 - [Subscribing to messages](https://cloud.google.com/pubsub/docs/subscriber)
+- [Subscription properties](https://cloud.google.com/pubsub/docs/subscription-properties)
 - [Message ordering](https://cloud.google.com/pubsub/docs/ordering)
 - [Exactly-once delivery](https://cloud.google.com/pubsub/docs/exactly-once-delivery)
+- [Pub/Sub pricing](https://cloud.google.com/pubsub/pricing)

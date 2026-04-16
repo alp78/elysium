@@ -8,10 +8,11 @@ description: "Project layout, naming conventions, config inheritance, multi-adap
 
 # dbt: Project Structure
 
-> [!quote]
+> [!quote] Structured projects scale better
+>
 > "There is no reason to tolerate an unstructured approach."
 >
-> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
+> Source: Ralph Kimball | *The Data Warehouse Toolkit* (2013)
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "Project layout, naming conventions, config inheritance, multi-adap
 > - Warnings: unstructured folder growth, hidden config inheritance, inconsistent prefixes, adapter logic leaking into the wrong layer, and committing environment-specific secrets or local profile files into the repo
 > - Recommendations: make layer boundaries explicit, keep naming conventions machine-readable, centralize safe defaults in `dbt_project.yml`, and isolate target-specific connection data outside version control
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **dbt project**
 > - The full repository structure and configuration that dbt reads when compiling and running models, tests, macros, seeds, and other resources.
@@ -173,10 +174,11 @@ description: "Project layout, naming conventions, config inheritance, multi-adap
 > >
 > > `profiles.yml` often contains credential references and environment-specific endpoints. Treat it as local or managed runtime state, not as repository content.
 
+## dbt Directory Tree
 
-### dbt Directory Tree
+*This repository tree separates models, tests, macros, seeds, snapshots, and docs so ownership and config scope stay legible as the project grows.*
 
-```
+```text
 financial_platform/
 ├── dbt_project.yml           # root config
 ├── profiles.yml              # connection targets (not in repo)
@@ -246,7 +248,9 @@ financial_platform/
 
 ---
 
-### dbt_project.yml — Fully Annotated
+## dbt_project.yml — Fully Annotated
+
+*This annotated root config shows where dbt discovers resources, which defaults apply project-wide, and where layer-specific overrides should live.*
 
 ```yaml
 # dbt_project.yml
@@ -345,7 +349,7 @@ tests:
 
 ---
 
-### dbt Naming Conventions
+## dbt Naming Conventions
 
 | Layer | Prefix | Pattern | Example |
 |---|---|---|---|
@@ -356,12 +360,15 @@ tests:
 | Snapshot | `snap_` | `snap_<entity>` | `snap_index_constituents` |
 | Seed | `ref_` | `ref_<domain>_<entity>` | `ref_gics_sectors` |
 
-> [!NOTE] Double underscore in staging
-> The double underscore (`__`) separates the *source system* from the *entity*. This makes it immediately clear where the data originates and allows globbing with `stg_market_data__*` selectors.
+> [!info] Double underscore in staging
+>
+> The double underscore (`__`) separates the source system from the entity. That keeps origin and business object readable at a glance and makes selectors such as `stg_market_data__*` useful during targeted runs.
 
 ---
 
-### dbt _sources.yml Pattern
+## dbt _sources.yml Pattern
+
+*This source declaration captures freshness rules, column tests, and raw-table metadata at the ingestion boundary instead of scattering those assumptions across model SQL.*
 
 ```yaml
 # models/staging/market_data/_sources.yml
@@ -423,16 +430,20 @@ sources:
 
 ---
 
-### dbt Config Inheritance: Project to Folder to Model
+## dbt Config Inheritance: Project to Folder to Model
 
-```
+*This inheritance sketch shows the config scopes dbt evaluates before it materializes a model.*
+
+```text
 dbt_project.yml (project level)
   └── staging/ folder config (+materialized: view, +schema: silver)
         └── stg_market_data__daily_prices.sql
               └── {{ config(tags=["high_priority"]) }}  ← model-level addition
 ```
 
-Lower levels always win. A model-level `config()` block overrides folder-level, which overrides project-level.
+More specific scopes take precedence for clobbering configs such as `materialized` or `schema`, but dbt also has additive and merged configs such as `tags`, `meta`, and hooks. Review inheritance with the actual config type in mind so you do not accidentally drop shared metadata or assume a tag list was replaced when it was combined.
+
+*This model-level `config()` block adds a local tag while inheriting the folder's materialization and schema defaults from `dbt_project.yml`.*
 
 ```sql
 -- stg_market_data__daily_prices.sql
@@ -447,9 +458,11 @@ select ...
 
 ---
 
-### Multi-Adapter Layout (SQL Server + BigQuery Dispatch)
+## Multi-Adapter Layout (SQL Server + BigQuery Dispatch)
 
 dbt's dispatch system lets you write adapter-specific macro implementations without forking model SQL.
+
+*This dispatch configuration tells dbt to resolve shared macros from the project first and then fall back to the upstream package implementation.*
 
 ```yaml
 # dbt_project.yml — dispatch configuration
@@ -457,6 +470,8 @@ dispatch:
   - macro_namespace: dbt_utils
     search_order: ['financial_platform', 'dbt_utils']
 ```
+
+*These macro variants show how one logical helper can compile to different SQL on BigQuery and SQL Server while the model API stays stable.*
 
 ```sql
 -- macros/cross_db/date_trunc.sql
@@ -473,6 +488,8 @@ dispatch:
 
 Model SQL calls the abstract macro:
 
+*The model calls the abstract macro once and lets dispatch choose the warehouse-specific implementation at compile time.*
+
 ```sql
 -- Works on both SQL Server and BigQuery
 select
@@ -484,11 +501,13 @@ group by 1
 
 ---
 
-### dbt Mapping to Medallion Architecture
+## dbt Mapping to Medallion Architecture
 
 The directory structure directly mirrors the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) layers, making the staging/intermediate/marts hierarchy a concrete implementation of bronze/silver/gold:
 
-```
+*This mapping makes the warehouse-layer intent explicit by aligning dbt folders with raw, cleaned, and consumption-ready data zones.*
+
+```text
 Bronze (raw ingestion)
   └── raw_db.market_data_raw.*          ← Source tables (not owned by dbt)
 
@@ -500,12 +519,19 @@ Gold (consumption-ready)
   └── mart models  (fct_*, dim_*)       ← aggregated facts, conformed dims
 ```
 
-> [!TIP] Schema mapping
-> Use `+schema` in `dbt_project.yml` to route each layer to the correct database schema. dbt appends the `+schema` value to the `generate_schema_name` macro output, keeping bronze/silver/gold physically separated without any manual DDL.
+> [!tip] Schema mapping
+>
+> Use `+schema` in `dbt_project.yml` to route each layer to the correct database schema. dbt appends the `+schema` value to the `generate_schema_name` macro output, which keeps bronze, silver, and gold objects separated without hand-maintained DDL.
 
 ---
 
-### profiles.yml Reference (not committed to repo)
+## profiles.yml Reference (not committed to repo)
+
+> [!warning] Profile discovery order matters
+>
+> Current dbt docs recommend `~/.dbt/profiles.yml` as the default location, but dbt Core will also search `--profiles-dir`, the `DBT_PROFILES_DIR` environment variable, and the current working directory before it falls back there. In CI and containerized runs, be explicit about the profile directory so a stray local file does not silently change the active target.
+
+*This local profile example keeps warehouse credentials and target-specific execution settings outside the repository while still letting the same project switch environments safely.*
 
 ```yaml
 # ~/.dbt/profiles.yml

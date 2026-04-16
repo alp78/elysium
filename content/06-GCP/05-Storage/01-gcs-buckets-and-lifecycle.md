@@ -4,7 +4,7 @@ tags: [gcp, gcs, storage]
 aliases: [GCS buckets, GCS lifecycle, GCS storage classes, hierarchical namespace, managed folders, bucket retention, bucket soft delete]
 description: "Bucket architecture, namespace models, storage classes, lifecycle automation, governance controls, and bucket recovery workflows in Google Cloud Storage."
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -12,32 +12,38 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers Google Cloud Storage bucket design and operations for data-engineering environments, with live `gcloud storage` workflows for namespace choice, lifecycle automation, governance controls, and bucket recovery in project `bq-wh-nb`.
+> Covers Google Cloud Storage bucket design and operations for data-engineering environments, with `gcloud storage` patterns for namespace choice, lifecycle automation, governance controls, and bucket recovery.
 >
 > **Bucket role and inventory**
 > - Defines buckets as the control plane for exports, raw landing zones, long-retention backups, and every downstream object operation that inherits bucket-level policy
-> - Uses the live project `bq-wh-nb`, including production buckets `stoxx-bq-bucket` and `stoxx-sql-bucket`, plus scratch buckets for hierarchical namespace, lifecycle, Autoclass, retention, and restore drills
+> - Preserves the archived `bq-wh-nb` examples, including production buckets `stoxx-bq-bucket` and `stoxx-sql-bucket`, plus scratch buckets for hierarchical namespace, lifecycle, Autoclass, retention, and restore drills
 > - Explains how buckets relate to projects, objects, prefixes, folders, managed folders, and bucket-level policy boundaries
 >
 > **Namespace and access model**
 > - Distinguishes flat namespace prefixes from hierarchical namespace folders, including the operational difference between name-based path layout and first-class folder resources
 > - Covers managed folders as path-scoped IAM boundaries, plus the role of Uniform bucket-level access (`UBLA`) and Public access prevention (`PAP`) in keeping authorization bucket-centric and non-public
-> - Shows `gcloud storage buckets create`, `buckets describe --raw`, `folders create`, `folders list`, and `managed-folders create` patterns for proving HNS is enabled and for creating auditable subtrees
+> - Shows `gcloud storage buckets create`, `buckets describe --raw`, `folders create`, `folders list`, and `managed-folders create` patterns for proving HNS is enabled and for creating auditable subtrees, while current documentation clarifies that HNS also supports atomic folder rename and automatic parent-folder creation during uploads, rewrites, and compose operations
 >
 > **Lifecycle, storage classes, and automation**
 > - Explains location choice, immutable bucket placement, storage classes, Autoclass, lifecycle JSON rules, labels, and how age-based policy should align with class billing boundaries
 > - Shows when to use adaptive tiering with Autoclass versus deterministic lifecycle rules with `matchesPrefix` for prefixes such as `archive/`
-> - Covers label updates, lifecycle policy attachment, and the constraints around `SetStorageClass` rewrites, early-deletion exposure, and Autoclass incompatibility with manual class-transition lifecycle rules
+> - Covers label updates, lifecycle policy attachment, and the constraints around `SetStorageClass` rewrites, early-deletion exposure, lifecycle propagation delay, and Autoclass incompatibility with manual class-transition lifecycle rules
 >
 > **Governance and recovery**
 > - Covers versioning, default event-based hold, retention policy, irreversible bucket lock, soft delete, per-object retention capability, and restore behavior for soft-deleted buckets
 > - Demonstrates `gcloud storage buckets update` patterns for versioning, hold toggles, retention period changes, and `gcloud storage restore` with bucket generation for time-bound recovery
-> - Includes bucket-role design guidance for landing/raw, processing/transient, exchange/export, backup/archive, and replay/backfill buckets with different preferred controls
+> - Includes bucket-role design guidance for landing/raw, processing/transient, exchange/export, backup/archive, and replay/backfill buckets with different preferred controls, plus the current soft-delete nuance that `gcloud` bucket restore returns the bucket first and object restore remains a separate step
 >
 > **Operations and safety**
 > - Warnings: location is immutable after creation, `--raw` is required to prove HNS, PowerShell can split unquoted comma-separated label payloads, holds and retention block cleanup, bucket lock is irreversible, and soft delete recovery is limited by the retention window
 > - Recommendations table: bucket-role patterns for landing/raw, processing/transient, exchange/export, backup/archive, and replay/backfill with preferred controls for each role
 > - Troubleshooting: 6 failure modes covering write failure from IAM or UBLA posture, delete blocks from holds or retention, region mismatch, asynchronous lifecycle timing, accidental bucket deletion, and cost spikes from versioning or soft-deleted bytes
+
+> [!warning] Archived demo boundary
+>
+> The original Storage project used throughout this note, `bq-wh-nb`, has been removed. Treat the captured bucket listings, scratch-bucket names, and `gcloud storage` outputs as archived operator reference rather than current validation.
+>
+> This refresh intentionally does not rerun any bucket examples. The page keeps the former outputs where they still teach the workflow, and it only adds knowledge-backed corrections from current Cloud Storage documentation.
 
 > [!note]- Glossary
 >
@@ -89,6 +95,10 @@ status: complete
 > >
 > > The normalized `buckets describe` output does not show the HNS field clearly. Use `gcloud storage buckets describe --raw` and confirm `hierarchicalNamespace.enabled: true`.
 >
+> > [!info] Rename semantics change materially
+> >
+> > In an HNS bucket, folder rename is atomic and metadata-only. In a flat bucket, the same logical move is still copy plus delete across object names, which is slower, costlier, and not atomic.
+>
 > ---
 >
 > **Folder**
@@ -108,6 +118,10 @@ status: complete
 > > [!info] Policy, not lifecycle
 > >
 > > Managed folders create authorization boundaries. They do not move data, replace lifecycle rules, or change how storage classes work.
+>
+> > [!info] Parent folders can be implicit
+> >
+> > Current Cloud Storage documentation explicitly allows child managed folders to be created before their parents. Cloud Storage creates the missing parent folders automatically and ensures that a managed folder cannot exist without its associated folder path.
 >
 > ---
 >
@@ -279,7 +293,7 @@ The control flow below is the bucket-level decision stack for most GCS-backed da
   'fontSize': '14px'
 }}}%%
 flowchart TD
-    A["GCP project<br/>bq-wh-nb"] --> B["Bucket"]
+    A["Archived demo project<br/>bq-wh-nb"] --> B["Bucket"]
     B --> C["Flat namespace bucket<br/>prefixes only"]
     B --> D["Hierarchical namespace bucket<br/>real folders"]
     C --> E["Objects under prefixes<br/>raw/ bronze/ archive/"]
@@ -294,22 +308,22 @@ flowchart TD
 
 ## Bucket Creation and Inspection
 
-Creating a bucket is where the irreversible decisions happen: name, location, namespace model, uniform bucket-level access, and whether the bucket is built for per-object retention. Inspection is how you confirm that those decisions match production intent before you put data into the bucket.
+Creating a bucket is where the irreversible decisions happen: name, location, namespace model, uniform bucket-level access, and whether the bucket is built for per-object retention. Inspection is how you confirm that those decisions match production intent before you put data into the bucket. The examples below now function as archived operator patterns because the original project is gone.
 
 ### PowerShell / Linux | gcloud storage buckets | create and inspect buckets
 
-This subsection validates four core workflows:
+This subsection preserves four core workflows:
 
-- Listing the current project bucket inventory.
+- Listing the archived project bucket inventory.
 - Inspecting an existing production bucket.
 - Creating a flat namespace bucket with per-object retention enabled.
 - Creating a hierarchical namespace bucket and confirming the raw API field that proves HNS is active.
 
-#### List the current project bucket inventory
+#### List the archived project bucket inventory
 
 During first access to a project or before creating a new bucket. It is typically triggered by you need to understand what bucket estate already exists and whether a naming standard is already in use. Runs from any shell with `storage.googleapis.com` enabled and permission to list project buckets. Read-only. Establish the current bucket inventory and confirm the active project is the intended one.
 
-*List every bucket in `bq-wh-nb` with its location, default class, soft-delete window, and UBLA state.*
+*List every bucket in the archived `bq-wh-nb` project with its location, default class, soft-delete window, and UBLA state.*
 
 ```bash
 gcloud storage buckets list --format="table(name,location,default_storage_class,soft_delete_policy.retentionDurationSeconds,uniform_bucket_level_access)"
@@ -324,13 +338,13 @@ stoxx-bq-bucket                           EUROPE-WEST1  STANDARD               6
 stoxx-sql-bucket                          EUROPE-WEST1  STANDARD               604800                      True
 ```
 
-All live buckets in this project are regional `EUROPE-WEST1` buckets with `STANDARD` as the default storage class, a seven-day soft-delete window (`604800` seconds), and uniform bucket-level access enabled. That tells you the project already favors IAM-only access control and a short recovery window.
+In the archived project snapshot, every listed bucket was regional `EUROPE-WEST1` with `STANDARD` as the default storage class, a seven-day soft-delete window (`604800` seconds), and uniform bucket-level access enabled. That tells you the design already favored IAM-only access control and a short recovery window.
 
 #### Inspect an existing production bucket
 
 Before using an existing bucket for load, export, backup, or ingestion work. It is typically triggered by A bucket already exists and you need to verify whether it is safe for the new workload. Read-only bucket metadata lookup. Confirm location, public-access posture, and recovery defaults on a real production bucket.
 
-*Describe the current production export bucket.*
+*Describe the archived production export bucket used in this note.*
 
 ```bash
 gcloud storage buckets describe gs://stoxx-bq-bucket --format="yaml(name,location,storage_url,public_access_prevention,soft_delete_policy.retentionDurationSeconds,uniform_bucket_level_access)"
@@ -346,7 +360,7 @@ storage_url: gs://stoxx-bq-bucket/
 uniform_bucket_level_access: true
 ```
 
-`stoxx-bq-bucket` is locked down the way most data-engineering buckets should be: PAP is enforced, UBLA is enabled, and the recovery baseline is soft delete rather than public sharing or per-object ACLs.
+`stoxx-bq-bucket` was locked down the way most data-engineering buckets should be: PAP was enforced, UBLA was enabled, and the recovery baseline was soft delete rather than public sharing or per-object ACLs.
 
 #### Create a flat namespace bucket with per-object retention enabled
 
@@ -502,6 +516,12 @@ storage_url: gs://bq-wh-nb-codex-gcs-hns-20260413-2288/raw/bronze/2026/04/13/
 
 This is the practical difference from a flat bucket: the directories themselves exist and are listable as resources.
 
+> [!info] Pre-creating folders is optional in many HNS workflows
+>
+> Current Cloud Storage documentation clarifies that uploads, rewrites, compose operations, and managed-folder creation can automatically create any missing parent folders in an HNS bucket.
+>
+> Create folders explicitly when you need auditable structure ahead of time. Otherwise, object creation itself can materialize the path.
+
 #### Create and inspect a managed folder
 
 When one logical subtree in a shared bucket needs its own IAM boundary. It is typically triggered by several teams or pipelines share one bucket but should not share access to every path. State-changing command against bucket namespace metadata. Requires permission to modify bucket resources. Create a managed folder that can later hold path-scoped IAM rules.
@@ -531,6 +551,10 @@ storage_url: gs://bq-wh-nb-codex-gcs-hns-20260413-2288/managed/landing/
 
 Managed folders are the right tool when one bucket must stay shared but path-level access must still be auditable and intentional.
 
+> [!info] Managed folders are compatible with existing prefixes
+>
+> A managed folder can be created in place of an existing simulated folder prefix. If objects already exist under `managed/landing/`, the managed-folder IAM policy applies to that subtree once the managed folder is created.
+
 | Flag | Syntax | Description |
 |---|---|---|
 | `--recursive` | `gcloud storage folders create --recursive ...` | Creates every missing folder in the path. |
@@ -557,9 +581,9 @@ Use the location model that matches the workload boundary rather than the highes
 | **Dual-region** | `EUR4`, custom dual-region | Regulated DR designs and replicated serving paths | Higher cost, more planning around replication behavior |
 | **Multi-region** | `EU`, `US`, `ASIA` | Broadly distributed readers and platform-managed geo redundancy | Highest storage cost and less placement precision |
 
-> [!info] Regional-only live estate
+> [!info] Regional-only archived estate
 >
-> Every live bucket in `bq-wh-nb` is regional `EUROPE-WEST1`. Dual-region placement and `--rpo=ASYNC_TURBO` are important design options, but they were not executed live here because this project currently has no dual-region or multi-region buckets.
+> Every captured bucket in `bq-wh-nb` was regional `EUROPE-WEST1`. Dual-region placement and `--rpo=ASYNC_TURBO` remain important design options, but they were not exercised in the archived demo estate.
 
 ### Compare storage classes before writing lifecycle rules
 
@@ -645,6 +669,15 @@ Updating gs://bq-wh-nb-codex-gcs-restore-20260413-4762/...
 
 The follow-up `describe` output above shows `autoclass.enabled: true` and `terminalStorageClass: ARCHIVE`. That confirms the bucket is in adaptive-tiering mode rather than manual `SetStorageClass` mode.
 
+> [!info] Autoclass changes more than tier movement
+>
+> Current Cloud Storage documentation clarifies four operational details that matter in review:
+>
+> - All objects in an Autoclass bucket begin in `STANDARD`, even if a request specifies another storage class.
+> - Objects smaller than `128 KiB` do not transition to colder classes.
+> - Restoring a soft-deleted object into an Autoclass bucket brings the restored live object back as `STANDARD`.
+> - Enabling, disabling, or modifying Autoclass can take up to one day to take full effect.
+
 #### Define a lifecycle policy file
 
 Before applying lifecycle automation to prefixes that have a predictable aging curve. It is typically triggered by archive or staging data follows a known age-based retention path. Local file definition plus a later bucket update. The file itself is not a Cloud resource. Express deterministic bucket policy in JSON before attaching it to the bucket.
@@ -705,6 +738,12 @@ name: bq-wh-nb-codex-gcs-flat-20260413-3938
 ```
 
 The `matchesPrefix` condition is the important production pattern. It lets one bucket host multiple data zones while only specific prefixes age into colder storage or expiry.
+
+> [!warning] Lifecycle timing is eventual, not immediate
+>
+> Cloud Storage lifecycle changes can take up to 24 hours to propagate, and the service can continue applying the previous configuration during that window.
+>
+> Current release notes also clarify a subtle safety change: from October 31, 2025 onward, an `age: 0` lifecycle condition becomes true at midnight UTC after object creation, not immediately at write time. Do not use `age: 0` expecting same-request cleanup behavior.
 
 > [!question] Autoclass or lifecycle?
 >
@@ -845,9 +884,15 @@ Updating gs://bq-wh-nb-codex-gcs-flat-20260413-3938/...
 
 Soft delete is the first recovery tier for accidental bucket deletion. If the bucket is still inside its soft-delete window, `gcloud storage restore` can bring it back without re-creating the name manually.
 
+> [!info] Bucket restore does not finish object recovery
+>
+> Current Cloud Storage documentation distinguishes bucket restore from object restore. Restoring a soft-deleted bucket with the CLI or API makes the bucket live again, but its soft-deleted objects still need their own restore step if you want them returned to the live namespace.
+>
+> The soft-delete policy itself is also not an arbitrary timer: Cloud Storage documents a minimum retention duration of 7 days and a maximum of 90 days, and policy changes can take up to 30 seconds to propagate.
+
 ### PowerShell / Linux | gcloud storage rm and restore | recover a deleted bucket
 
-The restore workflow below uses the disposable bucket `bq-wh-nb-codex-gcs-restore-20260413-4762`.
+The archived restore workflow below uses the disposable bucket `bq-wh-nb-codex-gcs-restore-20260413-4762`.
 
 #### Delete an empty scratch bucket
 
@@ -900,6 +945,8 @@ softDeletePolicy:
 
 The restored bucket kept its labels and Autoclass state. That is the important operator takeaway: restore is meant to recover the deleted resource, not an empty shell with the same name.
 
+If object data inside the bucket was also soft-deleted, current documentation says that bucket restore alone is not the full recovery sequence. Restoring the bucket makes the namespace live again; object restore remains a separate operation.
+
 > [!warning] Soft delete is not infinite retention
 >
 > The restore window lasts only as long as `softDeletePolicy.retentionDurationSeconds` allows. Once the hard-delete boundary passes, `gcloud storage restore` cannot recover the bucket.
@@ -933,7 +980,7 @@ Bucket design is easiest to reason about when every bucket has one operational r
 | **Backup / archive** | Database backups, point-in-time exports, disaster recovery copies | Colder classes, retention, possibly lock | Makes recovery posture explicit and auditable. |
 | **Replay / backfill** | Known-good historical slices | Predictable lifecycle and stronger naming discipline | Makes reruns safe without mixing with hot landing data. |
 
-A simple and readable naming rule is: one environment, one platform domain, one workload purpose. The production buckets already visible in `bq-wh-nb` follow that principle better than a single catch-all shared bucket would.
+A simple and readable naming rule is: one environment, one platform domain, one workload purpose. The archived production buckets that were visible in `bq-wh-nb` followed that principle better than a single catch-all shared bucket would.
 
 ## Troubleshooting and Runbooks
 
@@ -971,8 +1018,11 @@ A simple and readable naming rule is: one environment, one platform domain, one 
 
 - https://cloud.google.com/storage/docs/storage-classes
 - https://cloud.google.com/storage/docs/lifecycle
+- https://cloud.google.com/storage/docs/autoclass
 - https://docs.cloud.google.com/storage/docs/hns-overview
 - https://docs.cloud.google.com/storage/docs/managed-folders
+- https://cloud.google.com/storage/docs/rename-hns-folders
 - https://docs.cloud.google.com/storage/docs/soft-delete
 - https://docs.cloud.google.com/storage/docs/object-versioning
 - https://cloud.google.com/storage/docs/bucket-lock
+- https://docs.cloud.google.com/storage/docs/release-notes

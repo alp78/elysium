@@ -5,7 +5,7 @@ aliases: [cat, head, tail, tail -f, less, reading files, Select-String]
 keywords: [cat, head, tail, grep, awk, less, Get-Content, Select-String, log analysis, reading files]
 description: "Read small files safely, inspect larger logs with bounded commands, and follow live output on Linux and PowerShell."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -90,8 +90,6 @@ Use bounded reads first so you can confirm structure and recent activity before 
 
 `cat` is appropriate when the file is small and you actually want the full contents on standard output. For unknown logs, treat `cat` as the last choice rather than the first.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to print a small file with `cat`.*
 ```bash
 cat /tmp/elysium-reading-demo/app.conf
@@ -106,8 +104,6 @@ LOG_LEVEL=info
 
 `head` is the safer first look when you need schema, headers, or the opening lines of a file. If you only need a CSV header row, drop the count to `1`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to read the first lines with `head -n`.*
 ```bash
 head -n 3 /tmp/elysium-reading-demo/data.csv
@@ -121,8 +117,6 @@ MSFT,428.10,900
 #### Read the last lines with `tail -n`
 
 `tail` is the quick way to inspect recent log activity without paging through the entire file. It is usually the first bounded read on an append-only log.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to read the last lines with `tail -n`.*
 ```bash
@@ -141,8 +135,6 @@ Before you stream or search an unfamiliar log, confirm its size and then narrow 
 
 File size tells you whether a full-file read is cheap or reckless. On a large file, switch to bounded reads and targeted search immediately.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to check file size with `ls -lh`.*
 ```bash
 ls -lh /tmp/elysium-reading-demo/pipeline.log
@@ -155,8 +147,6 @@ ls -lh /tmp/elysium-reading-demo/pipeline.log
 
 `wc -l` counts newline characters, which makes it a fast way to estimate record count before you decide how aggressively to inspect the file. A final line without a trailing newline is not counted the way many editors display it.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to count newline-terminated records with `wc -l`.*
 ```bash
 wc -l /tmp/elysium-reading-demo/pipeline.log
@@ -168,8 +158,6 @@ wc -l /tmp/elysium-reading-demo/pipeline.log
 #### Show line numbers and surrounding context with `grep -n -C`
 
 When you already know the pattern, `grep -n -C` gives you the hit, its line number, and a bounded amount of context around it. That is usually enough to decide whether you need a longer time-window extract.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to show line numbers and surrounding context with `grep -n -C`.*
 ```bash
@@ -186,8 +174,6 @@ grep -n -C 1 'ERROR' /tmp/elysium-reading-demo/pipeline.log
 #### Slice a known time window with `awk`
 
 If the interesting period is already known, an `awk` range pattern is the simplest way to isolate that window without opening the rest of the file.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to slice a known time window with `awk`.*
 ```bash
@@ -207,7 +193,9 @@ Once the bounded reads tell you that the file is the right target, switch to fol
 
 Use `tail -F` when the writer may rotate or replace the file under the same name. The captured output below shows the reopen event, which is exactly why `-F` is safer than plain `-f` for production logs.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+> [!info] Rotation-safe follow mode
+>
+> GNU `tail -f` follows the file descriptor by default, which can leave you attached to the old inode after a rename or log rotation. `tail -F` switches to name-following with retry, so the reader can reopen the path when the log disappears and reappears.
 
 *Run the commands in this section to follow a rotating log with `tail -F`.*
 ```bash
@@ -231,8 +219,6 @@ PowerShell exposes the same core reading patterns, but the pipeline carries stri
 
 Default `Get-Content` is the PowerShell equivalent of a basic file read. It emits one string per line, which means later pipeline steps still work line by line.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to print a small file with `Get-Content`.*
 ```powershell
 Get-Content (Join-Path $env:TEMP 'elysium-reading-demo\app.conf')
@@ -246,8 +232,6 @@ LOG_LEVEL=info
 #### Read the first lines with `-TotalCount`
 
 `Get-Content` uses `-TotalCount` for the bounded "read the first N lines" case. Use `1` when you only need the header row.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to read the first lines with `-TotalCount`.*
 ```powershell
@@ -263,8 +247,6 @@ MSFT,428.10,900
 
 `-Tail` is the direct equivalent of `tail -n`. It is the safest way to inspect the newest log lines without materializing the full file.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to read the last lines with `-Tail`.*
 ```powershell
 Get-Content (Join-Path $env:TEMP 'elysium-reading-demo\pipeline.log') -Tail 2
@@ -277,8 +259,6 @@ Get-Content (Join-Path $env:TEMP 'elysium-reading-demo\pipeline.log') -Tail 2
 #### Use `-Raw` only when you need one string
 
 `-Raw` changes the shape of the result from line-by-line output to a single string object. That is useful for whole-file parsing, but it is the wrong default for large log inspection.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to use `-Raw` only when you need one string.*
 ```powershell
@@ -296,7 +276,9 @@ For ongoing logs, follow the file as it grows. For known patterns, switch to `Se
 
 `-Wait` keeps reading as new lines arrive. Pair it with `-Tail 0` when you only want future writes instead of replaying the current file contents first.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+> [!info] FileSystem-only follow behavior
+>
+> `Get-Content -Wait` works only on FileSystem drives, polls once per second, cannot be combined with `-Raw`, and stops if the file is deleted. It follows appended lines well, but it is not a path-reopen equivalent to `tail -F`.
 
 *Run the commands in this section to follow appended lines with `-Wait`.*
 ```powershell
@@ -310,8 +292,6 @@ Get-Content -Path (Join-Path $env:TEMP 'elysium-reading-demo\live.log') -Wait -T
 #### Search with context using `Select-String`
 
 `Select-String` is the right tool when you need the match plus surrounding lines. Converting each result to a string keeps the example readable while still showing line numbers and context.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to search with context using `Select-String`.*
 ```powershell
@@ -328,8 +308,6 @@ Select-String -Path (Join-Path $env:TEMP 'elysium-reading-demo\pipeline.log') -P
 #### Count matching lines with `Select-String`
 
 If you only need magnitude before you inspect full context, count the `MatchInfo` results first and expand later only when the number justifies it.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to count matching lines with `Select-String`.*
 ```powershell

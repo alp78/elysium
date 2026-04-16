@@ -8,10 +8,11 @@ description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns 
 
 # dbt: Airflow Integration
 
-> [!quote]
+> [!quote] Scheduler and transformer boundaries
+>
 > "It becomes even more important to have something like Airflow that brings everything together in a sane place where every little piece of the puzzle can be orchestrated properly."
 >
-> — **Maxime Beauchemin** (creator of Apache Airflow)
+> Source: Maxime Beauchemin | creator of Apache Airflow
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns 
 > - Warnings: hiding dbt inside one opaque shell task, leaking credentials through variable passing, overusing per-model task expansion, and losing rerun precision by choosing the wrong operator pattern
 > - Recommendations: match orchestration granularity to failure-recovery needs, isolate heavy runs when possible, pass runtime values explicitly, and wire failure callbacks into the team's alerting path early
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Airflow orchestration**
 > - The scheduling, dependency, retry, and alerting layer that determines when and how dbt runs as part of a broader pipeline.
@@ -133,8 +134,7 @@ description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns 
 > >
 > > If the orchestration layer cannot isolate reruns, teams often pay for broader reruns and slower recovery than the underlying dbt failure actually required.
 
-
-### Airflow BashOperator Wrapping dbt run
+## Airflow BashOperator Wrapping dbt run
 
 The simplest approach: invoke the dbt CLI as a shell command from within an Airflow task. The entire dbt project runs as a single Airflow task.
 
@@ -166,9 +166,9 @@ dbt_run = BashOperator(
 - No per-model retry, duration metrics, or partial re-run from Airflow.
 - Log output is a single stream; hard to isolate failures.
 
-> [!tip] When to use single-task approach
+> [!tip] When to use the single-task approach
 >
-> Use for non-critical pipelines or when the dbt project is small (< 20 models).
+> Use it for non-critical pipelines or when the dbt project is small enough that one coarse retry surface is operationally acceptable.
 
 ---
 
@@ -186,6 +186,7 @@ pip install astronomer-cosmos[dbt-bigquery]
 
 ```python
 from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
 
 from airflow import DAG
@@ -213,7 +214,7 @@ esg_dbt_dag = DbtDag(
     operator_args={
         "vars": {"run_date": "{{ ds }}"},
         "retries": 2,
-        "retry_delay": 30,
+        "retry_delay": timedelta(seconds=30),
     },
     schedule="0 4 * * *",
     start_date=datetime(2025, 1, 1),
@@ -233,13 +234,13 @@ esg_dbt_dag = DbtDag(
 - Requires the manifest to be present at parse time; coordinate with CI/CD.
 - Additional dependency (`astronomer-cosmos`) must be pinned and managed.
 
-> [!note] Cosmos load modes
+> [!info] Cosmos load modes
 >
-> Cosmos supports `LoadMode.DBT_LS` (runtime discovery) and `LoadMode.MANIFEST` (pre-built manifest). Prefer `MANIFEST` in production for parse-time stability.
+> Cosmos supports `LoadMode.DBT_LS` for runtime discovery and `LoadMode.MANIFEST` for pre-built metadata. Prefer `MANIFEST` in production when you want predictable DAG parse behavior and fewer moving parts on the scheduler.
 
 ---
 
-### Airflow CloudRunJobOperator (Isolated Container)
+## Airflow CloudRunJobOperator (Isolated Container)
 
 Run dbt inside a Cloud Run Job, treating the entire dbt invocation as a containerised ephemeral workload. Airflow submits the job and polls for completion.
 
@@ -280,7 +281,7 @@ dbt_cloud_run = CloudRunExecuteJobOperator(
 
 ---
 
-### Airflow dbt Operator Comparison Table
+## Airflow dbt Operator Comparison Table
 
 | Dimension         | BashOperator        | astronomer-cosmos          | CloudRunJobOperator      |
 |-------------------|---------------------|----------------------------|--------------------------|
@@ -294,7 +295,7 @@ dbt_cloud_run = CloudRunExecuteJobOperator(
 
 ---
 
-### Full DAG: Extract to dbt Cosmos to dbt test to Publish
+## Full DAG: Extract to dbt Cosmos to dbt test to Publish
 
 This pattern represents a complete ESG data pipeline: raw provider data lands in GCS, dbt transforms it, tests validate quality, and a downstream publish step refreshes the index calculation API.
 
@@ -432,7 +433,8 @@ bash_command=(
 > XCom values pulled into `--vars` must be strings or simple scalars. Never pass secrets through XComs; use Airflow Connections or Secret Manager instead.
 
 > [!success] Safe variable passing
-> Pass secrets to dbt via environment variables using Airflow's `env` parameter on `BashOperator` (sourced from an Airflow Connection or Secret Manager backend). Use `--vars` only for non-sensitive run-time parameters such as `run_date` or `provider_code`.
+>
+> Pass secrets to dbt via environment variables using Airflow's `env` parameter on `BashOperator`, sourced from an Airflow Connection or Secret Manager backend. Use `--vars` only for non-sensitive runtime parameters such as `run_date` or `provider_code`.
 
 ---
 

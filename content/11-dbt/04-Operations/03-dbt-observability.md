@@ -8,10 +8,11 @@ description: "Monitoring dbt runs with Datadog custom metrics, the elementary pa
 
 # dbt: Observability
 
-> [!quote]
+> [!quote] Production debugging discipline
+>
 > "Monitoring is TDD for production. Observability is debugging for production -- give Future You the power to answer any question."
 >
-> — **Charity Majors**, charity.wtf (2018)
+> Source: Charity Majors | charity.wtf (2018)
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "Monitoring dbt runs with Datadog custom metrics, the elementary pa
 > - Warnings: treating dbt success as binary without artifact detail, shipping noisy metrics without naming discipline, missing freshness alerts, and alerting paths that page too late or without enough execution context
 > - Recommendations: parse artifacts systematically, make metric names stable, combine package-level and custom monitoring, and wire freshness, failures, and schema drift into the same incident response surface
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **dbt artifact**
 > - A structured file emitted by dbt after compilation or execution, containing metadata about the project, graph, and run results.
@@ -142,7 +143,6 @@ description: "Monitoring dbt runs with Datadog custom metrics, the elementary pa
 > > [!warning] Thresholds shape pager quality
 > >
 > > Poorly tuned monitors create either silence or alert fatigue. Good observability depends on thresholds and routing being calibrated to real operational impact.
-
 
 ## dbt Artifacts Overview
 
@@ -373,8 +373,7 @@ from datadog import statsd
 with open("target/sources.json") as f:
     sources = json.load(f)
 
-for result in sources["results"]:
-    source_name = result["unique_id"].split(".")[-1]
+for source_name, result in sources.get("sources", {}).items():
     max_loaded = result.get("max_loaded_at")
     if max_loaded:
         import datetime, pytz
@@ -394,6 +393,7 @@ for result in sources["results"]:
 ### dbt Alerting — Airflow Failure Callback to Datadog
 
 ```python
+import os
 import requests
 
 def notify_datadog_and_slack(context: dict):

@@ -6,7 +6,7 @@ tags:
 aliases: [BigQuery datasets, BigQuery tables, bq ls, bq show, bq mk, BQ schema, BigQuery table management]
 description: "How to list, inspect, create, and delete BigQuery datasets and tables using the bq CLI — including schemas, metadata, partitioning, and clustering configuration."
 created: 2026-03-22
-updated: 2026-04-12
+updated: 2026-04-15
 status: complete
 ---
 
@@ -19,7 +19,7 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers BigQuery dataset and table lifecycle with the Cloud SDK `bq` CLI and `INFORMATION_SCHEMA`, so you can inventory resources, inspect schemas and storage metadata, choose immutable physical layout settings at creation time, preview data, estimate scan cost, and delete safely.
+> Documents BigQuery dataset and table lifecycle with the Cloud SDK `bq` CLI and `INFORMATION_SCHEMA`, so you can inventory resources, inspect schemas and storage metadata, choose immutable physical layout settings at creation time, preview data, estimate scan cost, and delete safely.
 >
 > **Inventory and inspection**
 > - Prerequisites: enable `bigquery.googleapis.com`, use the Cloud SDK `bq` CLI, and grant `roles/bigquery.metadataViewer` for reads plus `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` or `roles/bigquery.dataOwner` / `roles/bigquery.admin` for write operations
@@ -40,6 +40,12 @@ status: complete
 > - When to use: BigQuery onboarding, schema validation, region and IAM audits, physical-layout planning, backup or recovery preparation, and cost estimation before running queries
 > - Warnings: dataset `--location` is permanent, partitioning and clustering are immutable after table creation, deletions are bounded by `maxTimeTravelHours`, and point-in-time recovery fails if the same table ID has been recreated
 > - Recommendations table: prefer explicit locations, partition time-series tables by `DATE` / `TIMESTAMP`, cluster on common filter columns, require partition filters on large partitioned tables, use TTLs for scratch objects, and dry-run expensive SQL before execution
+
+> [!warning] Live-run boundary
+>
+> The original `bq-wh-nb` warehouse used throughout the note is no longer available. On `2026-04-15`, `bq ls --project_id=bq-wh-nb` returned `Project bq-wh-nb has been deleted.`, while `dagflow-poc` currently exposes no private dataset inventory.
+>
+> This refresh reran only read-only examples against `bigquery-public-data:samples` using `dagflow-poc` as the billing and job project. State-changing examples such as `bq mk`, `bq update`, `bq cp`, and `bq rm` remain historical operator patterns and were not rerun.
 >
 > [!note]- Glossary
 >
@@ -314,6 +320,24 @@ flowchart TD
 
 Listing operations require `roles/bigquery.metadataViewer` or `roles/bigquery.dataViewer` on the project or dataset. Results are scoped to the active project unless `--project_id` is specified.
 
+> [!info] Current read-only validation target
+>
+> A live `bq --project_id=dagflow-poc ls bigquery-public-data:samples` run on `2026-04-15` returned:
+>
+> ```text
+>       tableId       Type                                 Labels                                Time Partitioning   Clustered Fields
+>  ----------------- ------- ------------------------------------------------------------------ ------------------- ------------------
+>   github_nested     TABLE
+>   github_timeline   TABLE
+>   gsod              TABLE
+>   natality          TABLE
+>   shakespeare       TABLE
+>   trigrams          TABLE
+>   wikipedia         TABLE   dataplex-dp-published-scan:af83fd049-871e-486e-86bb-406eb82a794d
+>                             dataplex-dp-published-project:daui-storage
+>                             dataplex-dp-published-location:us-central1
+> ```
+
 ### bq | ls | list datasets and tables
 
 #### List all datasets in the project
@@ -382,6 +406,12 @@ The `stoxx_gold` dataset contains three base tables and two views. None of these
 ## Inspecting Schema and Metadata
 
 `bq show` retrieves the column schema or full table metadata. The `--format=prettyjson` flag renders human-readable JSON. Full metadata includes `numRows`, `numBytes` (uncompressed logical bytes), `type` (`TABLE` | `VIEW` | `MATERIALIZED_VIEW`), `timePartitioning` (partition column and granularity), `clustering` (clustering columns in priority order), and `expirationTime` (present only on tables with a configured TTL).
+
+> [!info] Current public metadata check
+>
+> Read-only validation against `bigquery-public-data:samples.shakespeare` confirmed that `bq show` still exposes the same fields this note teaches:
+> - `bq --project_id=dagflow-poc show --schema --format=prettyjson bigquery-public-data:samples.shakespeare` returned four `REQUIRED` columns: `word`, `word_count`, `corpus`, and `corpus_date`
+> - `bq --project_id=dagflow-poc show --format=prettyjson bigquery-public-data:samples` returned `location: "US"`, `maxTimeTravelHours: "168"`, and an `allUsers` `READER` binding on the public dataset ACL
 
 ### bq | show | schema and metadata
 

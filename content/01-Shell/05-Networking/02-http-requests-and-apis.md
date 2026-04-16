@@ -8,7 +8,7 @@ aliases: [curl, wget, HTTP request, REST API, Invoke-RestMethod, Invoke-WebReque
 keywords: [curl, wget, HTTP, REST API, GET request, POST request, JSON, bearer token, download file, retry, timeout, status code, timing breakdown, Invoke-RestMethod, Invoke-WebRequest, curl vs wget, connect-timeout, max-time, health check]
 description: "Making HTTP requests from the command line with curl and PowerShell's Invoke-RestMethod. Covers headers, JSON bodies, authentication, file downloads with retry, timing breakdown for latency diagnosis, and when to use curl vs wget vs Python requests."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -137,8 +137,6 @@ The simplest invocation sends a GET request and prints the response body to stdo
 
 #### Send a GET request
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 *Fetch a JSON document and print the response body to stdout.*
 ```bash
 curl https://api.example.com/data
@@ -149,8 +147,6 @@ curl https://api.example.com/data
 ```
 
 #### Send a GET request in verbose mode
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 *Inspect request headers, response headers, and TLS handshake details for one request.*
 ```bash
@@ -169,8 +165,6 @@ curl -v https://api.example.com/data
 ```
 
 #### Check HTTP status code only
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 `-s` silences the progress meter, `-o /dev/null` discards the response body, and `-w` prints a format string at completion. This pattern is used in monitoring scripts and health checks where only the status code matters.
 
@@ -214,8 +208,6 @@ HTTP requests frequently require custom headers (authentication tokens, content-
 
 #### Send a POST request with a JSON body
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 `-X POST` sets the HTTP method. `-H "Content-Type: application/json"` tells the server the body is JSON. `-H "Authorization: Bearer $API_TOKEN"` injects the token from an environment variable. `-d` provides the raw body string.
 
 *Send a JSON webhook payload with an explicit content type and bearer token.*
@@ -232,8 +224,6 @@ curl -X POST https://api.example.com/webhook \
 
 #### Send a POST request with a JSON body from a file
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 When the body is complex or templated, store it in a file and reference it with `@`. This keeps the curl command readable and allows the file to be version-controlled.
 
 *Read a JSON request body from `payload.json` instead of embedding it inline.*
@@ -244,13 +234,8 @@ curl -X POST https://api.example.com/webhook \
   -d @payload.json
 ```
 
-```text
-(no terminal output on success)
-```
 
 #### Upload a file with PUT
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 `-T` uploads a local file as the request body without base64 encoding, suitable for binary uploads (backups, archives).
 
@@ -259,13 +244,8 @@ Use this leaf for the operation named in the heading. It is typically triggered 
 curl -X PUT -T backup.sql.gz https://storage.example.com/backups/
 ```
 
-```text
-(no terminal output on success)
-```
 
 #### Send a PATCH request
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 *Patch a subset of fields on an existing resource.*
 ```bash
@@ -275,24 +255,20 @@ curl -X PATCH https://api.example.com/records/42 \
   -d '{"status": "archived"}'
 ```
 
-```text
-(no terminal output on success)
-```
 
 #### Use basic authentication
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 `-u user:password` sends HTTP Basic Auth credentials, encoded as a Base64 header automatically by curl.
+
+> [!warning] Basic auth is not encryption
+>
+> In HTTP Basic authentication, curl base64-encodes the username and password and sends them in the `Authorization` header. That is not transport protection, so this pattern should be used only against `https://` endpoints.
 
 *Send HTTP Basic Auth credentials without constructing the header manually.*
 ```bash
 curl -u "$API_USER:$API_PASS" https://api.example.com/protected
 ```
 
-```text
-(no terminal output on success)
-```
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -311,8 +287,6 @@ Production scripts must defend against transient network failures, slow servers,
 
 #### Download a file with retry and timeout
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 `-f` causes curl to fail with a non-zero exit code on HTTP errors (4xx, 5xx) instead of saving the error HTML. `-S` ensures errors are shown even when `-s` (silent) is active. `--retry` retries on transient failures (connection refused, 5xx). `--retry-delay` waits between attempts. `--connect-timeout` limits the TCP connection phase. `--max-time` limits the entire transfer.
 
 *Download a file with retry, connection timeout, and total timeout limits.*
@@ -326,9 +300,6 @@ curl -fSL \
   https://data-provider.com/export/latest.csv
 ```
 
-```text
-(no terminal output on success)
-```
 
 > [!warning] Missing `-f` causes silent failures
 >
@@ -350,8 +321,6 @@ download complete
 
 #### Resume an interrupted download
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 `-C -` instructs curl to detect the already-downloaded byte offset and resume from that position. The server must support the `Range` header for this to work.
 
 *Resume a partial download from the server-reported byte offset.*
@@ -359,9 +328,6 @@ Use this leaf for the operation named in the heading. It is typically triggered 
 curl -C - -o data.csv https://data-provider.com/export/latest.csv
 ```
 
-```text
-(no terminal output on success)
-```
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -380,8 +346,6 @@ curl -C - -o data.csv https://data-provider.com/export/latest.csv
 The `-w` format string can print per-phase timing metrics after a transfer completes. This is the fastest way to isolate whether latency originates in DNS, network, TLS, or the server itself — without installing additional tools.
 
 #### Print timing metrics for a request
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 *Print `curl` timing phases for DNS, TCP, TLS, first byte, and total duration.*
 ```bash
@@ -423,20 +387,13 @@ Each metric covers a cumulative phase from request start. The derived server pro
 
 #### Download a file
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 *Download a file into the current directory using the remote filename.*
 ```bash
 wget https://data-provider.com/export/latest.csv
 ```
 
-```text
-(no terminal output on success)
-```
 
 #### Resume an interrupted download
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 `-c` (continue) sends a `Range` header so the server resumes from the last byte offset. Useful for large files on unreliable connections.
 
@@ -445,13 +402,8 @@ Use this leaf for the operation named in the heading. It is typically triggered 
 wget -c https://data-provider.com/export/large-dataset.csv
 ```
 
-```text
-(no terminal output on success)
-```
 
 #### Download with retry and timeout
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 *Retry a download and cap the per-request timeout.*
 ```bash
@@ -460,13 +412,8 @@ wget --tries=3 --timeout=30 --wait=5 \
   https://data-provider.com/export/latest.csv
 ```
 
-```text
-(no terminal output on success)
-```
 
 #### Mirror a directory tree
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 `-r` enables recursive download, `-np` prevents ascending to parent directories, `-nH` strips the hostname from the local path.
 
@@ -475,9 +422,6 @@ Use this leaf for the operation named in the heading. It is typically triggered 
 wget -r -np -nH https://data-provider.com/reports/2025/
 ```
 
-```text
-(no terminal output on success)
-```
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -510,8 +454,6 @@ PowerShell ships two cmdlets for HTTP: `Invoke-RestMethod` and `Invoke-WebReques
 
 #### Send a GET request
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 *Issue a GET request and let PowerShell deserialize the response body.*
 ```powershell
 Invoke-RestMethod -Uri "https://api.example.com/data"
@@ -525,8 +467,6 @@ ok         1024
 
 #### Send a GET request with an authorization header
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 *Pass an Authorization header and read a property from the returned object.*
 ```powershell
 $response = Invoke-RestMethod -Uri "https://api.example.com/data" `
@@ -539,8 +479,6 @@ $response.records
 ```
 
 #### Check HTTP status code only
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 `Invoke-WebRequest` exposes the `StatusCode` property. Use it when you need the status without processing the body.
 
@@ -568,8 +506,6 @@ $r.StatusCode
 
 #### Send a POST request with a JSON body
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 Convert a hashtable to JSON with `ConvertTo-Json` before passing it as the body. PowerShell's pipeline makes nested object serialization straightforward.
 
 *Serialize a hashtable to JSON and send it as a POST body.*
@@ -594,8 +530,6 @@ evt_123     True
 
 #### Send a PATCH request
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 *Serialize a small JSON body and patch a resource in place.*
 ```powershell
 $body = @{ status = "archived" } | ConvertTo-Json
@@ -607,13 +541,8 @@ Invoke-RestMethod -Uri "https://api.example.com/records/42" `
     -Body $body
 ```
 
-```text
-(no terminal output on success)
-```
 
 #### Use basic authentication
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 Encode credentials as a Base64 Basic Auth header manually, since `Invoke-RestMethod` does not have a dedicated `-Credential` flag for HTTP Basic Auth against arbitrary APIs.
 
@@ -627,9 +556,6 @@ Invoke-RestMethod -Uri "https://api.example.com/protected" `
     -Headers @{ Authorization = "Basic $encoded" }
 ```
 
-```text
-(no terminal output on success)
-```
 
 | Parameter | Syntax | Description |
 |---|---|---|
@@ -647,8 +573,6 @@ Invoke-RestMethod -Uri "https://api.example.com/protected" `
 
 #### Download a file with retry (PowerShell 7+)
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 `-MaximumRetryCount` and `-RetryIntervalSec` were introduced in PowerShell 7. They automatically retry on transient HTTP errors (429, 5xx) and network timeouts.
 
 *Retry a file download automatically in PowerShell 7 or later.*
@@ -659,9 +583,6 @@ Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" `
     -RetryIntervalSec 5
 ```
 
-```text
-(no terminal output on success)
-```
 
 > [!warning] Retry parameters require PowerShell 7+
 >
@@ -690,8 +611,6 @@ download complete
 
 #### Set a timeout on a download
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 PowerShell 7 uses `System.Net.Http.HttpClient` internally. The `-TimeoutSec` parameter sets the request timeout in seconds.
 
 *Set an overall timeout for a file download request.*
@@ -701,9 +620,6 @@ Invoke-WebRequest -Uri "https://data-provider.com/latest.csv" `
     -TimeoutSec 300
 ```
 
-```text
-(no terminal output on success)
-```
 
 | Parameter | Syntax | Description |
 |---|---|---|
@@ -721,8 +637,6 @@ Use these platform-specific patterns for the common workflows that show up repea
 
 #### Quick GET and JSON inspection
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 Pipe the response to `jq` when you want structured inspection instead of raw output.
 
 *Fetch a JSON document quietly and pretty-print it with `jq`.*
@@ -739,8 +653,6 @@ curl -s https://api.example.com/endpoint | jq '.'
 
 #### POST JSON with an explicit content type
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 Set `Content-Type: application/json` even when the body is obvious to a human reader. The server uses the header, not the payload shape, to choose its parser.
 
 *Send a compact JSON body to an API endpoint.*
@@ -756,8 +668,6 @@ curl -sS -X POST https://api.example.com/endpoint \
 
 #### Health checks in scripts
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 Use `-s` to suppress progress output, `-f` to make HTTP errors fail the command, and `-w` to emit only the status code. Add `-L` if redirects are part of the expected path.
 
 *Return only the HTTP status code and fail the script on HTTP errors.*
@@ -770,8 +680,6 @@ curl -sf -o /dev/null -w '%{http_code}\n' https://service.example.com/health
 ```
 
 #### Verbose request debugging
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 Verbose mode is the fastest way to inspect redirects, TLS negotiation, response headers, and protocol-level failures from a single command.
 
@@ -787,8 +695,6 @@ curl -v https://api.example.com/endpoint
 ```
 
 #### Runtime bearer-token authentication
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 Resolve the token when you make the call rather than storing it in the script body.
 
@@ -806,8 +712,6 @@ curl -H "Authorization: Bearer $(gcloud auth print-access-token)" \
 
 #### Authenticated API call
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 `Invoke-RestMethod` returns objects, so the normal pattern is to send the request and then select the property you need.
 
 *Call an API with a bearer token and read a property from the deserialized response.*
@@ -822,8 +726,6 @@ $response.records
 ```
 
 #### Select JSON fields directly from the response object
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 For PowerShell workflows, prefer property access or `Select-Object` over text parsing because the cmdlet already converted the JSON to objects.
 
@@ -847,8 +749,6 @@ Use these checks when a request fails and you need to decide whether the problem
 
 #### Make HTTP errors fail the command
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 `curl` succeeds at the process level unless you ask it to fail on HTTP errors. That behavior is useful for manual inspection but dangerous in automation.
 
 *Force `curl` to return a non-zero exit code on an HTTP error response.*
@@ -863,8 +763,6 @@ curl: (22) The requested URL returned error: 404
 ```
 
 #### Diagnose `401 Unauthorized` and `403 Forbidden`
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 Capture the response headers first. A `401` usually means the token is missing, expired, or wrong for the audience. A `403` usually means the token is valid but lacks the required permission.
 
@@ -882,8 +780,6 @@ www-authenticate: Bearer error="invalid_token"
 
 #### Check the local listener for `connection refused`
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 If localhost refuses the connection, confirm that the service is actually listening on the expected port before debugging the HTTP client.
 
 *Inspect listening TCP sockets on the expected local port.*
@@ -896,8 +792,6 @@ LISTEN 0 4096 127.0.0.1:8080 0.0.0.0:* users:(("myservice",pid=1234,fd=7))
 ```
 
 #### Inspect non-JSON responses before piping to `jq`
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 `jq` parse failures often mean the server returned HTML, plain text, or an empty body instead of JSON. Check headers and file type before assuming the payload is structured data.
 
@@ -918,8 +812,6 @@ response.bin: HTML document, ASCII text
 
 #### Capture the HTTP status in `try/catch`
 
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
-
 PowerShell throws on many HTTP failures, so the diagnostic pattern is to catch the exception and inspect the status code directly. The same pattern distinguishes `401` from `403`.
 
 *Catch a failed web request and print the HTTP status code.*
@@ -938,8 +830,6 @@ try {
 ```
 
 #### Check the local listener on Windows
-
-Use this leaf for the operation named in the heading. It is typically triggered by you need this exact request pattern or diagnostic check. Replace the example URL, credential, path, file name, or port with real values. Exercise the command shape safely and inspect the resulting behavior.
 
 When a localhost request fails with connection refusal, verify the listening port and owning process before changing the client command.
 

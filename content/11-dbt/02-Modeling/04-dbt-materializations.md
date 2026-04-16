@@ -8,17 +8,18 @@ description: "View table incremental ephemeral snapshot deep dive"
 
 # dbt: Materializations
 
-> [!quote]
+> [!quote] State management tradeoffs
+>
 > "There are only two ways to handle state in computing: recompute it or cache it. Everything else is a variation on that theme."
 >
-> — **Pat Helland**
+> Source: Pat Helland
 
 > [!abstract]- Summary
 >
 > Explains how dbt materializations turn the same model SQL into very different warehouse behaviors by changing persistence, rebuild semantics, incremental state handling, and long-term cost or performance tradeoffs.
 >
 > **Materialization decision model**
-> - Defines the five core dbt materializations â€” `view`, `table`, `incremental`, `ephemeral`, and `snapshot` â€” and compares what object each creates, whether data is stored, and how each behaves across runs
+> - Defines the five core dbt materializations - `view`, `table`, `incremental`, `ephemeral`, and `snapshot` - and compares what object each creates, whether data is stored, and how each behaves across runs
 > - Frames materialization choice as one of the biggest architectural controls in a dbt project because it changes both execution semantics and downstream warehouse behavior
 >
 > **State and persistence patterns**
@@ -33,7 +34,7 @@ description: "View table incremental ephemeral snapshot deep dive"
 > - Warnings: wrong `is_incremental()` filters, skipped late-arriving data, casual full refreshes, overuse of views on expensive logic, and snapshot or incremental strategies applied without a clear change model
 > - Recommendations: choose materialization by workload shape, pair incrementals with lookback windows and `unique_key`, treat snapshots as temporal history tools, and revisit materialization when query cost or rebuild time changes materially
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Materialization**
 > - The dbt setting that determines how a model's SQL result is persisted or represented in the warehouse.
@@ -163,8 +164,7 @@ description: "View table incremental ephemeral snapshot deep dive"
 > >
 > > Insert_overwrite is powerful when the warehouse and table design support it, but it assumes partition boundaries are the right unit of replacement.
 
-
-### The Five Materialisation Types
+## The Five Materialisation Types
 
 | Type | Warehouse object | Data is stored? | Rebuilt each run? |
 |---|---|---|---|
@@ -176,9 +176,11 @@ description: "View table incremental ephemeral snapshot deep dive"
 
 ---
 
-### dbt view Materialisation
+## dbt view Materialisation
 
 The default materialisation. dbt issues a `CREATE OR REPLACE VIEW` on every run. The underlying query executes at query time, always reflecting current source data.
+
+*This view example keeps a staging model lightweight by pushing the final query evaluation to read time instead of persisting a physical table.*
 
 ```sql
 -- models/staging/market_data/stg_market_data__daily_prices.sql
@@ -198,9 +200,11 @@ from {{ source('market_data', 'daily_prices') }}
 
 ---
 
-### dbt table Materialisation
+## dbt table Materialisation
 
 dbt drops and recreates the physical table on every run. Simple and predictable.
+
+*This table example shows the simplest persistent mart pattern: rebuild the whole relation each run when the dataset is still cheap enough to recompute fully.*
 
 ```sql
 -- models/marts/reference/dim_indices.sql
@@ -222,19 +226,22 @@ from {{ ref('stg_indices__master') }}
 
 **When not to use**: Tables with hundreds of millions of rows where a full rebuild takes too long. Use `incremental` instead.
 
-> [!NOTE] Full-refresh parity
-> Running `dbt run --full-refresh` against an `incremental` model gives you exactly the same result as running a `table` model. Use `table` when the dataset is small enough that full rebuild is cheap every run.
+> [!info] Full-refresh parity
+>
+> Running `dbt run --full-refresh` against an incremental model should produce the same logical result as its non-incremental path, but only if that path selects the full historical dataset correctly. Prefer a permanent `table` materialization when the model is small enough that a full rebuild is the normal, low-risk operating mode.
 
 ---
 
-## incremental
+## dbt incremental Materialisation
 
 dbt first checks whether the relation exists. If it does, it runs the model's `{% if is_incremental() %}` branch to produce only new/changed rows, then merges or appends them. If the table does not exist (or `--full-refresh` is passed), it behaves like `table`.
 
-> [!danger] Incremental Models Silently Skip Data if the is_incremental() Filter Is Wrong
-> The `is_incremental()` branch determines which rows are processed. If the filter references `max(price_date) FROM {{ this }}` but the table was loaded with a gap (e.g., a weekend backfill was skipped), data for the gap will never be loaded. Always use a lookback window (e.g., `max(price_date) - 3 days`) instead of an exact boundary to catch late-arriving data and backfill gaps.
+> [!danger] Bad incremental predicates lose data quietly
+>
+> The `is_incremental()` branch determines which rows are processed. If the filter references `max(price_date) FROM {{ this }}` but the table was loaded with a gap such as a missed backfill, that gap can remain unprocessed indefinitely. Always use a lookback window instead of an exact boundary so late-arriving and corrected rows are revisited intentionally.
 
 > [!success] Safe pattern: lookback window
+>
 > Always subtract a lookback offset from `max()` in the incremental filter:
 > ```sql
 > where price_date >= (
@@ -245,6 +252,8 @@ dbt first checks whether the relation exists. If it does, it runs the model's `{
 > Pair with `unique_key` and `merge` strategy so re-processed rows are updated, not duplicated.
 
 ### Basic Pattern
+
+*This baseline incremental pattern uses a unique key, a bounded lookback window, and schema-change handling so reruns can update recent slices instead of duplicating them.*
 
 ```sql
 -- models/marts/performance/fct_index_performance.sql
@@ -282,6 +291,8 @@ select * from source
 
 Inserts new rows only. Never updates existing rows. Fastest option.
 
+*This append strategy is appropriate only when existing rows are immutable and corrections are handled outside the model.*
+
 ```sql
 {{ config(
     materialized = 'incremental',
@@ -295,6 +306,8 @@ Use when: rows are immutable once written (e.g., audit logs, intraday tick snaps
 
 Deletes rows matching `unique_key` in the target, then inserts all rows from the incremental run. Simpler than merge; avoids merge lock contention on some warehouses.
 
+*This strategy rewrites the affected key slice on each incremental run, which is often easier to reason about than a warehouse-specific merge plan.*
+
 ```sql
 {{ config(
     materialized         = 'incremental',
@@ -307,7 +320,9 @@ Use when: rows can be corrected/restated and you want clean replacement without 
 
 #### merge (default for most adapters)
 
-Issues a SQL [MERGE](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) statement matching on `unique_key`. Rows that match are updated; rows that don't match are inserted.
+Issues a SQL [MERGE](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) statement matching on `unique_key`. Rows that match are updated; rows that do not match are inserted.
+
+*This merge configuration is the common choice when corrected rows and late-arriving facts need to upsert into an existing published table.*
 
 ```sql
 {{ config(
@@ -323,6 +338,8 @@ Issues a SQL [MERGE](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writ
 #### insert_overwrite (BigQuery / Spark)
 
 Overwrites entire partitions rather than individual rows. Extremely efficient for partitioned tables.
+
+*This pattern replaces whole date partitions, which is efficient only when the warehouse and table design make partition-level replacement the right unit of change.*
 
 ```sql
 {{ config(
@@ -344,11 +361,13 @@ where price_date >= date_sub(current_date(), interval {{ var('lookback_days', 3)
 
 ---
 
-> [!warning] on_schema_change: ignore Is the Default -- New Columns Are Silently Lost
-> If you add a column to your incremental model but forget to set `on_schema_change`, dbt defaults to `ignore`. The new column appears in your dev environment (where the table is created fresh) but is silently dropped in production (where the existing table lacks the column). Set `on_schema_change: 'append_new_columns'` on all incremental models to prevent this.
+> [!warning] `on_schema_change: ignore` drops new columns
+>
+> If you add a column to your incremental model but forget to set `on_schema_change`, dbt defaults to `ignore`. The new column appears in development where the table is created fresh, but it is silently omitted in production when the existing table lacks that column. Set `on_schema_change: 'append_new_columns'` on incremental models unless you have a stronger compatibility requirement.
 
 > [!success] Safe default
-> Set `on_schema_change: 'append_new_columns'` in every incremental model config. This ensures new columns are added to the existing table in production without requiring a full refresh or manual DDL.
+>
+> Set `on_schema_change: 'append_new_columns'` in incremental model configs that evolve over time. That adds new columns to the existing table in production without immediately forcing a full refresh or manual DDL.
 
 ### dbt on_schema_change Behaviour
 
@@ -361,6 +380,8 @@ Controls what happens when the model's column set changes compared to the existi
 | `append_new_columns` | New columns added to table; old columns preserved |
 | `sync_all_columns` | Adds new, removes deleted columns (destructive) |
 
+*This config snippet opts into additive schema evolution so published incremental tables can accept new columns without breaking the whole run path.*
+
 ```sql
 {{ config(
     materialized     = 'incremental',
@@ -369,11 +390,13 @@ Controls what happens when the model's column set changes compared to the existi
 ) }}
 ```
 
-> [!WARNING] sync_all_columns in production
-> `sync_all_columns` will drop columns that were removed from your model SQL. This can break downstream BI tools and APIs that reference those columns. Prefer `append_new_columns` and handle removals explicitly via `--full-refresh`.
+> [!warning] `sync_all_columns` can remove consumer columns
+>
+> `sync_all_columns` will drop columns that were removed from your model SQL. That can break downstream BI tools and APIs that still reference them. Prefer `append_new_columns` for ordinary evolution and handle destructive removals through an explicit rollout plan.
 
 > [!success] Safe removal workflow
-> Use `append_new_columns` in production. To retire a column: (1) deprecate it in documentation, (2) notify consumers, (3) schedule a `--full-refresh` in a maintenance window after all consumers have migrated.
+>
+> Use `append_new_columns` in production. To retire a column, deprecate it in documentation first, notify consumers, and then schedule a controlled `--full-refresh` or replacement deployment in a maintenance window after consumers have migrated.
 
 ---
 
@@ -382,6 +405,8 @@ Controls what happens when the model's column set changes compared to the existi
 A core challenge with incremental models processing financial data is that source systems frequently backfill or correct historical data. A price vendor might correct a corporate action adjustment 2 days after initial delivery.
 
 The lookback pattern reprocesses a rolling window of recent data on every incremental run:
+
+*This example reprocesses a bounded recent slice so corrected vendor data can overwrite stale rows instead of being missed permanently.*
 
 ```sql
 {{ config(
@@ -412,9 +437,11 @@ With `unique_key` and `merge` strategy, dbt will update existing rows that fall 
 
 ---
 
-### dbt ephemeral Materialisation
+## dbt ephemeral Materialisation
 
 Ephemeral models are not materialised in the warehouse at all. dbt inlines their SQL as a CTE in every model that references them via `ref()`.
+
+*This ephemeral helper keeps trivial row-level logic out of the warehouse object list, but it still becomes part of every downstream compiled statement that references it.*
 
 ```sql
 -- models/intermediate/market_data/int_price_flags.sql
@@ -442,9 +469,11 @@ When `int_daily_returns` references `int_price_flags`, dbt compiles the ephemera
 
 ---
 
-### dbt snapshot Materialisation
+## dbt snapshot Materialisation
 
 Snapshots implement SCD Type 2 (slowly changing dimensions) — they record the full history of how a row changed over time.
+
+*This snapshot captures constituent membership history so downstream consumers can query either the current state or a historical point in time without rebuilding old rows.*
 
 ```sql
 -- snapshots/snap_index_constituents.sql
@@ -482,12 +511,16 @@ dbt adds four metadata columns to the snapshot table:
 
 Query the current state:
 
+*This query filters snapshot metadata to the rows that are still active today.*
+
 ```sql
 select * from snap_index_constituents
 where dbt_valid_to is null
 ```
 
 Query the state on a specific date:
+
+*This query reconstructs the state that was valid on a chosen historical date by using the snapshot validity window.*
 
 ```sql
 select * from snap_index_constituents
@@ -501,7 +534,7 @@ where '2023-06-30' between dbt_valid_from and coalesce(dbt_valid_to, '9999-12-31
 
 ---
 
-### Materialisation Decision Matrix
+## Materialisation Decision Matrix
 
 | Scenario | Recommended materialisation |
 |---|---|
@@ -516,7 +549,7 @@ where '2023-06-30' between dbt_valid_from and coalesce(dbt_valid_to, '9999-12-31
 
 ---
 
-### dbt Full-Refresh Mechanics
+## dbt Full-Refresh Mechanics
 
 Running `dbt run --full-refresh` against an incremental model causes dbt to:
 
@@ -526,6 +559,8 @@ Running `dbt run --full-refresh` against an incremental model causes dbt to:
 
 This is equivalent to dropping and recreating a `table` materialisation. It is the escape hatch when incremental state becomes corrupted or when a schema change requires a complete rebuild.
 
+*These commands trigger targeted or broad rebuilds of incremental models when you intentionally want to bypass incremental state and recompute from scratch.*
+
 ```bash
 # Full-refresh a single incremental model
 dbt run --select fct_index_performance --full-refresh
@@ -534,8 +569,9 @@ dbt run --select fct_index_performance --full-refresh
 dbt run --select tag:incremental --full-refresh
 ```
 
-> [!TIP] Scheduled full-refresh
-> Run a weekly `--full-refresh` in production to prevent incremental state drift from accumulating. Schedule it during a low-traffic window and notify downstream consumers of the extended run time.
+> [!tip] Treat full refresh as an exception path
+>
+> Do not schedule routine production `--full-refresh` runs by default. Use them when schema drift, incremental corruption, or major logic changes justify the extra cost, and verify that the warehouse window, downstream SLAs, and backfill volume can absorb the rebuild safely.
 
 ---
 

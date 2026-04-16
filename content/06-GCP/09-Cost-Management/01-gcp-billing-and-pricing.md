@@ -8,9 +8,9 @@ aliases:
   - GCP billing
   - GCP pricing
   - Cloud Billing
-description: Live, project-grounded reference for Cloud Billing hierarchy, export architecture, pricing interpretation, and attribution in bq-wh-nb.
+description: Archived-project reference for Cloud Billing hierarchy, export architecture, pricing interpretation, and attribution in bq-wh-nb.
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -18,20 +18,20 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers Cloud Billing topology, export readiness, live pricing surfaces, and attribution maturity for `bq-wh-nb`, so operators can distinguish a project that can spend money from one that is actually ready for invoice-grade FinOps work.
+> Covers Cloud Billing topology, export readiness, archived pricing evidence, and attribution maturity for `bq-wh-nb`, so operators can distinguish a project that can spend money from one that is actually ready for invoice-grade FinOps work.
 >
-> **Billing topology and current state**
+> **Billing topology and archived state**
 > - Confirms that `bq-wh-nb` is linked to billing account `billingAccounts/0190CF-C61D5A-F08831` (`Agents Billing Account`), that the account currency is `CZK`, and that billing is enabled for the project
 > - Explains the current billing hierarchy: one open billing account, one active linked project, and one visible `roles/billing.admin` binding for `user:alexper.recovery@gmail.com`
 > - Separates billing linkage from export readiness so "billing enabled" is not mistaken for "FinOps ready"
 >
 > **Export surfaces and readiness**
 > - Distinguishes standard usage cost export, detailed usage cost export, pricing export, and CUD metadata export by what analytical questions each one answers
-> - Confirms that `bq-wh-nb` currently has no billing-export dataset in BigQuery, so there is no live `gcp_billing_export_v1_*`, detailed usage, pricing, or CUD metadata table to query
+> - Confirms that `bq-wh-nb` had no billing-export dataset in BigQuery, so there was no `gcp_billing_export_v1_*`, detailed usage, pricing, or CUD metadata table to query in the captured state
 > - Explains the dataset-location consequence on first enablement: supported multi-region datasets can backfill current and previous month data, while supported regional datasets begin at enablement time only
 >
 > **Pricing and commitments**
-> - Uses the Cloud Billing Catalog API / Pricing API in `CZK` to retrieve live public prices for Compute Engine E2 core and RAM, persistent disk, and BigQuery analysis and storage tiers in `europe-west1`
+> - Uses the Cloud Billing Catalog API / Pricing API in `CZK` to retrieve public prices for Compute Engine E2 core and RAM, persistent disk, and BigQuery analysis and storage tiers in `europe-west1`
 > - Distinguishes list price from effective price, and makes clear that current public rates are suitable for forward estimates but not for invoice-grade reconciliation
 > - Confirms that `bq-wh-nb` currently has no Compute Engine commitments and no BigQuery capacity commitments, so commitment-backed or amortized pricing claims would be inaccurate
 >
@@ -43,6 +43,10 @@ status: complete
 > **Operations and safety**
 > - Warnings: billing-enabled projects can still lack exports, pricing export is separate from usage export, list price is not invoice truth, label attribution is forward-only in export rows, and missing commitment inventory means you cannot safely describe current pricing as discounted
 > - Recommendations: treat linkage, export, pricing, and attribution as separate checks; use the Pricing API for current `CZK` list rates; enable standard usage export before budgets or chargeback; and label datasets, buckets, and long-lived compute before month-end reconciliation
+>
+> [!warning] Archived demo boundary
+>
+> The original project `bq-wh-nb` has been removed. The billing-account linkage, IAM view, and pricing examples in this note are preserved as archived operator reference, and this refresh did not rerun Cloud Billing or BigQuery commands against a replacement environment.
 
 > [!note]- Glossary
 >
@@ -158,11 +162,11 @@ status: complete
 >
 > **Cloud Billing Catalog API / Pricing API**
 > - The Google pricing surface that returns current public SKU prices programmatically, including regional and currency-specific list rates.
-> - It is the live fallback source for `CZK` list pricing when billing export is absent in `bq-wh-nb`.
+> - It is the archived note's fallback source for `CZK` list pricing when billing export is absent in `bq-wh-nb`.
 >
-> > [!info] Use live currency alignment
+> > [!info] Use currency alignment
 > >
-> > Querying the API in the billing-account currency avoids mixing USD documentation examples with a live account that is actually billed in `CZK`.
+> > Querying the API in the billing-account currency avoids mixing USD documentation examples with an account that is actually billed in `CZK`.
 >
 > ---
 >
@@ -172,7 +176,7 @@ status: complete
 >
 > > [!warning] None are present here
 > >
-> > The live inventory returned no Compute Engine commitments in `bq-wh-nb`. Any current VM math in this chapter should therefore be treated as on-demand list-price math.
+> > The archived inventory returned no Compute Engine commitments in `bq-wh-nb`. Any current VM math in this chapter should therefore be treated as on-demand list-price math.
 >
 > ---
 >
@@ -226,11 +230,11 @@ flowchart TD
     R --> Q["Current fallback surfaces<br>gcloud inventories · Pricing API · INFORMATION_SCHEMA"]
 ```
 
-## Current Billing Topology
+## Archived Billing Topology
 
-The live billing topology is simple: one open billing account, one active linked project, and one identity with `roles/billing.admin` on the billing account.
+The archived billing topology is simple: one open billing account, one active linked project, and one identity with `roles/billing.admin` on the billing account.
 
-> [!info] Live Scope
+> [!info] Archived scope
 >
 > - Billing account `billingAccounts/0190CF-C61D5A-F08831` is open and denominated in `CZK`.
 > - Project `bq-wh-nb` is linked to that account and `billingEnabled` is `true`.
@@ -288,7 +292,7 @@ Run this before enabling paid APIs, creating exports, or investigating "billing 
 | `billingEnabled` | Project billing info | BOOLEAN | Whether the project can accrue paid usage. |
 | `name` | Billing info resource name | STRING | API resource for the project billing record. |
 
-*This command returns the live billing linkage for `bq-wh-nb`.*
+*This command returns the archived billing linkage for `bq-wh-nb`.*
 
 ```powershell
 gcloud billing projects describe bq-wh-nb --format=json
@@ -380,7 +384,7 @@ bq ls --format=prettyjson
 ]
 ```
 
-There is no billing-export dataset here. That means there is no live `gcp_billing_export_v1_*`, detailed usage table, pricing export table, or CUD metadata table to query in this project today.
+There is no billing-export dataset here. That means there was no `gcp_billing_export_v1_*`, detailed usage table, pricing export table, or CUD metadata table to query in this project state.
 
 #### Check for Compute Engine commitments
 
@@ -390,7 +394,7 @@ Run this before attributing savings to commitments or writing about effective VM
 |---|---|---|---|
 | JSON array length | Command result | INTEGER | Number of commitments returned by the project inventory. |
 
-*This command checks for Compute Engine commitments in the current project.*
+*This command checks for Compute Engine commitments in the archived project.*
 
 ```powershell
 gcloud compute commitments list --format=json
@@ -430,11 +434,11 @@ This confirms that the current BigQuery posture is on-demand rather than reserva
 
 ### PowerShell | Cloud Billing Catalog API | query current list prices
 
-The Pricing API is the live list-price source when billing export is absent. It does not tell you what you were billed. It tells you what the public rate sheet currently says for a given SKU and region.
+The Pricing API is the list-price source when billing export is absent. It does not tell you what you were billed. It tells you what the public rate sheet says for a given SKU and region.
 
 #### Query Compute Engine and disk list prices for `europe-west1`
 
-Run this when you need a current public rate for a SKU that actually exists in the environment. It is typically triggered by use it during TCO modeling, rightsizing, or when a stale price table would be unsafe. This is a read-only REST call against the Cloud Billing Catalog API using an access token from the active `gcloud` identity. Retrieve live list prices for E2 core and RAM time plus the persistent disk types used by the current VMs.
+Run this when you need a current public rate for a SKU that actually exists in the environment. It is typically triggered by use it during TCO modeling, rightsizing, or when a stale price table would be unsafe. This is a read-only REST call against the Cloud Billing Catalog API using an access token from the active `gcloud` identity. Retrieve public list prices for E2 core and RAM time plus the persistent disk types used by the current VMs.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -443,7 +447,7 @@ Run this when you need a current public rate for a SKU that actually exists in t
 | `tieredRates` | Pricing expression | ARRAY / OBJECT | Price tiers for the SKU. |
 | `effectiveTime` | Pricing metadata | TIMESTAMP | When the returned price becomes effective. |
 
-*This PowerShell pipeline fetches the Compute Engine SKU catalog in `CZK`, filters it to the active region, and returns only the core, RAM, disk, and snapshot entries that matter for the current project inventory.*
+*This PowerShell pipeline fetches the Compute Engine SKU catalog in `CZK`, filters it to the active region, and returns only the core, RAM, disk, and snapshot entries that matter for the archived project inventory.*
 
 ```powershell
 $token = gcloud auth print-access-token
@@ -508,7 +512,7 @@ $skus |
 ]
 ```
 
-These values are live public list prices. They are suitable for forward modeling, but they are still not effective cost because they exclude credits, free tiers, and any future commitments.
+These values are public list prices. They are suitable for forward modeling, but they are still not effective cost because they exclude credits, free tiers, and any future commitments.
 
 #### Query BigQuery analysis and storage price tiers for `europe-west1`
 
@@ -590,7 +594,7 @@ $skus |
 ]
 ```
 
-The live tier data matters more than a copied price table. It shows that query spend is free until the first `1 TiB`, and active logical storage is free until the first `10 GiB`, after which public list pricing applies.
+The tier data matters more than a copied price table. It shows that query spend is free until the first `1 TiB`, and active logical storage is free until the first `10 GiB`, after which public list pricing applies.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -602,7 +606,7 @@ The live tier data matters more than a copied price table. It shows that query s
 
 Billing export maturity is not about one table. It is about which export family is enabled and what analytical questions each family can answer.
 
-| Export surface | What it contains | When you need it | Current state in `bq-wh-nb` | Operational implication |
+| Export surface | What it contains | When you need it | Archived state in removed project | Operational implication |
 |---|---|---|---|---|
 | Standard usage cost export | Daily usage cost rows by service, SKU, project, credits, and invoice month | Baseline spend trends, cost by service, project, or label | Not configured | There is no invoice-grade cost history to query in BigQuery. |
 | Detailed usage cost export | Richer usage rows with more resource attribution detail | Per-resource drill-down, stronger reconciliation, and deeper attribution | Not configured | Resource-level cost analysis is blocked. |
@@ -619,16 +623,24 @@ Billing export maturity is not about one table. It is about which export family 
 > - If you create the export dataset in a supported region such as `europe-west1`, export starts from the enablement date forward and does not backfill earlier usage.
 > - Do not manually insert rows into billing-export tables after export is enabled; Google can overwrite managed export tables.
 
+> [!info] Current product note: pricing and export nuances
+>
+> Current Cloud Billing documentation distinguishes more clearly between usage export, pricing export, and the pricing table report. Pricing export data is generated daily, includes a `pricing_as_of_time` anchor, and pricing changes are not retroactively added to earlier days. Billing export datasets also still have operational constraints such as managed-table ownership and unsupported CMEK configurations.
+
 ## Attribution and Pricing Interpretation
 
-Live inventory shows partial attribution maturity. Current Compute Engine instances carry labels such as `app` and `env`, but the BigQuery datasets `stoxx_bronze`, `stoxx_silver`, and `stoxx_gold` do not expose any `labels` field in their current dataset metadata. That means cost ownership is currently stronger on VM inventory than on warehouse inventory.
+Archived inventory shows partial attribution maturity. Current Compute Engine instances carry labels such as `app` and `env`, but the BigQuery datasets `stoxx_bronze`, `stoxx_silver`, and `stoxx_gold` did not expose any `labels` field in their captured dataset metadata. That means cost ownership was stronger on VM inventory than on warehouse inventory.
 
 Pricing interpretation also needs discipline:
 
 - **List price** is what the Pricing API returned in this note.
 - **Effective price** is what you actually pay after credits, discounts, taxes, and free-tier offsets.
 - **Current project state** shows no Compute Engine commitments and no BigQuery capacity commitments, so there is no evidence of commitment-backed pricing in `bq-wh-nb`.
-- **Safe conclusion today**: use live list prices for forward planning, but do not describe them as amortized, discounted, or invoice-accurate.
+- **Safe conclusion today**: use archived list-price evidence plus current pricing docs for forward planning, but do not describe them as amortized, discounted, or invoice-accurate.
+
+> [!info] Current product note: list price versus effective price
+>
+> Current Cloud Billing surfaces now make the separation between public list price and account-specific effective price more explicit. Use the Pricing API and pricing export when you need current public SKU math, but use billing export rows, price table reporting, and invoice data when the question is what the account actually paid after credits, commitments, or negotiated discounts.
 
 ## Recommendations / Production Rules
 
@@ -641,7 +653,7 @@ Pricing interpretation also needs discipline:
 
 ## Quick Reference
 
-| Question | Live answer |
+| Question | Archived answer |
 |---|---|
 | Which billing account funds `bq-wh-nb`? | `billingAccounts/0190CF-C61D5A-F08831` (`Agents Billing Account`) |
 | Is billing enabled? | Yes |

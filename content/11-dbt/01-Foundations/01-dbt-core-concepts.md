@@ -8,10 +8,11 @@ description: "What dbt is, how it compiles, the DAG, materializations, profiles,
 
 # dbt Core Concepts
 
-> [!quote]
+> [!quote] Analytics engineering mindset
+>
 > "Data engineering is much closer to software engineering than it is to data science."
 >
-> — **Maxime Beauchemin**, "The Rise of the Data Engineer" (2017)
+> Source: Maxime Beauchemin | "The Rise of the Data Engineer" (2017)
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "What dbt is, how it compiles, the DAG, materializations, profiles,
 > - Warnings: treating dbt as ingestion or scheduling software, misreading compile-time versus run-time behavior, choosing the wrong materialization, and letting unset `env_var()` values fail later with misleading connection errors
 > - Recommendations: keep the ELT boundary clear, use `dbt debug` before real runs, model dependencies through `ref()` instead of manual ordering, and make target and adapter choice explicit in every environment
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **dbt**
 > - A transformation framework that compiles Jinja-templated SQL and executes the resulting SQL inside a warehouse.
@@ -173,8 +174,7 @@ description: "What dbt is, how it compiles, the DAG, materializations, profiles,
 > >
 > > Small config choices in `dbt_project.yml` propagate through every model. A careless default for schemas, materializations, or vars turns into chapter-wide operational drift.
 
-
-### What dbt Is (and Is Not)
+## What dbt Is (and Is Not)
 
 dbt is the **T** in ELT. It does not extract data from sources. It does not load data into the warehouse. It transforms data that is already in the warehouse using SQL.
 
@@ -186,7 +186,7 @@ dbt is the **T** in ELT. It does not extract data from sources. It does not load
 | Run tests against data | Replace stored procedures (but can supersede them) |
 | Generate documentation and lineage | Handle real-time/streaming data |
 
-### dbt Core vs dbt Cloud
+## dbt Core vs dbt Cloud
 
 | Factor | dbt Core (open source) | dbt Cloud (SaaS) |
 |--------|----------------------|------------------|
@@ -198,14 +198,17 @@ dbt is the **T** in ELT. It does not extract data from sources. It does not load
 | State management | You manage manifest.json | Automatic |
 | Best for | Teams with Airflow, cost-conscious | Teams without orchestration |
 
-> [!tip] For This Stack
-> We use dbt Core because we already have Airflow for orchestration and GitHub Actions for CI/CD. dbt Core runs inside a Docker container triggered by Airflow.
+> [!tip] For this stack
+>
+> We use dbt Core because Airflow already owns orchestration and GitHub Actions already owns CI/CD. That keeps dbt focused on transformation logic while the surrounding platform handles scheduling, secrets, and deployment workflow.
 
-### dbt Compilation Architecture
+## dbt Compilation Architecture
 
 dbt compiles before executing:
 
-```
+*This flow shows how dbt renders Jinja into warehouse-specific SQL before any database object is created.*
+
+```text
 Your model (Jinja + SQL)
     --> dbt compile
 Compiled SQL (pure SQL)
@@ -215,6 +218,8 @@ Warehouse executes the SQL
 ```
 
 Example model `stg_daily_prices.sql`:
+
+*This staging model casts raw columns, filters impossible values, and keeps source-aligned cleanup separate from downstream business logic.*
 
 ```sql
 {{ config(materialized='view') }}
@@ -230,12 +235,14 @@ WHERE close_price > 0
 
 After compilation, `target/compiled/` contains pure SQL with `{{ source() }}` resolved to the actual table name.
 
-### The dbt DAG
+## The dbt DAG
 
 Every dbt project is a Directed Acyclic Graph built automatically from two functions:
 
 - **ref('model_name')** — references another dbt model (creates a dependency edge)
 - **source('source_name', 'table_name')** — references an external table (entry point)
+
+*This graph example shows how `source()` anchors the raw-data boundary and how successive `ref()` calls define the staging-to-mart execution order.*
 
 ```sql
 -- stg_daily_prices.sql (reads from source)
@@ -265,9 +272,10 @@ GROUP BY w.index_code, r.price_date
 dbt knows to run staging first, then intermediate, then marts — mirroring the [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) progression from bronze to silver to gold. You never specify execution order — ref() handles it.
 
 > [!tip] Contrast with Airflow
-> In Airflow, you explicitly define `task_a >> task_b >> task_c`. In dbt, dependencies are implicit from ref(). Airflow orchestrates *when* dbt runs; dbt manages the *order within* a run.
+>
+> In Airflow, you explicitly define `task_a >> task_b >> task_c`. In dbt, dependencies are implicit from `ref()`. Airflow orchestrates when dbt runs; dbt manages the order inside the run itself.
 
-### dbt Materializations Overview
+## dbt Materializations Overview
 
 | Materialization | Creates | When to Use | Storage Cost |
 |----------------|---------|-------------|-------------|
@@ -276,6 +284,8 @@ dbt knows to run staging first, then intermediate, then marts — mirroring the 
 | **incremental** | Appends/merges new rows only | Large fact tables, daily data | Lowest at scale |
 | **ephemeral** | CTE (no object) | Helper logic, no persistence needed | Zero |
 | **snapshot** | SCD Type 2 history | Tracking dimension changes | Moderate |
+
+*This incremental configuration rebuilds the target once, then applies a date-based cutoff on later runs to limit warehouse work to new facts.*
 
 ```sql
 {{ config(
@@ -293,15 +303,19 @@ WHERE price_date > (SELECT MAX(price_date) FROM {{ this }})
 
 See [dbt-materializations](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations) for the deep dive with decision matrices.
 
-> [!warning] env_var() in profiles.yml Fails Silently with Empty String
-> If `SQL_PASSWORD` is not set, `{{ env_var('SQL_PASSWORD') }}` resolves to an empty string -- dbt will not raise an error at parse time. The connection will then fail at runtime with a misleading authentication error. Always use `{{ env_var('SQL_PASSWORD', 'MISSING') }}` with a sentinel default, or validate environment variables in your CI startup script.
+> [!warning] Required env vars fail at compile time
+>
+> If `SQL_PASSWORD` is not set, `{{ env_var('SQL_PASSWORD') }}` raises a compilation error before dbt opens a warehouse connection. That fail-fast behavior is safer than hiding the problem behind a later authentication error. Only provide a default when fallback behavior is genuinely intended, and keep secret values in environment variables rather than hard-coding them in `profiles.yml`.
 
-> [!success] Use a sentinel default and a preflight check
-> Write `{{ env_var('SQL_PASSWORD', 'MISSING') }}` in `profiles.yml`. Add a CI startup step that runs `dbt debug` before `dbt run` — `dbt debug` will surface a connection failure immediately if the sentinel value is used, stopping the pipeline before any models execute.
+> [!success] Fail fast on required credentials
+>
+> Leave required secrets as `{{ env_var('SQL_PASSWORD') }}` so missing values stop compilation immediately. For non-secret settings that genuinely need a fallback, use an explicit default and cast it to the expected type. Keep `dbt debug` in CI as a preflight so profile, target, and connectivity problems surface before a real build starts.
 
-### dbt Profiles and Targets
+## dbt Profiles and Targets
 
 `profiles.yml` defines where dbt connects. Each profile has multiple targets (environments):
+
+*This profile maps one project to separate SQL Server and BigQuery targets so the same dbt codebase can compile against different backends without manual relation rewrites.*
 
 ```yaml
 financial_platform:
@@ -337,7 +351,7 @@ financial_platform:
 
 Switch targets: `dbt run --target prod` or `dbt run --target bigquery`.
 
-### dbt Adapters
+## dbt Adapters
 
 | Adapter | Package | Database |
 |---------|---------|----------|
@@ -347,9 +361,11 @@ Switch targets: `dbt run --target prod` or `dbt run --target bigquery`.
 
 Each adapter handles SQL dialect differences. See [dbt-sqlserver-adapter](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-sqlserver-adapter) and [dbt-bigquery-adapter](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-bigquery-adapter).
 
-### dbt Packages
+## dbt Packages
 
 Declare in `packages.yml`, install with `dbt deps`:
+
+*This package manifest pins shared macro and testing dependencies so every environment resolves the same project behavior during `dbt deps`.*
 
 ```yaml
 packages:
@@ -363,7 +379,9 @@ packages:
 
 See [dbt-packages](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-packages) for the full package guide.
 
-### The dbt_project.yml
+## The dbt_project.yml
+
+*This root configuration sets project-wide paths, variables, and layer defaults so model behavior stays consistent unless a narrower folder or model override is intentional.*
 
 ```yaml
 name: financial_platform
@@ -392,19 +410,23 @@ models:
       +schema: gold
 ```
 
-> [!danger] dbt run --full-refresh on Incremental Models Silently Drops and Rebuilds the Table
-> Running `dbt run --full-refresh` on an incremental model drops the existing table and rebuilds from scratch. If your incremental model filters on `is_incremental()`, the full-refresh path must produce the correct full dataset -- otherwise you lose historical data. Always test `--full-refresh` in a dev target before running it in production. For snapshot tables, `--full-refresh` destroys all SCD2 history permanently (see [dbt-snapshots-and-scd](https://alp78.github.io/elysium/11-dbt/Advanced/dbt-snapshots-and-scd)).
+> [!danger] Full refresh rebuilds incremental state
+>
+> Running `dbt run --full-refresh` on an incremental model drops the existing relation and rebuilds it from scratch. If the non-incremental path does not select the complete historical dataset, the rebuilt table becomes incomplete even though the command succeeds. Always test full-refresh behavior in a dev target before you use it to recover production drift or schema changes.
 
-> [!success] Test full-refresh in dev, validate row counts before prod
-> Always run `dbt run --full-refresh --target dev` first and verify the rebuilt table has the expected row count and date range. Ensure the model SQL outside the `{% if is_incremental() %}` block selects the full historical dataset. Gate the production full-refresh behind a manual approval step in CI to prevent accidental execution.
+> [!success] Validate the non-incremental path first
+>
+> Run `dbt run --full-refresh --target dev` against a representative dataset, then compare row counts, date ranges, and key uniqueness with the trusted relation or source. Gate production full refreshes behind a manual approval step so a broad rebuild is never triggered by an ordinary deployment.
 
-> [!warning] dbt build vs dbt run -- Use build in CI/CD
-> `dbt run` executes models but does NOT run tests. `dbt build` runs models AND their downstream tests in dependency order. In CI/CD, always use `dbt build` -- otherwise bad data can propagate to the gold layer before tests catch it.
+> [!warning] CI should use `dbt build`
+>
+> `dbt run` executes models but does not run tests. `dbt build` runs seeds, snapshots, models, and tests in dependency order, so a failing upstream test can stop downstream work before more warehouse state is written.
 
-> [!success] Use dbt build in all CI/CD pipelines
-> Replace every `dbt run && dbt test` invocation in CI with a single `dbt build` command. For slim CI, use `dbt build --select state:modified+ --defer --state ./prod_artifacts`. This ensures tests gate downstream execution and no failing data reaches the gold layer.
+> [!success] Keep build and test in one DAG-aware command
+>
+> Replace `dbt run && dbt test` in CI with `dbt build`, and combine it with narrow selectors such as `state:modified+` when you need slim CI behavior. That keeps the execution graph, test gating, and failure reporting in one command instead of reconstructing the workflow in your orchestrator.
 
-### dbt Anti-Patterns
+## dbt Anti-Patterns
 
 | Anti-Pattern | Problem | Better Approach |
 |-------------|---------|----------------|

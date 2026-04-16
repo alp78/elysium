@@ -4,7 +4,7 @@ tags: [bigquery, gcp, data-loading, data-export]
 aliases: [BigQuery load, bq load, BigQuery export, bq extract, time travel, BigQuery GCS load, Parquet BigQuery, LOAD DATA]
 description: "How to load data into BigQuery from GCS using CSV, Parquet, and other formats — including hive-partitioned layouts — and export BigQuery tables back to GCS. Also covers BigQuery time travel for querying and restoring historical data."
 created: 2026-03-22
-updated: 2026-04-12
+updated: 2026-04-15
 status: complete
 ---
 
@@ -17,7 +17,7 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers moving data between Cloud Storage and BigQuery with `bq load`, `LOAD DATA`, and `bq extract`, then extends into built-in recovery with time travel and snapshot tables so you can ingest files, export tables, and restore historical state without leaving the BigQuery ecosystem.
+> Documents moving data between Cloud Storage and BigQuery with `bq load`, `LOAD DATA`, and `bq extract`, then extends into built-in recovery with time travel and snapshot tables so you can ingest files, export tables, and restore historical state without leaving the BigQuery ecosystem.
 >
 > **Loading from GCS**
 > - Prerequisites: enable `bigquery.googleapis.com`, grant `bigquery.dataEditor` on target datasets and `storage.objectViewer` on source buckets, and understand that load jobs are asynchronous and free
@@ -40,6 +40,12 @@ status: complete
 > - When to use: batch ingestion from GCS, SQL-native scheduled loads, cross-system exports, corruption investigation, and point-in-time recovery
 > - Warnings: many small loads fragment tables, CSV autodetect can mistype columns from a 500-row sample, large exports require wildcard sharding, and time travel cannot exceed 168 hours
 > - Recommendations: prefer Parquet, batch loads at pipeline boundaries, switch to the BigQuery Storage Write API or streaming for sub-minute ingestion, right-size `max_time_travel_hours` by dataset tier, and schedule snapshots for long-term retention
+
+> [!warning] Live-run boundary
+>
+> This note's original runnable examples depend on a writable BigQuery dataset and a writable GCS bucket in `bq-wh-nb`. On `2026-04-15`, `bq-wh-nb` was already deleted, and `dagflow-poc` currently exposes no private BigQuery datasets, so the `bq load`, `LOAD DATA`, `bq extract`, time-travel restore, and snapshot examples were not rerun.
+>
+> The commands and outputs below remain useful as an operator runbook, but treat them as historically validated patterns rather than current proof that the load/export path is live.
 >
 > [!note]- Glossary
 >
@@ -264,6 +270,10 @@ status: complete
 ## Loading Data from GCS
 
 Loading data from GCS into BigQuery requires two IAM roles: `bigquery.dataEditor` on the target dataset (grants permission to create, update, and delete table data) and `storage.objectViewer` on the source GCS bucket (grants read-only access to objects). Both roles are scoped at the dataset or bucket level respectively — granting them at the project level is broader than necessary and should be avoided in production. Load jobs run asynchronously and are **free** — BigQuery does not charge for loading data from GCS. Each load job supports up to 10,000 source files and 15 TB total uncompressed input; compressed CSV and JSON files are limited to 4 GB per file because BigQuery must decompress them in memory. Individual uncompressed files may not exceed 5 TB. Parquet, Avro, and ORC files have no per-file compression limit because they use block-level compression that BigQuery reads natively. Ensure `bigquery.googleapis.com` is enabled before running any `bq` command. Load jobs are capped at 1,000 per table per day and 100,000 per project per day — if you need higher throughput, use streaming inserts instead.
+
+> [!info] Load jobs are atomic
+>
+> A successful load job makes the new data visible all at once. Queries against the destination table either see the state before the load or the full post-load state, not a partial subset of files that happened to finish first.
 
 > [!warning] Frequent Small Loads Cause Table Fragmentation
 >

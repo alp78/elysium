@@ -2,7 +2,7 @@
 title: "05 - BigQuery Problems"
 tags: [bigquery, gcp]
 status: stable
-updated: 2026-03-23
+updated: 2026-04-15
 description: "Comprehensive catalog of BigQuery production problems for data engineers — 25 issues ranked by severity with root cause analysis, impact assessment, prevention protocols, and fix procedures. Covers cost control, query performance, DML concurrency, data types, and operational issues."
 ---
 
@@ -44,6 +44,12 @@ description: "Comprehensive catalog of BigQuery production problems for data eng
 > - When to use: design reviews, pre-production hardening, incident triage, postmortems, regulated reproducibility checks, and cost-governance runbooks
 > - Warnings: on-demand scan costs compound silently, the 20 concurrent interactive DML limit is hard, time travel expires permanently, region and security boundaries are easy to cross incorrectly, and some failures surface only when queried
 > - Recommendations: codify prevention in Terraform, dbt, Airflow, Cloud Billing, and CI checks; dry-run and cap large queries; enforce partition filters and labels; and treat each prevention protocol plus fix procedure as an operational runbook
+
+> [!warning] Historical output boundary
+>
+> This note is primarily conceptual, but many sections include live `bq-wh-nb` outputs captured when that warehouse still existed. On `2026-04-15`, `bq-wh-nb` was already deleted, so those embedded result sets now function as historical evidence, not current platform state.
+>
+> Numeric quotas, pricing examples, and platform limits in this note are version-sensitive. Re-check the current BigQuery quotas and pricing documentation before turning any threshold, concurrency ceiling, or cost formula here into automation or policy.
 >
 > [!note]- Glossary
 >

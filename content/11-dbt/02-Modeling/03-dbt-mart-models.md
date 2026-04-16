@@ -8,10 +8,11 @@ description: "Consumption-ready facts and dimensions, gold layer"
 
 # dbt: Mart Models
 
-> [!quote]
+> [!quote] Consumer-facing dimensional design
+>
 > "Dimensions provide the 'who, what, where, when, why, and how' context surrounding a business process event."
 >
-> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
+> Source: Ralph Kimball | *The Data Warehouse Toolkit* (2013)
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "Consumption-ready facts and dimensions, gold layer"
 > - Warnings: ambiguous grain, undocumented columns, direct `source()` use, view-based marts that collapse under BI load, and mart outputs that skip exposure or consumer traceability
 > - Recommendations: declare grain explicitly, document every published column, materialize marts for query stability, and treat mart changes as contract changes with downstream blast radius
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Mart model**
 > - A consumption-ready dbt model intended for direct use by BI tools, APIs, analysts, or other downstream consumers.
@@ -153,8 +154,7 @@ description: "Consumption-ready facts and dimensions, gold layer"
 > >
 > > Once a model is directly consumed, latency, documentation, naming, and stability all become external-facing concerns, not just internal engineering preferences.
 
-
-### Mart Model Core Principles
+## Mart Model Core Principles
 
 | Rule | Rationale |
 |---|---|
@@ -167,9 +167,11 @@ description: "Consumption-ready facts and dimensions, gold layer"
 
 ---
 
-### Mart Grain Definition
+## Mart Grain Definition
 
 Every mart model must have a clearly stated grain — the combination of columns that uniquely identifies one row.
+
+*This YAML description makes grain part of the mart contract so downstream consumers do not have to infer row uniqueness from SQL alone.*
 
 ```yaml
 # In _performance.yml
@@ -182,7 +184,9 @@ Every mart model must have a clearly stated grain — the combination of columns
 
 ---
 
-### fct_index_performance
+## fct_index_performance
+
+*This mart model publishes index-level daily and rolling performance by combining point-in-time constituent weights with reusable return calculations from the intermediate layer.*
 
 ```sql
 -- models/marts/performance/fct_index_performance.sql
@@ -200,7 +204,11 @@ with constituents as (
         index_id,
         security_id,
         effective_date,
-        weight
+        weight,
+        lead(effective_date) over (
+            partition by index_id, security_id
+            order by effective_date
+        )                                           as next_effective_date
 
     from {{ ref('stg_market_data__index_constituents') }}
 
@@ -243,10 +251,7 @@ constituent_returns as (
         and r.price_date   >= c.effective_date
         -- Weight is valid until the next effective_date for this security in this index
         and r.price_date   <  coalesce(
-                lead(c.effective_date) over (
-                    partition by c.index_id, c.security_id
-                    order by c.effective_date
-                ),
+                c.next_effective_date,
                 '9999-12-31'
             )
 
@@ -314,9 +319,11 @@ select * from rolling
 
 ---
 
-### fct_composite_scores
+## fct_composite_scores
 
 Combines ESG, momentum, and value signals into a single composite factor score per security per date. Consumed by portfolio construction tooling.
+
+*This mart aligns several reusable factor signals into one published score surface that external portfolio tools can query without reconstructing intermediate joins.*
 
 ```sql
 -- models/marts/performance/fct_composite_scores.sql
@@ -415,9 +422,11 @@ select * from combined
 
 ---
 
-### dim_constituents
+## dim_constituents
 
 Slowly-changing reference dimension for securities that have ever been index constituents.
+
+*This dimension publishes stable security attributes so fact models and downstream consumers can join descriptive context without revisiting raw master data tables.*
 
 ```sql
 -- models/marts/reference/dim_constituents.sql
@@ -498,9 +507,11 @@ left join sectors s
 
 ---
 
-### dim_indices
+## dim_indices
 
 Reference dimension for all indices tracked by the platform.
+
+*This dimension provides the descriptive metadata that makes index-level fact rows interpretable in BI tools, APIs, and exports.*
 
 ```sql
 -- models/marts/reference/dim_indices.sql
@@ -532,7 +543,9 @@ left join {{ ref('stg_indices__methodology') }} m using (index_id)
 
 ---
 
-### _performance.yml — Mart Documentation and Tests
+## _performance.yml — Mart Documentation and Tests
+
+*This mart YAML turns grain, test thresholds, and consumer-facing column descriptions into an explicit contract instead of leaving them implicit in SQL.*
 
 ```yaml
 # models/marts/performance/_performance.yml
@@ -598,9 +611,11 @@ models:
 
 ---
 
-### _exposures.yml
+## _exposures.yml
 
 Exposures declare which external systems consume mart models, enabling impact analysis.
+
+*This exposure metadata extends lineage past dbt models so reviewers can see which dashboards, APIs, or reporting jobs will feel a mart change immediately.*
 
 ```yaml
 # models/marts/_exposures.yml
@@ -650,7 +665,8 @@ exposures:
       email: "esg@example.com"
 ```
 
-> [!TIP] Using exposures in selection
+> [!tip] Using exposures in selection
+>
 > Run only models needed for a specific exposure:
 > ```bash
 > dbt run --select +exposure:portfolio_construction_api

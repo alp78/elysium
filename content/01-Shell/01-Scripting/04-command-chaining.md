@@ -8,7 +8,7 @@ aliases: [command chaining, shell operators, chain commands, && operator, pipe o
 keywords: [command chaining, exit code, logical AND, logical OR, pipe, pipeline, semicolon, fail-fast, bash operators, powershell operators, process exit code, shell execution flow]
 description: "How bash and PowerShell command chaining operators (&&, ||, ;, |) use exit codes to control execution flow, enabling fail-fast scripts and graceful error handling."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -178,8 +178,6 @@ Bash uses `&&` for dependent steps that must not continue after a failure. This 
 
 This chain prints two successful stages, fails deliberately at `false`, and never reaches `deploy`. The final `printf` captures the numeric exit code that the chain returned.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to stop after the first failed step.*
 ```bash
 printf 'build\n' && printf 'test\n' && false && printf 'deploy\n'
@@ -200,8 +198,6 @@ Use `||` when the fallback is short, local, and safe to run only after a failure
 
 The left-hand `false` simulates a failed primary command. Because it fails, Bash runs the fallback `printf`, and the overall expression finishes successfully.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to run a fallback command after a failure.*
 ```bash
 false || printf 'fallback\n'
@@ -220,8 +216,6 @@ The semicolon is just a separator. Bash executes the next statement whether the 
 #### Show why a semicolon masks failures
 
 The failed command does not stop execution. `still-ran` proves the second statement executed anyway, and the final exit code is `0` because the last command succeeded.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to show why a semicolon masks failures.*
 ```bash
@@ -242,8 +236,6 @@ Bash pipelines connect text streams. They are powerful, but their exit semantics
 
 This pipeline sends two lines into `grep`, keeps only the line that begins with `b`, and counts the result. The pipeline succeeds because every stage completed successfully.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to stream stdout into the next command.*
 ```bash
 printf 'alpha\nbeta\n' | grep '^b' | wc -l
@@ -259,8 +251,6 @@ exit=0
 
 `set -o pipefail` produces no output, so you have to verify the setting explicitly. The `sed` filter confirms that `pipefail` is on before you rely on it in a script.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to enable and verify `pipefail`.*
 ```bash
 set -o pipefail
@@ -274,8 +264,6 @@ pipefail       	on
 #### Inspect `${PIPESTATUS[@]}` after a failed pipeline stage
 
 This pipeline prints no matches from `grep`, so the middle stage exits with `1` even though `wc -l` still prints `0`. Capturing `${PIPESTATUS[@]}` immediately shows which stage failed.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to inspect `${PIPESTATUS[@]}` after a failed pipeline stage.*
 ```bash
@@ -302,8 +290,6 @@ PowerShell 7 added Bash-style chain operators. They are useful for native tools 
 
 This chain prints `build` and `test`, then calls `cmd /c exit 1`. Because that native command fails, `deploy` never runs, `$?` becomes `$false`, and `$LASTEXITCODE` records the native exit code.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to stop after the first failed native command.*
 ```powershell
 Write-Output 'build' &&
@@ -329,8 +315,6 @@ In PowerShell 7+, `||` runs the right-hand command only when the left-hand comma
 
 The first native command exits with code `1`, so the fallback `echo` runs. After the fallback succeeds, the overall chain reports success and `$LASTEXITCODE` reflects the last native command that ran.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to run a fallback after a non-zero exit.*
 ```powershell
 cmd /c exit 1 || cmd /c echo fallback
@@ -351,8 +335,6 @@ The semicolon keeps going regardless of failure, just as it does in Bash. That m
 #### Show why a semicolon keeps going
 
 `cmd /c exit 1` fails, but `Write-Output` still runs because the semicolon does not inspect the previous status. `$LASTEXITCODE` still remembers the native failure even though the last cmdlet succeeded.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to show why a semicolon keeps going.*
 ```powershell
@@ -375,8 +357,6 @@ PowerShell pipelines move structured objects between cmdlets. When you need to p
 
 This pipeline starts with integers, filters them as integers, and formats the surviving values. The output proves that PowerShell is piping objects, not text columns.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to pass objects through the pipeline.*
 ```powershell
 1..5 | Where-Object { $_ -gt 3 } | ForEach-Object { "item=$_" }
@@ -390,8 +370,6 @@ item=5
 #### Capture every stream with `*>` and verify the file
 
 `*>` itself is silent, so the proof comes from reading the file after the block runs. The resulting file contains standard output, a warning, and information output in one place.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to capture every stream with `*>` and verify the file.*
 ```powershell
@@ -418,11 +396,13 @@ info
 
 These Bash patterns cover the scenarios that show up most often in scripts: safe defaults, dependent steps, cleanup, and long pipelines.
 
+> [!warning] `cmd && ok || fail` is not an `if/else`
+>
+> The `||` branch reacts to the exit status of the entire left-hand expression, not only to the primary command. If the `ok` branch fails, the `fail` branch still runs even after the primary command succeeded. Use `if ...; then ... else ... fi` for true branching.
+
 #### Start script entrypoints with `set -euo pipefail`
 
 This is the standard Bash safety header: `-e` stops on failures, `-u` catches unset variables, and `pipefail` exposes failed pipeline stages. The verification command confirms that all three settings are enabled.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to start script entrypoints with `set -euo pipefail`.*
 ```bash
@@ -440,8 +420,6 @@ pipefail       	on
 
 When step 3 depends on step 2, and step 2 depends on step 1, chain them with `&&`. The missing `deploy` line proves that the failure stopped the chain before the unsafe step.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to use `&&` between causally dependent steps.*
 ```bash
 printf 'build\n' && printf 'test\n' && false && printf 'deploy\n'
@@ -458,8 +436,6 @@ exit=1
 
 This pattern is appropriate when the fallback is simple and local. The failed file read falls through to a safe default value, and the chain exits successfully.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to use `primary || fallback` for short default paths.*
 ```bash
 db_host=$(cat /tmp/chain-missing 2>/dev/null) || db_host='localhost'
@@ -475,8 +451,6 @@ exit=0
 #### Use `trap ... EXIT` for cleanup that must always run
 
 Cleanup belongs in `trap`, not in `||`, because cleanup must run on every shell exit path. This script fails deliberately after creating a temp directory, and the trap still prints `cleanup`.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to use `trap ... EXIT` for cleanup that must always run.*
 ```bash
@@ -495,8 +469,6 @@ cleanup
 #### Inspect `${PIPESTATUS[@]}` after long pipelines
 
 `pipefail` tells you that the pipeline failed; `${PIPESTATUS[@]}` tells you which stage failed. That is the fastest way to isolate a bad stage in a long text-processing chain.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to inspect `${PIPESTATUS[@]}` after long pipelines.*
 ```bash
@@ -517,8 +489,6 @@ stages=0 1 0
 
 With `pipefail` enabled, a normal `grep` miss becomes a failed pipeline. That is usually what you want in automation and usually not what you want when you are exploring interactively.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to keep `pipefail` in scripts, not in ad hoc interactive searches.*
 ```bash
 set -o pipefail
@@ -535,11 +505,13 @@ pipeline=1
 
 PowerShell recommendations depend on the version you are targeting. PowerShell 7 can use Bash-like chain operators; Windows PowerShell 5.1 needs explicit control flow.
 
+> [!info] `$?` and `$LASTEXITCODE` answer different questions
+>
+> `$?` reports whether the last PowerShell pipeline succeeded. `$LASTEXITCODE` reports what the last native executable returned. Inspect both when a chain mixes cmdlets and native tools, because a successful cmdlet can leave an old native exit code in place.
+
 #### Use `&&` and `||` in PowerShell 7+ when you want Bash-like chaining
 
 This is the shortest readable form for dependent steps and simple fallbacks in modern PowerShell. The fallback runs only after the deliberate failure, and the chain finishes successfully.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to use `&&` and `||` in PowerShell 7+ when you want Bash-like chaining.*
 ```powershell
@@ -557,8 +529,6 @@ exit=0
 #### Use `try/catch/finally` with `$LASTEXITCODE` when you must support Windows PowerShell 5.1
 
 Windows PowerShell 5.1 has no `&&` or `||`, so you have to inspect native exit codes yourself. This example throws when the native command fails, reports the reason in `catch`, and still runs cleanup in `finally`.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to use `try/catch/finally` with `$LASTEXITCODE` when you must support Windows PowerShell 5.1.*
 ```powershell
@@ -587,8 +557,6 @@ These Bash failure modes are common because they look harmless in code review wh
 
 If the line uses `;`, Bash treats the next command as unconditional. The first line prints because the semicolon does not care about failure; the second line never prints because `&&` does.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to a script keeps going after a failed step.*
 ```bash
 false; printf 'ran-with-semicolon\n'
@@ -602,8 +570,6 @@ ran-with-semicolon
 #### A pipeline returns success but the result is empty
 
 Without `pipefail`, the pipeline status comes from `wc -l`, not from `grep`. `0` lines were counted, but the pipeline still reports success because the last stage succeeded.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to a pipeline returns success but the result is empty.*
 ```bash
@@ -619,8 +585,6 @@ exit=0
 #### `cmd && ok || fail` triggers the `fail` branch even though the primary command succeeded
 
 The left-hand `true` succeeds, but the grouped `ok` branch returns failure because it ends with `false`. That failure is enough to trigger the `||` branch, which is why this idiom is unsafe for critical logic.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to `cmd && ok || fail` triggers the `fail` branch even though the primary command succeeded.*
 ```bash
@@ -642,8 +606,6 @@ PowerShell adds a second axis of complexity: version support and the difference 
 
 Windows PowerShell 5.1 never learned the chain operators, so the parser fails before execution starts. If you need 5.1 compatibility, replace this syntax with explicit `if`, `try/catch`, and `$LASTEXITCODE` checks.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to `&&` is a syntax error in Windows PowerShell 5.1.*
 ```powershell
 Write-Output 'ok' && Write-Output 'later'
@@ -661,8 +623,6 @@ The token '&&' is not a valid statement separator in this version.
 #### `$?` is `$false` even though the last native command exited `0`
 
 This happens when a cmdlet fails after a native executable succeeded. The output shows the cmdlet error first, then proves that `$?` tracks the cmdlet failure while `$LASTEXITCODE` still holds the native process result.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to `$?` is `$false` even though the last native command exited `0`.*
 ```powershell

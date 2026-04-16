@@ -4,7 +4,7 @@ tags: [gcp, compute, ssh, iap]
 aliases: [gcloud compute ssh, gcloud compute scp, IAP tunnel, VM remote access, VM file transfer]
 description: "How to SSH into Compute Engine VMs through the IAP tunnel (no public IP required), run remote commands non-interactively, and copy files to and from VMs using gcloud compute scp."
 created: 2026-03-22
-updated: 2026-04-12
+updated: 2026-04-15
 status: complete
 ---
 
@@ -16,7 +16,7 @@ status: complete
 > — **Bruce Schneier**, *Secrets and Lies* (2000)
 > [!abstract]- Summary
 >
-> Covers secure remote access and file transfer for Compute Engine VMs through Identity-Aware Proxy, using `gcloud compute ssh`, `gcloud compute scp`, `gcloud compute start-iap-tunnel`, and OS Login so `stoxx-vm` can remain private in `bq-wh-nb` with `--no-address`.
+> Documents the private-VM access pattern that was originally validated against `stoxx-vm` in `bq-wh-nb`, using `gcloud compute ssh`, `gcloud compute scp`, `gcloud compute start-iap-tunnel`, and OS Login.
 >
 > **SSH access via IAP**
 > - Use `gcloud compute ssh ... --tunnel-through-iap` for interactive shells, non-interactive `--command` runs, privileged diagnostics with `sudo`, and one-off `--project` overrides
@@ -38,6 +38,12 @@ status: complete
 > - Warnings: IAP requires `roles/iap.tunnelResourceAccessor`, firewall access from `35.235.240.0/20`, correct OS Login roles, and separate ownership handling for remote file writes
 > - Recommendations table: the OS Login comparison matrix contrasts identity binding, short-lived keys, 2FA, audit trail, multi-project behavior, and service-account limitations
 > - Troubleshooting: 5 failure modes covering SSH timeouts, `Permission denied (publickey)`, slow SCP transfers, remote-path permission errors, and stale host keys after VM recreation
+
+> [!warning] Live-run boundary
+>
+> The original VM behind these SSH and SCP examples is no longer available for rerun. On `2026-04-15`, the source project `bq-wh-nb` reported `lifecycleState: DELETE_REQUESTED`, so the `stoxx-vm` shell and file-transfer transcripts in this note remain historical operator examples.
+>
+> This refresh only reran read-only commands that still make sense without a live VM, especially `gcloud compute os-login describe-profile` and the current local `gcloud` help surfaces for `ssh`, `scp`, and `start-iap-tunnel`.
 
 > [!note]- Glossary
 >
@@ -322,6 +328,10 @@ The `--project=bq-wh-nb` flag targets the correct project regardless of the acti
 ## File Transfer via SCP
 
 `gcloud compute scp` wraps SCP over the IAP tunnel, allowing you to copy files between your local machine and a VM without the VM needing a public IP. The `hostname:path` convention mirrors standard `scp` syntax — the remote side is prefixed with the VM name. The transfer patterns here complement the general [data-transfer](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer) commands.
+
+> [!warning] Keep shell startup files quiet for SCP
+>
+> `scp` and other non-interactive SSH flows are brittle if `.bashrc`, `.profile`, or similar startup files print banners, prompts, or debug text. Extra output on startup can corrupt the protocol stream and turn a valid tunnel into a hanging or failed transfer.
 
 ### gcloud compute scp | copy files to and from a VM
 
@@ -617,6 +627,30 @@ gcloud compute os-login describe-profile
 ```text
 name: '104392677521024249480'
 posixAccounts:
+- accountId: stoxx-index-intelligence
+  gid: '1483416528'
+  homeDirectory: /home/alexper_recovery_gmail_com
+  name: users/104392677521024249480/projects/stoxx-index-intelligence
+  operatingSystemType: LINUX
+  primary: true
+  uid: '1483416528'
+  username: alexper_recovery_gmail_com
+- accountId: seclab-dev-ap26
+  gid: '303732474'
+  homeDirectory: /home/alexper_recovery_gmail_com
+  name: users/104392677521024249480/projects/seclab-dev-ap26
+  operatingSystemType: LINUX
+  primary: true
+  uid: '303732474'
+  username: alexper_recovery_gmail_com
+- accountId: seclab-dev-ap-26
+  gid: '1170941192'
+  homeDirectory: /home/alexper_recovery_gmail_com
+  name: users/104392677521024249480/projects/seclab-dev-ap-26
+  operatingSystemType: LINUX
+  primary: true
+  uid: '1170941192'
+  username: alexper_recovery_gmail_com
 - accountId: bq-wh-nb
   gid: '1137701540'
   homeDirectory: /home/alexper_recovery_gmail_com
@@ -626,13 +660,27 @@ posixAccounts:
   uid: '1137701540'
   username: alexper_recovery_gmail_com
 sshPublicKeys:
-  8b8b4e64...:
-    fingerprint: 8b8b4e64...
-    key: ssh-rsa AAAAB3NzaC1yc2EAAA...
-    name: users/104392677521024249480/sshPublicKeys/8b8b4e64...
+  41e8d21fa528458b27a9352edf522fbdb51276a39ddffa36a36809c9fa84fcbd:
+    fingerprint: 41e8d21fa528458b27a9352edf522fbdb51276a39ddffa36a36809c9fa84fcbd
+    key: |
+      ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGw6+6+miXPgipd67tQz1Fh+2ifTn7OWf4RON73ghnoT security-lab-notebook
+    name: users/104392677521024249480/sshPublicKeys/41e8d21fa528458b27a9352edf522fbdb51276a39ddffa36a36809c9fa84fcbd
+  8b8b4e64acd580ed6ee82a095a10c7e62adcc0ff276d50e95dad79e36d3b5f5d:
+    fingerprint: 8b8b4e64acd580ed6ee82a095a10c7e62adcc0ff276d50e95dad79e36d3b5f5d
+    key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCXghbq6SX6+AsNe1fu9fCL+PMlQv+w0uZoBZOXt+ba3L7Pz2sJj9WMz0zfCgvHS3ReOS3qsWAK6KVZkvh597A915SCdkxthre/ONT1XutCCd9B09hgxrRE2osZcpQ5o7u8Qi4VZeRWxl4eg3RSaIwNqaISMH71voKFqU9Tl3UaazIU+W2d00ZXyuHSC/1IZwcVIZC91Ph7v7ckF0j2QaaQloK26Nh/FBkpJHdzwky3rFzodgFfuhu+xIpAtlZGPs5dRW63eyEkcuHddgAKcJQl4l/GyVosIuTu2zCeo750y3SA5uRb7AiY/AY7pCZr07wF7/ZMQsDOBInbapyK7cjx ELYSIUM\Alex@Elysium
+    name: users/104392677521024249480/sshPublicKeys/8b8b4e64acd580ed6ee82a095a10c7e62adcc0ff276d50e95dad79e36d3b5f5d
+  a2925aec6ea32bf3d7fa4da71844ae5814c3281b38686a36d754c185fa76d004:
+    fingerprint: a2925aec6ea32bf3d7fa4da71844ae5814c3281b38686a36d754c185fa76d004
+    key: |
+      ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEVzy9nMKjGvl5dhbYUj0X6gCEhTk4gQ89bC5htVOrxq security-lab-notebook
+    name: users/104392677521024249480/sshPublicKeys/a2925aec6ea32bf3d7fa4da71844ae5814c3281b38686a36d754c185fa76d004
+  e9c20edacd7add9841295e8d57a5d656083f5f489a8d492b2bcf187e42588087:
+    fingerprint: e9c20edacd7add9841295e8d57a5d656083f5f489a8d492b2bcf187e42588087
+    key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDTqMqdS0kC+wLhp4+f82ZmxRFxXsEABDQzGe61+fqu0zD6B8hIxjrxd3IVkzPqIpDlufPsDL7BwKCi9ZT7DgKjGQm4e+iuRU3hqjK0wI0l8U1iVuxmi6DPhiA64Y5Il/2GvOJuWGBN4PCpQDMOFGSZvMkqEmdegRUclbvihJwH0oxDWY3DGDMy+3Q4gBuVElXG57iLXvtr515XVC/Ts1j+FUWWsLO2cF/+UQi1S1SRzyP1s584rQNVBZFt3zPCFBOTJ4wlL659lU4yw60dbTfhaZ0jScJjM7AMAWU1eeLwiAqrMbMftbNDoGoKWbplPxebs3q8XdC2BXGjw9jRLf9pYoV+Q3NXOXZ+NBaBKL/7f52iUep8Y2ORaBdSlPjHpzCTpuzgB8sRNWZkQZAzNE2F8n83se+kdw3YlrHbr9Jgnz4STa/0o8L8xGalcF7eNafHrGVy4PGUSQNlUOOVgWs2Tmi13xPLdWoAvnJ8yUsvdhhIiLMPtvlzmCsPWYjh7hU= alex@Elysium
+    name: users/104392677521024249480/sshPublicKeys/e9c20edacd7add9841295e8d57a5d656083f5f489a8d492b2bcf187e42588087
 ```
 
-The profile shows the POSIX account mapping for `bq-wh-nb`: UID `1137701540`, GID `1137701540`, home directory `/home/alexper_recovery_gmail_com`. The `username` field is derived from the Google identity email by replacing `@` and `.` with underscores. The `sshPublicKeys` section lists all SSH keys associated with this identity across projects. Output is truncated to the `bq-wh-nb` account — profiles with access to multiple GCP projects will show one `posixAccount` entry per project.
+The live profile now shows four project-scoped POSIX accounts for the same Google identity, including the historical `bq-wh-nb` mapping. The `username` remains `alexper_recovery_gmail_com` across projects, while the UID and GID vary per project-scoped OS Login account. The `sshPublicKeys` section also confirms multiple active SSH public keys tied to the current identity rather than to one VM.
 
 ### SSH after OS Login
 

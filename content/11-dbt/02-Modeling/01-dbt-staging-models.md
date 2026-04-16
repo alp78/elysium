@@ -8,10 +8,11 @@ description: "Staging models 1:1 with source, source freshness"
 
 # dbt: Staging Models
 
-> [!quote]
+> [!quote] Deterministic staging boundary
+>
 > "A pure task should be deterministic and idempotent, meaning that it will produce the same result every time it runs or re-runs."
 >
-> — **Maxime Beauchemin**, "Functional Data Engineering" (2018)
+> Source: Maxime Beauchemin | "Functional Data Engineering" (2018)
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "Staging models 1:1 with source, source freshness"
 > - Warnings: hiding business logic in staging, breaking the 1:1 source mapping, skipping source freshness definitions, and using heavyweight materializations where source-aligned views are the safer default
 > - Recommendations: keep staging models narrow, declare sources and freshness centrally, enforce consistent naming, and make every transformation auditable back to a single upstream table
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Staging model**
 > - The first dbt model layer above raw sources, usually limited to renaming, casting, and lightweight structural cleanup.
@@ -143,8 +144,7 @@ description: "Staging models 1:1 with source, source freshness"
 > >
 > > A little business logic in staging feels harmless until many models depend on it. By then, the layer boundary is gone and refactoring becomes much harder.
 
-
-### Staging Model Core Principles
+## Staging Model Core Principles
 
 | Rule | Rationale |
 |---|---|
@@ -156,14 +156,22 @@ description: "Staging models 1:1 with source, source freshness"
 | Add `_id` surrogate key where natural key is complex | Simplifies downstream joins |
 
 > [!tip] Related pattern
-> The rename-and-cast operations in staging models rely on the same [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals) patterns — `CAST`, `UPPER`, `TRIM`, and `COALESCE` — that appear throughout the SQL reference material.
+>
+> The rename-and-cast operations in staging models rely on the same [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals) patterns such as `CAST`, `UPPER`, `TRIM`, and `COALESCE` that appear throughout the SQL reference material.
 
-> [!NOTE] No business logic
-> If you find yourself writing a `CASE WHEN` that encodes a business rule (e.g., "a return > 50% is suspicious"), that belongs in an intermediate model, not staging. Staging is for structural transformation only.
+> [!warning] No business logic in staging
+>
+> If you find yourself writing a `CASE WHEN` that encodes a business rule such as "a return above 50% is suspicious," that logic belongs in an intermediate model, not staging. Staging is for structural transformation only.
 
 ---
 
-### dbt _sources.yml — Full Declaration with Freshness
+## dbt _sources.yml — Full Declaration with Freshness
+
+> [!info] Current docs move freshness under `config`
+>
+> Recent dbt docs place source freshness under a source or table `config:` block, and `loaded_at_field` has moved there as well. Legacy projects still show the older top-level pattern, but new notes and greenfield projects should prefer the current config-scoped syntax so examples match modern dbt behavior.
+
+*This source declaration centralizes raw-table freshness thresholds, boundary tests, and documentation so staging models can stay 1:1 with the source instead of embedding those checks in SQL.*
 
 ```yaml
 # models/staging/market_data/_sources.yml
@@ -288,7 +296,9 @@ sources:
 
 ---
 
-### stg_market_data__daily_prices
+## stg_market_data__daily_prices
+
+*This staging model standardizes prices, trading dates, exchange metadata, and ingestion metadata without changing business meaning or row grain.*
 
 ```sql
 -- models/staging/market_data/stg_market_data__daily_prices.sql
@@ -334,7 +344,9 @@ select * from renamed
 
 ---
 
-### stg_esg__scores
+## stg_esg__scores
+
+*This ESG staging model normalizes score names, types, and provider metadata so downstream factor logic reads consistent columns regardless of raw provider quirks.*
 
 ```sql
 -- models/staging/esg/stg_esg__scores.sql
@@ -377,7 +389,9 @@ select * from renamed
 
 ---
 
-### stg_market_data__corporate_actions
+## stg_market_data__corporate_actions
+
+*This model preserves the raw corporate-action grain while adding a surrogate key that makes downstream joins and history tracking easier to manage.*
 
 ```sql
 -- models/staging/market_data/stg_market_data__corporate_actions.sql
@@ -429,7 +443,9 @@ select * from renamed
 
 ---
 
-### stg_market_data__index_constituents
+## stg_market_data__index_constituents
+
+*This constituent staging model keeps point-in-time membership rows source-aligned while standardizing dates, weights, and change-type metadata.*
 
 ```sql
 -- models/staging/market_data/stg_market_data__index_constituents.sql
@@ -473,7 +489,9 @@ select * from renamed
 
 ---
 
-### _staging_market_data.yml — Column-Level Documentation
+## _staging_market_data.yml — Column-Level Documentation
+
+*This YAML file documents published staging columns and declares the low-cost data-quality tests that should fail before bad raw data spreads deeper into the DAG.*
 
 ```yaml
 # models/staging/market_data/_staging_market_data.yml
@@ -538,7 +556,9 @@ models:
 
 ---
 
-### dbt Source Freshness in Practice
+## dbt Source Freshness in Practice
+
+*These commands run source freshness globally or by source group so orchestration can stop downstream models when raw feeds are too stale for the SLA.*
 
 ```bash
 # Run freshness checks for all sources
@@ -558,14 +578,19 @@ Wire freshness failures into your orchestration layer to block downstream runs w
 
 ---
 
-### Staging Model Anti-Patterns
+## Staging Model Anti-Patterns
 
-> [!WARNING] Anti-patterns to avoid in staging
+> [!warning] Keep staging strictly source-aligned
+>
+> Staging failures are usually boundary failures. Once a staging model joins another relation, applies an analytical filter, or hides structural drift with `SELECT *`, the raw-to-modeled contract stops being auditable and downstream debugging gets much harder.
 
 > [!success] Correct staging scope
-> Staging models should contain only: column renames, type casts, `UPPER`/`TRIM` normalisation, surrogate key generation, and ingestion metadata passthrough. Any join, filter, or business rule belongs in an intermediate model where it can be independently tested and documented.
+>
+> Staging models should contain only column renames, type casts, `UPPER` or `TRIM` normalization, surrogate key generation, and ingestion metadata passthrough. Any join, filter, or business rule belongs in an intermediate model where it can be independently tested and documented.
 
 **Joining to other models**: Staging models should reference only their own source. Any join introduces a dependency that belongs in the intermediate layer.
+
+*This wrong example leaks downstream dimensional context into a model that should stay 1:1 with its source table.*
 
 ```sql
 -- WRONG: join in staging
@@ -575,6 +600,8 @@ left join {{ ref('dim_securities') }} s on p.security_id = s.security_id
 ```
 
 **Business logic and filters**: Do not filter rows in staging unless the source truly contains structural garbage (e.g., empty header rows). Filtering valid data hides lineage.
+
+*This wrong example mixes analytical screening with structural cleanup, which makes the staging layer responsible for business semantics it cannot document or test safely.*
 
 ```sql
 -- WRONG: business filter in staging

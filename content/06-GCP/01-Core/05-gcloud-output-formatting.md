@@ -2,9 +2,9 @@
 title: "05 - gcloud Output Formatting"
 tags: [gcp, gcloud]
 aliases: [gcloud format, gcloud filter, gcloud output, gcloud --format, gcloud --filter]
-description: "How to use gcloud --format, --filter, projections, transform functions, and --uri to produce stable script-friendly output from live bq-wh-nb resources."
+description: "How to use gcloud --format, --filter, projections, transform functions, and --uri to produce stable script-friendly output from live dagflow-poc resources."
 created: 2026-04-13
-updated: 2026-04-13
+updated: 2026-04-15
 status: complete
 ---
 
@@ -13,7 +13,10 @@ status: complete
 > [!abstract]- Summary
 > `gcloud` returns structured API resources and only renders them into human-facing text at the final output step. `--format` controls how those resources are serialized, `--filter` controls which resources survive to that stage, and projections plus transform functions let you shape the result directly in the CLI instead of post-processing default tables with `grep`, `awk`, or ad hoc JSON parsing.
 >
-> This note focuses on building stable, script-friendly output contracts from live project data, including the Compute Engine VM `stoxx-vm` and the four current service accounts in `bq-wh-nb`. All live outputs were captured on April 13, 2026 with Google Cloud SDK `563.0.0`.
+> This note focuses on building stable, script-friendly output contracts from live project data, now using the readable `dagflow-poc` service-account inventory, enabled-service inventory, and selected project IAM bindings. The local help-topic excerpts and live resource outputs were refreshed on April 15, 2026 with Google Cloud SDK `563.0.0`.
+
+> [!warning]- Live-run boundary
+> On April 15, 2026 `gcloud compute instances list --project=dagflow-poc` returned `Listed 0 items.`. The live formatting examples in this note therefore moved from the older `stoxx-vm` walkthrough to the `dagflow-poc` service-account list, enabled services, and one filtered IAM policy binding that are all still readable today.
 
 > [!note]- Glossary
 > **`--format` flag**
@@ -227,99 +230,115 @@ The default table is fine for interactive reading, but it is a weak contract for
 
 | Field | Type | Meaning |
 |---|---|---|
-| `name` | string | Resource name of the VM instance. |
-| `zone` | URI | Full Compute Engine zone resource path for the instance. |
-| `status` | enum-like string | Current lifecycle state of the instance. |
-| `machineType` | URI | Full machine-type resource path for the instance. |
-| `networkInterfaces[0].networkIP` | IPv4 string | Primary internal IPv4 address on the first network interface. |
-| `labels.app` | string | Instance label that identifies the application role. |
-| `labels.env` | string | Instance label that identifies the environment. |
-| `tags.items` | string array | Network tags attached to the instance. |
+| `name` | string | Full IAM resource name for the service account. |
 | `email` | string | Service account email address. |
 | `displayName` | string | Human-readable service account display name. |
 | `disabled` | boolean | Whether the service account is disabled. |
+| `projectId` | string | Project ID that owns the service account. |
+| `uniqueId` | string | Numeric immutable identifier for the service account. |
+| `description` | string | Free-form description stored on the service account. |
+| `oauth2ClientId` | string | OAuth client ID associated with the service account. |
 
 #### Use the default table when a human is reading the result
 
-During ad-hoc inspection at the terminal when readability matters more than machine parsing. It is typically triggered by you want a quick health check of resources and do not need to pipe the output into another tool. Read-only list command against Compute Engine in project `bq-wh-nb`. Show the built-in human-friendly table that `gcloud` prints when no explicit format is supplied.
+During ad-hoc inspection at the terminal when readability matters more than machine parsing. It is typically triggered by you want a quick inventory check and do not need to pipe the output into another tool. Read-only list command against IAM service accounts in project `dagflow-poc`. Show the built-in human-friendly table that `gcloud` prints when no explicit format is supplied.
 
-*List the VM inventory using the command's built-in default table.*
+*List the service-account inventory using the command's built-in default table.*
 
 ```bash
-gcloud compute instances list --project=bq-wh-nb
+gcloud iam service-accounts list --project=dagflow-poc
 ```
 
 ```text
-NAME      ZONE            MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP  STATUS
-stoxx-vm  europe-west1-b  e2-medium                  10.132.0.8                RUNNING
+DISPLAY NAME                     EMAIL                                                        DISABLED
+GitHub Actions Deployer          github-actions-deployer@dagflow-poc.iam.gserviceaccount.com  False
+Default compute service account  462383815308-compute@developer.gserviceaccount.com           False
+Terraform Deployer               terraform-deployer@dagflow-poc.iam.gserviceaccount.com       False
 ```
 
 This output is easy to read, but it is not ideal for scripts because the header names, ordering, and spacing belong to the CLI presentation layer rather than to a stable machine contract.
 
 #### Build a custom table projection with transform functions
 
-When the default table is close to useful but you need to choose specific columns or clean up URI-based fields. It is typically triggered by you need a human-readable inventory that includes labels, tags, or URI-derived values the default table does not expose clearly. Read-only list command with a custom `table(...)` projection. The API response is unchanged; only the client-side rendering differs. Produce a readable table that shows exactly the fields you care about and applies transforms inline.
+When the default table is close to useful but you need to choose specific columns or clean up resource-name fields. It is typically triggered by you need a human-readable inventory with fewer columns, better labels, or transformed values. Read-only list command with a custom `table(...)` projection. The API response is unchanged; only the client-side rendering differs. Produce a readable table that shows exactly the fields you care about and applies transforms inline.
 
 > [!info] Projection breakdown
 >
-> - `zone.basename()` trims the full zone URI down to `europe-west1-b`.
-> - `machineType.basename()` trims the full machine-type URI down to `e2-medium`.
-> - `tags.items.list()` collapses the string array into one comma-delimited cell.
-> - `labels.app` and `labels.env` project label values directly into separate columns.
+> - `name.basename():label=EMAIL` trims the full IAM resource name down to the service-account email and relabels the column.
+> - `displayName:label=DISPLAY_NAME` replaces the default heading with an automation-friendly column name.
+> - `disabled.yesno(yes='disabled',no='enabled'):label=STATE` turns the Boolean into an operational state string and relabels the output.
+> - `projectId` and `uniqueId` project stable ownership and identity fields directly into the table.
 
-*Project selected fields into a custom table and transform URI and list fields inline.*
+*Project selected fields into a custom table and transform the full resource name inline.*
 
 ```bash
-gcloud compute instances list --project=bq-wh-nb --format="table(name,zone.basename(),status,machineType.basename(),labels.app,labels.env,tags.items.list())"
+gcloud iam service-accounts list --project=dagflow-poc --format="table(name.basename():label=EMAIL,displayName:label=DISPLAY_NAME,projectId:label=PROJECT,uniqueId:label=UNIQUE_ID,disabled.yesno(yes='disabled',no='enabled'):label=STATE)"
 ```
 
 ```text
-NAME      ZONE            STATUS   MACHINE_TYPE  APP       ENV  ITEMS
-stoxx-vm  europe-west1-b  RUNNING  e2-medium     stoxx-db  dev  iap-ssh,sql-server
+EMAIL                                                        DISPLAY_NAME                     PROJECT      UNIQUE_ID              STATE
+github-actions-deployer@dagflow-poc.iam.gserviceaccount.com  GitHub Actions Deployer          dagflow-poc  108397796108109846813  enabled
+462383815308-compute@developer.gserviceaccount.com           Default compute service account  dagflow-poc  116178860353002034854  enabled
+terraform-deployer@dagflow-poc.iam.gserviceaccount.com       Terraform Deployer               dagflow-poc  111463851582255539946  enabled
 ```
 
-This is the practical form of projections and transforms working together. The API still returned the full URIs and list fields, but the format expression rendered them in a shorter operational view.
+This is the practical form of projections and transforms working together. The API still returned the full service-account resource names and Boolean state, but the format expression rendered them in a shorter operational view.
 
 #### Emit projected JSON for downstream tools
 
 When the next consumer is `jq`, Python, PowerShell JSON parsing, or another programmatic tool. It is typically triggered by you need structured machine-readable output instead of aligned columns or plain strings. Read-only list command. JSON serialization happens client-side after the resource list is returned. Produce a predictable JSON array containing only the requested fields.
 
-*Project the instance list into a reduced JSON payload.*
+*Project the service-account list into a reduced JSON payload.*
 
 ```bash
-gcloud compute instances list --project=bq-wh-nb --format="json(name,status,zone,machineType,networkInterfaces[0].networkIP)"
+gcloud iam service-accounts list --project=dagflow-poc --format="json(name,email,displayName,disabled,projectId,uniqueId)"
 ```
 
 ```text
 [
   {
-    "machineType": "https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/machineTypes/e2-medium",
-    "name": "stoxx-vm",
-    "networkInterfaces": [
-      {
-        "networkIP": "10.132.0.8"
-      }
-    ],
-    "status": "RUNNING",
-    "zone": "https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b"
+    "disabled": false,
+    "displayName": "GitHub Actions Deployer",
+    "email": "github-actions-deployer@dagflow-poc.iam.gserviceaccount.com",
+    "name": "projects/dagflow-poc/serviceAccounts/github-actions-deployer@dagflow-poc.iam.gserviceaccount.com",
+    "projectId": "dagflow-poc",
+    "uniqueId": "108397796108109846813"
+  },
+  {
+    "disabled": false,
+    "displayName": "Default compute service account",
+    "email": "462383815308-compute@developer.gserviceaccount.com",
+    "name": "projects/dagflow-poc/serviceAccounts/462383815308-compute@developer.gserviceaccount.com",
+    "projectId": "dagflow-poc",
+    "uniqueId": "116178860353002034854"
+  },
+  {
+    "disabled": false,
+    "displayName": "Terraform Deployer",
+    "email": "terraform-deployer@dagflow-poc.iam.gserviceaccount.com",
+    "name": "projects/dagflow-poc/serviceAccounts/terraform-deployer@dagflow-poc.iam.gserviceaccount.com",
+    "projectId": "dagflow-poc",
+    "uniqueId": "111463851582255539946"
   }
 ]
 ```
 
-Projected JSON keeps machine-readability without forcing you to accept the full raw resource payload. The nested array under `networkInterfaces` also shows why JSON is often the easiest intermediate format when fields are repeated.
+Projected JSON keeps machine-readability without forcing you to accept the full raw resource payload. It also preserves field names exactly, which is why it is a good handoff format for downstream tooling.
 
 #### Extract scalar values for shell loops and tabular pipelines
 
 When a script needs one or more scalar fields per resource with no headers or formatting decoration. It is typically triggered by you are feeding the output into a loop, `ForEach-Object`, `xargs`, or another CLI stage. Read-only list command with the `value(...)` format. Print a clean row-oriented stream that scripts can consume without stripping headers.
 
-*Emit the instance name and internal IP as a tab-separated value stream.*
+*Emit the service-account email, display name, and disabled flag as a tab-separated value stream.*
 
 ```bash
-gcloud compute instances list --project=bq-wh-nb --format="value(name,networkInterfaces[0].networkIP)"
+gcloud iam service-accounts list --project=dagflow-poc --format="value(email,displayName,disabled)"
 ```
 
 ```text
-stoxx-vm	10.132.0.8
+github-actions-deployer@dagflow-poc.iam.gserviceaccount.com	GitHub Actions Deployer	False
+462383815308-compute@developer.gserviceaccount.com	Default compute service account	False
+terraform-deployer@dagflow-poc.iam.gserviceaccount.com	Terraform Deployer	False
 ```
 
 `value(...)` emits one row per resource and uses tabs between projected fields. That makes it safer for shell automation than parsing a human-readable table.
@@ -328,134 +347,128 @@ stoxx-vm	10.132.0.8
 
 When the result needs to move into a spreadsheet, CSV-aware import tool, or flat-file inventory. It is typically triggered by A consumer outside the CLI expects comma-separated rows with a header line. Read-only list command against IAM service accounts. Serialize selected service account metadata as CSV.
 
-*Export the service account inventory as CSV.*
+*Export the service-account inventory as CSV.*
 
 ```bash
-gcloud iam service-accounts list --project=bq-wh-nb --format="csv(email,displayName,disabled)"
+gcloud iam service-accounts list --project=dagflow-poc --format="csv(email,displayName,disabled)"
 ```
 
 ```text
 email,display name,disabled
-pipeline-state-writer@bq-wh-nb.iam.gserviceaccount.com,Pipeline State Writer,False
-github-actions-sa@bq-wh-nb.iam.gserviceaccount.com,GitHub Actions (git-lab),False
-bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com,BQ WH SA,False
-348557092514-compute@developer.gserviceaccount.com,Compute Engine default service account,False
+github-actions-deployer@dagflow-poc.iam.gserviceaccount.com,GitHub Actions Deployer,False
+462383815308-compute@developer.gserviceaccount.com,Default compute service account,False
+terraform-deployer@dagflow-poc.iam.gserviceaccount.com,Terraform Deployer,False
 ```
 
 CSV is the simplest bridge into spreadsheets or ingestion utilities, but it is still only as stable as the explicit projection you choose. Keep the projection list fixed if downstream tooling depends on column order.
 
 #### Render YAML for configuration review
 
-When you want a compact, review-friendly representation of selected resource fields. It is typically triggered by A human needs to compare resource configuration values or copy a concise configuration snapshot into a ticket or note. Read-only describe command against one VM instance. Serialize selected instance fields in a nested text format that remains easy to diff and read.
+When you want a compact, review-friendly representation of selected resource fields. It is typically triggered by A human needs to compare resource configuration values or copy a concise configuration snapshot into a ticket or note. Read-only describe command against one service account. Serialize selected account fields in a nested text format that remains easy to diff and read.
 
-*Describe selected instance fields in YAML.*
+*Describe selected service-account fields in YAML.*
 
 ```bash
-gcloud compute instances describe stoxx-vm --zone=europe-west1-b --project=bq-wh-nb --format="yaml(name,status,zone,machineType,tags.items,disks[0].boot)"
+gcloud iam service-accounts describe github-actions-deployer@dagflow-poc.iam.gserviceaccount.com --project=dagflow-poc --format="yaml(name,email,displayName,description,oauth2ClientId,projectId,uniqueId,disabled)"
 ```
 
 ```text
-disks:
-- boot: true
-machineType: https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/machineTypes/e2-medium
-name: stoxx-vm
-status: RUNNING
-tags:
-  items:
-  - iap-ssh
-  - sql-server
-zone: https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b
+description: Impersonated by GitHub Actions through Workload Identity Federation
+displayName: GitHub Actions Deployer
+email: github-actions-deployer@dagflow-poc.iam.gserviceaccount.com
+name: projects/dagflow-poc/serviceAccounts/github-actions-deployer@dagflow-poc.iam.gserviceaccount.com
+oauth2ClientId: '108397796108109846813'
+projectId: dagflow-poc
+uniqueId: '108397796108109846813'
 ```
 
-YAML preserves nesting more readably than flattened text while remaining lighter than full JSON for manual review. In this example, the boot-disk flag and tag list remain structurally visible.
+YAML preserves key names readably while remaining lighter than full JSON for manual review. In this example, the account description, OAuth client ID, and immutable identifiers remain easy to scan.
 
 #### Print resource URIs directly
 
 When another command or API call needs the canonical resource URI rather than a short display name. It is typically triggered by you are chaining commands or documenting exact resource identities. Read-only list command with the global `--uri` flag. Emit only canonical resource URIs with no extra presentation formatting.
 
-*Print the instance URI rather than a table of display fields.*
+*Print the service-account URIs rather than a table of display fields.*
 
 ```bash
-gcloud compute instances list --project=bq-wh-nb --uri
+gcloud iam service-accounts list --project=dagflow-poc --uri
 ```
 
 ```text
-https://www.googleapis.com/compute/v1/projects/bq-wh-nb/zones/europe-west1-b/instances/stoxx-vm
+https://iam.googleapis.com/v1/projects/dagflow-poc/serviceAccounts/108397796108109846813
+https://iam.googleapis.com/v1/projects/dagflow-poc/serviceAccounts/116178860353002034854
+https://iam.googleapis.com/v1/projects/dagflow-poc/serviceAccounts/111463851582255539946
 ```
 
 `--uri` is useful when another tool or another `gcloud` command wants the exact resource path. It also makes the "resource URI" concept concrete: this is the canonical identifier the API itself understands.
 
 | Format or flag | Syntax | Description |
 |---|---|---|
-| `table(...)` | `--format="table(name,status)"` | Human-readable aligned table with selected fields. |
-| `json(...)` | `--format="json(name,status)"` | Machine-readable JSON array containing only projected fields. |
-| `value(...)` | `--format="value(name,networkInterfaces[0].networkIP)"` | Headerless scalar or tab-separated row output for scripts. |
+| `table(...)` | `--format="table(email,displayName,disabled)"` | Human-readable aligned table with selected fields. |
+| `json(...)` | `--format="json(email,displayName,disabled)"` | Machine-readable JSON array containing only projected fields. |
+| `value(...)` | `--format="value(email,displayName,disabled)"` | Headerless scalar or tab-separated row output for scripts. |
 | `csv(...)` | `--format="csv(email,displayName,disabled)"` | Comma-separated output with a header row. |
-| `yaml(...)` | `--format="yaml(name,status,tags.items)"` | Nested YAML for human review or text diffing. |
-| `flattened(...)` | `--format="flattened(labels,tags.items)"` | Dot-path key/value output for nested-field discovery. |
-| `--uri` | `gcloud compute instances list --uri` | Print canonical resource URIs instead of a formatted table. |
+| `yaml(...)` | `--format="yaml(name,email,displayName,uniqueId)"` | Nested YAML for human review or text diffing. |
+| `flattened(...)` | `--format="flattened(bindings)"` | Dot-path key/value output for nested-field discovery. |
+| `--uri` | `gcloud iam service-accounts list --uri` | Print canonical resource URIs instead of a formatted table. |
 
 ### gcloud | discover nested keys and transform complex fields
 
-Nested arrays and nested objects are where most `gcloud` formatting confusion starts. `flattened(...)` helps you discover exact field paths, and transform functions help you turn awkward raw values such as URIs or repeated arrays into compact operational output.
+Nested arrays and nested objects are where most `gcloud` formatting confusion starts. `flattened(...)` helps you discover exact field paths, and transform functions help you turn repeated values such as IAM member arrays into compact operational output.
 
 | Field or function | Type | Meaning |
 |---|---|---|
-| `labels` | object | Resource key/value metadata labels. |
-| `tags.items` | string array | Network tags attached to the instance. |
-| `serviceAccounts[]` | object array | Service accounts attached to the instance. |
-| `serviceAccounts[0].email` | string | Email of the first attached service account. |
-| `serviceAccounts[0].scopes[0]` | URI | Full OAuth scope URI granted to that service account. |
-| `.basename()` | transform | Returns the last segment of a URI. |
+| `bindings[]` | object array | IAM policy bindings returned by `get-iam-policy`. |
+| `bindings.role` | string | IAM role attached to one binding. |
+| `bindings.members[]` | string array | Principals attached to one binding. |
+| `bindings.members[0]` | string | First principal in the binding. |
 | `.list()` | transform | Joins an array into one delimited printable value. |
+| `.basename()` | transform | Returns the last segment of a resource path. |
 | `.date()` | transform | Renders timestamps with a chosen format or timezone. |
 | `.yesno()` | transform | Converts Boolean values to `yes` or `no`. |
-| `.scope()` | transform | Extracts a named scope segment from a resource URI. |
+| `.scope()` | transform | Extracts a named scope segment from a resource URI when applicable. |
 
 #### Flatten nested fields to learn the projection paths
 
-When you do not yet know the exact nested field path you need for `table(...)`, `json(...)`, or `value(...)`. It is typically triggered by A default table hides nested labels, tags, service accounts, or list elements. Read-only describe command with the `flattened(...)` format. It changes presentation only. Reveal the concrete dot-path keys that later projections can reference directly.
+When you do not yet know the exact nested field path you need for `table(...)`, `json(...)`, or `value(...)`. It is typically triggered by A policy or resource contains repeated arrays that the default output hides or condenses. Read-only IAM policy command with the `flattened(...)` format. It changes presentation only. Reveal the concrete dot-path keys that later projections can reference directly.
 
-*Flatten selected nested fields from the instance description.*
+*Flatten one filtered IAM policy binding to reveal the nested member paths.*
 
 ```bash
-gcloud compute instances describe stoxx-vm --zone=europe-west1-b --project=bq-wh-nb --format="flattened(labels,tags.items,serviceAccounts[])"
+gcloud projects get-iam-policy dagflow-poc --flatten="bindings[]" --filter="bindings.role:roles/run.admin" --format="flattened(bindings)"
 ```
 
 ```text
-labels.app:                   stoxx-db
-labels.env:                   dev
-serviceAccounts[0].email:     bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com
-serviceAccounts[0].scopes[0]: https://www.googleapis.com/auth/cloud-platform
-tags.items[0]:                iap-ssh
-tags.items[1]:                sql-server
+bindings.members[0]: serviceAccount:github-actions-deployer@dagflow-poc.iam.gserviceaccount.com
+bindings.members[1]: serviceAccount:terraform-deployer@dagflow-poc.iam.gserviceaccount.com
+bindings.role:       roles/run.admin
 ```
 
-This is the most practical discovery output in the note. It exposes the exact paths later used in projections such as `labels.app`, `tags.items.list()`, and `serviceAccounts[0].email`.
+This is the most practical discovery output in the note. It exposes the exact paths later used in projections such as `bindings.role` and `bindings.members.list()`.
 
 #### Transform nested values after the paths are known
 
-After field discovery, when you need a short printable value rather than the raw nested URI or array element. It is typically triggered by the projected value is technically correct but too verbose for terminal output or scripting. Read-only describe command with a `value(...)` projection and an inline transform. Show how discovered nested fields can be shortened into operationally useful scalar output.
+After field discovery, when you need a short printable value rather than the raw array layout. It is typically triggered by the projected value is technically correct but too verbose for terminal output or scripting. Read-only IAM policy command with a `value(...)` projection and an inline transform. Show how discovered nested fields can be shortened into operationally useful scalar output.
 
-*Project the attached service account email and trim its OAuth scope URI to the final segment.*
+*Project the filtered IAM role and collapse its member array into one scalar field.*
 
 ```bash
-gcloud compute instances describe stoxx-vm --zone=europe-west1-b --project=bq-wh-nb --format="value(serviceAccounts[0].email,serviceAccounts[0].scopes[0].basename())"
+gcloud projects get-iam-policy dagflow-poc --flatten="bindings[]" --filter="bindings.role:roles/run.admin" --format="value(bindings.role,bindings.members.list())"
 ```
 
 ```text
-bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com	cloud-platform
+roles/run.admin	serviceAccount:github-actions-deployer@dagflow-poc.iam.gserviceaccount.com,serviceAccount:terraform-deployer@dagflow-poc.iam.gserviceaccount.com
 ```
 
-Without `.basename()`, the second field would be the full scope URI. With the transform, the value becomes the operationally meaningful suffix `cloud-platform`.
+Without `.list()`, the second field would remain a repeated array in the raw policy structure. With the transform, the member list becomes one compact scalar that is easy to log or pass downstream.
 
 | Transform | Syntax | Description |
 |---|---|---|
-| `.basename()` | `zone.basename()` | Returns the final URI segment, such as `europe-west1-b`. |
-| `.list()` | `tags.items.list()` | Joins array elements into one printable list cell. |
+| `.basename()` | `name.basename()` | Returns the final resource-path segment, such as a service-account email. |
+| `.list()` | `bindings.members.list()` | Joins array elements into one printable list cell. |
 | `.date()` | `creationTimestamp.date(tz=LOCAL)` | Renders a timestamp in a chosen timezone or format. |
 | `.yesno()` | `deletionProtection.yesno()` | Converts Boolean values to `yes` or `no`. |
-| `.scope()` | `selfLink.scope(zones)` | Extracts a named scope segment from a resource URI. |
+| `.scope()` | `selfLink.scope(zones)` | Extracts a named scope segment from a resource URI when the field is URI-shaped. |
 
 ### gcloud | filter before you format
 
@@ -471,71 +484,78 @@ Filtering and formatting solve different problems and should be combined deliber
 
 | Field | Type | Meaning |
 |---|---|---|
-| `status` | enum-like string | Instance lifecycle state used in Compute Engine list filters. |
-| `name` | string | Resource name, commonly filtered with substring or regex operators. |
 | `email` | string | Service account email used for IAM list filters. |
 | `displayName` | string | Human-readable service account name. |
 | `disabled` | boolean | Service account enabled or disabled state. |
+| `config.name` | string | Canonical API service name used in Service Usage filters. |
+| `config.title` | string | Human-readable API title used in Service Usage filters. |
 
-#### Filter the instance list to the running stoxx VM
+#### Filter the service-account list to deployer identities
 
-When you already know the resource family and want to reduce the result set before inspecting it. It is typically triggered by the unfiltered list would include more resources than the current operational question needs. Read-only Compute Engine list command with a filter expression. Return only the instance rows that match the requested name pattern and runtime state.
+When you already know the resource family and want to reduce the result set before inspecting it. It is typically triggered by the unfiltered list would include more resources than the current operational question needs. Read-only IAM service-account list command with a filter expression. Return only the account rows that match the requested pattern.
 
-*Filter the instance list to resources named like `stoxx` that are currently running.*
+*Filter the service-account list to identities whose email contains `deployer`.*
 
 ```bash
-gcloud compute instances list --project=bq-wh-nb --filter="name:stoxx AND status=RUNNING"
+gcloud iam service-accounts list --project=dagflow-poc --filter="email:deployer"
 ```
 
 ```text
-NAME      ZONE            MACHINE_TYPE  PREEMPTIBLE  INTERNAL_IP  EXTERNAL_IP  STATUS
-stoxx-vm  europe-west1-b  e2-medium                  10.132.0.8                RUNNING
+DISPLAY NAME             EMAIL                                                        DISABLED
+GitHub Actions Deployer  github-actions-deployer@dagflow-poc.iam.gserviceaccount.com  False
+Terraform Deployer       terraform-deployer@dagflow-poc.iam.gserviceaccount.com       False
 ```
 
-The filter kept only the one VM that matches both conditions. This is the same inventory command as before, but now the selection logic is explicit and machine-reproducible.
+The filter kept only the two deployer identities. This is the same inventory command as before, but now the selection logic is explicit and machine-reproducible.
 
 #### Combine filtering with scalar output for automation
 
-When a script needs only the filtered subset and only a few scalar fields from that subset. It is typically triggered by you are turning the filtered result into a downstream loop, SSH target list, or inventory file. Read-only Compute Engine list command combining `--filter` with `value(...)`. Produce the minimum viable machine-readable output for a filtered resource subset.
+When a script needs only the filtered subset and only a few scalar fields from that subset. It is typically triggered by you are turning the filtered result into a downstream loop, inventory file, or access-review check. Read-only IAM service-account list command combining `--filter` with `value(...)`. Produce the minimum viable machine-readable output for a filtered resource subset.
 
-*Filter the running stoxx instance and emit only name, zone, and machine type.*
+*Filter the deployer accounts and emit only email and display name.*
 
 ```bash
-gcloud compute instances list --project=bq-wh-nb --filter="name:stoxx AND status=RUNNING" --format="value(name,zone.basename(),machineType.basename())"
+gcloud iam service-accounts list --project=dagflow-poc --filter="email:deployer" --format="value(email,displayName)"
 ```
 
 ```text
-stoxx-vm	europe-west1-b	e2-medium
+github-actions-deployer@dagflow-poc.iam.gserviceaccount.com	GitHub Actions Deployer
+terraform-deployer@dagflow-poc.iam.gserviceaccount.com	Terraform Deployer
 ```
 
-This is the stable scripting form of the same query. The resource selection happens first, and the remaining row is reduced to three tab-separated scalars.
+This is the stable scripting form of the same query. The resource selection happens first, and the remaining rows are reduced to tab-separated scalars.
 
-#### Filter service accounts and format the reduced result
+#### Filter enabled services and format the reduced result
 
-When you need a targeted IAM inventory instead of the full account list. It is typically triggered by you care about one subset of service accounts, such as CI identities or a specific application identity. Read-only IAM service account list command. The filter expression is applied to the list result before formatting. Narrow the service account inventory to matching identities and print only the requested metadata columns.
+When you need a targeted API inventory instead of the full enabled-service list. It is typically triggered by you care about one subset of services, such as the BigQuery surface or storage APIs. Read-only Service Usage list command. The filter expression is applied to the list result before formatting. Narrow the enabled-service inventory to matching APIs and print only the requested metadata columns.
 
-*Filter the service account list to the GitHub Actions and warehouse identities.*
+*Filter the enabled services to the BigQuery family and print only name and title.*
 
 ```bash
-gcloud iam service-accounts list --project=bq-wh-nb --filter="email:github-actions-sa OR email:bq-wh-sa" --format="table(email,displayName,disabled)"
+gcloud services list --enabled --project=dagflow-poc --filter="config.title:BigQuery" --format="table(config.name,config.title)"
 ```
 
 ```text
-EMAIL                                               DISPLAY NAME              DISABLED
-github-actions-sa@bq-wh-nb.iam.gserviceaccount.com  GitHub Actions (git-lab)  False
-bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com           BQ WH SA                  False
+NAME                                 TITLE
+bigquery.googleapis.com              BigQuery API
+bigqueryconnection.googleapis.com    BigQuery Connection API
+bigquerydatapolicy.googleapis.com    BigQuery Data Policy API
+bigquerydatatransfer.googleapis.com  BigQuery Data Transfer API
+bigquerymigration.googleapis.com     BigQuery Migration API
+bigqueryreservation.googleapis.com   BigQuery Reservation API
+bigquerystorage.googleapis.com       BigQuery Storage API
 ```
 
-This is the pattern you want in access reviews: explicit selection logic plus explicit output columns. Nothing else from the IAM inventory leaks into the result.
+This is the pattern you want in automation and reviews: explicit selection logic plus explicit output columns. Nothing else from the enabled-service inventory leaks into the result.
 
 | Flag or operator | Syntax | Description |
 |---|---|---|
-| `--filter` | `--filter="status=RUNNING"` | Applies a filter expression to list results. |
-| `=` | `status=RUNNING` | Exact equality comparison. |
-| `:` | `name:stoxx` | Pattern or substring-style match in the filter language. |
-| `~` | `name~'^stoxx-.*'` | Regular-expression match. |
-| `AND` | `status=RUNNING AND name:stoxx` | Both terms must match. |
-| `OR` | `email:bq-wh-sa OR email:github-actions-sa` | Either term may match. |
+| `--filter` | `--filter="email:deployer"` | Applies a filter expression to list results. |
+| `=` | `disabled=False` | Exact equality comparison. |
+| `:` | `email:deployer` | Pattern or substring-style match in the filter language. |
+| `~` | `email~'.*-deployer@.*'` | Regular-expression match. |
+| `AND` | `disabled=False AND email:deployer` | Both terms must match. |
+| `OR` | `email:github-actions OR email:terraform-deployer` | Either term may match. |
 | `NOT` | `NOT disabled` | Negates the following term or expression. |
 | `--limit` | `--limit=10` | Restricts the number of listed resources after sort and filter processing. |
 | `--sort-by` | `--sort-by=name` | Sorts list results by one or more fields before the final output is printed. |

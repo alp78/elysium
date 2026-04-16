@@ -18,8 +18,10 @@ mindmap
 ```
 
 > [!abstract]- [[01-dbt-core-concepts]]
+>
 
 > [!abstract]- [[02-dbt-project-structure]]
+>
 
 > [!abstract]- [[03-dbt-cli-reference]]
-
+>

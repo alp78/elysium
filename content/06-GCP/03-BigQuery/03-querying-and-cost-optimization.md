@@ -8,7 +8,7 @@ tags:
 aliases: [BigQuery cost optimization, bq query, BigQuery dry run, BigQuery caching, BigQuery SELECT star cost, BQ cost]
 description: "How to run BigQuery queries efficiently using the bq CLI — including dry runs for cost estimation, parameterized queries for caching, destination tables, and the 80/20 cost optimization practices."
 created: 2026-03-22
-updated: 2026-04-12
+updated: 2026-04-15
 status: complete
 ---
 
@@ -21,7 +21,7 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers BigQuery query execution and scan-cost control with `bq query`, dry runs, destination tables, parameterized caching, query guardrails, and pricing telemetry so you can run GoogleSQL from the CLI without accidentally turning broad scans into recurring spend.
+> Documents BigQuery query execution and scan-cost control with `bq query`, dry runs, destination tables, parameterized caching, query guardrails, and pricing telemetry so you can run GoogleSQL from the CLI without accidentally turning broad scans into recurring spend.
 >
 > **Running queries**
 > - Prerequisites: enable `bigquery.googleapis.com`, grant `roles/bigquery.jobUser` plus `roles/bigquery.dataViewer`, and authenticate with `gcloud auth application-default login` or `GOOGLE_APPLICATION_CREDENTIALS`
@@ -45,6 +45,12 @@ status: complete
 > - When to use: ad hoc CLI querying, exploratory analysis, automated query guardrails, cost review, and user-level spend attribution
 > - Warnings: legacy SQL remains available unless you disable it, `SELECT *` scales cost with every scanned column, wrapping partition columns in functions disables pruning, cached results are bypassed by common conditions, and unbounded queries need byte caps
 > - Recommendations: dry-run first, keep byte caps on exploratory workloads, enumerate columns explicitly, combine partitioning with clustering, and use materialized views only when a few minutes of staleness fits the SLA
+
+> [!warning] Live-run boundary
+>
+> The original `stoxx_*` BigQuery datasets referenced throughout this note lived in `bq-wh-nb`, which is now deleted. This refresh reran only read-only query examples against `bigquery-public-data.samples.shakespeare`, using `dagflow-poc` as the billing and job project.
+>
+> Any state-changing examples below, especially `--destination_table`, remain historical operator patterns and were not rerun without a writable warehouse target.
 >
 > [!note]- Glossary
 >
@@ -270,6 +276,22 @@ The `bq` command-line tool is the primary interface for running BigQuery queries
 
 `bq query` runs a SQL query and prints results to stdout. By default the result is formatted as a table and the job runs as an interactive query with a 6-hour timeout. Fully-qualified table names require backtick notation: `` `project.dataset.table` ``.
 
+> [!info] Current live query validation
+>
+> A live `bq --project_id=dagflow-poc query --use_legacy_sql=false "SELECT word, word_count FROM \`bigquery-public-data.samples.shakespeare\` WHERE corpus = 'hamlet' ORDER BY word_count DESC LIMIT 5"` run on `2026-04-15` returned:
+>
+> ```text
+> +------+------------+
+> | word | word_count |
+> +------+------------+
+> | the  |        995 |
+> | and  |        706 |
+> | to   |        635 |
+> | of   |        630 |
+> | I    |        546 |
+> +------+------------+
+> ```
+
 #### Count all rows in a table
 
 Any time you need a quick sanity check on table size after a load or migration. It is typically triggered by first interaction with a new or unfamiliar table. `bq` CLI, requires `roles/bigquery.jobUser` + `roles/bigquery.dataViewer`. Read-only — no table mutation. Confirm the table is populated and get a baseline row count.
@@ -323,6 +345,10 @@ bq query --use_legacy_sql=false \
 ### bq CLI | bq query --dry_run | estimate cost before executing
 
 A dry run returns the estimated bytes to be scanned without executing or billing. The cost formula is `bytes / 1,099,511,627,776 * $6.25`. Without a `WHERE` clause on a partitioned column, the same table can estimate orders of magnitude more bytes — always add partition filters before executing.
+
+> [!info] Current live dry-run validation
+>
+> A live dry run against the same public table returned: `Query successfully validated. Assuming the tables are not modified, running this query will process 5114816 bytes of data.` This is a useful current reminder that dry runs still expose byte estimates even when you do not have a private demo dataset available.
 
 #### Dry-run a filtered column projection
 

@@ -8,13 +8,14 @@ aliases: [GCP connectivity, gcloud compute ssh, bq query, Cloud Run, Airflow IAP
 keywords: [GCP connectivity, gcloud compute ssh, gcloud compute scp, bq query, bigquery client, Cloud Run, Airflow webserver, Datadog agent, IAP tunnel, pymssql, pyodbc, sqlcmd, SSMS, Invoke-Sqlcmd, GCS, BigQuery API, connection matrix, service account, application default credentials]
 description: "Complete guide to connecting to every GCP resource type: SSH to Compute Engine VMs, SQL Server via IAP tunnel, BigQuery direct API, Cloud Run HTTPS, Airflow webserver, and Datadog agent. Includes a connection quick reference matrix."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-15
 status: complete
 ---
 
 # Connecting to GCP Resources
 
-> [!quote]
+> [!quote] Ellison on cloud
+>
 > "The interesting thing about cloud computing is that we've redefined cloud computing to include everything that we already do."
 >
 > — **Larry Ellison**, Oracle analyst conference (2008)

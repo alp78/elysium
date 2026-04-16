@@ -10,7 +10,8 @@ description: "Linux and PowerShell commands for monitoring memory, CPU, and disk
 
 # System Resources — Memory, CPU, and Disk I/O
 
-> [!quote]
+> [!quote] Cray on systems
+>
 > "Anyone can build a fast CPU. The trick is to build a fast system."
 >
 > — **Seymour Cray**, attributed remark (c. 1980s)

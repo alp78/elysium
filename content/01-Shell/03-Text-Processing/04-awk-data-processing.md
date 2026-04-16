@@ -8,13 +8,14 @@ aliases: [awk, gawk, mawk, field processing, column extraction, text transformat
 keywords: [awk, gawk, mawk, field separator, record separator, NR, NF, BEGIN, END, print, printf, gsub, sub, gensub, match, split, substr, tolower, toupper, associative array, getline, FNR, OFS, ORS, RS, FS, pattern-action, csv parsing, log parsing, data aggregation, group-by, running total, pivot, text processing, shell scripting, PowerShell equivalent, Import-Csv, ConvertFrom-Csv, Select-Object, Where-Object, Measure-Object, ForEach-Object, data engineering, ETL, column extraction, delimiter conversion, TSV, pipe-delimited, user-defined functions, POSIX character classes, next, nextfile, output redirection, rand, srand, int, sqrt]
 description: "Executable awk/gawk reference for data engineers with verified Linux and PowerShell demonstrations for field extraction, filtering, aggregation, transformations, and troubleshooting."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
 # awk — Data Processing
 
-> [!quote]
+> [!quote] Kernighan on awk
+>
 > "The goal was to see how much of programming we could stuff into one line."
 >
 > — **Brian Kernighan** (co-creator of awk)

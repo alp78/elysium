@@ -8,10 +8,11 @@ description: "GitHub Actions CI with slim builds and manifest diffing, Workload 
 
 # dbt: CI/CD
 
-> [!quote]
+> [!quote] Integrate early, fail cheaply
+>
 > "The longer you wait to integrate, the more it costs and the more unpredictable the cost becomes."
 >
-> — **Mary Poppendieck**, *Lean Software Development* (2003)
+> Source: Mary Poppendieck | *Lean Software Development* (2003)
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "GitHub Actions CI with slim builds and manifest diffing, Workload 
 > - Warnings: stale manifest state, over-broad cloud credentials, CI that rebuilds too much or too little, pre-commit checks that diverge from hosted CI, and Airflow deployment patterns that make rollback or reproducibility unclear
 > - Recommendations: keep artifacts versioned and explicit, prefer keyless auth, validate only the affected subgraph where possible, align local hooks with hosted CI, and choose a deployment path that makes runtime state observable and repeatable
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **CI/CD**
 > - The automation path that validates dbt changes before merge and promotes approved code into production execution environments.
@@ -153,8 +154,7 @@ description: "GitHub Actions CI with slim builds and manifest diffing, Workload 
 > >
 > > Fast promotion without a clear rollback story is just accelerated risk. Delivery pipelines should make the reverse move understandable as well as the forward one.
 
-
-### dbt CI Goals
+## dbt CI Goals
 
 | Goal | Mechanism |
 |------|-----------|
@@ -166,7 +166,7 @@ description: "GitHub Actions CI with slim builds and manifest diffing, Workload 
 
 ---
 
-### dbt Slim Build: State-Based Selection
+## dbt Slim Build: State-Based Selection
 
 dbt compares the current project against a previously compiled manifest (`manifest.json`) and selects only the nodes that changed or depend on changed nodes.
 
@@ -188,7 +188,7 @@ dbt build \
 
 > [!tip] State-modified CI optimization
 >
-> `state:modified+` is the single biggest CI cost-saver for large projects. A 300-model ESG project may touch only 4-8 models per PR, so CI runs in 2-3 minutes instead of 45.
+> `state:modified+` is one of the biggest CI cost-savers for large projects. A 300-model ESG project may touch only a small subgraph per PR, so CI stays fast without giving up dependency awareness.
 
 ---
 
@@ -287,9 +287,9 @@ repos:
   - repo: local
     hooks:
       - id: dbt-compile
-        name: dbt compile (changed files only)
+        name: dbt parse
         language: system
-        entry: bash -c 'dbt compile --target dev --select state:modified'
+        entry: bash -c 'dbt parse --target dev'
         pass_filenames: false
         files: ^models/
 ```
@@ -301,9 +301,9 @@ pip install pre-commit sqlfluff
 pre-commit install
 ```
 
-> [!note] Pre-commit hook requirements
+> [!info] Pre-commit hook requirements
 >
-> `dbt compile` in the pre-commit hook requires a working `profiles.yml` pointing at a dev target. Use environment variables so the hook works on every developer's machine without checking in credentials.
+> A local `dbt parse` or `dbt compile` hook still requires a working `profiles.yml` and a reachable dev target when the command touches adapter context. Use environment variables so the hook works on each developer's machine without checking credentials into git, and keep state-aware selection in hosted CI where the production manifest is available.
 
 ---
 

@@ -8,10 +8,11 @@ description: "dbt docs generate, exposures, lineage graph, static hosting on GCS
 
 # dbt: Documentation and Lineage
 
-> [!quote]
+> [!quote] Grain and documentation discipline
+>
 > "The grain declaration becomes a binding contract on the design."
 >
-> — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
+> Source: Ralph Kimball | *The Data Warehouse Toolkit* (2013)
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "dbt docs generate, exposures, lineage graph, static hosting on GCS
 > - Warnings: undocumented published models, stale generated docs, missing exposures, lineage gaps from hard-coded relations, and externally hosted docs that drift from the actual project state
 > - Recommendations: generate docs from CI, keep descriptions close to code, register exposures for real consumers, and treat docs hosting and versioning as part of the production analytical surface
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **dbt docs**
 > - The generated documentation site built from dbt project metadata, model SQL, tests, sources, and lineage information.
@@ -152,7 +153,6 @@ description: "dbt docs generate, exposures, lineage graph, static hosting on GCS
 > > [!warning] Trust requires traceability
 > >
 > > In high-stakes reporting, consumers do not just need a table name. They need to know how it was built, what it depends on, and where to inspect the logic behind it.
-
 
 ## Generating and Serving Docs
 
@@ -339,7 +339,7 @@ exposures:
       email: reg-reporting@example.com
 ```
 
-> [!note] Exposures for impact analysis
+> [!info] Exposures for impact analysis
 >
 > Exposures are the primary mechanism for impact analysis. Before changing `fct_esg_scores`, the lineage graph immediately shows that three high-maturity consumers will be affected.
 

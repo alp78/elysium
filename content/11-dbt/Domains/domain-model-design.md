@@ -19,9 +19,13 @@ mindmap
 ```
 
 > [!abstract]- [[01-dbt-staging-models]]
+>
 
 > [!abstract]- [[02-dbt-intermediate-models]]
+>
 
 > [!abstract]- [[03-dbt-mart-models]]
+>
 
 > [!abstract]- [[04-dbt-materializations]]
+>

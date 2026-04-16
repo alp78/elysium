@@ -4,7 +4,7 @@ tags: [gcp, gcloud, authentication]
 aliases: [gcloud auth, GCP authentication, Application Default Credentials, ADC, gcloud login, Workload Identity Federation, WIF, OIDC authentication, keyless authentication]
 description: "How GCP authentication works with gcloud CLI: interactive login, Application Default Credentials (ADC), service account key files, Workload Identity Federation (WIF), and the credential search order that client libraries follow."
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-15
 status: complete
 ---
 
@@ -15,10 +15,16 @@ status: complete
 > "Passwords are like underwear: you don't let people see it, you should change it very often, and you shouldn't share it with strangers."
 >
 > — **Chris Pirillo**
+
 > [!abstract]- Summary
+>
 > GCP authentication in `gcloud` is built around short-lived OAuth 2.0 tokens, but the operational path differs by identity type and runtime. This note separates interactive user login, Application Default Credentials (ADC), service account authentication, service account impersonation, and Workload Identity Federation (WIF) so you can tell which credential source a CLI command or client library is actually using.
 >
-> It also traces the ADC search order, shows how `gcloud auth` commands populate different local stores, and explains why metadata-backed or federated credentials are safer than long-lived key files. The examples use the live project `bq-wh-nb`, including the `github-actions` workload identity pool, the `github` OIDC provider, and the target service account `github-actions-sa@bq-wh-nb.iam.gserviceaccount.com`, with runnable WIF commands executed on April 13, 2026 using Google Cloud SDK `563.0.0`.
+> It also traces the ADC search order, shows how `gcloud auth` commands populate different local stores, and explains why metadata-backed or federated credentials are safer than long-lived key files. On April 15, 2026, the local credential-inspection examples in this note were refreshed live on this workstation. The project-specific WIF walkthrough still references the original `bq-wh-nb` setup and is retained as historical operator reference rather than as a freshly rerun demo.
+
+> [!warning] Federation context drift
+>
+> The local `gcloud auth list` and token-inspection commands below were refreshed live on April 15, 2026. The `bq-wh-nb` workload identity pool, provider, and service-account examples remain documented patterns from the original setup and were not re-executed during this pass because the underlying demo project is no longer a healthy live baseline.
 
 > [!note]- Glossary
 > **OAuth 2.0**
@@ -257,8 +263,8 @@ gcloud auth list
 ```text
                          Credentialed Accounts
 ACTIVE  ACCOUNT
-*       you@example.com
-        other@example.com
+*       alexper.recovery@gmail.com
+        bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com
 
 To set the active account, run:
     $ gcloud config set account `ACCOUNT`
@@ -273,8 +279,10 @@ gcloud auth print-access-token
 ```
 
 ```text
-ya29.A0ARrdaM_...Zx9Q
+ya29.a0Aa7MY...<redacted>
 ```
+
+The token was captured live and then redacted in the note because bearer tokens are immediately reusable secrets.
 
 Pass the token directly to REST API calls:
 

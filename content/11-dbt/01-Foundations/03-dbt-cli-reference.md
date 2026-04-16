@@ -8,10 +8,11 @@ description: "CLI commands, node selection, flags, output interpretation"
 
 # dbt: CLI Reference
 
-> [!quote]
+> [!quote] Iterative CLI discipline
+>
 > "Make it work, make it right, make it fast."
 >
-> — **Kent Beck**
+> Source: Kent Beck
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "CLI commands, node selection, flags, output interpretation"
 > - Warnings: running broad selectors against the wrong target, misunderstanding `build` versus `run && test`, rebuilding incrementals unintentionally, and using state or defer flags without the correct artifact context
 > - Recommendations: default to the narrowest selector that answers the question, use `dbt debug` and `dbt compile` before expensive runs, prefer `dbt build` in CI, and treat selector syntax as a control surface rather than a convenience shortcut
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **`dbt run`**
 > - The CLI command that materializes selected models into the warehouse.
@@ -183,8 +184,7 @@ description: "CLI commands, node selection, flags, output interpretation"
 > >
 > > Retry saves time only when the previous invocation context is still valid. If the target, code, or upstream state has changed, a fresh scoped command is usually safer.
 
-
-### Core Commands Overview
+## Core Commands Overview
 
 | Command | What it does |
 |---|---|
@@ -205,9 +205,11 @@ description: "CLI commands, node selection, flags, output interpretation"
 
 ---
 
-### dbt run
+## dbt run
 
 Materialise one or more models into the warehouse.
+
+*These `dbt run` examples show how selector scope, state artifacts, and execution flags change the blast radius of a warehouse write.*
 
 ```bash
 # Run everything
@@ -255,7 +257,9 @@ dbt run --select fct_index_performance --full-refresh
 
 ---
 
-### dbt test
+## dbt test
+
+*These `dbt test` examples narrow execution by layer, model, and test type so data-quality checks stay targeted and cheap.*
 
 ```bash
 # Test everything
@@ -285,9 +289,11 @@ dbt test --no-fail-fast
 
 ---
 
-### dbt build
+## dbt build
 
 `dbt build` is the recommended command for CI/CD. It runs seeds, snapshots, models, and tests in DAG-topological order, so a model is tested before its downstream models execute.
+
+*These `dbt build` examples cover full runs, slim CI selection, and broad rebuild scenarios that should be used deliberately.*
 
 ```bash
 # Full build
@@ -299,18 +305,28 @@ dbt build --select +fct_composite_scores
 # Build only changed nodes and downstream (slim CI pattern)
 dbt build --select state:modified+ --defer --state ./prod_artifacts
 
+# Validate the selected graph without reading full source volumes
+dbt build --empty --select +fct_index_performance
+
 # Build with full refresh for incremental models
 dbt build --full-refresh --select tag:incremental
 ```
 
-> [!TIP] build vs run + test
+> [!tip] Build vs run plus test
+>
 > `dbt build` guarantees that if `stg_esg__scores` tests fail, the downstream `int_esg_normalized` will never execute. `dbt run && dbt test` runs all models first, so failures propagate into downstream data before you discover them.
+
+> [!info] Use `--empty` for cheap graph validation
+>
+> Current dbt docs expose `dbt build --empty` as a schema-only dry run. It still compiles and executes selected models against the warehouse, but it limits refs and sources to zero rows so you can validate dependency wiring and relation creation logic without paying for full input scans.
 
 ---
 
-### dbt compile
+## dbt compile
 
 Renders Jinja templates to plain SQL without executing anything. Useful for debugging macro output.
+
+*These compile examples render model SQL into the target artifacts directory so you can inspect the exact statement dbt plans to run.*
 
 ```bash
 # Compile everything
@@ -323,9 +339,11 @@ dbt compile --select int_daily_returns
 
 ---
 
-### dbt debug
+## dbt debug
 
 Validates that dbt can connect to the warehouse and that `dbt_project.yml` parses correctly.
+
+*`dbt debug` checks profile resolution, target selection, adapter connectivity, and project parsing before you spend time on a real build.*
 
 ```bash
 dbt debug
@@ -335,13 +353,17 @@ dbt debug
 
 ---
 
-### dbt deps
+## dbt deps
 
 Installs packages declared in `packages.yml`.
+
+*Run `dbt deps` before compilation when package versions or macros may have changed between environments.*
 
 ```bash
 dbt deps
 ```
+
+*This `packages.yml` example pins dependency ranges so installs stay within a reviewed compatibility window instead of drifting to arbitrary major versions.*
 
 ```yaml
 # packages.yml
@@ -356,9 +378,11 @@ packages:
 
 ---
 
-### dbt seed
+## dbt seed
 
 Loads CSV files from the `seeds/` directory into the warehouse.
+
+*These seed commands cover routine loads and the rebuild path you need after a schema change or corrected reference file.*
 
 ```bash
 # Load all seeds
@@ -382,9 +406,11 @@ Typical seeds for a financial platform:
 
 ---
 
-### dbt snapshot
+## dbt snapshot
 
 Executes snapshot definitions to capture SCD Type 2 history.
+
+*These snapshot commands run either the full snapshot set or a named temporal capture when you need to isolate one history-bearing resource.*
 
 ```bash
 # Run all snapshots
@@ -393,6 +419,8 @@ dbt snapshot
 # Run a specific snapshot
 dbt snapshot --select snap_index_constituents
 ```
+
+*This snapshot definition tracks row history by timestamp and invalidates hard deletes so point-in-time analyses can distinguish active from retired records.*
 
 ```sql
 -- snapshots/snap_index_constituents.sql
@@ -420,7 +448,9 @@ from {{ ref('stg_market_data__index_constituents') }}
 
 ---
 
-### dbt docs
+## dbt docs
+
+*These docs commands generate the catalog artifacts first and then optionally serve the site locally for model and lineage review.*
 
 ```bash
 # Generate the docs site (writes to target/catalog.json + manifest.json)
@@ -437,9 +467,11 @@ Documentation is pulled from `description:` fields in `.yml` files and rendered 
 
 ---
 
-### dbt source freshness
+## dbt source freshness
 
 Checks whether source tables have been updated within the configured freshness window.
+
+*These freshness commands cover default monitoring, scoped source checks, and artifact output for downstream alerting systems.*
 
 ```bash
 # Check all sources
@@ -456,9 +488,11 @@ Exit codes: `0` = pass, `1` = warn, `2` = error. Wire `2` into your alerting sys
 
 ---
 
-### dbt ls (list)
+## dbt ls (list)
 
 List DAG nodes without executing anything.
+
+*`dbt ls` is the safest way to confirm selector scope before you run a command that writes warehouse state.*
 
 ```bash
 # List all models
@@ -479,9 +513,11 @@ dbt ls --output json --select tag:daily
 
 ---
 
-### dbt clean
+## dbt clean
 
 Deletes compiled artifacts and installed packages. Run before a fresh `dbt deps`.
+
+*`dbt clean` removes generated artifacts so you can force a dependency reinstall or clear stale compiled output.*
 
 ```bash
 dbt clean
@@ -490,15 +526,21 @@ dbt clean
 
 ---
 
-### dbt retry
+## dbt retry
 
 Re-runs the last failed invocation using the same selection and flags. Useful in CI when a transient network error causes a single model failure.
+
+*`dbt retry` only helps after a prior run has already executed nodes and written run results for dbt to replay from the point of failure.*
 
 ```bash
 dbt retry
 ```
 
 Internally, dbt reads `target/run_results.json` and re-queues all nodes that did not have status `success`.
+
+> [!warning] Retry can be a no-op
+>
+> If the failed command stopped before any nodes executed, `dbt retry` has nothing useful to replay and will not rebuild the graph for you. Fix the root cause, inspect `target/run_results.json` if needed, and rerun the scoped command explicitly when the previous failure happened before execution started.
 
 ---
 
@@ -525,6 +567,8 @@ Internally, dbt reads `target/run_results.json` and re-queues all nodes that did
 | `metric:metric_name` | All models feeding a metric |
 
 ### Set Operators
+
+*These selector combinations show how dbt unions, intersects, and subtracts resource sets before execution.*
 
 ```bash
 # Union: run both subgraphs
@@ -563,6 +607,8 @@ dbt run --select marts/ --exclude fct_composite_scores+
 
 `--defer` lets developers run only their changed models in a dev environment, resolving unselected upstream `ref()` calls against the production schema instead of rebuilding everything.
 
+*This slim-CI pattern combines state comparison, deferral, and an explicit target so changed nodes reuse trusted upstream production objects.*
+
 ```bash
 # 1. In CI: download prod manifest
 dbt run --target prod --select ... # or download from artifact storage
@@ -581,7 +627,9 @@ This means a developer who only changes `int_esg_normalized` does not need to re
 
 ### Reading CLI Output
 
-```
+*This sample log shows the sequence dbt prints as it discovers nodes, executes them, and summarizes the final pass, warning, error, and skip counts.*
+
+```text
 Running with dbt=1.8.0
 Found 42 models, 18 tests, 4 seeds, 2 snapshots, 5 sources
 
@@ -609,11 +657,13 @@ Done. PASS=42 WARN=0 ERROR=0 SKIP=0 TOTAL=42
 | `PASS` | Test passed |
 | `FAIL` | Test failed (severity=error) |
 
-> [!WARNING] SKIP propagation
-> A single `ERROR` in a staging model will `SKIP` all downstream intermediates and marts. Always check the first error in the log — it is usually the root cause.
+> [!warning] Skip propagation
+>
+> A single `ERROR` in a staging model will `SKIP` all downstream intermediates and marts. Always check the first error in the log because it is usually the root cause.
 
 > [!success] Isolate the root cause before rerunning
-> Scroll to the first `ERROR` entry in the log — subsequent `SKIP` lines are consequences, not causes. Fix the root model, then use `dbt retry` to re-run only the failed and skipped nodes without rebuilding the whole graph. In CI, use `dbt run --fail-fast` to stop immediately and surface the root error clearly.
+>
+> Scroll to the first `ERROR` entry in the log. Subsequent `SKIP` lines are consequences, not causes. Fix the root model, then use `dbt retry` to re-run only the failed and skipped nodes without rebuilding the whole graph. In CI, use `dbt run --fail-fast` to stop immediately and surface the root error clearly.
 
 ---
 

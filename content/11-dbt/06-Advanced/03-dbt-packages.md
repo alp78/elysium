@@ -8,7 +8,8 @@ description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, an
 
 # dbt: Packages
 
-> [!quote]
+> [!quote] Shared Foundations
+>
 > "If I have seen further, it is by standing on the shoulders of giants."
 >
 > — **Isaac Newton**, letter to Robert Hooke (1675)
@@ -18,11 +19,11 @@ description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, an
 > dbt packages are reusable dbt projects that import shared macros, tests, models, and seeds into a project, and this note defines how to declare, lock, evaluate, and extend package dependencies so financial-data pipelines reuse mature building blocks without losing reproducibility or control.
 >
 > **Dependency declaration and reproducibility**
-> - Uses `packages.yml` plus `dbt deps` to install Hub, Git, or local packages into `dbt_packages/`, and explains when `packages.lock.yml` should be committed and checked in CI.
+> - Uses `packages.yml` plus `dbt deps` to install Hub, Git, or local packages into `dbt_packages/`, and explains when `package-lock.yml` should be committed and checked in CI.
 > - Treats version pinning as a production requirement rather than a convenience, especially for regulated or auditable reporting pipelines.
 >
 > **High-value package capabilities**
-> - Covers `dbt_utils` for common macro primitives, `dbt_expectations` for richer data tests, `dbt_codegen` for YAML and base-model scaffolding, `audit_helper` for relation diffs during migrations, and Elementary for observability and anomaly detection.
+> - Covers `dbt_utils` for common macro primitives, `dbt_expectations` for richer data tests, `codegen` for YAML and base-model scaffolding, `audit_helper` for relation diffs during migrations, and Elementary for observability and anomaly detection.
 > - Maps each package to concrete financial-data use cases such as surrogate keys, date spines, provider pivots, migration validation, and schema-change monitoring.
 >
 > **Internal package design**
@@ -34,7 +35,7 @@ description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, an
 > - Recommendations table: the version-pinning strategy by environment is the note's core release-management rule.
 > - Upgrade workflow: the note defines a 6-step package upgrade process from version bump through CI validation and deployment.
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **dbt package**
 > - A reusable dbt project that can contribute macros, tests, models, seeds, or other project assets to another dbt project.
@@ -76,7 +77,7 @@ description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, an
 >
 > ---
 >
-> **`packages.lock.yml`**
+> **`package-lock.yml`**
 > - The lock file that records the exact resolved dependency versions for a dbt project.
 > - It matters here because CI and production need deterministic dependency graphs rather than open-ended semver resolution.
 >
@@ -116,8 +117,8 @@ description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, an
 >
 > ---
 >
-> **`dbt_codegen`**
-> - A dbt package that generates source YAML, model YAML, and base-model scaffolds from existing warehouse objects.
+> **`codegen`**
+> - The `dbt-labs/codegen` package that generates source YAML, model YAML, and base-model scaffolds from existing warehouse objects.
 > - It matters here because wide raw financial feeds make manual schema authoring slow and error-prone.
 >
 > > [!warning] Scaffold, then review
@@ -184,7 +185,6 @@ description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, an
 > >
 > > Macro-signature or behavior changes can break models even when project SQL is untouched. Run the full build and review the lock-file delta before merging.
 
-
 ## `packages.yml` and `dbt deps`
 
 Declare packages in `packages.yml` at the project root. Run `dbt deps` to install them into `dbt_packages/`.
@@ -195,22 +195,22 @@ Declare packages in `packages.yml` at the project root. Run `dbt deps` to instal
 packages:
   # dbt Hub packages (semver-pinned)
   - package: dbt-labs/dbt_utils
-    version: [">=1.3.0", "<2.0.0"]
+    version: 1.3.3
 
-  - package: calogica/dbt_expectations
-    version: [">=0.10.0", "<1.0.0"]
+  - package: metaplane/dbt_expectations
+    version: 0.10.10
 
-  - package: calogica/dbt_date
-    version: [">=0.10.0", "<1.0.0"]
+  - package: godatadriven/dbt_date
+    version: 0.17.1
 
-  - package: dbt-labs/dbt_codegen
-    version: [">=0.12.0", "<1.0.0"]
+  - package: dbt-labs/codegen
+    version: 0.14.0
 
   - package: dbt-labs/audit_helper
-    version: [">=0.11.0", "<1.0.0"]
+    version: 0.12.2
 
   - package: elementary-data/elementary
-    version: [">=0.14.0", "<1.0.0"]
+    version: 0.22.1
 
   # Git packages (for packages not on dbt Hub)
   - git: "https://github.com/your-org/dbt-financial-utils.git"
@@ -222,28 +222,29 @@ packages:
 
 ```bash
 dbt deps                          # Install all packages
-dbt deps --upgrade                # Check for newer compatible versions
-dbt deps --lock                   # Write packages.lock.yml (dbt 1.7+)
+dbt deps --upgrade                # Refresh ranged or Git-based dependencies
+dbt deps --lock                   # Write package-lock.yml (dbt 1.7+)
 ```
 
 > [!important] Always pin versions in production
-> Floating version ranges (`>=1.0.0`) are acceptable for development. For production pipelines serving regulatory reporting, pin to an exact version or a narrow range and commit `packages.lock.yml` to version control. This prevents silent upgrades from changing macro behaviour between deployments.
+>
+> Floating version ranges (`>=1.0.0`) are acceptable for development. For production pipelines serving regulatory reporting, pin to an exact version or a narrow range and commit `package-lock.yml` to version control. This prevents silent upgrades from changing macro behaviour between deployments.
 
-### dbt packages.lock.yml — dependency lock file
+### dbt package-lock.yml — dependency lock file
 
 Available in dbt Core 1.7+. Records the exact resolved version of every package and its dependencies.
 
 ```yaml
-# packages.lock.yml (generated — do not edit manually)
+# package-lock.yml (generated — do not edit manually)
 packages:
   - package: dbt-labs/dbt_utils
-    version: 1.3.0
+    version: 1.3.3
     install-prerelease: false
-  - package: calogica/dbt_expectations
-    version: 0.10.4
+  - package: metaplane/dbt_expectations
+    version: 0.10.10
 ```
 
-Commit this file. CI should run `dbt deps --check` to verify the lock file is up to date.
+Commit this file. CI should run `dbt deps` and fail the job if `package-lock.yml` changes unexpectedly after dependency resolution.
 
 ---
 
@@ -445,6 +446,7 @@ select * from renamed
 ```
 
 > [!tip] Codegen workflow
+>
 > 1. Load raw data into warehouse.
 > 2. Run `generate_source` → paste into `sources.yml`.
 > 3. Run `generate_base_model` → paste into `stg_provider__table.sql`.
@@ -457,64 +459,56 @@ select * from renamed
 
 Compares two relations and surfaces differences. Essential when migrating a legacy transformation to dbt, or promoting a refactored model to replace an existing one.
 
-### dbt-audit-helper compare_relations — diff two models row by row
+### dbt-audit-helper compare_and_classify_relation_rows — diff two models row by row
 
-Compares all rows between two tables and categorises differences:
+Use the current relation-comparison macro rather than the legacy `compare_relations` wrapper:
 
-```bash
-dbt run-operation audit_helper.compare_relations \
-  --args '{
-    "a_relation": "analytics.marts.fct_index_performance",
-    "b_relation": "analytics.marts.fct_index_performance_new",
-    "primary_key": "performance_key",
-    "columns_to_compare": [
-      "weight_bop",
-      "total_return_usd",
-      "contribution_to_return",
-      "esg_score"
-    ]
-  }'
+```sql
+{% set old_relation = adapter.get_relation(
+    database = 'analytics',
+    schema = 'marts',
+    identifier = 'fct_index_performance'
+) %}
+
+{% set new_relation = ref('fct_index_performance_new') %}
+
+{{ audit_helper.compare_and_classify_relation_rows(
+    a_relation = old_relation,
+    b_relation = new_relation,
+    primary_key_columns = ['performance_key'],
+    columns = ['weight_bop', 'total_return_usd', 'contribution_to_return', 'esg_score']
+) }}
 ```
 
-Result categories:
-
-| Status | Meaning |
-| ------ | ------- |
-| `identical` | Row exists in both, all compared columns match |
-| `in_a_only` | Row exists in old table only (deleted) |
-| `in_b_only` | Row exists in new table only (added) |
-| `in_both_and_different` | Row exists in both but at least one column differs |
+This classifies rows into matching, missing, and different groups so refactors can be reviewed before cutover.
 
 ### dbt-audit-helper compare_column_values — column-level diff
 
 For numeric columns, shows a frequency distribution of differences — useful for spotting systematic rounding errors in return calculations:
 
-```bash
-dbt run-operation audit_helper.compare_column_values \
-  --args '{
-    "a_relation": "analytics.marts.fct_index_performance",
-    "b_relation": "analytics.marts.fct_index_performance_v2",
-    "primary_key": "performance_key",
-    "column_to_compare": "total_return_usd"
-  }'
+```sql
+{% set old_query %}
+    select * from analytics.marts.fct_index_performance
+{% endset %}
+
+{% set new_query %}
+    select * from {{ ref('fct_index_performance_v2') }}
+{% endset %}
+
+{{ audit_helper.compare_column_values(
+    a_query = old_query,
+    b_query = new_query,
+    primary_key = 'performance_key',
+    column_to_compare = 'total_return_usd'
+) }}
 ```
 
 ### dbt-audit-helper — migration validation workflow
 
-```bash
-# 1. Build the new model alongside the old one (different name)
-dbt run --select fct_index_performance_refactored
-
-# 2. Compare against production
-dbt run-operation audit_helper.compare_relations \
-  --args '{"a_relation": "..prod..fct_index_performance", "b_relation": "..dev..fct_index_performance_refactored", ...}'
-
-# 3. Investigate specific column discrepancies
-dbt run-operation audit_helper.compare_column_values \
-  --args '{"column_to_compare": "contribution_to_return", ...}'
-
-# 4. When identical, rename and swap
-```
+1. Build the refactored model alongside the current production model under a different name.
+2. Create a temporary audit model or singular test that calls `audit_helper.compare_and_classify_relation_rows`.
+3. For mismatched numeric columns, add a follow-up audit query using `audit_helper.compare_column_values`.
+4. Cut over only after the diff is understood and accepted.
 
 ---
 
@@ -527,7 +521,7 @@ Elementary adds data observability — anomaly detection, schema change tracking
 ```yaml
 # packages.yml
 - package: elementary-data/elementary
-  version: [">=0.14.0", "<1.0.0"]
+  version: 0.22.1
 ```
 
 ```bash
@@ -685,10 +679,12 @@ packages:
 ```
 
 > [!warning] Private repos in CI
+>
 > Use a deploy key or machine account token. Set `GITHUB_TOKEN` as an environment variable and reference it in the git URL:
 > `https://$GITHUB_TOKEN@github.com/your-org/dbt-financial-utils.git`
 
 > [!success] Use a scoped deploy key per repo
+>
 > Create a read-only GitHub deploy key for the private package repository and store it as a CI secret (e.g., `DBT_PACKAGE_DEPLOY_KEY`). Configure the SSH agent in the CI pipeline step before running `dbt deps`. This avoids storing a personal access token and limits blast radius if the secret is rotated or exposed.
 
 ---
@@ -702,12 +698,12 @@ packages:
 | Production | Exact via lock file, reviewed upgrade PRs | Zero surprise upgrades |
 | Custom internal package | Git tag (`v0.3.1`) | Semantic versioning with changelogs |
 
-#### Upgrade workflow
+### Upgrade workflow
 
 1. Update `packages.yml` to the new version.
 2. Run `dbt deps` locally.
 3. Run `dbt build` — fix any macro signature changes.
-4. Run `dbt deps --lock` to regenerate `packages.lock.yml`.
+4. Run `dbt deps --lock` to regenerate `package-lock.yml`.
 5. Open a PR. CI validates the full build.
 6. Merge and deploy.
 

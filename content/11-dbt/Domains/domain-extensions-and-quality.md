@@ -20,11 +20,16 @@ mindmap
 ```
 
 > [!abstract]- [[01-dbt-macros-and-jinja]]
+>
 
 > [!abstract]- [[03-dbt-packages]]
+>
 
 > [!abstract]- [[02-dbt-snapshots-and-scd]]
+>
 
 > [!abstract]- [[01-dbt-testing-framework]]
+>
 
 > [!abstract]- [[02-dbt-data-contracts-implementation]]
+>

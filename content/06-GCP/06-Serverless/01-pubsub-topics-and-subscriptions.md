@@ -4,7 +4,7 @@ tags: [gcp, pubsub]
 aliases: [Pub/Sub topics, Pub/Sub subscriptions, gcloud pubsub, dead letter queue, push subscription, pull subscription]
 description: "How to create Pub/Sub topics and subscriptions — including pull vs push models, acknowledgement deadlines, message retention, and dead letter queues for failed message handling."
 created: 2026-03-22
-updated: 2026-04-05
+updated: 2026-04-16
 status: complete
 ---
 
@@ -35,15 +35,21 @@ status: complete
 > **Subscription management**
 > - Create pull subscriptions with `--ack-deadline`, `--message-retention-duration`, expiration control, attribute filtering, exactly-once delivery, and retained acknowledged messages
 > - Create push subscriptions with `--push-endpoint`, OIDC authentication, and retry backoff settings, then attach dead letter policies with `--dead-letter-topic` and `--max-delivery-attempts`
-> - Use BigQuery subscriptions when Pub/Sub should write directly into a BigQuery table without an intermediate consumer process
+> - Use BigQuery or Cloud Storage subscriptions when Pub/Sub should write directly into analytics or object storage without an intermediate consumer process
 >
 > **Delivery models**
-> - Compare pull, push, and BigQuery subscriptions by rate control, backpressure, authentication model, endpoint requirements, and best-fit workload shape
-> - Use pull for batch and variable-rate consumers, push for event-driven HTTP handlers, and BigQuery subscriptions for direct analytics ingestion
+> - Compare pull, push, BigQuery, and Cloud Storage subscriptions by rate control, backpressure, authentication model, endpoint requirements, and best-fit workload shape
+> - Use pull for batch and variable-rate consumers, push for event-driven HTTP handlers, BigQuery subscriptions for direct analytics ingestion, and Cloud Storage subscriptions for raw event archiving with minimal transformation
 >
 > **Operations and safety**
-> - Warnings: Pub/Sub is at-least-once by default, short ack deadlines cause redelivery, inactive subscriptions expire after 31 days unless configured otherwise, and non-matching filters silently keep messages away from the consumer
+> - Warnings: Pub/Sub is at-least-once by default, short ack deadlines cause redelivery, inactive subscriptions expire after 31 days unless configured otherwise, and subscription filters both hide non-matching messages and remain immutable after creation
 > - Recommendations table: the pull-vs-push-vs-BigQuery comparison table maps consumer architecture, rate control, backpressure, authentication, and ideal use cases to the right subscription type
+
+> [!warning] Knowledge-only refresh
+>
+> The original Serverless demo project used for this folder no longer exists. This note keeps the generic `gcloud` examples and sample outputs as operator reference, but no Pub/Sub topics, subscriptions, push endpoints, or dead-letter paths were recreated during this refresh.
+>
+> The edits below only correct product behavior from current Pub/Sub documentation, including immutable subscription filters, export-subscription guidance, and current storage-pricing boundaries.
 
 > [!note]- Glossary
 >
@@ -264,7 +270,7 @@ projects/my-project/topics/pipeline-events-dead-letter
 
 ## Subscription Management
 
-Subscriptions are the delivery mechanisms that connect consumers to topics. Each subscription receives an independent copy of every message published to its topic. Pub/Sub supports four subscription types: **pull** (consumer fetches messages), **push** (Pub/Sub delivers to an HTTP endpoint), **BigQuery** (Pub/Sub writes directly to a BigQuery table), and **Cloud Storage** (Pub/Sub writes to GCS buckets). A single topic can have up to 10,000 subscriptions.
+Subscriptions are the delivery mechanisms that connect consumers to topics. Each subscription receives an independent copy of every message published to its topic. Pub/Sub supports four subscription types: **pull** (consumer fetches messages), **push** (Pub/Sub delivers to an HTTP endpoint), **BigQuery** (Pub/Sub writes directly to a BigQuery table), and **Cloud Storage** (Pub/Sub writes to GCS buckets). BigQuery and Cloud Storage subscriptions are export subscriptions: they remove subscriber code when the destination only needs direct durable writes, but Dataflow or a custom consumer is still the better fit once you need joins, windowing, aggregation, or rich transformation. A single topic can have up to 10,000 subscriptions.
 
 ### gcloud | Create a pull subscription
 
@@ -304,6 +310,12 @@ gcloud pubsub subscriptions create pipeline-gold-sub \
 Created subscription [projects/my-project/subscriptions/pipeline-gold-sub].
 ```
 
+> [!info] Filters are immutable and still bill throughput
+>
+> Pub/Sub lets pull and push subscriptions filter on message attributes, but you cannot edit the filter on an existing subscription. The safe change path is to snapshot the old subscription, create a new one with the new filter, then seek the new subscription to that snapshot.
+>
+> Non-matching messages are automatically acknowledged for that subscription, but Pub/Sub throughput charges still apply to those filtered messages.
+
 > [!warning] Subscription Expiration
 >
 > Subscriptions with no subscriber activity (pull, push delivery, or message backlog) for 31 days are automatically deleted by default. This can silently break pipelines that process data on an infrequent schedule (e.g., monthly batch jobs).
@@ -318,8 +330,8 @@ Created subscription [projects/my-project/subscriptions/pipeline-gold-sub].
 | `--ack-deadline` | `--ack-deadline=60` | Seconds before unacknowledged messages are redelivered (default: 10, max: 600) |
 | `--message-retention-duration` | `--message-retention-duration=7d` | How long unacknowledged messages are retained (default: 7d, max: 31d) |
 | `--expiration-period` | `--expiration-period=never` | Auto-delete subscription after inactivity (default: 31d, `never` to disable) |
-| `--message-filter` | `--message-filter='attributes.key = "val"'` | Server-side attribute filter expression |
-| `--enable-exactly-once-delivery` | `--enable-exactly-once-delivery` | Enable exactly-once delivery (adds latency for deduplication) |
+| `--message-filter` | `--message-filter='attributes.key = "val"'` | Server-side attribute filter expression (immutable after creation) |
+| `--enable-exactly-once-delivery` | `--enable-exactly-once-delivery` | Enable exactly-once delivery for pull subscriptions in a single region |
 | `--retain-acked-messages` | `--retain-acked-messages` | Keep acknowledged messages for replay via seek |
 | `--labels` | `--labels=env=prod` | Key-value labels for cost tracking |
 
@@ -423,11 +435,17 @@ Choosing between pull and push delivery depends on the consumer architecture. Pu
 >
 > **Push** — Pub/Sub sends each message as an HTTP POST to a configured endpoint. Best for event-driven architectures where a stateless Cloud Run Service or Cloud Function processes messages as they arrive.
 >
-> **BigQuery subscription** — Pub/Sub writes messages directly to a BigQuery table without any consumer code. Best for analytics pipelines where messages are structured data destined for BigQuery. Supports schema mapping, dead-letter handling, and uses the BigQuery Storage Write API internally. Eliminates the need for an intermediate consumer process entirely.
+> **BigQuery subscription** — Pub/Sub writes messages directly to a BigQuery table without any consumer code. Best for analytics pipelines where messages are structured data destined for BigQuery. Supports schema mapping, dead-letter handling, and uses the BigQuery Storage Write API internally, but still follows at-least-once delivery semantics. Eliminates the need for an intermediate consumer process entirely.
 
 > [!info] BigQuery Subscriptions (GA)
 >
-> BigQuery subscriptions write messages directly to a BigQuery table using the Storage Write API, with no consumer process required. The subscription handles schema mapping (JSON message fields → BigQuery columns), metadata columns (`subscription_name`, `message_id`, `publish_time`, `attributes`), and dead-lettering for schema mismatches. This is the simplest path for Pub/Sub → BigQuery analytics pipelines. Create with: `gcloud pubsub subscriptions create my-bq-sub --topic=my-topic --bigquery-table=project:dataset.table`.
+> BigQuery subscriptions write messages directly to a BigQuery table using the Storage Write API, with no consumer process required. They are the simplest Pub/Sub → BigQuery path when the messages do not need pre-ingestion transformation, but they remain an at-least-once export mechanism rather than an exactly-once sink. Create with: `gcloud pubsub subscriptions create my-bq-sub --topic=my-topic --bigquery-table=project:dataset.table`.
+
+> [!info] Cloud Storage export subscriptions
+>
+> Cloud Storage subscriptions are the parallel export pattern for raw event capture. Pub/Sub batches messages into objects in an existing bucket and acknowledges the source message only after the object write succeeds, which makes the feature useful for durable archiving without standing up Dataflow.
+>
+> Use a Cloud Storage subscription when the destination just needs stored event files, optionally with lightweight SMT-based reshaping. If the pipeline needs cross-message aggregation, windowing, or non-trivial transformation, a Dataflow subscriber is still the better choice.
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -481,5 +499,8 @@ flowchart TD
 - [Dead letter topics](https://cloud.google.com/pubsub/docs/dead-letter-topics)
 - [Choosing pull vs push](https://cloud.google.com/pubsub/docs/pull)
 - [BigQuery subscriptions](https://cloud.google.com/pubsub/docs/bigquery)
+- [Cloud Storage subscriptions](https://cloud.google.com/pubsub/docs/cloudstorage)
 - [Subscription expiration](https://cloud.google.com/pubsub/docs/subscription-properties#expiration)
 - [Filtering messages](https://cloud.google.com/pubsub/docs/filtering)
+- [Subscription properties](https://cloud.google.com/pubsub/docs/subscription-properties)
+- [Pub/Sub pricing](https://cloud.google.com/pubsub/pricing)

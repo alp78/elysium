@@ -17,7 +17,7 @@ links:
   - "[[01-bash-automation]]"
   - "[[02-powershell-automation]]"
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -168,20 +168,18 @@ Bash strict mode is a set of shell behaviors that converts silent failure into e
 
 The `set` builtin changes the behavior of the current shell. The strict-mode flags below are normally enabled together, but each one protects a different failure mode.
 
+> [!warning] Strict mode belongs in scripts, not your everyday shell
+>
+> `set -euo pipefail` is a script policy. It turns normal exploratory behavior such as `grep` misses, scratch variables, and partial pipelines into failures. Keep it in entrypoint scripts and tested functions instead of dropping it into a login shell profile.
+
 #### Enable the full strict mode header
 
 Every production script should put the shebang first and the strict-mode header immediately after it. The header itself has no output, so the verification command below inspects the shell option state after enabling the flags.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to enable the full strict mode header.*
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to enable the full strict mode header.*
@@ -198,8 +196,6 @@ pipefail       	on
 #### set -e — stop on the first failing command
 
 Without `set -e`, a command can fail and the script still keeps running. The first example shows the failure being observed but ignored. The second example enables `set -e`; the command after `false` never runs, and the caller receives a non-zero exit status.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to set -e — stop on the first failing command.*
 ```bash
@@ -236,8 +232,6 @@ Use the escape hatches deliberately. `if cmd ...`, `cmd || true`, and subshell b
 
 The classic destructive pattern looks like this. The existing captured output is preserved because it already demonstrates the failure being caught before `rm` expands the path.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to set -u — stop on unset variables.*
 ```bash
 rm -rf "$STAGING_DIR"/*
@@ -262,8 +256,6 @@ bash: line 3: STAGING_DIR: unbound variable
 
 `${VAR:-default}` keeps `set -u` enabled while still allowing optional configuration. It is the right tool for settings that have a safe operational fallback.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to supply defaults for optional variables with `${VAR:-default}`.*
 ```bash
 DB_PORT="${DB_PORT:-1433}"
@@ -281,8 +273,6 @@ CACHE_MODE=read-only
 
 `${VAR:?message}` is the hard-stop version of parameter expansion. Use it near the top of the script so required configuration fails before the script touches data or infrastructure.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to require startup configuration with `${VAR:?error}`.*
 ```bash
 : "${DB_HOST:?ERROR: DB_HOST must be set}"
@@ -294,8 +284,6 @@ Use this leaf when you need the exact operation named in the heading. It is typi
 #### set -o pipefail — surface upstream pipeline failures
 
 Without `pipefail`, a pipeline is treated as successful if its last command succeeds. The first run shows a failed first stage still producing `pipeline_exit=0`. The second run enables `pipefail`, so the same upstream failure becomes visible to the caller.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to set -o pipefail — surface upstream pipeline failures.*
 ```bash
@@ -340,8 +328,6 @@ The related `set` switches below are still useful as a compact lookup table.
 
 `set -x` is useful because it prints each command before execution, but it will also print arguments and can leak secrets. Turn it on only around the block you are diagnosing and remove it before committing the script.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to use `set -x` only for temporary debugging.*
 ```bash
 set -x
@@ -355,8 +341,6 @@ safe_demo
 #### Disable strict mode only around an intentional failure
 
 When a command is allowed to fail, scope that exception narrowly with `set +e` and then restore `set -e` immediately. That preserves the default fail-fast behavior everywhere else.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to disable strict mode only around an intentional failure.*
 ```bash
@@ -381,8 +365,6 @@ still_running
 
 `EXIT` fires on normal completion, explicit `exit`, or shell termination caused by `set -e`. The demo below fails on purpose, but the cleanup handler still runs and preserves the original exit code.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to register cleanup with `trap ... EXIT`.*
 ```bash
 bash -c 'set -euo pipefail
@@ -404,8 +386,6 @@ script_exit=1
 #### Handle specific signals when the script must react
 
 Trap `INT` when you need to respond to Ctrl+C and `TERM` when you need to react to orchestrator-initiated shutdown. `HUP` can be ignored if the script must outlive a disconnected terminal, but `SIGKILL` can never be trapped.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to handle specific signals when the script must react.*
 ```bash
@@ -472,8 +452,6 @@ PowerShell has equivalents for every Bash mechanism above, but the defaults are 
 
 The demo below forces a missing-path error. With `Stop` enabled, the error becomes terminating and flows into `catch` instead of allowing the script to continue.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to set `$ErrorActionPreference = 'Stop'` at the top of every script.*
 ```powershell
 & {
@@ -507,8 +485,6 @@ The common preference values below remain a useful compact lookup.
 #### Enable `Set-StrictMode -Version Latest`
 
 The preserved example below shows the kind of failure strict mode prevents in destructive code.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to enable `Set-StrictMode -Version Latest`.*
 ```powershell
@@ -551,11 +527,13 @@ The version table below is still useful as a factual lookup.
 
 `try/catch/finally` is the PowerShell equivalent of Bash `set -e` plus `trap EXIT`. Use `catch` for terminating failures and `finally` for cleanup that must always happen.
 
+> [!info] Native exit codes bypass PowerShell's error preference
+>
+> `$ErrorActionPreference = 'Stop'` only upgrades PowerShell errors. Native tools still signal failure through `$LASTEXITCODE`, so defensive scripts must inspect that value and throw explicitly when a non-zero exit should stop the run.
+
 #### Wrap the script body in `try/catch/finally`
 
 This run creates a temp file, triggers a terminating error, and then proves that the `finally` block still executed cleanup.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to wrap the script body in `try/catch/finally`.*
 ```powershell
@@ -587,8 +565,6 @@ cleanup_ran=True
 #### Throw on non-zero `$LASTEXITCODE` after native tools
 
 Native executables do not honor `$ErrorActionPreference`. The native command below fails with exit code `7`; the explicit `throw` converts that exit code into a terminating PowerShell error that `catch` can handle.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to throw on non-zero `$LASTEXITCODE` after native tools.*
 ```powershell
@@ -663,8 +639,6 @@ The symptoms below are the most common reasons strict scripts feel "too aggressi
 
 `grep` returns `1` when it finds no match. Under `set -e`, that is still a non-zero exit code, so the script stops unless you mark the case as expected.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to a command that is allowed to return 1 now stops the script.*
 ```bash
 if bash -lc 'set -e; grep -q needle /dev/null; echo after'; then
@@ -691,8 +665,6 @@ Use `if grep ...; then ... fi` when the result controls branching, and use `|| t
 
 If a variable is genuinely optional, do not disable `set -u`; give that variable an explicit fallback.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to an optional variable is unbound under `set -u`.*
 ```bash
 printf 'OPTIONAL_VAR=%s\n' "${OPTIONAL_VAR:-fallback}"
@@ -704,8 +676,6 @@ OPTIONAL_VAR=fallback
 #### A pipeline looks successful even though the first stage failed
 
 `pipefail` makes the pipeline fail, and `PIPESTATUS` tells you which stage returned which exit code. Use both when diagnosing a multi-stage pipeline.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to a pipeline looks successful even though the first stage failed.*
 ```bash
@@ -720,8 +690,6 @@ PIPESTATUS=1 0
 #### Cleanup never runs
 
 The most common cause is that the trap was registered too late. If the script fails before `trap cleanup EXIT`, there is nothing to run. Even when the trap is registered correctly, `SIGKILL` remains uncatchable.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to cleanup never runs.*
 ```bash
@@ -753,8 +721,6 @@ script_exit=1
 #### `catch` never runs because the error is still non-terminating
 
 With the default `Continue` behavior, non-terminating errors stay non-terminating. The script below captures the emitted error record and still reaches the line after it, which is the symptom to look for.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to `catch` never runs because the error is still non-terminating.*
 ```powershell
@@ -795,8 +761,6 @@ caught
 #### A native executable fails but the script keeps going
 
 Native tools report failure through `$LASTEXITCODE`, not through PowerShell's error preference system. The first example shows the script continuing after `cmd /c exit 7`; the second turns that exit code into a terminating error.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to a native executable fails but the script keeps going.*
 ```powershell

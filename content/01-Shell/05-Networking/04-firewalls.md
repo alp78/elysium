@@ -8,13 +8,14 @@ aliases: [ufw, iptables, firewall, GCP firewall, network security, defense in de
 keywords: [ufw, iptables, firewall, GCP firewall rules, VPC firewall, allow rule, deny rule, default deny, port 1433, SQL Server firewall, IAP firewall, defense in depth, VPC Service Controls, New-NetFirewallRule, Get-NetFirewallRule, network security]
 description: "Configuring Linux ufw, GCP VPC firewall rules, and Windows Firewall for secure database and infrastructure access. Covers the defense-in-depth model: VPC firewall + OS firewall + strong authentication + no public IP."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-15
 status: complete
 ---
 
 # Firewalls — Controlling Access to Your Data
 
-> [!quote]
+> [!quote] Schneier and Thompson on trust
+>
 > "Complexity is the worst enemy of security, and our systems are getting more complex all the time."
 >
 > — **Bruce Schneier**, *Schneier on Security* blog (2007)

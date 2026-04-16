@@ -8,7 +8,7 @@ aliases: [brace expansion, globbing, extglob, globstar, failglob, shopt]
 keywords: [brace expansion, globbing, extglob, globstar, failglob, shopt, wildcard, pattern matching, bash expansion, file patterns, recursive glob, exclude patterns]
 description: "Brace expansion and globbing in Bash, plus PowerShell equivalents with arrays, Get-ChildItem, and verification-focused safety patterns."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -152,15 +152,9 @@ Use these forms when you need compact, deterministic argument generation rather 
 
 `mkdir -p` is silent on success, so the second command verifies the exact tree that brace expansion generated.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to create a nested directory tree in one command.*
 ```bash
 mkdir -p data/{bronze,silver,gold}/{raw,staging,final}
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to create a nested directory tree in one command.*
@@ -188,8 +182,6 @@ data/silver/staging
 
 Zero padding is preserved when the range starts with a zero-padded value. `echo` receives the already-expanded filenames as separate arguments.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to generate a numeric sequence of filenames.*
 ```bash
 echo file{001..012}.parquet
@@ -203,24 +195,14 @@ file001.parquet file002.parquet file003.parquet file004.parquet file005.parquet 
 
 `cp` is also silent on success, so create the source file first, then verify that the backup exists after the copy.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to back up a file before editing.*
 ```bash
 printf 'key: value\n' > config.yaml
 ```
 
-```text
-(no terminal output on success)
-```
-
 *Run the commands in this section to back up a file before editing.*
 ```bash
 cp config.yaml{,.bak}
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to back up a file before editing.*
@@ -237,8 +219,6 @@ config.yaml.bak
 
 The optional third term is the step. This is useful for partitions, checkpoints, or fixed-size batches.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to generate a stepped numeric range.*
 ```bash
 echo partition_{0..100..10}
@@ -252,24 +232,14 @@ partition_0 partition_10 partition_20 partition_30 partition_40 partition_50 par
 
 Brace expansion can generate the destination names, but a single `cp model.pkl{,.v1,.v2,.backup}` call is not valid because `cp` accepts only one non-directory destination. A loop keeps the source fixed while using brace expansion to enumerate the targets.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to create versioned copies from one source file.*
 ```bash
 : > model.pkl
 ```
 
-```text
-(no terminal output on success)
-```
-
 *Run the commands in this section to create versioned copies from one source file.*
 ```bash
 for target in model.pkl{.v1,.v2,.backup}; do cp model.pkl "$target"; done
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to create versioned copies from one source file.*
@@ -304,19 +274,17 @@ Standard wildcards work without any `shopt` option. `extglob`, `globstar`, `fail
 
 These options change shell behavior. When the enabling command is silent, verify it explicitly before relying on the option. Treat each H4 as a standalone snippet in a disposable working directory.
 
+> [!warning] No-match behavior must be chosen deliberately
+>
+> Default Bash leaves an unmatched pattern literal, `nullglob` removes it, and `failglob` turns it into an error. Pick one before using wildcards in `rm`, `mv`, or loops, because an empty match set changes the blast radius of the command.
+
 #### Enable extended globbing patterns
 
 `extglob` turns on the quantified and negated operators that standard globbing does not have.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to enable extended globbing patterns.*
 ```bash
 shopt -s extglob
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to enable extended globbing patterns.*
@@ -342,8 +310,6 @@ These operators are now available:
 
 This example stages a disposable directory, enables `extglob`, and prints the expansion so you can inspect the match set before sending it to another command.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to list all files excluding specific extensions.*
 ```bash
 mkdir extglob-demo && cd extglob-demo
@@ -354,10 +320,6 @@ mkdir extglob-demo && cd extglob-demo
 : > debug.log
 : > cache.tmp
 shopt -s extglob
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to list all files excluding specific extensions.*
@@ -376,8 +338,6 @@ schema.sql
 
 For destructive patterns, preview the expansion first in a disposable directory. Once the preview looks correct, run the delete and verify the result explicitly.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to delete all files except one.*
 ```bash
 mkdir delete-demo && cd delete-demo
@@ -386,10 +346,6 @@ mkdir delete-demo && cd delete-demo
 : > notes.md
 : > scratch.tmp
 shopt -s extglob
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to delete all files except one.*
@@ -408,10 +364,6 @@ scratch.tmp
 rm !(important.txt)
 ```
 
-```text
-(no terminal output on success)
-```
-
 *Run the commands in this section to delete all files except one.*
 ```bash
 find . -maxdepth 1 -type f -printf '%P\n' | sort
@@ -425,15 +377,9 @@ important.txt
 
 `globstar` changes `**` from an ordinary path wildcard into a recursive directory traversal operator.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to enable recursive double-star globbing.*
 ```bash
 shopt -s globstar
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to enable recursive double-star globbing.*
@@ -449,8 +395,6 @@ globstar       	on
 
 This example uses `printf` instead of `ls` so the expansion result is exact and not reformatted into columns.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to recursively match files by extension.*
 ```bash
 mkdir -p tree/etl/utils tree/models tree/tests
@@ -461,10 +405,6 @@ mkdir -p tree/etl/utils tree/models tree/tests
 : > tree/models/train.sql
 cd tree
 shopt -s globstar
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to recursively match files by extension.*
@@ -483,8 +423,6 @@ tests/test_pipeline.py
 
 `wc -l` is a good fit when a recursive glob already yields the exact files you want. If the tree is huge or you need extra predicates, move to `find` instead of expanding everything in the shell.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to count lines across all SQL files recursively.*
 ```bash
 mkdir -p sql-demo/queries sql-demo/schema
@@ -493,10 +431,6 @@ printf 'create table t1;\ncreate table t2;\ncreate table t3;\n' > sql-demo/queri
 printf 'begin;\n' > sql-demo/schema/init.sql
 cd sql-demo
 shopt -s globstar
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to count lines across all SQL files recursively.*
@@ -515,15 +449,9 @@ wc -l **/*.sql
 
 `failglob` is silent when enabled, so verify the state before depending on it in a script header.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to enable failglob to stop no-match pass-through.*
 ```bash
 shopt -s failglob
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to enable failglob to stop no-match pass-through.*
@@ -552,18 +480,12 @@ The table at the end is a compact reminder. The H4 entries here show what the wi
 
 `*` matches zero or more characters inside one path component.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to match any string with `*`.*
 ```bash
 mkdir wildcard-star && cd wildcard-star
 : > data.csv
 : > sales_2025.csv
 : > report.txt
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to match any string with `*`.*
@@ -580,8 +502,6 @@ sales_2025.csv
 
 `?` matches one character, so `file10.txt` is excluded because it needs two characters after `file`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to match exactly one character with `?`.*
 ```bash
 mkdir wildcard-question && cd wildcard-question
@@ -589,10 +509,6 @@ mkdir wildcard-question && cd wildcard-question
 : > file2.txt
 : > fileA.txt
 : > file10.txt
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to match exactly one character with `?`.*
@@ -610,18 +526,12 @@ fileA.txt
 
 Character classes can name explicit sets such as `[abc]` or ranges such as `[0-9]`. This example uses a numeric range.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to match sets and ranges with `[]`.*
 ```bash
 mkdir wildcard-range && cd wildcard-range
 : > log1.txt
 : > log2.txt
 : > logA.txt
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to match sets and ranges with `[]`.*
@@ -638,18 +548,12 @@ log2.txt
 
 `[!set]` negates a single character position. Here it excludes files whose first character is a digit.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to exclude starting characters with `[!...]`.*
 ```bash
 mkdir wildcard-negated && cd wildcard-negated
 : > alpha.csv
 : > beta.csv
 : > 1-summary.csv
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to exclude starting characters with `[!...]`.*
@@ -665,8 +569,6 @@ beta.csv
 #### Include dotfiles with `dotglob`
 
 By default, `*` skips hidden files. Enabling `dotglob` changes that behavior for the current shell.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to include dotfiles with `dotglob`.*
 ```bash
@@ -717,8 +619,6 @@ These examples generate the same kinds of path sets as Bash brace expansion, but
 
 `New-Item` is silent only because the pipeline sends its objects to `Out-Null`, so verify the resulting tree explicitly.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to create a nested directory tree using nested loops.*
 ```powershell
 $tiers = 'bronze','silver','gold'
@@ -728,10 +628,6 @@ foreach ($tier in $tiers) {
         New-Item -ItemType Directory -Path "data/$tier/$zone" -Force | Out-Null
     }
 }
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to create a nested directory tree using nested loops.*
@@ -760,8 +656,6 @@ data\silver\staging
 
 Use the range operator for the integers, then format them into fixed-width strings.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to generate zero-padded filenames.*
 ```powershell
 1..12 | ForEach-Object { 'file{0:D3}.parquet' -f $_ }
@@ -786,24 +680,14 @@ file012.parquet
 
 There is no brace shorthand here. Create or select the source, copy it, and then verify the result directly.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to back up a file before editing.*
 ```powershell
 Set-Content -Path config.yaml -Value 'key: value'
 ```
 
-```text
-(no terminal output on success)
-```
-
 *Run the commands in this section to back up a file before editing.*
 ```powershell
 Copy-Item config.yaml config.yaml.bak
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to back up a file before editing.*
@@ -836,11 +720,13 @@ Use this lookup table as a translation aid between Bash intent and PowerShell sy
 
 When the cmdlet is silent or returns objects you suppress, add an explicit verification command so the note proves what happened. Treat each H4 as a standalone snippet in a disposable working directory.
 
+> [!info] Use `-LiteralPath` when the name is data, not a pattern
+>
+> `-Path`, `-Filter`, `-Include`, and `-Exclude` all treat wildcard characters as patterns. Reach for `-LiteralPath` when a real filename contains `[`, `]`, `*`, or `?`, and prefer `-Filter` over pipeline-side filtering when the provider supports it because it narrows enumeration earlier.
+
 #### Recursively list all files of a given type
 
 For a single wildcard, `-Filter` is the cleanest and usually fastest choice.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to recursively list all files of a given type.*
 ```powershell
@@ -850,10 +736,6 @@ Set-Content -Path 'tree/etl/utils.py' -Value 'print(2)'
 Set-Content -Path 'tree/models/train.py' -Value 'print(3)'
 Set-Content -Path 'tree/models/train.sql' -Value 'select 1;'
 Set-Location tree
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to recursively list all files of a given type.*
@@ -873,8 +755,6 @@ models\train.py
 
 For multiple patterns, switch to `-Include` and make sure the path points at children by using `.\*` or `-Recurse`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to recursively list files matching multiple extensions.*
 ```powershell
 New-Item -ItemType Directory -Path 'tree/etl','tree/models' -Force | Out-Null
@@ -883,10 +763,6 @@ Set-Content -Path 'tree/etl/utils.py' -Value 'print(2)'
 Set-Content -Path 'tree/models/train.py' -Value 'print(3)'
 Set-Content -Path 'tree/models/train.sql' -Value 'select 1;'
 Set-Location tree
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to recursively list files matching multiple extensions.*
@@ -907,8 +783,6 @@ models\train.sql
 
 `-Exclude` uses the same wildcard engine as `-Include`. Point the path at the child items you want filtered.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to exclude specific extensions from a directory listing.*
 ```powershell
 Set-Content -Path config.yaml -Value 'key: value'
@@ -916,10 +790,6 @@ Set-Content -Path pipeline.py -Value 'print(1)'
 Set-Content -Path requirements.txt -Value 'requests'
 Set-Content -Path debug.log -Value 'log'
 Set-Content -Path cache.tmp -Value 'tmp'
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to exclude specific extensions from a directory listing.*
@@ -939,8 +809,6 @@ requirements.txt
 
 PowerShell has no `!(pattern)` operator. Build the keep rule with `Where-Object`, preview the delete with `-WhatIf`, and only then run the real removal. The captured preview output includes the temporary root used during execution.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to preview and then delete all files except one.*
 ```powershell
 New-Item -ItemType Directory -Path delete-demo -Force | Out-Null
@@ -948,10 +816,6 @@ Set-Content -Path 'delete-demo/important.txt' -Value 'keep'
 Set-Content -Path 'delete-demo/draft.txt' -Value 'remove'
 Set-Content -Path 'delete-demo/notes.md' -Value 'remove'
 Set-Location delete-demo
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to preview and then delete all files except one.*
@@ -973,10 +837,6 @@ Get-ChildItem -Path . -File |
     Remove-Item
 ```
 
-```text
-(no terminal output on success)
-```
-
 *Run the commands in this section to preview and then delete all files except one.*
 ```powershell
 Get-ChildItem -Path . -File |
@@ -992,18 +852,12 @@ important.txt
 
 PowerShell returns objects rather than a `wc`-style total, so build the output you want explicitly.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to count lines across all SQL files recursively.*
 ```powershell
 New-Item -ItemType Directory -Path 'sql/queries','sql/schema' -Force | Out-Null
 Set-Content -Path 'sql/queries/daily_agg.sql' -Value @('select 1;','select 2;')
 Set-Content -Path 'sql/queries/index_weights.sql' -Value @('create table t1;','create table t2;','create table t3;')
 Set-Content -Path 'sql/schema/init.sql' -Value @('begin;')
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to count lines across all SQL files recursively.*
@@ -1050,15 +904,9 @@ The original recommendation matrix is more useful as executable platform-specifi
 
 These three options change script behavior materially. Enable them immediately after `set -euo pipefail` in Bash scripts that use negated patterns, recursive `**`, or strict no-match handling.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to enable `extglob`, `globstar`, and `failglob` in scripts that depend on them.*
 ```bash
 shopt -s extglob globstar failglob
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to enable `extglob`, `globstar`, and `failglob` in scripts that depend on them.*
@@ -1075,8 +923,6 @@ failglob       	on
 #### Keep `nocaseglob` and `cdspell` in interactive startup files
 
 These are interactive conveniences, not core script defaults. `nocaseglob` widens every match in the shell, and `cdspell` only affects interactive `cd` corrections.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to keep `nocaseglob` and `cdspell` in interactive startup files.*
 ```bash
@@ -1098,8 +944,6 @@ cdspell        	on
 
 `-Filter` is the provider/native filter and is the default choice when one pattern is enough. Use `-Include` when you truly need a wildcard list, and make sure the path enumerates children instead of the directory object itself.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to prefer `-Filter` for one wildcard and `-Include` for multiple wildcards.*
 ```powershell
 New-Item -ItemType Directory -Path 'tree/etl','tree/models' -Force | Out-Null
@@ -1108,10 +952,6 @@ Set-Content -Path 'tree/etl/utils.py' -Value 'print(2)'
 Set-Content -Path 'tree/models/train.py' -Value 'print(3)'
 Set-Content -Path 'tree/models/train.sql' -Value 'select 1;'
 Set-Location tree
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to prefer `-Filter` for one wildcard and `-Include` for multiple wildcards.*
@@ -1145,8 +985,6 @@ models\train.sql
 
 `Remove-Item` is silent on success and destructive on failure. A preview is the only safe way to confirm the target set before the delete runs. The captured preview output includes the temporary root used during execution.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to preview recursive deletes with `-WhatIf`.*
 ```powershell
 New-Item -ItemType Directory -Path delete-demo -Force | Out-Null
@@ -1174,8 +1012,6 @@ Each troubleshooting item below replaces the old matrix with a concrete symptom,
 
 If a script must stop when a pattern matches nothing, enable `failglob` before the command runs. The output below is the explicit error you want to see instead of a literal `*.csv` argument flowing downstream.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to unmatched globs should fail early in scripts.*
 ```bash
 mkdir failglob-demo && cd failglob-demo
@@ -1189,8 +1025,6 @@ bash: line 1: no match: *.csv
 #### `**/*.py` stops short until `globstar` is enabled
 
 Without `globstar`, `**` is parsed as ordinary wildcard path components. The pattern below reaches only one nested level instead of the full tree.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to `**/*.py` stops short until `globstar` is enabled.*
 ```bash
@@ -1210,8 +1044,6 @@ a/one.py
 
 In non-interactive Bash, missing `extglob` produces a parse error. In interactive Bash, `!` can also collide with history expansion when `histexpand` is on, which is why the exact message can differ.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to `!(pattern)` is a syntax error until `extglob` is enabled.*
 ```bash
 rm -rf /tmp/extglob-demo && mkdir /tmp/extglob-demo
@@ -1229,8 +1061,6 @@ bash: -c: line 1: `printf "%s\n" !(important.txt)'
 
 Brace expansion is a Bash extension, not a POSIX shell feature. If the shebang is `#!/bin/sh`, the text stays untouched.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to brace expansion stays literal under `/bin/sh`.*
 ```bash
 sh -c 'echo file{1..3}.txt'
@@ -1246,17 +1076,11 @@ file{1..3}.txt
 
 `-Include` filters the child items that `Get-ChildItem` enumerates. A bare `-Path .` targets the directory object itself, so the first command returns nothing. Point the path at children with `.\*` or recurse through the tree.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to `Get-ChildItem -Include` returns nothing without `-Recurse` or `.\*`.*
 ```powershell
 New-Item -ItemType Directory -Path include-demo -Force | Out-Null
 Set-Content -Path 'include-demo/app.py' -Value 'print(1)'
 Set-Location include-demo
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to `Get-ChildItem -Include` returns nothing without `-Recurse` or `.\*`.*

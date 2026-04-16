@@ -17,7 +17,7 @@ status: complete
 >
 > "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
 >
-> - **Brian Kernighan**, *Unix for Beginners* (1979)
+> — **Brian Kernighan**, *Unix for Beginners* (1979)
 
 > [!abstract]- Summary
 >

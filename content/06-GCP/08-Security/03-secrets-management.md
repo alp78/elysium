@@ -2,9 +2,9 @@
 title: "03 - Secrets Management"
 tags: [gcp, security, secrets, secret-manager, kms]
 aliases: [GCP Secret Manager, regional secrets, secret version aliases, Secret Manager CMEK]
-description: "Secret Manager containers, versions, aliases, CMEK, regional secrets, secret-scope IAM, and rotation runbooks in Google Cloud."
+description: "Secret Manager containers, versions, aliases, CMEK, regional secrets, secret-scope IAM, and rotation runbooks in Google Cloud, anchored in archived project examples."
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -12,10 +12,10 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers Google Cloud Secret Manager as the runtime secret store for `bq-wh-nb`, including secret containers and versions, regional and automatically replicated secrets, aliases, scheduled destruction, CMEK, secret-scope IAM, impersonated access tests, and rotation-safe operating patterns.
+> Covers Google Cloud Secret Manager as the runtime secret store using archived operator evidence from `bq-wh-nb`, including secret containers and versions, regional and automatically replicated secrets, aliases, scheduled destruction, CMEK, secret-scope IAM, impersonated access tests, and rotation-safe operating patterns.
 >
-> **Scope and live context**
-> - Use live examples captured on April 13, 2026 from two lab secrets later removed during cleanup: `codex-api-token-260413`, an automatically replicated CMEK-backed secret with aliases and rotation metadata, and `codex-sql-pass-ew1-260413`, a regional secret in `europe-west1`
+> **Scope and archived context**
+> - Use archived examples captured on April 13, 2026 from two lab secrets later removed during cleanup: `codex-api-token-260413`, an automatically replicated CMEK-backed secret with aliases and rotation metadata, and `codex-sql-pass-ew1-260413`, a regional secret in `europe-west1`
 > - Distinguish what Secret Manager is good for, such as runtime credentials, from what belongs elsewhere, such as large binaries, non-sensitive configuration, or authorization policy itself
 >
 > **Secret inventory and encryption**
@@ -38,6 +38,10 @@ status: complete
 > - Warnings: `--location` alone is not enough for regional secret CLI operations, stale aliases can point to disabled versions, CMEK fails if the Secret Manager service agent lacks KMS rights, and immediate destroy removes your rollback path
 > - Recommendations table: the data-engineering scenarios table and quick-reference table map Cloud Run, Airflow, GitHub Actions, residency, and rotation requirements to the correct Secret Manager pattern
 > - Troubleshooting: 5 failure modes covering missing regional endpoint override, missing secret-scope IAM, stale aliases, missing CMEK KMS access, and premature disable or destroy actions
+>
+> [!warning] Archived demo boundary
+>
+> The original project `bq-wh-nb` has been removed. The secrets, aliases, and IAM examples in this note are preserved as archived operator reference, and this refresh did not rerun Secret Manager or KMS commands against a replacement project.
 
 > [!note]- Glossary
 >
@@ -338,6 +342,10 @@ gcloud kms keys get-iam-policy \
 
 If this binding is missing, CMEK-backed secret operations fail even when secret IAM is correct.
 
+> [!info] Current product note: CMEK dependency chain
+>
+> Secret-level IAM is only one side of a CMEK-protected design. Secret Manager also depends on its Google-managed service agent being able to use the selected KMS key, so a secret can fail for encryption reasons even when the caller has the right Secret Manager role.
+
 | Flag | Syntax | Description |
 |---|---|---|
 | `--project` | `--project=bq-wh-nb` | Project that owns the secret or KMS resource. |
@@ -374,6 +382,10 @@ This is not an IAM denial. It is a control-plane routing problem.
 > [!bug] Regional secret gotcha
 >
 > `--location=europe-west1` is not enough by itself. The `gcloud` CLI still talks to the default Secret Manager endpoint unless you override `api_endpoint_overrides/secretmanager`.
+
+> [!info] Current product note: regional endpoint expectation
+>
+> Current Secret Manager regional documentation still treats the regional endpoint as a required part of CLI and client behavior. The practical meaning is that residency is not only a storage choice; it also changes which control-plane endpoint your tools must call.
 
 #### Point the CLI at the regional Secret Manager endpoint
 
@@ -604,6 +616,10 @@ gcloud secrets describe \
 
 The container is back in its clean steady state with one active alias.
 
+> [!info] Current product note: aliases, ETags, and version targeting
+>
+> Current Secret Manager guidance pairs alias-based rotation with optimistic concurrency through `etag` checks. It also recommends referencing a concrete version number when the reader must be deterministic, instead of treating `latest` as a stable contract.
+
 | Flag | Syntax | Description |
 |---|---|---|
 | `--update-version-aliases` | `--update-version-aliases='current=2,previous=1'` | Creates or moves aliases to specific versions. |
@@ -762,7 +778,9 @@ This is the cleanest proof that access is working for the intended reason.
 ## References
 
 - https://cloud.google.com/secret-manager/docs/overview
+- https://cloud.google.com/secret-manager/docs/best-practices
 - https://cloud.google.com/secret-manager/regional-secrets/create-regional-secret
+- https://docs.cloud.google.com/secret-manager/regional-secrets/view-regional-secret-details
 - https://cloud.google.com/secret-manager/docs/assign-alias-to-secret-version
 - https://cloud.google.com/secret-manager/docs/cmek
 - https://cloud.google.com/secret-manager/docs/access-control

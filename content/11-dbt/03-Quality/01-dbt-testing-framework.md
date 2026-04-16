@@ -8,17 +8,18 @@ description: "Schema tests dbt-utils dbt-expectations custom tests"
 
 # dbt: Testing Framework
 
-> [!quote]
+> [!quote] Tests need operational context
+>
 > "Without observability, it's just chaos. Why do people invest so much in staging testing tooling, when they cannot tell if the system is healthy in the first place?"
 >
-> — **Charity Majors**, charity.wtf (2018)
+> Source: Charity Majors | charity.wtf (2018)
 
 > [!abstract]- Summary
 >
 > Explains dbt's testing system as the warehouse-side quality layer for a project, covering built-in tests, package-provided generic tests, custom singular and generic tests, failure storage, severity handling, and test-coverage strategy by model layer.
 >
 > **Test categories and warehouse assertions**
-> - Defines the major dbt test categories â€” built-in generic, `dbt_utils`, `dbt-expectations`, singular SQL tests, and custom generic macros â€” and shows where each is declared and what kinds of quality rules each fits best
+> - Defines the major dbt test categories - built-in generic, `dbt_utils`, `dbt-expectations`, singular SQL tests, and custom generic macros - and shows where each is declared and what kinds of quality rules each fits best
 > - Connects dbt testing to structural constraints, business-rule enforcement, and statistical or distributional checks that run against materialized relations in the warehouse
 >
 > **Reusable and custom test patterns**
@@ -33,7 +34,7 @@ description: "Schema tests dbt-utils dbt-expectations custom tests"
 > - Warnings: weak coverage on critical marts, overusing heavyweight tests in fast feedback paths, storing failures without a cleanup plan, and treating warning severity as harmless on business-critical rules
 > - Recommendations: match test type to failure surface, keep generic checks reusable, store failed rows when debugging, and distribute coverage intentionally across staging, intermediate, and mart layers
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **dbt test**
 > - The dbt execution surface that runs schema and singular tests against selected relations in the warehouse.
@@ -163,8 +164,7 @@ description: "Schema tests dbt-utils dbt-expectations custom tests"
 > >
 > > Contracts protect shape; tests protect content and behavior. Strong quality programs usually need both layers working together.
 
-
-### dbt Test Categories
+## dbt Test Categories
 
 | Category | Defined in | Examples |
 |---|---|---|
@@ -176,9 +176,11 @@ description: "Schema tests dbt-utils dbt-expectations custom tests"
 
 ---
 
-### dbt Built-in Generic Tests
+## dbt Built-in Generic Tests
 
 Declared directly in `.yml` files alongside model or source definitions.
+
+*This YAML example shows how column-level integrity checks and model-level grain checks live next to the resource they protect.*
 
 ```yaml
 # models/staging/market_data/_staging_market_data.yml
@@ -238,6 +240,8 @@ models:
 ## dbt-utils Generic Tests
 
 Install via `packages.yml`:
+
+*This package declaration pins the shared test library so generic test names and macros resolve consistently across environments.*
 
 ```yaml
 packages:
@@ -308,6 +312,8 @@ tests:
 ## dbt-expectations Generic Tests
 
 Install:
+
+*This package declaration adds expectation-style tests for richer statistical and table-level assertions than the built-in set covers on its own.*
 
 ```yaml
 packages:
@@ -388,9 +394,12 @@ Singular tests are plain SQL files in the `tests/` directory. A test passes when
 > A singular test that queries an empty table returns zero rows and passes -- even though no data was validated. This is the most common false-positive in dbt testing. Always pair singular tests with a `dbt_expectations.expect_table_row_count_to_be_between` test to ensure the source table actually has data. Otherwise a broken ingestion pipeline produces an empty table that passes all quality checks.
 
 > [!success] Fix: guard every singular test with a row-count test
+>
 > Add `dbt_expectations.expect_table_row_count_to_be_between` with a meaningful `min_value` to the same model. This ensures the pipeline fails visibly when no data was loaded, preventing a false-positive pass on an empty table.
 
 ### assert_no_negative_prices
+
+*This singular test returns the exact offending rows and columns when price fields contain non-positive values that should never leave staging.*
 
 ```sql
 -- tests/assert_no_negative_prices.sql
@@ -431,6 +440,8 @@ where high_price <= 0
 
 ### assert_weights_sum_to_100
 
+*This singular test validates that constituent weights remain close to a full portfolio weight on recent rebalance dates.*
+
 ```sql
 -- tests/assert_weights_sum_to_100.sql
 -- Fails if any index's constituent weights do not sum to approximately 1.0
@@ -463,6 +474,8 @@ where total_weight < 0.99
 
 ### assert_no_future_dated_prices
 
+*This singular test catches ingestion and timezone bugs by returning any price rows dated beyond the warehouse's current date.*
+
 ```sql
 -- tests/assert_no_future_dated_prices.sql
 -- Fails if any price observation is dated after today.
@@ -477,6 +490,8 @@ where price_date > current_date()
 ```
 
 ### assert_esg_scores_coverage
+
+*This warning-level singular test highlights large-cap constituents missing recent ESG coverage without halting the entire build.*
 
 ```sql
 -- tests/assert_esg_scores_coverage.sql
@@ -528,6 +543,8 @@ Generic tests are macros that can be applied to any model/column via YAML. They 
 
 Useful for cumulative adjustment factors that must be monotonically non-decreasing per security.
 
+*This generic test macro turns a reusable monotonicity rule into parameterized SQL that can be attached to any ordered series.*
+
 ```sql
 -- macros/tests/assert_column_not_decreasing.sql
 {% test assert_column_not_decreasing(model, column_name, partition_by, order_by) %}
@@ -557,6 +574,8 @@ where prev_value is not null
 
 Apply in YAML:
 
+*This YAML attachment applies the custom generic test to a specific model column and defines the partition and ordering context the macro expects.*
+
 ```yaml
 models:
   - name: int_corporate_action_adjustments
@@ -569,6 +588,8 @@ models:
 ```
 
 ### Generic test: assert_no_orphan_keys
+
+*This macro-level test finds child keys that do not resolve to a declared parent relation, turning a repeated referential-integrity rule into reusable test logic.*
 
 ```sql
 -- macros/tests/assert_no_orphan_keys.sql
@@ -585,9 +606,11 @@ where parent.{{ parent_column }} is null
 
 ---
 
-### dbt --store-failures
+## dbt --store-failures
 
 When `--store-failures` is active, dbt writes the failing rows from every failed test into a dedicated schema instead of just reporting a count.
+
+*These commands enable persistent failure capture and then inspect the warehouse tables dbt writes for failed assertions.*
 
 ```bash
 dbt test --store-failures
@@ -609,12 +632,15 @@ select * from dbt_dev.test_failures.accepted_range_stg_market_data__index_consti
 select * from dbt_dev.test_failures.assert_no_negative_prices
 ```
 
-> [!TIP] Store-failures in CI
-> Enable `--store-failures` in CI runs so that when a test fails, the exact bad rows are available for debugging without re-running the pipeline. Pair with `--severity warn` for non-critical checks so the pipeline continues while failures are logged.
+> [!tip] Store failures in CI
+>
+> Enable `--store-failures` in CI runs so that when a test fails, the exact bad rows are available for debugging without re-running the pipeline. Pair it with carefully chosen severity levels so non-critical checks can be investigated without blocking the whole pipeline.
 
 ---
 
-### dbt Test severity: warn vs error
+## dbt Test severity: warn vs error
+
+*This YAML example shows how severity changes whether a failed assertion is only reported or becomes a hard pipeline stop.*
 
 ```yaml
 columns:
@@ -654,7 +680,8 @@ Guidance by data type:
 >
 > A test with `severity: warn` will report failures in the dbt output but exit with code 0, meaning your CI pipeline treats it as a success. If you promote `warn` tests to detect real issues, add a post-run script that parses `run_results.json` and fails CI when warn-level failures exceed a threshold. Otherwise, warnings accumulate unnoticed.
 
-> [!success] Fix: parse run_results.json in CI to surface warn failures
+> [!success] Fix: parse `run_results.json` in CI
+>
 > After `dbt test`, run a script that reads `target/run_results.json` and counts results with `status: "warn"`. Fail the CI step if the warn count exceeds an acceptable threshold, turning silent warnings into actionable gate failures.
 
 ## Test Coverage Strategy by Layer

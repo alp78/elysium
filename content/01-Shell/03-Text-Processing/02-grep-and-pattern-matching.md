@@ -45,7 +45,7 @@ keywords:
   - compressed file search
 description: "Exhaustive reference for grep and pattern matching in bash and PowerShell, covering basic flags, regular expressions, advanced features, data engineering scenarios, and ripgrep. Every bash example paired with its PowerShell Select-String equivalent."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -138,8 +138,6 @@ Use a temporary directory so the examples stay isolated from real logs and sourc
 
 #### Build a disposable grep demo tree
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to build a disposable grep demo tree.*
 ```bash
 tmp=/tmp/elysium-grep-demo
@@ -225,8 +223,6 @@ find "$tmp" -maxdepth 3 -type f | sort
 Mirror the same tree under `$env:TEMP` so the PowerShell and `findstr` examples use disposable data instead of real files.
 
 #### Build a disposable `Select-String` demo tree
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to build a disposable `Select-String` demo tree.*
 ```powershell
@@ -318,8 +314,6 @@ Use plain `grep` first, then add flags only when the behavior needs to change.
 
 Use plain `grep` when the pattern is already case-correct and the file set is explicit.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to find `ERROR` lines in one file.*
 ```bash
 tmp=/tmp/elysium-grep-demo
@@ -335,8 +329,6 @@ grep 'ERROR' "$tmp/app.log"
 
 `-i` keeps the search stable when the source mixes uppercase and lowercase log tokens. `-n` is added here because case-insensitive searches are usually followed by navigation.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to ignore case when the log level changes.*
 ```bash
 grep -in 'error' '/tmp/elysium-grep-demo/app.log'
@@ -350,8 +342,6 @@ grep -in 'error' '/tmp/elysium-grep-demo/app.log'
 #### Match `log` but not `logfile`
 
 `-w` forces a whole-word match, which matters when the token can appear as a substring inside longer identifiers.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to match `log` but not `logfile`.*
 ```bash
@@ -367,8 +357,6 @@ log
 
 `-c` reports the number of matching lines, not the number of individual match occurrences on each line.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to count matching lines.*
 ```bash
 tmp=/tmp/elysium-grep-demo
@@ -382,8 +370,6 @@ grep -c 'ERROR' "$tmp/app.log"
 #### List only the files that contain a match
 
 `-l` is safer than printing the matching lines when the content itself may be noisy or sensitive.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to list only the files that contain a match.*
 ```bash
@@ -399,8 +385,6 @@ grep -l 'ERROR' "$tmp/app.log" "$tmp/project/logs/app.log"
 #### Remove noisy `DEBUG` lines
 
 `-v` inverts the match and leaves only the lines that do not contain the pattern.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to remove noisy `DEBUG` lines.*
 ```bash
@@ -421,8 +405,6 @@ mode=prod
 
 Project the `MatchInfo` object into predictable text when you want line numbers and the matched line without the default console emphasis.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to find `ERROR` lines in one file.*
 ```powershell
 $tmp = Join-Path $env:TEMP 'elysium-grep-demo'
@@ -438,8 +420,6 @@ app.log:4: 2026-04-14 09:03:00 ERROR disk full
 #### Find `ERROR` regardless of case
 
 This is the default behavior in PowerShell, which is the opposite of plain `grep`.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to find `ERROR` regardless of case.*
 ```powershell
@@ -457,8 +437,6 @@ app.log:4: 2026-04-14 09:03:00 ERROR disk full
 
 `Select-String` reads strings from the pipeline without losing regex support.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to search pipeline input instead of a path.*
 ```powershell
 $tmp = Join-Path $env:TEMP 'elysium-grep-demo'
@@ -475,8 +453,6 @@ Get-Content -LiteralPath (Join-Path $tmp 'app.log') |
 
 PowerShell has no `-w` switch, so the equivalent is an explicit word-boundary regex.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to match `log` but not `logfile`.*
 ```powershell
 $tmp = Join-Path $env:TEMP 'elysium-grep-demo'
@@ -492,8 +468,6 @@ log
 
 The direct count is the number of matching lines in the returned result set.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to count matching lines.*
 ```powershell
 $tmp = Join-Path $env:TEMP 'elysium-grep-demo'
@@ -507,8 +481,6 @@ $tmp = Join-Path $env:TEMP 'elysium-grep-demo'
 #### List only the files that contain a match
 
 Expand `Path` and deduplicate it when multiple matches may come from the same file.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to list only the files that contain a match.*
 ```powershell
@@ -525,8 +497,6 @@ C:\Users\aperi\AppData\Local\Temp\elysium-grep-demo\project\logs\app.log
 #### Remove noisy `DEBUG` lines
 
 `-NotMatch` is the direct inverse filter for lines that should be excluded from the stream.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to remove noisy `DEBUG` lines.*
 ```powershell
@@ -582,8 +552,6 @@ On Linux, the critical distinction is between BRE, ERE, and GNU `-P`.
 
 Plain `grep 'ERROR|WARN'` searches for the literal character `|`. Use `grep -E 'ERROR|WARN'` or the BRE form `grep 'ERROR\|WARN'` when alternation is required.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to alternate between `ERROR` and `WARN`.*
 ```bash
 grep -n 'ERROR|WARN' '/tmp/elysium-grep-demo/app.log' || echo 'no match'
@@ -608,8 +576,6 @@ grep -nE 'ERROR|WARN' '/tmp/elysium-grep-demo/app.log'
 
 `-o` is useful when downstream commands should work on the captured token instead of the full line.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to print only the matching level tokens.*
 ```bash
 tmp=/tmp/elysium-grep-demo
@@ -625,8 +591,6 @@ ERROR
 #### Extract `user=` values with GNU grep PCRE
 
 GNU `grep -P` supports lookbehind and other Perl-style constructs, but do not assume that option exists on every non-GNU build.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to extract `user=` values with GNU grep PCRE.*
 ```bash
@@ -659,8 +623,6 @@ PowerShell uses the .NET regex engine. Grouping, alternation, lookahead, and loo
 
 Passing a string array to `-Pattern` is the closest `Select-String` equivalent to repeated `grep -e`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to match both `ERROR` and `WARN` with multiple patterns.*
 ```powershell
 $tmp = Join-Path $env:TEMP 'elysium-grep-demo'
@@ -677,8 +639,6 @@ app.log:4: 2026-04-14 09:03:00 ERROR disk full
 #### Return every `user=` value from one line
 
 `-AllMatches` matters whenever multiple values can appear on the same input line.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to return every `user=` value from one line.*
 ```powershell
@@ -704,8 +664,6 @@ Recursive grep is useful, but it should be narrowed deliberately so you do not r
 
 Combine `-r` with `--include` and `--exclude` when the directory tree contains mixed content.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to search only Python files and skip test files.*
 ```bash
 tmp=/tmp/elysium-grep-demo
@@ -719,8 +677,6 @@ grep -r --include='*.py' --exclude='test_*' 'TODO' "$tmp/project"
 #### Show one line of context around a failure
 
 `-C 1` keeps the matching line together with its immediate neighbors.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to show one line of context around a failure.*
 ```bash
@@ -737,8 +693,6 @@ grep -C 1 'ERROR payment timeout' "$tmp/app.log"
 #### Verify a quiet check with its exit status
 
 `grep -q` intentionally prints nothing, so the follow-up verification here is the exit code itself.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to verify a quiet check with its exit status.*
 ```bash
@@ -759,8 +713,6 @@ PowerShell reaches the same outcome by composing `Get-ChildItem` and `Select-Str
 
 Filter the file list before `Select-String` so the match set stays clean.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to search only Python files and skip test files.*
 ```powershell
 $tmp = Join-Path $env:TEMP 'elysium-grep-demo'
@@ -778,8 +730,6 @@ C:\Users\aperi\AppData\Local\Temp\elysium-grep-demo\project\src\app.py:1: # TODO
 
 `-Context 1,1` returns one line before and after each match.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to show one line of context around a failure.*
 ```powershell
 $tmp = Join-Path $env:TEMP 'elysium-grep-demo'
@@ -796,8 +746,6 @@ Select-String -Pattern 'ERROR payment timeout' -Path (Join-Path $tmp 'app.log') 
 #### Return a Boolean instead of `MatchInfo` objects
 
 Use `-Quiet` when the calling code only needs a true-or-false answer.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to return a Boolean instead of `MatchInfo` objects.*
 ```powershell
@@ -821,8 +769,6 @@ The Linux side is usually strongest at stream processing and compressed-log sear
 
 `zgrep` preserves the same search behavior while reading from a gzip-compressed file.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to search compressed logs without unpacking them.*
 ```bash
 tmp=/tmp/elysium-grep-demo
@@ -837,8 +783,6 @@ zgrep 'ERROR' "$tmp/app.log.gz"
 #### Scan for candidate secret files without printing the secret
 
 `-l` is the safer first pass because it reports only the filenames that need review.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to scan for candidate secret files without printing the secret.*
 ```bash
@@ -857,8 +801,6 @@ The PowerShell side is strongest when the search result needs to feed a report o
 #### Project match objects into a report row set
 
 Extract only the fields that are operationally useful and discard the rest of the object shape.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to project match objects into a report row set.*
 ```powershell
@@ -880,8 +822,6 @@ Select-String -Pattern '(ERROR|WARN)' -Path (Join-Path $tmp 'app.log') |
 #### Fall back to `findstr` when only cmd.exe tooling is available
 
 `findstr` is far less capable than `Select-String`, but it remains useful in constrained Windows environments.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to fall back to `findstr` when only cmd.exe tooling is available.*
 ```powershell
@@ -937,8 +877,6 @@ Literal tokens and recursive trees are where `grep` and `rg` diverge most clearl
 
 In regex mode, `.` means "any character." Fixed-string mode avoids that overmatch.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to search for a literal IP address.*
 ```bash
 tmp=/tmp/elysium-grep-demo
@@ -964,8 +902,6 @@ client=10.132.0.2
 
 `rg` is a better default for repository search because recursion is built in and glob filtering is concise.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to search Python files with ripgrep globs.*
 ```bash
 tmp=/tmp/elysium-grep-demo
@@ -983,8 +919,6 @@ The same distinction exists on Windows: use literal matching for literal tokens 
 #### Search for a literal IP address
 
 Regex mode and literal mode are different operations in `Select-String`, even when the pattern looks simple.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to search for a literal IP address.*
 ```powershell
@@ -1015,8 +949,6 @@ client=10.132.0.2
 
 `rg` behaves the same way on Windows, so it is often the cleanest cross-platform recursive search tool.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to search Python files with ripgrep globs.*
 ```powershell
 $tmp = Join-Path $env:TEMP 'elysium-grep-demo'
@@ -1039,7 +971,9 @@ Keep the default choices simple and predictable.
 
 If the token is an IP address, path, URL, or version string, the safest default is `grep -F`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+> [!info] Literal mode disables regex parsing
+>
+> GNU `grep` treats patterns as regular expressions unless you ask for fixed strings. `-F` makes punctuation such as `.`, `?`, `+`, and `|` literal, which is the safer default for copied error text, IP addresses, paths, and version identifiers.
 
 *Run the commands in this section to prefer fixed-string mode for literal tokens.*
 ```bash
@@ -1054,8 +988,6 @@ client=10.132.0.2
 #### Prefer filename-only scans for secret hunting
 
 Start with `-l` so the terminal does not become an accidental secret sink.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to prefer filename-only scans for secret hunting.*
 ```bash
@@ -1075,7 +1007,9 @@ On the PowerShell side, the most useful defaults are the literal mode and the Bo
 
 Use regex mode only when the wildcard behavior is intentional.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+> [!info] Regex is still the default
+>
+> `Select-String` interprets `-Pattern` as regex unless `-SimpleMatch` is added. Use `-SimpleMatch` for exact text searches, and pair it with `-Quiet` when the calling code only needs a true-or-false result instead of `MatchInfo` objects.
 
 *Run the commands in this section to prefer `-SimpleMatch` for literal tokens.*
 ```powershell
@@ -1092,8 +1026,6 @@ client=10.132.0.2
 #### Prefer `-Quiet` when a script needs a Boolean
 
 This keeps the branch condition explicit and avoids carrying full `MatchInfo` objects through a control-flow check.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to prefer `-Quiet` when a script needs a Boolean.*
 ```powershell
@@ -1116,8 +1048,6 @@ On Linux, the main failure mode is assuming ERE behavior while still using plain
 #### `grep 'ERROR|WARN'` returns no matches
 
 If the pattern contains `|`, `+`, `?`, or grouping, plain `grep` is the first thing to inspect.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to `grep 'ERROR|WARN'` returns no matches.*
 ```bash
@@ -1142,8 +1072,6 @@ grep -nE 'ERROR|WARN' '/tmp/elysium-grep-demo/app.log'
 #### A dotted pattern matches more lines than expected
 
 Dots are regex wildcards. Switch to `-F` when the dots are literal punctuation.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to a dotted pattern matches more lines than expected.*
 ```bash
@@ -1174,8 +1102,6 @@ On Windows, the main surprises are the default case-insensitive behavior and the
 
 PowerShell is case-insensitive by default. Add `-CaseSensitive` when porting a plain `grep` check that should remain case-sensitive.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to a ported grep check starts matching regardless of case.*
 ```powershell
 $tmp = Join-Path $env:TEMP 'elysium-grep-demo'
@@ -1199,8 +1125,6 @@ False
 #### A literal search is still being parsed as regex
 
 `Select-String` treats the pattern as regex unless `-SimpleMatch` is added.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to a literal search is still being parsed as regex.*
 ```powershell

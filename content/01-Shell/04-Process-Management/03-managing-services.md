@@ -8,13 +8,14 @@ aliases: [systemctl, journalctl, service management, systemd, daemon, OOM kill, 
 keywords: [systemctl, journalctl, systemd, service, daemon, start service, stop service, restart service, enable on boot, service logs, OOM killer, out of memory, service status, mssql-server, datadog-agent, airflow, service failed, Set-Service, Start-Service]
 description: "Managing Linux systemd services and Windows services for production data engineering infrastructure. Covers start/stop/restart/enable, reading service logs with journalctl, diagnosing OOM kills, and the PowerShell equivalents."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
 # Managing Services
 
-> [!quote]
+> [!quote] Poettering on systemd
+>
 > "systemd is never finished, never complete, but tracking progress of technology."
 >
 > — **Lennart Poettering** (creator of systemd)
@@ -193,6 +194,10 @@ Apr 14 15:10:48 Elysium systemd[332]: Reloaded vault-style-demo.service - Vault 
 #### Reload unit file changes from disk
 
 After editing a unit file directly on disk, the manager must re-parse its definitions. The pre-check below intentionally touches the demo unit so `NeedDaemonReload` flips to `yes`; the reload should clear that flag without restarting the service.
+
+> [!info] `daemon-reload` is not service reload
+>
+> `systemctl daemon-reload` tells systemd to rescan unit files and dependency metadata. It does not re-read the application's own configuration and it does not restart the running service; if the changed unit definition should affect runtime behavior, follow it with the appropriate `restart` or `reload`.
 
 ```bash
 printf '\n# demo touch\n' >> ~/.config/systemd/user/vault-style-demo.service

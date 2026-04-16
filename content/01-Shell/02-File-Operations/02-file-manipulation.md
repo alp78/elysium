@@ -8,7 +8,7 @@ aliases: [cp, mv, rm, chmod, chown, mkdir, file permissions, safe delete, file o
 keywords: [cp, mv, rm, chmod, chown, mkdir, rsync, file copy, file move, delete, permissions, ownership, octal permissions, safe delete, trash, archive mode, disk usage, docker permissions, airflow uid]
 description: "Safe file copying, moving, and deletion patterns for production environments. Covers rsync archive mode, chmod octal notation, chown for Docker/Airflow containers, and the safe delete pattern using a trash directory."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-15
 status: complete
 ---
 
@@ -134,8 +134,6 @@ flowchart TD
 
 This is the baseline local copy. Add `-v` in demonstrations or incident response work when you want the destination path echoed back immediately.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to copy a single file.*
 ```bash
 cp -v /tmp/elysium-file-manipulation/cp-single/source.txt /tmp/elysium-file-manipulation/cp-single/dest.txt
@@ -148,8 +146,6 @@ cp -v /tmp/elysium-file-manipulation/cp-single/source.txt /tmp/elysium-file-mani
 #### Copy a directory recursively
 
 `-r` copies the tree structure and file contents, but it is still not archive mode. Use this form for quick copies when you do not care about preserving the original metadata.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to copy a directory recursively.*
 ```bash
@@ -165,8 +161,6 @@ cp -rv /tmp/elysium-file-manipulation/cp-recursive/source_dir /tmp/elysium-file-
 #### Archive copy preserving all metadata
 
 `cp -a` is the safer default for data directories because it preserves the state that downstream tooling often keys on. That includes `mtime`, modes, and symlink shape.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to archive copy preserving all metadata.*
 ```bash
@@ -193,15 +187,9 @@ stat -c '%n %A %y %N' /tmp/elysium-file-manipulation/cp-archive/dest_dir/config.
 
 No-clobber copies are intentionally quiet when the destination already exists, so verify the target immediately after the command if you need proof that the original file stayed in place.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to skip existing files (no-clobber).*
 ```bash
 cp -n /tmp/elysium-file-manipulation/cp-noclobber/source.txt /tmp/elysium-file-manipulation/cp-noclobber/dest.txt
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to skip existing files (no-clobber).*
@@ -216,8 +204,6 @@ destination-stays
 #### Copy only when source is newer
 
 `-u` turns `cp` into a simple timestamp-based update step. It is useful in build or staging workflows that do not need `rsync` but still want to avoid replacing newer destinations.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to copy only when source is newer.*
 ```bash
@@ -249,8 +235,6 @@ Use `rsync` when the copy might be large, remote, restartable, or destructive to
 
 `--progress` makes a one-off copy observable. In automation, keep the progress output for operator runs and drop it when logs need to stay compact.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to copy a file with progress display.*
 ```bash
 rsync -ah --progress /tmp/elysium-file-manipulation/rsync-progress/source.tar.gz /tmp/elysium-file-manipulation/rsync-progress/dest/
@@ -266,8 +250,6 @@ source.tar.gz
 #### Sync a directory, deleting removed files from destination
 
 `--delete` makes the destination converge on the source. That is what you want for mirror directories and exactly what you do not want if the source path is wrong, so dry-run this form before the live pass.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to sync a directory, deleting removed files from destination.*
 ```bash
@@ -293,8 +275,6 @@ The source slash controls whether `rsync` copies the directory itself or only it
 #### Dry-run preview
 
 Dry runs are the last safe place to catch a bad trailing slash, a wrong destination, or an unexpected delete set.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to dry-run preview.*
 ```bash
@@ -333,8 +313,6 @@ total size is 5  speedup is 0.05 (DRY RUN)
 
 This is the standard same-directory rename. Use it after writing a temporary file in the final destination directory so readers never see a partial publish.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to rename a file.*
 ```bash
 mv -v /tmp/elysium-file-manipulation/mv-rename/old.txt /tmp/elysium-file-manipulation/mv-rename/new.txt
@@ -348,7 +326,9 @@ renamed '/tmp/elysium-file-manipulation/mv-rename/old.txt' -> '/tmp/elysium-file
 
 This form relocates the file into an existing directory. If the target is on another filesystem and the payload is large, prefer `rsync -ah --remove-source-files` so you can watch and verify the transfer.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+> [!warning] Cross-filesystem moves stop being atomic
+>
+> GNU `mv` is only a metadata rename while source and destination stay on the same filesystem. If the destination lives on a different filesystem, `mv` falls back to copying as if by `cp -a` and then removing the source, which means partial progress and cleanup behavior matter again.
 
 *Run the commands in this section to move a file to another directory.*
 ```bash
@@ -374,8 +354,6 @@ The Perl `rename` utility is efficient when you have the expected implementation
 #### Batch rename file extensions
 
 This form rewrites matching filenames in place. Check `rename --version` first because Debian-family and some RHEL-family systems do not ship the same syntax.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to batch rename file extensions.*
 ```bash
@@ -413,8 +391,6 @@ renamed '/tmp/elysium-file-manipulation/rename-portable/report-02.csv' -> '/tmp/
 
 Use this for a confirmed single-file delete. There is no recycle bin and no rollback.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to delete a single file.*
 ```bash
 rm -v /tmp/elysium-file-manipulation/rm-file/file.txt
@@ -427,8 +403,6 @@ removed '/tmp/elysium-file-manipulation/rm-file/file.txt'
 #### Delete a directory recursively
 
 `-r` walks the tree and removes every nested entry. Use it only after inspecting the directory contents.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to delete a directory recursively.*
 ```bash
@@ -445,8 +419,6 @@ removed directory '/tmp/elysium-file-manipulation/rm-directory/directory/'
 
 `-f` suppresses prompts and ignores missing files. Combined with `-r`, it is the fastest way to remove the wrong tree, so pair it with explicit path checks and `set -u` in scripts.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to force delete without confirmation.*
 ```bash
 rm -rfv /tmp/elysium-file-manipulation/rm-force/directory/
@@ -462,7 +434,9 @@ removed directory '/tmp/elysium-file-manipulation/rm-force/directory/'
 
 A staged move gives you a recovery window. The live demo uses a fixed trash directory name so the verification stays readable, but the same pattern should be timestamped in production scripts.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
+> [!tip] Keep the trash directory on the same filesystem
+>
+> This pattern works best when the staging directory lives on the same volume as the target. In that case the move stays a fast rename; if you send the target to another filesystem, the "safe delete" step turns into a copy-then-remove operation and loses its quick rollback characteristics.
 
 *Run the commands in this section to safe delete — move to staging area instead.*
 ```bash
@@ -520,8 +494,6 @@ Moved to /tmp/trash_20260414_061410 — verify before final deletion
 
 This creates one directory and shows the resulting path immediately.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to create a directory.*
 ```bash
 mkdir -pv /tmp/elysium-file-manipulation/mkdir-single/mydir
@@ -535,8 +507,6 @@ mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-single/mydir'
 #### Create nested directories with parents
 
 This is the Linux equivalent of a declarative directory scaffold. It is safe to run repeatedly because existing parents are not treated as errors.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to create nested directories with parents.*
 ```bash
@@ -569,8 +539,6 @@ mkdir: created directory '/tmp/elysium-file-manipulation/mkdir-nested/data/pipel
 
 Octal notation is the compact way to normalize a file or script to a known state.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to set permissions with octal notation.*
 ```bash
 chmod -v 755 /tmp/elysium-file-manipulation/chmod-octal/script.sh
@@ -584,8 +552,6 @@ mode of '/tmp/elysium-file-manipulation/chmod-octal/script.sh' changed from 0644
 
 Symbolic notation is safer when you only want to add one capability and leave the rest of the mode alone.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to add execute bit with symbolic notation.*
 ```bash
 chmod -v +x /tmp/elysium-file-manipulation/chmod-exec/script.sh
@@ -598,8 +564,6 @@ mode of '/tmp/elysium-file-manipulation/chmod-exec/script.sh' changed from 0644 
 #### Modify specific permission bits
 
 This form adjusts only the named subject and permission bits. It is useful when group write access needs to be removed without rewriting the whole mode by hand.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to modify specific permission bits.*
 ```bash
@@ -632,8 +596,6 @@ Ownership fixes are where container runtime mismatches usually surface. These ex
 
 This is the direct fix when the wrong account owns a single file or artifact.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to change owner and group of a file.*
 ```bash
 chown -v root:root /tmp/elysium-file-manipulation/chown-single/file.txt
@@ -646,8 +608,6 @@ changed ownership of '/tmp/elysium-file-manipulation/chown-single/file.txt' from
 #### Fix Airflow container permissions on a bind mount
 
 Airflow images commonly run as UID `50000`. If the bind-mounted host path belongs to another user, task logs, DAG parsing, or plugins can fail with `Permission denied`.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to fix Airflow container permissions on a bind mount.*
 ```bash
@@ -677,8 +637,6 @@ Verify the container UID with `docker inspect` before applying the same pattern 
 
 This is the quick size check before a move, archive, or cleanup window.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to get total size of a directory.*
 ```bash
 du -sh /tmp/elysium-file-manipulation/du/data
@@ -691,8 +649,6 @@ du -sh /tmp/elysium-file-manipulation/du/data
 #### List subdirectory sizes, sorted largest first
 
 This form shows which immediate child directories are dominating the parent path.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to list subdirectory sizes, sorted largest first.*
 ```bash
@@ -722,8 +678,6 @@ du -h --max-depth=1 /tmp/elysium-file-manipulation/du/data | sort -rh
 
 This narrows the report to the filesystem that backs `/tmp`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to show disk usage for the target filesystem.*
 ```bash
 df -h /tmp
@@ -737,8 +691,6 @@ Filesystem      Size  Used Avail Use% Mounted on
 #### Check inode usage
 
 Bytes are not the only capacity limit. Inode exhaustion blocks new files even when the disk still has free space.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to check inode usage.*
 ```bash
@@ -770,8 +722,6 @@ PowerShell covers the same problem space with cmdlets instead of single-purpose 
 
 `-PassThru` makes the copy observable. The follow-up check shows both source and destination timestamps after the copy.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to copy a file.*
 ```powershell
 Copy-Item -Path "$env:TEMP\ElysiumFileManipulation\copy-item-file\source.txt" -Destination "$env:TEMP\ElysiumFileManipulation\copy-item-file\dest.txt" -PassThru | Select-Object Name, LastWriteTime
@@ -798,8 +748,6 @@ dest.txt   02-Jan-24 3:04:00
 #### Copy a directory recursively
 
 `-Recurse` is required for directory trees. The destination container and its nested file appear in the returned object stream.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to copy a directory recursively.*
 ```powershell
@@ -844,8 +792,6 @@ C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\copy-item-directory\de
 
 The returned object confirms the new path immediately.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to move a file.*
 ```powershell
 Move-Item -Path "$env:TEMP\ElysiumFileManipulation\move-item-file\old.txt" -Destination "$env:TEMP\ElysiumFileManipulation\move-item-file\new.txt" -PassThru | Select-Object Name, FullName
@@ -872,8 +818,6 @@ new.txt C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\move-item-file
 
 This is the direct in-place rename.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to rename a file.*
 ```powershell
 Rename-Item -Path "$env:TEMP\ElysiumFileManipulation\rename-item-file\old.txt" -NewName "new.txt" -PassThru | Select-Object Name, FullName
@@ -888,8 +832,6 @@ new.txt C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\rename-item-fi
 #### Batch rename with regex
 
 The script block form of `-NewName` lets you reuse .NET regex replacement logic across every matching file in the pipeline.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to batch rename with regex.*
 ```powershell
@@ -918,8 +860,6 @@ two.csv.bak
 
 This is the last cheap check before an irreversible delete.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to list contents before deleting.*
 ```powershell
 Get-ChildItem "$env:TEMP\ElysiumFileManipulation\remove-item-list\directory" | Format-Table Name
@@ -936,15 +876,9 @@ beta.txt
 
 The delete itself is silent, so verify the result immediately. If Windows still holds a handle open and `Remove-Item` fails, the .NET `Directory.Delete()` call is the fallback worth keeping in your runbook.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to delete a directory recursively.*
 ```powershell
 Remove-Item "$env:TEMP\ElysiumFileManipulation\remove-item-delete\directory" -Recurse -Force
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to delete a directory recursively.*
@@ -959,10 +893,6 @@ False
 *Run the commands in this section to delete a directory recursively.*
 ```powershell
 [System.IO.Directory]::Delete("$env:TEMP\ElysiumFileManipulation\remove-item-dotnet\directory", $true)
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Run the commands in this section to delete a directory recursively.*
@@ -990,8 +920,6 @@ False
 
 This creates the full parent chain and returns the final directory object.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to create a directory.*
 ```powershell
 New-Item -ItemType Directory -Path "$env:TEMP\ElysiumFileManipulation\new-item\data\pipeline\bronze" -Force | Select-Object FullName, Name, PSIsContainer
@@ -1018,8 +946,6 @@ C:\Users\aperi\AppData\Local\Temp\ElysiumFileManipulation\new-item\data\pipeline
 
 The raw ACL output is machine-specific, but the structure shows which ACEs are inherited and which principal owns which right.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to view permissions on a file or directory.*
 ```powershell
 icacls "$env:TEMP\ElysiumFileManipulation\icacls"
@@ -1040,8 +966,6 @@ Successfully processed 1 files; Failed processing 0 files
 
 The `(OI)(CI)` flags make the grant flow to files and child directories as well as the directory itself.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to grant a user full control.*
 ```powershell
 icacls "$env:TEMP\ElysiumFileManipulation\icacls" /grant "$($env:USERDOMAIN)\$($env:USERNAME):(OI)(CI)F"
@@ -1055,8 +979,6 @@ Successfully processed 1 files; Failed processing 0 files
 #### Remove all permissions for a user
 
 This removes explicit ACEs for the named principal. Inherited permissions can still leave the user effective access through another group.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to remove all permissions for a user.*
 ```powershell
@@ -1072,8 +994,6 @@ Successfully processed 1 files; Failed processing 0 files
 
 `/reset /T` is the recovery path when explicit grants have drifted too far from the parent directory policy.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to reset permissions to inherited defaults.*
 ```powershell
 icacls "$env:TEMP\ElysiumFileManipulation\icacls" /reset /T
@@ -1087,8 +1007,6 @@ Successfully processed 1 files; Failed processing 0 files
 #### Take ownership of a file or directory
 
 Use `takeown` before `icacls` when you are locked out of the path entirely.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to take ownership of a file or directory.*
 ```powershell
@@ -1140,8 +1058,6 @@ Permission shorthand:
 
 This keeps the raw byte counts intact.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to show disk space for all drives.*
 ```powershell
 Get-PSDrive -PSProvider FileSystem | Select-Object Name, Used, Free
@@ -1157,8 +1073,6 @@ Temp 1777709449216 268719779840
 #### Show disk space in human-readable GB
 
 This converts the same numbers into operator-friendly gigabytes.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to show disk space in human-readable GB.*
 ```powershell
@@ -1179,8 +1093,6 @@ This is the PowerShell equivalent of `du -sh`: enumerate the files, sum their by
 #### Get total size of a directory in MB
 
 The fixture contains two files totaling 5 MB, which makes the math easy to validate.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to get total size of a directory in MB.*
 ```powershell

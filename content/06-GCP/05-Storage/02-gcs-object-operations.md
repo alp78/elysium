@@ -4,7 +4,7 @@ tags: [gcp, gcs, storage]
 aliases: [GCS objects, gcloud storage operations, object generations, signed URLs, storage notifications]
 description: "Object naming, metadata, generations, preconditions, copy and sync workflows, holds, restore, signed URLs, and event-driven automation in Google Cloud Storage."
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -12,11 +12,11 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers Google Cloud Storage object-level operations in `bq-wh-nb`, with live `gcloud storage` workflows for inspection, safe mutation, restore, controlled sharing, and event-driven automation across production and scratch buckets.
+> Covers Google Cloud Storage object-level operations with `gcloud storage` workflows for inspection, safe mutation, restore, controlled sharing, and event-driven automation across production and scratch buckets.
 >
 > **Inspection and verification**
 > - Explains object names, prefixes, content type, checksums, generations, and metagenerations so operators can identify the exact object body and metadata state before any mutation
-> - Shows `gcloud storage ls -l -r`, `cat`, `objects describe`, and `hash` patterns for verifying prefix contents, inline text payloads, live metadata, and local file integrity
+> - Shows `gcloud storage ls -l -r`, `cat`, `objects describe`, and `hash` patterns for verifying prefix contents, inline text payloads, archived metadata snapshots, and local file integrity
 > - Uses scratch and production-style buckets to ground object inspection in real paths such as `landing/`, `archive/`, `sync/`, and `events/`
 >
 > **Copy, sync, move, and rewrite**
@@ -27,16 +27,22 @@ status: complete
 > **Safe mutation and recovery controls**
 > - Covers generation and metageneration preconditions, custom metadata patching, stale-precondition failure behavior, temporary hold, event-based hold, per-object retention, soft delete, restore tokens, and object restore
 > - Explains optimistic concurrency through `--if-generation-match` and `--if-metageneration-match`, plus the difference between object body changes and metadata-only changes
-> - Demonstrates that restore creates a new live generation rather than resurrecting the old generation number in place
+> - Demonstrates that restore creates a new live generation rather than resurrecting the old generation number in place, while current documentation also clarifies that restored objects come back in `STANDARD` storage
 >
 > **Controlled sharing and eventing**
 > - Covers signed URLs for time-bound delivery, bucket notification configuration, Pub/Sub topic and subscription setup, and `OBJECT_FINALIZE` event flow for objects written under `events/`
-> - Explains the signer, verb, expiry, required headers, topic existence, and Cloud Storage service-agent publish rights that make event-driven automation or external sharing actually work
+> - Explains the signer, verb, expiry, required headers, topic existence, notification limits, and Cloud Storage publish path details that make event-driven automation or external sharing actually work
 >
 > **Operations and safety**
 > - Warnings: `/` is part of the object name in flat buckets, stale preconditions fail with `412`, Windows rsync warnings can add noise, class changes are rewrites, holds and retention block mutation, restore returns a new live generation, and notifications require matching prefix plus publish permissions
 > - Recommendations table: landing-date, medallion-zone, export-staging, replay, and small-file consolidation layout patterns for safer lifecycle, replay, and downstream processing
 > - Troubleshooting: 7 failure modes covering stale preconditions, checksum mismatch, wrong full object path, accidental delete, signed URL failure, risky recursive sync or delete, and missing notification delivery
+
+> [!warning] Archived demo boundary
+>
+> The original Storage project used throughout this note, `bq-wh-nb`, has been removed. Treat the captured object listings, generations, and notification outputs as archived operator reference, not as live validation.
+>
+> This refresh intentionally avoids rerunning any object workflows. The note keeps the former outputs where they still illustrate the command behavior and only adds knowledge-backed corrections from current Cloud Storage documentation.
 
 > [!note]- Glossary
 >
@@ -47,6 +53,10 @@ status: complete
 > > [!warning] Slash is not a folder
 > >
 > > In a flat bucket, `/` is only part of the object name. If the full key is wrong, the command fails even when the apparent console folder looks correct.
+>
+> > [!warning] `#` has version meaning in CLI syntax
+> >
+> > In `gcloud storage`, appending `#GENERATION` targets a specific object version. Avoid `#` in object names unless you are prepared to quote paths carefully and distinguish the literal name from generation-addressing syntax.
 >
 > ---
 >
@@ -77,6 +87,10 @@ status: complete
 > > [!warning] Metadata bumps separately
 > >
 > > Changing metadata increments metageneration without changing the object body. Confusing it with generation leads to incorrect precondition logic.
+>
+> > [!info] Scoped to one object generation
+> >
+> > Current Cloud Storage documentation defines metageneration as meaningful only alongside a specific object generation. When the object body changes and a new generation is created, the metageneration sequence for that new generation starts over.
 >
 > ---
 >
@@ -285,9 +299,9 @@ Before copying or deleting anything, inspect the real object estate. Listing, re
 
 ### PowerShell / Linux | gcloud storage ls, cat, objects describe, hash | inspect object state
 
-This subsection uses the flat scratch bucket `bq-wh-nb-codex-gcs-flat-20260413-3938`.
+This subsection uses the archived flat scratch bucket `bq-wh-nb-codex-gcs-flat-20260413-3938`.
 
-#### List the current object estate recursively
+#### List the archived object estate recursively
 
 Before bulk copy, delete, lifecycle tuning, or prefix cleanup. It is typically triggered by you need to know what really exists under a bucket or prefix. Read-only listing. Show current prefixes, object sizes, and last-write timestamps.
 
@@ -339,7 +353,7 @@ Use `cat` only for small text-like payloads. For larger objects, download select
 
 After upload, metadata patching, overwrite, or restore. It is typically triggered by you need exact metadata fields, not just a listing row. Read-only metadata lookup. Confirm size, generation, metageneration, content type, and current metadata values.
 
-*Describe the live `landing/ohlcv.csv` object.*
+*Describe the archived `landing/ohlcv.csv` object snapshot used in this note.*
 
 ```bash
 gcloud storage objects describe gs://bq-wh-nb-codex-gcs-flat-20260413-3938/landing/ohlcv.csv --format="yaml(name,size,content_type,generation,metageneration,storage_class,metadata)"
@@ -546,6 +560,13 @@ Patching gs://bq-wh-nb-codex-gcs-flat-20260413-3938/landing/ohlcv.csv...
 
 After the patch, the object still has generation `1776085553882775`, but its metageneration advanced and the metadata now contains `zone` and `format`.
 
+> [!info] Two precondition patterns matter most
+>
+> Current Cloud Storage guidance highlights two operator-grade patterns:
+>
+> - Use `--if-generation-match` together with `--if-metageneration-match` when you are patching metadata that depends on a previously read object state.
+> - Use `--if-generation-match=0` when the goal is create-only semantics, meaning the write should succeed only if no live object with that name currently exists.
+
 #### Show the failure path for a stale precondition
 
 During automation testing or when explaining why optimistic concurrency is safer than blind patching. It is typically triggered by another metadata update has already advanced metageneration. State-changing command expected to fail safely. Demonstrate that stale preconditions fail with `412` instead of silently overwriting current metadata.
@@ -569,7 +590,7 @@ This is the outcome you want. A stale writer failed fast instead of trampling th
 | `--custom-metadata` | `"--custom-metadata=zone=landing,format=csv"` | Replaces the full custom-metadata set. |
 | `--update-custom-metadata` | `--update-custom-metadata=owner=pipeline` | Adds or updates individual metadata keys without clearing the rest. |
 | `--remove-custom-metadata` | `--remove-custom-metadata=owner` | Deletes one or more custom-metadata keys. |
-| `--if-generation-match` | `--if-generation-match=1776085553882775` | Runs only if the object body generation is exactly the expected one. |
+| `--if-generation-match` | `--if-generation-match=1776085553882775` | Runs only if the object body generation is exactly the expected one. `0` is the create-only pattern when no live object may already exist. |
 | `--if-metageneration-match` | `--if-metageneration-match=2` | Runs only if the metadata version is exactly the expected one. |
 
 ## Holds, Retention, and Object Restore
@@ -743,6 +764,13 @@ storageClass: STANDARD
 
 The restored object did not come back with the same generation number. Restore made a new live generation from the deleted payload, which is exactly how you should expect recovery to behave.
 
+> [!info] Restore token and storage-class nuances
+>
+> Current Cloud Storage documentation adds two details that matter in real incidents:
+>
+> - In hierarchical-namespace buckets, duplicate soft-deleted objects can require a `restoreToken` to disambiguate which deleted instance to recover.
+> - A restored live object comes back in `STANDARD` storage, regardless of the storage class of the soft-deleted source object.
+
 | Flag | Syntax | Description |
 |---|---|---|
 | `--temporary-hold` | `--temporary-hold` | Enables a manual hold on the object. |
@@ -780,6 +808,12 @@ signed_url: https://bq-wh-nb-codex-gcs-flat-20260413-3938.storage.googleapis.com
 ```
 
 The important output fields are `expiration`, `http_verb`, and `signed_url`. The URL is valid only until the expiration time and only for the signed verb.
+
+> [!info] Signed URL scope and lifetime
+>
+> Current Cloud Storage documentation keeps the core V4 constraint unchanged: signed URLs are for bounded access to a specific request shape, and the maximum lifetime is seven days.
+>
+> They are also most useful for the initial request boundary. For resumable uploads, once the session URI is created, subsequent upload requests authenticate with that session URI rather than with another signed URL.
 
 #### Create a bucket notification and pull the resulting Pub/Sub message
 
@@ -880,6 +914,14 @@ gcloud pubsub subscriptions pull gcs-events-demo-sub --auto-ack --limit=1
 
 The pulled message confirms that the `OBJECT_FINALIZE` event carried the object name, bucket, generation, content type, and size into Pub/Sub. That is the foundation for event-driven ingestion.
 
+> [!info] Notification semantics worth remembering
+>
+> Current Cloud Storage documentation adds three operational details that are easy to miss:
+>
+> - A bucket can have up to `100` total notification configurations and up to `10` notification configurations for the same event type.
+> - Creating or deleting a notification configuration increments the bucket metageneration.
+> - Replacing an existing object generates `OBJECT_FINALIZE` for the new generation and either `OBJECT_ARCHIVE` or `OBJECT_DELETE` for the prior object state, with `overwroteGeneration` carried on the finalize message.
+
 | Flag | Syntax | Description |
 |---|---|---|
 | `--private-key-file` | `--private-key-file=key.json` | Uses a local private key to sign the URL. |
@@ -904,6 +946,10 @@ The object name is part of the data model. A good prefix layout makes lifecycle 
 | **Export staging** | `export/job_id/part-000.parquet` | Keeps one export run isolated from the next. |
 | **Replay bucket or prefix** | `replay/2026-04-01/` | Makes backfills and audit reruns explicit instead of hidden in the hot path. |
 | **Small-file consolidation** | Fewer larger Parquet or compressed CSV objects | Reduces listing overhead, object-count sprawl, and downstream job startup cost. |
+
+> [!info] Native composition is part of the compaction toolbox
+>
+> Cloud Storage supports native object composition for `1` to `32` source objects into one composite object. That makes `gcloud storage objects compose` a legitimate building block for bounded small-file consolidation inside one bucket when you do not yet need a full transfer or processing service.
 
 > [!info] Not executed live
 >
@@ -946,7 +992,9 @@ The object name is part of the data model. A good prefix layout makes lifecycle 
 
 - https://cloud.google.com/sdk/gcloud/reference/storage
 - https://docs.cloud.google.com/storage/docs/metadata
+- https://cloud.google.com/storage/docs/request-preconditions
 - https://docs.cloud.google.com/storage/docs/object-holds
 - https://docs.cloud.google.com/storage/docs/soft-delete
+- https://docs.cloud.google.com/storage/docs/composing-objects
 - https://docs.cloud.google.com/storage/docs/pubsub-notifications
 - https://docs.cloud.google.com/storage/docs/access-control/signed-urls

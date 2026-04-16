@@ -4,7 +4,7 @@ tags: [gcp, compute, airflow, cloud-run, orchestration]
 aliases: [Airflow on GCE, Airflow VM GCP, stoxx-airflow]
 description: "End-to-end setup of Airflow 3.2 on a private Compute Engine VM, from yfinance fetch into GCS through SQL Server bronze and medallion transforms, BigQuery marts, and Firestore serving."
 created: 2026-04-13
-updated: 2026-04-13
+updated: 2026-04-15
 status: complete
 parent: "[[domain-compute-and-messaging]]"
 links:
@@ -16,7 +16,7 @@ links:
 
 > [!abstract]- Summary
 >
-> Covers the full STOXX-only Airflow 3.2 demo deployment on a private Compute Engine VM, including the Airflow control plane, Cloud Run fetch and transform jobs, GCS staging, SQL Server loading, BigQuery marts, and Firestore publication that were validated live on April 13, 2026.
+> Preserves the full STOXX-only Airflow 3.2 demo deployment that was validated live on `2026-04-13`, including the Airflow control plane, Cloud Run fetch and transform jobs, GCS staging, SQL Server loading, BigQuery marts, and Firestore publication.
 >
 > **Scope and architecture**
 > - The current validated scope excludes `oil_20` completely and keeps only `euro_stoxx_50`, `stoxx_asia_50`, and `stoxx_usa_50` across fetch, SQL, BigQuery, and Firestore layers
@@ -43,6 +43,12 @@ links:
 > - Warnings: the host-mounted `dags/` directory can flip to UID `50000`, missing `google_cloud_default` breaks the Google operator, the VM service account needs `run.jobs.run`, and unset Compose env vars create noisy or broken VM deployments
 > - Recommendations table: the final DAG topology, serving-layer target objects, validated BigQuery mart counts, and Firestore counts define the live demo reference state
 > - Troubleshooting: 7 bring-up issues covering Cloud Run network mode, container entrypoint arg handling, legacy oil cleanup SQL, BigQuery factsheet query shape, Firestore database selection, unset Compose env defaults, and queued DAG runs
+
+> [!warning] Archived demo boundary
+>
+> The end-to-end Airflow demo described here was validated on `2026-04-13`, not rerun during this `2026-04-15` refresh. Current read-only checks against the replacement workspace returned `Listed 0 items.` for both `gcloud run jobs list --project=dagflow-poc --region=europe-west1` and `gcloud run services list --project=dagflow-poc --region=europe-west1`, so there is no comparable live Cloud Run estate available to replay the pipeline honestly.
+>
+> Treat the commands, outputs, and DAG chronology below as a historically verified demo record. This refresh focused on preserving the operator knowledge, clarifying boundaries, and keeping the note explicit about what is no longer live.
 
 > [!note]- Glossary
 >
@@ -308,6 +314,10 @@ Ubuntu 22.04.5 LTS
 ## Install Docker Engine and Compose
 
 Airflow runs entirely in containers on the VM. Docker Engine and the Compose plugin are installed directly on Ubuntu and the OS Login user is added to the `docker` group.
+
+> [!warning] Single-VM Docker Compose is a lab pattern
+>
+> This layout is intentionally optimized for demo bring-up and operator visibility, not for production-grade Airflow availability. Docker Compose on one VM keeps the stack understandable, but it also keeps the scheduler, worker, metadata database, and broker in one failure domain.
 
 *Install Docker Engine, Compose, and add the VM user to the `docker` group.*
 
@@ -951,6 +961,6 @@ Then open `http://localhost:8080`.
 
 ## Result
 
-The Airflow VM is operational, the full STOXX-only DAG is deployed, the SQL bronze and medallion transforms are wired behind Cloud Run, the serving layer lands in BigQuery and Firestore, and the final Airflow run `manual__2026-04-13T17:28:30Z_serving` completed successfully. As of **2026-04-13 17:41 UTC**, the validated live path is:
+The Airflow VM and downstream jobs described here were operational in the original `2026-04-13` validation window, where the full STOXX-only DAG completed successfully under run `manual__2026-04-13T17:28:30Z_serving`. The historically validated path was:
 
 Airflow → `stoxx-stage-fetch` → `stoxx-bronze-load` → `stoxx-transforms` → `stoxx-serving` → BigQuery marts → Firestore `main`.

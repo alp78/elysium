@@ -11,7 +11,8 @@ status: complete
 
 # 04. Functions - C#
 
-> [!quote]
+> [!quote] Dijkstra on abstraction
+>
 > "The purpose of abstraction is not to be vague, but to create a new semantic level in which one can be absolutely precise."
 >
 > — **Edsger W. Dijkstra**, *The Humble Programmer*, ACM Turing lecture (1972)
@@ -250,6 +251,7 @@ Methods declare a return type, accept typed parameters, and support overloading 
 
 `string` and `int` methods return a typed value directly to the caller. The return type is declared before the method name, and the compiler enforces that every code path returns a value of that type.
 
+*Runnable example showing a method with a return value.*
 ```csharp
 string Greet(string name) { return $"Hello, {name}!"; }
 Console.WriteLine(Greet("Alice"));
@@ -263,6 +265,7 @@ Hello, Alice!
 
 `void` methods perform side effects — printing, writing, mutating state — without returning a value. The compiler prevents callers from using the return value.
 
+*Runnable example showing a `void` method with side effects.*
 ```csharp
 void PrintGreeting(string name)
 {
@@ -279,6 +282,7 @@ PrintGreeting("Bob");
 
 A local function is defined inside another method's body, restricting its visibility to that scope. Useful for private helpers too small to justify a class-level method.
 
+*Runnable example showing a local function nested inside a method.*
 ```csharp
 void RunDemo()
 {
@@ -301,6 +305,7 @@ The `=>` (expression-bodied) syntax eliminates braces and the `return` keyword f
 > - `type Method(params) => expression` — implicit return, no braces
 > - Works for methods, properties, constructors, and operators
 
+*Runnable example showing expression-bodied methods.*
 ```csharp
 string GreetShort(string name) => $"Hello, {name}!";
 int Square(int x) => x * x;
@@ -323,6 +328,7 @@ Tuples let a method return multiple values without defining a class or struct. C
 > - Callers destructure: `var (q, r) = Divide(17, 5)`
 > - Use named fields for clarity; for 3–4+ values, prefer a `record` or class
 
+*Runnable example showing tuple return and destructuring.*
 ```csharp
 (int quotient, int remainder) Divide(int a, int b)
 {
@@ -354,6 +360,7 @@ Console.WriteLine(Divide(17, 5));
 > - Use for callbacks, LINQ, strategy pattern, DI
 > - For event handlers, use `EventHandler<T>`
 
+*Runnable example showing `Func<T, TResult>` assignment and invocation.*
 ```csharp
 Func<string, string> sayHello = Greet;
 Console.WriteLine(sayHello("Eve"));
@@ -367,6 +374,7 @@ Hello, Eve!
 
 `Action<T>` stores a void method — no return value. Assign a named method or lambda. Use for side effects: logging, printing, state mutation.
 
+*Runnable example showing `Action<T>` for a void callback.*
 ```csharp
 Action<string> printer = PrintGreeting;
 printer("Frank");
@@ -380,6 +388,7 @@ printer("Frank");
 
 Pass `Func<T, TResult>` as a method parameter to let the caller inject any compatible function — the foundation for callbacks, the strategy pattern, and dependency injection.
 
+*Runnable example showing a `Func<T, TResult>` passed as an argument.*
 ```csharp
 string Apply(Func<string, string> func, string value) => func(value);
 Console.WriteLine(Apply(Greet, "Grace"));
@@ -393,6 +402,7 @@ Hello, Grace!
 
 A method can return a `Func<T, TResult>`, creating a parameterized function factory. Each call captures the parameter in a closure, producing an independent function.
 
+*Runnable example showing a factory that returns a `Func<T, TResult>`.*
 ```csharp
 Func<int, int> MakeMultiplier(int n) => x => x * n;
 var doubler = MakeMultiplier(2);
@@ -416,6 +426,7 @@ A callback is a function passed as an argument to another function, to be called
 
 Accept `Action<string> onSuccess` and `Action<Exception> onError` — the caller defines the response. Decouples the operation from its side effects.
 
+*Runnable example showing success and failure callbacks.*
 ```csharp
 void FetchData(string url, Action<string> onSuccess, Action<Exception> onError)
 {
@@ -442,6 +453,7 @@ The strategy pattern lets you swap an algorithm at runtime without changing the 
 
 Define interchangeable `Func<T, TResult>` for each strategy. Pass the desired one to the consumer — change behavior without modifying code (open/closed principle). Use for pricing rules, validation, sorting, formatters.
 
+*Runnable example showing interchangeable pricing strategies.*
 ```csharp
 Func<decimal, decimal> fullPrice = price => price;
 Func<decimal, decimal> discount20 = price => price * 0.8m;
@@ -468,6 +480,7 @@ Store steps as `List<Func<string, string>>`. `Aggregate` folds the input through
 
 `Aggregate(seed, function)` folds the input through each step sequentially: `seed` is the starting value, `acc` is the running result (starts as seed, then the output of each step), and `step` is the current `Func<string, string>` from the list. Each iteration feeds the previous step's output as input to the next.
 
+*Runnable example showing a `Func<T, T>` pipeline.*
 ```csharp
 var steps = new List<Func<string, string>>
 {
@@ -492,6 +505,7 @@ Dependency injection (DI) means passing dependencies into a method or class from
 Accept `Func<DateTime> getNow` with default `DateTime.UtcNow`. Production uses the default; tests inject a fixed `DateTime` for deterministic results. No interface needed — `Func<DateTime>` is lightweight DI.
 
 > [!tip] DI enables testability
+>
 > If a function calls `DateTime.UtcNow` directly, you can't test what happens at midnight, on weekends, or at year boundaries without waiting. Injecting time as a `Func<DateTime>` parameter makes every time-dependent scenario testable in milliseconds.
 
 > [!warning] Don't use DateTime.Now directly
@@ -502,6 +516,7 @@ Accept `Func<DateTime> getNow` with default `DateTime.UtcNow`. Production uses t
 >
 > Accept `Func<DateTime>? getNow = null` with `getNow ??= () => DateTime.UtcNow` as default. Production uses real time; tests inject a fixed `DateTime` — fully deterministic.
 
+*Runnable example showing injected time for production and test paths.*
 ```csharp
 Dictionary<string, object> ProcessOrder(
     Dictionary<string, object> order,
@@ -534,6 +549,7 @@ Accept `Action<int, int, string>?` (nullable). Call with `onProgress?.Invoke(cur
 
 The `?.Invoke()` pattern is null-conditional: if `onProgress` is null, the call is skipped silently. `Invoke` calls the `Action` with `(current, total, item)` — equivalent to `onProgress(i + 1, items.Length, items[i])` but safe when the callback is null.
 
+*Runnable example showing a nullable progress callback.*
 ```csharp
 void LoadData(string[] items, Action<int, int, string>? onProgress = null)
 {
@@ -570,6 +586,7 @@ LINQ's `OrderBy` accepts a `Func<T, TKey>` that extracts the sort key from each 
 >
 > Use `.OrderBy(e => e.Dept).ThenBy(e => e.Salary)` to apply a stable secondary sort without discarding the primary one.
 
+*Runnable example showing a key selector used with `OrderByDescending`.*
 ```csharp
 var employees = new[]
 {
@@ -589,16 +606,22 @@ Bob        $65,000
 
 #### Common function-passing patterns
 
-Quick reference for choosing the right function-passing approach — each pattern maps to a C# delegate signature.
+Quick reference for choosing the right function-passing approach. `Action<T>` covers callbacks and progress hooks, `Func<T, TResult>` covers strategies and key selectors, and `List<Func<T, T>>` plus `Aggregate` covers pipelines. Prefer the smallest delegate shape that matches the contract.
 
-| Pattern | C# signature | Use case |
-|---|---|---|
-| **Callbacks** | `Action<string> onSuccess, Action<Exception> onError` | Success/error hooks |
-| **Strategy** | `Func<decimal, decimal> pricingStrategy` | Swap algorithms |
-| **Pipeline** | `List<Func<string, string>> steps` + `Aggregate` | Chain processing steps |
-| **DI / Testing** | `Func<DateTime> getNow` | Inject fake time |
-| **Events** | `Action<int, int, string> onProgress` | Progress hooks |
-| **Sorting** | `.OrderBy(e => e.Salary)` — `Func<T, TKey>` | Key selector |
+*Runnable example showing callback, strategy, and pipeline patterns together.*
+```csharp
+Action<string> onSuccess = msg => Console.WriteLine($"Success: {msg}");
+Func<decimal, decimal> pricingStrategy = price => price * 0.8m;
+var steps = new List<Func<string, string>> { s => s.Trim(), s => s.ToUpper() };
+
+Console.WriteLine($"Price: {pricingStrategy(100):F2}");
+onSuccess(steps.Aggregate("  refactor  ", (acc, step) => step(acc)));
+```
+
+```text
+Price: 80.00
+Success: REFACTOR
+```
 
 ## Parameters
 
@@ -612,6 +635,7 @@ Default values must be compile-time constants — no mutable default trap like P
 
 Default values: `void Func(int x = 10)` — must be compile-time constants. Named arguments: `Func(x: 5, y: 10)` — self-documenting, any order. Parameter passing modes: `ref` (read+write), `out` (must assign before return), `in` (read-only reference), `params` (variable argument count as array).
 
+*Runnable example showing default values and named arguments.*
 ```csharp
 string Connect(string host, int port = 5432, bool ssl = true)
     => $"{host}:{port} ssl={ssl}";
@@ -642,6 +666,7 @@ C# passes value types by copy by default. The `ref`, `out`, and `in` keywords ch
 > - Variable must be initialized before passing
 > - Use `out` for output-only scenarios (caller doesn't need to initialize)
 
+*Runnable example showing `ref` mutation at the call site.*
 ```csharp
 void DoubleIt(ref int x)
 {
@@ -660,6 +685,7 @@ Console.WriteLine(val);
 
 `out int result` requires the method to assign a value before returning — compiler enforces it. The `TryParse` pattern combines check + extraction in one line: `if (int.TryParse(s, out int n))`.
 
+*Runnable example showing an `out` parameter.*
 ```csharp
 bool TryDivide(int a, int b, out int result)
 {
@@ -679,6 +705,7 @@ out: 3
 
 `in` passes by reference but prevents modification — compiler enforces read-only. Avoids copy overhead for large structs (Matrix, Vector3D). Don't use for small types (`int`, `double`) — copy is just as fast.
 
+*Runnable example showing an `in` parameter.*
 ```csharp
 double Distance(in (double x, double y) point)
     => Math.Sqrt(point.x * point.x + point.y * point.y);
@@ -697,6 +724,7 @@ Console.WriteLine(Distance((3, 4)));
 
 `params int[] numbers` accepts variable arguments — compiler creates the array. Must be the last parameter. `Total(1, 2, 3)` and `Total(myArray)` both work.
 
+*Runnable example showing `params` collecting variable arguments.*
 ```csharp
 int Total(params int[] numbers)
 {
@@ -727,6 +755,7 @@ C# has no `**kwargs` equivalent for collecting arbitrary keyword arguments. Inst
 
 An anonymous object `new { key = value }` simulates structured keyword arguments — the pattern used widely in ASP.NET for routing and view data. Properties are readable but the type has no name.
 
+*Runnable example showing an anonymous object as structured data.*
 ```csharp
 void LogEvent(string name, object data) =>
     Console.WriteLine($"  {name}: {data}");
@@ -739,6 +768,7 @@ click: { page = home, button = submit }
 
 `Dictionary<string, object>` supports fully dynamic keys not known at compile time. Key-value pairs are explicit and enumerable at runtime.
 
+*Runnable example showing a dictionary for dynamic keys.*
 ```csharp
 void LogDict(string name, Dictionary<string, object> data) =>
     Console.WriteLine($"  {name}: {string.Join(", ", data.Select(kv => $"{kv.Key}={kv.Value}"))}");
@@ -776,6 +806,7 @@ A lambda expression uses `=>` to separate parameters from the body. Single-expre
 >
 > Extract anything beyond 3 lines into a named method. Side-effecting operations belong in `foreach` loops, not LINQ chains — keeps each part readable and independently testable.
 
+*Runnable example showing simple lambda expressions.*
 ```csharp
 Func<int, int> square = x => x * x;
 Func<int, int, int> add = (a, b) => a + b;
@@ -800,6 +831,7 @@ When a lambda needs multiple statements (`if`/`else`, loops, `try`/`catch`), wra
 > - Still captures enclosing scope
 > - Keep under 5 lines — extract longer logic to a named method
 
+*Runnable example showing a multi-line statement lambda.*
 ```csharp
 Func<int, string> classify = (x) => {
     if (x > 0) return "positive";
@@ -821,6 +853,7 @@ LINQ methods accept lambdas as predicates, projections, and key selectors. The c
 
 `OrderBy(n => expr)` sorts ascending by the value the lambda extracts from each element. The compiler infers the type of `n` from the collection. Pass a different key expression to change sort order without modifying the data.
 
+*Runnable example showing `OrderBy` with lambda key selectors.*
 ```csharp
 var names = new[] { "Charlie", "Alice", "Bob", "Diana" };
 Console.WriteLine(string.Join(", ", names.OrderBy(n => n.Length)));
@@ -836,6 +869,7 @@ Diana, Bob, Charlie, Alice
 
 `Select(x => expr)` transforms each element into a new value — equivalent to `map`. Returns a lazy `IEnumerable<TResult>`; the compiler infers `x` as `int` from the array type.
 
+*Runnable example showing `Select` as a projection.*
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
 Console.WriteLine(string.Join(", ", nums.Select(x => x * x)));
@@ -849,6 +883,7 @@ Console.WriteLine(string.Join(", ", nums.Select(x => x * x)));
 
 `Where(x => bool)` returns only elements where the predicate is `true` — equivalent to `filter`. Commonly chained with `Select` for filter-then-transform pipelines.
 
+*Runnable example showing `Where` as a filter.*
 ```csharp
 Console.WriteLine(string.Join(", ", nums.Where(x => x % 2 == 0)));
 ```
@@ -861,6 +896,7 @@ Console.WriteLine(string.Join(", ", nums.Where(x => x % 2 == 0)));
 
 `MinBy(p => key)` returns the full element (not just the key value) with the minimum key — C# 10+. Use `MaxBy` for the largest.
 
+*Runnable example showing `MinBy` returning the full element.*
 ```csharp
 var people = new[] { ("Alice", 30), ("Bob", 25), ("Charlie", 35) };
 Console.WriteLine(people.MinBy(p => p.Item2));
@@ -884,6 +920,7 @@ Console.WriteLine(people.MinBy(p => p.Item2));
 > - `Predicate<T>` — boolean tests used by `List.FindAll`, `Exists`
 > - Closures capture the **variable reference**, not its value — changes are shared
 
+*Runnable example showing `Action<T>` and `Predicate<T>` together.*
 ```csharp
 Action<string> shout = msg => Console.WriteLine($"  {msg.ToUpper()}!");
 shout("hello");
@@ -904,6 +941,7 @@ True
 
 Lambdas capture the **variable reference**, not a snapshot. If `multiplier` changes after the lambda is defined, the lambda uses the new value. When you need a frozen value, copy to a local variable first.
 
+*Runnable example showing closure capture by reference.*
 ```csharp
 int multiplier = 3;
 Func<int, int> times = x => x * multiplier;
@@ -921,11 +959,26 @@ Console.WriteLine(times(5));
 
 Use inline lambdas for short, single-use operations in LINQ, event handlers, and callbacks. Extract to a named method when the logic is reusable, exceeds 3 lines, or needs documentation. Statement lambdas bridge the gap for moderate complexity.
 
-| Use | When |
-|---|---|
-| **Lambda** | LINQ, event handlers, callbacks, short inline logic |
-| **Named method** | Reusable, complex, needs documentation |
-| **Statement lambda** | Multi-line body with braces and explicit `return` |
+`Lambda`, `named method`, and `statement lambda` solve different shapes of the same problem. Keep the logic inline when it is brief and local, and promote it to a named method when reuse or documentation matters.
+
+*Runnable example showing lambda, named method, and statement lambda choices.*
+```csharp
+int Square(int x) => x * x;
+
+Func<int, int> lambda = x => x + 1;
+Func<int, int> named = Square;
+Func<int, int> statement = x => { return x - 1; };
+
+Console.WriteLine(lambda(5));
+Console.WriteLine(named(5));
+Console.WriteLine(statement(5));
+```
+
+```text
+6
+25
+4
+```
 
 > [!warning] Lambda vs method choice
 >
@@ -947,6 +1000,7 @@ Closures capture the variable reference, not a snapshot of its value. This means
 
 Variables declared inside `{}` are local to that block and inaccessible outside it. C# enforces this at compile time — referencing an out-of-scope variable is a compilation error, not a runtime surprise.
 
+*Runnable example showing block scope.*
 ```csharp
 {
     int x = 10;
@@ -963,6 +1017,7 @@ Inside block: 10
 
 A lambda returned from a method retains access to the method's locals — the captured parameter lives on the heap as long as the closure exists. Each call to `MakeAdder` creates an independent closure with its own `n`, so `add5` and `add10` hold separate state.
 
+*Runnable example showing a closure that captures a local variable.*
 ```csharp
 Func<int, int> MakeAdder(int n)
 {
@@ -983,6 +1038,7 @@ Console.WriteLine(add10(3));
 
 Closures can read AND modify captured variables — both the lambda and enclosing scope see the same variable. Use for simple counters in single-threaded code. For multi-threaded scenarios, use `Interlocked` or locks.
 
+*Runnable example showing a closure mutating outer state.*
 ```csharp
 int counter = 0;
 Action increment = () => counter++;
@@ -1004,6 +1060,7 @@ Closures that return functions create independent, encapsulated state — each c
 
 `MakeCounter()` returns `Func<int>` closing over a local `count`. Each call creates an independent counter with private, encapsulated state — no class needed.
 
+*Runnable example showing a counter factory closure.*
 ```csharp
 Func<int> MakeCounter(int start = 0)
 {
@@ -1028,6 +1085,7 @@ Console.WriteLine(c2());
 
 `MakeRangeValidator(min, max)` returns `Func<int, bool>` that tests `[min, max]`. Each call creates an independent validator, composable with `items.Where(isValid)`.
 
+*Runnable example showing a parameterized validator closure.*
 ```csharp
 Func<int, bool> MakeRangeValidator(int min, int max)
     => value => value >= min && value <= max;
@@ -1059,6 +1117,7 @@ Lambdas created in a `for` loop capture the loop variable `i` itself — not its
 >
 > Declare `int captured = i;` at the top of the loop body and close over `captured` instead of `i`. Each iteration creates a new variable, so each lambda holds an independent snapshot.
 
+*Runnable example showing the loop capture fix.*
 ```csharp
 var funcs = new List<Func<int>>();
 for (int i = 0; i < 3; i++)
@@ -1083,6 +1142,7 @@ Console.WriteLine(string.Join(", ", funcsGood.Select(f => f())));
 
 Delegates are type-safe function pointers — they declare a signature as a type and hold references to methods matching that signature. The built-in `Func<T>`, `Action<T>`, and `Predicate<T>` cover most cases; custom delegates add named semantics. Multicast delegates chain multiple handlers via `+=`, and the `event` keyword restricts delegate access to enforce the observer pattern.
 
+*Decision flowchart for choosing a delegate shape.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -1125,6 +1185,7 @@ Delegates declare a function signature as a type — type-safe function pointers
 >
 > When all subscribers perform side effects (logging, UI updates, pipeline steps), use `Action<T>` — return values are irrelevant and the multicast discard issue never arises.
 
+*Runnable example showing delegate declaration and invocation.*
 ```csharp
 int Add(int a, int b) => a + b;
 int Multiply(int a, int b) => a * b;
@@ -1146,6 +1207,7 @@ delegate int MathOp(int a, int b);
 
 `+=` adds a handler, `-=` removes. Invoking calls all registered handlers in order. Observer pattern — multiple subscribers notified by one invoke. Don't forget to remove handlers to avoid memory leaks.
 
+*Runnable example showing a multicast delegate chain.*
 ```csharp
 Action<string> pipeline = msg => Console.WriteLine($"  Step 1: {msg}");
 pipeline += msg => Console.WriteLine($"  Step 2: {msg.ToUpper()}");
@@ -1162,6 +1224,7 @@ Step 3: 11 chars
 ```
 
 > [!info] Delegate removal
+>
 > Delegates support `-=` to remove handlers from the invocation list, enabling dynamic pipeline step management at runtime.
 
 ### Method groups and callbacks
@@ -1172,6 +1235,7 @@ A method group is a method name without parentheses — the compiler creates the
 
 `Action<string> h = PrintUpper` — no parentheses, no lambda wrapper. Compiler creates the delegate automatically. Works with LINQ: `.Select(Transform)`, `.Where(IsValid)`. Use lambda only when additional arguments or transformation are needed.
 
+*Runnable example showing a method group assignment.*
 ```csharp
 void PrintUpper(string s) => Console.WriteLine($"  {s.ToUpper()}");
 
@@ -1195,6 +1259,7 @@ METHOD GROUP
 
 `ProcessData` accepts `Action<int> onProcessed` called for each item. Caller defines the response — log, collect, display, or ignore. Decouples the algorithm from output handling.
 
+*Runnable example showing a callback passed as `Action<int>`.*
 ```csharp
 void ProcessData(int[] data, Action<int> onProcessed)
 {
@@ -1230,6 +1295,7 @@ Declare events with `event EventHandler<TEventArgs>` where `TEventArgs` carries 
 >
 > Implement `IDisposable` on subscriber classes and unsubscribe in `Dispose()`. For UI components, unsubscribe in teardown/close handlers. Consider weak event patterns for long-lived publishers.
 
+*Runnable example showing `EventHandler<TEventArgs>` with safe invocation.*
 ```csharp
 class OrderEventArgs : EventArgs
 {
@@ -1289,6 +1355,7 @@ Multiple methods can share a name if their parameter lists differ in type or cou
 
 The compiler picks the most specific overload by argument types. `Format(42)` resolves to `Format(int)`, `Format(3.14)` to `Format(double)`. Numeric promotions: `int` can promote to `double` but not vice versa. Use generics when one method can handle all types.
 
+*Runnable example showing overload resolution by argument type.*
 ```csharp
 string Format(int value) => $"int: {value}";
 string Format(double value) => $"double: {value:F2}";
@@ -1321,6 +1388,7 @@ Define a static method in a static class with `this` before the first parameter:
 > Every LINQ method (`.Where`, `.Select`, `.OrderBy`) is an extension method on `IEnumerable<T>`.
 > The simplified signature of `.Where`: `static IEnumerable<T> Where<T>(this IEnumerable<T> source, Func<T, bool> predicate)` — the `this` keyword before the first parameter makes it an extension method.
 
+*Runnable example showing LINQ extension methods in use.*
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
 Console.WriteLine(string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10)));
@@ -1386,14 +1454,67 @@ Console.WriteLine(string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10)))
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `CS0161: not all code paths return a value` | Missing `return` in a branch of a non-void method | Add `return` to every code path or use switch expression |
-| `NullReferenceException` on event invoke | Event has no subscribers (`null`) | Use `event?.Invoke(sender, args)` |
-| All closures return same value | Captured `for` loop variable | Copy to local variable inside loop body |
-| `CS1628: cannot use ref/out parameter in lambda` | Lambda tries to capture `ref`/`out` parameter | Copy to a local variable first |
-| Extension method not found | Missing `using` for the extension class's namespace | Add the `using` directive |
-| Overload resolution ambiguity | Multiple overloads match with optional/params parameters | Make parameter types more specific or remove ambiguous overloads |
-| `CS0123: method has wrong return type for delegate` | Method signature doesn't match `Func<T>` type parameters | Verify parameter and return types match the delegate signature |
-| Closure causes heap allocation | Non-static local function captures enclosing variables | Add `static` modifier to prevent capture |
-| `out` parameter not assigned error | Method exits without assigning all `out` parameters | Assign all `out` parameters before any `return` or exception |
+#### `CS0161` and `out` assignments
+
+`CS0161` means a non-void method has a path that does not return a value. `out` assignment errors mean a method can exit before assigning every `out` parameter. Return on every path and assign `out` values before any exit.
+
+*Runnable example showing an `out` parameter on a successful path.*
+```csharp
+bool TryDivide(int a, int b, out int result)
+{
+    if (b == 0) { result = 0; return false; }
+    result = a / b;
+    return true;
+}
+
+if (TryDivide(10, 3, out int answer))
+    Console.WriteLine(answer);
+```
+
+```text
+3
+```
+
+#### `event?.Invoke()` and captured `for` variables
+
+Use `event?.Invoke(...)` to avoid a null event invocation. If a lambda inside a `for` loop returns the same value for every item, copy the loop variable to a local before capturing it. For capture-free helpers, add `static` to local functions so the compiler rejects accidental outer-scope access.
+
+*Runnable example showing safe null invocation and corrected loop capture.*
+```csharp
+Action? notify = null;
+notify?.Invoke();
+Console.WriteLine("No exception");
+
+var funcs = new List<Func<int>>();
+for (int i = 0; i < 3; i++)
+{
+    int captured = i;
+    funcs.Add(() => captured);
+}
+Console.WriteLine(string.Join(", ", funcs.Select(f => f())));
+```
+
+```text
+No exception
+0, 1, 2
+```
+
+#### `using` directives, delegate signatures, and overload resolution
+
+If an extension method is not found, add the `using` directive for its namespace. If a delegate assignment fails with `CS0123`, match the method signature to the `Func<T>` or `Action<T>` shape exactly. If overload resolution is ambiguous, make the argument type explicit or remove the ambiguous overload.
+
+*Runnable example showing extension methods and explicit overload choice.*
+```csharp
+string Format(int value) => $"int: {value}";
+string Format(double value) => $"double: {value:F2}";
+
+Console.WriteLine(Format(42));
+Console.WriteLine(Format((double)42));
+Console.WriteLine(string.Join(", ", new[] { 1, 2, 3 }.Where(x => x > 1)));
+```
+
+```text
+int: 42
+double: 42.00
+2, 3
+```

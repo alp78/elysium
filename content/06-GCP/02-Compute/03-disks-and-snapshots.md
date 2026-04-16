@@ -4,7 +4,7 @@ tags: [gcp, compute]
 aliases: [GCE disks, persistent disk snapshots, disk resize, multi-disk layout, SQL Server disk separation]
 description: "How to manage Compute Engine persistent disks — creating a multi-disk layout for SQL Server, formatting and mounting, incremental snapshots, restore procedures, snapshot schedules, and disk resize."
 created: 2026-03-22
-updated: 2026-04-12
+updated: 2026-04-15
 status: complete
 ---
 
@@ -16,7 +16,7 @@ status: complete
 > — **W. Curtis Preston**, *Backup & Recovery* (2007)
 > [!abstract]- Summary
 >
-> Covers multi-disk storage design for SQL Server on Compute Engine, including persistent-disk creation, guest formatting and mounting, point-in-time snapshots, restore workflows, automated schedules, and online resize so `stoxx-vm` can separate data, log, and TempDB storage safely in `bq-wh-nb`.
+> Documents the multi-disk storage design that was originally validated for SQL Server on `stoxx-vm`, covering persistent-disk creation, guest formatting and mounting, point-in-time snapshots, restore workflows, automated schedules, and online resize.
 >
 > **Prerequisites**
 > - Require `compute.googleapis.com`, `roles/compute.storageAdmin` for disks and snapshots, `roles/compute.instanceAdmin.v1` for attach and detach operations, and an existing `stoxx-vm` in `bq-wh-nb` / `europe-west1-b`
@@ -42,6 +42,12 @@ status: complete
 > - Warnings: regional disks cost roughly 2× zonal disks, first snapshots are full, restored disks can change device mappings, resize requires a guest filesystem expansion step, and missing `nofail` can break boot
 > - Recommendations table: the disk family reference compares Persistent Disk and Hyperdisk types for database, analytics, archive, and RPO = 0 designs
 > - Troubleshooting: 10 failure modes covering wrong post-resize size, bad `fstab`, wrong mount path, already-attached disks, slow snapshots, in-use deletes, restore UUID mismatches, wrong `resize2fs` target, missing schedule execution, and mount-point ownership errors
+
+> [!warning] Live-run boundary
+>
+> The original `stoxx-vm` disk estate in `bq-wh-nb` is no longer available for a full rerun. On `2026-04-15`, the source project was already `DELETE_REQUESTED`, and current read-only inventory against `dagflow-poc` returned `Listed 0 items.` for both `gcloud compute disks list` and `gcloud compute snapshots list`.
+>
+> This refresh therefore preserves the create, attach, format, snapshot, restore, resize, and delete sequences as historical operator runbooks while refreshing the disk-type catalog from a live `europe-west1-b` query.
 
 > [!note]- Glossary
 >
@@ -1208,6 +1214,25 @@ gcloud compute disks delete stoxx-data --zone=europe-west1-b --quiet
 ## Disk Types Reference
 
 Compute Engine offers two disk families: **Persistent Disk** (block storage billed by provisioned capacity) and **Hyperdisk** (next-generation block storage with independently configurable IOPS and throughput, GA since 2024). Hyperdisk availability varies by zone — check the [GCE disk types docs](https://cloud.google.com/compute/docs/disks) before selecting a type.
+
+> [!info] Current live disk-type inventory
+>
+> A live `gcloud compute disk-types list --project=dagflow-poc --zones=europe-west1-b --limit=15` run on `2026-04-15` returned:
+>
+> ```text
+> NAME                  ZONE            DEFAULT_DISK_SIZE_GB  VALID_DISK_SIZES
+> hyperdisk-balanced    europe-west1-b  100                   4GB-65536GB
+> hyperdisk-extreme     europe-west1-b  1000                  64GB-65536GB
+> hyperdisk-ml          europe-west1-b  100                   4GB-65536GB
+> hyperdisk-throughput  europe-west1-b  2048                  2048GB-32768GB
+> local-ssd             europe-west1-b  375                   375GB-375GB
+> pd-balanced           europe-west1-b  100                   10GB-65536GB
+> pd-extreme            europe-west1-b  1000                  500GB-65536GB
+> pd-ssd                europe-west1-b  100                   10GB-65536GB
+> pd-standard           europe-west1-b  500                   10GB-65536GB
+> ```
+>
+> Use a fresh `disk-types list` check in the target zone before standardizing on a Hyperdisk or `pd-*` SKU, because availability and size floors are zone-specific.
 
 > [!warning] Pricing Varies by Region
 >

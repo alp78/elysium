@@ -2,8 +2,9 @@
 title: "02 - GCP APIs and Services"
 tags: [gcp, gcloud]
 aliases: [GCP APIs and services, Service Usage API, gcloud services]
-description: "How Google Cloud APIs are listed, filtered, enabled, disabled, and tracked as long-running operations, with live output from bq-wh-nb."
+description: "How Google Cloud APIs are listed, filtered, enabled, disabled, and tracked as long-running operations, using live read-only output from dagflow-poc after the original bq-wh-nb demo project became invalid for Service Usage."
 created: 2026-04-13
+updated: 2026-04-15
 status: complete
 ---
 
@@ -11,11 +12,11 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Explains how Google Cloud API activation works in the live `bq-wh-nb` project so operators can list, enable, disable, and track service state correctly before debugging IAM, Terraform, or workload failures.
+> Explains how Google Cloud API activation works in a live project context so operators can list, enable, disable, and track service state correctly before debugging IAM, Terraform, or workload failures.
 >
 > **API fundamentals**
 > - Separate API activation from IAM and quota: a principal can have the right roles and still fail if the service is disabled in the consumer project
-> - Use the live `bq-wh-nb` environment to show current service state and the current SDK limitation that `gcloud 563.0.0` does not expose `gcloud services describe`
+> - Use live read-only output from `dagflow-poc` to show current service state and the current SDK limitation that `gcloud 563.0.0` does not expose `gcloud services describe`
 >
 > **Listing APIs**
 > - Use `gcloud services list --enabled` to inspect the current active service surface and `gcloud services list --available` to inspect the larger catalog the project could enable
@@ -35,6 +36,10 @@ status: complete
 >
 > **Operations and safety**
 > - Warnings: `API not enabled` is not an IAM denial, disabling an API can be an outage even when resources still exist, and `--force` can cascade to dependent services
+
+> [!warning] Demo project drift
+>
+> On April 15, 2026, `gcloud services list --enabled --project=bq-wh-nb` began returning `CONSUMER_INVALID` with the message `Project #348557092514 has been deleted`. The read-only listing, filtering, and REST metadata examples in this note were refreshed live against active project `dagflow-poc`. The state-changing enable, disable, and operation-tracking examples remain documented patterns from the original `bq-wh-nb` walkthrough and were not re-executed during this pass.
 
 > [!note]- Glossary
 >
@@ -241,7 +246,7 @@ stateDiagram-v2
 
 API activation is always project-scoped. Enabling `bigquery.googleapis.com` in development does not enable it in staging or production. That is why platform bootstrap usually includes an explicit `gcloud services enable ...` step or the Terraform `google_project_service` resource.
 
-The live `bq-wh-nb` project illustrates the usual pattern: core control-plane services such as `serviceusage.googleapis.com`, `servicemanagement.googleapis.com`, and `cloudapis.googleapis.com` are already active, and product services such as `compute.googleapis.com`, `storage.googleapis.com`, and `bigquery.googleapis.com` are also enabled. Most specialized services are not enabled until an operator or IaC workflow does so deliberately.
+The live `dagflow-poc` project illustrates the usual pattern: core control-plane services such as `serviceusage.googleapis.com`, `servicemanagement.googleapis.com`, and `cloudapis.googleapis.com` are already active, and product services such as `compute.googleapis.com`, `storage.googleapis.com`, and `bigquery.googleapis.com` are also enabled. Most specialized services are not enabled until an operator or IaC workflow does so deliberately.
 
 ### PowerShell / Linux | "API not enabled" is not an IAM denial
 
@@ -263,9 +268,9 @@ Listing is the fastest way to answer three operational questions: what the proje
 
 `gcloud services list --enabled` returns only the services already active in the target project. This is the preflight check to run before product-specific commands such as `bq query`, `gcloud run deploy`, or `gcloud scheduler jobs create`.
 
-#### List the enabled services in `bq-wh-nb`
+#### List the enabled services in `dagflow-poc`
 
-Before running any product-specific command that depends on a Google Cloud API. It is typically triggered by first project audit, preflight checks, or troubleshooting an "API not enabled" failure. Read-only `gcloud` list command. It queries Service Usage state for the target project and does not mutate anything. Return the exact service endpoints currently enabled in `bq-wh-nb`.
+Before running any product-specific command that depends on a Google Cloud API. It is typically triggered by first project audit, preflight checks, or troubleshooting an "API not enabled" failure. Read-only `gcloud` list command. It queries Service Usage state for the target project and does not mutate anything. Return the exact service endpoints currently enabled in `dagflow-poc`.
 
 | Output column | Source field | Type | Meaning |
 |---|---|---|---|
@@ -275,12 +280,13 @@ Before running any product-specific command that depends on a Google Cloud API. 
 *List every enabled service in the project and render the canonical endpoint plus display title.*
 
 ```bash
-gcloud services list --enabled --project=bq-wh-nb --format='table(config.name,config.title)'
+gcloud services list --enabled --project=dagflow-poc --format='table(config.name,config.title)'
 ```
 
 ```text
 NAME                                 TITLE
 analyticshub.googleapis.com          Analytics Hub API
+artifactregistry.googleapis.com      Artifact Registry API
 bigquery.googleapis.com              BigQuery API
 bigqueryconnection.googleapis.com    BigQuery Connection API
 bigquerydatapolicy.googleapis.com    BigQuery Data Policy API
@@ -289,21 +295,28 @@ bigquerymigration.googleapis.com     BigQuery Migration API
 bigqueryreservation.googleapis.com   BigQuery Reservation API
 bigquerystorage.googleapis.com       BigQuery Storage API
 cloudapis.googleapis.com             Google Cloud APIs
+cloudbuild.googleapis.com            Cloud Build API
 cloudresourcemanager.googleapis.com  Cloud Resource Manager API
+cloudscheduler.googleapis.com        Cloud Scheduler API
 cloudtrace.googleapis.com            Cloud Trace API
 compute.googleapis.com               Compute Engine API
+containerregistry.googleapis.com     Container Registry API
 dataform.googleapis.com              Dataform API
 dataplex.googleapis.com              Cloud Dataplex API
 datastore.googleapis.com             Cloud Datastore API
-firebaserules.googleapis.com         Firebase Rules API
-firestore.googleapis.com             Cloud Firestore API
+iam.googleapis.com                   Identity and Access Management (IAM) API
 iamcredentials.googleapis.com        IAM Service Account Credentials API
 logging.googleapis.com               Cloud Logging API
 monitoring.googleapis.com            Cloud Monitoring API
 oslogin.googleapis.com               Cloud OS Login API
+pubsub.googleapis.com                Cloud Pub/Sub API
+run.googleapis.com                   Cloud Run Admin API
+secretmanager.googleapis.com         Secret Manager API
 servicemanagement.googleapis.com     Service Management API
+servicenetworking.googleapis.com     Service Networking API
 serviceusage.googleapis.com          Service Usage API
 sql-component.googleapis.com         Cloud SQL
+sqladmin.googleapis.com              Cloud SQL Admin API
 storage-api.googleapis.com           Google Cloud Storage JSON API
 storage-component.googleapis.com     Cloud Storage
 storage.googleapis.com               Cloud Storage API
@@ -311,7 +324,7 @@ sts.googleapis.com                   Security Token Service API
 telemetry.googleapis.com             Telemetry API
 ```
 
-The project currently has 29 enabled services. The list mixes product APIs such as BigQuery and Dataplex with control-plane dependencies such as Service Usage, Service Management, Cloud Resource Manager, and Google Cloud APIs. That mix is normal: real projects need both workload services and the control services that support them.
+The project currently has 37 enabled services. The list mixes product APIs such as BigQuery, Cloud Run, Pub/Sub, and Dataplex with control-plane dependencies such as Service Usage, Service Management, Cloud Resource Manager, and Google Cloud APIs. That mix is normal: real projects need both workload services and the control services that support them.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -322,13 +335,13 @@ The project currently has 29 enabled services. The list mixes product APIs such 
 | `--page-size` | `gcloud services list --enabled --page-size=100` | Controls paging size when the backend paginates responses. |
 | `--sort-by` | `gcloud services list --enabled --sort-by=config.name` | Sorts rows client-side before filtering and limiting. |
 | `--format` | `gcloud services list --enabled --format='value(config.name)'` | Changes output shape for scripting or table rendering. |
-| `--project` | `gcloud services list --enabled --project=bq-wh-nb` | Targets a specific project instead of the active config default. |
+| `--project` | `gcloud services list --enabled --project=dagflow-poc` | Targets a specific project instead of the active config default. |
 
 ### PowerShell / Linux | gcloud services list --available
 
 `gcloud services list --available` answers a different question: which services could this project enable if needed? The result set is far larger because it includes Google-managed product APIs, public data endpoints, and marketplace-style partner services.
 
-#### Sample the services available to `bq-wh-nb`
+#### Sample the services available to `dagflow-poc`
 
 During service discovery, project bootstrap planning, or before writing an enablement batch. It is typically triggered by you know a workload category but not the exact service endpoint name yet. Read-only Service Usage query. The command can return a very large result set, so `--limit` is used here to keep the output reviewable. Show the difference between "available to enable" and "already enabled.".
 
@@ -337,10 +350,10 @@ During service discovery, project bootstrap planning, or before writing an enabl
 | `config.name` | `config.name` | string | The service endpoint that can be passed to `gcloud services enable`. |
 | `config.title` | `config.title` | string | The display title published for that service. |
 
-*List a 30-row sample from the much larger available-services catalog.*
+*List a 15-row sample from the much larger available-services catalog.*
 
 ```bash
-gcloud services list --available --project=bq-wh-nb --limit=30 --format='table(config.name,config.title)'
+gcloud services list --available --project=dagflow-poc --limit=15 --format='table(config.name,config.title)'
 ```
 
 ```text
@@ -353,28 +366,13 @@ a10-vthunder-adc-200mbps.endpoints.a10networks-public-396315.cloud.goog         
 a10-vthunder-adc-20mbps.endpoints.a10networks-public-396315.cloud.goog                       A10 Thunder ADC for Advanced Load Balancing - 20 Mbps
 a10-vthunder-adc-500mbps.endpoints.a10networks-public-396315.cloud.goog                      A10 Thunder ADC for Advanced Load Balancing - 500 Mbps
 a10-vthunder-adc-5gbps.endpoints.a10networks-public-396315.cloud.goog                        A10 Thunder ADC for Advanced Load Balancing - 5 Gbps
-a10-vthunder-adc-byol.endpoints.a10networks-public-396315.cloud.goog                         A10 Thunder ADC for Advanced Load Balancing - BYOL
-a2a-agent-v1-49b2.endpoints.menlo-security-public.cloud.goog                                 Menlo A2A Agent (Preview)
-a8genaiplatform.endpoints.articul8-public.cloud.goog                                         Articul8 GenAI Platform
-aapanel.endpoints.anarion-technologies-public.cloud.goog                                     aaPanel v7.0.16 on Ubuntu v20
-aapl-miriinfotech-public.cloudpartnerservices.goog                                           Miri Infotech lapp
-ab-initio-cooperating-system.endpoints.ab-initio-419002.cloud.goog                           Ab Initio? Co>Operating System?
-ab-initio-data-platform.endpoints.ab-initio-419002.cloud.goog                                Ab Initio? Data Platform
-ab-tasty-experimentation.endpoints.abtasty-public.cloud.goog                                 AB Tasty Experimentation
-abacus.ai.endpoints.abacus-public.cloud.goog                                                 Abacus.Ai
-abacus360-on-rcloud.endpoints.regnology-cloud-marketplace.cloud.goog                         Abacus360 Banking on Rcloud
-abantecart-bitnami-launchpad.cloudpartnerservices.goog                                       Bitnami AbanteCart Certified by Bitnami
-abantecart-ecommerce-platform-on-centos-6-34701.endpoints.cognosys-public.cloud.goog         Abantecart eCommerce Platform on Centos 6
-abantecart-ecommerce-platform-on-centos-7-34700.endpoints.cognosys-public.cloud.goog         Abantecart eCommerce Platform on Centos 7
-abantecart-ecommerce-platform-on-centos-8-34699.endpoints.cognosys-public.cloud.goog         Abantecart eCommerce Platform on Centos 8
-abantecart-ecommerce-platform-on-centos-8-stream-34698.endpoints.cognosys-public.cloud.goog  Abantecart eCommerce Platform on Centos 8 stream
-abantecart-ecommerce-platform-on-centos-9-34697.endpoints.cognosys-public.cloud.goog         Abantecart eCommerce Platform on Centos 9
-abantecart-ecommerce-platform-on-centos-9-stream-34696.endpoints.cognosys-public.cloud.goog  Abantecart eCommerce Platform on Centos 9 stream
-abantecart-ecommerce-platform-on-centos-latest-34695.endpoints.cognosys-public.cloud.goog    Abantecart eCommerce Platform on Centos latest
-abantecart-ecommerce-platform-on-debian-10-34694.endpoints.cognosys-public.cloud.goog        Abantecart eCommerce Platform on Debian 10
-abantecart-ecommerce-platform-on-debian-11-34693.endpoints.cognosys-public.cloud.goog        Abantecart eCommerce Platform on Debian 11
-abantecart-ecommerce-platform-on-debian-12-34692.endpoints.cognosys-public.cloud.goog        Abantecart eCommerce Platform on Debian 12
-abantecart-ecommerce-platform-on-debian-34691.endpoints.cognosys-public.cloud.goog           Abantecart eCommerce Platform on Debian
+a10-vthunder-adc-byol.endpoints.a10networks-public-396315.cloud.goog         A10 Thunder ADC for Advanced Load Balancing - BYOL
+a2a-agent-v1-49b2.endpoints.menlo-security-public.cloud.goog                 Menlo A2A Agent (Preview)
+a8genaiplatform.endpoints.articul8-public.cloud.goog                         Articul8 GenAI Platform
+aapanel.endpoints.anarion-technologies-public.cloud.goog                     aaPanel v7.0.16 on Ubuntu v20
+aapl-miriinfotech-public.cloudpartnerservices.goog                           Miri Infotech lapp
+ab-initio-cooperating-system.endpoints.ab-initio-419002.cloud.goog           Ab Initio? Co>Operating System?
+ab-initio-data-platform.endpoints.ab-initio-419002.cloud.goog                Ab Initio? Data Platform
 ```
 
 This output is intentionally noisy. It shows why `--available` is not the same thing as "Google first-party services you probably care about today." The catalog includes partner endpoints and marketplace products, so production bootstrap scripts should always pin exact canonical names instead of relying on fuzzy search.
@@ -384,11 +382,11 @@ This output is intentionally noisy. It shows why `--available` is not the same t
 | `--available` | `gcloud services list --available` | Returns the full catalog of services the project can enable. |
 | `--enabled` | `gcloud services list --enabled` | Restricts the result to services already active in the project. |
 | `--filter` | `gcloud services list --available --filter='config.name=bigquery.googleapis.com'` | Narrows the catalog to matching names or metadata. |
-| `--limit` | `gcloud services list --available --limit=30` | Prevents the result from becoming unmanageably large. |
+| `--limit` | `gcloud services list --available --limit=15` | Prevents the result from becoming unmanageably large. |
 | `--page-size` | `gcloud services list --available --page-size=100` | Adjusts the backend page size for large catalogs. |
 | `--sort-by` | `gcloud services list --available --sort-by=config.name` | Sorts rows before filter and limit are applied. |
 | `--format` | `gcloud services list --available --format='table(config.name,config.title)'` | Chooses table, JSON, YAML, CSV, or value output. |
-| `--project` | `gcloud services list --available --project=bq-wh-nb` | Queries a specific project's visible catalog. |
+| `--project` | `gcloud services list --available --project=dagflow-poc` | Queries a specific project's visible catalog. |
 
 ### PowerShell / Linux | filtering and searching services
 
@@ -406,29 +404,29 @@ During initial discovery, before you know the exact service endpoint. It is typi
 *Search the available-services catalog with the broad filter `name:bigquery`.*
 
 ```bash
-gcloud services list --available --project=bq-wh-nb --filter='name:bigquery' --format='table(name,config.title)'
+gcloud services list --available --project=dagflow-poc --filter='name:bigquery' --format='table(name,config.title)'
 ```
 
 The command returned hundreds of rows. The excerpt below shows the opening portion of the actual output.
 
 ```text
 NAME                                                                                                                               TITLE
-projects/348557092514/services/active-campaign.endpoints.bigquery-connectors-public.cloud.goog                                     ActiveCampaign Connector by Windsor.ai
-projects/348557092514/services/activecampaign.endpoints.bigquery-connectors-public.cloud.goog                                      ActiveCampaign by Windsor.ai
-projects/348557092514/services/adalyser.endpoints.bigquery-connectors-public.cloud.goog                                            Adalyser by Windsor.ai
-projects/348557092514/services/adform-bigquery-connector.endpoints.bigquery-connectors-public.cloud.goog                           Adform BigQuery Connector
-projects/348557092514/services/adform.endpoints.bigquery-connectors-public.cloud.goog                                              Adform by Windsor.ai
-projects/348557092514/services/adjust-connector-by-windsor.ai.endpoints.bigquery-connectors-public.cloud.goog                      Adjust Connector by Windsor.ai
-projects/348557092514/services/adjust.endpoints.bigquery-connectors-public.cloud.goog                                              Adjust by Windsor.ai
-projects/348557092514/services/adobe-analytics-bigquery-connector.endpoints.bigquery-connectors-public.cloud.goog                  Adobe Analytics BigQuery Connector
-projects/348557092514/services/adobe-analytics-v2.bigquery-connector.endpoints.bigquery-connectors-public.cloud.goog               Adobe Analytics (v2.0) BigQuery Connector
-projects/348557092514/services/adobe-analytics.endpoints.bigquery-connectors-public.cloud.goog                                     Adobe Analytics by Windsor.ai
-projects/348557092514/services/adroll-connector-by-windsor.ai.endpoints.bigquery-connectors-public.cloud.goog                      AdRoll Connector by Windsor.ai
-projects/348557092514/services/adroll.endpoints.bigquery-connectors-public.cloud.goog                                              AdRoll by Windsor.ai
-projects/348557092514/services/adtraction.endpoints.bigquery-connectors-public.cloud.goog                                          Adtraction by Windsor.ai
-projects/348557092514/services/aha.endpoints.bigquery-connectors-public.cloud.goog                                                 Aha! by Windsor.ai
-projects/348557092514/services/aircall-connector-by-windsor.ai.endpoints.bigquery-connectors-public.cloud.goog                     Aircall Connector by Windsor.ai
-projects/348557092514/services/aircall.endpoints.bigquery-connectors-public.cloud.goog                                             Aircall by Windsor.ai
+projects/462383815308/services/active-campaign.endpoints.bigquery-connectors-public.cloud.goog                                     ActiveCampaign Connector by Windsor.ai
+projects/462383815308/services/activecampaign.endpoints.bigquery-connectors-public.cloud.goog                                      ActiveCampaign by Windsor.ai
+projects/462383815308/services/adalyser.endpoints.bigquery-connectors-public.cloud.goog                                            Adalyser by Windsor.ai
+projects/462383815308/services/adform-bigquery-connector.endpoints.bigquery-connectors-public.cloud.goog                           Adform BigQuery Connector
+projects/462383815308/services/adform.endpoints.bigquery-connectors-public.cloud.goog                                              Adform by Windsor.ai
+projects/462383815308/services/adjust-connector-by-windsor.ai.endpoints.bigquery-connectors-public.cloud.goog                      Adjust Connector by Windsor.ai
+projects/462383815308/services/adjust.endpoints.bigquery-connectors-public.cloud.goog                                              Adjust by Windsor.ai
+projects/462383815308/services/adobe-analytics-bigquery-connector.endpoints.bigquery-connectors-public.cloud.goog                  Adobe Analytics BigQuery Connector
+projects/462383815308/services/adobe-analytics-v2.bigquery-connector.endpoints.bigquery-connectors-public.cloud.goog               Adobe Analytics (v2.0) BigQuery Connector
+projects/462383815308/services/adobe-analytics.endpoints.bigquery-connectors-public.cloud.goog                                     Adobe Analytics by Windsor.ai
+projects/462383815308/services/adroll-connector-by-windsor.ai.endpoints.bigquery-connectors-public.cloud.goog                      AdRoll Connector by Windsor.ai
+projects/462383815308/services/adroll.endpoints.bigquery-connectors-public.cloud.goog                                              AdRoll by Windsor.ai
+projects/462383815308/services/adtraction.endpoints.bigquery-connectors-public.cloud.goog                                          Adtraction by Windsor.ai
+projects/462383815308/services/aha.endpoints.bigquery-connectors-public.cloud.goog                                                 Aha! by Windsor.ai
+projects/462383815308/services/aircall-connector-by-windsor.ai.endpoints.bigquery-connectors-public.cloud.goog                     Aircall Connector by Windsor.ai
+projects/462383815308/services/aircall.endpoints.bigquery-connectors-public.cloud.goog                                             Aircall by Windsor.ai
 ```
 
 The command ended with this CLI warning:
@@ -451,7 +449,7 @@ After discovery, when you are ready to write a deterministic script or bootstrap
 *Match only the canonical BigQuery API endpoint.*
 
 ```bash
-gcloud services list --available --project=bq-wh-nb --filter='config.name=bigquery.googleapis.com' --format='table(config.name,config.title)'
+gcloud services list --available --project=dagflow-poc --filter='config.name=bigquery.googleapis.com' --format='table(config.name,config.title)'
 ```
 
 ```text
@@ -470,10 +468,10 @@ When you need a quick family-level inventory rather than one exact API. It is ty
 | `config.name` | `config.name` | string | Canonical service endpoint. |
 | `config.title` | `config.title` | string | Product-family display title used for human scanning. |
 
-*List the enabled BigQuery family services in `bq-wh-nb`.*
+*List the enabled BigQuery family services in `dagflow-poc`.*
 
 ```bash
-gcloud services list --enabled --project=bq-wh-nb --filter='config.title:BigQuery' --format='table(config.name,config.title)'
+gcloud services list --enabled --project=dagflow-poc --filter='config.title:BigQuery' --format='table(config.name,config.title)'
 ```
 
 ```text
@@ -501,7 +499,7 @@ During quick interactive exploration of a small enabled-service set. It is typic
 *Search enabled services for endpoints containing `storage`.*
 
 ```bash
-gcloud services list --enabled --project=bq-wh-nb --filter='config.name:storage' --format='table(config.name,config.title)'
+gcloud services list --enabled --project=dagflow-poc --filter='config.name:storage' --format='table(config.name,config.title)'
 ```
 
 ```text
@@ -522,7 +520,7 @@ When validating an older runbook or copied command snippet. It is typically trig
 *Run the older wildcard pattern against the available-services catalog.*
 
 ```bash
-gcloud services list --available --project=bq-wh-nb --filter='config.title:*Storage*' --format='table(config.name,config.title)'
+gcloud services list --available --project=dagflow-poc --filter='config.title:*Storage*' --format='table(config.name,config.title)'
 ```
 
 ```text
@@ -535,10 +533,10 @@ On this SDK version, the older wildcard pattern is simply invalid. Use `config.t
 |---|---|---|
 | `--filter` | `gcloud services list --filter='config.name=bigquery.googleapis.com'` | Applies a Boolean filter to the list result. |
 | `--format` | `gcloud services list --format='table(config.name,config.title)'` | Controls table, JSON, YAML, CSV, or value output. |
-| `--project` | `gcloud services list --project=bq-wh-nb` | Targets a specific project explicitly. |
+| `--project` | `gcloud services list --project=dagflow-poc` | Targets a specific project explicitly. |
 | `--available` | `gcloud services list --available` | Searches the full enable-able catalog instead of only enabled services. |
 | `--enabled` | `gcloud services list --enabled` | Restricts the search to currently enabled services. |
-| `--limit` | `gcloud services list --available --limit=30` | Keeps discovery output manageable when the catalog is large. |
+| `--limit` | `gcloud services list --available --limit=15` | Keeps discovery output manageable when the catalog is large. |
 | `--page-size` | `gcloud services list --available --page-size=200` | Changes the response page size returned by the backend. |
 | `--sort-by` | `gcloud services list --sort-by=config.name` | Sorts rows before filtering and limiting. |
 
@@ -553,7 +551,7 @@ Before relying on copied examples that mention `gcloud services describe`. It is
 *Attempt to describe the BigQuery API directly from the `gcloud services` command group.*
 
 ```bash
-gcloud services describe bigquery.googleapis.com --project=bq-wh-nb
+gcloud services describe bigquery.googleapis.com --project=dagflow-poc
 ```
 
 ```text
@@ -562,17 +560,23 @@ Maybe you meant:
   gcloud services disable
   gcloud services enable
   gcloud services list
+  gcloud services api-keys describe
   gcloud services operations describe
+  gcloud network-services endpoint-policies describe
+  gcloud network-services gateways describe
+  gcloud network-services grpc-routes describe
+  gcloud network-services http-routes describe
+  gcloud network-services meshes describe
 
 To search the help text of gcloud commands, run:
   gcloud help -- SEARCH_TERMS
 ```
 
-On April 13, 2026, with Google Cloud SDK `563.0.0`, there is no direct `gcloud services describe`. That is a CLI-surface limitation, not a permission problem.
+On April 15, 2026, with Google Cloud SDK `563.0.0`, there is still no direct `gcloud services describe`. That is a CLI-surface limitation, not a permission problem.
 
 #### Query the Service Usage REST API for the same service metadata
 
-After confirming the CLI surface does not provide a direct describe command. It is typically triggered by you still need service state, descriptive metadata, and quota descriptors for one API. Read-only REST call authenticated with the active service-account access token. The shell wrapper below is PowerShell because that is the live execution environment for this note. Retrieve the Service Usage `services.get` payload for `bigquery.googleapis.com`.
+After confirming the CLI surface does not provide a direct describe command. It is typically triggered by you still need service state, descriptive metadata, and quota descriptors for one API. Read-only REST call authenticated with the active access token. The shell wrapper below is PowerShell because that is the live execution environment for this note. Retrieve the Service Usage `services.get` payload for `bigquery.googleapis.com`.
 
 | Output field | Source field | Type | Meaning |
 |---|---|---|---|
@@ -591,7 +595,7 @@ After confirming the CLI surface does not provide a direct describe command. It 
 ```powershell
 $token = gcloud auth print-access-token
 $headers = @{ Authorization = "Bearer $token" }
-$url = 'https://serviceusage.googleapis.com/v1/projects/348557092514/services/bigquery.googleapis.com'
+$url = 'https://serviceusage.googleapis.com/v1/projects/462383815308/services/bigquery.googleapis.com'
 $svc = Invoke-RestMethod -Headers $headers -Uri $url
 
 $summary = [ordered]@{
@@ -609,7 +613,7 @@ $summary = [ordered]@{
           name    = $_.name
           metric  = $_.metric
           unit    = $_.unit
-          default = $_.values.standard
+          default = $_.values.DEFAULT
         }
       }
   )
@@ -620,7 +624,7 @@ $summary | ConvertTo-Json -Depth 5
 
 ```text
 {
-  "name": "projects/348557092514/services/bigquery.googleapis.com",
+  "name": "projects/462383815308/services/bigquery.googleapis.com",
   "state": "ENABLED",
   "serviceName": "bigquery.googleapis.com",
   "title": "BigQuery API",
@@ -631,19 +635,19 @@ $summary | ConvertTo-Json -Depth 5
       "name": "QueryUsagePerDay",
       "metric": "bigquery.googleapis.com/quota/query/usage",
       "unit": "1/d/{project}",
-      "default": null
+      "default": "209715200"
     },
     {
       "name": "QueryUsagePerUserPerDay",
       "metric": "bigquery.googleapis.com/quota/query/usage",
       "unit": "1/d/{project}/{user}",
-      "default": null
+      "default": "9223372036854775807"
     },
     {
       "name": "StreamingInsertBytesPerSecond",
       "metric": "bigquery.googleapis.com/quota/streaming/insert_bytes",
       "unit": "1/min/{project}/{region}",
-      "default": null
+      "default": "18874368000"
     }
   ]
 }

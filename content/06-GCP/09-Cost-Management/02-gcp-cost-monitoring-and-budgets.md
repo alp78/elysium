@@ -9,9 +9,9 @@ aliases:
   - budget alerts
   - billing budgets
   - anomalies
-description: Live, project-grounded control-plane reference for budgets, anomaly handling, workload proxies, and cost runbooks in bq-wh-nb.
+description: Archived-project control-plane reference for budgets, anomaly handling, workload proxies, and cost runbooks in bq-wh-nb.
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -19,17 +19,17 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers the live cost-control plane for `bq-wh-nb`, separating budgets, anomalies, reports, forecasts, and workload proxies so operators can respond safely when the project can spend money but still lacks a fully wired FinOps control surface.
+> Covers the archived cost-control plane for `bq-wh-nb`, separating budgets, anomalies, reports, forecasts, and workload proxies so operators can respond safely when the project can spend money but still lacks a fully wired FinOps control surface.
 >
 > **Cost-control state and missing surfaces**
-> - Confirms that the project currently lacks a complete monitoring plane: there is no billing export dataset, `billingbudgets.googleapis.com` is disabled, `recommender.googleapis.com` is disabled, `cloudscheduler.googleapis.com` is disabled, and Pub/Sub has no topics or subscriptions for programmatic cost notifications
+> - Confirms that the archived project lacked a complete monitoring plane: there was no billing export dataset, `billingbudgets.googleapis.com` was disabled, `recommender.googleapis.com` was disabled, `cloudscheduler.googleapis.com` was disabled, and Pub/Sub had no topics or subscriptions for programmatic cost notifications
 > - Explains that a failed `gcloud billing budgets list` call in this project proves the Budget API is disabled, not that zero budget objects necessarily exist
-> - Shows why budgets, scheduled automation, recommendation-backed optimization, and Pub/Sub notification delivery cannot be documented as live operational reality yet
+> - Shows why budgets, scheduled automation, recommendation-backed optimization, and Pub/Sub notification delivery cannot be documented as archived operational reality yet
 >
 > **Budgets, anomalies, reports, and forecasts**
 > - Distinguishes budgets as plan-threshold controls, anomalies as historical-deviation signals, reports as descriptive breakdowns, and forecasts as projected month-end spend estimates
 > - Explains why collapsing all four into one vague "cost alerting" concept produces noisy automation and inaccurate runbooks
-> - Maps each surface to the current project status so missing APIs are treated as blocked control-plane capabilities rather than as healthy zero-state surfaces
+> - Maps each surface to the archived project status so missing APIs are treated as blocked control-plane capabilities rather than as healthy zero-state surfaces
 >
 > **Workload proxies while export is absent**
 > - Uses BigQuery `region-europe-west1.INFORMATION_SCHEMA.JOBS_BY_PROJECT` to rank principals, query counts, bytes processed, slot consumption, and most-referenced tables as temporary cost signals
@@ -38,13 +38,17 @@ status: complete
 >
 > **Runbooks and control-plane sequencing**
 > - Provides the safe build order for the missing control plane: enable standard Cloud Billing export first, then enable Budget API, Pub/Sub, Cloud Scheduler, and Recommender only when each surface will actually be used
-> - Documents conceptual-but-not-executed workflows for Billing Reports, budget-to-Pub/Sub delivery, anomaly review, and FinOps hub so the note does not pretend those surfaces were validated live
+> - Documents conceptual-but-not-executed workflows for Billing Reports, budget-to-Pub/Sub delivery, anomaly review, and FinOps hub so the note does not pretend those surfaces were validated in the archived project
 > - Includes incident-style runbooks for missing budget visibility, suspected BigQuery spend spikes, network drift, and logging-cost drift
 >
 > **Operations and safety**
 > - Warnings: a spend-capable project can still lack its cost-control plane, `SERVICE_DISABLED` does not prove a true zero state, workload telemetry is not billing export, same-day data is often incomplete because of export lag, and disabling billing is an outage action rather than routine cost governance
 > - Recommendations: enable billing export first; wire Budget API, Pub/Sub, Scheduler, and Recommender only when ready to use them; prefer selective enforcement to full billing shutdown; and document which resources are safe to stop before automating any response
 > - Troubleshooting: 4 runbooks covering missing budget visibility, BigQuery spend suspicion without export, suspected network cost drift, and suspected logging cost drift
+>
+> [!warning] Archived demo boundary
+>
+> The original project `bq-wh-nb` has been removed. The disabled-API state, empty Pub/Sub inventory, and proxy-query examples in this note are preserved as archived operator reference, and this refresh did not rerun Cloud Billing, Pub/Sub, Scheduler, Recommender, Logging, or Monitoring commands.
 
 > [!note]- Glossary
 >
@@ -150,7 +154,7 @@ status: complete
 >
 > **Recommender API / `recommender.googleapis.com`**
 > - The API that exposes recommendation-backed optimization data such as machine-type rightsizing suggestions.
-> - It is the prerequisite for treating recommendation-driven cost optimization as a live workflow.
+> - It is the prerequisite for treating recommendation-driven cost optimization as an active workflow.
 >
 > > [!warning] No recommendations without API
 > >
@@ -194,7 +198,7 @@ status: complete
 >
 > > [!warning] Empty means no delivery path
 > >
-> > In the current project, no Pub/Sub topics or subscriptions exist. There is therefore no live machine-readable notification channel for budgets or anomalies today.
+> > In the archived project, no Pub/Sub topics or subscriptions existed. There was therefore no machine-readable notification channel for budgets or anomalies.
 >
 > ---
 >
@@ -250,13 +254,13 @@ flowchart LR
     F --> H
 ```
 
-## Live Cost-Control State
+## Archived Cost-Control State
 
-The current project state is incomplete but explicit:
+The archived project state is incomplete but explicit:
 
 - Budgets cannot be listed because `billingbudgets.googleapis.com` is disabled on `bq-wh-nb`.
-- Pub/Sub has no topics and no subscriptions, so there is no live delivery path for programmatic budget or anomaly notifications.
-- Cloud Scheduler is disabled, so there is no live scheduled automation surface in the project.
+- Pub/Sub has no topics and no subscriptions, so there is no archived delivery path for programmatic budget or anomaly notifications.
+- Cloud Scheduler is disabled, so there is no archived scheduled automation surface in the project.
 - Recommender is disabled, so FinOps hub and recommendation-backed optimization workflows are blocked.
 
 ### PowerShell / Linux | gcloud | inspect the current cost-control surfaces
@@ -265,7 +269,7 @@ These commands establish whether the project has a real budgeting and automation
 
 #### Attempt to list billing budgets
 
-Run this before claiming budgets exist or before troubleshooting a missing budget notification. It is typically triggered by use it when building a cost control note, budget automation, or runbook for the current billing account. This is a read-only command against the billing account, but it still depends on the Cloud Billing Budget API being enabled for the consumer project. Verify whether budgets are queryable from the current project context.
+Run this before claiming budgets exist or before troubleshooting a missing budget notification. It is typically triggered by use it when building a cost control note, budget automation, or runbook for the current billing account. This is a read-only command against the billing account, but it still depends on the Cloud Billing Budget API being enabled for the consumer project. Verify whether budgets are queryable from the archived project context.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -274,7 +278,7 @@ Run this before claiming budgets exist or before troubleshooting a missing budge
 | `reason` | Error metadata | STRING | Primary failure reason returned by Google APIs. |
 | `activationUrl` | Error metadata | STRING | The exact enablement URL for the missing API. |
 
-*This command tries to enumerate budgets on the live billing account.*
+*This command tries to enumerate budgets on the archived billing account.*
 
 ```powershell
 gcloud billing budgets list --billing-account=0190CF-C61D5A-F08831 --format=json
@@ -289,7 +293,7 @@ service: billingbudgets.googleapis.com
 reason: SERVICE_DISABLED
 ```
 
-This is not evidence of zero budgets. It is evidence that the current project cannot even query the budget surface yet.
+This is not evidence of zero budgets. It is evidence that the archived project could not query the budget surface yet.
 
 #### Check whether Pub/Sub topics exist for programmatic notifications
 
@@ -385,7 +389,7 @@ service: recommender.googleapis.com
 reason: SERVICE_DISABLED
 ```
 
-FinOps hub cannot be treated as live and queryable until the recommendation surface is enabled.
+FinOps hub cannot be treated as active and queryable until the recommendation surface is enabled.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -588,7 +592,7 @@ Invoke-RestMethod -Headers $headers -Uri $url
 }
 ```
 
-Current logging ingestion is tiny. The operational value here is not the absolute number. It is that the project now has a live metric you can trend, threshold, and compare over time even before billing export is enabled.
+Current logging ingestion is tiny. The operational value here is not the absolute number. It is that the project exposes a metric you can trend, threshold, and compare over time even before billing export is enabled.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -600,16 +604,20 @@ Current logging ingestion is tiny. The operational value here is not the absolut
 
 Each surface answers a different operational question. Mixing them together creates noisy automation and poor runbooks.
 
-| Surface | Operational question | Current live status in `bq-wh-nb` | Correct action |
+| Surface | Operational question | Archived status in removed project | Correct action |
 |---|---|---|---|
 | Budget | "Are we crossing a planned spend threshold?" | Blocked by disabled Budget API | Enable the API, then define thresholds and destinations. |
 | Anomaly | "Is today materially different from recent history?" | Native anomaly review not validated here | Use workload proxies now; enable billing export and anomaly surfaces next. |
-| Report | "What changed by service, SKU, project, or label?" | Console surface exists conceptually, but export-backed detail is absent | Treat reports as a post-export step, not as a current live workflow. |
-| Forecast | "If the month continues like this, where do we land?" | Console surface exists conceptually; current project lacks export-backed spend history | Use conservative manual forecasting until billing export is enabled. |
+| Report | "What changed by service, SKU, project, or label?" | Console surface exists conceptually, but export-backed detail is absent | Treat reports as a post-export step, not as an archived validated workflow. |
+| Forecast | "If the month continues like this, where do we land?" | Console surface exists conceptually; archived project lacked export-backed spend history | Use conservative manual forecasting until billing export is enabled. |
+
+> [!info] Current product note: budgets and anomalies are not the same channel
+>
+> Current Cloud Billing pricing guidance makes two practical points explicit: budgets and anomaly detection are free control-plane features, but Pub/Sub delivery for either one incurs standard Pub/Sub charges. Treat those optional notification paths as automation plumbing, not as the core budgeting feature itself.
 
 ## Important Conceptual Or Console Workflows Not Safely Executed Here
 
-Some Google Cloud cost-management features are important enough to document even when the current project cannot validate them live yet.
+Some Google Cloud cost-management features are important enough to document even when the archived project could not validate them.
 
 | Surface | What the platform supports | Why it was not executed here | Safe next step |
 |---|---|---|---|
@@ -617,6 +625,14 @@ Some Google Cloud cost-management features are important enough to document even
 | Budget email and Pub/Sub notifications | Threshold notifications and automation hooks | The Budget API is disabled and Pub/Sub is empty | Enable Budget API, create a topic, then validate delivery with a non-destructive test budget. |
 | Anomaly detection | Spend anomaly review and optional notifications | The project does not yet have the surrounding budget/export plumbing documented as active | Enable export first, then review anomalies against invoice-grade data. |
 | FinOps hub | Recommendation and optimization review surface | `recommender.googleapis.com` is disabled here | Enable Recommender and review outputs before writing optimization automation. |
+
+> [!info] Current product note: notification delivery semantics
+>
+> Programmatic Cloud Billing notifications are operational signals, not exactly-once event streams. Current documentation describes repeated notification delivery during the day, and operators should build Pub/Sub consumers to be idempotent rather than assuming one clean message per threshold crossing.
+
+> [!info] Current product note: FinOps hub inputs
+>
+> FinOps hub is not just a prettier budget screen. It depends on recommendation and historical-usage surfaces, so leaving Recommender disabled blocks one of the main current optimization entry points even if basic billing visibility exists elsewhere.
 
 ## Recommendations / Production Rules
 
@@ -655,7 +671,7 @@ Some Google Cloud cost-management features are important enough to document even
 
 ## Quick Reference
 
-| Question | Live answer |
+| Question | Archived answer |
 |---|---|
 | Can the project list billing budgets today? | No; `billingbudgets.googleapis.com` is disabled. |
 | Is there a Pub/Sub path for billing notifications? | No; topics and subscriptions are both empty. |

@@ -155,8 +155,6 @@ The `history` built-in and readline bindings cover most current-session recall w
 
 Running `history` with no arguments prints all entries currently in memory.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Print the current session's numbered history list.*
 ```bash
 history
@@ -171,8 +169,6 @@ history
 
 Pipe `history` into `grep` to filter entries by a substring. Use it when you remember part of a command but not its history number.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Filter the current session history for commands containing `sqlcmd`.*
 ```bash
 history | grep "sqlcmd"
@@ -184,8 +180,6 @@ history | grep "sqlcmd"
 #### Verify that reverse search is bound to `Ctrl+R`
 
 Interactive reverse search is a readline feature, not a separate Bash command. Querying the binding directly confirms that `Ctrl+R` still invokes `reverse-search-history` in the current shell environment.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Query the active binding for reverse search.*
 ```bash
@@ -199,15 +193,19 @@ reverse-search-history can be invoked via "\C-r".
 
 Use `history -c` when you need to discard the current shell's in-memory list without touching the persisted file directly.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Clear the in-memory history list for the current shell process.*
 ```bash
 history -c
 ```
 
+*Verify that the current shell now reports an empty history list.*
+
+```bash
+history | wc -l
+```
+
 ```text
-(no terminal output on success)
+0
 ```
 
 The table below summarizes the `history` options most relevant to inspection, replay, and file synchronization.
@@ -226,17 +224,11 @@ The table below summarizes the `history` options most relevant to inspection, re
 
 History expansion is efficient because it skips a confirmation step. Use a short isolated history list so each preview is unambiguous before you rely on `!!`, `!string`, or `!?string?` interactively.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Seed two history entries for the preview examples.*
 ```bash
 history -c
 history -s 'ls /var/log'
 history -s 'grep db01 /etc/hosts'
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Preview the previous command with `!!`.*
@@ -287,16 +279,10 @@ Persistent Bash history is a write-policy problem. Retention limits, append beha
 
 `HISTSIZE` controls the in-memory list and `HISTFILESIZE` controls file-backed retention. Set them together so current-session recall and durable retention do not drift apart operationally.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Set large Bash retention limits in the current shell.*
 ```bash
 export HISTSIZE=50000
 export HISTFILESIZE=100000
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Print the active retention values.*
@@ -312,16 +298,10 @@ HISTFILESIZE=100000
 
 `histappend` prevents one shell from overwriting another shell's history file. `PROMPT_COMMAND='history -a'` reduces crash loss by flushing accepted commands before the next prompt instead of waiting for a clean exit.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Enable append-on-exit plus prompt-time flushing.*
 ```bash
 shopt -s histappend
 PROMPT_COMMAND='history -a'
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Verify that `histappend` is enabled.*
@@ -344,8 +324,6 @@ PROMPT_COMMAND=history -a
 
 After editing `.bashrc` or setting values interactively, confirm the current shell actually sees the expected history configuration.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Print the current values of `HISTSIZE` and `HISTCONTROL`.*
 ```bash
 echo $HISTSIZE
@@ -360,8 +338,6 @@ ignoreboth
 
 `history` sees only the in-memory list. When the command you need was run in another shell, search `HISTFILE` itself instead of assuming the entry disappeared.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Create an isolated history file with a prior `sqlcmd` entry.*
 ```bash
 export HOME=/tmp/codex-hist-search
@@ -372,10 +348,6 @@ echo hello
 sqlcmd -S db01 -Q "SELECT @@VERSION"
 docker ps
 EOF
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Search the isolated history file for `sqlcmd`.*
@@ -401,11 +373,13 @@ The table below summarizes the primary Bash variables used to control history re
 
 Inline secrets become plain text in the history file unless you block them before persistence. Bash provides both convention-based suppression and pattern-based suppression, and using both is more reliable than depending on operator memory alone.
 
+> [!warning] History filters are not secret storage
+>
+> `HISTCONTROL` and `HISTIGNORE` only decide whether a line reaches `~/.bash_history`. They do not remove secrets already exposed in terminal scrollback, shell transcripts, or process arguments. Prefer environment-based injection, secret-aware prompts, or a vault-backed retrieval path when the tool supports it.
+
 #### Combine leading-space suppression with pattern filters
 
 `HISTCONTROL=ignoreboth` suppresses leading-space commands and consecutive duplicates. `HISTIGNORE` adds explicit pattern-based exclusions. Together they reduce the chance that a password export or token-bearing command survives to disk.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Prepare an isolated Bash history file with `ignoreboth` and `HISTIGNORE`.*
 ```bash
@@ -417,10 +391,6 @@ export HISTCONTROL=ignoreboth
 export HISTIGNORE='*PASSWORD*:*TOKEN*'
 set -o history
 history -c
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Record a visible command that should persist.*
@@ -436,17 +406,9 @@ visible-entry
  export DB_PASSWORD=secret123
 ```
 
-```text
-(no terminal output on success)
-```
-
 *Flush the current session history to disk.*
 ```bash
 history -a
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Print the active suppression settings.*
@@ -477,15 +439,9 @@ Most Bash history failures come down to disabled expansion or overly weak synchr
 
 If `!!`, `!n`, or `!string` appear inert, inspect the `histexpand` shell option before assuming the history list is broken. The option state is the direct diagnostic surface for expansion.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Disable `histexpand` in the current shell.*
 ```bash
 set +H
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Print the `histexpand` option state.*
@@ -502,15 +458,9 @@ If the diagnostic returns `off`, re-enable expansion with `set -H` or the corres
 
 Incremental flush writes new commands out, but it does not pull commands written by other terminals back into the current shell. When near-real-time convergence matters more than prompt latency, use a heavier reload hook.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Set a prompt hook that writes, clears, and reloads history.*
 ```bash
 PROMPT_COMMAND='history -a; history -c; history -r'
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Print the active `PROMPT_COMMAND` value.*
@@ -533,8 +483,6 @@ These commands operate only on the current PowerShell process. That is useful fo
 
 `Get-History` returns the current session history as objects. Because the result is object-based, you can filter or sort it before choosing what to replay.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Return the current session history as PowerShell objects.*
 ```powershell
 Get-History
@@ -550,8 +498,6 @@ Get-History
 #### Search history by keyword
 
 Filter the `CommandLine` property with `-like` to find all matching entries across the current session.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Filter the session history for commands whose text contains `sqlcmd`.*
 ```powershell
@@ -574,15 +520,9 @@ The table below summarizes the most useful `Get-History` parameters for narrowin
 
 `Invoke-History -Id` replays the chosen entry from the current session history. Inspect the list first, then replay the exact identifier you intend to run.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Create a stable first entry in the session history.*
 ```powershell
 Get-Date | Out-Null
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Create a visible entry that is safe to replay.*
@@ -626,8 +566,6 @@ PSReadLine owns the persistent file, its write policy, and its retention ceiling
 
 `HistorySavePath` tells you which file to inspect when the command you need was run in another PowerShell session.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Print the file path used for persistent PSReadLine history.*
 ```powershell
 (Get-PSReadLineOption).HistorySavePath
@@ -639,8 +577,6 @@ C:\Users\aperi\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHo
 #### Inspect the current history save style
 
 `HistorySaveStyle` determines whether accepted commands are written incrementally, only at exit, or not at all. Use it to distinguish durable history from exit-time-only history.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Print the current PSReadLine history save style.*
 ```powershell
@@ -654,15 +590,9 @@ HistorySaveStyle : SaveIncrementally
 
 `MaximumHistoryCount` limits the PSReadLine file, not the current `Get-History` session list. That separation matters because increasing the file ceiling does not make a new shell inherit a larger live session buffer automatically.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Set a larger PSReadLine retention ceiling.*
 ```powershell
 Set-PSReadLineOption -MaximumHistoryCount 50000
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Print the active `MaximumHistoryCount` value.*
@@ -676,8 +606,6 @@ MaximumHistoryCount : 50000
 #### Search the persisted history file directly
 
 When `Get-History` cannot see a command because it was run in an older session, search the PSReadLine file itself. This is the PowerShell equivalent of grepping `~/.bash_history`.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Search the persistent PSReadLine history file for commands containing `sqlcmd`.*
 ```powershell
@@ -703,20 +631,18 @@ PSReadLine exposes prediction, persistence, and filtering through the same optio
 
 PowerShell needs the filter before the write. Once a password-bearing line reaches the PSReadLine file, cleanup is reactive and incomplete. `AddToHistoryHandler` is the intended control surface for that decision.
 
+> [!tip] Keep sensitive recalls in memory only
+>
+> When operators still need same-session recall but the line must not reach the PSReadLine file, return `MemoryOnly` from `AddToHistoryHandler` instead of a Boolean reject. Use a full reject only when the command should disappear from both memory and disk.
+
 #### Use `AddToHistoryHandler` to reject credential-bearing lines
 
 The handler can return booleans or explicit `AddToHistoryOption` values. This example uses boolean returns for clarity and relies on PowerShell's default case-insensitive `-notmatch` behavior so common casing variants are still caught.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Install a handler that rejects password-, token-, secret-, and key-bearing lines.*
 ```powershell
 $handler = { param([string]$line) $line -notmatch 'password|secret|token|key' }
 Set-PSReadLineOption -AddToHistoryHandler $handler
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Evaluate a safe line against the handler.*
@@ -743,16 +669,10 @@ The fastest interactive retrieval pattern is usually prefix search rather than l
 
 Binding `UpArrow` and `DownArrow` to `HistorySearchBackward` and `HistorySearchForward` turns the current typed prefix into the search key. That is more precise than generic previous/next navigation when command families repeat.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Bind the arrow keys to PSReadLine history search.*
 ```powershell
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
-```
-
-```text
-(no terminal output on success)
 ```
 
 *Print the active history-search key bindings.*
@@ -778,8 +698,6 @@ The most common PowerShell history mistake is assuming that `Get-History` is a c
 #### Confirm that `Get-History` is session-scoped
 
 A fresh PowerShell process proves the point immediately. If the count is zero in a new shell, that does not mean history is gone; it means you need to search the PSReadLine file instead.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Count the entries returned by `Get-History` in a fresh session.*
 ```powershell

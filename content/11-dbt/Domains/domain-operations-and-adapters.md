@@ -24,19 +24,28 @@ mindmap
 ```
 
 > [!abstract]- [[01-dbt-airflow-integration]]
+>
 
 > [!abstract]- [[05-dbt-ci-cd]]
+>
 
 > [!abstract]- [[02-dbt-documentation-and-lineage]]
+>
 
 > [!abstract]- [[03-dbt-observability]]
+>
 
 > [!abstract]- [[04-dbt-performance-tuning]]
+>
 
 > [!abstract]- [[06-dbt-troubleshooting]]
+>
 
 > [!abstract]- [[02-dbt-bigquery-adapter]]
+>
 
 > [!abstract]- [[01-dbt-sqlserver-adapter]]
+>
 
 > [!abstract]- [[03-dbt-cross-adapter-patterns]]
+>

@@ -2,9 +2,9 @@
 title: "01 - Cloud Logging"
 tags: [gcp, logging, observability]
 aliases: [Cloud Logging, gcloud logging read, Cloud Audit Logs, log router, log buckets, log views, log scopes, log-based metrics]
-description: "Production-focused Cloud Logging reference for the active GCP project, covering buckets, views, sinks, scopes, audit logs, read and write workflows, and the bridge into Monitoring."
+description: "Production-focused Cloud Logging reference anchored in an archived GCP project, covering buckets, views, sinks, scopes, audit logs, read and write workflows, and the bridge into Monitoring."
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -12,12 +12,12 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers Cloud Logging as the live-verified event system for project `bq-wh-nb`, including `LogEntry` structure, router-driven storage, buckets, views, sinks, scopes, audit-log payloads, `gcloud logging` read and write workflows, and the bridge into Monitoring so you can investigate incidents, design retention intentionally, and control access or exports without guessing where an event went.
+> Covers Cloud Logging using archived operator evidence from project `bq-wh-nb`, including `LogEntry` structure, router-driven storage, buckets, views, sinks, scopes, audit-log payloads, `gcloud logging` read and write workflows, and the bridge into Monitoring so you can investigate incidents, design retention intentionally, and control access or exports without guessing where an event went.
 >
 > **Storage, routing, and access**
 > - Core model: `LogEntry` payload shapes (`textPayload`, `jsonPayload`, `protoPayload`), `severity`, `logName`, and `resource.type` determine how entries are filtered, interpreted, and routed
 > - Router-owned storage objects: `_Default` bucket (`global`, 30-day retention), `_Required` bucket (`global`, 400-day retention, locked), `_Default` and `_Required` system sinks, `_Default` and `_AllLogs` views, and the automatically created `_Default` log scope
-> - Analytics bridge state: `gcloud logging links list` returned `[]` for `_Default`, so Log Analytics linked datasets are not yet configured in the active project
+> - Analytics bridge state: `gcloud logging links list` returned `[]` for `_Default`, so Log Analytics linked datasets were not configured in the archived project
 >
 > **Read and write workflows**
 > - Inspection commands cover buckets, sinks, views, scopes, and links with `gcloud logging buckets|sinks|views|scopes|links ... --format=json|table(...)`
@@ -26,7 +26,7 @@ status: complete
 > - Stable `gcloud logging tail` is not available in this SDK; only `gcloud alpha logging tail` starts a live session, and it remains automation-sensitive here
 >
 > **Derived signals and operational design**
-> - The project currently has no user-defined log-based metrics, so Logging-to-Monitoring promotion is still only a design path rather than an active inventory object
+> - The archived project had no user-defined log-based metrics, so Logging-to-Monitoring promotion remained only a design path rather than an active inventory object
 > - Production guidance distinguishes when to keep data in `_Default`, when to route to custom buckets or sinks, and when to prefer BigQuery, GCS, or Pub/Sub as downstream destinations
 > - Data-engineering scenarios cover root-cause pipeline investigation, long-horizon SQL analysis, and audit-evidence collection
 >
@@ -35,6 +35,10 @@ status: complete
 > - Warnings: `_Default` is not an audit archive, `roles/logging.viewer` does not guarantee Data Access visibility, high-cardinality metric labels create cost and noise, and stable `tail` examples from older docs do not match this SDK
 > - Recommendations: prefer structured `jsonPayload`, separate retention from export decisions, create log-based metrics only for recurrent event families, and validate bucket, view, IAM, and sink permissions before declaring logs missing
 > - Troubleshooting: 4 failure modes covering missing logs, empty sink destinations, noisy logs, and inaccessible audit logs
+>
+> [!warning] Archived demo boundary
+>
+> The original demo project `bq-wh-nb` has been removed. The inventories, command outputs, and examples in this note are preserved as archived operator reference, and this refresh did not rerun Cloud Logging commands against a replacement project.
 >
 > [!note]- Glossary
 >
@@ -200,7 +204,7 @@ status: complete
 >
 > **Log Analytics / linked dataset**
 > - The SQL-analysis path where a log bucket is linked into a BigQuery dataset for longer-horizon or set-based analysis.
-> - The note references linked datasets because the active project currently has none, which sets the boundary of what can be queried analytically today.
+> - The note references linked datasets because the archived project had none, which sets the boundary of what can be queried analytically in the captured examples.
 >
 > > [!info] Investigation mode changes
 > >
@@ -260,7 +264,7 @@ status: complete
 
 Data engineering incidents usually begin as events, not as averages. A Cloud Run task exits with code `1`, a scheduler trigger never reaches the worker, a Pub/Sub consumer starts retrying, or a VM login policy fails. Metrics tell you that a system moved out of range. Logs tell you which actor, method, resource, and payload caused the movement. In Google Cloud, Cloud Logging is also the security evidence layer because Cloud Audit Logs capture control-plane and, when enabled, data-plane access.
 
-The live project state already shows why this matters. The project has system buckets, system sinks, system views, a default log scope, active audit logs, and no user-defined log-based metrics or analytics links. That is a realistic production baseline: enough telemetry to investigate platform events, but not yet enough derived metrics or retention architecture to support long-horizon analytics on its own.
+The archived project state already shows why this matters. The project had system buckets, system sinks, system views, a default log scope, active audit logs, and no user-defined log-based metrics or analytics links. That is a realistic production baseline: enough telemetry to investigate platform events, but not yet enough derived metrics or retention architecture to support long-horizon analytics on its own.
 
 ## Conceptual Model
 
@@ -291,11 +295,11 @@ flowchart LR
     D --> J["Linked dataset / Log Analytics"]
 ```
 
-### Cloud Logging | live project summary
+### Cloud Logging | archived project summary
 
-The active project uses only the default storage and routing objects. There are no user-created sinks, no linked datasets, and no user-defined log-based metrics.
+The archived demo project used only the default storage and routing objects. There were no user-created sinks, no linked datasets, and no user-defined log-based metrics in the captured estate.
 
-| Object | Live state in `bq-wh-nb` | Operational meaning |
+| Object | Archived state in removed project | Operational meaning |
 |---|---|---|
 | `_Default` bucket | `global`, `retentionDays: 30`, `ACTIVE` | Main non-required storage bucket |
 | `_Required` bucket | `global`, `retentionDays: 400`, `locked: true`, `ACTIVE` | Audit and required system logging bucket |
@@ -309,9 +313,9 @@ The active project uses only the default storage and routing objects. There are 
 
 > [!info] Important conceptual note not safely executed here
 >
-> The active project does not contain user-defined buckets, exclusions, sinks, log-based metrics, analytics links, or custom views. Creating them would mutate a live production-style project and can affect retention, cost, access, or downstream delivery. This note therefore distinguishes between:
+> The archived project did not contain user-defined buckets, exclusions, sinks, log-based metrics, analytics links, or custom views. Creating them would have mutated the live production-style environment and could have affected retention, cost, access, or downstream delivery. This note therefore distinguishes between:
 >
-> - live-verified inspection workflows for the objects that already exist
+> - historically captured inspection workflows for the objects that existed
 > - production guidance for objects that were important to explain but not safe to create here
 
 ## PowerShell / Linux
@@ -471,7 +475,11 @@ gcloud logging links list --bucket=_Default --location=global --format=json
 []
 ```
 
-The `_Default` view result is the key access-control fact: a reader who only has access to that default view will not see Data Access audit logs. The scope output shows that this project is not aggregating logs from other projects or custom views. The empty links list shows that `_Default` is not currently linked to a BigQuery dataset for Log Analytics.
+The `_Default` view result is the key access-control fact: a reader who only has access to that default view will not see Data Access audit logs. The scope output shows that this project is not aggregating logs from other projects or custom views. The empty links list shows that `_Default` was not linked to a BigQuery dataset for Log Analytics in the captured state.
+
+> [!info] Current product note: Observability Analytics
+>
+> Current Cloud Logging documentation frames the bucket-side SQL upgrade path as **Observability Analytics**. When a bucket is upgraded, the analytics setting is irreversible, and analytics views become part of the SQL/query access layer on top of that upgraded bucket.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -581,7 +589,7 @@ gcloud logging read 'logName:"cloudaudit.googleapis.com"' --limit=1 --freshness=
 
 This entry is the concrete example of why audit logs use `protoPayload`. The event is more than a message string. It has a typed request, a typed response, and explicit authorization facts.
 
-#### Read a live `textPayload` entry
+#### Read an archived `textPayload` entry
 
 When you need to verify unstructured application or ad hoc shell logging. It is typically triggered by you know the log name and only need the message text and severity. Read-only. The log was intentionally written during this refactor for verification. Show what an unstructured custom log entry looks like in Cloud Logging.
 
@@ -605,7 +613,7 @@ TIMESTAMP                       SEVERITY  TYPE    TEXT_PAYLOAD
 
 This is the simplest `LogEntry` payload shape. It is useful for quick operator messages, but not ideal when you later need to chart or alert on extracted fields.
 
-#### Read a live `jsonPayload` entry
+#### Read an archived `jsonPayload` entry
 
 When you need structured application telemetry. It is typically triggered by the investigation requires field-level filtering, grouping, or future metric extraction. Read-only. The log was intentionally written during this refactor for verification. Show a structured custom entry that can be filtered by JSON path.
 
@@ -637,7 +645,7 @@ This is the payload style to prefer for pipelines and services. Each JSON key is
 | `--freshness` | `--freshness=30d` | Restricts results to recent time only |
 | `--format` | `--format="table(...)"` | Renders selected fields instead of full JSON |
 | `--order` | `--order=asc` | Changes result ordering from default newest-first |
-| `--project` | `--project=bq-wh-nb` | Overrides the active project if needed |
+| `--project` | `--project=bq-wh-nb` | Overrides the target project if needed |
 
 ### PowerShell / Linux | gcloud logging | write verification entries
 
@@ -645,7 +653,7 @@ Use `gcloud logging write` when a shell script, break-glass runbook, or one-off 
 
 #### Write a text log entry
 
-During controlled verification of routing or to leave a shell-origin event marker. It is typically triggered by you need a human-readable log entry immediately from the CLI. State-changing. Writes one new log entry into the active project. Confirm that the project accepts direct CLI log writes and that the chosen log name becomes queryable.
+During controlled verification of routing or to leave a shell-origin event marker. It is typically triggered by you need a human-readable log entry immediately from the CLI. State-changing. Writes one new log entry into the target project. Confirm that the project accepts direct CLI log writes and that the chosen log name becomes queryable.
 
 | Argument | Meaning |
 |---|---|
@@ -667,7 +675,7 @@ The command output is intentionally minimal. Success means the event was accepte
 
 #### Write a JSON log entry
 
-When you need a structured event from a shell context. It is typically triggered by the downstream consumer needs stable keys instead of message parsing. State-changing. Writes one new JSON log entry into the active project. Demonstrate how `gcloud logging write` can produce `jsonPayload`.
+When you need a structured event from a shell context. It is typically triggered by the downstream consumer needs stable keys instead of message parsing. State-changing. Writes one new JSON log entry into the target project. Demonstrate how `gcloud logging write` can produce `jsonPayload`.
 
 | Argument | Meaning |
 |---|---|
@@ -746,14 +754,14 @@ Log-based metrics are the narrow bridge between event streams and alertable nume
 
 #### Inspect the current log-based metric inventory
 
-Before designing a new alert or dashboard from logs. It is typically triggered by you need to know whether the project already derives metrics from logs. Run in a shell with Logging read access. Read-only. Show whether user-defined log-based metrics already exist in the active project.
+Before designing a new alert or dashboard from logs. It is typically triggered by you need to know whether the project already derives metrics from logs. Run in a shell with Logging read access. Read-only. Show whether user-defined log-based metrics already exist in the archived project.
 
 | Field | Type | Meaning |
 |---|---|---|
 | result array | array | All user-defined and system-visible log metrics returned by the command |
 | `[]` | empty array | No user-defined log-based metrics exist in the project |
 
-*List log-based metrics in the active project.*
+*List log-based metrics in the archived project.*
 
 ```powershell
 gcloud logging metrics list --format=json
@@ -763,7 +771,11 @@ gcloud logging metrics list --format=json
 []
 ```
 
-The live project currently has no user-defined log-based metrics. That means no existing log pattern has yet been promoted into a chartable or alertable Cloud Monitoring series.
+The archived project had no user-defined log-based metrics. That means no existing log pattern had yet been promoted into a chartable or alertable Cloud Monitoring series.
+
+> [!info] Current product note: log-based metric behavior
+>
+> Log-based metrics are still not retroactive. System-defined metrics are generated from logs that are stored in the bucket, while user-defined log-based metrics can count matching entries even when those entries are excluded from bucket storage. User-defined metrics can also be bucket-scoped, which matters when teams separate retention, access, and analytics by bucket.
 
 > [!warning] Do not create log-based metrics by reflex
 >
@@ -833,7 +845,7 @@ If the main question is trend analysis, cost attribution, or large-window correl
 2. Route the analytic subset to a custom bucket or external destination.
 3. Use a linked dataset or BigQuery sink for SQL access.
 
-In the active project, `gcloud logging links list --bucket=_Default --location=global --format=json` returned `[]`, so that analytics path is not yet configured.
+In the archived project, `gcloud logging links list --bucket=_Default --location=global --format=json` returned `[]`, so that analytics path was not configured in the captured state.
 
 ### Need compliance or audit evidence
 
@@ -904,6 +916,7 @@ These official references were used to verify retention behavior, audit log stru
 - [Logging query language](https://cloud.google.com/logging/docs/view/logging-query-language)
 - [Cloud Audit Logs overview](https://cloud.google.com/logging/docs/audit)
 - [Configure log buckets](https://docs.cloud.google.com/logging/docs/buckets)
+- [Query and view logs with Observability Analytics](https://cloud.google.com/logging/docs/analyze/query-and-view)
 - [Configure log views](https://cloud.google.com/logging/docs/logs-views)
 - [Create and manage log scopes](https://cloud.google.com/logging/docs/log-scope/create-and-manage)
 - [Log-based metrics overview](https://docs.cloud.google.com/logging/docs/logs-based-metrics)

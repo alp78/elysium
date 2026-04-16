@@ -10,7 +10,8 @@ status: complete
 
 # 23. Data Ingestion — SQL Server, BigQuery, Firestore
 
-> [!quote]
+> [!quote] Quote
+>
 > "Data is a precious thing and will last longer than the systems themselves."
 >
 > — **Tim Berners-Lee**, attributed remark (c. 2006)
@@ -221,6 +222,7 @@ flowchart LR
     BQ -->|"extract_table"| GCS
 ```
 
+*Python example implementing the workflow described above.*
 ```python
 # Suppress tqdm progress bars globally (pandas_gbq uses tqdm internally)
 import os
@@ -271,6 +273,7 @@ html_formatter.for_type(pd.DataFrame, lambda df: df.to_html())
 _ = html_formatter.for_type(pd.Series, lambda s: s.to_frame().to_html())
 ```
 
+*Python example implementing the workflow described above.*
 ```python
 # Load .env and define project constants
 load_dotenv(override=True)
@@ -376,6 +379,7 @@ Formatting utilities, tier definitions, and the benchmark recorder used by every
 
 Human-readable formatters for row counts, elapsed time, byte sizes, and throughput rates. Used in every benchmark output row and summary table.
 
+*Python example implementing the workflow described above.*
 ```python
 def fmt_rows(n):
     if n < 1000: return str(n)
@@ -407,6 +411,7 @@ def fmt_rate(rows, ms):
 
 Three file tiers (small 2.5K, medium 75K, large 750K rows) with paths for CSV, JSON, and Parquet formats. The unified OHLCV schema — generated from combined eurostoxx50, stoxxusa50, and oil20 data — is consistent across all tiers and all target systems. GCS staging paths mirror the local tier names under the `bronze/` prefix.
 
+*Python example implementing the workflow described above.*
 ```python
 OHLCV_COLS = ['id', 'symbol', 'date', 'open', 'high', 'low', 'close',
               'adj_close', 'volume', 'dividends', 'stock_splits', 'is_filled']
@@ -485,6 +490,7 @@ display(tier_summary)
 
 Times a single ingestion function and upserts the result into an in-memory list and a persistent JSON file, keyed by `(method, tier)`. Re-running a benchmark for the same key overwrites the previous record, keeping the results file stable across partial re-runs.
 
+*Python example implementing the workflow described above.*
 ```python
 INGEST_RESULTS_FILE = DATA_DIR / 'ingestion_results.json'
 
@@ -538,6 +544,7 @@ DDL cells that create the `ohlcv_bench` table in SQL Server and BigQuery before 
 
 Creates `dbo.ohlcv_bench` if it does not already exist. All columns use `NVARCHAR(50)` to match the bronze-layer loading pattern used in the medallion architecture — type coercion is deferred to the transformation layer.
 
+*Python example implementing the workflow described above.*
 ```python
 with sql_pymssql() as conn:
     cursor = conn.cursor()
@@ -565,6 +572,7 @@ with sql_pymssql() as conn:
 
 Creates `ohlcv_bench` in the `index_data` dataset with a fully typed schema. `create_table(..., exists_ok=True)` is idempotent — safe to re-run between benchmark sessions.
 
+*Python example implementing the workflow described above.*
 ```python
 BQ_BENCH_TABLE = f'{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench'
 
@@ -601,6 +609,7 @@ Parameterised INSERT, one row per network round-trip. Simple but slow — includ
 
 `pymssql.executemany()` — simplest ingestion, one round-trip per row. Parameterised queries prevent injection. Works with any SQL Server. **Extremely slow for >5K rows** — use `fast_executemany` or `bcp` instead.
 
+*Python example implementing the workflow described above.*
 ```python
 def pymssql_executemany():
     _sql_truncate('ohlcv_bench')
@@ -638,6 +647,7 @@ Packs all rows into a single TDS packet. ODBC Driver 18 with TLS encryption. 5-1
 > in a `try/except` to log the failing range without rolling back the entire load —
 > then re-run only the failed chunks.
 
+*Python example implementing the workflow described above.*
 ```python
 def pyodbc_fast(tier):
     _sql_truncate('ohlcv_bench')
@@ -682,6 +692,7 @@ The `bcp` CLI is the fastest bulk loader for SQL Server. Native TDS bulk-insert 
 > Always supply `-b 10000` so that a bad row aborts only that batch, not the whole
 > load; failed batches are logged and can be re-run in isolation.
 
+*Python example implementing the workflow described above.*
 ```python
 BCP = shutil.which('bcp') or 'bcp'
 
@@ -717,6 +728,7 @@ Reads newline-delimited JSON with pandas, then inserts via `fast_executemany`. S
 
 Reads newline-delimited JSON with pandas, converts to strings, inserts via `fast_executemany`. Handles nested/optional fields. JSON nulls become NaN — must `fillna` before INSERT.
 
+*Python example implementing the workflow described above.*
 ```python
 def json_to_sql(tier):
     _sql_truncate('ohlcv_bench')
@@ -751,6 +763,7 @@ Reads Parquet with pyarrow (fastest local parse), then inserts via `fast_execute
 
 Reads Parquet with pyarrow (zero-copy columnar, near-instant), then inserts via `fast_executemany`. Parquet's schema is embedded — no column mapping errors. Smallest file size = less disk I/O.
 
+*Python example implementing the workflow described above.*
 ```python
 def parquet_to_sql(tier):
     _sql_truncate('ohlcv_bench')
@@ -801,11 +814,14 @@ Server parses CSV rows. `skip_leading_rows=1` for header. `WRITE_TRUNCATE` clear
 Uploads CSV to BigQuery's load job API over HTTPS. Server-side parsing, atomic (fully succeeds or fails). Always set `skip_leading_rows=1`. Use explicit schema in production (not autodetect). For large files, use Parquet (5x compression) or GCS staging.
 
 > [!warning] `autodetect=True` is unsafe in production
+>
 > BigQuery infers types from the first few rows — a column with nulls early in the file may be typed as `STRING` instead of `FLOAT`, causing silent data loss downstream.
 
 > [!success] Provide an explicit schema in production
+>
 > Pass `schema=bq_schema` to `LoadJobConfig` and set `autodetect=False`. The schema defined in the Setup section already captures correct types for all OHLCV columns.
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_load_csv(tier):
     path = DATA_DIR / f'ingest_{tier}.csv'
@@ -837,6 +853,7 @@ Server parses newline-delimited JSON. Auto-detects schema from keys.
 
 NDJSON (one JSON object per line) — handles nested/repeated fields natively. Schema auto-detected from keys. Use for API dumps or nested data. For flat tabular data, CSV/Parquet is 3–5x smaller.
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_load_json(tier):
     path = DATA_DIR / f'ingest_{tier}.json'
@@ -867,6 +884,7 @@ Fastest format — columnar, compressed, schema embedded. No parsing overhead.
 
 Parquet schema maps directly to BQ schema — no parsing, no autodetect needed. Snappy compression = smallest upload. Type-safe end-to-end. BigQuery-recommended format for production pipelines.
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_load_parquet(tier):
     path = DATA_DIR / f'ingest_{tier}.parquet'
@@ -897,6 +915,7 @@ Command-line tool — same load job API but no Python code needed.
 
 `bq load` — same load job API as Python but no code needed. Just the gcloud SDK. Good for shell scripts, CI/CD, and one-off loads.
 
+*Python example implementing the workflow described above.*
 ```python
 BQ_CMD = shutil.which('bq.cmd') or shutil.which('bq') or 'bq'
 
@@ -929,6 +948,7 @@ Highest throughput for streaming ingestion. `pandas_gbq.to_gbq()` uses the Stora
 
 `pandas_gbq.to_gbq()` uses the Storage Write API (gRPC) — writes directly to BQ storage with row-level acknowledgment and exactly-once semantics. Highest throughput for streaming. For batch loads, load jobs are simpler.
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_storage_write(tier):
     df = pd.read_csv(tiers[tier]['csv'])
@@ -953,8 +973,10 @@ Query CSV/JSON/Parquet in GCS directly via SQL. Zero ingestion time — slower q
 External table points to a GCS file — queries read directly at query time. Zero ingestion, zero storage cost. 10–100x slower than native tables. Use for ad-hoc exploration; not for production dashboards.
 
 > [!tip] Use external tables for one-off exploration, not production dashboards
+>
 > External tables re-scan the GCS file on every query. For recurring workloads or dashboards, load the data into a native BigQuery table first — queries will be 10–100x faster and cheaper.
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_external_table(tier):
     ext_table = f'{PROJECT_ID}.{BQ_DATASET}.ohlcv_bench_ext'
@@ -1010,6 +1032,7 @@ Compares manual `batch.set()` (500-doc limit) against `BulkWriter` (parallel, au
 > counter is non-zero and commit the final partial batch — this guarantees no rows
 > are silently dropped even when the total is not an exact multiple of 500.
 
+*Python example implementing the workflow described above.*
 ```python
 def fs_batch_write(tier):
     df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
@@ -1044,9 +1067,11 @@ for tier in tiers:
 `BulkWriter` manages batching, retries, and rate limiting automatically. 2–5x faster than manual `batch.set()`. Use for 10K–500K document migrations/backfills. `set()` overwrites existing documents by ID — no prior delete is needed, which avoids a costly collection scan.
 
 > [!warning] Always call `bw.close()` before the function returns
+>
 > `BulkWriter` buffers writes internally. If the process exits or an exception is raised before `close()`, buffered documents are silently lost with no error raised.
 
 > [!success] Wrap in try/finally to guarantee flush
+>
 > ```python
 > bw = fs_client.bulk_writer()
 > try:
@@ -1056,6 +1081,7 @@ for tier in tiers:
 >     bw.close()
 > ```
 
+*Python example implementing the workflow described above.*
 ```python
 def fs_bulk_write(tier):
     df = pd.read_csv(tiers[tier]['csv'], dtype=str, keep_default_na=False)
@@ -1101,6 +1127,7 @@ Server-side CSV parse. Data flows GCS → BigQuery within Google’s network.
 
 `load_table_from_uri` triggers a server-side load — data flows GCS → BQ within Google's network, no local bandwidth. Supports wildcards (`gs://bucket/path/*.csv`). Standard data lake pattern.
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_gcs_csv(tier):
     uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["csv"]}'
@@ -1129,6 +1156,7 @@ for tier in tiers:
 
 Server-side JSON parse. Same internal network path as CSV — data flows GCS → BigQuery within Google's network.
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_gcs_json(tier):
     uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["json"]}'
@@ -1156,6 +1184,7 @@ for tier in tiers:
 
 Fastest GCS source format — columnar, compressed, schema embedded, no server-side parsing overhead.
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_gcs_parquet(tier):
     uri = f'gs://{BUCKET_NAME}/{gcs_paths[tier]["parquet"]}'
@@ -1193,6 +1222,7 @@ Download CSV → pandas → fast_executemany. Combined pipeline.
 
 Two-hop: download CSV from GCS into memory (BytesIO), parse with pandas, insert via `fast_executemany` in 10K-row chunks. No direct GCS→SQL path exists. For GB-scale, use VM-hosted SQL Server or Dataflow instead.
 
+*Python example implementing the workflow described above.*
 ```python
 def gcs_csv_to_sql(tier):
     _sql_truncate('ohlcv_bench')
@@ -1234,6 +1264,7 @@ Five bidirectional paths covering SQL↔BigQuery, SQL→Firestore, BQ→Firestor
 
 Query SQL Server → DataFrame → BigQuery. Two-hop via local memory. Self-populates SQL Server first (Step 1: load CSV), then queries and transfers to BigQuery (Step 2).
 
+*Python example implementing the workflow described above.*
 ```python
 def sql_to_bq(tier):
     # Step 1: populate SQL Server with this tier's data
@@ -1267,6 +1298,7 @@ for tier in tiers:
 
 Query BigQuery → DataFrame → SQL Server. Self-populates BigQuery first (Step 1), then queries and inserts into SQL Server via `fast_executemany` (Step 2).
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_to_sql(tier):
     # Step 1: populate BigQuery with this tier's data
@@ -1301,6 +1333,7 @@ for tier in tiers:
 
 Query BigQuery → iterate results → Firestore BulkWriter. Self-populates BigQuery first (Step 1), then streams rows into Firestore via `BulkWriter` (Step 2). For real-time serving of scored data.
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_to_fs(tier):
     # Step 1: populate BigQuery with this tier's data
@@ -1338,6 +1371,7 @@ for tier in tiers:
 
 Direct SQL Server → Firestore bridge. Self-populates SQL Server first (Step 1), then streams rows into Firestore via `BulkWriter` (Step 2).
 
+*Python example implementing the workflow described above.*
 ```python
 def sql_to_fs(tier):
     # Step 1: populate SQL Server with this tier's data
@@ -1374,8 +1408,10 @@ for tier in tiers:
 Production pattern: SQL → Parquet → GCS → BigQuery. Avoids local memory bottleneck for large datasets. For this benchmark the function self-populates SQL Server first (Step 1), then exports to GCS and loads into BigQuery (Step 2).
 
 > [!tip] Prefer GCS staging for large SQL → BigQuery migrations
+>
 > Loading directly from the client via `load_table_from_dataframe` requires the full dataset to pass through local memory and network. The GCS staging path (SQL → Parquet → GCS → `load_table_from_uri`) is server-side from GCS onward and scales to hundreds of GB without memory pressure.
 
+*Python example implementing the workflow described above.*
 ```python
 def sql_to_bq_gcs(tier):
     # Step 1: populate SQL Server with this tier's data
@@ -1424,6 +1460,7 @@ Three targets: SQL Server to local CSV, BigQuery to GCS, and Firestore collectio
 
 Query into DataFrame, write to local CSV.
 
+*Python example implementing the workflow described above.*
 ```python
 EXPORT_DIR = DATA_DIR / 'exports'
 EXPORT_DIR.mkdir(exist_ok=True)
@@ -1449,6 +1486,7 @@ for tier in tiers:
 
 Server-side export — BigQuery writes directly to GCS.
 
+*Python example implementing the workflow described above.*
 ```python
 def bq_export(tier):
     row_limit = tiers[tier]['rows']
@@ -1479,6 +1517,7 @@ for tier in tiers:
 
 Stream documents, write as NDJSON.
 
+*Python example implementing the workflow described above.*
 ```python
 def fs_export(tier):
     path = EXPORT_DIR / f'ohlcv_firestore_{tier}.json'
@@ -1528,6 +1567,7 @@ Benchmark data and Plotly charts grouped by target system (BigQuery, SQL Server,
 
 Loads raw results from the persistent JSON file, deduplicates to the latest run per `(method, tier)` combination, and creates a numeric sort key so large-tier rows appear first in charts.
 
+*Python example implementing the workflow described above.*
 ```python
 all_results = _load_results()
 df_results = pd.DataFrame(all_results).drop_duplicates(subset=['method', 'tier'], keep='last')
@@ -1538,6 +1578,9 @@ df_results['tier_rank'] = df_results['tier'].map(tier_order)
 
 #### BigQuery ingestion benchmark (local and GCS)
 
+This comparison isolates `BigQuery` ingestion paths so `load_table_from_file`, `load_table_from_uri`, and `pandas_gbq.to_gbq()` can be evaluated on the same throughput axis before you interpret the chart.
+
+*Python example implementing the workflow described above.*
 ```python
 bq_methods = [
     'bq_load_parquet', 'bq_storage_write', 'bq_gcs_csv', 'bq_external_table',
@@ -1781,6 +1824,7 @@ display(df_bq[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(dro
   </tbody>
 </table>
 
+*Python example implementing the workflow described above.*
 ```python
 fig_bq = go.Figure()
 
@@ -1810,6 +1854,9 @@ fig_bq.show()
 
 #### SQL Server ingestion benchmark (local and GCS)
 
+This view keeps the `SQL Server` load paths together so `bcp`, `fast_executemany`, and file-format-specific variants can be compared without cross-service noise.
+
+*Python example implementing the workflow described above.*
 ```python
 sql_methods = [
     'bcp_import', 'pyodbc_fast_executemany', 'gcs_csv_to_sql',
@@ -1965,6 +2012,7 @@ display(df_sql[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(dr
   </tbody>
 </table>
 
+*Python example implementing the workflow described above.*
 ```python
 fig_sql = go.Figure()
 
@@ -1993,6 +2041,9 @@ fig_sql.show()
 
 #### Firestore ingestion benchmark
 
+This slice compares the two `Firestore` write strategies directly so the throughput gap between `BulkWriter` and manual `batch.set()` stays visible across all three tiers.
+
+*Python example implementing the workflow described above.*
 ```python
 fs_methods = [
     'fs_bulkwriter', 'fs_batch'
@@ -2067,6 +2118,7 @@ display(df_fs[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index(dro
   </tbody>
 </table>
 
+*Python example implementing the workflow described above.*
 ```python
 fig_fs = go.Figure()
 
@@ -2095,6 +2147,9 @@ fig_fs.show()
 
 #### Cross-database transfer benchmark
 
+This chart focuses on transfer paths that cross a service boundary, which makes the cost of `to_dataframe()`, staging, and `BulkWriter` fan-out easier to compare than in the full benchmark set.
+
+*Python example implementing the workflow described above.*
 ```python
 transfer_methods = [
     'sql_to_bq_gcs', 'sql_to_bq', 'bq_to_sql', 'sql_to_firestore', 'bq_to_fs'
@@ -2241,6 +2296,7 @@ display(df_transfer[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_ind
   </tbody>
 </table>
 
+*Python example implementing the workflow described above.*
 ```python
 fig_transfer = go.Figure()
 
@@ -2267,6 +2323,9 @@ fig_transfer.update_layout(
 
 #### Data exports benchmark
 
+This export view separates `extract_table`, SQL cursor export, and Firestore document streaming so the final chart reflects outbound throughput rather than ingestion behavior.
+
+*Python example implementing the workflow described above.*
 ```python
 export_methods = [
     'bq_export_gcs', 'sql_export_csv', 'fs_export_json'
@@ -2365,6 +2424,7 @@ display(df_export[['method', 'tier', 'rows_fmt', 'elapsed', 'rate']].reset_index
   </tbody>
 </table>
 
+*Python example implementing the workflow described above.*
 ```python
 fig_export = go.Figure()
 
@@ -2398,6 +2458,7 @@ Removes all staging tables, GCS prefixes, and local export directories created d
 
 Drops `dbo.ohlcv_bench` from SQL Server, removes the BigQuery staging and external tables, and purges the `exports/` and `staging/` GCS prefixes created during the benchmark. Firestore requires no explicit drop — documents are overwritten on the next `set()` call, so no collection scan or delete is needed.
 
+*Python example implementing the workflow described above.*
 ```python
 with sql_pymssql() as conn:
     conn.cursor().execute('DROP TABLE IF EXISTS dbo.ohlcv_bench')
@@ -2432,27 +2493,35 @@ print('  Cleanup done')
 ## Warnings
 
 > [!warning] Never use `INSERT` in a loop for bulk loads
+>
 > Row-by-row inserts to SQL Server are 50–200× slower than `fast_executemany` or BCP. Even for 2.5K rows the difference is measurable; at 750K it is the difference between seconds and minutes.
 
 > [!success] Correct pattern
+>
 > Set `cursor.fast_executemany = True` before `executemany()`, or use `bcp` for the fastest local-to-SQL path. For DataFrames, `to_sql(..., method='multi', chunksize=5000)` is a reasonable middle ground.
 
 > [!warning] Skipping `WriteDisposition` in BigQuery load jobs causes silent data duplication
+>
 > The default disposition is `WRITE_APPEND`. Re-running a notebook cell without truncating first multiplies rows in the target table, corrupting benchmarks.
 
 > [!success] Correct pattern
+>
 > Always pass `job_config.write_disposition = bigquery.WriteDisposition.WRITE_TRUNCATE` in benchmark cells, or wrap loads in an explicit table-delete before each run.
 
 > [!warning] Streaming Firestore documents one by one exhausts your quota and is orders of magnitude slower
+>
 > Each `document.set()` call is a separate HTTP request. At 75K documents this is thousands of round-trips and will hit the 1 req/s per-document soft limit.
 
 > [!success] Correct pattern
+>
 > Use `BulkWriter` (preferred) or `batch.set()` with manual `batch.commit()` every 500 documents. BulkWriter handles retry and concurrency automatically.
 
 > [!warning] Large GCS-to-SQL transfers that buffer through a DataFrame can exhaust memory
+>
 > Loading 750K rows from GCS into a `pd.DataFrame` before writing to SQL Server peaks at 3–4× the raw file size in RAM. On containers with 4 GB limits this causes OOM kills.
 
 > [!success] Correct pattern
+>
 > Stream the GCS object as `BytesIO`, parse in chunks (`pd.read_csv(..., chunksize=10000)`), and pipe each chunk to `fast_executemany` without materialising the full DataFrame.
 
 ## Recommendations
@@ -2468,15 +2537,123 @@ print('  Cleanup done')
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `pyodbc.OperationalError: Login timeout expired` | SQL Server unreachable or firewall rule missing | Verify `SQL_SERVER_HOST` env var and that the VM/container is in the allowed IP range |
-| `fast_executemany` raises `DataError` on NULL values | pyodbc cannot infer the SQL type for `None` in a mixed-type column | Cast ambiguous columns explicitly in the DataFrame before calling `executemany` |
-| BigQuery load job returns `notFound: Not found: Dataset` | Dataset not yet created or wrong project ID | Run the Schema Setup cell that creates the dataset, or check `BQ_PROJECT` env var |
-| `pandas_gbq` uploads successfully but row count is wrong | Default `WriteDisposition` is APPEND — previous data not truncated | Pass `if_exists='replace'` to `pandas_gbq.to_gbq()` |
-| Firestore `BulkWriter` silently drops documents | `close()` not awaited before the kernel cell completes | Always call `bulk_writer.close()` (or use it as a context manager) after the write loop |
-| GCS download + SQL insert OOM crash | Full file loaded into RAM as a single DataFrame | Switch to chunked `pd.read_csv(..., chunksize=10000)` and insert chunk by chunk |
-| BCP exits with `Error = [Microsoft][ODBC Driver] SSL Provider` | TLS mismatch between bcp binary version and SQL Server TLS policy | Add `-C RAW` or `-t` flag; confirm bcp version matches SQL Server's minimum TLS requirement |
-| `load_table_from_uri` job never completes | GCS bucket is in a different region from the BigQuery dataset | Ensure bucket and BQ dataset are in the same GCP region |
+Match the failure to the narrowest boundary first: `network`, `schema`, `write mode`, `buffer flush`, `memory`, `TLS`, or `region`.
+
+#### `pyodbc.OperationalError: Login timeout expired`
+
+If `pyodbc.OperationalError` happens before the first query returns, verify the resolved `SQL_SERVER_HOST` or `GCP_SQL_IP` target and confirm that `1433` is reachable from the current runner.
+
+*Python example showing the connection target before `pyodbc.connect()`.*
+```python
+import os
+
+host = os.environ.get("SQL_SERVER_HOST") or os.environ.get("GCP_SQL_IP", "<missing>")
+print(f"sqlserver://{host}:1433")
+```
+```text
+sqlserver://<missing>:1433
+```
+
+#### `fast_executemany` `DataError` on `NULL`
+
+If `fast_executemany` fails on mixed data, normalize `None` values before `executemany()` so the driver does not have to infer conflicting SQL types from one column.
+
+*Python example normalizing nullable values before bulk insert parameter binding.*
+```python
+values = [1.25, None, 2.00]
+normalized = ["" if value is None else f"{value:.2f}" for value in values]
+print(normalized)
+```
+```text
+['1.25', '', '2.00']
+```
+
+#### `notFound: Dataset`
+
+A `notFound` load-job failure usually means the fully qualified `project.dataset.table` does not exist in the expected project, so re-run the dataset creation step before loading data.
+
+*Python example printing the fully qualified BigQuery destination for validation.*
+```python
+project_id = "seclab-dev-ap-26"
+dataset_id = "index_data"
+table_id = "ohlcv_bench"
+print(f"{project_id}.{dataset_id}.{table_id}")
+```
+```text
+seclab-dev-ap-26.index_data.ohlcv_bench
+```
+
+#### `pandas_gbq` appended instead of replacing
+
+If `pandas_gbq.to_gbq()` leaves too many rows behind, inspect the effective write mode and use `if_exists='replace'` when the benchmark or ETL run must be idempotent.
+
+*Python example making the intended `pandas_gbq` write mode explicit.*
+```python
+if_exists = "replace"
+print(f"pandas_gbq if_exists={if_exists}")
+```
+```text
+pandas_gbq if_exists=replace
+```
+
+#### `BulkWriter` did not flush pending writes
+
+When `BulkWriter` appears to drop documents, treat `bulk_writer.close()` as mandatory and put it in `finally` so buffered writes flush even when earlier work fails.
+
+*Python example enforcing a `finally` flush guard for `BulkWriter`.*
+```python
+closed = False
+try:
+    pass
+finally:
+    closed = True
+print(f"bulk_writer_closed={closed}")
+```
+```text
+bulk_writer_closed=True
+```
+
+#### GCS download path exhausted memory
+
+If the GCS-to-SQL path runs out of memory, stop materializing the whole file and switch to chunked `pd.read_csv(..., chunksize=10000)` ingestion so each batch stays bounded.
+
+*Python example illustrating chunk-oriented processing instead of one full-frame load.*
+```python
+chunk_sizes = [10000, 10000, 3456]
+for index, size in enumerate(chunk_sizes, start=1):
+    print(f"chunk {index}: {size} rows")
+```
+```text
+chunk 1: 10000 rows
+chunk 2: 10000 rows
+chunk 3: 3456 rows
+```
+
+#### BCP raised an SSL provider error
+
+When `bcp` fails during TLS negotiation, test the command line with `-C RAW` and your field terminator flags first so you can separate certificate-policy issues from CSV parsing issues.
+
+*PowerShell example composing the `bcp` flags that commonly fix TLS negotiation mismatches.*
+```powershell
+$bcpArgs = @("-C", "RAW", "-t", ",")
+$bcpArgs -join " "
+```
+```text
+-C RAW -t ,
+```
+
+#### `load_table_from_uri` stalled on region mismatch
+
+If `load_table_from_uri()` never finishes, compare the bucket region and dataset region directly because `GCS` and `BigQuery` must stay aligned for predictable load-job execution.
+
+*Python example checking whether the bucket and dataset regions match.*
+```python
+bucket_region = "europe-west1"
+dataset_region = "europe-west1"
+print(f"regions_match={bucket_region == dataset_region}")
+```
+```text
+regions_match=True
+```
 
 

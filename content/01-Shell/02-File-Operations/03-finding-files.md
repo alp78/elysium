@@ -4,13 +4,14 @@ tags: [shell]
 aliases: [find, fd, locate, file search, find command, xargs, parallel]
 description: "Targeted file searching with find, fd, and locate — searching by name pattern, size, modification time, and content. Includes parallel processing with xargs and GNU parallel, and PowerShell equivalents."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
 # Finding Files
 
-> [!quote]
+> [!quote] `find` complexity
+>
 > "UNIX has a couple of hundred system calls, and the `find` command is probably the single most complicated command in the whole system."
 >
 > — **Brian Kernighan**, *Unix: A History and a Memoir* (2019)
@@ -681,6 +682,10 @@ d----          2026-03-15  00:00              - 2026-03-15
 #### Run parallel operations on found files
 
 `ForEach-Object -Parallel` runs a script block concurrently across multiple runspaces. Use it when each file can be processed independently.
+
+> [!warning] Parallel script blocks do not share normal session state
+>
+> `ForEach-Object -Parallel` runs in separate runspaces, and only variables passed with the `Using:` scope modifier are available inside the parallel block. Treat shared mutable state carefully: simple reads are fine, but counters, lists, and caches need thread-safe types or each runspace should write its own output and let the caller merge results afterward.
 
 ```powershell
 Get-ChildItem -Path "$env:TEMP\finding-files-demo\data" -Filter "*.csv" -Recurse -File |

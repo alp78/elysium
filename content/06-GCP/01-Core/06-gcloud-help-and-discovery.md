@@ -4,7 +4,7 @@ tags: [gcp, gcloud]
 aliases: [gcloud help, gcloud topic, gcloud cheat-sheet, gcloud beta, gcloud alpha, gcloud interactive]
 description: "How to discover gcloud commands, navigate help output, use topic references, understand release tracks, and diagnose the local CLI environment with live output from SDK 563.0.0."
 created: 2026-04-13
-updated: 2026-04-13
+updated: 2026-04-15
 status: complete
 ---
 
@@ -13,7 +13,10 @@ status: complete
 > [!abstract]- Summary
 > `gcloud` is a large command tree, and most operators only memorize a small subset of it. Effective CLI work depends on being able to discover commands quickly, read help pages efficiently, distinguish GA surfaces from beta and alpha tracks, and capture enough local environment detail to explain a failed invocation or support ticket.
 >
-> This note walks through help-tree navigation, topic references, release-track awareness, keyword discovery, and local diagnostic commands that expose the current SDK, account, project, and configuration context. All live outputs were captured on April 13, 2026 with Google Cloud SDK `563.0.0` while the active project was `bq-wh-nb`, so the examples reflect the current installed CLI state rather than abstract syntax alone.
+> This note walks through help-tree navigation, topic references, release-track awareness, keyword discovery, and local diagnostic commands that expose the current SDK, account, project, and configuration context. The local help pages, search results, and workstation diagnostics were refreshed on April 15, 2026 with Google Cloud SDK `563.0.0`.
+
+> [!warning]- Live-run boundary
+> On April 15, 2026 the local CLI still had `core/project = bq-wh-nb`, even though that project now reports `DELETE_REQUESTED` in the live Resource Manager surface. That matters only for the diagnostic-context examples in this note. The help, topic, release-track, and search outputs are local SDK behavior and do not depend on that project being healthy.
 
 > [!note]- Glossary
 > **`gcloud help`**
@@ -104,6 +107,9 @@ SYNOPSIS
         [--flags-file=YAML_FILE] [--flatten=[KEY,...]] [--format=FORMAT]
         [--help] [--project=PROJECT_ID] [--quiet, -q]
         [--verbosity=VERBOSITY; default="warning"] [--version, -v] [-h]
+        [--access-token-file=ACCESS_TOKEN_FILE]
+        [--impersonate-service-account=SERVICE_ACCOUNT_EMAILS] [--log-http]
+        [--trace-token=TRACE_TOKEN] [--no-user-output-enabled]
 
 DESCRIPTION
     The gcloud CLI manages authentication, local configuration, developer
@@ -111,13 +117,33 @@ DESCRIPTION
 
     For a quick introduction to the gcloud CLI, a list of commonly used
     commands, and a look at how these commands are structured, run gcloud
-    cheat-sheet or see the `gcloud` CLI cheat sheet.
+    cheat-sheet or see the `gcloud` CLI cheat sheet
+    (https://cloud.google.com/sdk/docs/cheatsheet).
+
+GLOBAL FLAGS
+     --account=ACCOUNT
+        Google Cloud user account to use for invocation.
+
+     --configuration=CONFIGURATION
+        File name of the configuration to use for this command invocation.
+
+     --format=FORMAT
+        Sets the format for printing command output resources.
+
+     --project=PROJECT_ID
+        The Google Cloud project ID to use for this invocation.
 
 GROUPS
     GROUP is one of the following:
 
+     alpha
+        (ALPHA) Alpha versions of gcloud commands.
+
      auth
         Manage oauth2 credentials for the Google Cloud CLI.
+
+     beta
+        (BETA) Beta versions of gcloud commands.
 
      compute
         Create and manipulate Compute Engine resources.
@@ -143,6 +169,9 @@ COMMANDS
      cheat-sheet
         Display gcloud cheat sheet.
 
+     docker
+        (DEPRECATED) Enable Docker CLI access to Google Container Registry.
+
      feedback
         Provide feedback to the Google Cloud CLI team.
 
@@ -155,11 +184,14 @@ COMMANDS
      init
         Initialize or reinitialize gcloud.
 
+     survey
+        Invoke a customer satisfaction survey for Google Cloud CLI.
+
      version
         Print version information for Google Cloud CLI components.
 ```
 
-The two most important clues are the `GROUP | COMMAND` grammar in the synopsis and the separation between `GROUPS` and `COMMANDS`. If the thing you want is a product area, it will usually appear under `GROUPS`. If it is a root-level utility such as `info`, `help`, or `version`, it appears under `COMMANDS`.
+The two most important clues are the `GROUP | COMMAND` grammar in the synopsis and the separation between `GROUPS` and `COMMANDS`. If the thing you want is a product area, it will usually appear under `GROUPS`. If it is a root-level utility such as `info`, `help`, or `version`, it appears under `COMMANDS`. The current SDK also exposes `alpha` and `beta` directly at the root, which is an immediate signal that release-track discovery starts at the top-level page.
 
 #### Drill down from a product group to a resource subgroup
 
@@ -182,8 +214,19 @@ DESCRIPTION
     The gcloud compute command group lets you create, configure, and manipulate
     Compute Engine virtual machine (VM) instances.
 
+    With Compute Engine, you can create and run VMs on Google's infrastructure.
+
+GCLOUD WIDE FLAGS
+    These flags are available to all commands: --help.
+
 GROUPS
     GROUP is one of the following:
+
+     accelerator-types
+        Read Compute Engine accelerator types.
+
+     addresses
+        Read and manipulate Compute Engine addresses.
 
      disks
         Read and manipulate Compute Engine disks.
@@ -196,6 +239,9 @@ GROUPS
 
      instance-groups
         Read and manipulate Compute Engine instance groups.
+
+     instance-templates
+        Read and manipulate Compute Engine instances templates.
 
      instances
         Read and manipulate Compute Engine virtual machine instances.
@@ -215,11 +261,21 @@ COMMANDS
      config-ssh
         Populate SSH config files with Host entries from each instance.
 
+     connect-to-serial-port
+        Connect to the serial port of an instance.
+
      scp
         Copy files to and from Google Compute Engine virtual machines via scp.
 
      ssh
         SSH into a virtual machine instance.
+
+NOTES
+    These variants are also available:
+
+        $ gcloud alpha compute
+
+        $ gcloud beta compute
 ```
 
 At this level the structure becomes operational. `instances` is a subgroup because it owns many verbs. `ssh` is already a concrete command because it is a leaf operation directly under `compute`.
@@ -245,6 +301,12 @@ SYNOPSIS
 DESCRIPTION
     Read and manipulate Compute Engine virtual machine instances.
 
+    For more information about virtual machine instances, see the virtual
+    machine instances documentation.
+
+GCLOUD WIDE FLAGS
+    These flags are available to all commands: --help.
+
 GROUPS
     GROUP is one of the following:
 
@@ -259,8 +321,14 @@ GROUPS
         Manage Google Cloud Observability agents for Compute Engine VM
         instances.
 
+     os-inventory
+        Read Compute Engine OS Inventory Data and Related Resources.
+
 COMMANDS
     COMMAND is one of the following:
+
+     add-access-config
+        Create a Compute Engine virtual machine access configuration.
 
      add-labels
         Add labels to Google Compute Engine virtual machine instances.
@@ -274,11 +342,21 @@ COMMANDS
      describe
         Describe a virtual machine instance.
 
+     get-iam-policy
+        Get the IAM policy for a Compute Engine instance.
+
      get-serial-port-output
         Read output from a virtual machine instance's serial port.
 
      list
         List Compute Engine instances.
+
+NOTES
+    These variants are also available:
+
+        $ gcloud alpha compute instances
+
+        $ gcloud beta compute instances
 ```
 
 This is the point where tree navigation turns into command selection. If you are walking the tree manually, the next literal step is `gcloud compute instances create --help`. The direct help command below reaches the same destination in one hop.
@@ -305,10 +383,13 @@ SYNOPSIS
         [--no-boot-disk-auto-delete]
         [--boot-disk-device-name=BOOT_DISK_DEVICE_NAME]
         [--boot-disk-interface=BOOT_DISK_INTERFACE]
+        [--boot-disk-provisioned-iops=BOOT_DISK_PROVISIONED_IOPS]
+        [--boot-disk-provisioned-throughput=BOOT_DISK_PROVISIONED_THROUGHPUT]
         [--boot-disk-size=BOOT_DISK_SIZE] [--boot-disk-type=BOOT_DISK_TYPE]
         [--can-ip-forward] [--create-disk=[PROPERTY=VALUE,...]]
         [--csek-key-file=FILE] [--deletion-protection]
         [--description=DESCRIPTION]
+        [--discard-local-ssds-at-termination-timestamp=DISCARD_LOCAL_SSDS_AT_TERMINATION_TIMESTAMP]
         [--labels=[KEY=VALUE,...]] [--machine-type=MACHINE_TYPE]
         [--metadata=KEY=VALUE,[KEY=VALUE,...]]
         [--network=NETWORK] [--subnet=SUBNET] [--tags=TAG,[TAG,...]]
@@ -326,7 +407,8 @@ DESCRIPTION
 
     When an instance is in RUNNING state and the system begins to boot, the
     instance creation is considered finished, and the command returns with a
-    list of new virtual machines.
+    list of new virtual machines. Note that you usually cannot log into a new
+    instance until it finishes booting.
 
 EXAMPLES
     To create an instance with the latest 'Red Hat Enterprise Linux 8' image
@@ -335,6 +417,12 @@ EXAMPLES
         $ gcloud compute instances create example-instance \
             --image-family=rhel-8 --image-project=rhel-cloud \
             --zone=us-central1-a
+
+    To create instances called 'example-instance-1', 'example-instance-2', and
+    'example-instance-3' in the 'us-central1-a' zone, run:
+
+        $ gcloud compute instances create example-instance-1 \
+            example-instance-2 example-instance-3 --zone=us-central1-a
 
 POSITIONAL ARGUMENTS
      INSTANCE_NAMES [INSTANCE_NAMES ...]
@@ -638,6 +726,10 @@ SYNOPSIS
         [--billing-project=BILLING_PROJECT] [--configuration=CONFIGURATION]
         [--flags-file=YAML_FILE] [--flatten=[KEY,...]] [--format=FORMAT]
         [--help] [--project=PROJECT_ID] [--quiet, -q]
+        [--verbosity=VERBOSITY; default="warning"] [--version, -v] [-h]
+        [--access-token-file=ACCESS_TOKEN_FILE]
+        [--impersonate-service-account=SERVICE_ACCOUNT_EMAILS] [--log-http]
+        [--trace-token=TRACE_TOKEN] [--no-user-output-enabled]
 
 DESCRIPTION
     (BETA) Beta versions of gcloud commands.
@@ -664,6 +756,10 @@ SYNOPSIS
         [--billing-project=BILLING_PROJECT] [--configuration=CONFIGURATION]
         [--flags-file=YAML_FILE] [--flatten=[KEY,...]] [--format=FORMAT]
         [--help] [--project=PROJECT_ID] [--quiet, -q]
+        [--verbosity=VERBOSITY; default="warning"] [--version, -v] [-h]
+        [--access-token-file=ACCESS_TOKEN_FILE]
+        [--impersonate-service-account=SERVICE_ACCOUNT_EMAILS] [--log-http]
+        [--trace-token=TRACE_TOKEN] [--no-user-output-enabled]
 
 DESCRIPTION
     (ALPHA) Alpha versions of gcloud commands.
@@ -736,8 +832,14 @@ gcloud info
 Google Cloud SDK [563.0.0]
 
 Platform: [Windows, x86_64] uname_result(system='Windows', node='Elysium', release='11', version='10.0.26200', machine='AMD64')
+Locale: ('English_United States', '1252')
 Python Version: [3.13.12 ...]
 Python Location: [C:\Users\aperi\AppData\Local\Google\Cloud SDK\google-cloud-sdk\platform\bundledpython\python.exe]
+OpenSSL: [OpenSSL 3.0.18 30 Sep 2025]
+Requests Version: [2.32.3]
+urllib3 Version: [2.6.3]
+Default CA certs file: [C:\Users\aperi\AppData\Local\Google\Cloud SDK\google-cloud-sdk\lib\third_party\certifi\cacert.pem]
+Site Packages: [Disabled]
 
 Installation Root: [C:\Users\aperi\AppData\Local\Google\Cloud SDK\google-cloud-sdk]
 Installed Components:
@@ -746,7 +848,9 @@ Installed Components:
   bq: [2.1.31]
   cloud-sql-proxy: [2.21.2]
   core: [2026.03.27]
+  gcloud-crc32c: [1.0.0]
   gsutil: [5.36]
+  log-streaming: [0.3.2]
 
 Installation Properties: [C:\Users\aperi\AppData\Local\Google\Cloud SDK\google-cloud-sdk\properties]
 User Config Directory: [C:\Users\aperi\AppData\Roaming\gcloud]
@@ -762,9 +866,13 @@ Current Properties:
     screen_reader: [False] (property file)
   [core]
     account: [alexper.recovery@gmail.com] (property file)
+    disable_usage_reporting: [False] (property file)
     project: [bq-wh-nb] (property file)
   [run]
     region: [europe-west1] (property file)
+
+Logs Directory: [C:\Users\aperi\AppData\Roaming\gcloud\logs]
+Last Log File: [C:\Users\aperi\AppData\Roaming\gcloud\logs\2026.04.15\23.16.36.593971.log]
 ```
 
 This output is the fastest diagnostic snapshot in the note. It answers five operational questions at once:
@@ -776,6 +884,8 @@ This output is the fastest diagnostic snapshot in the note. It answers five oper
 | account properties | `Account`, `Project`, and `Current Properties` | Confirms the effective authenticated principal and default project context. |
 | accessibility | `[accessibility] screen_reader: [False]` | Shows whether accessibility-oriented rendering behavior is enabled. |
 | network and proxy | no explicit proxy block appears in this output | Inference: the current SDK session is not exposing an explicit CLI proxy override here, which is consistent with direct network access. |
+
+The important operational caveat is that the local default project is still `bq-wh-nb`. On April 15, 2026 that project was already in `DELETE_REQUESTED`, so a help lookup may work while a real API command still fails because the inherited project context is stale.
 
 #### Print the exact component versions
 
@@ -797,6 +907,9 @@ core 2026.03.27
 gcloud-crc32c 1.0.0
 gsutil 5.36
 log-streaming 0.3.2
+Updates are available for some Google Cloud CLI components.  To install them,
+please run:
+  $ gcloud components update
 ```
 
 This is the version block you want in tickets, bug reports, and "works on my machine" comparisons. It is shorter than `gcloud info`, but it still proves whether preview components are installed.
@@ -840,12 +953,13 @@ gcloud auth list
       Credentialed Accounts
 ACTIVE  ACCOUNT
 *       alexper.recovery@gmail.com
+        bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com
 
 To set the active account, run:
     $ gcloud config set account `ACCOUNT`
 ```
 
-This is the fastest identity check in the CLI. If the wrong account is active here, downstream permission failures are usually expected rather than surprising.
+This is the fastest identity check in the CLI. The workstation still has both the personal user account and the older `bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com` credential cached locally, so downstream permission failures may come either from the wrong active account or from an outdated project default.
 
 | Diagnostic command | What it proves | Best use |
 |---|---|---|
@@ -977,7 +1091,6 @@ $env:CLOUDSDK_PAGER=''; $env:PAGER='cat'; gcloud help "--" service-account
 ```
 
 ```text
-Listed 5 of 228 items.
 +----------------------------------------------+-------------------------------+
 |                   COMMAND                    |            SUMMARY            |
 +----------------------------------------------+-------------------------------+
@@ -997,6 +1110,7 @@ Listed 5 of 228 items.
 | gcloud iam SERVICE-ACCOUNTs                  | Create and manipulate service |
 |                                              | accounts.                     |
 +----------------------------------------------+-------------------------------+
+Listed 5 of 228 items.
 ```
 
 This is the practical answer to "I do not know where service-account commands live." Search gives you cross-product matches and quickly reveals that the core account-management surface lives under `gcloud iam service-accounts`.

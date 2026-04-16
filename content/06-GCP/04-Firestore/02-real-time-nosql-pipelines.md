@@ -15,7 +15,7 @@ description: >
   replay, observability, cost control, and operational failure handling without
   duplicating SDK tutorials.
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-15
 status: complete
 ---
 
@@ -42,18 +42,24 @@ status: complete
 > - Explains cost and scaling boundaries such as per-document reads, index fanout, hotspotting from sequential keys, and why summary documents are cheaper than scanning full run-history collections
 >
 > **Operational commands and platform readiness**
-> - Uses `gcloud services list --enabled` and `gcloud firestore databases describe --database='main'` to verify service prerequisites and confirm the live Firestore location `europe-west1`
-> - Shows how to enable missing APIs, create Eventarc triggers with `--event-filters` and `--event-filters-path-pattern`, inspect trigger configuration, and track long-running admin work by captured operation name instead of default-database discovery
+> - Uses `gcloud services list --enabled` and `gcloud firestore databases describe --database='main'` as prerequisite-check patterns for service readiness and regional placement
+> - Shows how to enable missing APIs, create Eventarc triggers with `--event-filters` and `--event-filters-path-pattern`, inspect trigger configuration, and track long-running admin work with explicit named-database targeting
 > - Includes export and `bulk-delete` workflows for offloading or clearing bounded operational collections such as `pipeline_runs`, `replay_manifests`, and `run_debug_payloads`
 >
 > **Data engineering patterns**
 > - Demonstrates orchestration metadata, backfill tracking, idempotency documents, deduplication state, hot and cold storage splits, and incident recovery markers stored in Firestore while heavier history and transport move elsewhere
-> - Captures the current project posture: `firestore.googleapis.com`, `pubsub.googleapis.com`, and `bigquery.googleapis.com` are enabled, while `eventarc.googleapis.com`, `run.googleapis.com`, and `dataflow.googleapis.com` still need project-level enablement
+> - Preserves the archived demo posture from the removed `bq-wh-nb` project instead of claiming a current runnable Firestore estate
 >
 > **Operations and safety**
-> - Warnings: Eventarc delivery is not exactly-once, trigger and destination regions must align with Firestore location, API enablement is project-wide, `gcloud firestore operations list` is unreliable in this named-database project, and bulk delete is destructive but does not catch later writes
+> - Warnings: Eventarc delivery is not exactly-once, trigger and destination regions must align with Firestore location, API enablement is project-wide, Firestore admin operations should target the named database explicitly, and bulk delete is destructive but does not catch later writes
 > - Recommendations table: compact current-state documents, stable idempotency keys, TTL on ephemeral collections, BigQuery or Cloud Storage offload, explicit replay workflows, and `schema_version` plus `owner` fields
 > - Troubleshooting: 6 failure modes covering missing APIs, duplicate processing, rising Firestore cost, stale state, replay or backfill collisions, and trigger region mismatch
+
+> [!warning] Archived demo boundary
+>
+> The original Firestore project used throughout this note, `bq-wh-nb`, has been removed. Treat all embedded Firestore or Eventarc outputs as archived reference material, not as live validation.
+>
+> This refresh intentionally avoids rerunning cloud commands. The note keeps the former examples as operator patterns and adds only knowledge-backed corrections where current documentation changes the operational guidance.
 
 > [!note]- Glossary
 >
@@ -228,7 +234,7 @@ status: complete
 > ---
 >
 > **Named database / `main`**
-> - A Firestore database whose ID is not `'(default)'`, such as the `main` database used by the live project in this note.
+> - A Firestore database whose ID is not `'(default)'`, such as the archived `main` database used by the former demo project in this note.
 > - It changes trigger filters, admin commands, and the error modes of tooling that assumes the default database exists.
 >
 > > [!warning] Default database mismatch
@@ -373,7 +379,7 @@ Firestore's cost model rewards narrow reads and bounded history. It punishes bro
 
 ## Operational Commands And Workflows
 
-The commands below focus on platform readiness and integration boundaries, not SDK code. They use the live project `bq-wh-nb` and the live Firestore database `main` where read-only verification was possible.
+The commands below focus on platform readiness and integration boundaries, not SDK code. The original walkthrough used the removed project `bq-wh-nb` and the named Firestore database `main`, so captured outputs are archived examples and the commands should now be read as operator patterns.
 
 ### PowerShell / Linux | gcloud | verify live pipeline prerequisites
 
@@ -401,13 +407,13 @@ gcloud services list --enabled \
 | `firestore.googleapis.com` |
 | `pubsub.googleapis.com` |
 
-From this live output, the current project is ready for Firestore, Pub/Sub, and BigQuery patterns, but Eventarc, Cloud Run, and Dataflow are not enabled yet.
+In the archived environment, this output showed that Firestore, Pub/Sub, and BigQuery patterns were ready, while Eventarc, Cloud Run, and Dataflow still needed project-level enablement.
 
 #### Confirm the Firestore database location before creating triggers
 
 Before creating Eventarc triggers, Cloud Run services, or cross-service wiring that depends on regional placement. It is typically triggered by you are about to create an Eventarc trigger or reason about latency between Firestore and compute. `gcloud` CLI, read-only. Confirm the Firestore database location so downstream services can be co-located correctly.
 
-*Print the location of the live `main` Firestore database.*
+*Print the location of the archived `main` Firestore database used in this note.*
 
 ```bash
 gcloud firestore databases describe \
@@ -425,6 +431,12 @@ For Firestore direct events, the trigger location and destination region should 
 
 After verifying the project is missing Eventarc, Cloud Run, or Dataflow and before attempting to create triggers or launch streaming jobs. It is typically triggered by the service list shows the platform is not provisioned for the desired integration pattern. `gcloud` CLI, state-changing. Requires permission to enable services in the project. Provision the project-level APIs needed for Eventarc-triggered reactions and Dataflow-based processing.
 
+> [!info] Firestore direct-event prerequisites
+>
+> For Firestore direct events, the Eventarc path requires more than just `eventarc.googleapis.com` and `run.googleapis.com`. Current Google Cloud documentation also calls out `firestore.googleapis.com`, `eventarcpublishing.googleapis.com`, and `logging.googleapis.com` as prerequisites for a Cloud Run trigger flow.
+>
+> Keep that distinction explicit: Firestore direct events, Eventarc routing, and Dataflow processing are separate platform surfaces, so the enablement set should match the architecture you are actually deploying.
+
 > [!warning] API enablement is a project-wide mutation
 >
 > Before running this command, verify:
@@ -437,11 +449,14 @@ After verifying the project is missing Eventarc, Cloud Run, or Dataflow and befo
 >
 > If the pattern is just Firestore plus BigQuery export, you may not need Eventarc or Dataflow at all. Keep the project surface area intentional.
 
-*Enable the APIs still missing for Firestore-triggered Cloud Run workflows and Dataflow processing.*
+*Enable the APIs needed for Firestore-triggered Cloud Run workflows and Dataflow processing.*
 
 ```bash
 gcloud services enable \
+  firestore.googleapis.com \
   eventarc.googleapis.com \
+  eventarcpublishing.googleapis.com \
+  logging.googleapis.com \
   run.googleapis.com \
   dataflow.googleapis.com
 ```
@@ -494,13 +509,11 @@ After creating the trigger, use `gcloud eventarc triggers list --location='europ
 
 #### Track long-running Firestore admin operations safely
 
-During exports, imports, restores, or bulk deletes that have been started asynchronously. It is typically triggered by you need to verify progress or keep the operation name for later review. `gcloud` CLI. The initiating command returns or logs the operation name. In the current live project, `gcloud firestore operations list` errors because the project uses the named database `main` instead of `'(default)'`. Keep long-running admin work observable without assuming project defaults that are wrong for this environment.
+During exports, imports, restores, or bulk deletes that have been started asynchronously. It is typically triggered by you need to verify progress or keep the operation name for later review. `gcloud` CLI. The initiating command returns or logs the operation name. Keep long-running admin work observable without assuming the default database ID is correct.
 
-> [!warning] Do not rely on `operations list` in this project
+> [!warning] Do not rely on the default database
 >
-> The live project uses the named database `main`, and `gcloud firestore operations list` currently errors because it assumes `'(default)'`.
->
-> Capture the operation name from the command that started the export, import, restore, or bulk delete.
+> The original demo project used the named database `main`, not `'(default)'`. Current Cloud SDK releases expose `--database` on both `gcloud firestore operations list` and `gcloud firestore operations describe`, so the operational rule is to pass the named database explicitly instead of hoping the default matches reality.
 
 > [!success] Keep the operation name with the incident or change record
 >
@@ -509,7 +522,8 @@ During exports, imports, restores, or bulk deletes that have been started asynch
 *Describe one Firestore admin operation by operation name returned from the initiating command.*
 
 ```bash
-gcloud firestore operations describe OPERATION_NAME
+gcloud firestore operations describe OPERATION_NAME \
+  --database='main'
 ```
 
 | Flag | Syntax | Description |
@@ -521,6 +535,7 @@ gcloud firestore operations describe OPERATION_NAME
 | `--event-filters-path-pattern` | `--event-filters-path-pattern="document=pipeline_runs/{runId}"` | Binds the trigger to a document path pattern |
 | `--event-data-content-type` | `--event-data-content-type='application/protobuf'` | Sets the Firestore direct-event payload encoding |
 | `--service-account` | `--service-account='eventarc-firestore@bq-wh-nb.iam.gserviceaccount.com'` | Specifies the identity Eventarc uses to invoke the destination |
+| `--database` | `--database='main'` | Targets the correct named Firestore database when listing or describing admin operations |
 
 ### PowerShell / Linux | gcloud | offload history and analytical workloads
 
@@ -538,7 +553,7 @@ Before historical analysis, before deleting old records, or when building a ware
 >
 > If you plan to delete old run history, backfill manifests, or deduplication records, export them first so historical analysis and forensics do not disappear with the cleanup.
 
-*Export `pipeline_runs` from the live `main` database to a verified Cloud Storage prefix.*
+*Export `pipeline_runs` from the archived `main` database pattern to a verified Cloud Storage prefix.*
 
 ```bash
 gcloud firestore export 'gs://YOUR_EXISTING_BUCKET/firestore/main/pipeline-runs-2026-04-13' \
@@ -568,7 +583,7 @@ gcloud firestore bulk-delete \
   --collection-ids='replay_manifests','run_debug_payloads'
 ```
 
-Track the operation using the operation name returned by the initiating command. In this named-database project, do not rely on `gcloud firestore operations list` as the discovery step.
+Track the operation using the operation name returned by the initiating command. In named-database environments, pass `--database` explicitly if you later use `gcloud firestore operations list` or `describe`.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -734,7 +749,7 @@ Use this matrix to choose the right Firestore-centered pattern.
 
 ## Quick Reference
 
-The table below summarizes the live project readiness discovered from read-only inspection on 2026-04-13.
+The table below preserves the archived project readiness captured on 2026-04-13. It is historical reference only because the original project has been removed.
 
 | Item | Current value | Operational implication |
 |---|---|---|

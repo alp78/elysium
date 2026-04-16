@@ -2,9 +2,9 @@
 title: "04 - VPC Service Controls"
 tags: [gcp, security, vpc-sc, access-context-manager]
 aliases: [VPC-SC, service perimeter, perimeter bridge, VPC accessible services, Access Context Manager]
-description: "How VPC Service Controls, Access Context Manager, dry-run rollout, bridges, ingress, and egress work for data-engineering environments."
+description: "How VPC Service Controls, Access Context Manager, dry-run rollout, bridges, ingress, and egress work for data-engineering environments, anchored in archived project examples."
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -12,11 +12,11 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers VPC Service Controls as Google Cloud's data-perimeter layer above IAM, including Access Context Manager concepts, supported-service limits, dry-run rollout, bridges, ingress and egress rules, VPC accessible services, audit evidence, and the current boundary that prevents real perimeter authoring in `bq-wh-nb`.
+> Covers VPC Service Controls as Google Cloud's data-perimeter layer above IAM, using archived operator evidence from `bq-wh-nb`, including Access Context Manager concepts, supported-service limits, dry-run rollout, bridges, ingress and egress rules, VPC accessible services, audit evidence, and the boundary that prevented real perimeter authoring in that project.
 >
-> **Scope and live boundary**
-> - Work from the live project `bq-wh-nb`, where no visible organization parent exists in the current credential context
-> - Separate what is live-verifiable here, such as project facts, supported-service checks, CLI surfaces, and logging state, from conceptual workflows that require organization-level Access Context Manager authority
+> **Scope and archived boundary**
+> - Work from the removed project `bq-wh-nb`, where no visible organization parent existed in the captured credential context
+> - Separate what was verified there, such as project facts, supported-service checks, CLI surfaces, and logging state, from conceptual workflows that require organization-level Access Context Manager authority
 >
 > **Control model**
 > - Distinguish IAM's answer to "who may call the service" from VPC-SC's answer to "may data cross this perimeter boundary"
@@ -38,6 +38,10 @@ status: complete
 > - Warnings: no visible organization means no safe perimeter creation here, supported-product coverage is not universal, broad roles can be only partially supported, and enforce mode should never be the first validation step
 > - Recommendations table: the data-engineering design-pattern table and quick-reference table map exports, partner exchange, Airflow placement, CI/CD boundaries, and internal API restriction needs to the correct VPC-SC pattern
 > - Troubleshooting: 5 failure modes covering IAM-looks-correct-but-export-fails, broken trusted ingress, cross-project protected traffic gaps, dry-run-without-evidence, and unsupported-role assumptions
+>
+> [!warning] Archived demo boundary
+>
+> The original project `bq-wh-nb` has been removed. The project metadata, CLI help output, and logging examples in this note are preserved as archived operator reference, and this refresh did not rerun Access Context Manager or Cloud Logging commands against a replacement environment.
 
 > [!note]- Glossary
 >
@@ -225,9 +229,9 @@ The order matters:
 
 That is why VPC-SC incidents often confuse teams that only inspect IAM.
 
-## Live Boundary in `bq-wh-nb`
+## Archived Boundary in `bq-wh-nb`
 
-The current environment cannot author a real perimeter because there is no visible organization scope. That is the first thing to prove before designing any rollout.
+The archived environment could not author a real perimeter because there was no visible organization scope. That is the first thing to prove before designing any rollout.
 
 ### PowerShell / Linux | gcloud organizations and projects | prove the current perimeter-authoring boundary
 
@@ -278,6 +282,10 @@ The project exists and is active, but there is no visible parent object in this 
 > - a deliberate rollout plan across real projects
 >
 > None of those prerequisites are visible in the current `bq-wh-nb` credential context.
+
+> [!info] Current product note: scoped policies and metadata limits
+>
+> Current VPC Service Controls documentation distinguishes between the main organization-level access policy model and scoped policies that can delegate perimeter administration lower in the hierarchy. The same documentation also stresses that VPC-SC is designed to control data movement, not every possible metadata path, so IAM still carries part of the protection burden.
 
 ## Supported Services and Product Limits
 
@@ -460,6 +468,10 @@ DESCRIPTION
 
 This is why dry run is operationally important. Without an explicit dry-run spec, there is no preview-only signal to analyze.
 
+> [!info] Current product note: explicit dry-run specs
+>
+> Current rollout guidance treats dry run as an explicit spec you manage deliberately, not as a vague preview mode. The operational goal is to observe dry-run evidence across a representative workload cycle before promoting any configuration into enforced perimeter behavior.
+
 #### Confirm the perimeter membership boundary
 
 Before assuming buckets, datasets, or service accounts can be added directly to a perimeter. It is typically triggered by A design proposes adding something other than projects as perimeter members. CLI help inspection. Prove the membership rule enforced by the current control plane.
@@ -506,6 +518,10 @@ When the organization boundary exists, the safest rollout order is:
 5. Add missing ingress and egress exceptions deliberately.
 6. Promote dry-run config into enforce mode only after the dry-run logs are clean.
 
+> [!info] Current product note: Cloud Run perimeter compliance
+>
+> Cloud Run inside a service perimeter has additional runtime requirements beyond IAM. Current guidance requires Direct VPC egress or a Serverless VPC Access connector, all egress routed through the VPC path, and internal-only ingress; setting ingress to `all` disables VPC Service Controls enforcement for the service.
+
 ## Data-Engineering Design Patterns
 
 | Scenario | Correct VPC-SC pattern | Why it works | Main risk if skipped |
@@ -548,7 +564,9 @@ When the organization boundary exists, the safest rollout order is:
 ## References
 
 - https://cloud.google.com/vpc-service-controls/docs/overview
+- https://cloud.google.com/vpc-service-controls/docs/dry-run-mode
 - https://cloud.google.com/vpc-service-controls/docs/supported-products
 - https://cloud.google.com/vpc-service-controls/docs/service-perimeters
 - https://cloud.google.com/vpc-service-controls/docs/ingress-egress-rules
 - https://cloud.google.com/vpc-service-controls/docs/access-level-design
+- https://docs.cloud.google.com/run/docs/securing/using-vpc-service-controls

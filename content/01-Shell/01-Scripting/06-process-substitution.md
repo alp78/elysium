@@ -8,13 +8,13 @@ aliases: [process substitution, here document, here string, heredoc, herestring,
 keywords: [process substitution, here document, heredoc, here string, herestring, diff command output, virtual file descriptor, multi-line input, EOF, stdin, temporary file elimination]
 description: "Bash process substitution (<() and >()), here documents (<<EOF), and here strings (<<<) for treating command output as files and embedding multi-line strings in scripts."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
 # Process Substitution and Here Documents — Advanced Input/Output
 
-> [!quote]
+> [!quote] Unix design rule
 > "Expect the output of every program to become the input to another, as yet unknown, program. Don't clutter output with extraneous information. Don't insist on interactive input."
 >
 > — **Doug McIlroy**, *Bell System Technical Journal* (1978)

@@ -8,7 +8,8 @@ description: "SQL Server adapter installation, auth, T-SQL differences, incremen
 
 # dbt: SQL Server Adapter
 
-> [!quote]
+> [!quote] Engineering Discipline
+>
 > "Practices that matured over decades in software engineering should be replicated in data — deployment processes, testing, version control."
 >
 > — **Tristan Handy** (creator of dbt)
@@ -38,7 +39,7 @@ description: "SQL Server adapter installation, auth, T-SQL differences, incremen
 > - Recommendations table: connection parameter defaults and the known-limitations summary define the safe baseline.
 > - Limitations: 7 unsupported or partial features are called out explicitly in the final summary table.
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **`dbt-sqlserver`**
 > - The community adapter package that lets dbt Core compile and run models against Microsoft SQL Server or Azure SQL.
@@ -198,8 +199,7 @@ description: "SQL Server adapter installation, auth, T-SQL differences, incremen
 > >
 > > On SQL Server, thread count is not an abstract performance knob. It changes live connection load and spill pressure, so start conservatively and tune from observed behavior.
 
-
-### SQL Server Adapter Installation
+## SQL Server Adapter Installation
 
 ```bash
 # Pin both packages together — mismatches cause silent runtime errors
@@ -220,9 +220,11 @@ apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18
 ```
 
 > [!warning] Driver version matters
+>
 > `dbt-sqlserver` ≥ 1.7 defaults to ODBC Driver 18. Driver 17 is still accepted but requires setting `driver: ODBC Driver 17 for SQL Server` explicitly in `profiles.yml`. Do not mix driver versions across environments.
 
 > [!success] Pin driver version explicitly
+>
 > Always set `driver: "ODBC Driver 18 for SQL Server"` explicitly in every `profiles.yml` output block. Verify with `odbcinst -q -d` before deploying to a new environment. Use the same driver string in dev, staging, and prod to prevent environment-specific failures.
 
 ---
@@ -350,6 +352,7 @@ select * from source
 ```
 
 > [!warning] MERGE gotchas on SQL Server
+>
 > The `merge` incremental strategy issues a T-SQL `MERGE` statement. Known issues:
 > - **Non-deterministic updates**: if the source has duplicate `unique_key` values, SQL Server raises an error or silently picks a row depending on the version.
 > - **Table-level lock escalation**: `MERGE` can escalate to a table lock on large targets, blocking concurrent reads from BI tools.
@@ -358,6 +361,7 @@ select * from source
 > Use `delete+insert` unless you specifically need the upsert semantics of `merge`.
 
 > [!success] Use delete+insert with a deduplication CTE
+>
 > Set `incremental_strategy = 'delete+insert'` and wrap the source query in a CTE that deduplicates on `unique_key` using `ROW_NUMBER()`. This avoids MERGE lock escalation and produces deterministic results even when the upstream feed delivers duplicate rows.
 
 ### insert_overwrite is not supported
@@ -472,6 +476,7 @@ SQL Server does not auto-create indexes on dbt-managed tables. For guidance on c
 ```
 
 > [!tip] Idempotent index creation
+>
 > Always guard `CREATE INDEX` with an existence check. dbt `table` models drop and recreate the object, so the index is rebuilt every run — but `incremental` models keep the table, meaning the post-hook will fail on the second run without the guard.
 
 ---

@@ -8,10 +8,11 @@ description: "Model contracts, access levels, versioning, and breaking-change de
 
 # dbt: Data Contracts Implementation
 
-> [!quote]
+> [!quote] Observable interfaces become contracts
+>
 > "With a sufficient number of users of an API, it does not matter what you promise in the contract: all observable behaviors of your system will be depended on by somebody."
 >
-> — **Hyrum Wright**
+> Source: Hyrum Wright
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "Model contracts, access levels, versioning, and breaking-change de
 > - Warnings: mismatched `data_type` declarations, overexposed public models, breaking changes without versioning, CI that checks contracts too late, and relying on naming conventions alone to enforce layer boundaries
 > - Recommendations: contract only the models that are real interfaces, combine access levels with ownership groups, version before breaking consumers, and push change detection into CI before deployment
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Data contract**
 > - A declared promise about a model's columns, types, and interface shape that dbt can enforce during builds.
@@ -163,8 +164,7 @@ description: "Model contracts, access levels, versioning, and breaking-change de
 > >
 > > Keeping every version forever avoids immediate breakage but creates permanent complexity. Deprecation is how the interface lifecycle stays manageable.
 
-
-### What Is a dbt Data Contract?
+## What Is a dbt Data Contract?
 
 A **data contract** is a schema declaration on a model that dbt enforces during `dbt run`. When `contract.enforced: true` is set, dbt will:
 
@@ -174,14 +174,17 @@ A **data contract** is a schema declaration on a model that dbt enforces during 
 
 This transforms YAML schema files from documentation into active guardrails.
 
-> [!important] Contracts are compile-time, not runtime
-> Contract enforcement fires before SQL is executed in the warehouse. A mismatched column type or missing column stops the build immediately — no partial data is written.
+> [!info] Contracts are build-time, not content-quality checks
+>
+> Contract enforcement fires before SQL is executed in the warehouse. A mismatched column type or missing column stops the build immediately, but contracts only protect interface shape. They do not prove the published values are semantically correct, which is why tests and observability still matter.
 
 ---
 
-### Enabling a dbt Data Contract
+## Enabling a dbt Data Contract
 
 Add the `contract` block to the model's config in YAML. The model must also declare every column with its `data_type`.
+
+*This YAML contract turns a mart schema into an enforceable interface by declaring every published column and its adapter-specific type explicitly.*
 
 ```yaml
 # models/marts/finance/_finance__models.yml
@@ -249,8 +252,9 @@ models:
         description: Pipeline load timestamp (UTC).
 ```
 
-> [!note] Supported data types
-> Data types must match your adapter's native types. In BigQuery use `FLOAT64` not `FLOAT`; in Snowflake use `NUMBER` or `FLOAT`. dbt normalises common aliases but is strict about array/struct types.
+> [!info] Supported data types
+>
+> Data types must match your adapter's native types. In BigQuery use `FLOAT64` rather than `FLOAT`; in Snowflake use `NUMBER` or `FLOAT`. dbt normalizes some common aliases, but nested and adapter-specific types still need to match the warehouse you actually build against.
 
 ---
 
@@ -265,6 +269,8 @@ Access levels control which other models can `ref()` a given model. They enforce
 | `public`    | Any project, including **downstream mesh projects** | Stable mart / fact tables               |
 
 ### Declaring Access
+
+*This config block uses access levels to distinguish internal implementation models from stable interfaces other teams or projects may depend on.*
 
 ```yaml
 models:
@@ -287,6 +293,8 @@ models:
 
 Groups pair with access levels to provide ownership metadata and restrict private models.
 
+*This ownership metadata ties access control to a named team so public and private boundaries are accountable instead of implied by naming alone.*
+
 ```yaml
 # models/marts/finance/_groups.yml
 
@@ -307,8 +315,9 @@ models:
 
 Attempting to `ref('int_cap_weight_calc')` from outside the `index_analytics` group raises a compile-time error.
 
-> [!tip] Access + contracts together = dbt Mesh
-> Public + contract-enforced models are the building blocks of dbt Mesh. They let multiple dbt projects share certified data without coupling their transformation logic.
+> [!tip] Access plus contracts together enable Mesh
+>
+> Public, contract-enforced models are the building blocks of dbt Mesh. They let multiple dbt projects share certified data without tightly coupling their transformation logic.
 
 ---
 
@@ -317,6 +326,8 @@ Attempting to `ref('int_cap_weight_calc')` from outside the `index_analytics` gr
 Model versioning lets you publish a new breaking schema while keeping the old version live for existing consumers — no big-bang migrations.
 
 ### Declaring Versions
+
+*This version declaration publishes a new contract without forcing every consumer to migrate on the same day.*
 
 ```yaml
 # models/marts/finance/_finance__models.yml
@@ -343,7 +354,9 @@ dbt creates two separate materialisations: `fct_index_performance_v1` and `fct_i
 
 ### Version SQL Files
 
-```
+*This file layout keeps legacy and current SQL implementations side by side while the YAML metadata decides which version is the default interface.*
+
+```text
 models/
   marts/
     finance/
@@ -353,6 +366,8 @@ models/
 ```
 
 **v1 SQL** (legacy — no ESG columns):
+
+*This legacy version preserves the original consumer-facing schema while newer versions evolve independently.*
 
 ```sql
 -- models/marts/finance/fct_index_performance_v1.sql
@@ -379,6 +394,8 @@ from {{ ref('int_index_constituents_enriched') }}
 ```
 
 **v2 SQL** (adds ESG columns):
+
+*This current version extends the published contract with ESG attributes while keeping the older version available for controlled migration.*
 
 ```sql
 -- models/marts/finance/fct_index_performance.sql
@@ -412,6 +429,8 @@ left join {{ ref('int_esg_scores_latest') }}     esg
 
 Consumers pin to a version to opt in to upgrades explicitly:
 
+*These refs show how downstream projects can stay on a stable contract version or opt into the latest interface intentionally.*
+
 ```sql
 -- Pin to stable v1 until migration is complete
 select * from {{ ref('fct_index_performance', v=1) }}
@@ -430,6 +449,8 @@ select * from {{ ref('fct_index_performance') }}
 Use `dbt state:modified` with the `--select` flag in your CI pipeline to catch contract violations before they reach production.
 
 ### CI Workflow (GitHub Actions)
+
+*This CI workflow compares the branch state to a production manifest so contract-breaking changes fail before they reach deployment.*
 
 ```yaml
 # .github/workflows/dbt-ci.yml
@@ -458,12 +479,11 @@ jobs:
 
       - name: Check for breaking contract changes
         run: |
-          dbt run \
+          dbt build \
             --select "state:modified+" \
             --defer \
             --state ./prod-manifest \
-            --target prod \
-            --full-refresh false
+            --target prod
 ```
 
 `state:modified+` runs only models that changed in this PR, plus all downstream dependents — catching cascading contract breaks without rebuilding the entire project. For the full quality context in which these contract checks operate, see [data-quality-framework](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework).
@@ -472,7 +492,7 @@ jobs:
 
 If a PR removes `esg_score` from `fct_index_performance`, the contract check fails:
 
-```
+```text
 Compilation Error in model fct_index_performance
   Contract breach: column 'esg_score' is declared in the contract
   but was not found in the model's SQL output.
@@ -486,11 +506,14 @@ The PR is blocked until the column is restored or the contract YAML is updated a
 > Removing a declared column or changing its data type is always a breaking change regardless of version. To remove a column gracefully: publish a new version, deprecate the old one, give consumers a migration window, then delete the old version.
 
 > [!success] Safe pattern: version-bump before removal
-> Increment `latest_version`, define the new schema in the new version, set a `deprecation_date` on the old version, and notify consumers. Only delete the old version SQL file and YAML entry once no `ref(..., v=N)` calls to it remain in any downstream project.
+>
+> Increment `latest_version`, define the new schema in the new version, set a `deprecation_date` on the old version, and notify consumers. Only delete the old version SQL file and YAML entry once no `ref(..., v=N)` calls to it remain in downstream projects.
 
 ### `dbt source freshness` in CI
 
 Pair contract checks with source freshness gates so the pipeline fails before running if upstream feeds are stale:
+
+*This source configuration and command make upstream staleness part of the same CI gate that protects contracted downstream interfaces.*
 
 ```yaml
 # sources.yml
@@ -505,15 +528,19 @@ sources:
       - name: raw_esg_scores
 ```
 
+*This freshness command narrows the gate to the upstream source group the contracted marts depend on most directly.*
+
 ```bash
 dbt source freshness --select source:index_provider_raw
 ```
 
 ---
 
-### Full Annotated Contract: fct_index_performance
+## Full Annotated Contract: fct_index_performance
 
 This consolidates all concepts: contract enforcement, public access, versioning, and column-level constraints.
+
+*This end-to-end example combines access, contract enforcement, versioning, and column-level rules into one published mart definition.*
 
 ```yaml
 models:
@@ -604,9 +631,11 @@ models:
 
 ---
 
-### Deprecating a dbt Model Version
+## Deprecating a dbt Model Version
 
 Once consumers have migrated away from v1, mark it deprecated before removing:
+
+*This deprecation marker gives downstream teams a dated migration window before the legacy interface is physically removed.*
 
 ```yaml
 versions:

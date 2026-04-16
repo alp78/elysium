@@ -4,7 +4,7 @@ tags: [serverless, gcp, cloud-run]
 aliases: [Cloud Run Jobs, Cloud Run Services, gcloud run jobs, serverless containers, Cloud Run ETL, cold start]
 description: "How to manage Cloud Run Jobs vs Services for data pipeline workloads — executing jobs, viewing logs, updating configuration, and mitigating cold start latency for ETL containers."
 created: 2026-03-22
-updated: 2026-03-22
+updated: 2026-04-16
 status: complete
 ---
 
@@ -37,16 +37,22 @@ status: complete
 >
 > **Cold start, pricing, and performance**
 > - Expect Cloud Run Jobs to cold start every run and use image size, multi-stage builds, and lazy initialization to control startup latency
-> - Use `--min-instances` and always-allocated CPU only for latency-sensitive services, and weigh those settings against their idle-cost impact
-> - Distinguish service billing from job billing, and account for networking charges plus committed-use discounts where applicable
+> - Use `--min-instances`, startup CPU boost, and instance-based billing only when the service actually needs lower startup latency or CPU outside request handling
+> - Distinguish request-based services, instance-based services, and Jobs, then account for free-tier differences, networking charges, and billing-model-specific committed-use discounts
 >
 > **Environment variables and secrets**
 > - Use `--set-env-vars` for non-sensitive configuration and `--set-secrets` for Secret Manager-backed credentials injected at runtime
 > - Support multi-container sidecar patterns when one job or service revision needs logging agents, proxies, or metrics collectors next to the main container
 >
 > **Operations and safety**
-> - Warnings: jobs always cold start, `--min-instances` and always-allocated CPU create idle cost, hardcoded secrets leak through job definitions, and a regional deployment does not span multiple regions automatically
+> - Warnings: jobs always cold start, `--min-instances` and instance-based billing create idle cost when used carelessly, hardcoded secrets leak through job definitions, and a regional deployment does not span multiple regions automatically
 > - Recommendations table: the Jobs-versus-Services comparison table and the cold-start guidance map workload lifecycle, timeout, concurrency, trigger style, and cost profile to the correct Cloud Run resource type
+
+> [!warning] Archived demo boundary
+>
+> The original Serverless demo project used for this folder no longer exists. The job names, execution rows, and `europe-west1` examples below are preserved as archived operator reference rather than current Cloud Run inventory, and this refresh does not rerun any Cloud Run commands.
+>
+> The edits below focus on current product behavior from Cloud Run documentation, especially pricing-mode differences, startup CPU boost, sidecar billing constraints, and the newer worker-pool option for continuous background work.
 
 > [!note]- Glossary
 >
@@ -230,6 +236,10 @@ Cloud Run offers two resource types: **Jobs** for batch workloads that run to co
 > - **Cloud Run Services** — request-driven workloads: REST APIs, webhook receivers, Pub/Sub push endpoints, dashboards. Best when you need auto-scaling to zero, HTTP routing, or traffic splitting.
 > - **Cloud Functions** — lightweight event-driven glue: file upload triggers, Pub/Sub message handlers, simple transformations under 60 minutes. Best when you want zero infrastructure management and the function fits a single file. Cloud Functions (2nd gen) runs on Cloud Run under the hood.
 
+> [!info] Continuous workers are now a third container option
+>
+> Cloud Run Worker Pools exist for long-running background workers that do not serve HTTP traffic and do not naturally fit run-to-completion job semantics. Use Jobs when the unit of work should finish and exit, Services when requests drive scaling, and Worker Pools when you need continuously running pull workers or similar background daemons.
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -264,6 +274,10 @@ Cloud Run Jobs execute a container image to completion and then exit. A job defi
 > [!info] Parallel task execution
 >
 > A single job execution can run multiple identical tasks in parallel using the `--tasks` and `--parallelism` flags. Each task gets an index via the `CLOUD_RUN_TASK_INDEX` environment variable (0-based) and the total count via `CLOUD_RUN_TASK_COUNT`. Wall time scales inversely with worker count: `wall_time ≈ total_cpu_seconds / parallelism`. Maximum: 10,000 tasks per execution.
+
+> [!info] Archived execution examples
+>
+> The job listings and execution tables in this section are historical examples from the removed project. Read them as shape-of-output references only and treat the commands themselves as reusable patterns.
 
 ### gcloud | List and describe jobs
 
@@ -441,26 +455,27 @@ The first execution after a period of inactivity takes longer because Cloud Run 
 
 > [!tip] Reducing Cold Start Latency
 >
-> - **Keep images small.** A 2 GB image with unnecessary dependencies takes 30–60 seconds to pull. A 200 MB slim image starts in 5–10 seconds. Use [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) locally to mirror the production container environment during development.
+> - **Keep images small.** Cold-start work begins with image pull and process startup, so image discipline is still the first lever. Use [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) locally to mirror the production container environment during development.
 > - **Multi-stage Docker builds.** Build dependencies in stage 1, copy only the runtime into the final image.
 > - **Lazy initialization.** Defer heavy imports and connection setup until the first request or task starts, not at module load time.
 > - **Min instances = 1** (services only): keeps one instance warm. Not applicable to Jobs — they always cold start.
-> - **CPU allocation = always** (services only): keeps CPU allocated even between requests, reducing startup latency.
+> - **Startup CPU boost** (services only): temporarily increases CPU during startup and is often cheaper than keeping a service warm all day.
+> - **Instance-based billing** (services only): use it when the service or its sidecars need CPU outside request handling. Request-based billing is still the default and usually the cheaper baseline.
 
 > [!warning] Cost impact of always-on settings
 >
-> Setting `--min-instances=1` and `--cpu-throttling=false` (CPU always allocated) on a Cloud Run Service means you pay for idle vCPU-seconds and memory even when no requests are being served. For a service with 1 vCPU and 512 MiB running 24/7 idle, this costs approximately \$50–70/month — comparable to a small GCE VM.
+> `--min-instances` is not free capacity. Under request-based billing, minimum instances still create idle billable time; under instance-based billing, the entire instance lifetime is billed. The common mistake is enabling warm capacity or CPU outside requests for low-traffic services that do not actually need it.
 
 > [!success] Right-size always-on settings
 >
-> Use `--min-instances=1` only on services with strict latency requirements (p99 < 500 ms). For internal batch-trigger endpoints or low-traffic webhooks, let instances scale to zero and accept the cold start. Monitor per-service billing in the Cloud Run section of the [billing dashboard](https://alp78.github.io/elysium/06-GCP/Cost-Management) to catch idle cost drift.
+> Use `--min-instances` only for services with a measured latency objective, prefer startup CPU boost before moving to permanently warm instances, and switch to instance-based billing only when background threads or sidecars must keep running between requests. For internal batch-trigger endpoints or low-traffic webhooks, let instances scale to zero and accept the cold start.
 
 > [!info] Cloud Run pricing model
 >
-> - **Services:** Billed per-request ($0.40/million) + vCPU-seconds ($0.00002400) + memory GiB-seconds ($0.00000250). Free tier: 2 million requests, 180,000 vCPU-seconds, 360,000 GiB-seconds per month.
-> - **Jobs:** Billed for vCPU-seconds + memory GiB-seconds for the full task execution duration. No per-request charge. Same rates as services.
-> - **Networking:** Egress to the internet is charged at standard GCP rates. Egress to other GCP services in the same region is free.
-> - **Committed Use Discounts:** Jobs and instance-based services qualify for 1-year (28%) and 3-year (46%) discounts. Billing granularity is 100 ms.
+> - **Services:** Cloud Run now has two service billing modes. Request-based billing charges for requests plus active CPU and memory, while instance-based billing bills the full instance lifetime and is the mode to use when CPU must stay available outside request processing.
+> - **Jobs:** Jobs bill for CPU and memory for the duration of each task execution and have no per-request charge. The current free tier for Jobs is 240,000 vCPU-seconds and 450,000 GiB-seconds per month.
+> - **Request-based free tier:** Services on request-based billing currently include 2 million requests, 180,000 vCPU-seconds, and 360,000 GiB-seconds per month before paid usage begins.
+> - **Networking and discounts:** Billing is rounded to 100 ms, same-region traffic to Google Cloud resources is free, and Cloud Run flexible CUDs currently discount Jobs and instance-based services more deeply than request-based services.
 
 ## Environment Variables and Secrets
 
@@ -483,7 +498,9 @@ The secret value is injected as an environment variable at runtime. The containe
 
 > [!info] Multi-container sidecar support
 >
-> Cloud Run supports deploying multiple containers in a single service or job revision (sidecar pattern). A sidecar container runs alongside the main container and shares the same network namespace. Common uses: logging agents, auth proxies, metrics collectors. Configure via `gcloud run services update --add-containers` or in the YAML service spec. Sidecar containers share the job's CPU and memory allocation.
+> Cloud Run supports deploying multiple containers in a single service or job revision (sidecar pattern). A sidecar container runs alongside the main container, shares the same network namespace, and can share files through in-memory volumes. Common uses include logging agents, auth proxies, metrics collectors, and secret sidecars.
+>
+> For services on request-based billing, sidecars only get CPU during request handling and startup. If a sidecar must keep working between requests, such as continuous metrics shipping or a long-lived proxy loop, move that service to instance-based billing or reconsider whether a worker pool is the better primitive.
 
 ## Related
 
@@ -501,6 +518,14 @@ The secret value is injected as an environment variable at runtime. The containe
 
 - [Cloud Run Jobs overview](https://cloud.google.com/run/docs/create-jobs)
 - [Executing jobs](https://cloud.google.com/run/docs/execute/jobs)
+- [Request timeout for services](https://cloud.google.com/run/docs/configuring/request-timeout)
+- [Minimum instances for services](https://cloud.google.com/run/docs/configuring/min-instances)
+- [Billing settings for services](https://cloud.google.com/run/docs/configuring/billing-settings)
+- [CPU limits and startup CPU boost](https://cloud.google.com/run/docs/configuring/services/cpu)
+- [Deploy multiple containers to a job](https://cloud.google.com/run/docs/create-jobs#deploy-multiple-containers-to-a-job)
+- [Deploying sidecar containers for services](https://cloud.google.com/run/docs/deploying#sidecars)
+- [Worker pools](https://cloud.google.com/run/docs/deploy-worker-pools)
 - [Container image best practices](https://cloud.google.com/run/docs/tips/general)
 - [Cloud Run pricing](https://cloud.google.com/run/pricing)
+- [Cloud Run flexible committed use discounts](https://docs.cloud.google.com/run/cud)
 - [Cloud Run quotas and limits](https://cloud.google.com/run/quotas)

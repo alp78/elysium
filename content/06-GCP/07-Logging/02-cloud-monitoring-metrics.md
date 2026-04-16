@@ -2,9 +2,9 @@
 title: "02 - Cloud Monitoring Metrics"
 tags: [gcp, monitoring, observability]
 aliases: [Cloud Monitoring, GCP metrics, time series, metric descriptors, alerting policies, notification channels, uptime checks]
-description: "Production-focused Cloud Monitoring reference for the active GCP project, covering metric descriptors, time series, alignment, reduction, alerts, notification channels, and the current CLI/API surface."
+description: "Production-focused Cloud Monitoring reference anchored in an archived GCP project, covering metric descriptors, time series, alignment, reduction, alerts, notification channels, and the current CLI/API surface."
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -12,11 +12,11 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers Cloud Monitoring as the live-verified metric and alerting control plane for project `bq-wh-nb`, including metric descriptors, monitored resources, raw and aggregated time series, the current `gcloud monitoring` surface, the Monitoring v3 API fallback, notification and uptime surfaces, and the bridge back to Cloud Logging so you can interpret numeric signals correctly before you chart, alert, or troubleshoot.
+> Covers Cloud Monitoring using archived operator evidence from project `bq-wh-nb`, including metric descriptors, monitored resources, raw and aggregated time series, the current `gcloud monitoring` surface, the Monitoring v3 API fallback, notification and uptime surfaces, and the bridge back to Cloud Logging so you can interpret numeric signals correctly before you chart, alert, or troubleshoot.
 >
-> **Metric model and live project baseline**
+> **Metric model and archived project baseline**
 > - Core schema: metric descriptors, metric types, monitored resources, labels, points, `metricKind`, `valueType`, units, `samplePeriod`, and `ingestDelay` determine how Monitoring data must be read
-> - The active project currently has Compute Engine metric producers but no dashboards, alerting policies, uptime configs, or configured notification channels, which means raw telemetry exists but operator-facing control objects are still absent
+> - The archived project had Compute Engine metric producers but no dashboards, alerting policies, uptime configs, or configured notification channels, which means raw telemetry existed but operator-facing control objects were still absent
 > - Logging-derived Monitoring signals already exist through native metrics such as `logging.googleapis.com/billing/bytes_ingested`, even though no user-defined monitoring objects are configured
 >
 > **CLI and control surfaces**
@@ -34,6 +34,10 @@ status: complete
 > - Warnings: missing data is not automatically healthy data, noisy raw points should not page operators directly, high-cardinality labels increase cost and noise, and Monitoring API read economics now depend on time series returned rather than only request count
 > - Recommendations: read the descriptor before the data, align and reduce signals before alerting, pair every important metric alert with a log query, and validate the full chain from metric existence to policy to enabled notification channel
 > - Troubleshooting: 4 failure modes covering empty metric queries, alerts that never fired, alerts that fire too often, and fragmented Cloud Run or pipeline investigations
+>
+> [!warning] Archived demo boundary
+>
+> The original demo project `bq-wh-nb` has been removed. The inventories, API outputs, and examples in this note are preserved as archived operator reference, and this refresh did not rerun Cloud Monitoring commands or Monitoring API calls against a replacement project.
 >
 > [!note]- Glossary
 >
@@ -269,7 +273,7 @@ status: complete
 
 Metrics answer the questions that logs cannot answer quickly at scale: Is backlog rising, is CPU saturating, are errors sustained or spiky, and did the problem affect one instance or the whole fleet? In data engineering, these are the signals that tell you when a scheduled batch is late, when a consumer is falling behind, when retries are amplifying load, and when costs or retention are creeping upward.
 
-This active project already proves the split between Logging and Monitoring:
+This archived project already proves the split between Logging and Monitoring:
 
 - Logging has active audit logs, default buckets, and verification writes.
 - Monitoring has active metric APIs, running Compute Engine instances, no dashboards, no alerting policies, no uptime configs, and no configured notification channels.
@@ -305,11 +309,11 @@ flowchart LR
     I --> J["Cloud Logging queries"]
 ```
 
-### Cloud Monitoring | live project summary
+### Cloud Monitoring | archived project summary
 
-The active project already has metric-producing resources, but almost no Monitoring control objects.
+The archived project already had metric-producing resources, but almost no Monitoring control objects.
 
-| Object | Live state in `bq-wh-nb` | Operational meaning |
+| Object | Archived state in removed project | Operational meaning |
 |---|---|---|
 | Compute instances | `stoxx-airflow`, `stoxx-vm` | Native VM metrics are available |
 | Dashboards | `[]` | No saved visual views yet |
@@ -320,9 +324,9 @@ The active project already has metric-producing resources, but almost no Monitor
 
 > [!info] Important conceptual note not safely executed here
 >
-> The active project does not contain dashboards, alerting policies, uptime configs, synthetic monitors, or configured notification channels. Creating those objects would mutate the live environment and can page people, generate cost, or create false confidence. This note therefore separates:
+> The archived project did not contain dashboards, alerting policies, uptime configs, synthetic monitors, or configured notification channels. Creating those objects would have mutated the live environment and could have paged people, generated cost, or created false confidence. This note therefore separates:
 >
-> - live-verified inventory and query workflows
+> - historically captured inventory and query workflows
 > - production guidance for alert and monitor design that was important but not safe to instantiate here
 
 ## PowerShell / Linux
@@ -374,7 +378,7 @@ Before building alerts or dashboards on top of assumed existing objects. It is t
 | result array | array | Inventory returned by the CLI |
 | `[]` | empty array | No configured objects of that type exist in the project |
 
-*List dashboards in the active project.*
+*List dashboards in the archived project.*
 
 ```powershell
 gcloud monitoring dashboards list --format=json
@@ -384,7 +388,7 @@ gcloud monitoring dashboards list --format=json
 []
 ```
 
-*List alerting policies in the active project.*
+*List alerting policies in the archived project.*
 
 ```powershell
 gcloud monitoring policies list --format=json
@@ -394,7 +398,7 @@ gcloud monitoring policies list --format=json
 []
 ```
 
-*List uptime checks and synthetic monitors in the active project.*
+*List uptime checks and synthetic monitors in the archived project.*
 
 ```powershell
 gcloud monitoring uptime list-configs --format=json
@@ -404,7 +408,7 @@ gcloud monitoring uptime list-configs --format=json
 []
 ```
 
-*List configured notification channels in the active project.*
+*List configured notification channels in the archived project.*
 
 ```powershell
 gcloud alpha monitoring channels list --format=json
@@ -414,12 +418,12 @@ gcloud alpha monitoring channels list --format=json
 []
 ```
 
-The project currently has raw telemetry but no configured Monitoring control objects. That means alerts are not yet firing, dashboards are not yet persisted, and notification delivery is not configured.
+The archived project had raw telemetry but no configured Monitoring control objects. That means alerts were not yet firing, dashboards were not yet persisted, and notification delivery was not configured.
 
 | Flag | Syntax | Description |
 |---|---|---|
 | `--format` | `--format=json` | Chooses machine-readable inventory output |
-| `--project` | `--project=bq-wh-nb` | Overrides the active project when needed |
+| `--project` | `--project=bq-wh-nb` | Overrides the target project when needed |
 
 ### PowerShell / Linux | gcloud monitoring | inspect notification and uptime surfaces
 
@@ -449,6 +453,10 @@ webhook_tokenauth
 ```
 
 This output tells you what kinds of channels can exist. It does not mean any channel of that type is already configured.
+
+> [!info] Current product note: channel descriptors versus channels
+>
+> Descriptor support only tells you which channel families the API can create. Actual notification channels are separate resources, and channel instances carry operational state such as `verificationStatus`, enablement, and delivery-specific configuration.
 
 #### Inspect the Pub/Sub channel descriptor
 
@@ -511,6 +519,10 @@ USA     Oregon    35.233.167.246
 ```
 
 This command is useful even when there are no configured uptime checks yet because firewall and allowlist work often happens before the monitor object is created.
+
+> [!info] Current product note: uptime checks are not full browser journeys
+>
+> Uptime checks are still useful for reachability, latency, and allowlist planning, but they are not equivalent to scripted browser execution. When the requirement is multi-step journey validation or browser-level behavior, treat synthetic monitoring as a separate capability rather than as a synonym for basic uptime checks.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -704,7 +716,7 @@ During host-level triage or right-sizing review. It is typically triggered by yo
 | `points[].interval` | Time window for each metric point |
 | `points[].value.doubleValue` | Observed CPU utilization fraction |
 
-*Query raw CPU utilization points for one VM in the active project.*
+*Query raw CPU utilization points for one VM in the archived project.*
 
 ```powershell
 $token = gcloud auth print-access-token
@@ -963,7 +975,7 @@ These are the mistakes that most often turn Monitoring from a decision tool into
 
 ## Recommendations And Production Rules
 
-These rules translate the live project findings into a safer operating model for metrics and alerts.
+These rules translate the archived project findings into a safer operating model for metrics and alerts.
 
 Read the metric descriptor before you design the chart or the alert. `metricKind`, `valueType`, `unit`, `samplePeriod`, and `ingestDelay` are not metadata trivia. They determine what the data means and when it is safe to act on it.
 
@@ -971,7 +983,7 @@ Treat alerting as a control system, not as a checkbox. A policy with no channel,
 
 Pair every important alert with the log query that explains it. Metrics surface the anomaly. Logs explain the anomaly. If the team cannot pivot from a chart to a log query quickly, the observability design is unfinished.
 
-Remember that Monitoring API economics changed in late 2025. Read costs are now tied to time series returned rather than only raw API call count, so broad, high-cardinality queries are more expensive than focused reads.
+Remember that Monitoring API read cost is tied to time series returned rather than only raw API call count, so broad, high-cardinality queries are more expensive than focused reads. The current pricing page also notes that some alerting charges are effective no sooner than May 1, 2026, so review pricing before turning large alert estates into default platform behavior.
 
 ## Data-Engineering Scenarios
 
@@ -1015,7 +1027,7 @@ Use this sequence:
 
 ### Alert did not fire
 
-Because the active project has no alerting policies, this is an architectural runbook rather than a live object inspection:
+Because the archived project had no alerting policies, this is an architectural runbook rather than a live object inspection:
 
 1. Verify the underlying metric exists with raw API reads.
 2. Verify the alert threshold would actually have been crossed after alignment and reduction.

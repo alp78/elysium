@@ -2,9 +2,9 @@
 title: "04 - gcloud Configurations"
 tags: [gcp, gcloud]
 aliases: [gcloud config, gcloud configurations, GCP project switching, named configurations]
-description: "How to use gcloud named configurations, property scopes, environment overrides, and on-disk config files safely, with live output from bq-wh-nb."
+description: "How to use gcloud named configurations, property scopes, environment overrides, and on-disk config files safely, with live local output from a disposable SDK root."
 created: 2026-04-13
-updated: 2026-04-13
+updated: 2026-04-15
 status: complete
 ---
 
@@ -13,7 +13,10 @@ status: complete
 > [!abstract]- Summary
 > `gcloud` configurations are named property sets that control the CLI defaults for account, project, region, zone, and related settings when a command does not pass explicit flags. In multi-project work, they are the main guardrail against wrong-environment mistakes because they let you switch an entire context atomically instead of rewriting individual properties one by one.
 >
-> This note explains the difference between named configurations and the properties stored inside them, shows how environment variables override on-disk values, and traces where Cloud SDK keeps the active `config_<name>` files. All live outputs were captured on April 13, 2026 with Google Cloud SDK `563.0.0` against the live project `bq-wh-nb`, using a temporary `CLOUDSDK_CONFIG` root so the examples expose the effective file paths without mutating the normal per-user SDK directory.
+> This note explains the difference between named configurations and the properties stored inside them, shows how environment variables override on-disk values, and traces where Cloud SDK keeps the active `config_<name>` files. The local commands and path projections were rerun on April 15, 2026 with Google Cloud SDK `563.0.0` inside a disposable `CLOUDSDK_CONFIG` root seeded with `alexper.recovery@gmail.com` and `dagflow-poc`, so the walkthrough stays current without mutating the normal per-user SDK directory.
+
+> [!warning]- Live-run boundary
+> On April 15, 2026 the configuration create, activate, delete, property, override, and file-path examples in this note were rerun locally inside a temporary SDK root. The live outputs now reflect a disposable local profile that stores `dagflow-poc`, not the older `bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com` context.
 
 > [!note]- Glossary
 > **named configuration**
@@ -88,11 +91,11 @@ gcloud config configurations list
 ```
 
 ```text
-NAME     IS_ACTIVE  ACCOUNT                                    PROJECT   COMPUTE_DEFAULT_ZONE  COMPUTE_DEFAULT_REGION
-default  True       bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com  bq-wh-nb  europe-west1-b        europe-west1
+NAME     IS_ACTIVE  ACCOUNT                     PROJECT      COMPUTE_DEFAULT_ZONE  COMPUTE_DEFAULT_REGION
+default  True       alexper.recovery@gmail.com  dagflow-poc
 ```
 
-The fresh SDK root already contains `default`, and that configuration is active. Because `default` already has project and Compute Engine defaults, any command that relies on those properties will inherit `bq-wh-nb`, `europe-west1`, and `europe-west1-b` unless a flag or environment variable overrides them.
+The fresh SDK root already contains `default`, and that configuration is active. In the April 15 disposable root, only `core/account` and `core/project` were seeded, so the Compute columns are blank. That means commands needing a region or zone would still require explicit flags unless you set those properties later.
 
 #### Create a scratch configuration
 
@@ -176,7 +179,7 @@ WARNING: Failed to delete universe descriptor for universe domain googleapis.com
 Deleted [p5-scratch].
 ```
 
-The live run returned a local cache-cleanup warning for the hidden universe-descriptor SQLite store, but the configuration deletion itself still succeeded because the command ended with `Deleted [p5-scratch].` This is a local CLI cache warning, not a project-side failure in `bq-wh-nb`.
+The live run returned a local cache-cleanup warning for the hidden universe-descriptor SQLite store, but the configuration deletion itself still succeeded because the command ended with `Deleted [p5-scratch].` This is a local CLI cache warning, not a cloud-side failure.
 
 | Command | Flag or argument | Syntax | Description |
 |---|---|---|---|
@@ -217,18 +220,15 @@ gcloud config list
 ```text
 [accessibility]
 screen_reader = False
-[compute]
-region = europe-west1
-zone = europe-west1-b
 [core]
-account = bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com
+account = alexper.recovery@gmail.com
 disable_usage_reporting = True
-project = bq-wh-nb
+project = dagflow-poc
 
 Your active configuration is: [default]
 ```
 
-Only properties that are currently set are shown by default. This is why `config list` is much shorter than `config configurations describe --all`: it behaves like an operational snapshot of the values that will actually affect commands now.
+Only properties that are currently set are shown by default. This is why `config list` is much shorter than `config configurations describe --all`: it behaves like an operational snapshot of the values that will actually affect commands now. In the rerun disposable root, that snapshot contains only the core account and project defaults.
 
 #### Read one property directly
 
@@ -245,26 +245,27 @@ gcloud config get-value project
 ```
 
 ```text
-bq-wh-nb
+dagflow-poc
 ```
 
 This is the fastest way to confirm project context before a destructive command. It returns just the scalar property value with no section headers.
 
 #### Set the default project
 
-During initial workstation setup, after switching to a new environment, or when a script should inherit one project implicitly. It is typically triggered by the active configuration does not yet point at the project you intend to operate on. State-changing local command. It writes `core/project` into the active configuration file. Make future `gcloud` commands default to `bq-wh-nb` without repeating `--project`.
+During initial workstation setup, after switching to a new environment, or when a script should inherit one project implicitly. It is typically triggered by the active configuration does not yet point at the project you intend to operate on. State-changing local command. It writes `core/project` into the active configuration file. Make future `gcloud` commands default to `dagflow-poc` without repeating `--project`.
 
 *Write the default project into the active configuration.*
 
 ```bash
-gcloud config set project bq-wh-nb
+gcloud config set project dagflow-poc
 ```
 
 ```text
+WARNING: You do not appear to have access to project [dagflow-poc] or it does not exist.
 Updated property [core/project].
 ```
 
-The change is local to the active configuration unless `--installation` is used. Other named configurations keep their own `core/project` values.
+The change is local to the active configuration unless `--installation` is used. Other named configurations keep their own `core/project` values. In a disposable SDK root with no copied credential cache, `gcloud` may warn that it cannot verify project access even though the local property write still succeeds.
 
 #### Set a service-specific property
 
@@ -307,8 +308,8 @@ Once a property is unset, it disappears from later `gcloud config list` and `gcl
 | `list` | `--sort-by` | `gcloud config list --sort-by=name` | Sorts listed rows by field. |
 | `get-value` | `SECTION/PROPERTY` | `gcloud config get-value project` | Returns one property value as a scalar. `core/` is optional for `project`. |
 | `set` | `SECTION/PROPERTY` | `gcloud config set run/region europe-west1` | Identifies which property to write. |
-| `set` | `VALUE` | `gcloud config set project bq-wh-nb` | The value written into the selected property. |
-| `set` | `--installation` | `gcloud config set project bq-wh-nb --installation` | Writes the property across the whole Cloud SDK installation instead of only the active configuration. |
+| `set` | `VALUE` | `gcloud config set project dagflow-poc` | The value written into the selected property. |
+| `set` | `--installation` | `gcloud config set project dagflow-poc --installation` | Writes the property across the whole Cloud SDK installation instead of only the active configuration. |
 | `unset` | `SECTION/PROPERTY` | `gcloud config unset run/region` | Identifies which property to remove. |
 | `unset` | `--installation` | `gcloud config unset project --installation` | Removes the property across the whole installation instead of only the active configuration. |
 
@@ -316,7 +317,7 @@ Once a property is unset, it disappears from later `gcloud config list` and `gcl
 
 Environment variables sit outside the configuration files on disk. They are useful for one shell session, CI jobs, or wrapper scripts because they change effective values without permanently editing a named configuration.
 
-For the live examples below, the session also contained a second saved configuration named `p5-override` whose `compute/region` property was set to `europe-west4`. That second profile is what makes the override visible in the output.
+For the live examples below, the session also contained a second saved configuration named `p5-override` whose `core/project` property was set to `override-demo-project`. That second profile is what makes the process-level configuration override visible in the output.
 
 > [!info] Official precedence rules
 >
@@ -349,9 +350,9 @@ gcloud config configurations list
 ```
 
 ```text
-NAME         IS_ACTIVE  ACCOUNT                                    PROJECT   COMPUTE_DEFAULT_ZONE  COMPUTE_DEFAULT_REGION
-default      False      bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com  bq-wh-nb  europe-west1-b        europe-west1
-p5-override  True       bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com  bq-wh-nb                        europe-west4
+NAME         IS_ACTIVE  ACCOUNT                     PROJECT                COMPUTE_DEFAULT_ZONE  COMPUTE_DEFAULT_REGION
+default      False      alexper.recovery@gmail.com  dagflow-poc
+p5-override  True       alexper.recovery@gmail.com  override-demo-project
 ```
 
 The on-disk active configuration had already been switched back to `default`, but this process-level override made `p5-override` the effective configuration for the command. On Linux or macOS, the equivalent pattern is `CLOUDSDK_ACTIVE_CONFIG_NAME=p5-override gcloud config configurations list`.
@@ -369,7 +370,7 @@ When you want to keep the active configuration but temporarily replace just one 
 *Override `core/project` for the current PowerShell process and inspect the resulting source metadata.*
 
 ```powershell
-$env:CLOUDSDK_CORE_PROJECT = 'bq-wh-nb'
+$env:CLOUDSDK_CORE_PROJECT = 'dagflow-poc'
 gcloud info --format="json(config.properties.core.project)"
 ```
 
@@ -383,7 +384,7 @@ gcloud info --format="json(config.properties.core.project)"
             "name": "ENVIRONMENT",
             "value": "environment"
           },
-          "value": "bq-wh-nb"
+          "value": "dagflow-poc"
         }
       }
     }
@@ -391,12 +392,12 @@ gcloud info --format="json(config.properties.core.project)"
 }
 ```
 
-The value stayed `bq-wh-nb`, but the source changed from the property file to `ENVIRONMENT`. That is the key operational point: the environment can change the effective project without mutating the configuration file. On Linux or macOS, the equivalent pattern is `CLOUDSDK_CORE_PROJECT=bq-wh-nb gcloud info --format="json(config.properties.core.project)"`.
+The value stayed `dagflow-poc`, but the source changed from the property file to `ENVIRONMENT`. That is the key operational point: the environment can change the effective project without mutating the configuration file. On Linux or macOS, the equivalent pattern is `CLOUDSDK_CORE_PROJECT=dagflow-poc gcloud info --format="json(config.properties.core.project)"`.
 
 | Command or variable | Flag or variable | Syntax | Description |
 |---|---|---|---|
 | environment | `CLOUDSDK_ACTIVE_CONFIG_NAME` | `$env:CLOUDSDK_ACTIVE_CONFIG_NAME = 'p5-override'` | Overrides the active named configuration for the current process. |
-| environment | `CLOUDSDK_CORE_PROJECT` | `$env:CLOUDSDK_CORE_PROJECT = 'bq-wh-nb'` | Overrides only the `core/project` property for the current process. |
+| environment | `CLOUDSDK_CORE_PROJECT` | `$env:CLOUDSDK_CORE_PROJECT = 'dagflow-poc'` | Overrides only the `core/project` property for the current process. |
 | environment | `CLOUDSDK_SECTION_PROPERTY` | `CLOUDSDK_RUN_REGION=europe-west1` | General naming pattern for overriding a property through the environment. |
 | `gcloud info` | `--format` | `gcloud info --format="json(config.properties.core.project)"` | Limits the output to the exact fields needed for precedence inspection. |
 
@@ -424,7 +425,7 @@ gcloud info --format="get(config.paths.global_config_dir)"
 ```
 
 ```text
-C:\Users\aperi\AppData\Local\Temp\codex-gcloud-p5-286e347e88284659bf1f8052d7a27efb
+C:\Users\aperi\AppData\Local\Temp\codex-gcloud-config-1c6f0b7462cc44dfaa637e7d19ec5025
 ```
 
 This live output confirms that the session was running under a disposable SDK root rather than the normal per-user root. If `CLOUDSDK_CONFIG` were unset, the Windows path would normally live under `%APPDATA%\gcloud`.
@@ -440,7 +441,7 @@ gcloud info --format="get(config.paths.active_config_path)"
 ```
 
 ```text
-C:\Users\aperi\AppData\Local\Temp\codex-gcloud-p5-286e347e88284659bf1f8052d7a27efb\configurations\config_default
+C:\Users\aperi\AppData\Local\Temp\codex-gcloud-config-1c6f0b7462cc44dfaa637e7d19ec5025\configurations\config_default
 ```
 
 The file naming pattern is explicit: the active named configuration `default` maps to `config_default`. A configuration named `prod-eu` would map to `config_prod-eu` under the same `configurations/` directory.

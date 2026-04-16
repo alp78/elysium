@@ -4,7 +4,7 @@ tags: [gcp, compute, sql-server]
 aliases: [SQL Server on GCE, SQL Server VM GCP, stoxx-db GCE deployment]
 description: "End-to-end deployment of SQL Server 2022 on a Compute Engine VM with dedicated disks for data, log, and TempDB — including the stoxx_db split-file layout and the bronze/silver/gold-only stoxx provisioning workflow."
 created: 2026-04-12
-updated: 2026-04-13
+updated: 2026-04-15
 status: complete
 ---
 
@@ -18,7 +18,7 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers the full self-managed SQL Server 2022 deployment pattern on Compute Engine, using `stoxx-vm` in `bq-wh-nb` with dedicated disks, private IAP access, Linux package installation, engine configuration, data publication, startup automation, teardown, and cost analysis.
+> Preserves the full self-managed SQL Server 2022 deployment pattern that was originally executed on `stoxx-vm` in `bq-wh-nb`, including dedicated disks, private IAP access, Linux package installation, engine configuration, data publication, startup automation, teardown, and cost analysis.
 >
 > **Prerequisites and storage layout**
 > - Build on the mounted disk layout from page 03: `/mnt/sqldata` on `stoxx-data` (100 GB `pd-ssd`), `/mnt/sqllog` on `stoxx-log` (20 GB `pd-ssd`), and `/mnt/sqltempdb` on `stoxx-tempdb` (20 GB `pd-ssd`)
@@ -45,6 +45,12 @@ status: complete
 > - Warnings: non-interactive GPG import needs `gpg --batch`, Ubuntu 22.04 repo files need `signed-by=`, `sa` passwords must satisfy complexity policy, local `sqlcmd` needs `-C` without a CA-signed cert, and boot-time startup must verify disk mounts before service start
 > - Recommendations table: the cost section contrasts always-on GCE, scheduled stop and start savings, and Cloud SQL for SQL Server pricing to frame the management-versus-cost tradeoff
 > - Troubleshooting: 5 failure modes covering `/dev/tty` GPG import failures, `NO_PUBKEY` APT errors, weak `sa` password setup failures, self-signed TLS validation failures, and mount-dependent startup safety
+
+> [!warning] Archived environment boundary
+>
+> This note now functions as an operator runbook for a retired demo estate. On `2026-04-15`, the underlying project `bq-wh-nb` reported `lifecycleState: DELETE_REQUESTED`, so the original VM, disk, firewall, and SQL runtime steps were not rerun during this refresh.
+>
+> The command sequences and captured outputs below remain valuable because they document the exact bring-up order, Linux-specific package caveats, `mssql-tools18` / `sqlcmd -C` behavior, and mount-gated startup protections. Read them as a historically validated deployment record, not as a claim that a fresh SQL Server VM exists today.
 
 > [!note]- Glossary
 >

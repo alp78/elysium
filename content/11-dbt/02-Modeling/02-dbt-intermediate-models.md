@@ -8,10 +8,11 @@ description: "Business logic transforms, silver layer"
 
 # dbt: Intermediate Models
 
-> [!quote]
+> [!quote] Reusable business logic
+>
 > "What you realize you're doing over time with data transformation is you're curating the knowledge of the organization that you work for."
 >
-> — **Tristan Handy**
+> Source: Tristan Handy
 
 > [!abstract]- Summary
 >
@@ -33,7 +34,7 @@ description: "Business logic transforms, silver layer"
 > - Warnings: direct `source()` use, overgrown multi-purpose models, premature heavy materialization, and accidental analyst dependence on internal intermediate relations
 > - Recommendations: keep one concept per model, prefer refs over raw sources, materialize heavily reused logic intentionally, and publish only the marts that are meant to be queried directly
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Intermediate model**
 > - A dbt model that applies business logic on top of staged data and feeds other internal models rather than end-user tools directly.
@@ -153,8 +154,7 @@ description: "Business logic transforms, silver layer"
 > >
 > > The moment end users rely on an intermediate model directly, it starts inheriting mart-like expectations for stability, documentation, and support.
 
-
-### Intermediate Model Core Principles
+## Intermediate Model Core Principles
 
 | Rule | Rationale |
 |---|---|
@@ -166,7 +166,7 @@ description: "Business logic transforms, silver layer"
 
 ---
 
-### Intermediate Materialisation Strategy
+## Intermediate Materialisation Strategy
 
 Most intermediate models are views. The exceptions are:
 
@@ -177,11 +177,17 @@ Most intermediate models are views. The exceptions are:
 | Single-use, very simple derivation | `ephemeral` |
 | Large rolling calculations, daily incremental | `incremental` |
 
+> [!tip] Persist reused window logic deliberately
+>
+> If an intermediate model contains heavy window functions and feeds several downstream marts, materializing it as a `table` is usually safer than stacking view-on-view execution. The extra storage cost is often lower than repeatedly paying the same compute and debugging the same long compiled SQL in multiple places.
+
 ---
 
-### int_daily_returns
+## int_daily_returns
 
 Calculates daily simple and log returns from adjusted close prices.
+
+*This intermediate model derives reusable return measures from staged adjusted prices while preserving one row per security per trading date.*
 
 ```sql
 -- models/intermediate/market_data/int_daily_returns.sql
@@ -251,9 +257,11 @@ select * from returns
 
 ---
 
-### int_momentum_scores
+## int_momentum_scores
 
 Calculates trailing 12-month momentum (with 1-month skip) and 3-month short-term momentum for each security.
+
+*This model persists window-heavy momentum calculations because the same factors are likely to feed several downstream marts and portfolio screens.*
 
 ```sql
 -- models/intermediate/market_data/int_momentum_scores.sql
@@ -334,9 +342,11 @@ from momentum
 
 ---
 
-### int_value_signals
+## int_value_signals
 
 Computes fundamental value signals: price-to-book, earnings yield, dividend yield.
+
+*This model joins staged prices to the most recent available fundamentals so downstream marts can reuse consistent value-factor inputs instead of reimplementing the same point-in-time logic.*
 
 ```sql
 -- models/intermediate/market_data/int_value_signals.sql
@@ -425,9 +435,11 @@ select * from signals
 
 ---
 
-### int_esg_normalized
+## int_esg_normalized
 
 Normalises raw ESG scores to z-scores within each GICS sector on each score date. This enables cross-sector comparison.
+
+*This intermediate table computes sector-relative ESG z-scores once so downstream models inherit a consistent normalization basis instead of repeating peer-group math.*
 
 ```sql
 -- models/intermediate/esg/int_esg_normalized.sql
@@ -514,9 +526,11 @@ select * from z_scored
 
 ---
 
-### int_corporate_action_adjustments
+## int_corporate_action_adjustments
 
 Builds a multiplicative adjustment factor for each security for each date, used to reconstruct historical adjusted prices.
+
+*This model converts raw corporate actions into reusable price-adjustment factors that later marts and backfills can apply consistently.*
 
 ```sql
 -- models/intermediate/market_data/int_corporate_action_adjustments.sql
@@ -588,9 +602,11 @@ select * from cumulative
 
 ---
 
-### dbt Ephemeral Models for Intermediate Logic
+## dbt Ephemeral Models for Intermediate Logic
 
 Ephemeral models are inlined as CTEs and never materialised. Use them for simple intermediate steps that are only referenced by a single downstream model.
+
+*This ephemeral helper flags row-level price anomalies without creating a standalone warehouse object because only one downstream model needs it.*
 
 ```sql
 -- models/intermediate/market_data/int_price_validity_flags.sql
@@ -616,23 +632,29 @@ select
 from {{ ref('stg_market_data__daily_prices') }}
 ```
 
-> [!NOTE] Ephemeral model limitations
-> - Cannot be queried directly in the warehouse (they don't exist as objects).
-> - Compilation can produce very long SQL if a single CTE is referenced by many models — dbt inlines the CTE repeatedly.
-> - Not compatible with `--defer` (no artifact to defer to).
+> [!warning] Ephemeral model limitations
+>
+> - Cannot be queried directly in the warehouse because no relation is created.
+> - Compilation can produce very long SQL if one helper is referenced by many models because dbt inlines it repeatedly.
+> - Not compatible with `--defer` because there is no persisted artifact for dbt to resolve against.
 
 ---
 
-### Intermediate Model Anti-Patterns
+## Intermediate Model Anti-Patterns
 
-> [!WARNING] Common intermediate model mistakes
+> [!warning] Keep intermediate logic composable
+>
+> Intermediate models are where shared business logic becomes reusable. They lose that value when they reach back to raw sources, accumulate unrelated concepts in one file, or become quasi-public contracts that downstream tools query directly.
 
 > [!success] Safe patterns
-> - Reference staging models via `ref('stg_...')` exclusively in intermediate models — never call `source()` directly.
-> - Keep each intermediate model focused on one concept; decompose wide models into a chain of narrow, testable steps.
+>
+> - Reference staging models via `ref('stg_...')` exclusively in intermediate models; never call `source()` directly.
+> - Keep each intermediate model focused on one concept and decompose wide logic into a chain of narrow, testable steps.
 > - If a BI tool needs a result, promote the `int_` model to a mart with full YAML documentation rather than exposing intermediate models directly.
 
 **Referencing sources directly**: Intermediate models should only call `ref()`, never `source()`. This preserves the staging layer as the single point of source contact.
+
+*This contrast shows the boundary violation directly: the wrong pattern bypasses staging, while the correct pattern stays inside the modeled graph.*
 
 ```sql
 -- WRONG

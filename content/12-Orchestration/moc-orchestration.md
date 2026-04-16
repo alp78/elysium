@@ -4,12 +4,13 @@ tags:
   - moc
   - orchestration
   - airflow
+  - dagster
   - scheduling
 ---
 
 # MOC: Orchestration
 
-Orchestration determines when pipelines run, in what order, and what happens when they fail. These notes cover Apache Airflow for complex DAG-based workflows and platform-native scheduling tools for simpler recurring jobs.
+Orchestration determines when pipelines run, in what order, and what happens when they fail. These notes cover Apache Airflow for DAG-centric workflows, Dagster for asset-centric orchestration and modern data-platform operations, and platform-native scheduling tools for simpler recurring jobs.
 
 ```mermaid
 mindmap
@@ -26,6 +27,23 @@ mindmap
 > [[domain-airflow]]
 >
 > Apache Airflow for programmatic workflow orchestration — architecture, DAG authoring, production deployment, common failure modes, and troubleshooting.
+
+```mermaid
+mindmap
+  ((Dagster))
+    (core concepts)
+    (assets and lineage)
+    (automation)
+    (integrations)
+    (deployment)
+    (troubleshooting)
+```
+
+> [!guide]+ Dagster
+>
+> [[domain-dagster]]
+>
+> Dagster for modern data orchestration — asset modeling, declarative automation, external compute patterns, testing, production deployment, and migration from DAG-first orchestration.
 
 ```mermaid
 mindmap

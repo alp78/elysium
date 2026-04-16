@@ -2,8 +2,9 @@
 title: "01 - GCP Resource Hierarchy"
 tags: [gcp, gcloud]
 aliases: [GCP resource hierarchy, Cloud Resource Manager hierarchy, organization folder project hierarchy]
-description: "How Google Cloud organization, folder, and project hierarchy works, how IAM and billing inherit through it, and how to inspect project metadata, labels, and liens with live output from bq-wh-nb."
+description: "How Google Cloud organization, folder, and project hierarchy works, how IAM and billing inherit through it, and how to inspect project metadata, labels, and liens using the current bq-wh-nb project context, now in DELETE_REQUESTED."
 created: 2026-04-13
+updated: 2026-04-15
 status: complete
 ---
 
@@ -34,7 +35,11 @@ status: complete
 > - Map the CLI hierarchy concepts to Terraform resources such as `google_project`, `google_folder`, and `google_organization_iam_member`
 >
 > **Operations and safety**
-> - Warnings: JSON service-account keys are sensitive, folder-level grants widen blast radius, project deletion affects the full administrative boundary, labels are not access controls, and the current environment has no visible organization or folder parent
+> - Warnings: JSON service-account keys are sensitive, folder-level grants widen blast radius, project deletion affects the full administrative boundary, labels are not access controls, and the current environment has no visible organization or folder parent while the live reference project is now `DELETE_REQUESTED`
+
+> [!warning] Live project state drift
+>
+> On April 15, 2026, `gcloud projects describe bq-wh-nb` returned `lifecycleState: DELETE_REQUESTED`. The read-only hierarchy, metadata, and IAM checks in this note were refreshed against that state. The label, lien, delete, and undelete examples remain documented command patterns and were not re-executed during this pass because they would change cloud state.
 
 > [!note]- Glossary
 >
@@ -604,7 +609,7 @@ No live output in this environment: there is no live folder to move because `bq-
 
 ## Projects
 
-Projects are where most engineers live operationally. They are the point where billing attaches, APIs are enabled, service accounts run, and resources like BigQuery datasets, buckets, and Cloud Run services are created. The rest of this section is fully live against `bq-wh-nb`.
+Projects are where most engineers live operationally. They are the point where billing attaches, APIs are enabled, service accounts run, and resources like BigQuery datasets, buckets, and Cloud Run services are created. The read-only inspection commands in this section were refreshed live against `bq-wh-nb`, which is currently in `DELETE_REQUESTED`.
 
 ### PowerShell / Linux | gcloud projects list
 
@@ -614,22 +619,27 @@ Project listing is the first sanity check before any destructive or environment-
 
 Before choosing a project target or validating which projects a principal can access. It is typically triggered by you need to inventory visible projects or verify that the active identity is scoped correctly. Read-only Cloud Resource Manager query. Enumerate accessible projects with their IDs, numbers, and lifecycle states.
 
-*List the projects visible to the active service account.*
+*List the projects currently visible to the active service account that are pending deletion.*
 
 ```bash
-gcloud projects list --filter="projectId=bq-wh-nb" --format="table(projectId,name,projectNumber,lifecycleState)"
+gcloud projects list --filter="lifecycleState:DELETE_REQUESTED" --format="table(projectId,name,projectNumber,lifecycleState)"
 ```
 
 ```text
-PROJECT_ID  NAME         PROJECT_NUMBER  LIFECYCLE_STATE
-bq-wh-nb    BQ Database  348557092514    ACTIVE
+PROJECT_ID        NAME          PROJECT_NUMBER  LIFECYCLE_STATE
+bq-wh-nb          BQ Database   348557092514    DELETE_REQUESTED
+index-lab-2       Index Lab     1052700078743   DELETE_REQUESTED
+index-lab-491012  index-lab     624680779669    DELETE_REQUESTED
+seclab-dev-2026   Security Lab  935469410151    DELETE_REQUESTED
+seclab-dev-ap-26  Security Lab  922174528852    DELETE_REQUESTED
+seclab-dev-ap26   Security Lab  972728025985    DELETE_REQUESTED
 ```
 
-The service account can now see `bq-wh-nb` directly through Cloud Resource Manager, which was not true before the bootstrap steps. The result also confirms the display name, immutable project number, and current lifecycle state.
+The service account can now see `bq-wh-nb` directly through Cloud Resource Manager, which was not true before the bootstrap steps. The important nuance is that a plain `gcloud projects list --filter="projectId=bq-wh-nb"` currently returns no rows for this project, while the lifecycle-state filter above does. That suggests pending-deletion projects are not surfaced in the ordinary list path unless you ask for the deletion state explicitly.
 
 | Flag | Syntax | Description |
 |---|---|---|
-| `--filter` | `gcloud projects list --filter="projectId=bq-wh-nb"` | Restricts results by project metadata such as ID, name, labels, or lifecycle state. |
+| `--filter` | `gcloud projects list --filter="lifecycleState:DELETE_REQUESTED"` | Restricts results by project metadata such as ID, name, labels, or lifecycle state. |
 | `--format` | `gcloud projects list --format="table(projectId,name)"` | Controls output layout for humans or scripts. |
 | `--limit` | `gcloud projects list --limit=20` | Caps the number of rows returned. |
 | `--sort-by` | `gcloud projects list --sort-by=name` | Sorts project output by one or more fields. |
@@ -646,23 +656,25 @@ Before modifying labels, IAM, APIs, or billing on a project. It is typically tri
 *Describe the live metadata for `bq-wh-nb`.*
 
 ```bash
-gcloud projects describe bq-wh-nb --format="yaml(projectId,projectNumber,lifecycleState,parent,labels,createTime)"
+gcloud projects describe bq-wh-nb --format="yaml(projectId,projectNumber,name,lifecycleState,parent,labels,createTime)"
 ```
 
 ```text
 createTime: '2026-03-22T16:26:19.672Z'
-lifecycleState: ACTIVE
+lifecycleState: DELETE_REQUESTED
+name: BQ Database
 projectId: bq-wh-nb
 projectNumber: '348557092514'
 ```
 
-Three details matter here. First, `lifecycleState: ACTIVE` means the project is fully usable. Second, the absence of both `parent` and `labels` confirms this project currently has no visible organization or folder ancestor and no labels applied. Third, the `createTime` value gives you a precise audit point for when the project entered the environment.
+Three details matter here. First, `lifecycleState: DELETE_REQUESTED` means the project is already inside the 30-day recovery window and should be treated as pending deletion rather than as a healthy operating baseline. Google’s current Resource Manager guidance also notes that billing is disconnected at shutdown and that some services can delete data sooner than the full 30-day window. Second, the absence of both `parent` and `labels` confirms this project currently has no visible organization or folder ancestor and no labels applied. Third, the `createTime` value gives you a precise audit point for when the project entered the environment.
 
 | Field | Meaning | Operational implication |
 |---|---|---|
+| `name` | Human-readable project display name. | Useful for audits and consoles, but not the durable automation key. |
 | `projectId` | Immutable string identifier used by most APIs and CLIs. | Use this in `--project` flags, client configs, and Terraform. |
 | `projectNumber` | Immutable numeric identifier. | Required by some IAM, service-agent, and resource-manager APIs. |
-| `lifecycleState` | Current project state. | `ACTIVE` is healthy; delete states require recovery or waiting. |
+| `lifecycleState` | Current project state. | `DELETE_REQUESTED` means the recovery window is open; restore is possible, but the project should be treated as pending deletion. |
 | `createTime` | RFC 3339 creation timestamp. | Useful for audit trails and environment age tracking. |
 | `parent` | Folder or organization ancestor, if present. | Missing here means there is no visible ancestor resource. |
 | `labels` | Arbitrary project metadata tags. | Missing here means no labels are currently applied. |
@@ -707,7 +719,7 @@ Project deletion is intentionally slow because Google Cloud gives you a recovery
 
 #### Soft-delete a project
 
-Only when you are certain the project is no longer required. It is typically triggered by environment retirement, cost cleanup, or a deliberate rebuild. State-changing destructive command. It starts a 30-day recovery window rather than immediate irreversible destruction. Move a project from `ACTIVE` into a recoverable deletion state.
+Only when you are certain the project is no longer required. It is typically triggered by environment retirement, cost cleanup, or a deliberate rebuild. State-changing destructive command. It starts a 30-day recovery window rather than immediate irreversible destruction. Move a project from `ACTIVE` into a recoverable deletion state. Only projects that are still `ACTIVE` can be shut down.
 
 > [!danger] Project deletion is wide-scope
 >
@@ -724,7 +736,7 @@ gcloud projects delete PROJECT_ID
 ```
 
 ```text
-No live output in this environment: project deletion was not executed against `bq-wh-nb` because the project is the active reference environment for this chapter.
+Not run live in this refactor pass: the current reference project is already `DELETE_REQUESTED`, and Google Cloud only allows shutdown from the `ACTIVE` lifecycle state.
 ```
 
 #### Restore a project during the recovery window
@@ -738,7 +750,7 @@ gcloud projects undelete PROJECT_ID
 ```
 
 ```text
-No live output in this environment: undelete requires a project already in `DELETE_REQUESTED`, which was intentionally not created here.
+Not run live in this refactor pass: `bq-wh-nb` meets the `DELETE_REQUESTED` precondition, but restoring it would change the current cloud state and was intentionally left for an explicit recovery task.
 ```
 
 | Flag | Syntax | Description |
@@ -748,7 +760,7 @@ No live output in this environment: undelete requires a project already in `DELE
 
 ### PowerShell / Linux | project labels
 
-Labels are the lightest-weight governance metadata you can add to a project. They are cheap, script-friendly, and ideal for filtering, but they are not access controls. On April 13, 2026, the installed Google Cloud SDK version `563.0.0` exposes project label mutation on the `alpha` track in this environment, so the live commands below use `gcloud alpha projects update`.
+Labels are the lightest-weight governance metadata you can add to a project. They are cheap, script-friendly, and ideal for filtering, but they are not access controls. On April 15, 2026, the installed Google Cloud SDK version `563.0.0` still exposes project label mutation on the `alpha` track in this environment: `gcloud projects update` only renames projects, while `gcloud alpha projects update` is still the path that exposes `--update-labels` and `--remove-labels`.
 
 #### Add a label to the project
 
@@ -951,14 +963,17 @@ roles/bigquery.admin
 roles/browser
 roles/datastore.owner
 roles/datastore.user
+roles/iam.serviceAccountAdmin
+roles/iam.workloadIdentityPoolAdmin
 roles/resourcemanager.lienModifier
 roles/resourcemanager.projectMover
+roles/run.developer
 roles/serviceusage.serviceUsageAdmin
 roles/storage.admin
 roles/storage.objectUser
 ```
 
-These are direct project bindings, not the full inherited effective policy. In an organization-backed environment, you would run the equivalent IAM policy commands at organization and folder scope as well, then reason about inheritance from top to bottom.
+These are direct project bindings, not the full inherited effective policy. The current binding set is broader than the original bootstrap-only role set because the service account now also has direct IAM administration, Workload Identity Pool administration, and Cloud Run development roles on the project. In an organization-backed environment, you would run the equivalent IAM policy commands at organization and folder scope as well, then reason about inheritance from top to bottom.
 
 | Flag | Syntax | Description |
 |---|---|---|

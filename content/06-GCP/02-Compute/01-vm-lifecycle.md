@@ -10,6 +10,7 @@ aliases:
   - VM machine types
   - GCE lifecycle
 description: "How to create, inspect, operate, resize, schedule, and delete Compute Engine VMs — with IAM provisioning, startup scripts, Spot VMs, right-sizing, and Terraform equivalents."
+updated: 2026-04-15
 ---
 
 # VM Lifecycle
@@ -21,7 +22,7 @@ description: "How to create, inspect, operate, resize, schedule, and delete Comp
 
 > [!abstract]- Summary
 >
-> Covers the full Compute Engine VM lifecycle in `bq-wh-nb`, from API enablement and IAM through creation, inspection, scheduling, right-sizing, Spot provisioning, and deletion, so self-managed workloads such as `stoxx-vm` can be provisioned and operated safely.
+> Documents the full Compute Engine VM lifecycle that was originally exercised against `stoxx-vm` in `bq-wh-nb`, from API enablement and IAM through creation, inspection, scheduling, right-sizing, Spot provisioning, and deletion.
 >
 > **Prerequisites**
 > - Enable `compute.googleapis.com` and `monitoring.googleapis.com` before any lifecycle or metrics workflow
@@ -52,6 +53,12 @@ description: "How to create, inspect, operate, resize, schedule, and delete Comp
 > **Operations and safety**
 > - Warnings: API enablement changes billable project state, startup scripts rerun on every boot, resize and delete actions are state-changing, schedules can restart stopped VMs on the next cron boundary, and Spot VMs can be preempted with 30 seconds of notice
 > - Recommendations table: machine family guidance maps workload profiles to `e2`, `n2`, `n2d`, `t2d`, `t2a`, `c2`, `c3`, `n4`, `m2`, and custom sizing, and Terraform examples mirror the API, IAM, instance, and scheduling workflows
+
+> [!warning] Live-run boundary
+>
+> The original Compute demo estate behind this note is no longer live. On `2026-04-15`, `gcloud projects describe bq-wh-nb` returned `lifecycleState: DELETE_REQUESTED`, and Compute Engine inventory commands against that project no longer return a usable VM estate.
+>
+> This refresh revalidated only read-only surfaces that still exist safely today, such as machine-type inventory in `dagflow-poc`. State-changing examples in this note, including create, start, stop, resize, schedule, Spot provisioning, and delete flows, are preserved as operator runbooks and were not rerun.
 
 > [!note]- Glossary
 >
@@ -1226,6 +1233,31 @@ Do you want to continue (Y/n)?
 ## Machine Type Reference
 
 Compute Engine offers predefined machine type families optimized for different workload profiles, plus fully custom sizing. Pricing varies by family, region, and whether Committed Use Discounts (CUDs) or Spot pricing apply.
+
+> [!info] Current live catalog check
+>
+> The historical `stoxx-vm` estate is gone, but the regional machine-type catalog is still queryable. A live `gcloud compute machine-types list --project=dagflow-poc --zones=europe-west1-b --limit=15` run on `2026-04-15` returned:
+>
+> ```text
+> NAME                   CPUS  MEMORY_GB  IS_SHARED_CPU
+> a3-highgpu-1g          26    234.00     False
+> a3-highgpu-2g          52    468.00     False
+> a3-highgpu-4g          104   936.00     False
+> a3-highgpu-8g          208   1872.00    False
+> a3-megagpu-8g          208   1872.00    False
+> a3-ultragpu-8g         224   2952.00    False
+> a3-ultragpu-8g-nolssd  224   2952.00    False
+> c2-standard-16         16    64.00      False
+> c2-standard-30         30    120.00     False
+> c2-standard-4          4     16.00      False
+> c2-standard-60         60    240.00     False
+> c2-standard-8          8     32.00      False
+> c2d-highcpu-112        112   224.00     False
+> c2d-highcpu-16         16    32.00      False
+> c2d-highcpu-2          2     4.00       False
+> ```
+>
+> Treat the family table below as the operator-facing selection guide, and use a fresh `machine-types list` in the target zone before pinning a new build to a specific SKU.
 
 ### Compute Engine machine type families
 

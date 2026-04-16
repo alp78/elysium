@@ -8,9 +8,9 @@ aliases:
   - TCO
   - total cost of ownership
   - monthly cost
-description: Live, project-grounded TCO playbook for bq-wh-nb using current inventory, current pricing, and observed workload shape instead of static reference architectures.
+description: Archived-project TCO playbook for bq-wh-nb using captured inventory, current pricing guidance, and observed workload shape instead of static reference architectures.
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-16
 status: complete
 ---
 
@@ -18,32 +18,36 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers the live total cost of ownership baseline for `bq-wh-nb`, using verified inventory, current public prices, and observed workload shape to separate what is fixed, what is variable, and what still cannot be defended without billing export.
+> Covers the archived total cost of ownership baseline for `bq-wh-nb`, using captured inventory, current public pricing guidance, and observed workload shape to separate what is fixed, what is variable, and what still cannot be defended without billing export.
 >
-> **Current TCO frame**
-> - Defines the project's current cost structure around two always-on VMs, five attached persistent disks, small regional storage buckets, two Cloud Run jobs with very low observed runtime, small BigQuery workloads, and no visible Compute Engine or BigQuery commitments
+> **Archived TCO frame**
+> - Defines the archived project's cost structure around two always-on VMs, five attached persistent disks, small regional storage buckets, two Cloud Run jobs with very low observed runtime, small BigQuery workloads, and no visible Compute Engine or BigQuery commitments
 > - Splits TCO into fixed drivers, variable drivers, and blocked or unverified components so the note does not confuse measured inventory with missing invoice-grade evidence
-> - Explains why a live, project-grounded TCO baseline is more defensible than a generic reference architecture estimate built from imaginary volumes and stale rate cards
+> - Explains why a project-grounded TCO baseline is more defensible than a generic reference architecture estimate built from imaginary volumes and stale rate cards
 >
 > **Inventory and workload measurement**
 > - Uses `gcloud compute instances list`, `gcloud compute disks list`, and `gcloud storage du -s` to inventory always-on compute, attached persistent disks, and current bucket footprint
 > - Uses BigQuery `region-europe-west1.INFORMATION_SCHEMA.JOBS_BY_PROJECT`, `gcloud run jobs list`, and `gcloud run jobs executions list` to measure current analytical and serverless workload intensity
-> - Establishes that the current project is still dominated by fixed infrastructure rather than by BigQuery scans or Cloud Run execution time
+> - Establishes that the archived project was dominated by fixed infrastructure rather than by BigQuery scans or Cloud Run execution time
 >
-> **Live pricing and baseline calculation**
+> **Current pricing guidance and baseline calculation**
 > - Uses the Cloud Billing Catalog API / Pricing API in `CZK` to retrieve current E2 compute and persistent-disk list prices that match the actual inventory in `europe-west1`
-> - Translates that live pricing plus current VM and disk sizes into a recurring monthly list-price floor, then separately estimates the current observed Cloud Run and BigQuery variable footprint
+> - Translates captured pricing evidence plus current pricing guidance and archived VM and disk sizes into a recurring monthly list-price floor, then separately estimates the archived Cloud Run and BigQuery variable footprint
 > - Shows that the current recurring floor is about `2391.0729 CZK` per month from the two VMs and five disks, while observed Cloud Run and BigQuery usage is currently financially negligible
 >
 > **Scenario analysis and decision points**
-> - Compares lightweight API, batch-ingestion, Airflow-centric, streaming, and warehouse-heavy scenarios using the current project state rather than hypothetical enterprise-scale assumptions
+> - Compares lightweight API, batch-ingestion, Airflow-centric, streaming, and warehouse-heavy scenarios using the archived project state rather than hypothetical enterprise-scale assumptions
 > - Explains why the biggest current lever is VM rightsizing or off-hours shutdown, not BigQuery slot purchases or Cloud Run redesign
 > - Calls out still-unverified drivers such as NAT, egress, taxes, credits, and invoice reconciliation, which remain blocked by the absence of billing export
 >
 > **Operations and safety**
-> - Warnings: static architecture estimates age badly, current list prices are not effective invoice prices, shared-core VM math must match the live SKU, small free-tier workloads can hide future growth, and absent billing export blocks invoice-grade reconciliation
+> - Warnings: static architecture estimates age badly, current list prices are not effective invoice prices, shared-core VM math must match the captured SKU, small free-tier workloads can hide future growth, and absent billing export blocks invoice-grade reconciliation
 > - Recommendations: avoid BigQuery slots for now, focus on VM rightsizing and off-hours shutdown, do not remove NAT blindly, do not over-focus on tiny current GCS storage, and fix attribution before attempting chargeback
 > - Troubleshooting: 4 runbooks covering a TCO baseline that looks too low, BigQuery suddenly becoming material, Cloud Run jobs no longer looking cheap, and month-end reconciliation still being impossible
+>
+> [!warning] Archived demo boundary
+>
+> The original project `bq-wh-nb` has been removed. The VM, disk, Cloud Run, and BigQuery inventory snapshots in this note are preserved as archived operator reference, and this refresh did not rerun pricing, inventory, or workload commands against a replacement environment.
 
 > [!note]- Glossary
 >
@@ -101,7 +105,7 @@ status: complete
 > - A VM shape such as `e2-medium` where the advertised vCPUs map to a fractional physical-core allocation rather than to a standard dedicated-core shape.
 > - It matters because CPU-price reasoning for shared-core machines should not be copied blindly from standard-machine examples.
 >
-> > [!warning] Match the live SKU
+> > [!warning] Match the captured SKU
 > >
 > > Shared-core pricing logic has to align with the verified machine family and public SKU, or the baseline becomes quietly wrong.
 >
@@ -143,7 +147,7 @@ status: complete
 >
 > > [!warning] Current VM math is on-demand
 > >
-> > The live inventory shows no Compute Engine commitments in this project. Current VM baseline calculations should therefore remain in the on-demand list-price frame.
+> > The archived inventory shows no Compute Engine commitments in this project. Current VM baseline calculations should therefore remain in the on-demand list-price frame.
 >
 > ---
 >
@@ -159,9 +163,9 @@ status: complete
 >
 > **Cloud Billing Catalog API / Pricing API**
 > - The Google pricing surface used here to retrieve current public SKU rates in the billing-account currency.
-> - It is how the note maps the verified inventory to live `CZK` prices instead of relying on copied documentation tables.
+> - It is how the note maps the verified inventory to `CZK` prices instead of relying on copied documentation tables.
 >
-> > [!info] Prefer live currency alignment
+> > [!info] Prefer currency alignment
 > >
 > > Pulling prices in `CZK` keeps the estimate aligned to the billing account and avoids mixing local billing with default USD examples.
 >
@@ -179,7 +183,7 @@ status: complete
 >
 > **NAT cost driver**
 > - The networking spend introduced when workloads traverse Cloud NAT for outbound internet access.
-> - It matters because live NAT flow logs prove the path is active even though the exact billed amount is not yet defensible here.
+> - It matters because archived NAT flow logs prove the path was active even though the exact billed amount is not yet defensible here.
 >
 > > [!warning] Do not remove blindly
 > >
@@ -213,9 +217,9 @@ flowchart TD
     B["Blocked or unverified here<br>billing export absent · taxes · credits · negotiated pricing"] --> T
 ```
 
-## Live Inventory Of Current Cost Drivers
+## Archived Inventory Of Cost Drivers
 
-The current project is small enough that the resource inventory is still the most honest starting point for TCO.
+The archived project was small enough that the resource inventory was still the most honest starting point for TCO.
 
 ### PowerShell / Linux | gcloud | inventory always-on infrastructure
 
@@ -303,7 +307,7 @@ Current GCS footprint is tiny. Separate `gcloud storage buckets describe` calls 
 
 ### PowerShell / Linux | BigQuery / Cloud Run | measure variable workload
 
-Variable drivers are the easiest place to make wrong assumptions. The live query and execution history shows that current workload volume is still very small.
+Variable drivers are the easiest place to make wrong assumptions. The archived query and execution history shows that workload volume was still very small.
 
 #### Summarize BigQuery query activity by principal
 
@@ -411,13 +415,13 @@ The execution history confirms that current serverless batch work is measured in
 | `--job` | `--job=stoxx-stage-fetch` | Selects the execution history for one Cloud Run job. |
 | `--format` | `--format=json` | Preserves fields needed for later cost calculations. |
 
-### PowerShell | Cloud Billing Catalog API | translate inventory into live list prices
+### PowerShell | Cloud Billing Catalog API | translate inventory into current list prices
 
-The goal is not to recreate the invoice. The goal is to map live inventory to current public prices in the same currency as the billing account.
+The goal is not to recreate the invoice. The goal is to map archived inventory to current public prices in the same currency as the billing account.
 
-#### Query live Compute Engine and disk prices
+#### Query current Compute Engine and disk prices
 
-Run this when a TCO model needs current list prices rather than copied documentation values. It is typically triggered by use it during baseline refreshes or before any price-sensitive design decision. This is a read-only Pricing API call using the active `gcloud` token. Retrieve the live rates that match the actual VM and disk types present in the project region.
+Run this when a TCO model needs current list prices rather than copied documentation values. It is typically triggered by use it during baseline refreshes or before any price-sensitive design decision. This is a read-only Pricing API call using the active `gcloud` token. Retrieve the rates that match the actual VM and disk types present in the project region.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -425,7 +429,7 @@ Run this when a TCO model needs current list prices rather than copied documenta
 | `tieredRates.unitPrice` | Pricing expression | MONEY | Public list price for the SKU. |
 | `effectiveTime` | Pricing metadata | TIMESTAMP | When that price became effective. |
 
-*This PowerShell pipeline reads live list prices for E2 compute and the persistent-disk classes used by `bq-wh-nb`.*
+*This PowerShell pipeline reads current list prices for E2 compute and the persistent-disk classes used by `bq-wh-nb`.*
 
 ```powershell
 $token = gcloud auth print-access-token
@@ -484,16 +488,16 @@ $skus |
 
 These prices are enough to build a current fixed-cost baseline for the existing VMs and disks.
 
-#### Calculate the recurring monthly baseline from live inventory
+#### Calculate the recurring monthly baseline from archived inventory
 
-Run this when you need a quick recurring monthly floor from the current project state. It is typically triggered by use it after any machine-type or disk-size change. This is a local PowerShell calculation that uses live rates and live inventory values already verified in this note. Convert the project’s fixed infrastructure into a monthly public list-price baseline in `CZK`.
+Run this when you need a quick recurring monthly floor from the archived project state. It is typically triggered by use it after any machine-type or disk-size change. This is a local PowerShell calculation that uses current rates and archived inventory values already verified in this note. Convert the project’s fixed infrastructure into a monthly public list-price baseline in `CZK`.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
 | `component` | Local calculation output | STRING | Resource family being priced. |
 | `monthlyCzk` | Local calculation output | DECIMAL | Monthly list-price estimate for that component. |
 
-*This PowerShell snippet calculates the recurring monthly floor from the live VM and disk inventory.*
+*This PowerShell snippet calculates the recurring monthly floor from the archived VM and disk inventory.*
 
 ```powershell
 $vmCoreRate = 0.509871109
@@ -532,11 +536,11 @@ $items | ConvertTo-Json -Depth 4
 ]
 ```
 
-This is the most important result in the note. It shows that the current steady-state floor is driven by VMs and disks, not by serverless or analytical activity. The `stoxx-vm` calculation uses the shared-core `e2-medium` shape as the half-sized counterpart to `e2-standard-2`, which matches the live machine-type metadata and keeps the estimate aligned with the actual VM family.
+This is the most important result in the note. It shows that the steady-state floor is driven by VMs and disks, not by serverless or analytical activity. The `stoxx-vm` calculation uses the shared-core `e2-medium` shape as the half-sized counterpart to `e2-standard-2`, which matches the captured machine-type metadata and keeps the estimate aligned with the actual VM family.
 
 #### Calculate the current observed variable footprint
 
-Run this when you want to check whether variable drivers are still negligible or starting to compete with the fixed floor. It is typically triggered by use it during monthly reviews or after workload growth. This is a local PowerShell calculation using live execution durations, live query bytes, and live list prices already verified in this note. Estimate the current variable footprint for Cloud Run jobs and BigQuery analysis.
+Run this when you want to check whether variable drivers are still negligible or starting to compete with the fixed floor. It is typically triggered by use it during monthly reviews or after workload growth. This is a local PowerShell calculation using archived execution durations, archived query bytes, and current list prices already verified in this note. Estimate the archived variable footprint for Cloud Run jobs and BigQuery analysis.
 
 | Field | Source column | Unit / type | Meaning |
 |---|---|---|---|
@@ -545,7 +549,7 @@ Run this when you want to check whether variable drivers are still negligible or
 | `totalTiB` | Local calculation output | DECIMAL TiB | BigQuery bytes processed converted to tebibytes. |
 | `listPriceCzkIfAboveFreeTier` | Local calculation output | DECIMAL | What the measured BigQuery workload would cost above the free tier. |
 
-*This PowerShell snippet turns the live Cloud Run and BigQuery activity into a variable-cost estimate.*
+*This PowerShell snippet turns the archived Cloud Run and BigQuery activity into a variable-cost estimate.*
 
 ```powershell
 $jobCpuRate = 0.000382509
@@ -589,11 +593,11 @@ Current variable workload is effectively negligible compared to the steady VM an
 | `pageSize` | `?pageSize=5000` | Retrieves a large enough SKU slice to filter locally by description and region. |
 | `ConvertTo-Json -Depth 8` | `ConvertTo-Json -Depth 8` | Preserves nested tiered-rate structures in the output. |
 
-## Current `bq-wh-nb` TCO Baseline
+## Archived `bq-wh-nb` TCO Baseline
 
-The live evidence points to a very clear hierarchy of cost drivers.
+The archived evidence points to a very clear hierarchy of cost drivers.
 
-| Driver | Live basis | Approx monthly list price (`CZK`) | Interpretation |
+| Driver | Archived basis | Approx monthly list price (`CZK`) | Interpretation |
 |---|---|---:|---|
 | `stoxx-airflow` VM | `e2-standard-2`, running | 1143.538 | Largest fixed compute driver in the project. |
 | `stoxx-vm` VM | `e2-medium`, running | 571.769 | Second fixed compute driver. |
@@ -605,9 +609,13 @@ The live evidence points to a very clear hierarchy of cost drivers.
 
 The current recurring list-price floor for just the two VMs and five attached disks is about `2391.0729 CZK` per month before free-tier effects, taxes, credits, or negotiated pricing. That is the number that matters most for this project’s current architecture.
 
+> [!info] Current product note: TCO still needs effective-cost evidence
+>
+> Current Cloud Billing documentation is clearer about the gap between inventory-times-list-price math and what the account actually pays. Billing export, price table reporting, invoice rows, and commitment metadata are still the required sources when TCO needs to move from engineering estimate to finance-grade reconciliation.
+
 There are also important costs that remain unverified here:
 
-- Cloud NAT is definitely in use because live NAT flow logs show `stoxx-vm` going through `stoxx-nat`, but exact NAT spend is not defensible without billing export.
+- Cloud NAT is definitely in use because archived NAT flow logs show `stoxx-vm` going through `stoxx-nat`, but exact NAT spend is not defensible without billing export.
 - Network egress, taxes, credits, and any future discounts are outside the evidence currently available in this project.
 - There is no billing export dataset, so the note cannot reconcile these estimates to invoice rows yet.
 
@@ -630,6 +638,10 @@ The current environment is small enough that scenario planning should be grounde
 - **Do not remove NAT blindly.** Live logs prove `stoxx-vm` currently uses `stoxx-nat`; remove or redesign only after confirming the traffic path can move to Cloud Run or Private Google Access.
 - **Do not over-focus on GCS lifecycle yet.** The bucket footprint is tiny today, though `stoxx-sql-bucket` could become material if it turns into a backup archive without lifecycle transitions.
 - **Fix attribution before chargeback.** The VM labels are useful, but the project still lacks billing export and BigQuery dataset labels, so cross-team TCO is not yet defensible.
+
+> [!info] Current product note: commitments are a second-stage optimization
+>
+> Current Cloud Billing cost-optimization guidance keeps commitments and FinOps-hub-style savings review downstream of basic visibility. If billing export, attribution, and usage history are still missing, rightsizing always-on infrastructure is usually a safer first lever than commitment purchases or slot-style precommitment decisions.
 
 ## Troubleshooting / Incident-Response Runbooks
 
@@ -658,7 +670,7 @@ The current environment is small enough that scenario planning should be grounde
 
 ## Quick Reference
 
-| Question | Live answer |
+| Question | Archived answer |
 |---|---|
 | What dominates current TCO? | Running VMs and attached persistent disks. |
 | Are BigQuery commitments present? | No. |

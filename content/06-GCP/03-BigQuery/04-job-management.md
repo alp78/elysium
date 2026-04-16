@@ -6,7 +6,7 @@ tags:
 aliases: [BigQuery jobs, bq jobs, bq cancel, bq show job, BigQuery job listing]
 description: "How to list, inspect, and cancel BigQuery jobs using the bq CLI — essential for diagnosing failed queries, understanding cost history, and stopping accidental large scans."
 created: 2026-03-22
-updated: 2026-04-12
+updated: 2026-04-15
 status: complete
 ---
 
@@ -19,7 +19,7 @@ status: complete
 
 > [!abstract]- Summary
 >
-> Covers the BigQuery job lifecycle with `bq ls -j`, `bq show -j`, `bq cancel`, and `INFORMATION_SCHEMA.JOBS`, so you can identify recent work, inspect failures and billing signals, stop runaway execution, and recover cost history by user or day.
+> Documents the BigQuery job lifecycle with `bq ls -j`, `bq show -j`, `bq cancel`, and `INFORMATION_SCHEMA.JOBS`, so you can identify recent work, inspect failures and billing signals, stop runaway execution, and recover cost history by user or day.
 >
 > **CLI job triage**
 > - Every `QUERY`, `LOAD`, `EXTRACT`, and `COPY` operation creates a job; `INFORMATION_SCHEMA.JOBS` retains 180 days of history, while `bq ls -j` surfaces recent jobs and defaults to the last 100
@@ -40,6 +40,12 @@ status: complete
 > - When to use: incident response, failed-query diagnosis, mid-query cost containment, slot-usage review, and monthly spend attribution
 > - Warnings: omitting `--location` breaks non-default-region lookups, `DONE` does not mean success, cancellation charges continue until termination takes effect, and `INFORMATION_SCHEMA` queries are never served from cache
 > - Recommendations: inspect `status.errorResult` instead of display labels alone, filter metadata queries on `creation_time`, dry-run expensive SQL before execution, and prefer fully qualified job IDs for cross-region clarity
+
+> [!warning] Live-run boundary
+>
+> The original `bq-wh-nb` job history used in this note is no longer reachable because the project has been deleted. This refresh reran the read-only job-management flows against `dagflow-poc`, using current public-dataset queries in the `US` location to generate fresh successful and failed jobs.
+>
+> `bq cancel` remains documented as an operator pattern but was not exercised because there was no safe long-running job to interrupt.
 >
 > [!note]- Glossary
 >
@@ -248,6 +254,21 @@ status: complete
 ## Job Operations via bq CLI
 
 The `bq` CLI provides three core job management operations: listing recent jobs, inspecting job details, and canceling running jobs. For datasets in non-US/EU regions, pass `--location=<region>` to all `bq` job commands — omitting it returns a "job not found" error even when the job ID is correct.
+
+> [!info] Current live triage snapshot
+>
+> A live `bq --project_id=dagflow-poc ls -j --location=US --max_results=10` run on `2026-04-15` returned:
+>
+> ```text
+>                     jobId                      Job Type    State      Start Time         Duration
+>  -------------------------------------------- ---------- --------- ----------------- ----------------
+>   bqjob_r16a61d264874caef_0000019d93185759_1   query      SUCCESS   15 Apr 23:42:19   0:00:00.213000
+>   bqjob_r6d8f66d0a636d13_0000019d93185723_1    query      SUCCESS   15 Apr 23:42:19   0:00:00.158000
+>   bqjob_r2578847409064d4a_0000019d9317f8c9_1   query      FAILURE   15 Apr 23:41:55   0:00:00.061000
+>   bqjob_r60e478257aec63be_0000019d9317a876_1   query      FAILURE   15 Apr 23:41:35   0:00:00
+> ```
+>
+> The failed jobs came from deliberately malformed exploratory queries, which is useful here because it keeps the failure-analysis examples current without mutating any warehouse state.
 
 ### bq CLI | bq ls -j | list recent jobs
 
@@ -554,6 +575,22 @@ stateDiagram-v2
 ## Cost Recovery with INFORMATION_SCHEMA
 
 `INFORMATION_SCHEMA.JOBS` is a system view that retains job metadata for 180 days, partitioned by `creation_time` and clustered by `project_id` and `user_email`. Unlike `bq ls -j` which is limited to tabular display of basic fields, SQL against `INFORMATION_SCHEMA.JOBS` gives full analytical power: aggregation by user, date, job type, error rate, cache hit ratio, and cost attribution. The view is region-scoped — query `` `region-US`.INFORMATION_SCHEMA.JOBS `` for US-region jobs and `` `region-EU`.INFORMATION_SCHEMA.JOBS `` for EU-region jobs.
+
+> [!info] Current live metadata snapshot
+>
+> A live `region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT` query on `2026-04-15` returned:
+>
+> ```text
+> +--------------------------------------------+-------+----------------+--------------+-----------------------+
+> |                   job_id                   | state | statement_type | error_reason | total_bytes_processed |
+> +--------------------------------------------+-------+----------------+--------------+-----------------------+
+> | bqjob_r16a61d264874caef_0000019d93185759_1 | DONE  | SELECT         | NULL         |               5114816 |
+> | bqjob_r6d8f66d0a636d13_0000019d93185723_1  | DONE  | SELECT         | NULL         |              10485760 |
+> | bqjob_r2578847409064d4a_0000019d9317f8c9_1 | DONE  | SELECT         | invalidQuery |                  NULL |
+> +--------------------------------------------+-------+----------------+--------------+-----------------------+
+> ```
+>
+> This is the practical distinction the note relies on: all three jobs are `DONE`, but only the two rows with `error_reason = NULL` actually succeeded.
 
 > [!warning] INFORMATION_SCHEMA Queries Are Never Cached
 >

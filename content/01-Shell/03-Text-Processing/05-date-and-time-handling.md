@@ -5,13 +5,14 @@ aliases: [datetime handling, ISO 8601, timezone management, date arithmetic, DST
 keywords: [iso 8601, datetime, date, timezone, utc, dst, daylight saving, GETUTCDATE, SYSUTCDATETIME, DATETIMEOFFSET, DATETIME2, DateTimeOffset, DateOnly, zoneinfo, pytz, timedelta, relativedelta, dateutil, strptime, strftime, fromisoformat, date arithmetic, date parsing, date formatting, unix epoch, unix timestamp, pandas date_range, timedatectl, Get-Date, DATEADD, DATEDIFF, DATETRUNC, EOMONTH, AT TIME ZONE]
 description: "Cross-platform reference for date and time handling in pipelines: ISO 8601, UTC storage, timezone conversion, DST boundaries, and date arithmetic across Linux, PowerShell, SQL Server, Python, and C#."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
 # Date and Time Handling
 
-> [!quote]
+> [!quote] Douglas Adams on time
+>
 > "Time is an illusion. Lunchtime doubly so."
 >
 > -- **Douglas Adams**, *The Hitchhiker's Guide to the Galaxy* (1979)
@@ -689,6 +690,10 @@ For calendar windows and trading calendars, keep the filtering rule readable eno
 
 Convert a UTC-normalized value by first tagging it as UTC and then converting it to the target zone.
 That preserves DST behavior and avoids hard-coded numeric offsets.
+
+> [!info] Gap and overlap semantics
+>
+> SQL Server applies Windows time-zone rules in `AT TIME ZONE`. If a naive `datetime` or `datetime2` lands in a spring-forward gap, SQL Server moves it forward and uses the post-change offset. If it lands in the autumn overlap, SQL Server presents it with the pre-change DST offset. For UTC-normalized data, attach `UTC` first and then convert.
 
 ```sql
 DECLARE @utc datetime2 = '2026-03-10T15:30:00';

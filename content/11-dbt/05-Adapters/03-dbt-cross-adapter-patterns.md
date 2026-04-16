@@ -8,7 +8,8 @@ description: "Dispatch macros, adapter-conditional SQL, cross-adapter testing st
 
 # dbt: Cross-Adapter Patterns
 
-> [!quote]
+> [!quote] Production Analytics
+>
 > "The analytical process is fundamentally an engineering process. Not only do you have to answer that question once, but you have to push your analysis into production so that it is constantly going to be live from then on out."
 >
 > — **Tristan Handy** (creator of dbt)
@@ -34,7 +35,7 @@ description: "Dispatch macros, adapter-conditional SQL, cross-adapter testing st
 > - Warnings: inline `target.type` branching does not scale, BigQuery-only nested types require isolation, and migration should proceed layer by layer rather than by rewriting marts first.
 > - Recommendations table: the adapter-folder-versus-dispatch decision matrix is the note's main design rule.
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Cross-adapter pattern**
 > - A design approach that keeps one dbt project running across multiple database adapters by isolating differences in controlled extension points.
@@ -184,8 +185,7 @@ description: "Dispatch macros, adapter-conditional SQL, cross-adapter testing st
 > >
 > > This ordering narrows failures to the current layer. It is much easier to debug broken marts when the staging and intermediate contracts are already known-good.
 
-
-### The Cross-Adapter Problem
+## The Cross-Adapter Problem
 
 Standard SQL diverges across adapters in predictable ways:
 
@@ -230,13 +230,11 @@ macros/
       date_add.sql
 ```
 
-Register the dispatch namespace in `dbt_project.yml`:
+If these macros live in your root project, call `adapter.dispatch()` without a package namespace. The `cross_db/` folder here is only an organization convention, not a dispatch namespace:
 
 ```yaml
-# dbt_project.yml
-dispatch:
-  - macro_namespace: cross_db
-    search_order: ['your_project', 'dbt_utils']
+# No dispatch config is required for project-local macros.
+# Add a dispatch: block only when overriding package namespaces such as dbt_utils.
 ```
 
 > [!note] Check dbt_utils first
@@ -252,7 +250,7 @@ dispatch:
 ```sql
 -- macros/cross_db/date_trunc.sql
 {% macro date_trunc(datepart, date) -%}
-  {{ return(adapter.dispatch('date_trunc', 'cross_db')(datepart, date)) }}
+  {{ return(adapter.dispatch('date_trunc')(datepart, date)) }}
 {%- endmacro %}
 
 {% macro default__date_trunc(datepart, date) -%}
@@ -319,7 +317,7 @@ This model compiles correctly against both BigQuery and SQL Server without any a
 ```sql
 -- macros/cross_db/safe_divide.sql
 {% macro safe_divide(numerator, denominator) -%}
-  {{ return(adapter.dispatch('safe_divide', 'cross_db')(numerator, denominator)) }}
+  {{ return(adapter.dispatch('safe_divide')(numerator, denominator)) }}
 {%- endmacro %}
 
 {% macro default__safe_divide(numerator, denominator) -%}
@@ -369,11 +367,11 @@ from {{ ref('int_index_constituents_enriched') }}
 ```sql
 -- macros/cross_db/date_add.sql
 {% macro date_add(datepart, number, date) -%}
-  {{ return(adapter.dispatch('date_add', 'cross_db')(datepart, number, date)) }}
+  {{ return(adapter.dispatch('date_add')(datepart, number, date)) }}
 {%- endmacro %}
 
 {% macro default__date_add(datepart, number, date) -%}
-  {{ date }} + INTERVAL '{{ number }}' {{ datepart }}
+  {{ date }} + INTERVAL '{{ number }} {{ datepart }}'
 {%- endmacro %}
 ```
 
@@ -429,7 +427,8 @@ from {{ source('esg_provider', 'raw_scores') }}
 > Inline `target.type` branches work for 1-2 differences but become unmaintainable as divergence grows. If you find yourself writing 3+ `target.type` branches in a single model, extract the adapter-specific expressions into dispatch macros.
 
 > [!success] Refactor to dispatch macros
-> When a model accumulates 3 or more `target.type` branches, extract each adapter-specific expression into a dedicated dispatch macro under `macros/cross_db/`. Register the namespace in `dbt_project.yml` under the `dispatch:` key. The model SQL then calls the abstract macro name, keeping model files adapter-agnostic.
+>
+> When a model accumulates 3 or more `target.type` branches, extract each adapter-specific expression into a dedicated dispatch macro under `macros/cross_db/`. Let the wrapper macro call `adapter.dispatch()` directly, and add `dispatch:` config only when you are intentionally overriding macros from an installed package namespace.
 
 ### `target.type` in schema tests
 
@@ -514,8 +513,8 @@ jobs:
         run: pip install dbt-core dbt-${{ matrix.target }}
       - name: dbt compile
         run: dbt compile --target ${{ matrix.target }} --profiles-dir ci/profiles
-      - name: dbt run (slim)
-        run: dbt run --target ${{ matrix.target }} --select state:modified+ --profiles-dir ci/profiles
+      - name: dbt build
+        run: dbt build --target ${{ matrix.target }} --select path:models --profiles-dir ci/profiles
       - name: dbt test
         run: dbt test --target ${{ matrix.target }} --profiles-dir ci/profiles
 ```
@@ -566,9 +565,9 @@ Moving a dbt project from SQL Server to BigQuery involves three categories of ch
 
 ```bash
 # Find all models with T-SQL-specific functions
-grep -rn "GETDATE|ISNULL|DATEADD|DATEDIFF|CONVERT|TOP [0-9]" models/
-grep -rn "NVARCHAR|BIGINT|BIT|DATETIME2" models/
-grep -rn "sys\.|OBJECT_ID|INFORMATION_SCHEMA" macros/ models/
+rg "GETDATE|ISNULL|DATEADD|DATEDIFF|CONVERT|TOP [0-9]" models
+rg "NVARCHAR|BIGINT|BIT|DATETIME2" models
+rg "sys\\.|OBJECT_ID|INFORMATION_SCHEMA" macros models
 ```
 
 Create a migration checklist from the grep output. Each hit is a conversion task.
@@ -662,7 +661,7 @@ Update all `schema.yml` `data_type` fields using this mapping before running `db
 
 ```bash
 # Run against BigQuery with --empty flag to validate SQL without loading data
-dbt run --target bigquery --empty --select marts
+dbt build --target bigquery --empty --select marts
 
 # Run schema tests to confirm types are correct
 dbt test --target bigquery --select marts
@@ -672,6 +671,7 @@ dbt run-operation compare_row_counts --args '{"models": ["mart_esg_scores", "mar
 ```
 
 > [!tip] Migrate staging layer first
+>
 > Start the migration with staging models (simple SELECTs with casts), validate them, then move to intermediate, then mart. This incremental approach isolates issues at each layer and avoids debugging complex mart SQL before the source data is confirmed correct.
 
 ---

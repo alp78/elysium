@@ -18,7 +18,7 @@ description: >
   export, Terraform, and production troubleshooting for data-engineering
   workloads.
 created: 2026-03-22
-updated: 2026-04-13
+updated: 2026-04-15
 status: complete
 ---
 
@@ -45,9 +45,9 @@ status: complete
 > - Separates IAM for administrators, service accounts, `gcloud`, Terraform, and server workloads from Security Rules for direct mobile and web clients
 >
 > **Operational commands and recovery**
-> - Uses read-only `gcloud` checks to confirm the active account, active project, named database `main`, database metadata, indexes, TTL state, delete protection, PITR posture, backups, and export or import targets before any mutation
+> - Uses `gcloud` inspection patterns to confirm active account, active project, named database targeting, database metadata, indexes, TTL state, delete protection, PITR posture, backups, and export or import targets before any mutation
 > - Shows controlled workflows for creating databases, enabling delete protection or PITR, creating composite indexes and single-field exemptions, configuring TTL, and using bulk delete, export, import, scheduled backup, and restore-to-new-database patterns
-> - Captures the current live posture: project `bq-wh-nb`, database `main`, location `europe-west1`, edition `STANDARD`, TTL on `pipeline_runs.expires_at`, delete protection disabled, PITR disabled, and no managed backup schedules or backup artifacts
+> - Preserves the archived demo posture from the removed `bq-wh-nb` project: database `main`, location `europe-west1`, edition `STANDARD`, TTL on `pipeline_runs.expires_at`, delete protection disabled, PITR disabled, and no managed backup schedules or backup artifacts at the time of capture
 >
 > **Infrastructure as code and platform patterns**
 > - Provides Terraform patterns for `google_firestore_database`, `google_firestore_index`, `google_firestore_field`, and `google_firestore_backup_schedule` so location, retention, delete protection, and index policy remain reviewable and reproducible
@@ -58,6 +58,12 @@ status: complete
 > - Recommendations table: Native mode by default, deliberate location choice, delete protection, PITR, backup schedules, compact documents, index exemptions for non-query timestamps, and index definitions treated as deployable infrastructure
 > - Troubleshooting: 7 failure modes covering named-database targeting mistakes, missing composite indexes, delayed TTL cleanup, absent backups, disabled PITR, hotspotting, and partial bulk-delete expectations
 
+> [!warning] Archived demo boundary
+>
+> The original Firestore project used throughout this note, `bq-wh-nb`, has been removed. Treat every captured `gcloud firestore` output in this page as archived operator reference, not as a current environment snapshot.
+>
+> This refresh intentionally skips live reruns. The note now keeps the former `main` database examples as historical context while preserving the command patterns and updating knowledge where current documentation or Cloud SDK help exposed meaningful changes.
+
 > [!note]- Glossary
 >
 > **Firestore database**
@@ -66,7 +72,7 @@ status: complete
 >
 > > [!warning] Default database assumptions
 > >
-> > Many examples on the internet assume `'(default)'`. This environment uses the named database `main`, so database-scoped commands must target it explicitly.
+> > Many examples on the internet assume `'(default)'`. The archived environment used the named database `main`, so database-scoped commands had to target it explicitly.
 >
 > ---
 >
@@ -241,7 +247,7 @@ status: complete
 > ---
 >
 > **Named database / `main`**
-> - A Firestore database whose ID is not `'(default)'`, such as the live database `main` used in this environment.
+> - A Firestore database whose ID is not `'(default)'`, such as the archived demo database `main` used in this note.
 > - It changes CLI targeting, restore planning, and operational assumptions across every administrative workflow.
 >
 > > [!warning] Tooling may default wrong
@@ -370,7 +376,7 @@ Mode is decided at database creation time. It is a foundational platform decisio
 >
 > Choose Native mode unless you are intentionally preserving Datastore compatibility. It is the correct baseline for Firestore-backed data-engineering control planes.
 
-The live database in the current project is `projects/bq-wh-nb/databases/main`, and it is `FIRESTORE_NATIVE`.
+The archived demo database for this note was `projects/bq-wh-nb/databases/main`, and it was `FIRESTORE_NATIVE` at the time of capture.
 
 ### Firestore | location strategy | latency, durability, and co-location
 
@@ -381,7 +387,7 @@ Firestore location is an architectural decision with direct consequences for lat
 | **Regional** | Pipeline compute is concentrated in one region and write latency matters | Lower availability target than multi-region |
 | **Multi-region** | Firestore is business-critical and must remain resilient across regional failure | Higher cost and usually higher write latency |
 
-The current live database is regional in `europe-west1`. That is a sensible choice when your Cloud Run jobs, Composer environment, or other operational compute is also in Europe and you want lower write latency for control-plane state.
+The archived demo database was regional in `europe-west1`. That remains a sensible choice when Cloud Run jobs, Composer environments, or other operational compute are also in Europe and lower write latency matters for control-plane state.
 
 ### Firestore | data model | platform implications of document shape
 
@@ -448,7 +454,7 @@ Mixing the two leads to false assumptions, especially in incident response. A br
 
 ## Operational Commands And Workflows
 
-All commands below are written as live-safe patterns against the current project context. Read-only inspection commands use the verified project `bq-wh-nb` and the current named database `main`. State-changing commands include pre-check guidance and verification steps. If a command needs a resource that is not present in the current project, the command is presented as a controlled pattern rather than as something you should copy blind.
+All commands below should now be read as operator patterns. The original walkthrough used the removed project `bq-wh-nb` and the named database `main`, so embedded outputs are archived reference material rather than current validation. State-changing commands still include pre-check guidance and verification steps, but they were not rerun in this refresh.
 
 ### PowerShell / Linux | gcloud | confirm the active project and database context
 
@@ -505,7 +511,7 @@ gcloud firestore databases list \
 |---|---|---|---|---|
 | `projects/bq-wh-nb/databases/main` | `FIRESTORE_NATIVE` | `europe-west1` | `DELETE_PROTECTION_DISABLED` | `POINT_IN_TIME_RECOVERY_DISABLED` |
 
-The important result is that this project does not use `'(default)'`. Any command aimed at `'(default)'` will fail with `NOT_FOUND`.
+The important archived result is that this project did not use `'(default)'`. Any command aimed at `'(default)'` would fail with `NOT_FOUND` until retargeted to the named database.
 
 #### Describe the current Firestore database configuration
 
@@ -522,7 +528,7 @@ After listing databases and before changing delete protection, PITR, or location
 | `realtimeUpdatesMode` | `realtimeUpdatesMode` | enum | Whether real-time updates are enabled |
 | `versionRetentionPeriod` | `versionRetentionPeriod` | duration | Recovery-read retention window supported by the database |
 
-*Describe the live `main` Firestore database in the active project.*
+*Describe the archived `main` Firestore database configuration captured for this note.*
 
 ```bash
 gcloud firestore databases describe \
@@ -534,13 +540,13 @@ gcloud firestore databases describe \
 |---|---|---|---|---|---|---|---|
 | `projects/bq-wh-nb/databases/main` | `europe-west1` | `FIRESTORE_NATIVE` | `STANDARD` | `DELETE_PROTECTION_DISABLED` | `POINT_IN_TIME_RECOVERY_DISABLED` | `REALTIME_UPDATES_MODE_ENABLED` | `3600s` |
 
-The live reading is important:
+The archived reading is still operationally useful:
 
-- `main` is a Standard edition Native-mode database.
-- Delete protection is currently disabled.
-- PITR is currently disabled.
-- Real-time updates are enabled.
-- With PITR disabled, the version retention period is currently `3600s`, not seven days.
+- `main` was a Standard edition Native-mode database.
+- Delete protection was disabled.
+- PITR was disabled.
+- Real-time updates were enabled.
+- With PITR disabled, the version retention period was `3600s`, not seven days.
 
 | Flag | Syntax | Description |
 |---|---|---|
@@ -569,6 +575,12 @@ During initial environment provisioning or when intentionally adding a separate 
 > [!success] Use an explicit create command
 >
 > Create databases with all critical settings visible in the command. Silent defaults make reviews and incident reconstruction harder later.
+
+> [!info] Enterprise edition access mode
+>
+> Current Cloud SDK releases expose additional creation-time switches for Enterprise edition databases, including `--enable-firestore-data-access`, `--enable-mongodb-compatible-data-access`, and `--enable-realtime-updates`.
+>
+> Those flags matter when you are creating an Enterprise database with an explicit API access model. They are not required for the Standard Native-mode pattern shown below, but they are important if you standardize on Enterprise mode in newer environments.
 
 *Create a new Native-mode Firestore database in the active project with delete protection enabled at creation time.*
 
@@ -640,7 +652,7 @@ Before deploying a new query shape, after a failed precondition error, or during
 | `queryScope` | `queryScope` | enum | Whether the index applies to a collection or collection group |
 | `state` | `state` | enum | Build status such as `READY` |
 
-*List composite indexes in the live `main` database.*
+*List composite indexes from the archived `main` database snapshot used in this note.*
 
 ```bash
 gcloud firestore indexes composite list \
@@ -654,7 +666,7 @@ gcloud firestore indexes composite list \
 | `projects/bq-wh-nb/databases/main/collectionGroups/stocks/indexes/CICAgOjXh4EK` | `stocks` | `COLLECTION` | `country ASC`, `current_price ASC`, `__name__ ASC` | `READY` |
 | `projects/bq-wh-nb/databases/main/collectionGroups/pipeline_runs/indexes/CICAgJiUsZIK` | `pipeline_runs` | `COLLECTION` | `status ASC`, `started_at DESC`, `__name__ DESC` | `READY` |
 
-The practical lesson is that the current environment already versioned one important operational query shape: failed or status-filtered pipeline runs ordered by start time.
+The practical lesson from the archived environment is that one important operational query shape had already been versioned: failed or status-filtered pipeline runs ordered by start time.
 
 #### Inspect TTL fields in the current database
 
@@ -666,7 +678,7 @@ When verifying cleanup behavior or checking whether old operational records shou
 | `ttlConfig.state` | `ttlConfig.state` | enum | Whether TTL is active for the field |
 | `indexConfig.usesAncestorConfig` | `indexConfig.usesAncestorConfig` | boolean | Whether the field still inherits default single-field indexing behavior |
 
-*List TTL-enabled fields in the live `main` database.*
+*List TTL-enabled fields from the archived `main` database snapshot used in this note.*
 
 ```bash
 gcloud firestore fields ttls list \
@@ -678,7 +690,7 @@ gcloud firestore fields ttls list \
 |---|---|---|
 | `projects/bq-wh-nb/databases/main/collectionGroups/pipeline_runs/fields/expires_at` | `ACTIVE` | `True` |
 
-This output shows that `pipeline_runs.expires_at` is the live TTL field today. The field still inherits ancestor index behavior, which means it remains indexed unless you add a single-field exemption.
+This archived output shows that `pipeline_runs.expires_at` was configured as the TTL field. The field still inherited ancestor index behavior, which meant it remained indexed unless a single-field exemption was added.
 
 #### Create a composite index safely
 
@@ -756,7 +768,7 @@ Recovery workflows are where teams most often discover they never verified the r
 
 During a hardening review, before a maintenance window, or after onboarding a new environment. It is typically triggered by you need to confirm whether automated backups exist at all. `gcloud` CLI, read-only. Show whether the database currently has scheduled backups configured.
 
-*List backup schedules configured for the live `main` database.*
+*List backup schedules configured for the archived `main` database snapshot used in this note.*
 
 ```bash
 gcloud firestore backups schedules list \
@@ -768,13 +780,13 @@ gcloud firestore backups schedules list \
 []
 ```
 
-There are currently no scheduled backups for `main`.
+At the time of capture, there were no scheduled backups for `main`.
 
 #### List existing backups in the current Firestore region
 
 Before planning restore, clone, or disaster-recovery exercises. It is typically triggered by you need to know whether recoverable backup artifacts already exist in the database location. `gcloud` CLI, read-only. Show which backup artifacts exist in the database's region.
 
-*List Firestore backups in `europe-west1`, the current database location.*
+*List Firestore backups in `europe-west1`, the archived database location used in this note.*
 
 ```bash
 gcloud firestore backups list \
@@ -786,7 +798,7 @@ gcloud firestore backups list \
 []
 ```
 
-The live project currently has no managed Firestore backups in `europe-west1`.
+At the time of capture, the project had no managed Firestore backups in `europe-west1`.
 
 #### Create a weekly backup schedule
 
@@ -827,7 +839,7 @@ Before major data migrations, before destructive cleanup, or when offloading his
 >
 > Use `--collection-ids` for operational datasets such as `pipeline_runs`, `config`, or `checkpoints` so export scope, cost, and later import blast radius stay controlled.
 
-*Export only the `pipeline_runs` collection group from the `main` database to a verified Cloud Storage prefix.*
+*Export only the `pipeline_runs` collection group from the archived `main` database pattern to a verified Cloud Storage prefix.*
 
 ```bash
 gcloud firestore export 'gs://YOUR_EXISTING_BUCKET/firestore/main/pipeline-runs-2026-04-13' \
@@ -1136,7 +1148,7 @@ Use this matrix when deciding whether Firestore should own a platform concern.
 
 ## Quick Reference
 
-The table below summarizes the current live environment discovered from read-only `gcloud` inspection on 2026-04-13.
+The table below preserves the archived demo environment captured on 2026-04-13. It is historical reference only because the original project has been removed.
 
 | Item | Current value | Operational implication |
 |---|---|---|

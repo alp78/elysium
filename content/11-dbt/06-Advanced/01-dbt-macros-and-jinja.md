@@ -8,7 +8,8 @@ description: "Jinja2 fundamentals, writing macros, dbt-utils patterns, dispatch,
 
 # dbt: Macros and Jinja
 
-> [!quote]
+> [!quote] Programs As Thought
+>
 > "A programming language is for thinking of programs, not for expressing programs you've already thought of."
 >
 > — **Paul Graham**, *Hackers & Painters* (2004)
@@ -34,7 +35,7 @@ description: "Jinja2 fundamentals, writing macros, dbt-utils patterns, dispatch,
 > - Warnings: distinguish compile time from run time, guard all `run_query()` calls, keep macro dependencies shallow, and treat the anti-pattern checklist as the operational boundary.
 > - Recommendations table: the anti-pattern section and useful macro patterns form the note's safe implementation guide.
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Jinja2**
 > - The templating language dbt uses to generate SQL before sending statements to the warehouse.
@@ -193,7 +194,6 @@ description: "Jinja2 fundamentals, writing macros, dbt-utils patterns, dispatch,
 > > [!danger] Core mental model boundary
 > >
 > > If this distinction is blurred, macros, hooks, and dynamic SQL all become difficult to reason about. Treat compile time as code generation and run time as warehouse execution.
-
 
 ## Jinja2 Fundamentals
 
@@ -396,6 +396,7 @@ from source_table
 ```
 
 > [!note] MD5 vs SHA256
+>
 > `generate_surrogate_key` uses MD5 by default. For compliance-sensitive pipelines where key collision probability matters (very unlikely but auditable), use `dbt_utils.generate_surrogate_key` with a custom hash function via dispatch.
 
 ### dbt-utils date_spine — generate continuous date series
@@ -436,7 +437,11 @@ Rotates ESG provider rows into columns without hardcoding provider names.
     order by 1
 {% endset %}
 
-{% set providers = run_query(providers_query).columns[0].values() %}
+{% if execute %}
+    {% set providers = run_query(providers_query).columns[0].values() %}
+{% else %}
+    {% set providers = [] %}
+{% endif %}
 
 select
     constituent_id,
@@ -488,7 +493,7 @@ macros/
 ```sql
 -- macros/finance/safe_divide.sql
 {% macro safe_divide(numerator, denominator) %}
-    {{ return(adapter.dispatch('safe_divide', 'my_project')(numerator, denominator)) }}
+    {{ return(adapter.dispatch('safe_divide')(numerator, denominator)) }}
 {% endmacro %}
 
 {% macro default__safe_divide(numerator, denominator) %}
@@ -532,7 +537,7 @@ from {{ ref('int_portfolio_analytics') }}
 
 > [!tip] Dispatch namespace registration
 >
-> Register custom dispatch namespaces so dbt searches your project before packages:
+> Project-local dispatched macros do not need a `dispatch:` block. Add one only when you want dbt to search your project ahead of an installed package namespace such as `dbt_utils`:
 > ```yaml
 > dispatch:
 >   - macro_namespace: dbt_utils
@@ -574,6 +579,7 @@ from {{ ref('int_portfolio_analytics') }}
 > `run_query()` only works during the execution phase, not during parsing. Always wrap in `{% if execute %}` to prevent errors during `dbt parse` or `dbt compile`.
 
 > [!success] Standard execute guard pattern
+>
 > Wrap every `run_query()` call in `{% if execute %}...{% else %}{{ return([]) }}{% endif %}`. The `else` branch returns a safe empty default so macros that call this helper also receive a valid type during parse/compile without crashing.
 
 ---
@@ -640,7 +646,7 @@ on-run-end:
   - "call sp_update_freshness_metadata()"
 ```
 
-#### Audit log macro
+### Audit log macro
 
 ```sql
 -- macros/utils/log_run_start.sql
@@ -667,8 +673,10 @@ on-run-end:
 ### Jinja and Macro Anti-Patterns
 
 > [!danger] Anti-patterns to avoid
+>
 
 > [!success] Safe macro design principles
+>
 > Keep macros as thin SQL fragment generators. Business logic belongs in model SQL where it is version-controlled and testable. Use `{% if execute %}` guards around all `run_query()` calls. Prefer `var('is_production', false)` over `target.name` string comparisons. Ensure macros that call `run_query()` cache results in a Jinja variable so they are evaluated only once per compile pass.
 
 **1. Logic in macros instead of models**

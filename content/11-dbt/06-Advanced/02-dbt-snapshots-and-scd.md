@@ -8,7 +8,8 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 
 # dbt: Snapshots and SCD
 
-> [!quote]
+> [!quote] Historical Visibility
+>
 > "The ability to visualize something as abstract as a set of data in a concrete and tangible way is the secret of understandability."
 >
 > — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)
@@ -18,7 +19,7 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 > dbt snapshots implement SCD Type 2 history by closing changed rows and opening new versions over time, and this note defines the snapshot strategies, metadata columns, point-in-time query patterns, ESG and index-history use cases, and destructive edge cases required to preserve reproducible historical state in financial pipelines.
 >
 > **Snapshot mechanics and strategy choice**
-> - Explains how dbt snapshots compare the source against a `unique_key`, generate `dbt_scd_id`, `dbt_valid_from`, `dbt_valid_to`, and `dbt_updated_at`, and store files in the `snapshots/` directory.
+> - Explains how dbt snapshots compare the source against a `unique_key`, generate `dbt_scd_id`, `dbt_valid_from`, `dbt_valid_to`, and `dbt_updated_at`, and notes that SQL snapshot blocks remain supported while YAML-based snapshot definitions are the newer recommended pattern.
 > - Compares `timestamp` and `check` strategies, including reliable `updated_at` usage, explicit `check_cols`, and a decision matrix for high-volume or append-style sources.
 >
 > **Production snapshot patterns**
@@ -30,11 +31,11 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 > - Distinguishes pipeline metadata timestamps from business-effective dates and shows when source `effective_date` or `provider_updated_at` must drive business logic.
 >
 > **Operations and safety**
-> - Warnings: deduplicate `unique_key` in the source, never treat `dbt_valid_from` as business time, avoid `check_cols = 'all'` on wide sources, and do not run `dbt snapshot --full-refresh` casually.
+> - Warnings: deduplicate `unique_key` in the source, never treat `dbt_valid_from` as business time, avoid `check_cols = 'all'` on wide sources, and treat snapshot rebuilds and config migrations as manual history-affecting operations.
 > - Preventive checklist: the gotchas section defines 6 major failure modes and the concrete mitigations for each.
 > - Runtime sequence: snapshots belong in a dedicated pipeline step between freshness checks and downstream model builds.
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **Snapshot**
 > - A dbt construct that stores changing source records as a historical table instead of overwriting each entity with only its latest state.
@@ -126,13 +127,13 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 >
 > ---
 >
-> **`invalidate_hard_deletes`**
-> - A snapshot option that closes currently open records when their `unique_key` disappears from the latest source extract.
-> - It matters here because membership tables such as index constituents need removals to appear as ended history, not as still-open records.
+> **`hard_deletes`**
+> - The current snapshot config that controls how dbt handles source rows that disappear, with modes such as `ignore`, `invalidate`, and `new_record`.
+> - It matters here because membership tables such as index constituents often need removals to appear as ended or explicitly deleted history, not as still-open records.
 >
 > > [!warning] Correctness versus cost
 > >
-> > This improves history correctness for disappearing rows, but it adds extra warehouse work. Large snapshot tables need conscious performance planning when it is enabled.
+> > `hard_deletes: invalidate` replaces the legacy `invalidate_hard_deletes = true`, and `hard_deletes: new_record` adds explicit delete rows. Large snapshot tables need conscious performance planning before you enable either mode.
 >
 > ---
 >
@@ -156,23 +157,23 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 >
 > ---
 >
-> **`dbt snapshot --full-refresh`**
-> - The dbt command option that drops and recreates snapshot tables instead of preserving existing history.
-> - It matters here because, unlike ordinary model full refreshes, it destroys accumulated SCD history.
+> **Snapshot rebuild / migration**
+> - The manual process of backing up, altering, or recreating a snapshot table when you need to change snapshot configs or repair history.
+> - It matters here because snapshot tables are long-lived history assets, and major changes require deliberate warehouse migrations rather than casual rebuild habits.
 >
 > > [!danger] Destructive history reset
 > >
-> > Treat this as a last-resort rebuild operation with backup and review, not as normal maintenance. On snapshots, convenience and safety are in direct conflict.
+> > Treat any snapshot rebuild as a planned migration with backup and review, not as normal maintenance. On snapshots, convenience and safety are in direct conflict.
 >
 > ---
 >
-> **`on_schema_change = 'append_new_columns'`**
-> - A configuration setting that lets new columns be added to a snapshot table without forcing a destructive rebuild.
-> - It matters here because additive schema evolution is common in provider feeds and snapshots otherwise break on shape drift.
+> **Snapshot config migration**
+> - The dbt-supported process of carefully updating snapshot tables and configs when adopting newer snapshot features or changing the stored schema.
+> - It matters here because additive schema evolution is common in provider feeds, and current dbt docs recommend explicit migration steps rather than assuming snapshots auto-adapt.
 >
 > > [!warning] Only solves additive change
 > >
-> > This helps with new columns, not with arbitrary schema redesign. Dropped columns or changed business grain still need planned migration work.
+> > New snapshot configs such as `hard_deletes` and YAML-defined snapshots are best introduced through staged migration. Dropped columns or changed business grain still need planned warehouse work.
 >
 > ---
 >
@@ -183,7 +184,6 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 > > [!info] Ordering is part of correctness
 > >
 > > If snapshots run too late or inconsistently, downstream models consume the wrong history state. Placement in the DAG is an operational requirement, not a stylistic preference.
-
 
 ## Snapshot Mechanics
 
@@ -205,11 +205,13 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 | `dbt_valid_from` | timestamp | When this version of the row became active |
 | `dbt_valid_to` | timestamp | When this version ended (null = currently active) |
 
-The **current record** for any `unique_key` value is always the row where `dbt_valid_to is null`.
+If you use `hard_deletes: new_record`, dbt also adds `dbt_is_deleted` so explicit delete events appear as their own snapshot rows.
+
+By default, the **current record** for any `unique_key` value is the row where `dbt_valid_to is null`. If you adopt `dbt_valid_to_current`, use that configured sentinel instead of `NULL` in PIT helpers.
 
 ### File Placement
 
-Snapshots live in the `snapshots/` directory (configurable in `dbt_project.yml`). They use `.sql` extension with a `{% snapshot %}` block.
+Snapshots still commonly live in the `snapshots/` directory (configurable in `dbt_project.yml`). SQL files with `{% snapshot %}` blocks are still supported, but current dbt docs recommend YAML-defined snapshot configs for new work in dbt Core v1.9+ / Latest.
 
 ```
 snapshots/
@@ -235,7 +237,7 @@ Use `timestamp` when the source table has a reliable `updated_at` column maintai
     unique_key    = 'constituent_snapshot_key',
     strategy      = 'timestamp',
     updated_at    = 'provider_updated_at',
-    invalidate_hard_deletes = true
+    hard_deletes = 'invalidate'
   )
 }}
 
@@ -341,6 +343,7 @@ from {{ source('esg_providers_raw', 'raw_esg_ratings') }}
 > Setting `check_cols = 'all'` compares every column. For wide ESG tables with 80+ columns, this creates a very large hash and adds significant compute. Explicitly list the columns that represent meaningful business changes.
 
 > [!success] Enumerate check_cols explicitly
+>
 > Define `check_cols` as a YAML list containing only the columns that represent a meaningful business change (scores, flags, ratings). Exclude metadata columns like `_ingested_at`, `_loaded_at`, and `company_name` that change frequently but do not affect business logic. This keeps the hash small and prevents spurious SCD2 row creation.
 
 ### `timestamp` vs `check` Decision Matrix
@@ -371,7 +374,7 @@ This is a complete, production-ready snapshot tracking which securities are in e
     unique_key                = 'constituent_snapshot_key',
     strategy                  = 'timestamp',
     updated_at                = 'provider_updated_at',
-    invalidate_hard_deletes   = true,
+    hard_deletes              = 'invalidate',
 
     -- Snapshot-specific materialisation options
     tags                      = ['snapshots', 'index-data'],
@@ -471,6 +474,7 @@ order by weight_pct desc
 ```
 
 > [!tip] PIT filter as a macro
+>
 > Standardise this pattern in a macro to prevent off-by-one errors:
 > ```sql
 > -- macros/utils/pit_filter.sql
@@ -583,7 +587,7 @@ ESG ratings change as providers update their models and as companies disclose ne
       'is_weapons_involved',
       'carbon_intensity_scope12'
     ],
-    invalidate_hard_deletes = false   -- Keep history even if provider drops coverage
+    hard_deletes = 'ignore'   -- Keep history rows intact if provider stops coverage
   )
 }}
 
@@ -626,7 +630,7 @@ where esg_provider_id in ('MSCI', 'SUSTAINALYTICS', 'ISS', 'REFINITIV')
 {% endsnapshot %}
 ```
 
-#### ESG Snapshot Audit — show full rating history for a specific ISIN
+### ESG Snapshot Audit — show full rating history for a specific ISIN
 
 ```sql
 select
@@ -648,9 +652,11 @@ order by esg_provider_id, dbt_valid_from
 ## Gotchas and Known Issues
 
 > [!danger] Critical snapshot gotchas
+>
 
 > [!success] Preventive checklist
-> Before deploying any snapshot: (1) deduplicate the source query on `unique_key`; (2) set `invalidate_hard_deletes = true` for membership tables; (3) never run `dbt snapshot --full-refresh` in production without a backup; (4) store `effective_date` or `provider_updated_at` as source columns and use them — not `dbt_valid_from` — for business-logic PIT queries; (5) set `on_schema_change = 'append_new_columns'` to survive additive schema changes.
+>
+> Before deploying any snapshot: (1) deduplicate the source query on `unique_key`; (2) choose `hard_deletes` mode deliberately for membership-style sources; (3) treat snapshot rebuilds and config changes as manual migrations with backups; (4) store `effective_date` or `provider_updated_at` as source columns and use them — not `dbt_valid_from` — for business-logic PIT queries; (5) test schema/config changes in dev or staging before touching production history.
 
 ### Duplicate `unique_key` in Source
 
@@ -680,44 +686,47 @@ from deduped
 where rn = 1
 ```
 
-### `dbt snapshot --full-refresh` Wipes History
+### Snapshot Rebuilds and Config Migrations Are Manual
 
-**`dbt snapshot --full-refresh` drops and recreates the snapshot table, destroying all historical SCD2 data.** Unlike models where `--full-refresh` is a routine operation, on snapshots it is destructive.
+Current dbt docs describe running snapshots with `dbt snapshot` or via `dbt build`; when you need to rebuild a snapshot table or adopt newer snapshot configs such as `hard_deletes`, treat that as a manual warehouse migration rather than as routine day-to-day maintenance.
 
-- Never run `dbt snapshot --full-refresh` in production without explicit intent and a backup.
-- Protect snapshot tables with warehouse-level delete prevention or a pre-flight check.
-- In `dbt_project.yml`, you can make snapshots unable to be full-refreshed via a custom check in a pre-hook.
+- Back up the existing snapshot table before changing config semantics or stored columns.
+- Test the new config in development or staging and inspect PIT results before promoting it.
+- Review row-count and active-row diffs after the migration, because history semantics may change even when the SQL looks similar.
 
 > [!warning] Full-refresh on incremental models upstream
-> If an incremental model that feeds a snapshot is full-refreshed and re-seeded from a different date, the snapshot will receive "new" rows that look like changes and create spurious SCD2 records. Always full-refresh incrementals and their downstream snapshots together, or avoid full-refresh in production.
+>
+> If an incremental model that feeds a snapshot is rebuilt from a different historical boundary, the snapshot can receive rows that look like new changes and create spurious SCD2 versions. Review snapshot impact explicitly whenever upstream rebuilds change the source history surface.
 
-> [!success] Full-refresh incrementals and snapshots together
-> When a full-refresh of an upstream incremental is necessary, also drop and recreate the downstream snapshot table from the warehouse directly (preserving history structure), then re-run `dbt snapshot` to re-seed from the corrected source. Use a branch and review the row diff with `audit_helper.compare_relations` before promoting to production.
+> [!success] Rebuild with review, not by habit
+>
+> When an upstream rebuild is necessary, branch the change, compare the resulting snapshot history against the current production table, and promote only after confirming the new source history is the one you want to preserve.
 
 ### Hard Deletes Not Handled by Default
 
 When a constituent is removed from an index, the source row disappears. By default, dbt does **not** close the snapshot record — the `dbt_valid_to` stays null, and the constituent appears to be still active.
 
-**Solution:** Set `invalidate_hard_deletes = true` in the snapshot config. dbt will then close records whose `unique_key` values are absent from the latest source query.
+**Solution:** For new snapshots, use `hard_deletes: invalidate` to close records whose `unique_key` values disappear from the latest source query. Use `hard_deletes: new_record` when you need explicit delete rows rather than just closing the prior version.
 
 ```sql
 {{
   config(
     ...
-    invalidate_hard_deletes = true
+    hard_deletes = 'invalidate'
   )
 }}
 ```
 
-> [!note] Hard delete invalidation overhead
+> [!note] Hard delete tracking overhead
 >
-> When `invalidate_hard_deletes` is enabled, dbt runs an additional query to find keys present in the snapshot but absent from the source. For very large snapshot tables this adds meaningful query time. Consider partitioning the snapshot table by a date column and filtering accordingly.
+> When `hard_deletes: invalidate` or `hard_deletes: new_record` is enabled, dbt does extra work to reconcile keys that disappeared from the source. For very large snapshot tables this adds meaningful query time, so plan storage layout and run cadence deliberately.
 
 > [!danger] Pipeline time vs business time
 >
 > This is the single most misunderstood aspect of dbt snapshots. `dbt_valid_from` does NOT contain the business effective date -- it contains when the pipeline last ran. If your pipeline runs Monday through Friday but misses Saturday/Sunday, weekend changes all get stamped with Monday's timestamp. PIT queries using `dbt_valid_from` will show incorrect results for weekend dates. Always store and query on the source `effective_date` for business-logic PIT joins.
 
 > [!success] Use source effective_date for PIT queries
+>
 > Always include `effective_date` (or `provider_updated_at`) as a column in the snapshot's `select` query. Build all business-logic PIT joins against this source column, not `dbt_valid_from`. Reserve `dbt_valid_from` / `dbt_valid_to` for pipeline-level audit queries only — for example, determining when dbt last processed a given record.
 
 ### Snapshot Timestamps Use `current_timestamp`
@@ -731,22 +740,13 @@ The `dbt_valid_from` and `dbt_valid_to` are set to `current_timestamp` at the ti
 
 ### Schema Changes Break Snapshots
 
-If you add or remove columns from the snapshot's select query, dbt will raise an error on the next run because the snapshot table's DDL does not match the query output.
+If you add or remove columns from the snapshot query, you may need to migrate the snapshot table and config together because current dbt snapshot docs recommend explicit migration steps for new snapshot features and shape changes.
 
 #### Resolution — 7.5 Schema Changes Break Snapshots
 
-1. Add the column to the warehouse table manually (`alter table ... add column`), then run `dbt snapshot`.
-2. Or drop and recreate — but this destroys history (see §7.2).
-3. Use `on_schema_change = 'append_new_columns'` in the config to allow new columns to be added automatically (existing rows get null for the new column).
-
-```sql
-{{
-  config(
-    ...
-    on_schema_change = 'append_new_columns'
-  )
-}}
-```
+1. Back up the existing snapshot table before changing schema or snapshot semantics.
+2. Add required columns or migrate metadata columns in the warehouse first, following the current snapshot migration guidance.
+3. Re-run `dbt snapshot` in a non-production environment and verify PIT behavior before promoting the migrated table.
 
 ### Snapshot Tables Are Not Versioned
 
@@ -769,8 +769,8 @@ dbt snapshot --target prod
 # Run snapshots matching a tag
 dbt snapshot --select tag:snapshots
 
-# DANGEROUS: destroys history
-# dbt snapshot --full-refresh
+# History-affecting rebuilds should be handled as manual warehouse migrations
+# with a backup and review plan, not as a routine snapshot flag.
 ```
 
 Snapshots are typically run in a separate step from `dbt run` in the pipeline DAG:

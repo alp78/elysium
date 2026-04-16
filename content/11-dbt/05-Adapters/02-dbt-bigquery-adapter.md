@@ -8,7 +8,8 @@ description: "BigQuery adapter partitioning, clustering, incremental strategies,
 
 # dbt: BigQuery Adapter
 
-> [!quote]
+> [!quote] Serverless Scale
+>
 > "Serverless is a simple but powerful concept when it comes to gigabyte- to petabyte-scale data analysis. It's a relatively hard engineering problem."
 >
 > — **Jordan Tigani** (founding engineer of BigQuery)
@@ -34,7 +35,7 @@ description: "BigQuery adapter partitioning, clustering, incremental strategies,
 > - Recommendations table: the partition granularity guide and cost-visibility label patterns define the safe default operating posture.
 > - Cost controls: `maximum_bytes_billed`, dry runs, and billing labels are the note's explicit spend-governance mechanisms.
 
-> [!note]- Glossary
+> [!info]- Glossary
 >
 > **`dbt-bigquery`**
 > - The first-party dbt adapter that maps dbt models and materializations to BigQuery DDL, DML, and job configuration.
@@ -214,8 +215,7 @@ description: "BigQuery adapter partitioning, clustering, incremental strategies,
 > >
 > > This setting intentionally breaks expensive queries instead of letting them complete. That is desirable in production because a hard failure is usually cheaper than an unnoticed full-table scan.
 
-
-### BigQuery Adapter Installation
+## BigQuery Adapter Installation
 
 ```bash
 pip install dbt-core==1.8.* dbt-bigquery==1.8.*
@@ -262,8 +262,9 @@ financial_index:
       priority: batch
 ```
 
-> [!tip] Prefer Workload Identity over JSON keys on GCE
-> On Compute Engine or GKE, attach the service account to the VM/pod and use `method: oauth` or `method: oauth-secrets`. This eliminates key rotation overhead and is the recommended approach for production workloads.
+> [!tip] Prefer attached identities over JSON keys on GCE
+>
+> On Compute Engine or GKE, prefer attached service accounts or explicit service-account impersonation instead of downloadable JSON keys. That removes key-rotation overhead and reduces long-lived secret sprawl.
 
 ### Application Default Credentials (local development)
 
@@ -340,9 +341,10 @@ from {{ ref('int_esg_scores_validated') }}
 
 > [!warning] Require partition filter on marts
 >
-> Enabling `require_partition_filter = true` on mart tables prevents accidental full-table scans from BI tools. Any query that does not include a filter on the partition column will be rejected with an error. Set this on all mart tables. Do not set it on staging tables — dbt internal queries (e.g., `is_incremental()` checks) may not include partition filters.
+> Enabling `require_partition_filter = true` on mart tables prevents accidental full-table scans from BI tools. Any query that does not include a filter on the partition column will be rejected with an error. Use it on analyst-facing marts and on large incrementals only after checking the generated SQL still satisfies the partition requirement.
 
 > [!success] Safe pattern
+>
 > Set `require_partition_filter = true` only in `config()` blocks for mart and incremental models. Leave staging models without this setting. In dbt config: `require_partition_filter = true` at the mart layer, omit it entirely in staging model configs.
 
 ### Integer Range Partitioning
@@ -384,6 +386,7 @@ Clustering sorts data within each partition by the specified columns. BigQuery a
 ```
 
 > [!note] Clustering vs partitioning
+>
 > Partitioning prunes at the storage level before any bytes are scanned. Clustering prunes within a partition — it is a secondary optimization. Always partition first, then cluster on the most common filter/join columns.
 
 ---
@@ -453,6 +456,7 @@ where DATE_TRUNC(score_date, MONTH) IN (
 ```
 
 > [!tip] When to use insert_overwrite
+>
 > - Source data arrives in complete monthly batches (ESG providers often send full-month corrections).
 > - Reprocessing historical partitions is common.
 > - The table is too large for MERGE to be economical (MERGE scans the full target table for non-partitioned MERGE keys).
@@ -463,7 +467,7 @@ where DATE_TRUNC(score_date, MONTH) IN (
 
 ### BigQuery Slot Estimation and Thread Tuning
 
-BigQuery slots are units of compute. On-demand pricing provides up to 2,000 concurrent slots per project. Each query consumes slots proportional to its complexity and data volume.
+BigQuery slots are units of compute. In on-demand projects, dbt queries compete for shared BigQuery compute capacity, and each query consumes slots proportional to its complexity and data volume.
 
 ```yaml
 # profiles.yml thread settings
@@ -480,6 +484,7 @@ prod:
 > `threads: 16` means dbt submits 16 queries concurrently. Each of those queries may consume hundreds or thousands of slots. Setting threads too high on a shared project can cause slot exhaustion and query queuing. Start with `threads: 8` and increase after confirming slot availability via the BigQuery Admin Console.
 
 > [!success] Safe starting configuration
+>
 > Begin with `threads: 8` and `priority: batch` in production profiles. Monitor slot utilisation in the BigQuery Admin Console (`INFORMATION_SCHEMA.JOBS_BY_PROJECT`) for at least one full pipeline cycle before increasing thread count. Reserve slots via BigQuery Reservations if you need guaranteed capacity.
 
 ---
@@ -590,6 +595,7 @@ GROUP BY isin, score_date, esg_components
 ```
 
 > [!note] STRUCT/ARRAY limitations
+>
 > Nested types work well for analytical queries but are not compatible with `dbt-sqlserver`. Any model using STRUCT/ARRAY must live in a BigQuery-specific folder or be guarded by `target.type` checks. See [dbt-cross-adapter-patterns](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-cross-adapter-patterns) for the dispatch pattern.
 
 ### BigQuery SQL — MERGE DML (manual)
@@ -622,33 +628,26 @@ WHEN NOT MATCHED THEN
 ### BigQuery Materialized Views
 
 ```sql
--- macros/create_materialized_view.sql (called as an operation, not a model)
--- dbt-bigquery does not natively manage BQ materialized views as a materialization type.
--- Create via post-hook on the base table or as a standalone operation.
+-- models/mart/mv_esg_monthly_avg.sql
+{{
+  config(
+    materialized = 'materialized_view'
+  )
+}}
 
-{% set mv_sql %}
-CREATE MATERIALIZED VIEW IF NOT EXISTS
-  `{{ target.project }}.{{ target.dataset }}.mv_esg_monthly_avg`
-OPTIONS (
-  enable_refresh = true,
-  refresh_interval_minutes = 60
-)
-AS
 SELECT
     DATE_TRUNC(score_date, MONTH) AS score_month,
     provider_code,
     isin,
     AVG(composite_score)          AS avg_composite_score,
     COUNT(*)                      AS score_count
-FROM `{{ target.project }}.{{ target.dataset }}.mart_esg_scores`
+FROM {{ ref('mart_esg_scores') }}
 GROUP BY 1, 2, 3
-{% endset %}
-
-{% do run_query(mv_sql) %}
 ```
 
 > [!note] BI Engine acceleration
-> BI Engine accelerates queries on tables and materialized views in the same region as the BI Engine reservation. Ensure mart tables are in the same location as the BI Engine reservation (`US` or a specific multi-region). BI Engine does not accelerate queries using STRUCT/ARRAY columns.
+>
+> BI Engine accelerates queries on supported tables and materialized views in the same region as the BI Engine reservation. Keep mart datasets and BI Engine reservations aligned by location, and verify support for nested-heavy queries against current BigQuery platform limits.
 
 ---
 
@@ -690,30 +689,30 @@ For raw ESG provider files landed in GCS with a Hive-style path structure (see [
 gs://fi-raw-data/esg_scores/provider=msci/score_year=2024/score_month=01/scores.parquet
 ```
 
-```sql
--- models/sources/ext_esg_scores_gcs.sql  (or define in sources.yml)
-{{
-  config(
-    materialized = 'external',
-    options = {
-      "format": "PARQUET",
-      "uris": ["gs://fi-raw-data/esg_scores/*"],
-      "hive_partition_uri_prefix": "gs://fi-raw-data/esg_scores",
-      "require_hive_partition_filter": false
-    }
-  )
-}}
+```yaml
+# models/sources.yml
+sources:
+  - name: ext_esg
+    schema: raw_external
+    tables:
+      - name: esg_scores_gcs
+        external:
+          location: "gs://fi-raw-data/esg_scores/*"
+          options:
+            format: parquet
+            hive_partition_uri_prefix: "gs://fi-raw-data/esg_scores"
+            require_hive_partition_filter: false
 ```
 
-`dbt-bigquery` supports the `external` materialization via the `dbt-external-tables` package. Add to `packages.yml`:
+Manage BigQuery external tables through `dbt-external-tables` source definitions, not through a normal dbt model materialization. Add the package to `packages.yml`:
 
 ```yaml
 packages:
   - package: dbt-labs/dbt_external_tables
-    version: [">=0.9.0", "<0.10.0"]
+    version: 0.12.1
 ```
 
-Then define in `sources.yml` and run `dbt run-operation stage_external_sources`.
+Then define the source metadata in `sources.yml` and run `dbt run-operation stage_external_sources`.
 
 ---
 

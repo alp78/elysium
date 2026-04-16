@@ -4,12 +4,14 @@ tags: [gcp, gcloud]
 aliases: [gcloud CLI, Google Cloud SDK, gcloud init, gcloud components, Cloud Shell]
 description: "Google Cloud SDK installation across all platforms, gcloud init walkthrough, component management, version diagnostics, and shell completion — the prerequisite for every other gcloud command."
 created: 2026-04-12
+updated: 2026-04-15
 status: complete
 ---
 
 # gcloud CLI Setup
 
-> [!quote]
+> [!quote] Setup boundary
+>
 > "The Cloud SDK is the single pane of glass between you and every GCP service. If it is misconfigured, nothing downstream works."
 >
 > — **Steren Giannini**, Google Cloud Developer Relations
@@ -19,7 +21,7 @@ status: complete
 > Covers Google Cloud CLI installation and operational setup across package-manager, standalone, container, and Cloud Shell environments so every later `gcloud` workflow starts from a verifiable SDK installation and initialized configuration.
 >
 > **Installation**
-> - Install the SDK through Debian or Ubuntu apt repositories, the Windows standalone installer, version-pinned `google/cloud-sdk` Docker images, or browser-based Cloud Shell
+> - Install the SDK through Debian or Ubuntu apt repositories, the Windows standalone installer, version-pinned `gcr.io/google.com/cloudsdktool/google-cloud-cli` images, or browser-based Cloud Shell
 > - Distinguish bundled tools and install models, including `gcloud`, `bq`, `gsutil`, `gcloud storage`, optional components, and the difference between package-managed and component-managed SDKs
 > - Enable platform-specific shell completion for Bash, PowerShell, and Zsh after the SDK is on `PATH`
 >
@@ -245,7 +247,7 @@ flowchart TD
     YUM["yum repository<br>auto-updates via yum update"]
     INTERACTIVE["Interactive installer<br>install.sh"]
     WININSTALL["Windows installer<br>GoogleCloudSDKInstaller.exe"]
-    DOCKERIMG["Docker image<br>google/cloud-sdk"]
+    DOCKERIMG["Docker image<br>google-cloud-cli"]
     CLOUDSHELL["Cloud Shell<br>pre-installed, ephemeral"]
 
     POST["Post-install"]
@@ -290,6 +292,10 @@ echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.clou
 sudo apt-get update && sudo apt-get install google-cloud-cli
 ```
 
+```text
+Not run live in this Windows vault session: this example targets a Debian or Ubuntu host and mutates the system apt keyring, sources list, and installed package set.
+```
+
 #### Install additional components via apt
 
 After the base `google-cloud-cli` package is installed and you need optional tools. It is typically triggered by A workflow requires a tool not included in the base package (e.g., GKE authentication, kubectl, Pub/Sub emulator). Runs with `sudo`. The `gcloud components install` command is disabled for apt-based installations — apt packages are the only supported mechanism. Add optional SDK components through the system package manager.
@@ -298,6 +304,10 @@ After the base `google-cloud-cli` package is installed and you need optional too
 
 ```bash
 sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
+```
+
+```text
+Not run live in this Windows vault session: this example requires an apt-managed Google Cloud CLI installation on Debian or Ubuntu and changes the host package set.
 ```
 
 > [!warning] Component manager is disabled with apt installs
@@ -348,6 +358,10 @@ Invoke-WebRequest -Uri "https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleC
 & "$env:TEMP\GoogleCloudSDKInstaller.exe"
 ```
 
+```text
+Not run live in this refactor pass: rerunning the installer would mutate the active Windows workstation PATH, bundled Python runtime, and local SDK/component registry.
+```
+
 | Flag | Syntax | Description |
 |---|---|---|
 | `/S` | `GoogleCloudSDKInstaller.exe /S` | Silent install — no GUI prompts |
@@ -357,39 +371,45 @@ Invoke-WebRequest -Uri "https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleC
 | `/nostartmenu` | `GoogleCloudSDKInstaller.exe /nostartmenu` | Skip Start Menu shortcut creation |
 | `/nopath` | `GoogleCloudSDKInstaller.exe /nopath` | Do not add gcloud to PATH |
 
-### Docker | google/cloud-sdk image
+### Docker | google-cloud-cli image
 
-The official `google/cloud-sdk` Docker image provides a pre-installed SDK in a container. It is the preferred method for CI/CD pipelines, ephemeral build agents, and reproducible environments. The image is available in multiple variants: full (all components), slim (gcloud only), and Alpine-based.
+The current Google-managed container path is `gcr.io/google.com/cloudsdktool/google-cloud-cli`. It is the preferred packaging model for CI/CD pipelines, ephemeral build agents, and reproducible environments because the tag can be pinned independently of the workstation SDK version. Google now recommends the `:stable` family instead of the older `google/cloud-sdk` naming that many older examples still show.
 
 #### Run gcloud in a container
 
 In CI/CD pipelines, ephemeral build environments, or when the host machine should not have the SDK installed directly. It is typically triggered by pipeline step requiring GCP access, local testing without SDK installation, or reproducible environment requirements. Requires Docker. The container runs as an isolated process. Mount volumes for credential files and working directories. Execute gcloud commands in a self-contained, version-pinned environment.
 
-*Run the SDK container with a mounted credentials directory.*
+> [!tip] Pin the image tag
+>
+> Use an explicit versioned `:stable` tag in automation rather than `latest`. That keeps the CLI, bundled Python, and default component set reproducible across pipeline runs and makes rollback straightforward if a release changes behavior.
 
-```bash
-docker run --rm -it \
-  -v ~/.config/gcloud:/root/.config/gcloud \
-  google/cloud-sdk:563.0.0 \
-  gcloud projects list
-```
-
-*Use the slim variant (no bq/gsutil, smaller image) for CI pipelines.*
+*Run the pinned stable image and verify the CLI version inside the container.*
 
 ```bash
 docker run --rm \
-  -v ~/.config/gcloud:/root/.config/gcloud \
-  google/cloud-sdk:563.0.0-slim \
-  gcloud compute instances list --project=bq-wh-nb
+  gcr.io/google.com/cloudsdktool/google-cloud-cli:565.0.0-stable \
+  gcloud version
 ```
+
+```text
+Google Cloud SDK 565.0.0
+alpha 2026.04.10
+beta 2026.04.10
+bq 2.1.31
+bundled-python3-unix 3.13.11
+core 2026.04.10
+gcloud-crc32c 1.0.0
+gsutil 5.36
+preview 2026.04.10
+```
+
+If the container needs authenticated commands, mount the local config directory explicitly and keep the mount path platform-correct for the host shell. On Windows PowerShell, that usually means mounting `%APPDATA%\\gcloud` rather than a Linux-style `~/.config/gcloud` path.
 
 | Image Tag | Contents | Size | Use Case |
 |---|---|---|---|
-| `google/cloud-sdk:latest` | gcloud + bq + gsutil + all components | ~2.5 GB | Full development |
-| `google/cloud-sdk:<version>` | Version-pinned full image | ~2.5 GB | Reproducible builds |
-| `google/cloud-sdk:<version>-slim` | gcloud only (no bq, gsutil, extras) | ~600 MB | CI/CD pipelines |
-| `google/cloud-sdk:<version>-alpine` | Alpine-based, gcloud only | ~400 MB | Minimal footprint containers |
-| `google/cloud-sdk:<version>-emulators` | Full image + all emulators | ~3 GB | Local development with emulators |
+| `gcr.io/google.com/cloudsdktool/google-cloud-cli:stable` | Supported default image with the standard CLI toolset | Varies by release | General-purpose local and CI usage |
+| `gcr.io/google.com/cloudsdktool/google-cloud-cli:<version>-stable` | Version-pinned stable image | Varies by release | Reproducible builds and rollback-safe automation |
+| `gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators` | CLI plus emulator-focused extras | Larger than `stable` | Local emulator workflows |
 
 ### Cloud Shell
 
@@ -441,53 +461,7 @@ gcloud init
 ```
 
 ```text
-Welcome! This command will take you through the configuration of gcloud.
-
-Pick configuration to use:
- [1] Re-initialize this configuration [default] with new settings
- [2] Create a new configuration
-Please enter your numeric choice:  1
-
-Your current configuration has been set to: [default]
-
-You can skip diagnostics next time by using the following flag:
-  gcloud init --skip-diagnostics
-
-Network diagnostic passed (1/1 checks passed).
-
-Choose the account you would like to use to perform operations for this
-configuration:
- [1] alexper.recovery@gmail.com
- [2] Log in with a new account
-Please enter your numeric choice:  1
-
-You are logged in as: [alexper.recovery@gmail.com].
-
-Pick cloud project to use:
- [1] bq-wh-nb
- [2] Enter a project ID
- [3] Create a new project
-Please enter numeric choice or text value (must exactly match list item):  1
-
-Your current project has been set to: [bq-wh-nb].
-
-Do you want to configure a default Compute Engine region and zone? (Y/n)?  Y
-
-Which Google Compute Engine zone would you like to use as project default?
- [1] us-east1-b
- [2] us-east1-c
- ...
- [50] europe-west1-b
-Please enter numeric choice or text value (must exactly match list item):  50
-
-Your project default Compute Engine zone has been set to [europe-west1-b].
-
-Your Google Cloud SDK is configured and ready to use!
-
-* Commands that require authentication will use alexper.recovery@gmail.com by default
-* Commands will reference project `bq-wh-nb` by default
-* Compute Engine commands will use region `europe-west1` by default
-* Compute Engine commands will use zone `europe-west1-b` by default
+Not re-run live in this refactor pass: `gcloud init` is interactive, opens a browser-based authorization flow when needed, and rewrites the active local configuration on this workstation.
 ```
 
 > [!danger] Never run gcloud init in CI/CD pipelines
@@ -566,9 +540,6 @@ gcloud components list
 ```
 
 ```text
-Your current Google Cloud CLI version is: 563.0.0
-The latest available version is: 564.0.0
-
 +--------------------------------------------------------------------------------------------------------------------+
 |                                                     Components                                                     |
 +------------------+------------------------------------------------------+------------------------------+-----------+
@@ -609,6 +580,16 @@ The latest available version is: 564.0.0
 | Installed        | Google Cloud CRC32C Hash Tool                        | gcloud-crc32c                |   1.5 MiB |
 | Installed        | Log Streaming                                        | log-streaming                |  18.0 MiB |
 +------------------+------------------------------------------------------+------------------------------+-----------+
+
+Your current Google Cloud CLI version is: 563.0.0
+The latest available version is: 565.0.0
+
+To install or remove components at your current Google Cloud CLI version [563.0.0], run:
+  $ gcloud components install COMPONENT_ID
+  $ gcloud components remove COMPONENT_ID
+
+To update your Google Cloud CLI installation to the latest version [565.0.0], run:
+  $ gcloud components update
 ```
 
 The output has four columns:
@@ -635,26 +616,7 @@ gcloud components install gke-gcloud-auth-plugin
 ```
 
 ```text
-Your current Google Cloud CLI version is: 563.0.0
-
-Installing components from version: 563.0.0
-
-+------------------------------------------------------------+
-|          These components will be installed.                |
-+------------------------+---------+------------+------------+
-|          Name          | Version |    Size    |   Status   |
-+------------------------+---------+------------+------------+
-| gke-gcloud-auth-plugin |  0.6.2  |   3.9 MiB  | New Install|
-+------------------------+---------+------------+------------+
-
-Do you want to continue (Y/n)?  Y
-
-Creating update staging area...
-Installing: gke-gcloud-auth-plugin ... done.
-
-Performing post processing steps...done.
-
-Update done!
+Not run live in this refactor pass: the current workstation intentionally keeps `gke-gcloud-auth-plugin` uninstalled, and this command would mutate the local SDK installation.
 ```
 
 | Flag | Syntax | Description |
@@ -676,6 +638,10 @@ Periodically (monthly or before starting a new project) to stay current with API
 gcloud components update
 ```
 
+```text
+Not run live in this refactor pass: updating from `563.0.0` to `565.0.0` would change the local CLI baseline used by other notes and live examples in this vault.
+```
+
 > [!danger] Outdated SDK versions cause silent API incompatibilities
 >
 > GCP APIs evolve independently of the SDK. An outdated SDK may send deprecated request formats, miss new required fields, or fail to parse updated response schemas. These failures often surface as cryptic errors (e.g., `HttpError 400: Invalid value`) rather than explicit version warnings.
@@ -685,13 +651,13 @@ gcloud components update
 > Check the current version against the latest release before debugging API errors:
 > ```bash
 > gcloud version
-> gcloud components update --version=564.0.0  # pin to a specific version if needed
+> gcloud components update --version=565.0.0  # pin to a specific version if needed
 > ```
-> In CI/CD, use the Docker image with a pinned tag (e.g., `google/cloud-sdk:564.0.0-slim`) rather than `latest`.
+> In CI/CD, use the Docker image with a pinned tag (for example, `gcr.io/google.com/cloudsdktool/google-cloud-cli:565.0.0-stable`) rather than `latest`.
 
 | Flag | Syntax | Description |
 |---|---|---|
-| `--version=VERSION` | `gcloud components update --version=564.0.0` | Update to a specific SDK version instead of latest |
+| `--version=VERSION` | `gcloud components update --version=565.0.0` | Update to a specific SDK version instead of latest |
 | `--quiet` / `-q` | `gcloud components update -q` | Skip confirmation prompt |
 | `COMPONENT_ID [...]` | `gcloud components update core bq` | Update only specific components |
 
@@ -707,6 +673,10 @@ When cleaning up unused components to reduce disk footprint, or when a component
 
 ```bash
 gcloud components remove gke-gcloud-auth-plugin
+```
+
+```text
+Not run live in this refactor pass: the current workstation does not have `gke-gcloud-auth-plugin` installed, so the removal path remains documented syntax only.
 ```
 
 | Flag | Syntax | Description |
@@ -740,9 +710,12 @@ core 2026.03.27
 gcloud-crc32c 1.0.0
 gsutil 5.36
 log-streaming 0.3.2
+Updates are available for some Google Cloud CLI components.  To install them,
+please run:
+  $ gcloud components update
 ```
 
-The first line shows the overall SDK release version (563.0.0). Each subsequent line shows an installed component and its version. `core`, `alpha`, and `beta` track the SDK release date (2026.03.27). Other components follow independent versioning: `bq 2.1.31` is the BigQuery CLI version, `gsutil 5.36` is the Cloud Storage CLI version.
+The first line shows the overall SDK release version (`563.0.0`). Each subsequent line shows an installed component and its version. `core`, `alpha`, and `beta` track the SDK release date (`2026.03.27`). Other components follow independent versioning: `bq 2.1.31` is the BigQuery CLI version, `gsutil 5.36` is the Cloud Storage CLI version. The trailing advisory matters operationally: this workstation is behind the latest available release (`565.0.0`), so API troubleshooting should rule out version drift early.
 
 ### PowerShell / Linux | gcloud info
 
@@ -763,13 +736,13 @@ Google Cloud SDK [563.0.0]
 
 Platform: [Windows, x86_64] uname_result(system='Windows', node='Elysium', release='11', version='10.0.26200', machine='AMD64')
 Locale: ('English_United States', '1252')
-Python Version: [3.12.0 (tags/v3.12.0:0fb18b0, Oct  2 2023, 13:03:39) [MSC v.1935 64 bit (AMD64)]]
-Python Location: [C:\Users\aperi\My Drive\VAULT\.vault\Scripts\python.exe]
-OpenSSL: [OpenSSL 3.0.11 19 Sep 2023]
+Python Version: [3.13.12 (tags/v3.13.12:1cbe481, Feb  3 2026, 18:22:25) [MSC v.1944 64 bit (AMD64)]]
+Python Location: [C:\Users\aperi\AppData\Local\Google\Cloud SDK\google-cloud-sdk\platform\bundledpython\python.exe]
+OpenSSL: [OpenSSL 3.0.18 30 Sep 2025]
 Requests Version: [2.32.3]
 urllib3 Version: [2.6.3]
 Default CA certs file: [C:\Users\aperi\AppData\Local\Google\Cloud SDK\google-cloud-sdk\lib\third_party\certifi\cacert.pem]
-Site Packages: [Enabled]
+Site Packages: [Disabled]
 
 Installation Root: [C:\Users\aperi\AppData\Local\Google\Cloud SDK\google-cloud-sdk]
 Installed Components:
@@ -788,9 +761,10 @@ Active Configuration Path: [C:\Users\aperi\AppData\Roaming\gcloud\configurations
 
 Account: [alexper.recovery@gmail.com]
 Project: [bq-wh-nb]
+Universe Domain: [googleapis.com]
 
 git: [git version 2.53.0.windows.1]
-ssh: [OpenSSH_10.2p1, OpenSSL 3.5.5 27 Jan 2026]
+ssh: [OpenSSH_for_Windows_9.5p2, LibreSSL 3.8.2]
 ```
 
 The output is organized into sections:
@@ -798,7 +772,7 @@ The output is organized into sections:
 | Section | Key fields | What to check |
 |---|---|---|
 | **Platform** | OS, architecture, locale | Confirms the SDK is running on the expected platform |
-| **Python** | Version, location, OpenSSL version | The SDK requires Python 3.8+. If `Python Location` points to an unexpected interpreter, the SDK may use wrong dependencies |
+| **Python** | Version, location, OpenSSL version | The current Google Cloud CLI supports Python 3.10 to 3.14. On Windows, the installer bundles Python by default, so a bundled path here is normal |
 | **Installation Root** | Filesystem path to the SDK | Package-manager installs show `/usr/lib/google-cloud-sdk`; standalone installs show a user-writable path |
 | **Installed Components** | Component versions | Cross-reference with `gcloud components list` to check for updates |
 | **User Config Directory** | Path to config files | Where configurations, credentials, and logs are stored |
@@ -834,6 +808,10 @@ echo 'source ~/google-cloud-sdk/completion.bash.inc' >> ~/.bashrc
 source ~/.bashrc
 ```
 
+```text
+Not run live in this Windows vault session: this example targets a Bash profile on a Linux host and changes future shell startup behavior.
+```
+
 > [!info] Path depends on installation method
 >
 > - **apt install:** `/usr/lib/google-cloud-sdk/completion.bash.inc`
@@ -863,6 +841,10 @@ if (Test-Path $gcloudComp) { . $gcloudComp }
 
 # Reload
 . $PROFILE
+```
+
+```text
+Not run live in this refactor pass: this example appends to the PowerShell profile and changes completion behavior for future shells on the active workstation.
 ```
 
 > [!info] Windows SDK default completion path
@@ -895,6 +877,10 @@ echo 'source ~/google-cloud-sdk/completion.zsh.inc' >> ~/.zshrc
 
 # Reload
 source ~/.zshrc
+```
+
+```text
+Not run live in this Windows vault session: this example targets a Zsh profile on a Linux or macOS host and changes future shell startup behavior.
 ```
 
 > [!danger] Package manager and standalone installs must not coexist

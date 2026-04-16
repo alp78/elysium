@@ -8,7 +8,7 @@ aliases: [IO redirection, I/O redirection, output redirection, stderr redirect, 
 keywords: [redirection, stdout, stderr, stdin, file descriptor, dev null, redirect output, redirect error, tee, append, overwrite, fd 0, fd 1, fd 2, 2>&1, output to file]
 description: "How to redirect stdin, stdout, and stderr to files, other streams, or /dev/null in bash and PowerShell, including production logging patterns and common gotchas."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -179,11 +179,13 @@ Bash applies redirections in the shell before the target process starts. That mo
 
 These operators target stdout, stderr, or both. The examples below use temporary directories so the behavior is visible without depending on project-specific files or paths.
 
+> [!warning] Descriptor order changes the result
+>
+> Bash applies redirections from left to right. `cmd > file 2>&1` sends both streams to the file, while `cmd 2>&1 > file` duplicates stderr to the terminal-bound stdout first and leaves error output on screen. Use the explicit `> file 2>&1` order when the log must contain both streams.
+
 #### Redirect stdout to a file (overwrite)
 
 `>` opens the destination for writing and truncates any previous content before the command runs. The example overwrites an existing file and then prints the final contents so the effect is visible.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to redirect stdout to a file (overwrite).*
 ```bash
@@ -201,8 +203,6 @@ new
 
 `>>` keeps the existing file contents and writes new stdout at the end. That makes it the default choice for cumulative logs and audit trails.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to redirect stdout to a file (append).*
 ```bash
 tmp=$(mktemp -d)
@@ -219,8 +219,6 @@ second
 #### Redirect stderr to a file
 
 `2>` moves only stderr. Stdout keeps going to the terminal, which is why this pattern is useful when you want live progress but a separate error record.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to redirect stderr to a file.*
 ```bash
@@ -240,8 +238,6 @@ captured stderr
 
 `> file 2>&1` first points stdout at the file and then duplicates stderr into that same destination. The output below proves that both streams were written into one file instead of the terminal.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to redirect both stdout and stderr to the same file.*
 ```bash
 tmp=$(mktemp -d)
@@ -257,8 +253,6 @@ stderr line
 #### Redirect both stdout and stderr with Bash shorthand
 
 `&>` is the overwrite shorthand and `&>>` is the append shorthand. They are convenient in Bash-only scripts when the explicit `> file 2>&1` form is not needed for portability.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to redirect both stdout and stderr with Bash shorthand.*
 ```bash
@@ -278,8 +272,6 @@ second stderr
 #### Discard all output
 
 Redirecting to `/dev/null` is the Bash way to silence a command when only success or failure matters. Because the redirect is intentionally silent, the follow-up line verifies that the command still ran and returned exit code `0`.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to discard all output.*
 ```bash
@@ -313,8 +305,6 @@ Input redirection replaces interactive keyboard input with a file or inline bloc
 
 `<` opens a file and makes it the command's stdin. `wc -l` is a compact verification target because the output reflects only what came from the redirected file.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to redirect stdin from a file.*
 ```bash
 tmp=$(mktemp -d)
@@ -329,8 +319,6 @@ wc -l < "$tmp/input.txt"
 #### Here-document - embed multi-line stdin inline
 
 A here-document keeps multi-line input in the script itself. The first example shows normal expansion, and the second uses a quoted delimiter so the payload stays literal.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to here-document - embed multi-line stdin inline.*
 ```bash
@@ -360,8 +348,6 @@ Hello, $name
 
 `<<<` is the compact Bash form for passing one string into stdin. The example below base64-encodes a short string and preserves the original captured output.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to here-string - feed a single string to stdin.*
 ```bash
 base64 <<< "encode this string"
@@ -388,8 +374,6 @@ Use the lookup table below when you need the input forms at a glance.
 
 The command below writes two lines to stdout, shows them live, and then prints the saved log so the duplicated stream is obvious.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to write to terminal and file simultaneously.*
 ```bash
 tmp=$(mktemp -d)
@@ -410,8 +394,6 @@ line two
 #### Append to log file while displaying live output
 
 `tee -a` preserves prior log content. The example seeds the file with one line, merges stderr into stdout with `2>&1`, and then appends the new combined stream.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to append to log file while displaying live output.*
 ```bash
@@ -435,8 +417,6 @@ stderr line
 #### Separate stdout and stderr into distinct log files
 
 Separate log files are easier to search when the normal data stream and diagnostics have different consumers. This example uses a fixed timestamp string so the resulting paths stay stable inside the demo.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to separate stdout and stderr into distinct log files.*
 ```bash
@@ -475,8 +455,6 @@ The operator sections above explain mechanics. The recommendations below turn th
 
 If a job can fail noisily, append a merged stream to a persistent log. That gives you a complete timeline without sacrificing live terminal visibility.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to capture both streams in a production log.*
 ```bash
 tmp=$(mktemp -d)
@@ -497,8 +475,6 @@ job warning
 #### Keep data output and error output separate
 
 Structured output should not share a file with diagnostics. The example keeps CSV-like data on stdout and sends the bad row marker to a separate error log.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to keep data output and error output separate.*
 ```bash
@@ -522,8 +498,6 @@ bad row
 
 `command -v tool > /dev/null 2>&1` is the quiet existence check for shell scripts. The verification line prints the exit code instead of the command path.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to check whether a tool exists without printing noise.*
 ```bash
 command -v bash > /dev/null 2>&1
@@ -537,8 +511,6 @@ bash_available=0
 #### Quote here-document delimiters when embedded text must stay literal
 
 Quoted delimiters prevent accidental expansion inside inline SQL, JSON templates, and shell snippets that contain `$`-prefixed placeholders.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to quote here-document delimiters when embedded text must stay literal.*
 ```bash
@@ -560,8 +532,6 @@ These are the failure signatures that show up most often in shell scripts. Each 
 
 If the input file and output file are the same path, the shell truncates the target before the command reads it. The byte count below drops to zero because `sort` destroyed the input first.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to output file is empty after a redirect.*
 ```bash
 tmp=$(mktemp -d)
@@ -577,8 +547,6 @@ bytes_after_sort=0
 #### Stderr still appears on the terminal after a redirect
 
 This symptom usually means stderr was never redirected correctly. The example uses the classic wrong-order form, so stderr stays on the terminal while only stdout reaches the file.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to stderr still appears on the terminal after a redirect.*
 ```bash
@@ -598,8 +566,6 @@ stdout line
 
 An unquoted delimiter expands shell variables inside the block. If you expected literal text, the output below is the failure mode you are looking for.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to here-document variables expanded when they should stay literal.*
 ```bash
 name='Elysium'
@@ -615,8 +581,6 @@ name=Elysium
 #### `noclobber` seems to block a new file
 
 `noclobber` only blocks overwriting an existing file. If a first write to a new path succeeds, a failure on a supposedly missing file is more likely a path, permission, or disk issue.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to `noclobber` seems to block a new file.*
 ```bash
@@ -635,8 +599,6 @@ new file
 
 `tee` receives stdout from the pipe, not stderr. When the upstream command writes only to stderr, the terminal still shows the message but the log stays empty.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to `tee` wrote nothing because the pipeline produced only stderr.*
 ```bash
 tmp=$(mktemp -d)
@@ -652,8 +614,6 @@ log_bytes=0
 #### Prevent accidental overwrites with `noclobber`
 
 `set -C` turns accidental overwrite into an explicit failure. The existing refusal output below is preserved, and the second command shows the deliberate `>|` bypass.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to prevent accidental overwrites with `noclobber`.*
 ```bash
@@ -690,11 +650,13 @@ PowerShell keeps the familiar success and error streams but adds separate warnin
 
 These operators target the numbered PowerShell streams. The examples use temporary directories and simple strings so the stream behavior stays visible instead of host-specific.
 
+> [!info] File redirection still formats PowerShell objects
+>
+> `>` and `>>` flow through PowerShell's formatting system rather than writing raw object structure. Use `Export-Csv`, `ConvertTo-Json`, or `Out-File` with explicit `-Encoding` and `-Width` when the file is a machine-consumed artifact instead of a human log.
+
 #### Redirect stdout (Success stream) to a file
 
 `>` writes the Success stream to a file. The example overwrites an existing file and then reads it back so the final state is unambiguous.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to redirect stdout (Success stream) to a file.*
 ```powershell
@@ -713,8 +675,6 @@ new
 #### Redirect stdout to a file and append additional output
 
 `>>` appends to the same file, and `Out-File -Append` makes that intent explicit in scripts. The final read shows all three writes in order.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to redirect stdout to a file and append additional output.*
 ```powershell
@@ -737,8 +697,6 @@ third
 
 `2>` captures the error stream without touching the Success stream. The verification step filters the redirected file down to the message line so the captured error is easy to inspect.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to redirect stderr (Error stream) to a file.*
 ```powershell
 $tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
@@ -755,8 +713,6 @@ captured error
 #### Redirect all streams to a file
 
 `*>` is the wildcard form that captures Success, Warning, Verbose, Debug, Information, and Error output in one destination. The verification step extracts the key tokens from the saved file so each stream is visible without the surrounding formatting noise.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to redirect all streams to a file.*
 ```powershell
@@ -790,8 +746,6 @@ error
 #### Discard all output
 
 `*> $null` discards every PowerShell stream. Because the redirected command is intentionally silent, the follow-up line proves that only later output is still visible.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to discard all output.*
 ```powershell
@@ -831,8 +785,6 @@ Use the lookup table below for the numbered PowerShell stream operators.
 
 `Tee-Object -FilePath` writes the same Success stream to the console and a file. The verification step reads the file back immediately.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to write to terminal and file simultaneously.*
 ```powershell
 $tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
@@ -855,8 +807,6 @@ beta
 #### Append to a log file while displaying live output
 
 `-Append` keeps existing log content. Because warnings live on stream 3, the example merges `3>&1` before `Tee-Object` so both lines are visible and persisted.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to append to a log file while displaying live output.*
 ```powershell
@@ -882,8 +832,6 @@ live warning
 #### Capture output in a variable and continue the pipeline
 
 `Tee-Object -Variable` lets you inspect the full stream later while the pipeline keeps moving. The filtered output proves the downstream pipeline still ran, and the final line shows the saved copy.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to capture output in a variable and continue the pipeline.*
 ```powershell
@@ -914,8 +862,6 @@ PowerShell here-strings are multi-line literals, not stdin redirection. They mat
 
 `@"..."@` expands variables and expressions inside the block. The example uses a fixed date string so the original captured output remains stable.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to expandable here-string - variable interpolation active.*
 ```powershell
 $name = "World"
@@ -935,8 +881,6 @@ Today is 2026-04-03
 #### Literal here-string - no expansion
 
 `@'...'@` keeps the content untouched. That is the safe form for SQL, JSON, templates, and any block that contains `$`-prefixed text you do not want interpolated.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to literal here-string - no expansion.*
 ```powershell
@@ -971,8 +915,6 @@ These patterns build on the core operators above and focus on the cases that mos
 
 When operators need both live visibility and a durable log, append instead of overwrite. Merging stream 3 before the tee step keeps warning text in the same timeline.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to append production logs with `Tee-Object -Append`.*
 ```powershell
 if ($PSVersionTable.PSVersion.Major -ge 7) { $PSStyle.OutputRendering = 'PlainText' }
@@ -999,8 +941,6 @@ live warning
 
 Separating data from diagnostics keeps structured results machine-readable. The example writes the data row to one file and the error text to another.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to keep success output and error output in separate files.*
 ```powershell
 $tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
@@ -1026,8 +966,6 @@ bad row
 
 Encoding bugs are easiest to prevent before the file leaves PowerShell. The byte dump below shows the UTF-8 representation of `olá` rather than the UTF-16LE layout that surprises many Unix tools.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to prefer `Out-File -Encoding utf8` when another tool will read the file.*
 ```powershell
 $tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
@@ -1049,8 +987,6 @@ Most PowerShell redirect bugs come from the extra streams or from encoding defau
 
 If a file starts with `FF-FE` and every character is followed by `00`, you wrote UTF-16LE. That is the default many people still encounter in Windows PowerShell 5.1.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to redirected file contains UTF-16LE bytes.*
 ```powershell
 $tmp = Join-Path $env:TEMP ('redir-' + [guid]::NewGuid())
@@ -1067,8 +1003,6 @@ FF-FE-6F-00-6C-00-E1-00-0D-00-0A-00
 #### The pipeline missed warnings
 
 PowerShell pipes stream 1 by default, not stream 3. The first command shows the warning reaching the console while the pipeline sees only the data row; the second merges `3>&1` so the warning enters the pipeline too.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to the pipeline missed warnings.*
 ```powershell

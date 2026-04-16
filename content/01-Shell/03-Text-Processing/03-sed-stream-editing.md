@@ -6,7 +6,7 @@ tags:
 aliases: [sed, stream editor, find and replace, text substitution, in-place editing, -i flag]
 description: "Reference for sed covering substitution, addressing, in-place editing, multiline workflows, portability, and PowerShell equivalents."
 created: 2026-03-22
-updated: 2026-04-14
+updated: 2026-04-15
 status: complete
 ---
 
@@ -158,8 +158,6 @@ Substitution is sed's core feature. The examples below show how default replacem
 
 Without `g`, `s///` changes only the first match in the current pattern space. Keep that default only when first-match behavior is deliberate.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to replace the first match on each line.*
 ```bash
 printf 'ERROR ERROR\nWARN ERROR\n' | sed 's/ERROR/INFO/'
@@ -173,8 +171,6 @@ WARN INFO
 #### Replace every match on each line
 
 Add `g` when the intent is a full line-wide replacement.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to replace every match on each line.*
 ```bash
@@ -190,8 +186,6 @@ WARN INFO
 
 Alternative delimiters keep path and URL substitutions readable.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to switch delimiters for path-heavy patterns.*
 ```bash
 printf '/var/log/app\n' | sed 's|/var/log|/srv/log|g'
@@ -204,8 +198,6 @@ printf '/var/log/app\n' | sed 's|/var/log|/srv/log|g'
 #### Use capture groups with `-E`
 
 `-E` removes most of the backslash noise from non-trivial patterns.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to use capture groups with `-E`.*
 ```bash
@@ -222,8 +214,6 @@ printf '2026-04-14\n' | sed -E 's#([0-9]{4})-([0-9]{2})-([0-9]{2})#\3/\2/\1#'
 
 PowerShell's `-replace` is regex-based and replaces all matches on each string.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to replace every match with `-replace`.*
 ```powershell
 @('ERROR ERROR','WARN ERROR') | ForEach-Object { $_ -replace 'ERROR','INFO' }
@@ -238,8 +228,6 @@ WARN INFO
 
 Use `-creplace` when case-sensitive behavior matters.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to make the match case-sensitive with `-creplace`.*
 ```powershell
 @('Error error','ERROR error') | ForEach-Object { $_ -creplace 'Error','WARN' }
@@ -253,8 +241,6 @@ ERROR error
 #### Reorder fields with capture groups
 
 PowerShell uses `$1`, `$2`, and so on in the replacement string.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to reorder fields with capture groups.*
 ```powershell
@@ -294,8 +280,6 @@ Addresses restrict a command to the lines you care about. That keeps transformat
 
 Suppress default output with `-n` when you want sed to act as a line extractor.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to print a line range with `-n` and `p`.*
 ```bash
 printf 'one\ntwo\nthree\nfour\n' | sed -n '2,3p'
@@ -309,8 +293,6 @@ three
 #### Restrict a substitution to matching lines
 
 An address in front of `s///` limits the replacement to lines that match the address.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to restrict a substitution to matching lines.*
 ```bash
@@ -327,8 +309,6 @@ WARN retry
 
 Deletion is one of sed's most common cleanup tasks.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to delete blank lines.*
 ```bash
 printf 'alpha\n\nbeta\n' | sed '/^$/d'
@@ -342,8 +322,6 @@ beta
 #### Replace matching lines with `c\`
 
 Use `c\` when the whole line should be replaced, not just one matched fragment.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to replace matching lines with `c\`.*
 ```bash
@@ -362,8 +340,6 @@ DONE
 
 When the data is already in memory, array slicing is the closest equivalent to `sed -n 'start,endp'`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to select a line range.*
 ```powershell
 ('one','two','three','four')[1..2]
@@ -378,8 +354,6 @@ three
 
 Filtering with `Where-Object` covers the same case as `sed '/^$/d'`.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to delete blank lines with `Where-Object`.*
 ```powershell
 @('alpha','','beta') | Where-Object { $_ -ne '' }
@@ -393,8 +367,6 @@ beta
 #### Replace matching lines conditionally
 
 Use a conditional pipeline when the whole line should change based on a match.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to replace matching lines conditionally.*
 ```powershell
@@ -428,8 +400,6 @@ By default, sed writes to stdout and leaves the source file untouched. That is t
 
 A dry run is the fastest way to confirm the substitution scope before you touch a file.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to preview the change before writing.*
 ```bash
 printf 'host=localhost\n' | sed 's/localhost/db.internal/'
@@ -442,8 +412,6 @@ host=db.internal
 #### Edit a file with `-i.bak`
 
 `-i.bak` keeps a backup and works across GNU sed and BSD or macOS sed.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to edit a file with `-i.bak`.*
 ```bash
@@ -465,8 +433,6 @@ backup:host=localhost
 #### Rewrite the file after transforming the content
 
 PowerShell has no `-i` flag. The standard pattern is read, transform, write, and optionally create a backup first.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to rewrite the file after transforming the content.*
 ```powershell
@@ -510,8 +476,6 @@ Once a transformation needs more than one step, combine expressions with `-e` or
 
 Multiple expressions are often enough for text normalization tasks.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to chain cleanup steps with multiple `-e` expressions.*
 ```bash
 printf '  alpha  \n\nbeta  \n' | sed -e 's/[[:space:]]*$//' -e '/^$/d'
@@ -525,8 +489,6 @@ beta
 #### Join line pairs with `N`
 
 `N` appends the next input line to the current pattern space, which lets one substitution see both lines at once.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to join line pairs with `N`.*
 ```bash
@@ -544,8 +506,6 @@ gamma | delta
 
 The pipeline below mirrors the two-step cleanup from the Bash example.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to chain trims and filters in one pipeline.*
 ```powershell
 @('  alpha  ','','beta  ') | ForEach-Object { $_ -replace '\s+$','' } | Where-Object { $_ -ne '' }
@@ -560,8 +520,6 @@ beta
 
 Use `[regex]::Replace()` when the input should be treated as one multiline string instead of a line stream.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to collapse a wrapped value with a multiline regex.*
 ```powershell
 $text = "Subject: Hello`n World"
@@ -575,8 +533,6 @@ Subject: Hello World
 #### Join records into one value
 
 When the goal is a single combined value, array joining is usually simpler than emulating hold-space logic.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to join records into one value.*
 ```powershell
@@ -608,8 +564,6 @@ sed is common in log cleanup, export normalization, and one-off redaction. The e
 
 For local inspection or quick sanitization, a regex replacement is often enough.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to redact email-like tokens.*
 ```bash
 printf 'user=ana@example.com\n' | sed -E 's/[[:alnum:]._%+-]+@[[:alnum:].-]+\.[[:alpha:]]{2,}/EMAIL_REDACTED/g'
@@ -622,8 +576,6 @@ user=EMAIL_REDACTED
 #### Normalize a BOM, CRLF endings, trailing space, and blank lines
 
 Chaining cleanup expressions keeps a small normalization pass readable.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to normalize a BOM, CRLF endings, trailing space, and blank lines.*
 ```bash
@@ -640,8 +592,6 @@ id,name
 #### Redact bearer tokens
 
 For Windows-native pipelines, chained `-replace` operations cover the same kind of targeted redaction.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to redact bearer tokens.*
 ```powershell
@@ -699,8 +649,6 @@ These failure modes are common because sed defaults are terse and easy to forget
 
 The default `s///` behavior is first-match only. Add `g` when the line should be rewritten everywhere.
 
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
-
 *Run the commands in this section to only the first match changed.*
 ```bash
 printf 'foo foo\n' | sed 's/foo/bar/'
@@ -724,8 +672,6 @@ bar bar
 #### `sed '2p'` printed the selected line twice
 
 Without `-n`, sed still performs its normal end-of-cycle print. Add `-n` when `p` is meant to be selective output rather than an extra print.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to `sed '2p'` printed the selected line twice.*
 ```bash
@@ -753,8 +699,6 @@ two
 #### `+` or `|` matched literally
 
 Portable sed does not treat alternation or one-or-more as BRE features. Use `-E` when that syntax is part of the pattern.
-
-Use this leaf when you need the exact operation named in the heading. It is typically triggered by you are validating behavior, building a script, or diagnosing the specific shell behavior shown below. Replace the example paths, hosts, patterns, process IDs, file names, or credentials with real values before running it outside the disposable sample. Show the command shape, the expected effect, and the output you should verify.
 
 *Run the commands in this section to `+` or `|` matched literally.*
 ```bash
