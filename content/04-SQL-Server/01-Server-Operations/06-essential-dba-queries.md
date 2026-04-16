@@ -66,6 +66,8 @@ status: complete
 >
 > The query pack follows the order a DBA actually investigates an incident. The diagram below shows how the first signals branch into deeper queries.
 
+*This flowchart shows how the first-response queries branch from baseline facts into workload, blocking, and backup triage.*
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -107,7 +109,7 @@ Each section in this note maps to one branch of that decision path.
 
 ## Baseline
 
-> [!abstract] Identity and scope
+> [!abstract]- Summary
 >
 > Before changing anything, confirm the exact build, edition, host, clustering state, HA state, and database inventory on the instance you are looking at. This section covers the four reference points every responder needs: engine identity, database catalog, file allocation, and configuration drift. Every other section in this note depends on these facts being true and current.
 
@@ -554,25 +556,27 @@ ORDER BY name;
 | optimize for ad hoc workloads | 0 | 0 | 0 | 1 | 1 | 1 |
 | remote admin connections | 0 | 0 | 0 | 1 | 1 | 0 |
 
-*The audit shows an almost-default instance with two important observations. First, `Agent XPs = 1` proves that SQL Server Agent is enabled on this Linux container — the Agent workload is visible later in the session inventory and in the Agent job history query. Second, `min server memory` diverges between `value_in_use = 16` and `configured_value = 0`: the configured value is 0 but the engine is reporting 16 MB in use, which is the hard floor the engine applies internally and is not a drift signal. Every other setting is at its documented default. In production on this hardware, the three settings that should almost always change before the instance leaves lab are `max server memory`, `cost threshold for parallelism` (default `5` is too low for modern OLTP), and `max degree of parallelism`; see [SQL Server | server configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/01-server-configuration) for the remediation patterns.*
+*The audit shows an almost-default instance with two important observations. First, `Agent XPs = 1` proves that SQL Server Agent is enabled on this Linux container — the Agent workload is visible later in the session inventory and in the Agent job history query. Second, `min server memory` diverges between `value_in_use = 16` and `configured_value = 0`: the configured value is 0 but the engine is reporting 16 MB in use, which is the hard floor the engine applies internally and is not a drift signal. Every other setting is at its documented default.*
 
-| Setting | Default | Production recommendation | Reason |
-|---|---:|---|---|
-| `max degree of parallelism` | `0` (unlimited) | Equal to cores per NUMA node, capped at 8 | Prevents runaway parallelism on OLTP workloads |
-| `cost threshold for parallelism` | `5` | `50` or higher | Default triggers parallel plans on trivial queries |
-| `max server memory (MB)` | `2147483647` | Leave 2-4 GB plus ~10% for the OS | Default allows SQL Server to consume all host RAM |
-| `min server memory (MB)` | `0` | Leave at default unless multi-instance | Only matters for shared hosts |
-| `optimize for ad hoc workloads` | `0` | `1` | Halves plan-cache memory for single-use plans |
-| `backup compression default` | `0` | `1` | Backups are smaller and faster; trivial CPU cost |
-| `remote admin connections` | `0` | `1` | Enables DAC from remote host for emergency diagnostics |
-| `contained database authentication` | `0` | `1` if contained databases are in use | Required for contained database users |
-| `Agent XPs` | `0` | `1` if Agent is used | Enables Agent-related stored procedures |
+The production hardening order is straightforward:
+
+- `max server memory (MB)`: leave 2-4 GB plus roughly 10% of host RAM for the OS and background services.
+- `cost threshold for parallelism`: raise it to `50` or higher so trivial queries do not go parallel.
+- `max degree of parallelism`: cap it at the cores per NUMA node, with an upper bound of `8`.
+- `optimize for ad hoc workloads`: set it to `1` when plan-cache waste from single-use queries matters.
+- `backup compression default`: set it to `1` for smaller and usually faster backups.
+- `remote admin connections`: set it to `1` if you need remote DAC access for emergency diagnostics.
+- `contained database authentication`: leave it at `0` unless contained databases are in use.
+- `Agent XPs`: set it to `1` only when SQL Server Agent is part of the operating model.
+- `min server memory (MB)`: leave it at `0` unless the instance shares a host with other SQL Server services.
+
+See [SQL Server | server configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/01-server-configuration) for the remediation patterns behind each setting.
 
 ---
 
 ## Workload
 
-> [!abstract] What is happening right now
+> [!abstract]- Summary
 >
 > This section answers the live questions: who is connected, which requests are active, whether blocking exists, whether any transactions have been open too long, whether tempdb is taking allocation-page latch hits, and what cumulative waits have dominated since startup. Every query here is a live DMV read that should be interpreted in the context of the current session count and server uptime.
 
@@ -1087,7 +1091,7 @@ ORDER BY wait_time_ms DESC;
 
 ## Backups And Capacity
 
-> [!abstract] Proof, cadence, and hotspots
+> [!abstract]- Summary
 >
 > Backup queries answer one operational question each: does the instance have recent, trustworthy evidence of a full backup, has the log chain been maintained, and where is capacity actually being consumed? The DMV-based queries in this section are the minimum set you need before approving a restore request, a capacity plan, or an index maintenance window.
 
@@ -1536,13 +1540,13 @@ ORDER BY ps.avg_fragmentation_in_percent DESC;
 >
 > Run `LIMITED` first to find candidates for maintenance. Only escalate to `DETAILED` on the specific indexes that ranked high and only when you need the `avg_page_space_used_in_percent` metric for a rebuild-with-fillfactor decision.
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `frag_pct` | < 10% | &#9989; | Minimal fragmentation | No maintenance needed |
-| `frag_pct` | 10-30% | Watch | Moderate fragmentation | Candidate for `ALTER INDEX ... REORGANIZE` |
-| `frag_pct` | > 30% | &#10060; | Heavy fragmentation | Candidate for `ALTER INDEX ... REBUILD` |
-| `fragment_count` | Close to `page_count` | &#10060; | Nearly every page is its own fragment | Textbook random-insert fragmentation |
-| `page_count` | < 1000 | Usually ignore | Too small for fragmentation to matter | Filter out of maintenance decisions |
+Use the thresholds below to decide whether the query output needs action:
+
+- `frag_pct < 10%`: minimal fragmentation; no maintenance needed.
+- `frag_pct 10-30%`: moderate fragmentation; candidate for `ALTER INDEX ... REORGANIZE`.
+- `frag_pct > 30%`: heavy fragmentation; candidate for `ALTER INDEX ... REBUILD`.
+- `fragment_count` close to `page_count`: nearly every page is its own fragment, which is the classic random-insert pattern.
+- `page_count < 1000`: usually ignore; the index is too small for fragmentation to matter.
 
 ### SQL Server | sys.dm_db_missing_index_* | optimizer-suggested indexes
 
@@ -1644,20 +1648,20 @@ ORDER BY LogDate DESC;
 
 *The ten most recent rows all come from the same instance startup sequence at 15:56:00 today: recovery completed on `stoxx`, parallel redo shut down, then `Agent XPs` was configured on by a startup script, and the relevant `xpstar.dll` / `xpsqlbot.dll` extended-proc libraries were loaded. None of these rows represents an error condition. The useful operational reading is the ordering: `Recovery is complete` at 15:56:00.480 is the moment databases became usable, and anything before that timestamp is pre-recovery startup. In production the queries you actually run against this output look for specific patterns: `xp_readerrorlog 0, 1, N'error'` to filter on the word "error", `xp_readerrorlog 0, 1, N'I/O', N'15 seconds'` to find I/O stall warnings, or `xp_readerrorlog 0, 1, N'Login failed'` to surface authentication failures.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `LogText` | `Recovery is complete` | &#9989; | Instance finished startup recovery | Databases are usable from this timestamp on |
-| `LogText` | `Error:` + number | &#10060; | SQL Server error event | Look up the error number for severity and remediation |
-| `LogText` | `SQL Server has encountered N occurrence(s) of I/O requests taking longer than 15 seconds` | &#10060; | Storage latency warning | Investigate storage subsystem |
-| `LogText` | `Login failed for user` | Watch | Authentication failure | Correlate with client, investigate brute force or misconfigured apps |
-| `LogText` | `Database ... has been set to emergency` | &#10060; | Severe state change | Incident response required |
-| `LogText` | `DBCC CHECKDB` ... `found ... consistency errors` | &#10060; | Corruption | Restore from backup; investigate storage |
+Use the most recent error-log lines as follows:
+
+- `Recovery is complete`: the instance finished startup recovery and the databases are usable from that timestamp onward.
+- `Error:` plus a number: look up the error code and severity before deciding on remediation.
+- `SQL Server has encountered N occurrence(s) of I/O requests taking longer than 15 seconds`: storage latency warning; inspect the storage subsystem.
+- `Login failed for user`: authentication failure; correlate with the client and look for brute force or misconfiguration.
+- `Database ... has been set to emergency`: severe state change; treat it as an incident.
+- `DBCC CHECKDB` with `found ... consistency errors`: corruption signal; restore from backup and investigate storage.
 
 ---
 
 ## Next Steps
 
-> [!abstract] Related chapters and deeper dives
+> [!abstract]- Summary
 >
 > This note is the first-response query pack. Each of the sections below has a deeper chapter elsewhere in the vault — follow the links when a question goes beyond what these queries can answer.
 

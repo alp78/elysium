@@ -11,7 +11,8 @@ status: complete
 
 # 03. Control Flow - C#
 
-> [!quote]
+> [!quote] Dijkstra On `goto`
+>
 > "The quality of programmers is a decreasing function of the density of go to statements in the programs they produce."
 >
 > — **Edsger W. Dijkstra**, *Go To Statement Considered Harmful* (1968)
@@ -21,7 +22,7 @@ status: complete
 > **Conditional Statements**
 > - `if`/`else` chains require explicit `bool`; no truthy/falsy coercion — `if (1)` is a compile error.
 > - Ternary `?:` and null-coalescing `??`/`??=` cover inline value selection and null defaults.
-> - `switch` statement: imperative, mandatory `break`, constant case labels only.
+> - `switch` statement: imperative, mandatory `break`, supports constant labels, patterns, and `when` guards.
 > - `switch` expression: value-returning, exhaustive pattern matching; missing `_` discard throws `SwitchExpressionException`.
 > - Pattern types: type (`is int n`), property (`{ Month: 12 }`), relational (`>= 90`), logical combinators (`and`/`or`/`not`, C# 9+), list/positional (`[1, 2, ..]`, C# 11+).
 >
@@ -55,171 +56,98 @@ status: complete
 >
 > **`if`/`else`**
 >
-> - Conditional branching construct that evaluates an explicit `bool` expression and executes one of two code paths. C# has no truthy/falsy coercion — every condition must resolve to `true` or `false`.
-> - `else if` chains evaluate top-down; only the first matching branch executes. Deep nesting should be replaced with guard clauses or `switch` expressions.
->
-> > [!tip] Use braces always
-> >
-> > Always wrap `if`/`else` bodies in braces even for single-line branches to prevent accidental bugs when adding statements later.
->
->  ---
+> - Evaluates an explicit `bool` expression and selects one code path. C# does not coerce arbitrary values to `true` or `false`.
+> - `else if` chains evaluate top-down. Replace deep nesting with guard clauses or a `switch` expression.
+> - Braces are recommended in production code even when short examples omit them for brevity.
 >
 > **Ternary operator**
 >
-> - Inline conditional expression `condition ? valueIfTrue : valueIfFalse`. Both branches must return the same type; the whole expression is a value, not a statement.
-> - Right-associative chains are legal but unreadable beyond two levels — prefer a `switch` expression for three or more tiers.
->
-> > [!tip] Limit nesting depth
-> >
-> > Limit ternary chains to two levels maximum. Replace deeper nesting with a `switch` expression for clarity and exhaustiveness checking.
->
->  ---
+> - Inline conditional expression `condition ? valueIfTrue : valueIfFalse`. The whole construct is a value, not a statement.
+> - Keep chains shallow. For three or more tiers, a `switch` expression is easier to read and maintain.
 >
 > **Null-coalescing (`??`, `??=`)**
 >
 > - `a ?? b` returns `a` if non-null, otherwise `b`. `a ??= b` assigns `b` only when `a` is currently null — a one-line lazy initializer pattern.
 > - Both operators short-circuit: the right operand is not evaluated if the left is non-null.
->
-> > [!warning] `??` is not a null guard
-> >
-> > When null is a programming error rather than an expected state, throw `ArgumentNullException` instead of silently substituting a default with `??`.
->
->  ---
+> - When `null` is a programmer error rather than a valid state, throw `ArgumentNullException` instead of silently substituting a default.
 >
 > **`switch` statement**
 >
-> - Imperative multi-branch dispatch on a value. Each `case` must end with `break` — C# does not allow fall-through (compile error), unlike C/C++. Empty cases may stack to match multiple values.
-> - Only compile-time constants are allowed as case labels; runtime expressions require a `switch` expression with a `when` guard.
->
-> > [!info] Compile-time exhaustiveness
-> >
-> > The compiler warns when a `switch` statement over an `enum` omits one or more members. Add a `default` case to silence the warning and handle unexpected future values.
->
->  ---
+> - Imperative multi-branch dispatch on a value. Most `case` arms end with `break`; general fall-through is not allowed.
+> - `case` arms can use constants, patterns, and `when` guards. Empty stacked labels remain useful for grouping multiple inputs.
+> - The compiler warns when a `switch` over an `enum` omits members. Add `default` when future or invalid values must be handled explicitly.
 >
 > **`switch` expression**
 >
 > - Expression-based pattern dispatcher: `value switch { pattern => result, ... }`. Returns a value directly; each arm is `pattern => expression`, not a statement block.
 > - Compiler verifies exhaustiveness — missing a `_` discard arm throws `SwitchExpressionException` at runtime when no pattern matches.
->
-> > [!warning] Missing discard arm throws at runtime
-> >
-> > Always close a `switch` expression with `_ => defaultValue` or `_ => throw new ArgumentException(...)` to guarantee exhaustive coverage.
->
->  ---
+> - Close the expression with `_ => ...` or `_ => throw ...` so unmatched inputs do not escape into runtime failure.
 >
 > **Pattern matching**
 >
 > - Unified syntax for testing and destructuring values in `if` and `switch`. Types: type pattern (`is int n`), property pattern (`{ Length: > 5 }`), relational (`>= 90`), list/positional (`[1, 2, ..]`), logical combinators (`and`, `or`, `not`).
 > - Patterns introduce new variables in scope (e.g., `int n` in `is int n`) — these can shadow outer variables if the same name is reused.
->
-> > [!info] C# 9+ and C# 11+ additions
-> >
-> > Logical pattern combinators (`and`, `or`, `not`) were added in C# 9. List and positional patterns were added in C# 11 and operate on arrays, lists, and spans.
->
->  ---
+> - Logical combinators `and`/`or`/`not` arrived in C# 9. List and positional patterns arrived in C# 11.
 >
 > **`for` loop**
 >
 > - Index-based iteration: `for (init; condition; increment)`. The step expression can be any integer — positive, negative, or greater than 1 for non-unit strides.
 > - The most common error is off-by-one: using `<=` when `<` is intended (or vice versa) in the condition.
->
-> > [!tip] Prefer `foreach` when index is not needed
-> >
-> > Reserve `for` for cases requiring explicit index access, custom step, or backward traversal. Use `foreach` for straightforward collection iteration.
->
->  ---
+> - Reserve `for` for explicit index access, custom stepping, or backward traversal. Prefer `foreach` for straightforward collection iteration.
 >
 > **`foreach`**
 >
 > - Iterates any type implementing `IEnumerable<T>` without exposing an index. The loop variable is read-only — reassigning it inside the body has no effect on the source collection.
 > - Modifying the source collection during iteration throws `InvalidOperationException`. Snapshot with `.ToList()` first if mutation is required.
->
-> > [!warning] Mutation during iteration throws
-> >
-> > To remove or add items while iterating, snapshot with `.ToList()` before the loop or collect changes and apply them after the loop completes.
->
->  ---
+> - To remove or add items while iterating, snapshot with `.ToList()` first or collect changes and apply them after the loop completes.
 >
 > **`while` / `do-while`**
 >
 > - `while` evaluates the condition before each iteration — the body may never execute if the condition is false from the start. `do-while` executes the body first and then checks — guaranteeing at least one iteration.
 > - Use `while` for polling and input validation where zero iterations is valid; use `do-while` for retry-at-least-once patterns and menu display.
->
-> > [!tip] Match construct to intent
-> >
-> > If the first iteration must always run (e.g., show a menu, prompt for input), use `do-while`. If the loop may legitimately not run at all, use `while`.
->
->  ---
+> - Choose the construct that matches the guarantee you need: `do-while` for at least one pass, `while` when zero passes is valid.
 >
 > **`break` / `continue`**
 >
 > - `break` exits the innermost enclosing loop immediately; execution resumes after the loop body. `continue` skips the remainder of the current iteration and jumps to the next cycle.
 > - Neither keyword propagates through nested loops — `break` in an inner loop does not exit the outer loop.
->
-> > [!warning] `break` is scoped to the innermost loop only
-> >
-> > To exit nested loops, use `goto` with a label placed after the outer loop, or extract the loop body to a method and use `return`.
->
->  ---
+> - To exit nested loops, use `goto` with a label after the outer loop or extract the loop body into a method and `return`.
 >
 > **`goto`**
 >
 > - Unconditional jump to a labeled statement in the same method. In C#, its only accepted use is escaping nested loops by jumping to a label placed immediately after the outer loop.
 > - Avoid for general flow control — it creates spaghetti code and makes reasoning about execution order difficult. Method extraction with `return` is usually cleaner.
->
-> > [!warning] Use `goto` only for nested-loop escape
-> >
-> > Restrict `goto` strictly to the nested-break pattern. Any other use signals a design problem that should be resolved by refactoring to methods, flags, or LINQ.
->
->  ---
+> - Restrict `goto` to nested-loop escape. Other uses usually indicate a refactoring opportunity.
 >
 > **`yield return`**
 >
 > - Produces one value from an iterator method returning `IEnumerable<T>`. The compiler transforms the method into a state machine that pauses at each `yield return` and resumes on the next `MoveNext()` call.
 > - The method body does not execute at call time — execution is deferred until the first enumeration. Place argument validation before the first `yield` in a non-iterator wrapper to ensure immediate checking.
->
-> > [!tip] Validate eagerly, yield lazily
-> >
-> > Wrap the iterator in a non-iterator method that validates arguments first, then delegates to the `yield`-containing private method. This ensures validation fires at call time.
->
->  ---
+> - Validate arguments before entering the iterator body when immediate failure semantics matter.
 >
 > **`yield break`**
 >
 > - Terminates an iterator method early — no further values are produced. Equivalent to `return` in a regular method. Using plain `return` (with no value) in an iterator is a compile error; `yield break` is mandatory.
 > - Use for custom take-while logic, error boundaries, or when a sentinel value is encountered mid-sequence.
->
-> > [!tip] Prefer `.TakeWhile()` for simple filtering
-> >
-> > For straightforward prefix-filtering, `.TakeWhile(predicate)` is more concise than a manual `yield break`. Reserve `yield break` for complex early-exit logic that LINQ cannot express cleanly.
->
->  ---
+> - Prefer `.TakeWhile(...)` for simple prefix filtering. Use `yield break` when the stop condition depends on custom traversal logic.
 >
 > **LINQ**
 >
 > - Language-Integrated Query: a set of extension methods (`Select`, `Where`, `OrderBy`, `GroupBy`, `Aggregate`, etc.) that provide declarative, composable, lazy data transformation directly in C# syntax.
 > - All LINQ methods return lazy `IEnumerable<T>` — nothing executes until the sequence is enumerated. Re-enumerating a deferred query re-executes the entire pipeline; materialize with `.ToList()` to prevent duplicate work.
->
-> > [!warning] Re-enumeration duplicates work
-> >
-> > Assign the result of `.ToList()` to a variable after composing the pipeline, then use that variable for all subsequent iterations or passes.
->
->  ---
+> - Materialize once with `.ToList()` or `.ToArray()` when you need multiple passes over the same result.
 >
 > **`IEnumerable<T>`**
 >
 > - The standard iteration contract for forward-only, lazy sequences in .NET. Returned by LINQ methods, `yield return` iterators, and all standard collection types.
 > - Enumerating the same `IEnumerable<T>` multiple times triggers multiple evaluations — particularly costly when backed by a database query, file read, or network call. Materialize with `.ToList()` or `.ToArray()` to cache results.
->
-> > [!warning] Multiple enumeration triggers multiple source reads
-> >
-> > Never enumerate a raw `IEnumerable<T>` more than once when the source is expensive. Assign `.ToList()` once and reuse the list.
+> - Do not enumerate an expensive raw sequence more than once unless re-execution is intentional.
 
 ## Conditional Statements
 
 C# provides three families of conditional constructs: `if`/`else` chains for boolean branching, `switch` statements and expressions for multi-way value and pattern matching, and null-handling operators (`??`, `??=`, `is`) for safe navigation. Conditions must always be explicit `bool` — no implicit truthy/falsy conversion.
 
+*Diagram: Conditional Statements.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -244,7 +172,7 @@ flowchart TD
     D --> I["Type / property / relational patterns"]
     E --> J["Use for side effects,<br/>multiple statements"]
     F --> K["Use for inline<br/>value selection"]
-    G --> L["Use for imperative flow<br/>with fall-through"]
+    G --> L["Use for imperative flow<br/>with `break`-terminated arms"]
     H --> M["Use for value-returning<br/>compact matching"]
     I --> H
 ```
@@ -255,16 +183,13 @@ Basic conditional branching evaluates explicit `bool` expressions top-down. C# h
 
 #### if / else if / else — explicit bool conditions
 
-Conditions must be explicit `bool` expressions — no truthy/falsy (unlike Python/JS). `else if` chains evaluate top-down — first match wins. Place the most restrictive condition first, since each branch is only reached if all conditions above it failed.
+Conditions must be explicit `bool` expressions. `else if` chains evaluate top-down, so place the most restrictive condition first because each branch only runs if all earlier branches failed.
 
-> [!warning] Always use braces
+> [!tip] Brace style
 >
-> Always use braces — omitting them leads to bugs when adding statements later. Don't use deep `if`/`else` nesting — extract to methods or use switch expressions.
+> Braces reduce ambiguity during later edits. The short examples in this note sometimes omit them for brevity, but production code should prefer braced blocks and shallow nesting.
 
-> [!success] Best practice
->
-> Always wrap `if`/`else` bodies in braces, even for single-line branches. Replace deep nesting with guard clauses or switch expressions to keep methods flat and readable.
-
+*Example: if / else if / else — explicit bool conditions.*
 ```csharp
 int score = 85;
 string grade;
@@ -290,6 +215,7 @@ Score 85 → Grade B
 
 A standalone `if` checks one condition with no alternative branch. The body executes only when the condition is `true`.
 
+*Example: Simple if — single condition without else.*
 ```csharp
 int x = 10;
 if (x > 0)
@@ -304,6 +230,7 @@ if (x > 0)
 
 `condition ? trueVal : falseVal` chains right-to-left. Compact for simple 2-3 tier classification. Don't nest more than 2 levels — use switch expression for complex cases.
 
+*Example: Nested ternary — ? : chains.*
 ```csharp
 int val = 15;
 string label = val > 20 ? "high" : val > 10 ? "mid" : "low";
@@ -316,8 +243,9 @@ val=15 → mid
 
 #### No truthy/falsy — explicit bool conditions
 
-C# requires explicit `bool` in every condition — no truthy/falsy. `if (items)`, `if (str)` are compile errors — use `items.Count > 0`, `string.IsNullOrEmpty(s)`, `x != 0`, or `obj != null`. This prevents `if (x = 5)` bugs (assignment returns `int`, not `bool`). For null checks, `is null` is preferred over `== null` because `is` cannot be overloaded. Chained comparisons like `10 < x < 20` are also compile errors — use `&&` to combine conditions.
+C# requires explicit `bool` in every condition. `if (items)` and `if (str)` are compile errors, so use `items.Count > 0`, `string.IsNullOrEmpty(s)`, `x != 0`, or `obj != null`. This also blocks `if (x = 5)` bugs because assignment returns `int`, not `bool`. For null checks, `is null` is preferred over `== null` because `is` cannot be overloaded. Chained comparisons like `10 < x < 20` are also compile errors, so combine them with `&&`.
 
+*Example: No truthy/falsy — explicit bool conditions.*
 ```csharp
 #nullable enable
 var items = new List<int> { 1, 2, 3 };
@@ -332,6 +260,7 @@ string? value = null;
 if (value is null)
     Console.WriteLine("Value is null");
 
+int x = 15;
 if (10 < x && x < 20)
     Console.WriteLine($"{x} is between 10 and 20");
 ```
@@ -340,6 +269,7 @@ if (10 < x && x < 20)
 List has 3 items
 Name is empty
 Value is null
+15 is between 10 and 20
 ```
 
 ### Switch statements and expressions
@@ -348,8 +278,9 @@ The `switch` construct comes in two forms: the traditional statement (multi-line
 
 #### Switch statement — discrete value matching with mandatory break
 
-Each case must end with `break` (no fall-through — compile error in C#, unlike C). Empty cases can stack for multiple values. Only constants allowed in case labels. The compiler warns on missing enum cases.
+Each non-empty `case` usually ends with `break`, because general fall-through is not allowed. Empty cases can stack to match multiple values, and `case` arms can use constants, patterns, and `when` guards. The compiler warns on missing `enum` cases.
 
+*Example: Switch statement — discrete value matching with mandatory break.*
 ```csharp
 string command = "quit";
 switch (command)
@@ -381,15 +312,17 @@ Stopping...
 > - `_` is the discard wildcard
 > - Compiler warns if cases are incomplete
 
-> [!warning] Missing _ default causes MatchFailureException
+> [!warning] Missing `_` default causes `SwitchExpressionException`
 >
-> Missing `_` default causes `MatchFailureException` at runtime. Keep switch arms pure — no side effects.
+> Missing `_` causes `SwitchExpressionException` at runtime when no arm matches. Keep switch arms pure so unmatched inputs fail clearly.
 
 > [!success] Always add a wildcard arm
 >
 > Always close a switch expression with `_ => ...` to handle unmatched inputs gracefully. Keep arms side-effect-free and return values rather than mutating state.
 
+*Example: Switch expression — compact value-returning form with or pattern and _ wildcard.*
 ```csharp
+string command = "quit";
 string result = command switch
 {
     "start" => "Starting...",
@@ -407,8 +340,10 @@ Stopping...
 
 Switch arms support relational operators (`>=`, `<`, `>`, `<=`). First match wins — order arms from most restrictive to least. Placing `>= 70` before `>= 90` would incorrectly match 95 as "C".
 
+*Example: Switch expression — relational patterns.*
 ```csharp
-grade = score switch
+int score = 85;
+string grade = score switch
 {
     >= 90 => "A",
     >= 80 => "B",
@@ -431,6 +366,7 @@ Score 85 → Grade B
 > - `when` adds a guard: `int n when n < 0 => ...`
 > - Combines type checking and casting in one step — no explicit cast needed
 
+*Example: Switch expression — type patterns and when guard.*
 ```csharp
 object[] values = { 42, -5, "hello", new[] { 1, 2, 3 }, 3.14 };
 foreach (var v in values)
@@ -463,6 +399,7 @@ foreach (var v in values)
 > - Nest for multi-property: `{ Month: 12, Day: 25 }`
 > - Combine with relational patterns or `or`
 
+*Example: Switch expression — property patterns ({ Property: value }).*
 ```csharp
 var date = new DateTime(2024, 12, 25);
 string holiday = date switch
@@ -490,9 +427,10 @@ C# provides dedicated operators for null-safe programming that eliminate verbose
 > - `??` — returns left if non-null, else right (replaces `x != null ? x : default`)
 > - `??=` — assigns only when null (one-line lazy init: `_cache ??= LoadData()`)
 > - `is` pattern — extracts and casts in one step: `if (obj is string s)`
->
-> > [!warning] When null is an error, throw `ArgumentNullException` instead of using `??`.
 
+When `null` is a contract violation rather than expected input, throw `ArgumentNullException` instead of masking the problem with `??`.
+
+*Example: Null-coalescing (??, ??=) and is pattern matching.*
 ```csharp
 #nullable enable
 
@@ -520,6 +458,7 @@ Has value: fallback
 
 C# 9 introduced `and`, `or`, and `not` as pattern combinators that compose with any pattern — relational, type, property, or constant. They replace verbose `&&`/`||` chains in `switch` arms and `is` expressions. `not` is especially useful for null-guard clauses: `if (obj is not null)` reads more naturally than `if (obj != null)`.
 
+*Example: Logical pattern combinators — and, or, not (C# 9+).*
 ```csharp
 int temperature = 22;
 string comfort = temperature switch
@@ -546,6 +485,7 @@ Non-null string: hello
 
 List patterns match elements by position in arrays, lists, and spans. Use `_` for a single-element wildcard, `..` (slice pattern) for zero-or-more elements, and combine with relational or type patterns. List patterns make guard logic for sequences concise and declarative — especially useful for parsing command-line arguments, CSV rows, or protocol headers.
 
+*Example: List patterns — positional matching on collections (C# 11+).*
 ```csharp
 int[] numbers = { 1, 2, 3, 4, 5 };
 string description = numbers switch
@@ -577,6 +517,7 @@ committing: fix bug
 
 C# provides four loop constructs: `for` (index-based), `foreach` (collection iteration), `while` (condition-first), and `do-while` (body-first). Prefer `foreach` for collection traversal — it eliminates off-by-one errors and works with any `IEnumerable<T>`. Use `for` when you need the index, and `while`/`do-while` for condition-driven repetition.
 
+*Diagram: Loops.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -626,6 +567,7 @@ Index-based `for` loops give explicit control over the counter, step, and direct
 >
 > To remove or add items while iterating, snapshot the collection first with `.ToList()`, then `foreach` over the snapshot while modifying the original. For indexed removal, iterate backwards with a `for` loop.
 
+*Example: for and foreach loops.*
 ```csharp
 for (int i = 0; i < 5; i++)
     Console.Write($"  {i}");
@@ -640,6 +582,7 @@ Console.WriteLine();
 
 The step expression can be any integer — `i += 3` skips by three on each iteration. Use this pattern for sampling, pagination offsets, or any non-unit stride.
 
+*Example: for loop — custom step increment.*
 ```csharp
 for (int i = 0; i < 20; i += 3)
     Console.Write($"  {i}");
@@ -654,6 +597,7 @@ Console.WriteLine();
 
 Decrement with a negative step: `for (int i = 10; i > 0; i -= 2)`. The step can be any integer — negative for counting down, greater than 1 for skipping. Watch the condition direction: use `i > 0` (not `i < 10`) when counting down.
 
+*Example: Count down with for.*
 ```csharp
 for (int i = 10; i > 0; i -= 2)
     Console.Write($"  {i}");
@@ -668,6 +612,7 @@ Console.WriteLine();
 
 `foreach` iterates any type implementing `IEnumerable<T>` — arrays, lists, dictionaries, LINQ results, and custom collections. The loop variable is read-only; you cannot reassign it inside the body. For dictionaries, the loop variable is a `KeyValuePair<TKey, TValue>` that you can deconstruct.
 
+*Example: Iterate a collection with foreach.*
 ```csharp
 var languages = new[] { "C#", "Python", "Go" };
 foreach (var lang in languages)
@@ -689,6 +634,7 @@ Console.WriteLine();
 
 `while` evaluates the condition before each iteration — the body may never execute if the condition is `false` from the start. Use for input validation loops and polling where zero iterations is a valid outcome.
 
+*Example: while — condition-first loop.*
 ```csharp
 int n = 3;
 while (n > 0)
@@ -707,6 +653,7 @@ Console.WriteLine();
 
 `do-while` executes the body first, then checks the condition — guaranteeing at least one iteration. Use for retry-at-least-once logic, menu display, or input validation where the first pass must always run.
 
+*Example: do-while — body-first loop.*
 ```csharp
 int attempts = 0;
 do
@@ -725,6 +672,7 @@ Console.WriteLine();
 
 C# has no built-in `enumerate` keyword. Use LINQ's `Select` overload that provides the index as a second parameter: `.Select((item, index) => ...)`.
 
+*Example: Enumerate with index using Select overload.*
 ```csharp
 var fruits = new[] { "apple", "banana", "cherry" };
 foreach (var (fruit, i) in fruits.Select((f, i) => (f, i)))
@@ -740,6 +688,7 @@ Console.WriteLine();
 
 `Zip` pairs elements from two sequences positionally and stops at the shorter sequence. Use for lock-step iteration of parallel collections — names with ages, keys with values, expected with actual.
 
+*Example: Parallel iteration with Zip.*
 ```csharp
 var names = new[] { "Alice", "Bob", "Charlie" };
 var ages = new[] { 30, 25, 35 };
@@ -764,6 +713,7 @@ Keywords that alter loop execution: `break` exits immediately, `continue` skips 
 
 `break` exits the innermost enclosing loop immediately. Execution continues after the loop body. Works in `for`, `foreach`, `while`, and `do-while`. For complex flow, extract to a method with `return`.
 
+*Example: break — exit the innermost loop.*
 ```csharp
 for (int i = 0; i < 10; i++)
 {
@@ -786,6 +736,7 @@ Console.WriteLine();
 
 `continue` skips the remainder of the current iteration and jumps to the next loop cycle. Use for filtering within a loop when a LINQ pipeline is not practical.
 
+*Example: continue — skip to the next iteration.*
 ```csharp
 for (int i = 0; i < 10; i++)
 {
@@ -804,6 +755,7 @@ Console.WriteLine();
 
 C# has no labeled `break`. The accepted idiom for escaping nested loops is `goto` to a label placed after the outer loop. Avoid `goto` for general flow control — it is only justified for this specific nested-break scenario.
 
+*Example: Breaking outer loops with goto.*
 ```csharp
 bool found = false;
 for (int i = 0; i < 3; i++)
@@ -827,8 +779,9 @@ Found: True
 
 #### Breaking outer loops with return
 
-Extract nested loop logic to a method and use `return` to exit all loops at once. This is usually cleaner than `goto` and avoids the stigma of labeled jumps.
+Extract nested loop logic to a method and use `return` to exit all loops at once. This usually keeps control flow easier to follow than `goto`.
 
+*Example: Breaking outer loops with return.*
 ```csharp
 static int FindFirst(int[][] matrix, int target)
 {
@@ -866,6 +819,7 @@ A method returning `IEnumerable<T>` with `yield return` pauses execution, return
 >
 > Place argument validation before the first `yield` in a separate non-iterator wrapper method. This ensures validation runs immediately at call time, not deferred to first enumeration.
 
+*Example: yield return — lazy iterator method.*
 ```csharp
 IEnumerable<int> Countdown(int n)
 {
@@ -893,6 +847,7 @@ Console.WriteLine();
 
 `GetEnumerator()` returns an `IEnumerator` with `MoveNext()` (advance + bool) and `Current` (value). `foreach` is syntactic sugar for this protocol. Use manual iteration for peeking ahead or interleaving enumerators.
 
+*Example: Manual iteration with GetEnumerator().*
 ```csharp
 IEnumerable<int> Countdown(int n)
 {
@@ -919,6 +874,7 @@ Flattening converts nested collections into a single flat sequence. `SelectMany`
 
 `SelectMany` projects each element to a sequence and flattens the results into a single sequence: `nested.SelectMany(x => x)`. It only peels one layer — it is not recursive. For deeper nesting, use the iterative or recursive approaches below.
 
+*Example: SelectMany — flattens one level of nesting.*
 ```csharp
 var oneLevel = new[] { new[] { 1, 2 }, new[] { 3, 4 }, new[] { 5, 6 } };
 Console.WriteLine(string.Join(", ", oneLevel.SelectMany(x => x)));
@@ -932,6 +888,7 @@ Console.WriteLine(string.Join(", ", oneLevel.SelectMany(x => x)));
 
 Stack-based iterative flatten — no recursion, handles arbitrary depth in constant stack space. Avoids `StackOverflowException`. Watch out for strings (they're `IEnumerable` — causes infinite recursion if not checked).
 
+*Example: Iterative flatten with Stack&lt;T&gt;.*
 ```csharp
 var nested = new object[] { 1, new object[] { 2, 3 }, new object[] { 4, new object[] { 5, 6 } }, 7 };
 
@@ -961,6 +918,7 @@ Console.WriteLine(string.Join(", ", FlattenIter(nested)));
 
 The LINQ variant uses `SelectMany` with a recursive lambda — more compact but still uses the call stack. Prefer the iterative `Stack<T>` version for untrusted input depth.
 
+*Example: Recursive flatten with SelectMany.*
 ```csharp
 var nested = new object[] { 1, new object[] { 2, 3 }, new object[] { 4, new object[] { 5, 6 } }, 7 };
 
@@ -977,6 +935,7 @@ Console.WriteLine(string.Join(", ", FlatLinq(nested)));
 
 `ToList()` forces immediate evaluation and caches the results in a concrete `List<T>`. Use when enumerating multiple times or when downstream code expects a materialized collection. Never call `ToList()` on infinite sequences.
 
+*Example: Eager evaluation — materialize with ToList().*
 ```csharp
 var squaresList = Enumerable.Range(0, 10).Select(x => x * x).ToList();
 Console.WriteLine(string.Join(", ", squaresList));
@@ -990,6 +949,7 @@ Console.WriteLine(string.Join(", ", squaresList));
 
 Without `ToList()`, the query returns an iterator that re-executes on each enumeration. The type name (`RangeSelectIterator`) reveals no values have been computed yet. Both produce identical results, but the lazy version duplicates work on repeated enumeration.
 
+*Example: Lazy evaluation — deferred query re-executes on each enumeration.*
 ```csharp
 var squaresLazy = Enumerable.Range(0, 10).Select(x => x * x);
 Console.WriteLine(squaresLazy.GetType().Name);
@@ -1005,6 +965,7 @@ RangeSelectIterator`2
 
 `yield break` terminates the iterator immediately — no more values produced. Equivalent to `return` in a regular method. Use for custom take-while logic or error boundaries. For simple filtering, `.TakeWhile()` is shorter.
 
+*Example: yield break — early termination.*
 ```csharp
 IEnumerable<int> TakeWhilePositive(int[] arr)
 {
@@ -1025,6 +986,7 @@ Console.WriteLine(string.Join(", ", TakeWhilePositive(new[] { 3, 7, -2, 5 })));
 
 Recursive iterator — calls itself for nested collections, `yield return` for leaves. Natural for tree/graph traversal. For untrusted/deep nesting, use the Stack approach to avoid `StackOverflowException`.
 
+*Example: Recursive iterator — flatten a deeply nested structure with yield return.*
 ```csharp
 IEnumerable<int> Flatten(IEnumerable<object> nested)
 {
@@ -1065,6 +1027,7 @@ The foundational LINQ operations: `Select` (map), `Where` (filter), `SelectMany`
 >
 > Replace manual `foreach`/`if`/`Add` patterns with `.Where().Select()` chains. Call `.ToList()` once at the end to materialize, then reuse the list freely without re-executing the query.
 
+*Example: Select — transform each element (map).*
 ```csharp
 var squares = Enumerable.Range(0, 10).Select(x => x * x).ToList();
 Console.WriteLine(string.Join(", ", squares));
@@ -1078,6 +1041,7 @@ Console.WriteLine(string.Join(", ", squares));
 
 `Where` returns only elements satisfying the predicate — equivalent to `filter`. Chain with `Select` for filter-then-transform pipelines.
 
+*Example: Where — filter elements by predicate.*
 ```csharp
 var evens = Enumerable.Range(0, 20).Where(x => x % 2 == 0).ToList();
 Console.WriteLine(string.Join(", ", evens));
@@ -1091,6 +1055,7 @@ Console.WriteLine(string.Join(", ", evens));
 
 Chain `.Where().Select()` fluently for filter-then-transform pipelines. The order matters — filtering first reduces the number of elements transformed.
 
+*Example: Chaining Where and Select.*
 ```csharp
 var words = new[] { "hello", "world", "csharp", "is", "great" };
 var longUpper = words.Where(w => w.Length > 3).Select(w => w.ToUpper());
@@ -1105,6 +1070,7 @@ HELLO, WORLD, CSHARP, GREAT
 
 `SelectMany` projects each element to a sequence and flattens the results into a single `IEnumerable<T>`. It only peels one layer of nesting.
 
+*Example: SelectMany — flatten nested sequences.*
 ```csharp
 var matrix = new[] { new[] { 1, 2, 3 }, new[] { 4, 5, 6 }, new[] { 7, 8, 9 } };
 var flat = matrix.SelectMany(row => row).ToList();
@@ -1119,6 +1085,7 @@ Console.WriteLine(string.Join(", ", flat));
 
 Query syntax (`from x in items where ... select ...`) reads like SQL. Method syntax (`.Where().Select()`) uses lambda chains. Both compile to identical IL. Use query syntax for complex joins; method syntax for simple pipelines.
 
+*Example: Query syntax vs method syntax.*
 ```csharp
 var words = new[] { "hello", "world", "csharp", "is", "great" };
 
@@ -1148,9 +1115,10 @@ Materialization converts lazy LINQ queries into concrete collections (`Dictionar
 > - `ToDictionary(keySelector, valueSelector)` — builds a `Dictionary` (O(1) lookup)
 > - `ToHashSet()` — builds a `HashSet` (O(1) membership)
 > - Both are eager — enumerate immediately
->
-> > [!warning] Duplicate keys in `ToDictionary` throw `ArgumentException`.
 
+Duplicate keys in `ToDictionary` throw `ArgumentException`.
+
+*Example: ToDictionary and ToHashSet.*
 ```csharp
 var squaresDict = Enumerable.Range(0, 6).ToDictionary(x => x, x => x * x);
 Console.WriteLine(string.Join(", ", squaresDict.Select(kv => $"{kv.Key}:{kv.Value}")));
@@ -1164,18 +1132,19 @@ var uniqueLengths = words.Select(w => w.Length).ToHashSet();
 Console.WriteLine(string.Join(", ", uniqueLengths));
 ```
 
-`Where` on a dictionary yields `KeyValuePair<K,V>` — re-materialize with `ToDictionary`. `ToHashSet` builds a deduplicated `HashSet<T>` with O(1) membership testing.
-
 ```text
 0:0, 1:1, 2:4, 3:9, 4:16, 5:25
 Alice:85, Bob:92, Diana:95
 5, 6, 2
 ```
 
+`Where` on a dictionary yields `KeyValuePair<K,V>`, so call `ToDictionary` again when you need dictionary semantics. `ToHashSet` builds a deduplicated `HashSet<T>` with O(1) membership checks, but output order is not guaranteed.
+
 #### Aggregate — general-purpose fold
 
 `Aggregate(seed, (acc, x) => ...)` is the general fold — reduces a sequence to a single value by applying an accumulator function. The seed is the initial value. Use for custom reductions that built-in methods don't cover.
 
+*Example: Aggregate — general-purpose fold.*
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
 int total = nums.Aggregate(0, (acc, x) => acc + x);
@@ -1194,6 +1163,7 @@ Console.WriteLine(product);
 
 Built-in shortcuts for common reductions. `Any(predicate)` short-circuits on first match — always prefer `Any()` over `Count() > 0`. `All(predicate)` returns `true` for empty sequences.
 
+*Example: Built-in aggregations — Sum, Max, Min, Any, All, Count, Average.*
 ```csharp
 var nums = new[] { 1, 2, 3, 4, 5 };
 Console.WriteLine(nums.Sum());
@@ -1227,9 +1197,10 @@ Sorting, chaining, and controlling when a LINQ pipeline actually executes.
 > - `OrderByDescending` — sorts descending
 > - `ThenBy` / `ThenByDescending` — secondary sort
 > - Stable sort — equal elements maintain relative order
->
-> > [!warning] Don't chain two `OrderBy` calls — the second replaces the first. Use `ThenBy` for secondary sort.
 
+Use `ThenBy` for secondary sort keys. A second `OrderBy` replaces the first ordering.
+
+*Example: Ordering — OrderBy, OrderByDescending with a key selector.*
 ```csharp
 var names = new[] { "Charlie", "Alice", "Bob", "Diana" };
 Console.WriteLine(string.Join(", ", names.OrderBy(n => n)));
@@ -1253,9 +1224,10 @@ Diana, Bob, Charlie, Alice
 > - Chain declaratively: `.Where().Select().OrderBy().Take()`
 > - Nothing executes until `foreach` or `ToList()`
 > - Add conditions dynamically: `if (filter) query = query.Where(...)`
->
-> > [!warning] Don't enumerate the same deferred query multiple times — it duplicates work. Materialize with `ToList()` if you need multiple passes.
 
+Materialize with `ToList()` when multiple passes are required; otherwise each enumeration reruns the pipeline.
+
+*Example: Deferred execution — chained LINQ pipeline materialized by ToList().*
 ```csharp
 var result = Enumerable.Range(1, 20)
     .Where(x => x % 2 == 0)
@@ -1283,6 +1255,7 @@ Console.WriteLine(string.Join(", ", result));
 >
 > Always pair an infinite generator with `Take(n)`, `TakeWhile(...)`, or `First(...)` before materializing. This keeps memory bounded and gives callers explicit control over how many values are consumed.
 
+*Example: Infinite generator with yield return.*
 ```csharp
 IEnumerable<int> Naturals(int start = 0)
 {
@@ -1305,6 +1278,7 @@ Console.WriteLine(string.Join(", ", Naturals(10).Take(5)));
 
 `Range` generates consecutive integers, `Reverse` reverses order, `Concat` appends sequences, and `Repeat` produces a single value `n` times. All return lazy `IEnumerable<T>`.
 
+*Example: Common sequence methods — Range, Reverse, Concat, Repeat.*
 ```csharp
 Console.WriteLine(string.Join(", ", Enumerable.Range(0, 5)));
 Console.WriteLine(string.Join(", ", new[] { "a", "b" }.Select(s => s.ToUpper())));
@@ -1324,54 +1298,331 @@ x, x, x
 ```
 
 
-## Warnings
+## Operational Risks
 
-> [!warning] Collection modified during foreach
->
-> Adding or removing items from a collection during `foreach` throws `InvalidOperationException`.
+### Runtime and evaluation hazards
 
-> [!success] Correct pattern
->
-> Iterate over a copy (`foreach (var x in items.ToList())`) or collect indices to remove and process after the loop.
+#### Mutating a source collection during `foreach`
 
-> [!warning] Switch expression without discard pattern
->
-> If no `_` discard is provided and no pattern matches, `SwitchExpressionException` is thrown at runtime.
+Changing the active source inside `foreach` invalidates the enumerator and raises `InvalidOperationException`. Snapshot with `.ToList()` when the loop body needs to remove or add items.
 
-> [!success] Correct pattern
->
-> Always include a `_ => defaultValue` or `_ => throw new ArgumentException(...)` arm for exhaustiveness.
+*Example: Mutating a source collection during `foreach`.*
+```csharp
+var source = new List<int> { 1, 2, 3 };
+try
+{
+    foreach (var n in source)
+    {
+        source.Add(n);
+    }
+}
+catch (InvalidOperationException ex)
+{
+    Console.WriteLine(ex.GetType().Name);
+}
 
-> [!warning] Multiple LINQ enumeration
->
-> Enumerating an `IEnumerable<T>` backed by a database query or file read executes the source operation each time.
+var safe = new List<int> { 1, 2, 3 };
+foreach (var n in safe.ToList())
+{
+    if (n == 1)
+    {
+        safe.Remove(n);
+    }
+}
+Console.WriteLine(string.Join(", ", safe));
+```
 
-> [!success] Correct pattern
->
-> Materialize with `.ToList()` or `.ToArray()` before iterating multiple times: `var data = query.ToList();`.
+```text
+InvalidOperationException
+2, 3
+```
 
-## Recommendations
+#### Non-exhaustive `switch` expressions
 
-- **Use `switch` expressions** over `switch` statements for value-producing branches — more concise and the compiler checks exhaustiveness.
-- **Use pattern matching in `if`** — `if (obj is string s && s.Length > 0)` combines type check, cast, and condition in one expression.
-- **Use `foreach` over `for`** when you don't need the index — clearer intent and works with any `IEnumerable<T>`.
-- **Use LINQ for declarative pipelines** — `items.Where(...).Select(...).ToList()` is more readable than manual `for` + `if` + `add`.
-- **Materialize LINQ once** — call `.ToList()` after composing the query, before iterating multiple times.
-- **Use `yield return` for lazy sequences** — produces values on demand without allocating the full collection upfront.
-- **Use `Parallel.For` / `Parallel.ForEach`** for CPU-bound parallel iteration — no GIL limitation unlike Python.
-- **Always add `_` discard** to switch expressions to prevent runtime `SwitchExpressionException`.
+If a `switch` expression omits `_` and no arm matches, the runtime throws `SwitchExpressionException`. End every value-producing expression with `_ => ...` or `_ => throw ...`.
+
+*Example: Non-exhaustive `switch` expressions.*
+```csharp
+int day = 3;
+try
+{
+    _ = day switch
+    {
+        1 => "Mon",
+        2 => "Tue"
+    };
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.GetType().Name);
+}
+
+string safeLabel = day switch
+{
+    1 => "Mon",
+    2 => "Tue",
+    _ => "Other"
+};
+Console.WriteLine(safeLabel);
+```
+
+```text
+SwitchExpressionException
+Other
+```
+
+#### Re-enumerating deferred `IEnumerable<int>`
+
+A deferred query reruns its pipeline on every enumeration. Use `.ToList()` or `.ToArray()` when repeated passes over the same `IEnumerable<int>` would duplicate I/O or CPU work.
+
+*Example: Re-enumerating deferred `IEnumerable<int>`.*
+```csharp
+int evaluations = 0;
+var query = Enumerable.Range(1, 3).Select(x =>
+{
+    evaluations++;
+    return x * 2;
+});
+
+Console.WriteLine(string.Join(", ", query));
+Console.WriteLine(evaluations);
+Console.WriteLine(string.Join(", ", query));
+Console.WriteLine(evaluations);
+
+var materialized = Enumerable.Range(1, 3).Select(x => x * 2).ToList();
+Console.WriteLine(string.Join(", ", materialized));
+```
+
+```text
+2, 4, 6
+3
+2, 4, 6
+6
+2, 4, 6
+```
+
+## Recommended Patterns
+
+### Reference defaults
+
+#### Prefer `switch` expressions for value selection
+
+When a branch computes a value, `switch` expressions keep the mapping local and exhaustive. Pair them with `if (obj is string s && s.Length > 0)` style pattern tests for compact type-sensitive branching.
+
+*Example: Prefer `switch` expressions for value selection.*
+```csharp
+int statusCode = 404;
+string category = statusCode switch
+{
+    >= 200 and < 300 => "success",
+    >= 400 and < 500 => "client error",
+    _ => "other"
+};
+Console.WriteLine(category);
+```
+
+```text
+client error
+```
+
+#### Prefer `foreach` when an index is unnecessary
+
+Use `foreach` when the loop body only needs the current element. Switch to `for` or `.Select((item, index) => ...)` only when positional access is part of the requirement.
+
+*Example: Prefer `foreach` when an index is unnecessary.*
+```csharp
+var languages = new[] { "C#", "F#", "VB" };
+foreach (var language in languages)
+{
+    Console.WriteLine(language);
+}
+```
+
+```text
+C#
+F#
+VB
+```
+
+#### Compose transformations with `Where(...).Select(...)`
+
+Declarative pipelines express filtering and projection more directly than manual `for` plus temporary list mutation. Materialize once with `.ToList()` when the result will be reused.
+
+*Example: Compose transformations with `Where(...).Select(...)`.*
+```csharp
+var result = new[] { "alpha", "go", "beta" }
+    .Where(word => word.Length > 2)
+    .Select(word => word.ToUpperInvariant())
+    .ToList();
+Console.WriteLine(string.Join(", ", result));
+```
+
+```text
+ALPHA, BETA
+```
+
+#### Stream values with `yield return` and cap infinite iterators with `Take(...)`
+
+Use `yield return` when consumers should pull values lazily instead of paying for full materialization up front. Bound infinite generators with `Take(...)`, `TakeWhile(...)`, or `First(...)` before enumeration escapes into unbounded work.
+
+*Example: Stream values with `yield return` and cap infinite iterators with `Take(...)`.*
+```csharp
+IEnumerable<int> Naturals(int start)
+{
+    while (true)
+    {
+        yield return start;
+        start++;
+    }
+}
+
+Console.WriteLine(string.Join(", ", Naturals(10).Take(5)));
+```
+
+```text
+10, 11, 12, 13, 14
+```
+
+#### Use `Parallel.For` for independent CPU-bound work
+
+`Parallel.For` and `Parallel.ForEach` are useful when each iteration is independent and CPU-bound. Keep side effects isolated so the loop can run in any scheduling order without changing the final result.
+
+*Example: Use `Parallel.For` for independent CPU-bound work.*
+```csharp
+var squares = new int[4];
+Parallel.For(0, squares.Length, i =>
+{
+    squares[i] = (i + 1) * (i + 1);
+});
+Console.WriteLine(string.Join(", ", squares));
+```
+
+```text
+1, 4, 9, 16
+```
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `CS0029: Cannot implicitly convert type` in condition | Used non-bool expression in `if` (no truthy/falsy) | Use explicit comparison: `if (x != 0)` not `if (x)` |
-| `InvalidOperationException` during foreach | Modified collection while iterating | Iterate over `.ToList()` copy or collect changes for post-loop |
-| `SwitchExpressionException` at runtime | No pattern matched and no `_` discard arm | Add `_ => throw` or `_ => default` arm |
-| Iterator method returns wrong type | Used `return` instead of `yield return` | Use `yield return value;` and `yield break;` in iterator methods |
-| LINQ query executes twice | `IEnumerable<T>` re-evaluated on each enumeration | Materialize with `.ToList()` before multiple iterations |
-| `goto` causes spaghetti code | Overuse of `goto` for control flow | Refactor to method extraction, `break` with flag, or LINQ |
-| `break` only exits one loop level | `break` is scoped to the innermost loop | Use `goto`, extract to method with `return`, or use a flag |
-| `NullReferenceException` in null-coalescing chain | Intermediate object is null before `?.` applied | Chain null-conditional: `a?.B?.C ?? default` |
-| Pattern matching variable shadows outer | `is` pattern introduces same-named variable | Rename the pattern variable or the outer variable |
-| LINQ performance worse than loop | Virtual dispatch and allocation overhead in tight loops | Use plain `for` loop for hot paths processing millions of items |
+### Compiler and runtime diagnosis
+
+#### Fix `CS0029` and null-chain failures with explicit checks
+
+`CS0029` in an `if` condition means the expression is not a `bool`. Replace `if (x)` with `if (x != 0)` or a similar explicit test, and use `?.` plus `??` when a null chain can legally terminate early.
+
+*Example: Fix `CS0029` and null-chain failures with explicit checks.*
+```csharp
+int x = 5;
+string? label = null;
+
+if (x != 0)
+{
+    Console.WriteLine("non-zero");
+}
+
+Console.WriteLine(label?.ToUpperInvariant() ?? "DEFAULT");
+```
+
+```text
+non-zero
+DEFAULT
+```
+
+#### Exit nested loops with `return` or targeted `goto`
+
+`break` exits only the innermost loop. For nested search logic, extract the work into a method and `return`, or use a narrowly-scoped `goto` to a label immediately after the outer loop when method extraction is not practical.
+
+*Example: Exit nested loops with `return` or targeted `goto`.*
+```csharp
+static bool Contains(int[][] matrix, int target)
+{
+    for (int i = 0; i < matrix.Length; i++)
+    {
+        for (int j = 0; j < matrix[i].Length; j++)
+        {
+            if (matrix[i][j] == target)
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+int[][] matrix = { new[] { 1, 2 }, new[] { 3, 4 } };
+Console.WriteLine(Contains(matrix, 4));
+```
+
+```text
+True
+```
+
+#### Use `yield return` and `yield break` inside iterators
+
+Iterator methods cannot replace `yield return` with plain `return` for individual values. Use `yield return` for each produced element and `yield break` when the sequence must terminate early.
+
+*Example: Use `yield return` and `yield break` inside iterators.*
+```csharp
+IEnumerable<int> NonNegativePrefix(int[] values)
+{
+    foreach (var value in values)
+    {
+        if (value < 0)
+        {
+            yield break;
+        }
+
+        yield return value;
+    }
+}
+
+Console.WriteLine(string.Join(", ", NonNegativePrefix(new[] { 2, 4, -1, 8 })));
+```
+
+```text
+2, 4
+```
+
+#### Rename pattern variables to avoid shadowing outer names
+
+Pattern variables such as `if (input is int value)` introduce a new local name. If an outer `value` already exists, rename the pattern variable so the new binding does not shadow the surrounding state.
+
+*Example: Rename pattern variables to avoid shadowing outer names.*
+```csharp
+string value = "outer";
+object input = 42;
+
+if (input is int number)
+{
+    Console.WriteLine($"{value}:{number}");
+}
+```
+
+```text
+outer:42
+```
+
+#### Prefer `for` on profiled hot paths
+
+LINQ is usually clearer, but a tight loop over millions of elements can justify a plain `for` once a profiler shows allocation or dispatch overhead. Keep the `for` rewrite narrow and compare it against the original query to preserve behavior.
+
+*Example: Prefer `for` on profiled hot paths.*
+```csharp
+var data = new[] { 1, 2, 3, 4, 5 };
+
+int linqTotal = data.Where(x => x % 2 == 0).Sum();
+int forTotal = 0;
+for (int i = 0; i < data.Length; i++)
+{
+    if (data[i] % 2 == 0)
+    {
+        forTotal += data[i];
+    }
+}
+
+Console.WriteLine($"{linqTotal}:{forTotal}");
+```
+
+```text
+6:6
+```

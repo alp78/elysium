@@ -143,7 +143,7 @@ status: complete
 
 ## Execution and Query Runtime
 
-> [!abstract] Session monitoring, query performance, and plan cache inspection
+> [!abstract]- Summary
 >
 > The 13 DMVs in this category form the core diagnostic toolkit for understanding what the instance is doing right now, how queries have performed historically, and what sits in the plan cache. `dm_exec_requests` joined to `dm_exec_sessions` and cross-applied to `dm_exec_sql_text` is the foundational three-way pattern used throughout the chapter.
 
@@ -552,7 +552,7 @@ Table-valued function invoked as `CROSS APPLY sys.dm_exec_query_statistics_xml(s
 
 ## OS and Memory
 
-> [!abstract] Wait statistics, memory allocation, buffer pool, and system-level counters
+> [!abstract]- Summary
 >
 > The 11 DMVs in this category expose the operating system abstraction layer that SQL Server uses to manage scheduling, memory, and I/O. `dm_os_wait_stats` is the single most-referenced DMV in the entire chapter — it appears in 13 source pages.
 
@@ -834,7 +834,7 @@ Returns one row per active worker thread. Workers map 1:1 to tasks — each task
 
 ## Database — Indexes
 
-> [!abstract] Index fragmentation, usage tracking, and missing index recommendations
+> [!abstract]- Summary
 >
 > Six DMVs cover the full index lifecycle: physical health (`dm_db_index_physical_stats`), runtime I/O and contention (`dm_db_index_operational_stats`), seek/scan/lookup counters (`dm_db_index_usage_stats`), and the three-part missing index chain (`details` → `groups` → `group_stats`).
 
@@ -1042,7 +1042,7 @@ Bridge table linking `dm_db_missing_index_group_stats.group_handle` to `dm_db_mi
 
 ## Database — Files and Space
 
-> [!abstract] Transaction log health, data file utilization, and I/O statistics
+> [!abstract]- Summary
 >
 > Seven DMVs cover file-level diagnostics: I/O latency per file (`dm_io_virtual_file_stats`), transaction log VLF layout and space consumption (`dm_db_log_info`, `dm_db_log_space_usage`, `dm_db_log_stats`), data file space breakdown (`dm_db_file_space_usage`), and low-level page allocation inspection (`dm_db_database_page_allocations`, `dm_db_page_info`).
 
@@ -1244,7 +1244,7 @@ Table-valued function: `sys.dm_db_page_info(database_id, file_id, page_id, mode)
 
 ## Database — Statistics and Storage
 
-> [!abstract] Partition row counts, statistics staleness, columnstore health, and edition features
+> [!abstract]- Summary
 >
 > Five DMVs for physical storage diagnostics beyond indexes: partition-level sizing (`dm_db_partition_stats`), statistics freshness (`dm_db_stats_properties`), columnstore rowgroup state (`dm_db_column_store_row_group_physical_stats`), edition-locked features (`dm_db_persisted_sku_features`), and In-Memory OLTP hash index stats (`dm_db_xtp_hash_index_stats`).
 
@@ -1370,7 +1370,7 @@ Returns hash index statistics for memory-optimized tables. Key diagnostic for de
 
 ## Transactions and Locking
 
-> [!abstract] Active transactions, lock inventory, version store, and task-level wait detail
+> [!abstract]- Summary
 >
 > Seven DMVs for transaction lifecycle and concurrency monitoring. `dm_tran_locks` identifies what is locked and by whom; `dm_os_waiting_tasks` shows who is waiting and for what resource right now; `dm_tran_active_transactions` + `dm_tran_session_transactions` + `dm_tran_database_transactions` form a three-table join chain from transaction → session → database-level activity. The version store DMVs track tempdb consumption under snapshot isolation and read-committed snapshot.
 
@@ -1547,7 +1547,7 @@ Returns the total version store space consumed in tempdb per database. Lightweig
 
 ## High Availability (HADR)
 
-> [!abstract] Always On AG replica state, cluster topology, and seeding progress
+> [!abstract]- Summary
 >
 > Five DMVs expose the Always On Availability Groups subsystem. `dm_hadr_database_replica_states` is the primary health check — it reports synchronization state, redo queue, and send queue per database replica. The cluster DMVs (`dm_hadr_cluster`, `dm_hadr_cluster_members`) report WSFC topology.
 
@@ -1698,7 +1698,7 @@ Returns one row per automatic seeding operation. Automatic seeding (SQL Server 2
 
 ## Audit and Extended Events
 
-> [!abstract] Audit definitions, Extended Event session state, and session target configuration
+> [!abstract]- Summary
 >
 > Five DMVs support the SQL Server audit and Extended Events infrastructure. The audit DMVs (`dm_audit_actions`, `dm_audit_class_type_map`, `dm_server_audit_status`) provide metadata for building and monitoring audit specifications. The XE DMVs (`dm_xe_sessions`, `dm_xe_session_targets`) expose active session state.
 
@@ -1817,7 +1817,7 @@ Returns one row per server audit with its current operational status. Use to ver
 
 ## Server State and Encryption
 
-> [!abstract] Service information, encryption keys, CDC errors, and server suspend state
+> [!abstract]- Summary
 >
 > Four DMVs that don't fit neatly into the other categories: SQL Server service details (`dm_server_services`), TDE key state (`dm_database_encryption_keys`), CDC log scan errors (`dm_cdc_errors`), and server suspend status (`dm_server_suspend_status`).
 
@@ -1921,7 +1921,7 @@ Returns one row per error encountered by the CDC log scan process. CDC relies on
 
 ## System Functions (sys.fn_*)
 
-> [!abstract] Table-valued and scalar functions in the sys schema used alongside DMVs
+> [!abstract]- Summary
 >
 > Eight system functions referenced across the chapter. These are not DMVs but frequently appear in the same diagnostic queries. Each entry lists input parameters, return columns, and cross-references.
 
@@ -2112,7 +2112,7 @@ Returns one row per collation supported by the SQL Server instance, with name an
 
 ## Appendix — Catalog Views Quick Index
 
-> [!abstract] Summary of all sys.* catalog views referenced in the chapter
+> [!abstract]- Summary
 >
 > Catalog views expose persisted metadata (objects, columns, indexes, permissions, configurations) as opposed to DMVs which expose runtime state. This appendix lists every catalog view referenced in the chapter, grouped by category, with source pages. For per-column documentation, see the vault pages listed in each entry — catalog view columns are documented inline where they are queried.
 
@@ -2265,7 +2265,7 @@ Returns one row per collation supported by the SQL Server instance, with name an
 
 ## Appendix — System Stored Procedures
 
-> [!abstract] System stored procedures referenced in the chapter
+> [!abstract]- Summary
 >
 > This appendix lists the `sys.sp_*` and `sys.xp_*` procedures used across the chapter. For parameter documentation, see the vault pages listed in each entry.
 

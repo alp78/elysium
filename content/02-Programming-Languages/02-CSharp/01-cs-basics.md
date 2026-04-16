@@ -10,7 +10,8 @@ status: complete
 
 # 01. Basics - C#
 
-> [!quote]
+> [!quote] Quote
+>
 > "The only way to learn a new programming language is by writing programs in it."
 >
 > — **Brian W. Kernighan & Dennis Ritchie**, *The C Programming Language* (1978)
@@ -27,7 +28,7 @@ status: complete
 >
 > **Special Methods & Operator Overloading** — custom `operator` definitions; `IEquatable<T>`, `IComparable<T>`, `IEnumerable<T>`; implicit/explicit conversion operators; indexers; type inspection with `GetType`, `typeof`, `is`, `as`.
 >
-> **Value vs Reference Types** — stack vs heap allocation; copy vs shared-reference semantics; string immutability; boxing and unboxing; `struct` vs `class`; `ref`/`out`/`in` parameter modifiers.
+> **Value vs Reference Types** — storage context; copy vs shared-reference semantics; string immutability; boxing and unboxing; `struct` vs `class`; `ref`/`out`/`in` parameter modifiers.
 
 > [!note]- Glossary
 >
@@ -35,8 +36,7 @@ status: complete
 > - Named storage location whose static type is known at compile time in ordinary C# code.
 > - Used to store, retrieve, and pass values with compile-time type checking and tooling support.
 >
-> > [!tip] `var` is not dynamic
-> > `var x = 5;` infers `int` at compile time. The type is fixed after inference, so assigning a `string` later is a compile-time error.
+> - Tip: `var x = 5;` infers `int` at compile time. The type is fixed after inference, so assigning a `string` later is a compile-time error.
 >
 > ---
 >
@@ -44,8 +44,7 @@ status: complete
 > - Value declared with `const` when it is a compile-time constant, or with `readonly` / `static readonly` when it is assigned once at runtime and then not changed.
 > - Used to prevent accidental reassignment of values that are intended to stay fixed after definition or initialization.
 >
-> > [!warning] `const` requires a compile-time constant
-> > Use `readonly` or `static readonly` for values that depend on configuration, environment variables, constructor logic, or any other runtime computation.
+> - Warning: use `readonly` or `static readonly` for values that depend on configuration, environment variables, constructor logic, or any other runtime computation.
 >
 > ---
 >
@@ -53,8 +52,7 @@ status: complete
 > - Type system in which ordinary variable and expression types are determined and checked at compile time rather than being resolved dynamically at runtime.
 > - Used to catch type mismatches early, enable refactoring tools, and support optimized generated code.
 >
-> > [!info] `var` vs `dynamic`
-> > `var` is compile-time type inference, not dynamic typing. `dynamic` defers member binding and many type checks to runtime.
+> - Note: `var` is compile-time type inference, not dynamic typing. `dynamic` defers member binding and many type checks to runtime.
 >
 > ---
 >
@@ -62,8 +60,7 @@ status: complete
 > - 32-bit signed integer type (`System.Int32`) with range −2,147,483,648 to 2,147,483,647.
 > - Used as the default whole-number type for counters, loop indices, and general-purpose integer values.
 >
-> > [!warning] Overflow depends on context
-> > Integer overflow wraps in an `unchecked` context but throws `OverflowException` in a `checked` context. Do not assume overflow is always silent.
+> - Warning: integer overflow wraps in an `unchecked` context but throws `OverflowException` in a `checked` context. Do not assume overflow is always silent.
 >
 > ---
 >
@@ -71,8 +68,7 @@ status: complete
 > - 64-bit signed integer type (`System.Int64`) with a much larger range than `int`.
 > - Used when values can exceed the `int` range, such as large identifiers, epoch-based timestamps, or high-volume counters.
 >
-> > [!tip] Use the `L` suffix for long literals when needed
-> > `9_000_000_000L` is a `long` literal. Without the suffix, an out-of-range integer literal will not fit in `int`.
+> - Tip: `9_000_000_000L` is a `long` literal. Without the suffix, an out-of-range integer literal will not fit in `int`.
 >
 > ---
 >
@@ -80,8 +76,7 @@ status: complete
 > - Binary floating-point numeric types following IEEE 754, where `float` is 32-bit and `double` is 64-bit.
 > - Used for scientific, statistical, and measurement-oriented values where binary rounding behavior is acceptable.
 >
-> > [!danger] Do not use for money
-> > Binary floating-point cannot represent many decimal fractions exactly. For currency and other exact base-10 arithmetic, use `decimal`.
+> - Warning: binary floating-point cannot represent many decimal fractions exactly. For currency and other exact base-10 arithmetic, use `decimal`.
 >
 > ---
 >
@@ -89,8 +84,7 @@ status: complete
 > - 128-bit decimal-based numeric type (`System.Decimal`) designed for high-precision base-10 arithmetic.
 > - Used for financial calculations and any domain where decimal rounding must be controlled and binary floating-point error is unacceptable.
 >
-> > [!warning] The `m` suffix matters
-> > `19.99` is a `double`, while `19.99m` is a `decimal`. Omitting `m` gives the wrong numeric type for monetary values.
+> - Warning: `19.99` is a `double`, while `19.99m` is a `decimal`. Omitting `m` gives the wrong numeric type for monetary values.
 >
 > ---
 >
@@ -98,8 +92,7 @@ status: complete
 > - Boolean type that can hold only `true` or `false`.
 > - Used for flags, conditions, and control-flow expressions that must evaluate explicitly to a boolean value.
 >
-> > [!info] No implicit numeric truthiness
-> > C# does not treat integers as booleans. `if (1)` is invalid, and boolean values do not implicitly behave like `1` and `0`.
+> - Note: C# does not treat integers as booleans. `if (1)` is invalid, and boolean values do not implicitly behave like `1` and `0`.
 >
 > ---
 >
@@ -107,8 +100,7 @@ status: complete
 > - Immutable sequence of UTF-16 code units represented by `System.String`, with value-based equality for content comparison.
 > - Used for textual data such as names, paths, JSON, SQL fragments, and messages.
 >
-> > [!warning] Repeated concatenation can become expensive
-> > Repeated `+=` inside large loops creates many intermediate strings. Use `StringBuilder` when building large strings incrementally.
+> - Warning: repeated `+=` inside large loops creates many intermediate strings. Use `StringBuilder` when building large strings incrementally.
 >
 > ---
 >
@@ -116,8 +108,7 @@ status: complete
 > - Single UTF-16 code unit represented by `System.Char`.
 > - Used for low-level character processing, lexical scanning, and APIs that operate on one code unit at a time.
 >
-> > [!tip] Single quotes vs double quotes
-> > `'a'` is a `char`. `"a"` is a one-character `string`. They are different types and are not interchangeable.
+> - Tip: `'a'` is a `char`. `"a"` is a one-character `string`. They are different types and are not interchangeable.
 >
 > ---
 >
@@ -125,8 +116,7 @@ status: complete
 > - One-byte integer types where `byte` is unsigned (0–255) and `sbyte` is signed (−128 to 127).
 > - Used for binary data, protocol payloads, buffers, image channels, and low-level interop scenarios.
 >
-> > [!warning] `byte` cannot represent negative values
-> > Use `sbyte` only when a signed one-byte value is genuinely required. Most binary-data APIs in .NET use `byte`.
+> - Warning: `byte` cannot represent negative values. Use `sbyte` only when a signed one-byte value is genuinely required. Most binary-data APIs in .NET use `byte`.
 >
 > ---
 >
@@ -134,8 +124,7 @@ status: complete
 > - Special value representing the absence of an object reference, or the absence of a value for nullable value types.
 > - Used to model missing, optional, or not-yet-assigned values.
 >
-> > [!danger] `NullReferenceException` remains a common runtime failure
-> > Use null checks, null-conditional `?.`, null-coalescing `??`, and nullable reference type analysis to make null-handling explicit.
+> - Warning: `NullReferenceException` remains a common runtime failure. Use null checks, null-conditional `?.`, null-coalescing `??`, and nullable reference type analysis to make null-handling explicit.
 >
 > ---
 >
@@ -143,8 +132,7 @@ status: complete
 > - Type whose variables contain the value directly, including built-in numeric types, `bool`, `struct`, `enum`, and nullable value types.
 > - Used for compact data with value-copy semantics, predictable identity behavior, and efficient representation in many cases.
 >
-> > [!tip] Value type does not simply mean “stack allocated”
-> > Value types are often stored inline, but not always literally on the stack. Their important semantic property is value-copy behavior, not a single storage location rule.
+> - Note: value type does not simply mean "stack allocated". Value types are often stored inline, but not always literally on the stack. Their important semantic property is value-copy behavior, not a single storage location rule.
 >
 > ---
 >
@@ -152,8 +140,7 @@ status: complete
 > - Type whose variables hold a reference to an object rather than containing the full object data directly, including `class`, arrays, delegates, and `string`.
 > - Used for shared objects, polymorphic designs, and structures where identity and shared mutation matter.
 >
-> > [!warning] Assignment copies the reference, not the object
-> > `var listB = listA;` makes both variables refer to the same list instance. Mutating through one variable is visible through the other.
+> - Warning: assignment copies the reference, not the object. `var listB = listA;` makes both variables refer to the same list instance. Mutating through one variable is visible through the other.
 >
 > ---
 >
@@ -161,8 +148,7 @@ status: complete
 > - Syntax for `Nullable<T>` on value types, adding a `null` state to a value type that normally cannot be null.
 > - Used for optional numeric, date, and other value-type data, especially when modeling database columns or optional parameters.
 >
-> > [!warning] Unwrap safely
-> > Accessing `.Value` when no value is present throws `InvalidOperationException`. Prefer `??`, pattern checks, or `GetValueOrDefault()`.
+> - Warning: accessing `.Value` when no value is present throws `InvalidOperationException`. Prefer `??`, pattern checks, or `GetValueOrDefault()`.
 >
 > ---
 >
@@ -170,8 +156,7 @@ status: complete
 > - Contextual keyword that asks the compiler to infer the variable’s static type from the right-hand side expression.
 > - Used to reduce verbosity when the type is obvious or when the type would be cumbersome to repeat, such as with anonymous types or long generic names.
 >
-> > [!tip] Literal suffixes still control the inferred type
-> > `var x = 3.14m;` infers `decimal`, while `var x = 3.14;` infers `double`. The compiler follows the literal’s actual type rules.
+> - Tip: `var x = 3.14m;` infers `decimal`, while `var x = 3.14;` infers `double`. The compiler follows the literal's actual type rules.
 >
 > ---
 >
@@ -179,8 +164,7 @@ status: complete
 > - Type form designed for value-oriented data modeling, with compiler-generated members such as value-based equality and helpful printing behavior. `record` is a reference type; `record struct` is a value type.
 > - Used for DTOs, immutable data carriers, and domain values where structural equality is more useful than identity-based equality.
 >
-> > [!info] `record` is not just syntax sugar for `class`
-> > A `record` defaults to value-oriented equality semantics, while an ordinary `class` uses reference equality unless you override it manually.
+> - Note: a `record` defaults to value-oriented equality semantics, while an ordinary `class` uses reference equality unless you override it manually.
 >
 > ---
 >
@@ -188,8 +172,7 @@ status: complete
 > - Mutable text buffer in `System.Text` for building strings incrementally without allocating a new string on every append.
 > - Used when many concatenation steps are required, especially inside loops or streaming text-generation workflows.
 >
-> > [!tip] Materialize once at the end
-> > Append incrementally with methods such as `Append` and `AppendLine`, then call `ToString()` once when the final string is needed.
+> - Tip: append incrementally with methods such as `Append` and `AppendLine`, then call `ToString()` once when the final string is needed.
 >
 > ---
 >
@@ -197,8 +180,7 @@ status: complete
 > - Language feature that lets a type define custom behavior for operators such as `+`, `-`, `==`, or `<`.
 > - Used to give domain-specific value types natural syntax, especially for mathematical or strongly modeled business values.
 >
-> > [!warning] Equality overloads must stay consistent
-> > If you overload equality-related operators, also keep `Equals()` and `GetHashCode()` consistent so comparisons and hash-based collections behave correctly.
+> - Warning: if you overload equality-related operators, also keep `Equals()` and `GetHashCode()` consistent so comparisons and hash-based collections behave correctly.
 >
 > ---
 >
@@ -206,8 +188,7 @@ status: complete
 > - Arithmetic contexts that control whether integral overflow raises an exception (`checked`) or wraps silently (`unchecked`).
 > - Used to make overflow behavior explicit in domains where range errors matter, such as finance, counters, indexing, or safety-sensitive calculations.
 >
-> > [!tip] Consider enabling checked arithmetic deliberately
-> > Project-wide checked settings can catch real bugs early, but they should be chosen consciously because they change numeric-failure behavior across the codebase.
+> - Tip: project-wide checked settings can catch real bugs early, but they should be chosen consciously because they change numeric-failure behavior across the codebase.
 >
 > ---
 >
@@ -215,10 +196,9 @@ status: complete
 > - Package manager for .NET libraries and tools, used to restore dependencies into a project or solution.
 > - Used to declare, install, version, and update third-party packages and their transitive dependency graph.
 >
-> > [!tip] Centralize package versions in larger solutions
-> > Central package management can reduce version drift across projects and make dependency governance easier in multi-project repositories.
+> - Tip: central package management can reduce version drift across projects and make dependency governance easier in multi-project repositories.
 
-This note covers the absolute foundations of C# as a programming language: how to set up and verify a .NET Interactive notebook environment, read and write console output, declare variables with static typing, work with every built-in data type, use all operator families, implement custom operator behavior via operator overloading, and understand the value-vs-reference type distinction that governs memory layout and mutation safety.
+This note covers the absolute foundations of C# as a programming language: how to set up and verify a .NET Interactive notebook environment, read and write console output, declare variables with static typing, work with every built-in data type, use all operator families, implement custom operator behavior via operator overloading, and understand the value-vs-reference type distinction that governs copy semantics, storage context, and mutation safety.
 
 ## Environment Setup
 
@@ -478,7 +458,7 @@ after newline
 Backslash: \
 Quote: "double"
 Unicode: ❤ ★ ☂
-Null char: [ ] (invisible)
+Null char: [] (invisible)
 Verbatim string: \n \t not escaped
 Regular:  C:\Users\file.txt
 Verbatim: C:\Users\file.txt
@@ -716,7 +696,7 @@ GetNonEmptyString(new[] { "", "  ", "Alice" });
 
 ## Variables, Constants & Data Types
 
-Covers variable declaration, constants, type inference with `var`, the complete set of value and reference types, nullability, and the stack/heap memory model that governs how C# manages data.
+Covers variable declaration, constants, type inference with `var`, the complete set of value and reference types, nullability, and the storage and lifetime rules that shape how C# manages data.
 
 ### Variable declaration and constants
 
@@ -750,9 +730,11 @@ System.Int32
 ```
 
 > [!warning] Variables Cannot Change Type
+>
 > C# is statically typed. `x = "string"` after declaring `int x` is a compile error. Unlike Python, types are fixed at declaration.
 
 > [!success] Use var for type inference without sacrificing type safety
+>
 > `var x = 42;` infers `int` at compile time — the variable is still statically typed, you just don't have to write the type explicitly. `x = "string"` would still be a compile error.
 
 #### Define compile-time and runtime constants with const and readonly
@@ -760,6 +742,7 @@ System.Int32
 `const` values must be known at compile time and are embedded directly into the IL — use for truly fixed values like `Pi` or configuration keys that never change. `readonly` fields can be set once in the constructor at runtime — use for values computed at startup (e.g., connection strings from environment variables). `const` is implicitly `static`; `readonly` can be instance-level. Any attempt to reassign a constant (`Pi = 999`) is a compile error.
 
 > [!info] readonly vs const
+>
 > `readonly` can be assigned in the constructor at runtime. `const` must be a compile-time literal. Use `readonly` for values computed at startup.
 
 *This example shows how to define compile-time and runtime constants with const and readonly.*
@@ -846,11 +829,14 @@ checked: 2147483647 + 1 threw OverflowException
 ```
 
 > [!tip] Enable project-wide checked arithmetic
+>
 > Add `<CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>` to your `.csproj` to make all integer arithmetic checked by default. Use `unchecked` for the rare cases where wrapping is intentional (hash functions, bit manipulation).
 
 #### Floating-point types — float, double, decimal precision tiers
 
 Three floating-point types with increasing precision: `float` (32-bit, ~7 digits), `double` (64-bit, ~15 digits), `decimal` (128-bit, 28-29 digits). `double` is the default for science and ML. `decimal` has exact base-10 representation (no `0.1+0.2` surprises) — required for money and financial math. `float` uses half the memory of `double`.
+
+*This diagram summarizes when `float`, `double`, or `decimal` is usually the right fit.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -879,6 +865,7 @@ flowchart TD
 > Never use `float`/`double` for currency — always use `decimal`. Never compare floats with `==` — use `Math.Abs(a-b) < epsilon`.
 
 > [!success] Use decimal for money, epsilon comparison for floats
+>
 > Declare monetary amounts as `decimal amount = 9.99m;`. For float equality checks, use `Math.Abs(a - b) < 1e-9` where `1e-9` is your tolerance (epsilon), chosen based on the precision your computation requires.
 
 *This example demonstrates floating-point types — float, double, decimal precision tiers.*
@@ -924,9 +911,11 @@ System.Decimal
 When you use `var`, the compiler determines the type entirely from the right-hand side. `var a = 3.14` infers `double`, `var b = 3.14f` infers `float` (`System.Single`), and `var e = 3.14m` infers `decimal`. This makes suffix choice critical with `var` — omitting `m` on a monetary value silently gives you `double` with binary rounding.
 
 > [!warning] Float Requires f Suffix
+>
 > Numeric literals are `double` by default. `float x = 3.14;` is a compile error. Use `3.14f` for float, `3.14m` for decimal.
 
 > [!success] Use the correct suffix for each floating-point type
+>
 > `float f = 3.14f;` — `f` suffix. `decimal d = 9.99m;` — `m` suffix. `double` needs no suffix: `double x = 3.14;` is the default.
 
 *This example shows how to observe how var infers floating-point type from literal suffix.*
@@ -1002,6 +991,7 @@ Real: 3, Imaginary: 4
 The `bool` type holds exactly `true` or `false` — there is no implicit conversion to or from integers. `if (1)` and `true + true` are compile errors. When you need an integer representation, use `Convert.ToInt32(boolVal)` which returns `1` for `true` and `0` for `false`.
 
 > [!info] bool Is Strict — No Numeric Conversion, No Truthy/Falsy
+>
 > C# has no implicit bool-to-int conversion. `true + true` and `int x = true` are compile errors. Use `Convert.ToInt32(boolVal)` if needed.
 > `if ("hello")` and `if (1)` are also compile errors. C# requires explicit boolean expressions: `if (str != null && str.Length > 0)`.
 
@@ -1054,12 +1044,14 @@ café
 
 #### Understand null references and nullable value types
 
-`null` represents the absence of a value for reference types. Attempting to access a member on a `null` reference throws `NullReferenceException` — the most common runtime error in C#. Value types (`int`, `bool`, `struct`) cannot be `null` by default because they live on the stack with no reference to dereference. Use the `?` suffix (`int?`, `double?`) to create a nullable value type backed by `Nullable<T>`, which adds a `HasValue` flag alongside the value.
+`null` represents the absence of an object reference, or the absence of a value in `Nullable<T>`. Attempting to access a member on a `null` reference throws `NullReferenceException`. Non-nullable value types such as `int`, `bool`, and ordinary `struct` values do not include a `null` state by default. Use the `?` suffix (`int?`, `double?`) to create a nullable value type backed by `Nullable<T>`, which adds a `HasValue` flag alongside the value.
 
 > [!warning] Value Types Cannot Be Null
+>
 > `int x = null` is a compile error. Use `int? x = null` (nullable value type) when null is needed.
 
 > [!success] Use nullable value types (T?) when null is a valid state
+>
 > `int? x = null;` declares a nullable int. Check with `x.HasValue` or `x == null`. Unwrap with `x.Value` (throws if null) or `x.GetValueOrDefault(0)` (returns 0 if null). In C# 8+, enable `#nullable enable` for compile-time null safety on reference types too.
 
 *This example shows how to understand null references and nullable value types.*
@@ -1107,18 +1099,13 @@ name?.Length:
 
 #### C# data type overview — value types vs reference types
 
-C# has a strict **VALUE vs REFERENCE** type distinction.
+C# has a strict **value type vs reference type** distinction, but storage location still depends on context.
 
-- **STACK**: Fast, small, auto-managed memory. Each method call gets a stack frame.
+- **Stack frames** usually hold the current method's local variables and references.
+- **The managed heap** stores object instances whose lifetime is tracked by the Garbage Collector (GC).
+- A value type variable stores its data directly; a reference type variable stores a reference to an object.
 
-When the method returns, its stack frame is discarded. No garbage collector needed.
-  Value types live here (`int`, `bool`, `struct`, etc.)
-
-- **HEAP**: Large, shared memory pool managed by the Garbage Collector (GC).
-
-Objects persist until no references point to them, then GC reclaims the memory.
-  Reference types live here (`class`, `string`, `List`, `array`, etc.)
-  A variable on the stack holds a POINTER to the heap object.
+*This diagram shows a conceptual split between local variables and referenced heap objects.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -1138,8 +1125,8 @@ flowchart LR
         direction TB
         A["int x = 42"]
         B["bool b = true"]
-        C["listA (pointer)"]
-        D["listB (pointer)"]
+        C["listA (reference)"]
+        D["listB (reference)"]
     end
     subgraph HEAP["Heap (GC-managed)"]
         E["List: [1, 2, 3]"]
@@ -1147,6 +1134,8 @@ flowchart LR
     C -->|reference| E
     D -->|reference| E
 ```
+
+*This diagram summarizes the built-in type families rooted at `object` and `ValueType`.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -1246,7 +1235,7 @@ A  (2 bytes, Unicode))
 
 #### Struct and enum — user-defined value types
 
-`struct` and `enum` are user-defined value types that live on the stack. Use `struct` for small, immutable data bundles (coordinates, RGB colors, date ranges) — keep them under 16 bytes to avoid expensive copy overhead. `enum` maps named constants to underlying integer values.
+`struct` and `enum` are user-defined value types. They are copied by value, although their physical storage still depends on context. Use `struct` for small, immutable data bundles (coordinates, RGB colors, date ranges) and `enum` for named constants backed by an integral type.
 
 **struct** — user-defined value type for small, immutable data bundles.
 
@@ -1430,7 +1419,7 @@ Console.WriteLine("(immutable class)  (ref or value))");
 
 #### Why value and reference types affect assignment and equality
 
-Assigning a value type (`int a = b`) copies all data — the two variables are independent afterward. Assigning a reference type (`var listB = listA`) copies the pointer — both variables now point to the same heap object, so mutating through one is visible through the other. This distinction affects equality (`==` compares values for value types, references for classes), null behavior, function argument passing, and thread safety.
+Assigning a value type (`int a = b`) copies the value, so the two variables are independent afterward. Assigning a reference type (`var listB = listA`) copies the reference, so mutating through one alias is visible through the other. This distinction affects equality (`==` compares values for value types, references for ordinary classes), null behavior, and function argument passing.
 
 *This example demonstrates why value and reference types affect assignment and equality.*
 
@@ -1457,7 +1446,7 @@ Same object? True
 
 #### String immutability and boxing/unboxing
 
-Strings are reference types but behave like values because they are immutable — `+=` creates a new string, leaving the original unchanged. **Boxing** wraps a value type in an `object` on the heap (`object boxed = 42`); **unboxing** extracts it back (`(int)boxed`). Each box/unbox cycle involves a heap allocation and copy — avoid in hot paths by using generics instead of `object`.
+Strings are reference types but behave like values because they are immutable — `+=` creates a new string, leaving the original unchanged. **Boxing** wraps a value type in an `object` on the managed heap (`object boxed = 42`); **unboxing** copies the stored value back into a value-type variable (`(int)boxed`). Each boxing step allocates a managed object, so avoid repeated boxing in hot paths by using generics instead of `object`.
 
 *This example demonstrates string immutability and boxing/unboxing.*
 
@@ -1469,8 +1458,8 @@ Console.WriteLine($"strA = '{strA}'");
 Console.WriteLine($"strB = '{strB}'");
 
 int val = 42;
-object boxed = val;    // boxing: int copied to heap
-int unboxed = (int)boxed;  // unboxing: copied back to stack
+object boxed = val;    // boxing: int copied into a managed object
+int unboxed = (int)boxed;  // unboxing: value copied out of the box
 Console.WriteLine($"val={val}, boxed={boxed}, unboxed={unboxed}");
 ```
 
@@ -1483,6 +1472,7 @@ val=42, boxed=42, unboxed=42
 #### Value types vs reference types summary
 
 > [!info] Type system classification
+>
 > - **Value types:** `int`, `float`, `double`, `decimal`, `bool`, `char`, `struct`, `enum`, `ValueTuple`
 > - **Reference types:** `string`, `object`, `class`, `array`, `List`, `Dict`, `delegate`, `interface`, `record`
 > - **Special:** `string` is a reference type but immutable (acts like a value type)
@@ -1644,6 +1634,7 @@ False
 Unlike Python or JavaScript, C# does not treat non-zero integers, non-empty strings, or non-null objects as `true`. Every `if` condition must evaluate to an explicit `bool` — anything else is a compile error.
 
 > [!info] No truthy/falsy — C# requires explicit `bool` in all conditions
+>
 > - `if (list.Count > 0)` not `if (list)`
 > - `if (str.Length > 0)` not `if (str)`
 > - `if (x != 0)` not `if (x)`
@@ -2040,6 +2031,7 @@ Operators are `static` methods that enable natural syntax (`v1 + v2` instead of 
 > - **Mutable classes with `GetHashCode`** — hash changes after dictionary insertion
 
 > [!success] Override Equals and GetHashCode together, keep overloaded types immutable
+>
 > Always override `Equals` and `GetHashCode` when overloading `==`. Make classes that implement `GetHashCode` immutable — their hash value must remain constant for the lifetime of any dictionary entry. For value-like types, consider using a `record` or `struct` which handles these automatically.
 
 *This example defines an immutable `Vector` type with overloaded operators, indexing, iteration, and deconstruction.*
@@ -2348,12 +2340,12 @@ Comprehensive reference combining the value/reference distinction with the mutab
 
 #### Value type vs reference type — memory semantics overview
 
-C# has TWO orthogonal distinctions:
+C# has two orthogonal distinctions:
 
-1. **VALUE vs REFERENCE** type — where it lives in memory (stack vs heap)
-2. **MUTABLE vs IMMUTABLE** — can it be changed after creation?
+1. **Value type vs reference type** — whether the variable stores the value directly or stores a reference
+2. **Mutable vs immutable** — whether the value can be changed after creation
 
-These are INDEPENDENT — you can have all four combinations:
+These distinctions are independent, so you can have all four combinations:
 
 | Combination | Examples |
 |---|---|
@@ -2362,7 +2354,7 @@ These are INDEPENDENT — you can have all four combinations:
 | reference + mutable | `class`, `List<T>`, `Dictionary<K,V>` |
 | reference + immutable | `string`, `record`, `ImmutableList<T>` |
 
-**Value types** (stack, COPIED on assignment):
+**Value types** (copied by value):
 
 | Type | Example | Mutable? | Notes |
 |---|---|---|---|
@@ -2378,7 +2370,7 @@ These are INDEPENDENT — you can have all four combinations:
 
 \* struct/ValueTuple fields are technically mutable, but best practice is to keep them immutable.
 
-**Reference types** (heap, REFERENCE copied on assignment):
+**Reference types** (reference copied on assignment):
 
 | Type | Example | Mutable? | Notes |
 |---|---|---|---|
@@ -2401,15 +2393,15 @@ These are INDEPENDENT — you can have all four combinations:
 
 The value/reference distinction affects every aspect of data handling in C#:
 
-1. **Assignment**: value types copy all data, reference types copy the pointer
+1. **Assignment**: value types copy the value, reference types copy the reference
 2. **Equality**: value types compare by value, reference types compare by reference (except `string` and `record`)
 3. **Null**: value types cannot be null (use `int?`), reference types can
-4. **Performance**: value types live on the stack (fast allocation, no GC), reference types on the heap (GC-managed)
-5. **Function arguments**: value types are copied (caller's copy unchanged), reference types pass the pointer (callee can modify the object's contents)
+4. **Performance**: boxing, copying, and object allocation still matter, but actual storage depends on context rather than a single stack-vs-heap rule
+5. **Function arguments**: value-type parameters are copied unless you use `ref`, `in`, or `out`; reference-type parameters copy the reference, so methods can mutate the same object
 
 #### struct assignment — value type copies are independent
 
-Assigning a value type (`int`, `struct`, `enum`) copies all data — after copying, the two variables are completely independent. No aliasing surprises, thread-safe by default. Use for small immutable data (coordinates, amounts, dates, colors). For large data structures (>16 bytes), copying becomes expensive — use `class` or `record` instead.
+Assigning a value type (`int`, `struct`, `enum`) copies the value, so the two variables are independent after the assignment. Use value types for small immutable data such as coordinates, amounts, or date parts. If a value becomes large or is copied frequently, measure the cost and consider `class` or `record` instead.
 
 *This example demonstrates struct assignment — value type copies are independent.*
 
@@ -2426,7 +2418,7 @@ a = 10, b = 99
 
 #### Reference type assignment shares the same heap object
 
-Assigning a reference type copies the pointer, not the object. Both variables now refer to the same instance — mutations through either variable are visible through the other. This is the source of aliasing bugs: adding an element to `listB` also changes `listA` because they are the same list.
+Assigning a reference type copies the reference, not the object. Both variables now refer to the same instance, so mutations through either variable are visible through the other. This is the source of aliasing bugs: adding an element to `listB` also changes `listA` because they are the same list.
 
 *This example demonstrates reference type assignment shares the same heap object.*
 
@@ -2465,11 +2457,12 @@ strB = 'hello'
 ```
 
 > [!tip] Records compare by value
+>
 > `new Point(1,2) == new Point(1,2)` is `True` — records use value equality, unlike classes which compare by reference.
 
 #### Demonstrate function argument passing — value types copy, reference types share
 
-When a value type is passed to a method, the method receives a copy — modifications inside the method do not affect the caller's variable. When a reference type is passed, the method receives a copy of the pointer — it can modify the object's contents (add to a list, change properties), but reassigning the parameter itself does not affect the caller's variable. Use `ref` to pass by reference (both value and reference types), `out` for method-initialized outputs, and `in` for read-only pass-by-reference.
+When a value type is passed to a method, the method receives a copy, so modifications inside the method do not affect the caller's variable. When a reference type is passed, the method receives a copy of the reference, so it can modify the object's contents (add to a list, change properties), but reassigning the parameter itself does not affect the caller's variable. Use `ref` to pass by reference (both value and reference types), `out` for method-initialized outputs, and `in` for read-only pass-by-reference.
 
 *This example shows how to demonstrate function argument passing — value types copy, reference types share.*
 
@@ -2500,91 +2493,208 @@ Console.WriteLine($"[{string.Join(",", myList)}]");   // list after
 | Reference + Immutable | `string`, `record`, `delegate` | Safe to share |
 | Reference + Mutable | `class`, `List`, `Dict`, arrays | Careful with sharing |
 
-> [!example] Usage
->
-> > [!success] Applicability
-> >
-> > - **Production services and long-lived applications** — C#'s static type system, compile-time checks, and IDE refactoring support make it ideal for large codebases where correctness and maintainability matter more than development speed.
-> > - **Performance-sensitive workloads** — C# is 10–100x faster than Python for CPU-bound loops, with precise control over memory layout (structs, `Span<T>`, `stackalloc`). Ideal for high-throughput data processing, real-time systems, and low-latency APIs.
-> > - **Strong type safety requirements** — when incorrect types must be caught before deployment, not at runtime. Financial calculations, regulatory systems, and safety-critical code benefit from compile-time guarantees.
-> > - **Windows ecosystem and .NET platform** — native integration with SQL Server, Azure, WPF, ASP.NET, and the entire Microsoft stack. The natural choice when the deployment target is Windows or Azure.
-> > - **Enterprise data pipelines** — when the pipeline is part of a larger .NET application, or when performance, thread safety, and dependency injection matter more than scripting convenience.
->
-> > [!failure] Limitations
-> >
-> > - **Ad-hoc data exploration** — C#'s ceremony (compilation, type declarations, project files) makes it slower for quick experiments. Use Python with Jupyter for exploration, then port to C# for production.
-> > - **Small scripts and automation** — a 10-line Python script becomes 30+ lines in C#. For glue code, cron jobs, and one-off tasks, Python is more productive.
-> > - **Ecosystem coverage** — Python's data science and ML ecosystem (pandas, scikit-learn, transformers, dbt) is broader. C# equivalents exist but are less mature.
-> > - **Linux-first environments** — while .NET runs on Linux, the ecosystem and community tooling still lean toward Windows. Python is more at home on Linux.
-> > - **Rapid prototyping** — dynamic typing and Python's REPL make it faster to iterate on ideas before committing to a typed design.
+## Decision Criteria
 
-## Warnings
+### Choose features by correctness requirement
 
-> [!warning] Integer overflow is silent by default
->
-> `int.MaxValue + 1` wraps to `int.MinValue` without any error. This can cause subtle bugs in financial calculations, counters, and loop bounds.
+#### Prefer `record` when a model should compare by value
 
-> [!success] Correct pattern
->
-> Wrap critical arithmetic in `checked { }` to throw `OverflowException` on overflow. For project-wide checking, set `<CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>` in the `.csproj`.
+If a data carrier should treat equal field values as equal data, `record` is a safer default than a mutable `class`. The generated `==`, `Equals`, and `ToString()` members make `record` a good fit for DTOs, messages, and configuration snapshots.
 
-> [!warning] String concatenation in loops
->
-> `result += item` in a loop creates a new string object on every iteration — O(n^2) time complexity for n iterations. Visibly slow above ~1,000 iterations.
+*This example shows `record` value equality and generated printing.*
 
-> [!success] Correct pattern
->
-> Use `StringBuilder` for building strings in loops: `var sb = new StringBuilder(); sb.Append(item);`. Convert at the end with `sb.ToString()`.
+```csharp
+record Money(decimal Amount, string Currency);
 
-> [!warning] `==` vs `.Equals()` for reference types
->
-> `==` on reference types checks reference identity by default (same object in memory), not value equality. `string` is a special case — `==` is overloaded to compare content.
+var moneyA = new Money(10m, "USD");
+var moneyB = new Money(10m, "USD");
+Console.WriteLine(moneyA == moneyB);
+Console.WriteLine(moneyA);
+```
 
-> [!success] Correct pattern
->
-> Override `Equals()` and `GetHashCode()` together on custom classes. Use `record` types for automatic value equality. For reference comparison, use `object.ReferenceEquals()`.
+```text
+True
+Money { Amount = 10, Currency = USD }
+```
 
-> [!warning] NullReferenceException
->
-> Accessing a member on a `null` reference crashes at runtime. This is C#'s most common runtime exception.
+#### Prefer `decimal` and `checked` when rounding and overflow are part of correctness
 
-> [!success] Correct pattern
->
-> Enable nullable reference types (`<Nullable>enable</Nullable>`). Use `?.` (null-conditional) and `??` (null-coalescing): `var name = user?.Name ?? "Unknown";`.
+Use `decimal` for base-10 arithmetic and wrap overflow-sensitive integer code in `checked` when silent wraparound would be a bug. The combination matters in billing, limits, counters, and similar code paths where a wrong number is worse than a thrown exception.
 
-> [!warning] Boxing value types
->
-> Assigning a value type to `object` or an interface boxes it — allocates a heap object and copies the value. Frequent boxing in tight loops causes GC pressure.
+*This example shows `decimal` arithmetic and `checked` overflow detection.*
 
-> [!success] Correct pattern
->
-> Use generic collections (`List<int>` not `ArrayList`), generic interfaces (`IComparable<T>` not `IComparable`), and `Span<T>` to avoid boxing.
+```csharp
+decimal amount = 19.99m * 3m;
+Console.WriteLine(amount);
 
-## Recommendations
+try
+{
+    checked
+    {
+        int max = int.MaxValue;
+        Console.WriteLine(max + 1);
+    }
+}
+catch (OverflowException ex)
+{
+    Console.WriteLine(ex.GetType().Name);
+}
+```
 
-- **Enable nullable reference types** in every project — `<Nullable>enable</Nullable>` in `.csproj`. This catches null bugs at compile time.
-- **Use `decimal` for money** — never `float` or `double`. Suffix with `m`: `19.99m`.
-- **Use `var` for local variables** when the type is obvious from the right-hand side — reduces noise without losing clarity.
-- **Use `record` for DTOs and immutable data** — automatic `Equals`, `GetHashCode`, `ToString`, and `with` expressions.
-- **Use `checked` blocks** for financial and safety-critical arithmetic — overflow bugs are silent and catastrophic.
-- **Prefer `StringBuilder`** for any string construction involving loops or more than ~5 concatenations.
-- **Pair `Equals` with `GetHashCode`** — if you override one, override both. Inconsistency breaks `Dictionary`, `HashSet`, and LINQ.
-- **Use pattern matching** (`is`, `switch` expressions) instead of type-cast chains — more readable, safer, and the compiler verifies exhaustiveness.
-- **Prefer `Span<T>` and `Memory<T>`** for slice operations on arrays and strings — avoids allocation and copying.
+```text
+59.97
+OverflowException
+```
+
+## Operational Risks
+
+### Treat defaults as observable behavior
+
+#### Shared `List<T>` references propagate mutation
+
+A variable of type `List<T>` stores a `reference`, so copying the variable creates an alias rather than a second list. If the caller expects isolation, clone the list or expose a read-only view before mutating it.
+
+*This example shows how two variables can observe the same `List<T>` instance.*
+
+```csharp
+var original = new List<int> { 1, 2 };
+var alias = original;
+alias.Add(3);
+Console.WriteLine($"[{string.Join(", ", original)}]");
+Console.WriteLine(object.ReferenceEquals(original, alias));
+```
+
+```text
+[1, 2, 3]
+True
+```
+
+#### Repeated `string +=` hides allocation churn behind the same final text
+
+`string` is immutable, so `+=` creates a new value each time even when the final output matches a `StringBuilder` version. Prefer `StringBuilder` when repeated append operations are part of a hot path or large loop.
+
+*This example shows identical final text from `string +=` and `StringBuilder`.*
+
+```csharp
+string combined = "";
+for (int i = 0; i < 3; i++)
+    combined += i;
+
+var sb = new StringBuilder();
+for (int i = 0; i < 3; i++)
+    sb.Append(i);
+
+Console.WriteLine(combined);
+Console.WriteLine(sb.ToString());
+```
+
+```text
+012
+012
+```
+
+## Recommended Patterns
+
+### Keep basic code explicit
+
+#### Combine `?.` and `??` when optional data is normal
+
+`?.` keeps member access null-safe, and `??` supplies a fallback at the point of use. This is a good default for optional values such as `string?`, nullable DTO fields, and inputs read from `Console.ReadLine()`.
+
+*This example shows null-safe access with `?.` and fallback values from `??`.*
+
+```csharp
+string? userName = null;
+Console.WriteLine(userName?.ToUpper() ?? "UNKNOWN");
+
+var presentName = "Alex";
+Console.WriteLine(presentName?.ToUpper() ?? "UNKNOWN");
+```
+
+```text
+UNKNOWN
+ALEX
+```
+
+#### Use `switch` or `is` pattern matching instead of cast chains
+
+Pattern matching keeps the type check and extraction in one place. That usually reads better than repeated casts and makes the runtime path explicit when the value arrives as `object`.
+
+*This example shows a `switch` expression that dispatches on the runtime type.*
+
+```csharp
+object payload = 42;
+
+var description = payload switch
+{
+    int number => $"int {number}",
+    string text => $"string {text}",
+    _ => payload.GetType().Name
+};
+
+Console.WriteLine(description);
+```
+
+```text
+int 42
+```
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `NullReferenceException` | Accessed a member on a `null` reference | Enable nullable reference types; use `?.` and `??` operators |
-| `OverflowException` in `checked` block | Integer arithmetic exceeded type range | Use a wider type (`long`, `BigInteger`) or validate input ranges |
-| `InvalidCastException` | Invalid type cast with `(Type)` | Use `as` (returns `null` on failure) or `is` pattern matching |
-| `FormatException` on `int.Parse()` | Input string is not a valid integer | Use `int.TryParse()` which returns `false` instead of throwing |
-| `StringBuilder` vs `string +=` performance | Quadratic allocation in loops | Replace `+=` with `StringBuilder.Append()` |
-| `CS8600: Converting null literal` warning | Nullable reference type assigned to non-nullable | Add `?` to the type (`string?`) or provide a non-null default |
-| `struct` modification doesn't persist | Value type was copied before mutation | Avoid mutable structs; use `class` or `record` for mutable data |
-| `==` returns `false` for equal objects | Reference equality on a custom class | Override `Equals()` and `GetHashCode()`, or use `record` |
-| `decimal` literal error | Missing `m` suffix: `19.99` is `double` | Add `m`: `19.99m` |
-| `#r nuget` fails in notebook | Package not found or version conflict | Verify package name on nuget.org; specify version explicitly |
+### Replace exception-driven flow with checked alternatives
+
+#### Replace `int.Parse` with `int.TryParse` when input is uncertain
+
+If input comes from `Console.ReadLine()`, a file, or an external API, `int.TryParse` returns a success flag instead of throwing `FormatException`. Reserve `int.Parse` for data that is already validated.
+
+*This example contrasts `int.Parse` with `int.TryParse` on invalid input.*
+
+```csharp
+string raw = "abc";
+
+try
+{
+    Console.WriteLine(int.Parse(raw));
+}
+catch (FormatException ex)
+{
+    Console.WriteLine(ex.GetType().Name);
+}
+
+Console.WriteLine(int.TryParse(raw, out var parsed));
+Console.WriteLine(parsed);
+```
+
+```text
+FormatException
+False
+0
+```
+
+#### Replace direct casts with `is` or `as` when runtime type is uncertain
+
+A direct cast such as `(int)obj` is appropriate only when the runtime type is guaranteed. If the value may vary, use `is` pattern matching or `as` plus a null check to avoid `InvalidCastException`.
+
+*This example shows a failing direct cast and a safe `is` pattern.*
+
+```csharp
+object candidate = "hello";
+
+try
+{
+    Console.WriteLine((int)candidate);
+}
+catch (InvalidCastException ex)
+{
+    Console.WriteLine(ex.GetType().Name);
+}
+
+Console.WriteLine(candidate is string textValue ? textValue.ToUpperInvariant() : "not a string");
+```
+
+```text
+InvalidCastException
+HELLO
+```
 
 - **Data Architecture: Serialization** — [Serialization Formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for when bytes, JSON, and Parquet choices matter in pipelines

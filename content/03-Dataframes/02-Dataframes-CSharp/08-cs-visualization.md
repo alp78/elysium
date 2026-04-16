@@ -11,7 +11,8 @@ status: complete
 
 # Visualization - C#
 
-> [!quote]
+> [!quote]- Epigraph
+>
 > "The greatest value of a picture is when it forces us to notice what we never expected to see."
 >
 > — **John Tukey**, *Exploratory Data Analysis* (1977)
@@ -33,9 +34,9 @@ status: complete
 > - Use ScottPlot when server-side rendering, inline SVG, PNG/SVG persistence, and batch-friendly static output matter more than interactivity
 >
 > **Operations and safety**
-> - Warnings: the current warning/recommendation block is inherited from an earlier transform-focused note, so the real visualization risks in this body are mismatched chart/input expectations, HTML-widget-versus-image confusion, and export-target drift
-> - Recommendations: 4 inherited recommendations remain at the tail, while the body itself operationally supports Plotly.NET for interactive analysis and ScottPlot for notebook-native/static output
-> - Troubleshooting: the current tail table remains inherited, but the note’s actual failure surfaces are chart export format, typed-array preparation, and choosing the wrong rendering model for the destination
+> - Risks: the note’s failure surfaces are chart/input mismatch, axis scaling, HTML-versus-SVG confusion, and output drift
+> - Recommendations: use Plotly.NET when hover and zoom matter, and use ScottPlot when notebook-native SVG or image export is the destination
+> - Troubleshooting: check typed-array preparation, date-axis coercion, and the rendered output path before assuming the chart logic is wrong
 
 > [!note]- Glossary
 >
@@ -157,6 +158,7 @@ status: complete
 
 NuGet packages targeting .NET 8/9 trigger CS1701/CS1702 on .NET 10 — harmless version-mismatch noise. Run this cell once, before any cell that loads NuGet packages.
 
+*Suppress .NET notebook assembly-version warnings before loading NuGet packages.*
 ```csharp
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
@@ -176,6 +178,7 @@ optionsField.SetValue(csharpKernel, newOptions);
 
 Install the required packages: Polars.NET for data manipulation, Plotly.NET + Plotly.NET.CSharp for interactive charts, and ScottPlot + SkiaSharp for notebook-native SVG and static PNG export. The `DATA` variable points to the shared dataset folder.
 
+*Install charting packages and set the shared data path for the notebook session.*
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
 #r "nuget: Polars.NET.Native.win-x64, 0.4.0"
@@ -202,6 +205,7 @@ var DATA = Path.Combine("..", "data");
 
 Load the EuroStoxx 50 OHLCV dataset and extract typed arrays for use in chart traces. Polars.NET's `ToArray<T>()` requires homogeneous column types — date columns must be cast to `string` first because `ToArray<string>()` does not coerce `Date` types directly.
 
+*Load the EuroStoxx dataset and prepare typed arrays for Plotly.NET traces.*
 ```csharp
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 display($"Loaded: {dfP.Shape}");
@@ -225,6 +229,7 @@ ASML rows: 1331
 
 ScottPlot examples in this note render inline SVG rather than iframe-based HTML. The helpers below preserve the notebook's transparent theme, load the extra datasets used by the bubble / gauge / sector examples, and precompute the shared 60-trading-day windows reused across the ScottPlot cells.
 
+*Set up ScottPlot helpers, theme primitives, and reused data windows for the static charts.*
 ```csharp
 var dfEU = dfP;
 var dfUS = DataFrame.ReadCsv(Path.Combine(DATA, "stoxxusa50_ohlcv.csv"), tryParseDates: true);
@@ -342,8 +347,7 @@ Line charts connect ordered data points to reveal **trends, cycles, and rate of 
 
 Plots ASML's closing price as a single interactive trace. Date strings are parsed to `DateTime` to enable Plotly's built-in date axis formatting.
 
-_Parses all 1,331 ASML date strings to `DateTime`, renders a single `Chart.Line` trace with custom transparent background and gray font, producing an interactive chart with Plotly's built-in date axis formatting._
-
+*Parses all 1,331 ASML date strings to `DateTime`, renders a single `Chart.Line` trace with custom transparent background and gray font, producing an interactive chart with Plotly's built-in date axis formatting.*
 ```csharp
 var dates = asmlDates.Select(d => DateTime.Parse(d)).ToArray();
 Plotly.NET.CSharp.Chart.Line<DateTime, double, string>(x: dates, y: asmlClose)
@@ -365,8 +369,7 @@ Plotly.NET.CSharp.Chart.Line<DateTime, double, string>(x: dates, y: asmlClose)
 
 Build one trace per symbol via LINQ and combine them with `Chart.Combine()`. Each trace is automatically colored by Plotly's default palette; the legend identifies each symbol.
 
-_Iterates over three symbols (`ASML.AS`, `SAP.DE`, `SIE.DE`) with LINQ, builds one `Chart.Line` trace per symbol from its date-parsed close price array, and combines them into a single multi-series chart with an auto-colored legend._
-
+*Iterates over three symbols (`ASML.AS`, `SAP.DE`, `SIE.DE`) with LINQ, builds one `Chart.Line` trace per symbol from its date-parsed close price array, and combines them into a single multi-series chart with an auto-colored legend.*
 ```csharp
 var symbols = new[] { "ASML.AS", "SAP.DE", "SIE.DE" };
 var traces = symbols.Select(sym =>
@@ -397,8 +400,7 @@ Plotly.NET.CSharp.Chart.Combine(traces)
 
 Overlays a price line (left axis, full height) with volume bars (right axis, scaled to occupy the bottom third). Plotly.NET exposes `yaxis2` via `DynamicObj` since the typed API does not yet have a direct `WithYAxis2` helper. Setting `range` to `[0, maxVol * 4]` effectively confines the bars to the lower quarter of the chart area.
 
-_Overlays ASML close price (left y-axis, EUR) and daily volume converted to millions (right y-axis) — uses `DynamicObj` to configure `yaxis2` since the Plotly.NET typed API lacks a `WithYAxis2` helper, and sets `range: [0, maxVol * 4]` to confine volume bars to the lower quarter of the chart area._
-
+*Overlays ASML close price (left y-axis, EUR) and daily volume converted to millions (right y-axis) — uses `DynamicObj` to configure `yaxis2` since the Plotly.NET typed API lacks a `WithYAxis2` helper, and sets `range: [0, maxVol * 4]` to confine volume bars to the lower quarter of the chart area.*
 ```csharp
 var dates = asmlDates.Select(d => DateTime.Parse(d)).ToArray();
 var asmlVolDouble = asmlVol.Select(v => (double)v / 1_000_000.0).ToArray();
@@ -449,8 +451,7 @@ Bar charts compare discrete categories by encoding values as bar lengths. `Chart
 
 Groups by symbol, computes mean close, sorts descending, and takes the top 5. `Chart.Column` maps `barValues` (heights) to `barSymbols` (x-axis categories).
 
-_Groups all EuroStoxx 50 symbols by mean close price using Polars.NET `GroupBy().Agg()`, takes the top 5 by descending average, and renders them as a `Chart.Column` bar chart with symbol labels on the x-axis._
-
+*Groups all EuroStoxx 50 symbols by mean close price using Polars.NET `GroupBy().Agg()`, takes the top 5 by descending average, and renders them as a `Chart.Column` bar chart with symbol labels on the x-axis.*
 ```csharp
 var avgClose = dfP.GroupBy("symbol")
     .Agg(Col("close").Mean().Alias("avg_close"))
@@ -479,8 +480,7 @@ Plotly.NET.CSharp.Chart.Column<double, string, string>(barValues, Keys: barSymbo
 
 Splits each symbol's total volume into "up days" (close > open) and "down days" (close ≤ open) to reveal whether buying or selling pressure dominates. `BarMode.Stack` stacks the two bar series; `Chart.Combine()` merges the two traces before applying layout.
 
-_For each of the top 5 symbols, sums daily volume separately into up-day (close > open) and down-day buckets using a `for` loop, renders two `Chart.Column` traces colored green (`#26a69a`) and red (`#ef5350`) respectively, and stacks them with `BarMode.Stack` to reveal per-symbol buying vs selling pressure._
-
+*For each of the top 5 symbols, sums daily volume separately into up-day (close > open) and down-day buckets using a `for` loop, renders two `Chart.Column` traces colored green (`#26a69a`) and red (`#ef5350`) respectively, and stacks them with `BarMode.Stack` to reveal per-symbol buying vs selling pressure.*
 ```csharp
 var top5Syms = avgClose.Column("symbol").ToArray<string>();
 
@@ -529,8 +529,7 @@ Scatter plots reveal relationships between two continuous variables. Histograms 
 
 Plots ASML's closing price against daily volume to explore whether high-volume days correlate with price levels. `Opacity: 0.6` reduces overplotting for overlapping points.
 
-_Casts ASML volume from `long` to `double`, then renders 1,331 data points as a `Chart.Point` scatter plot with volume on x and close price on y, using size-4 markers at 60% opacity to reduce overplotting._
-
+*Casts ASML volume from `long` to `double`, then renders 1,331 data points as a `Chart.Point` scatter plot with volume on x and close price on y, using size-4 markers at 60% opacity to reduce overplotting.*
 ```csharp
 var scatterVol = asmlVol.Select(v => (double)v).ToArray();
 
@@ -556,8 +555,7 @@ Plotly.NET.CSharp.Chart.Point<double, double, string>(scatterVol, asmlClose)
 
 Computes daily percentage returns as `(close[i] - close[i-1]) / close[i-1] * 100`. The array is one element shorter than the close price array.
 
-_Computes 1,330 daily percentage returns from ASML's close price array using a `for` loop, then passes the resulting `double[]` to `Chart.Histogram` which auto-bins the distribution and renders frequency counts per return bucket._
-
+*Computes 1,330 daily percentage returns from ASML's close price array using a `for` loop, then passes the resulting `double[]` to `Chart.Histogram` which auto-bins the distribution and renders frequency counts per return bucket.*
 ```csharp
 var returns = new double[asmlClose.Length - 1];
 for (int i = 1; i < asmlClose.Length; i++)
@@ -585,8 +583,7 @@ Plotly.NET.CSharp.Chart.Histogram<double, double, string>(X: returns)
 
 Builds one `BoxPlot` trace per symbol using LINQ and combines them with `Chart.Combine()`.
 
-_For each of the top 5 symbols, extracts the full close price array and constructs a `Chart.BoxPlot` trace with symbol-labeled x-axis categories; `Chart.Combine()` merges all 5 traces into a single grouped box plot showing median, IQR, whiskers, and outliers per symbol._
-
+*For each of the top 5 symbols, extracts the full close price array and constructs a `Chart.BoxPlot` trace with symbol-labeled x-axis categories; `Chart.Combine()` merges all 5 traces into a single grouped box plot showing median, IQR, whiskers, and outliers per symbol.*
 ```csharp
 var boxTraces = top5Syms.Select(sym =>
 {
@@ -623,10 +620,11 @@ Candlestick and combined price+volume charts are the standard display for OHLCV 
 
 #### Plotly.NET | Candlestick — ASML OHLC
 
+This section introduces the candlestick anatomy and the data arrays used to build the chart.
+
 **How to read:** the body of each candle spans open to close. A green (hollow) body means close > open (bullish); a red (filled) body means close < open (bearish). The upper wick reaches the daily high; the lower wick reaches the daily low. Long wicks signal price rejection — buying or selling pressure reversed the move. A small body with long wicks (doji) indicates indecision.
 
-_Renders ASML's full 1,331-day OHLC history as an interactive Plotly candlestick chart using pre-extracted `asmlOpen`, `asmlHigh`, `asmlLow`, and `asmlClose` arrays with date strings on the x-axis._
-
+*Renders ASML's full 1,331-day OHLC history as an interactive Plotly candlestick chart using pre-extracted `asmlOpen`, `asmlHigh`, `asmlLow`, and `asmlClose` arrays with date strings on the x-axis.*
 ```csharp
 Plotly.NET.CSharp.Chart.Candlestick<double, string, string>(asmlOpen, asmlHigh, asmlLow, asmlClose, asmlDates)
     .WithTitle("ASML — Candlestick Chart")
@@ -647,8 +645,7 @@ Plotly.NET.CSharp.Chart.Candlestick<double, string, string>(asmlOpen, asmlHigh, 
 
 Renders candlestick and volume as two separate chart objects displayed sequentially via `display()` and the implicit return. Restricts to the last 130 trading days (~6 months) for readability — full history makes individual candles too narrow to read interactively.
 
-_Slices the last 130 trading days from the ASML arrays using `TakeLast()`, renders a candlestick for OHLC and a separate area chart for volume (in millions), and outputs both charts sequentially — the candlestick via `display()` and the volume area via implicit return._
-
+*Slices the last 130 trading days from the ASML arrays using `TakeLast()`, renders a candlestick for OHLC and a separate area chart for volume (in millions), and outputs both charts sequentially — the candlestick via `display()` and the volume area via implicit return.*
 ```csharp
 var nCandle = Math.Min(130, asmlDates.Length);
 var cDates = asmlDates.TakeLast(nCandle).Select(d => DateTime.Parse(d)).ToArray();
@@ -700,8 +697,7 @@ Heatmaps encode a matrix of values as colors — ideal for correlation matrices 
 
 Computes the 5×5 Pearson correlation matrix for OHLCV columns using a local helper function. Note that Polars.NET does not expose a built-in `.corr()` method, so the matrix is computed manually via array iteration.
 
-_Defines a local `Pearson()` function, builds a 5×5 correlation matrix over ASML's open/high/low/close/volume arrays (volume cast from `long` to `double`), rounds each value to 3 decimal places, and passes the result to `Chart.Heatmap` with column names as both x and y labels._
-
+*Defines a local `Pearson()` function, builds a 5×5 correlation matrix over ASML's open/high/low/close/volume arrays (volume cast from `long` to `double`), rounds each value to 3 decimal places, and passes the result to `Chart.Heatmap` with column names as both x and y labels.*
 ```csharp
 var colNames = new[] { "open", "high", "low", "close", "volume" };
 var arrays = colNames.Select(c =>
@@ -764,8 +760,7 @@ Pie and donut charts show part-to-whole composition for a single categorical var
 
 Groups by symbol, sums total traded volume, takes the top 8 by volume. `Chart.Pie` renders slices proportional to `pieVals`.
 
-_Groups all EuroStoxx 50 rows by symbol, sums `volume` cast to Float64, sorts descending, takes the top 8, and passes symbol labels and volume totals to `Chart.Pie` — each slice is sized proportionally to total traded volume._
-
+*Groups all EuroStoxx 50 rows by symbol, sums `volume` cast to Float64, sorts descending, takes the top 8, and passes symbol labels and volume totals to `Chart.Pie` — each slice is sized proportionally to total traded volume.*
 ```csharp
 var volBySymbol = dfP.GroupBy("symbol")
     .Agg(Col("volume").Cast(DataType.Float64).Sum().Alias("total_vol"))
@@ -792,8 +787,7 @@ Plotly.NET.CSharp.Chart.Pie<double, string, string>(values: pieVals, Labels: pie
 
 Extracts exchange suffix from each symbol ticker (e.g., `.AS` from `ASML.AS`) using LINQ string splitting, then counts rows per exchange. `Chart.Doughnut` is identical to `Chart.Pie` but adds a hole in the center — useful for placing a KPI label or total count.
 
-_Extracts the exchange suffix from all 66,355 symbol strings using `Split('.').Last()`, groups and counts rows per suffix with LINQ, sorts descending, and renders a `Chart.Doughnut` with proportional slices — the center hole is left available for a KPI total label._
-
+*Extracts the exchange suffix from all 66,355 symbol strings using `Split('.').Last()`, groups and counts rows per suffix with LINQ, sorts descending, and renders a `Chart.Doughnut` with proportional slices — the center hole is left available for a KPI total label.*
 ```csharp
 var symbolArr = dfP.Column("symbol").ToArray<string>();
 var exchangeCounts = symbolArr
@@ -825,8 +819,7 @@ Plotly.NET.CSharp.Chart.Doughnut<double, string, string>(values: donutVals, Labe
 
 Normalizes each metric to [0, 1] by dividing the per-symbol average by the global maximum. Closes the polygon by appending `vals[0]` and `metrics[0]` at the end.
 
-_For ASML, SAP, and Siemens, computes average open/high/low/close/volume (volume averaged as `double`) and normalizes each to [0,1] by dividing by the global metric max; closes each polygon by appending the first value, then combines three `Chart.ScatterPolar` traces in `Lines` mode with a transparent polar background._
-
+*For ASML, SAP, and Siemens, computes average open/high/low/close/volume (volume averaged as `double`) and normalizes each to [0,1] by dividing by the global metric max; closes each polygon by appending the first value, then combines three `Chart.ScatterPolar` traces in `Lines` mode with a transparent polar background.*
 ```csharp
 var radarSyms = new[] { "ASML.AS", "SAP.DE", "SIE.DE" };
 var metrics = new[] { "open", "high", "low", "close", "volume" };
@@ -894,7 +887,9 @@ All ScottPlot examples here render inline SVG via `ShowPlot()`. To persist any o
 ScottPlot line primitives focus on fast static rendering. `Scatter`, `SignalXY`, and twin-axis layouts cover single-series trends, overlays, dense series, and price-volume combinations without a browser runtime.
 
 #### ScottPlot | Single line — ASML close price with dark theme and date axis
+This section introduces the runnable chart cell and its supporting setup.
 
+*Render ASML close price as a static SVG line chart with a dark theme.*
 ```csharp
 // Single line — ASML closing price over the last 60 trading days
 var plt = new ScottPlot.Plot();
@@ -1044,7 +1039,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Multi-line — ASML, SAP, Siemens with custom line styles
+This section introduces the runnable chart cell and its supporting setup.
 
+*Compare ASML, SAP, and Siemens close prices as a static multi-series SVG chart.*
 ```csharp
 // Multi-line overlay — three stocks over the last 60 trading days
 var plt = new ScottPlot.Plot();
@@ -1267,7 +1264,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Dual Y-axis — close price + volume on twin axes
+This section introduces the runnable chart cell and its supporting setup.
 
+*Overlay ASML price and volume on separate y-axes in a static chart.*
 ```csharp
 // Dual Y-axis — price on left, volume on right (last 60 trading days)
 var plt = new ScottPlot.Plot();
@@ -1547,7 +1546,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | SignalXY — high-performance rendering of full 66k-row dataset
+This section introduces the runnable chart cell and its supporting setup.
 
+*Render the full 66k-row dataset with ScottPlot's high-performance signal trace.*
 ```csharp
 // SignalXY — optimized for large datasets with a last-60-day viewport
 var plt = new ScottPlot.Plot();
@@ -1695,7 +1696,9 @@ ShowPlot(plt);
 Bar-oriented ScottPlot examples work well for ranked comparisons and grouped or stacked financial aggregates. These cells stay close to the underlying arrays, so it is easy to turn Polars results into labeled bars.
 
 #### ScottPlot | Vertical bars — average close price for top 5 symbols
+This section introduces the runnable chart cell and its supporting setup.
 
+*Compare average close price for the top 5 symbols with a static bar chart.*
 ```csharp
 // Vertical bars — average close for top 5 symbols with value labels
 var plt = new ScottPlot.Plot();
@@ -1876,7 +1879,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Grouped bars — up-day vs down-day volume for top 5 symbols
+This section introduces the runnable chart cell and its supporting setup.
 
+*Compare up-day and down-day volume across the top 5 symbols.*
 ```csharp
 // Grouped bars — up-day vs down-day volume comparison
 var plt = new ScottPlot.Plot();
@@ -2088,7 +2093,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Stacked bars — quarterly volume breakdown for ASML
+This section introduces the runnable chart cell and its supporting setup.
 
+*Show ASML quarterly volume as a stacked bar chart over time.*
 ```csharp
 // Stacked bars — ASML quarterly volume split by up/down days
 var plt = new ScottPlot.Plot();
@@ -2414,7 +2421,9 @@ ShowPlot(plt, 900, 500);
 </div>
 
 #### ScottPlot | Horizontal bars — composite score ranking from scores_daily
+This section introduces the runnable chart cell and its supporting setup.
 
+*Rank the composite scores with a horizontal bar chart for quick comparison.*
 ```csharp
 // Horizontal bars — top 10 stocks by composite score
 var plt = new ScottPlot.Plot();
@@ -2693,7 +2702,9 @@ ShowPlot(plt, 900, 500);
 ScottPlot 5 includes dedicated OHLC and candlestick primitives for market data. The cells below layer technical indicators and shaded bands on top of the same ASML window to show how static trading views can still carry rich context.
 
 #### ScottPlot | Candlestick — ASML OHLC last 60 trading days
+This section introduces the runnable chart cell and its supporting setup.
 
+*Show the last 60 trading days as a candlestick chart with price context.*
 ```csharp
 // Candlestick — ASML OHLC with 120-day context and last 60 trading days visible
 var plt = new ScottPlot.Plot();
@@ -2986,7 +2997,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | OHLC bars — alternative representation for the same 60-day window
+This section introduces the runnable chart cell and its supporting setup.
 
+*Use OHLC bars to show the same 60-day price window in a compact static form.*
 ```csharp
 // OHLC bars — same data, bar-style rendering
 var plt = new ScottPlot.Plot();
@@ -3141,7 +3154,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Candlestick + SMA(20) and SMA(50) overlays
+This section introduces the runnable chart cell and its supporting setup.
 
+*Overlay short and long moving averages on the candlestick chart.*
 ```csharp
 // Candlestick + SMA(20) and SMA(50) moving average overlays
 var plt = new ScottPlot.Plot();
@@ -3480,7 +3495,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Candlestick + Bollinger Bands with fill shading
+This section introduces the runnable chart cell and its supporting setup.
 
+*Add Bollinger Bands to the candlestick chart with filled envelopes.*
 ```csharp
 // Candlestick + Bollinger Bands (20-day, 2 std dev) with shaded fill
 var plt = new ScottPlot.Plot();
@@ -3862,7 +3879,9 @@ ShowPlot(plt);
 Scatter-style ScottPlot charts cover point clouds, per-point coloring, and market-cap-weighted snapshots. These examples use direct coordinate arrays rather than Plotly traces, which keeps the rendering path lightweight.
 
 #### ScottPlot | Scatter — ASML close vs volume with marker styling
+This section introduces the runnable chart cell and its supporting setup.
 
+*Plot ASML close price against volume as a styled static scatter chart.*
 ```csharp
 // Scatter — close price vs volume
 var plt = new ScottPlot.Plot();
@@ -5554,7 +5573,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Color-mapped scatter — points colored by daily return magnitude
+This section introduces the runnable chart cell and its supporting setup.
 
+*Color daily-return scatter points by return magnitude for fast outlier reading.*
 ```csharp
 // Color-mapped scatter — each point colored by its daily return (diverging palette)
 var plt = new ScottPlot.Plot();
@@ -13700,7 +13721,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Bubble — forward PE vs dividend yield, size = market cap
+This section introduces the runnable chart cell and its supporting setup.
 
+*Use bubble size to encode market cap while comparing valuation and yield.*
 ```csharp
 // Bubble chart — latest snapshot by symbol: forward PE vs dividend yield, bubble size = market cap
 var plt = new ScottPlot.Plot();
@@ -14497,7 +14520,9 @@ ShowPlot(plt, 900, 550);
 ScottPlot also handles statistical summaries such as histograms, box plots, error bars, and filled channels. These are useful when the goal is explanatory static output rather than interactive exploration.
 
 #### ScottPlot | Histogram — ASML daily returns distribution
+This section introduces the runnable chart cell and its supporting setup.
 
+*Summarize ASML daily return shape with a static histogram.*
 ```csharp
 // Histogram — daily returns distribution with 50 bins
 var plt = new ScottPlot.Plot();
@@ -14835,7 +14860,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Box & whisker — close price distribution for top 5 symbols
+This section introduces the runnable chart cell and its supporting setup.
 
+*Compare close-price spread across the top 5 symbols with a box plot.*
 ```csharp
 // Box & whisker — close price spread for top 5 symbols
 var plt = new ScottPlot.Plot();
@@ -15029,7 +15056,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Error bars — mean ± std close price for top 5 symbols
+This section introduces the runnable chart cell and its supporting setup.
 
+*Show mean close price with standard-deviation error bars for the top 5 symbols.*
 ```csharp
 // Error bars — mean ± standard deviation for top 5 symbols
 var plt = new ScottPlot.Plot();
@@ -15237,7 +15266,9 @@ ShowPlot(plt);
 </div>
 
 #### ScottPlot | Fill between — ASML high/low price channel
+This section introduces the runnable chart cell and its supporting setup.
 
+*Draw the ASML high/low channel as a filled band around price.*
 ```csharp
 // Fill between — high/low price channel with close midline (last 60 trading days)
 var plt = new ScottPlot.Plot();
@@ -15445,7 +15476,9 @@ ShowPlot(plt);
 The final ScottPlot group moves beyond basic Cartesian charts into heatmaps, radial views, coxcomb slices, and a hand-composed 2×2 dashboard panel rendered through SkiaSharp to a single inline SVG.
 
 #### ScottPlot | Pie chart — volume share by top 8 symbols
+This section introduces the runnable chart cell and its supporting setup.
 
+*Show top-8 volume share as a static pie chart.*
 ```csharp
 // Pie chart — volume share by top 8 EU symbols
 var plt = new ScottPlot.Plot();
@@ -15555,7 +15588,9 @@ ShowPlot(plt, 760, 600);
 </div>
 
 #### ScottPlot | Coxcomb — sector composite scores
+This section introduces the runnable chart cell and its supporting setup.
 
+*Compare sector composite scores with a radial coxcomb chart.*
 ```csharp
 // Coxcomb (rose chart) — latest sector composite snapshot
 var plt = new ScottPlot.Plot();
@@ -15684,7 +15719,9 @@ display(HTML(
 </div></div><div style='width:220px;box-sizing:border-box;padding:14px 16px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.03)'><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#42a5f5;margin-top:2px;flex:0 0 12px'></span><span>Communication Services<br><span style='font-weight:500;opacity:.85'>+0.49</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#66bb6a;margin-top:2px;flex:0 0 12px'></span><span>Energy<br><span style='font-weight:500;opacity:.85'>+0.33</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#ffa726;margin-top:2px;flex:0 0 12px'></span><span>Healthcare<br><span style='font-weight:500;opacity:.85'>+0.08</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#ab47bc;margin-top:2px;flex:0 0 12px'></span><span>Technology<br><span style='font-weight:500;opacity:.85'>+0.05</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#ef5350;margin-top:2px;flex:0 0 12px'></span><span>Industrials<br><span style='font-weight:500;opacity:.85'>+0.05</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#26c6da;margin-top:2px;flex:0 0 12px'></span><span>Financial Services<br><span style='font-weight:500;opacity:.85'>-0.01</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#ec407a;margin-top:2px;flex:0 0 12px'></span><span>Basic Materials<br><span style='font-weight:500;opacity:.85'>-0.01</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#9ccc65;margin-top:2px;flex:0 0 12px'></span><span>Consumer Defensive<br><span style='font-weight:500;opacity:.85'>-0.06</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#8d6e63;margin-top:2px;flex:0 0 12px'></span><span>Consumer Cyclical<br><span style='font-weight:500;opacity:.85'>-0.10</span></span></div><div style='display:flex;align-items:flex-start;gap:10px;margin:0 0 10px 0;color:#fff;font:600 13px Segoe UI,sans-serif;line-height:1.25'><span style='display:inline-block;width:12px;height:12px;border-radius:999px;background:#78909c;margin-top:2px;flex:0 0 12px'></span><span>Utilities<br><span style='font-weight:500;opacity:.85'>-0.10</span></span></div></div></div>
 
 #### ScottPlot | Radial gauge — YTD performance for top 5 symbols
+This section introduces the runnable chart cell and its supporting setup.
 
+*Summarize YTD return for the top 5 symbols with a radial gauge.*
 ```csharp
 // Radial gauge — YTD returns for top 5 symbols from scores_daily
 var plt = new ScottPlot.Plot();
@@ -15768,7 +15805,9 @@ ShowPlot(plt, 700, 550);
 </div>
 
 #### ScottPlot | Multi-plot 2×2 panel — ASML overview dashboard
+This section introduces the runnable chart cell and its supporting setup.
 
+*Combine price, volume, returns, and distribution panels into one static dashboard.*
 ```csharp
 // Multi-plot 2×2 panel — ASML overview: price, volume, returns histogram, daily returns
 // ScottPlot 5 Multiplot: render 4 separate plots into one inline SVG via SkiaSharp
@@ -15850,32 +15889,20 @@ DisplaySvg(compositeSvg, totalW);
 svgStream.Dispose();
 ```
 
-> [!info] Composite SVG output omitted in source
->
-> The original notebook-exported inline SVG block for the four-panel ScottPlot composite was truncated in this markdown file and broke Quartz HTML parsing. Re-run the notebook cell to regenerate the rendered figure if you need the visual embedded here.
+_Composite dashboard rendered as a 2x2 HTML grid of ScottPlot SVG panels._
+
+<div style='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;max-width:700px;width:100%;margin:0 auto;'><div><?xml version="1.0" encoding="utf-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="330" height="245">	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M97.3464 215.039L97.3464 46.2813M176.186 215.039L176.186 46.2813M255.026 215.039L255.026 46.2813"/>	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M48.6348 194.826L315 194.826M48.6348 159.414L315 159.414M48.6348 124.003L315 124.003M48.6348 88.5911L315 88.5911M48.6348 53.1794L315 53.1794"/>	<clipPath id="cl_4">		<rect x="48.634766" y="46.28125" width="266.36523" height="168.75781"/>	</clipPath>	<g clip-path="url(#cl_4)">		<path fill="none" stroke="#42A5F5" stroke-width="1.5" stroke-miterlimit="4" d="M60.7423 191.781L63.558 204.033L66.3737 197.411L69.1894 194.26L77.6365 196.243L80.4522 193.693L83.2679 195.18L97.3464 192.418L100.162 188.31L102.978 187.248L108.609 164.266L117.056 140.575L119.872 137.813L122.688 141.071L125.503 154.811L128.319 130.519L136.766 128.819L139.582 123.082L142.398 129.598L145.213 106.509L148.029 100.206L156.476 116.779L159.292 109.838L162.107 104.597L164.923 96.9483L167.739 96.3108L176.186 96.3817L179.002 82.3587L181.817 90.5742L184.633 91.424L187.449 83.0669L195.896 79.809L198.712 91.9906L201.527 109.626L204.343 106.439L207.159 90.7866L215.606 86.8913L218.421 91.0699L221.237 85.829L224.053 95.7443L226.869 91.9906L235.316 90.3617L238.131 88.8744L240.947 72.7267L243.763 75.0638L246.578 68.9022L255.026 71.1686L257.841 66.1401L260.657 57.2872L263.473 77.1177L266.288 76.7636L274.735 84.9083L277.551 102.118L280.367 88.6619L283.183 93.5487L285.998 107.359L294.445 107.147L297.261 88.5911L300.077 89.016L302.892 91.849"/>	</g>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 46.3812L315 46.3812"/>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M97.3464 215.039L97.3464 219.039"/>	<text transform="translate(97.3464 221.039)" font-size="12" font-family="Segoe UI" x="-27.852539, -21.383789, -14.915039, -10.116211, -1.7021484, 4.5732422, 10.116211, 14.915039, 21.383789, " y="11.027344, ">			29-Dec-25	</text>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M176.186 215.039L176.186 219.039"/>	<text transform="translate(176.186 221.039)" font-size="12" font-family="Segoe UI" x="-26.326172, -19.857422, -13.388672, -8.5898438, -4.3066406, 1.7988281, 8.5898438, 13.388672, 19.857422, " y="11.027344, ">			26-Jan-26	</text>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M255.026 215.039L255.026 219.039"/>	<text transform="translate(255.026 221.039)" font-size="12" font-family="Segoe UI" x="-27.331055, -20.862305, -14.393555, -9.5947266, -3.7353516, 2.5400391, 9.5947266, 14.393555, 20.862305, " y="11.027344, ">			23-Feb-26	</text>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M48.6348 215.039L315 215.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 194.826L44.6348 194.826"/>	<text fill="white" transform="translate(39.6348 194.826)" font-size="12" font-family="Segoe UI" x="-19.40625, -12.9375, -6.46875, " y="3.046875, ">			900	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 159.414L44.6348 159.414"/>	<text fill="white" transform="translate(39.6348 159.414)" font-size="12" font-family="Segoe UI" x="-28.634766, -22.166016, -19.40625, -12.9375, -6.46875, " y="3.046875, ">			1&apos;000	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 124.003L44.6348 124.003"/>	<text fill="white" transform="translate(39.6348 124.003)" font-size="12" font-family="Segoe UI" x="-28.634766, -22.166016, -19.40625, -12.9375, -6.46875, " y="3.046875, ">			1&apos;100	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 88.5911L44.6348 88.5911"/>	<text fill="white" transform="translate(39.6348 88.5911)" font-size="12" font-family="Segoe UI" x="-28.634766, -22.166016, -19.40625, -12.9375, -6.46875, " y="3.046875, ">			1&apos;200	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 53.1794L44.6348 53.1794"/>	<text fill="white" transform="translate(39.6348 53.1794)" font-size="12" font-family="Segoe UI" x="-28.634766, -22.166016, -19.40625, -12.9375, -6.46875, " y="3.046875, ">			1&apos;300	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 208.991L46.6348 208.991"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 201.908L46.6348 201.908"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 187.744L46.6348 187.744"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 180.661L46.6348 180.661"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 173.579L46.6348 173.579"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 166.497L46.6348 166.497"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 152.332L46.6348 152.332"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 145.25L46.6348 145.25"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 138.167L46.6348 138.167"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 131.085L46.6348 131.085"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 116.92L46.6348 116.92"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 109.838L46.6348 109.838"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 102.756L46.6348 102.756"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 95.6734L46.6348 95.6734"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 81.5088L46.6348 81.5088"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 74.4264L46.6348 74.4264"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 67.3441L46.6348 67.3441"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 60.2618L46.6348 60.2618"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M48.6348 215.039L48.6348 46.2813"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M315 215.039L315 46.2813"/>	<text fill="white" transform="translate(181.817 31.2813)" font-size="16" font-weight="600" font-family="Segoe UI" x="-63.964844, -53.980469, -49.433594, -39.652344, -32.613281, -23.957031, -19.542969, -9.7148438, -3.3476563, 1.1992188, 8.8789063, 17.535156, 21.949219, 27.855469, 37.058594, 46.261719, 58.058594, " y="-6.890625, ">			Close Price (60D)	</text></svg></div><div><?xml version="1.0" encoding="utf-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="330" height="245">	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M87.4624 215.039L87.4624 46.2813M169.416 215.039L169.416 46.2813M251.369 215.039L251.369 46.2813"/>	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M35.5391 204.033L315 204.033M35.5391 151.177L315 151.177M35.5391 98.3216L315 98.3216"/>	<clipPath id="cl_6">		<rect x="35.539063" y="46.28125" width="279.46094" height="168.75781"/>	</clipPath>	<g clip-path="url(#cl_6)">		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="48.241833" y="136.20505" width="2.341526" height="67.828064"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="48.241833" y="136.20505" width="2.341526" height="67.828064"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="51.168739" y="123.50085" width="2.3415222" height="80.532265"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="51.168739" y="123.50085" width="2.3415222" height="80.532265"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="54.095642" y="125.01305" width="2.341526" height="79.020065"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="54.095642" y="125.01305" width="2.341526" height="79.020065"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="57.022549" y="72.082474" width="2.341526" height="131.95064"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="57.022549" y="72.082474" width="2.341526" height="131.95064"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="65.803268" y="164.32556" width="2.3415222" height="39.70755"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="65.803268" y="164.32556" width="2.3415222" height="39.70755"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="68.730171" y="176.7308" width="2.3415222" height="27.302307"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="68.730171" y="176.7308" width="2.3415222" height="27.302307"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="71.657074" y="197.7343" width="2.3415222" height="6.2988129"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="71.657074" y="197.7343" width="2.3415222" height="6.2988129"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="86.291603" y="163.79637" width="2.3415298" height="40.23674"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="86.291603" y="163.79637" width="2.3415298" height="40.23674"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="89.218506" y="161.52728" width="2.3415298" height="42.505829"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="89.218506" y="161.52728" width="2.3415298" height="42.505829"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="92.145416" y="187.53705" width="2.3415222" height="16.496063"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="92.145416" y="187.53705" width="2.3415222" height="16.496063"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="97.999222" y="119.58254" width="2.3415298" height="84.450569"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="97.999222" y="119.58254" width="2.3415298" height="84.450569"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="106.77995" y="102.73785" width="2.3415222" height="101.29527"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="106.77995" y="102.73785" width="2.3415222" height="101.29527"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="109.70685" y="138.58459" width="2.3415222" height="65.448517"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="109.70685" y="138.58459" width="2.3415222" height="65.448517"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="112.63375" y="142.30586" width="2.3415298" height="61.727249"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="112.63375" y="142.30586" width="2.3415298" height="61.727249"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="115.56066" y="131.53333" width="2.3415222" height="72.499786"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="115.56066" y="131.53333" width="2.3415222" height="72.499786"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="118.48756" y="123.96693" width="2.3415222" height="80.066185"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="118.48756" y="123.96693" width="2.3415222" height="80.066185"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="127.26828" y="139.28664" width="2.3415222" height="64.746475"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="127.26828" y="139.28664" width="2.3415222" height="64.746475"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="130.19519" y="139.0842" width="2.3415222" height="64.948914"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="130.19519" y="139.0842" width="2.3415222" height="64.948914"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="133.1221" y="139.20047" width="2.3415222" height="64.832642"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="133.1221" y="139.20047" width="2.3415222" height="64.832642"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="136.049" y="57.287201" width="2.3415222" height="146.74591"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="136.049" y="57.287201" width="2.3415222" height="146.74591"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="138.97591" y="121.04401" width="2.3415222" height="82.989105"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="138.97591" y="121.04401" width="2.3415222" height="82.989105"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="147.75662" y="148.66843" width="2.3415222" height="55.364685"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="147.75662" y="148.66843" width="2.3415222" height="55.364685"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="150.68353" y="115.18633" width="2.3415222" height="88.846786"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="150.68353" y="115.18633" width="2.3415222" height="88.846786"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="153.61043" y="130.86375" width="2.3415375" height="73.169357"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="153.61043" y="130.86375" width="2.3415375" height="73.169357"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="156.53734" y="115.64342" width="2.3415222" height="88.389694"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="156.53734" y="115.64342" width="2.3415222" height="88.389694"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="159.46423" y="136.34331" width="2.3415222" height="67.689804"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="159.46423" y="136.34331" width="2.3415222" height="67.689804"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="168.24496" y="143.3692" width="2.3415222" height="60.66391"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="168.24496" y="143.3692" width="2.3415222" height="60.66391"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="171.17186" y="116.82263" width="2.3415222" height="87.21048"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="171.17186" y="116.82263" width="2.3415222" height="87.21048"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="174.09877" y="70.201859" width="2.3415222" height="133.83125"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="174.09877" y="70.201859" width="2.3415222" height="133.83125"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="177.02568" y="100.24147" width="2.3415222" height="103.79164"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="177.02568" y="100.24147" width="2.3415222" height="103.79164"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="179.95258" y="103.30847" width="2.3415222" height="100.72464"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="179.95258" y="103.30847" width="2.3415222" height="100.72464"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="188.73329" y="136.78296" width="2.3415222" height="67.250153"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="188.73329" y="136.78296" width="2.3415222" height="67.250153"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="191.6602" y="134.87593" width="2.3415222" height="69.157181"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="191.6602" y="134.87593" width="2.3415222" height="69.157181"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="194.58711" y="133.7278" width="2.3415222" height="70.305313"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="194.58711" y="133.7278" width="2.3415222" height="70.305313"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="197.51401" y="127.44336" width="2.3415375" height="76.589752"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="197.51401" y="127.44336" width="2.3415375" height="76.589752"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="200.44092" y="146.3783" width="2.3415222" height="57.654816"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="200.44092" y="146.3783" width="2.3415222" height="57.654816"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="209.22163" y="155.78375" width="2.3415222" height="48.249359"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="209.22163" y="155.78375" width="2.3415222" height="48.249359"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="212.14854" y="155.46123" width="2.3415222" height="48.571884"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="212.14854" y="155.46123" width="2.3415222" height="48.571884"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="215.07544" y="147.93922" width="2.3415375" height="56.093887"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="215.07544" y="147.93922" width="2.3415375" height="56.093887"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="218.00235" y="144.97253" width="2.3415222" height="59.060577"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="218.00235" y="144.97253" width="2.3415222" height="59.060577"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="220.92926" y="129.17871" width="2.3415222" height="74.854401"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="220.92926" y="129.17871" width="2.3415222" height="74.854401"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="229.70998" y="183.34358" width="2.3415222" height="20.689529"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="229.70998" y="183.34358" width="2.3415222" height="20.689529"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="232.63689" y="160.18315" width="2.3415222" height="43.84996"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="232.63689" y="160.18315" width="2.3415222" height="43.84996"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="235.56378" y="148.72255" width="2.3415222" height="55.310562"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="235.56378" y="148.72255" width="2.3415222" height="55.310562"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="238.49069" y="149.29773" width="2.3415222" height="54.735382"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="238.49069" y="149.29773" width="2.3415222" height="54.735382"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="241.4176" y="144.25285" width="2.3415222" height="59.780258"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="241.4176" y="144.25285" width="2.3415222" height="59.780258"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="250.19832" y="153.34509" width="2.3415222" height="50.688019"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="250.19832" y="153.34509" width="2.3415222" height="50.688019"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="253.12521" y="131.04146" width="2.3415222" height="72.991653"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="253.12521" y="131.04146" width="2.3415222" height="72.991653"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="256.05212" y="149.61824" width="2.3415222" height="54.414871"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="256.05212" y="149.61824" width="2.3415222" height="54.414871"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="258.97903" y="132.47089" width="2.3415222" height="71.562225"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="258.97903" y="132.47089" width="2.3415222" height="71.562225"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="261.90594" y="97.190742" width="2.3414917" height="106.84237"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="261.90594" y="97.190742" width="2.3414917" height="106.84237"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="270.68665" y="111.9302" width="2.3415222" height="92.102913"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="270.68665" y="111.9302" width="2.3415222" height="92.102913"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="273.61356" y="104.45872" width="2.3415222" height="99.574394"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="273.61356" y="104.45872" width="2.3415222" height="99.574394"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="276.54047" y="128.49307" width="2.3415222" height="75.540039"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="276.54047" y="128.49307" width="2.3415222" height="75.540039"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="279.46735" y="121.78103" width="2.3415527" height="82.252083"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="279.46735" y="121.78103" width="2.3415527" height="82.252083"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="282.39429" y="113.40974" width="2.3414917" height="90.623375"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="282.39429" y="113.40974" width="2.3414917" height="90.623375"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="291.17499" y="131.18881" width="2.3415222" height="72.844299"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="291.17499" y="131.18881" width="2.3415222" height="72.844299"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="294.1019" y="119.37778" width="2.3415222" height="84.655327"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="294.1019" y="119.37778" width="2.3415222" height="84.655327"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="297.02881" y="144.52771" width="2.3415222" height="59.505402"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="297.02881" y="144.52771" width="2.3415222" height="59.505402"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="299.95572" y="190.47847" width="2.3415222" height="13.554642"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="299.95572" y="190.47847" width="2.3415222" height="13.554642"/>	</g>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 46.3812L315 46.3812"/>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M87.4624 215.039L87.4624 219.039"/>	<text transform="translate(87.4624 221.039)" font-size="12" font-family="Segoe UI" x="-27.852539, -21.383789, -14.915039, -10.116211, -1.7021484, 4.5732422, 10.116211, 14.915039, 21.383789, " y="11.027344, ">			29-Dec-25	</text>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M169.416 215.039L169.416 219.039"/>	<text transform="translate(169.416 221.039)" font-size="12" font-family="Segoe UI" x="-26.326172, -19.857422, -13.388672, -8.5898438, -4.3066406, 1.7988281, 8.5898438, 13.388672, 19.857422, " y="11.027344, ">			26-Jan-26	</text>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M251.369 215.039L251.369 219.039"/>	<text transform="translate(251.369 221.039)" font-size="12" font-family="Segoe UI" x="-27.331055, -20.862305, -14.393555, -9.5947266, -3.7353516, 2.5400391, 9.5947266, 14.393555, 20.862305, " y="11.027344, ">			23-Feb-26	</text>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M35.5391 215.039L315 215.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 204.033L31.5391 204.033"/>	<text fill="white" transform="translate(26.5391 204.033)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">			0	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 151.177L31.5391 151.177"/>	<text fill="white" transform="translate(26.5391 151.177)" font-size="12" font-family="Segoe UI" x="-15.539063, -9.0703125, -6.46875, " y="3.046875, ">			0.5	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 98.3216L31.5391 98.3216"/>	<text fill="white" transform="translate(26.5391 98.3216)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">			1	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 214.604L33.5391 214.604"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 193.462L33.5391 193.462"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 182.891L33.5391 182.891"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 172.32L33.5391 172.32"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 161.749L33.5391 161.749"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 140.606L33.5391 140.606"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 130.035L33.5391 130.035"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 119.464L33.5391 119.464"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 108.893L33.5391 108.893"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 87.7505L33.5391 87.7505"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 77.1794L33.5391 77.1794"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 66.6082L33.5391 66.6082"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 56.037L33.5391 56.037"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M35.5391 215.039L35.5391 46.2813"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M315 215.039L315 46.2813"/>	<text fill="white" transform="translate(175.27 31.2813)" font-size="16" font-weight="600" font-family="Segoe UI" x="-64.242188, -53.570313, -43.789063, -39.242188, -29.5625, -14.90625, -6.25, -1.8359375, 4.0703125, 19.382813, 23.71875, 28.132813, 37.335938, 46.539063, 58.335938, " y="-6.890625, ">			Volume (M, 60D)	</text></svg></div><div><?xml version="1.0" encoding="utf-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="330" height="245">	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M47.1508 215.039L47.1508 46.2813M70.2567 215.039L70.2567 46.2813M93.3626 215.039L93.3626 46.2813M116.468 215.039L116.468 46.2813M139.574 215.039L139.574 46.2813M162.68 215.039L162.68 46.2813M185.786 215.039L185.786 46.2813M208.892 215.039L208.892 46.2813M231.998 215.039L231.998 46.2813M255.104 215.039L255.104 46.2813M278.21 215.039L278.21 46.2813M301.315 215.039L301.315 46.2813"/>	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M26.4688 204.033L315 204.033M26.4688 162.106L315 162.106M26.4688 120.178L315 120.178M26.4688 78.2509L315 78.2509"/>	<clipPath id="cl_8">		<rect x="26.46875" y="46.28125" width="288.53125" height="168.75781"/>	</clipPath>	<g clip-path="url(#cl_8)">		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="39.583809" y="120.17831" width="7.8953476" height="83.854805"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="39.583809" y="120.17831" width="7.8953476" height="83.854805"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="48.356422" y="162.10571" width="7.8953476" height="41.927399"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="48.356422" y="162.10571" width="7.8953476" height="41.927399"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="57.129036" y="183.06941" width="7.8953476" height="20.963699"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="57.129036" y="183.06941" width="7.8953476" height="20.963699"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="65.901642" y="204.03311" width="7.8953552" height="0"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="74.674255" y="183.06941" width="7.8953552" height="20.963699"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="74.674255" y="183.06941" width="7.8953552" height="20.963699"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="83.446869" y="162.10571" width="7.8953552" height="41.927399"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="83.446869" y="162.10571" width="7.8953552" height="41.927399"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="92.21949" y="162.10571" width="7.8953476" height="41.927399"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="92.21949" y="162.10571" width="7.8953476" height="41.927399"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="100.9921" y="183.06941" width="7.8953552" height="20.963699"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="100.9921" y="183.06941" width="7.8953552" height="20.963699"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="109.76471" y="162.10571" width="7.8953552" height="41.927399"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="109.76471" y="162.10571" width="7.8953552" height="41.927399"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="118.53732" y="141.142" width="7.8953552" height="62.891113"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="118.53732" y="141.142" width="7.8953552" height="62.891113"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="127.30994" y="120.17831" width="7.8953552" height="83.854805"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="127.30994" y="120.17831" width="7.8953552" height="83.854805"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="136.08255" y="99.2146" width="7.8953552" height="104.81851"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="136.08255" y="99.2146" width="7.8953552" height="104.81851"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="144.85516" y="120.17831" width="7.8953552" height="83.854805"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="144.85516" y="120.17831" width="7.8953552" height="83.854805"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="153.62778" y="57.287201" width="7.8953552" height="146.74591"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="153.62778" y="57.287201" width="7.8953552" height="146.74591"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="162.40039" y="99.2146" width="7.8953552" height="104.81851"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="162.40039" y="99.2146" width="7.8953552" height="104.81851"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="171.173" y="141.142" width="7.8953552" height="62.891113"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="171.173" y="141.142" width="7.8953552" height="62.891113"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="179.94562" y="120.17831" width="7.8953552" height="83.854805"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="179.94562" y="120.17831" width="7.8953552" height="83.854805"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="188.71823" y="183.06941" width="7.8953552" height="20.963699"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="188.71823" y="183.06941" width="7.8953552" height="20.963699"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="197.49084" y="204.03311" width="7.8953552" height="0"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="206.26346" y="204.03311" width="7.8953552" height="0"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="215.03607" y="162.10571" width="7.8953552" height="41.927399"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="215.03607" y="162.10571" width="7.8953552" height="41.927399"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="223.80869" y="162.10571" width="7.8953552" height="41.927399"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="223.80869" y="162.10571" width="7.8953552" height="41.927399"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="232.5813" y="204.03311" width="7.8953552" height="0"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="241.35391" y="183.06941" width="7.8953552" height="20.963699"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="241.35391" y="183.06941" width="7.8953552" height="20.963699"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="250.12653" y="204.03311" width="7.8953552" height="0"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="258.89914" y="204.03311" width="7.8953552" height="0"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="267.67175" y="204.03311" width="7.8953552" height="0"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="276.44437" y="183.06941" width="7.8953552" height="20.963699"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="276.44437" y="183.06941" width="7.8953552" height="20.963699"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="285.21698" y="204.03311" width="7.8953552" height="0"/>		<rect fill="#9CA3AF" fill-opacity="0.70588237" x="293.98959" y="141.142" width="7.8953552" height="62.891113"/>		<rect fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" x="293.98959" y="141.142" width="7.8953552" height="62.891113"/>	</g>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M47.1508 215.039L47.1508 219.039"/>	<text fill="white" transform="translate(47.1508 221.039)" font-size="12" font-family="Segoe UI" x="-5.6337891, -0.83496094, " y="11.027344, ">			-4	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M70.2567 215.039L70.2567 219.039"/>	<text fill="white" transform="translate(70.2567 221.039)" font-size="12" font-family="Segoe UI" x="-5.6337891, -0.83496094, " y="11.027344, ">			-3	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M93.3626 215.039L93.3626 219.039"/>	<text fill="white" transform="translate(93.3626 221.039)" font-size="12" font-family="Segoe UI" x="-5.6337891, -0.83496094, " y="11.027344, ">			-2	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M116.468 215.039L116.468 219.039"/>	<text fill="white" transform="translate(116.468 221.039)" font-size="12" font-family="Segoe UI" x="-5.6337891, -0.83496094, " y="11.027344, ">			-1	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M139.574 215.039L139.574 219.039"/>	<text fill="white" transform="translate(139.574 221.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">			0	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M162.68 215.039L162.68 219.039"/>	<text fill="white" transform="translate(162.68 221.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">			1	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M185.786 215.039L185.786 219.039"/>	<text fill="white" transform="translate(185.786 221.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">			2	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M208.892 215.039L208.892 219.039"/>	<text fill="white" transform="translate(208.892 221.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">			3	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M231.998 215.039L231.998 219.039"/>	<text fill="white" transform="translate(231.998 221.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">			4	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M255.104 215.039L255.104 219.039"/>	<text fill="white" transform="translate(255.104 221.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">			5	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M278.21 215.039L278.21 219.039"/>	<text fill="white" transform="translate(278.21 221.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">			6	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M301.315 215.039L301.315 219.039"/>	<text fill="white" transform="translate(301.315 221.039)" font-size="12" font-family="Segoe UI" x="-3.234375, " y="11.027344, ">			7	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M28.6661 215.039L28.6661 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M33.2873 215.039L33.2873 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M37.9085 215.039L37.9085 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M42.5296 215.039L42.5296 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M51.772 215.039L51.772 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M56.3932 215.039L56.3932 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M61.0143 215.039L61.0143 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M65.6355 215.039L65.6355 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M74.8779 215.039L74.8779 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M79.499 215.039L79.499 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M84.1202 215.039L84.1202 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M88.7414 215.039L88.7414 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M97.9837 215.039L97.9837 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M102.605 215.039L102.605 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M107.226 215.039L107.226 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M111.847 215.039L111.847 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M121.09 215.039L121.09 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M125.711 215.039L125.711 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M130.332 215.039L130.332 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M134.953 215.039L134.953 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M144.195 215.039L144.195 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M148.817 215.039L148.817 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M153.438 215.039L153.438 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M158.059 215.039L158.059 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M167.301 215.039L167.301 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M171.923 215.039L171.923 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M176.544 215.039L176.544 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M181.165 215.039L181.165 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M190.407 215.039L190.407 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M195.028 215.039L195.028 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M199.65 215.039L199.65 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M204.271 215.039L204.271 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M213.513 215.039L213.513 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M218.134 215.039L218.134 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M222.755 215.039L222.755 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M227.377 215.039L227.377 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M236.619 215.039L236.619 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M241.24 215.039L241.24 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M245.861 215.039L245.861 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M250.483 215.039L250.483 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M259.725 215.039L259.725 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M264.346 215.039L264.346 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M268.967 215.039L268.967 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M273.588 215.039L273.588 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M282.831 215.039L282.831 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M287.452 215.039L287.452 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M292.073 215.039L292.073 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M296.694 215.039L296.694 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M305.937 215.039L305.937 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M310.558 215.039L310.558 217.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 215.039L315 215.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 46.3812L315 46.3812"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 204.033L22.4688 204.033"/>	<text fill="white" transform="translate(17.4688 204.033)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">			0	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 162.106L22.4688 162.106"/>	<text fill="white" transform="translate(17.4688 162.106)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">			2	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 120.178L22.4688 120.178"/>	<text fill="white" transform="translate(17.4688 120.178)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">			4	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 78.2509L22.4688 78.2509"/>	<text fill="white" transform="translate(17.4688 78.2509)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">			6	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 212.419L24.4688 212.419"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 195.648L24.4688 195.648"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 187.262L24.4688 187.262"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 178.877L24.4688 178.877"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 170.491L24.4688 170.491"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 153.72L24.4688 153.72"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 145.335L24.4688 145.335"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 136.949L24.4688 136.949"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 128.564L24.4688 128.564"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 111.793L24.4688 111.793"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 103.407L24.4688 103.407"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 95.0219L24.4688 95.0219"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 86.6364L24.4688 86.6364"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 69.8654L24.4688 69.8654"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 61.4799L24.4688 61.4799"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 53.0945L24.4688 53.0945"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M26.4688 215.039L26.4688 46.2813"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M315 215.039L315 46.2813"/>	<text fill="white" transform="translate(170.734 31.2813)" font-size="16" font-weight="600" font-family="Segoe UI" x="-99.648438, -89.203125, -80.546875, -74.320313, -64.640625, -58.273438, -48.59375, -41.554688, -37.140625, -25.34375, -20.796875, -13.757813, -7.53125, -1.1640625, 3.3828125, 13.304688, 22.984375, 29.210938, 33.757813, 43.539063, 53.21875, 57.632813, 63.539063, 72.742188, 81.945313, 93.742188, " y="-6.890625, ">			Returns Distribution (60D)	</text></svg></div><div><?xml version="1.0" encoding="utf-8" ?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="330" height="245">	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M83.1552 215.039L83.1552 46.2813M167.135 215.039L167.135 46.2813M251.115 215.039L251.115 46.2813"/>	<path fill="none" stroke="#D1D5DB" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" d="M31.2676 199.569L315 199.569M31.2676 173.802L315 173.802M31.2676 148.035L315 148.035M31.2676 122.267L315 122.267M31.2676 96.5002L315 96.5002M31.2676 70.7329L315 70.7329"/>	<clipPath id="cl_a">		<rect x="31.267578" y="46.28125" width="283.73242" height="168.75781"/>	</clipPath>	<g clip-path="url(#cl_a)">		<path fill="none" stroke="#EF5350" stroke-width="0.5" stroke-miterlimit="4" d="M44.1645 179.033L47.1638 197.096L50.1631 120.469L53.1624 135.19L62.1602 156.037L65.1595 137.682L68.1588 154.026L83.1552 136.856L86.1545 131.554L89.1538 143.826L95.1524 57.2872L104.15 60.646L107.15 138.493L110.149 159.206L113.148 195.561L116.147 60.7872L125.145 142.317L128.145 128.823L131.144 169.535L134.143 70.5571L137.142 128.083L146.14 199.693L149.139 125.496L152.139 131.309L155.138 123.936L158.137 146.063L167.135 148.253L170.135 104.725L173.134 172.583L176.133 150.624L179.132 122.527L188.13 138.284L191.13 184.22L194.129 201.933L197.128 137.869L200.127 98.4995L209.125 136.163L212.124 160.653L215.124 132.052L218.123 177.902L221.122 136.459L230.12 143.056L233.12 143.507L236.119 99.0443L239.118 154.866L242.117 129.93L251.115 154.602L254.115 133.39L257.114 122.541L260.113 204.033L263.112 146.989L272.11 172.06L275.109 199.765L278.109 105.895L281.108 162.853L284.107 190.401L293.105 147.361L296.104 89.2074L299.104 149.323L302.103 156.632"/>		<ellipse fill="#EF5350" cx="44.164505" cy="179.03293" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="47.163792" cy="197.09631" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="50.163078" cy="120.46906" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="53.162361" cy="135.19006" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="62.160221" cy="156.03697" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="65.159508" cy="137.68179" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="68.158791" cy="154.02579" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="83.15522" cy="136.85648" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="86.15451" cy="131.55368" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="89.153793" cy="143.82622" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="95.152359" cy="57.287201" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="104.15022" cy="60.645996" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="107.14951" cy="138.4931" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="110.14879" cy="159.20621" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="113.14808" cy="195.56133" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="116.14736" cy="60.787216" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="125.14522" cy="142.31714" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="128.1445" cy="128.82312" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="131.1438" cy="169.5347" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="134.14307" cy="70.557053" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="137.14236" cy="128.08269" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="146.14023" cy="199.69287" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="149.1395" cy="125.49641" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="152.13879" cy="131.30859" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="155.13808" cy="123.93649" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="158.13736" cy="146.06342" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="167.13522" cy="148.25342" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="170.13451" cy="104.72472" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="173.13379" cy="172.58304" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="176.13307" cy="150.62354" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="179.13235" cy="122.52686" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="188.13022" cy="138.28403" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="191.1295" cy="184.21997" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="194.12878" cy="201.93298" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="197.12807" cy="137.86877" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="200.12737" cy="98.499535" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="209.12521" cy="136.16339" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="212.1245" cy="160.65315" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="215.12379" cy="132.05167" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="218.12308" cy="177.90239" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="221.12236" cy="136.45932" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="230.12021" cy="143.05617" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="233.11951" cy="143.50659" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="236.11879" cy="99.044258" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="239.11807" cy="154.86569" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="242.11736" cy="129.92979" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="251.11522" cy="154.60172" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="254.1145" cy="133.38954" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="257.11377" cy="122.54075" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="260.11307" cy="204.03311" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="263.11237" cy="146.98932" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="272.11023" cy="172.05966" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="275.1095" cy="199.76509" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="278.10876" cy="105.89511" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="281.10809" cy="162.85336" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="284.10736" cy="190.40079" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="293.10522" cy="147.36078" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="296.10449" cy="89.207405" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="299.10379" cy="149.32309" rx="0.5" ry="0.5"/>		<ellipse fill="#EF5350" cx="302.10306" cy="156.6324" rx="0.5" ry="0.5"/>	</g>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 46.3812L315 46.3812"/>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M83.1552 215.039L83.1552 219.039"/>	<text transform="translate(83.1552 221.039)" font-size="12" font-family="Segoe UI" x="-27.852539, -21.383789, -14.915039, -10.116211, -1.7021484, 4.5732422, 10.116211, 14.915039, 21.383789, " y="11.027344, ">			29-Dec-25	</text>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M167.135 215.039L167.135 219.039"/>	<text transform="translate(167.135 221.039)" font-size="12" font-family="Segoe UI" x="-26.326172, -19.857422, -13.388672, -8.5898438, -4.3066406, 1.7988281, 8.5898438, 13.388672, 19.857422, " y="11.027344, ">			26-Jan-26	</text>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M251.115 215.039L251.115 219.039"/>	<text transform="translate(251.115 221.039)" font-size="12" font-family="Segoe UI" x="-27.331055, -20.862305, -14.393555, -9.5947266, -3.7353516, 2.5400391, 9.5947266, 14.393555, 20.862305, " y="11.027344, ">			23-Feb-26	</text>	<path fill="none" stroke="black" stroke-width="1" stroke-miterlimit="4" d="M31.2676 215.039L315 215.039"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 199.569L27.2676 199.569"/>	<text fill="white" transform="translate(22.2676 199.569)" font-size="12" font-family="Segoe UI" x="-11.267578, -6.46875, " y="3.046875, ">			-4	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 173.802L27.2676 173.802"/>	<text fill="white" transform="translate(22.2676 173.802)" font-size="12" font-family="Segoe UI" x="-11.267578, -6.46875, " y="3.046875, ">			-2	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 148.035L27.2676 148.035"/>	<text fill="white" transform="translate(22.2676 148.035)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">			0	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 122.267L27.2676 122.267"/>	<text fill="white" transform="translate(22.2676 122.267)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">			2	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 96.5002L27.2676 96.5002"/>	<text fill="white" transform="translate(22.2676 96.5002)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">			4	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 70.7329L27.2676 70.7329"/>	<text fill="white" transform="translate(22.2676 70.7329)" font-size="12" font-family="Segoe UI" x="-6.46875, " y="3.046875, ">			6	</text>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 215.03L29.2676 215.03"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 209.876L29.2676 209.876"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 204.723L29.2676 204.723"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 194.416L29.2676 194.416"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 189.262L29.2676 189.262"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 184.109L29.2676 184.109"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 178.955L29.2676 178.955"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 168.649L29.2676 168.649"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 163.495L29.2676 163.495"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 158.342L29.2676 158.342"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 153.188L29.2676 153.188"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 142.881L29.2676 142.881"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 137.728L29.2676 137.728"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 132.574L29.2676 132.574"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 127.421L29.2676 127.421"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 117.114L29.2676 117.114"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 111.961L29.2676 111.961"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 106.807L29.2676 106.807"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 101.654L29.2676 101.654"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 91.3467L29.2676 91.3467"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 86.1933L29.2676 86.1933"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 81.0398L29.2676 81.0398"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 75.8864L29.2676 75.8864"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 65.5795L29.2676 65.5795"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 60.426L29.2676 60.426"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 55.2726L29.2676 55.2726"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 50.1191L29.2676 50.1191"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M31.2676 215.039L31.2676 46.2813"/>	<path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" d="M315 215.039L315 46.2813"/>	<text fill="white" transform="translate(173.134 31.2813)" font-size="16" font-weight="600" font-family="Segoe UI" x="-73.523438, -61.726563, -53.117188, -48.570313, -44.023438, -35.414063, -31, -20.554688, -11.898438, -5.671875, 4.0078125, 10.375, 20.054688, 27.09375, 31.507813, 37.414063, 46.617188, 55.820313, 67.617188, " y="-6.890625, ">			Daily Returns (60D)	</text></svg></div></div>
 
 ---
 
-## Warnings
+## Operational Risks
 
-> [!warning] Polars.NET DataFrames are immutable — every operation returns a new DataFrame
-> Forgetting to assign the result of `WithColumns()`, `Filter()`, or `Sort()` silently discards the work. MDA is mutable — column assignment modifies the original.
-> [!warning] `IfElse` in Polars.NET is not `When/Then/Otherwise`
-> The C# API uses `Col("x").Gt(0).IfElse(trueVal, falseVal)` — not `When().Then().Otherwise()`. Translating from Python literally produces compile errors.
-> [!warning] Type mismatches between Polars.NET and MDA are common
-> Polars.NET uses Arrow types (Int64, Float64, Utf8). MDA uses .NET types (int, double, string). Converting between libraries requires explicit type mapping.
+The practical failure modes here are chart/input mismatch, axis-scale distortion, HTML-versus-SVG confusion, and export-target drift. The note's data-loading cells depend on homogeneous column types, so `ToArray<T>()` and date-axis casting should be checked before the chart primitive itself.
 
 ## Recommendations
 
-1. **Prefer Polars.NET expressions for analytical transforms** — the optimizer can fuse and reorder operations.
-2. **Use MDA when ML.NET integration is the goal** — MDA DataFrame implements `IDataView` for direct ML.NET handoff.
-3. **Validate output schemas after transforms** — assert column names and types match expectations.
-4. **Prefer Parquet for intermediate data** — lossless type preservation between transform steps.
+Use Plotly.NET when hover, zoom, and HTML export are part of the analysis workflow. Use ScottPlot when the destination is notebook-native SVG, batch image export, or any static report that should render without a browser runtime. Keep axis labels, theme settings, and helper functions explicit so repeated chart cells stay visually consistent.
 
-## Troubleshooting and failure modes
+## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
-| `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
-| MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
+If a chart renders incorrectly, check typed-array preparation, date coercion, and axis scaling before changing the plotting code. If an interactive figure does not display, verify that the destination supports HTML and that the output was not pasted as a static image. If the dashboard panel appears blank, rerun the plotting cell and confirm that the SVG or HTML output was captured instead of omitted during export.

@@ -10,7 +10,8 @@ status: complete
 
 # 18. Design Patterns - C#
 
-> [!quote]
+> [!quote]- Epigraph
+>
 > "When I see patterns in my programs, I consider it a sign of trouble. The shape of a program should reflect only the problem it needs to solve."
 >
 > — **Paul Graham**, *Revenge of the Nerds*, essay (2002)
@@ -178,6 +179,7 @@ status: complete
 This note documents C# design patterns and architectural idioms, including ASP.NET Core's built-in DI container, for data engineering and backend development.
 
 
+*Initialize the C# interactive kernel and suppress CS1701 warnings.*
 ```csharp
 // Suppress CS1701 assembly version warnings (NuGet packages on .NET 10).
 using System.Reflection;
@@ -205,13 +207,18 @@ Dependency Injection (DI) is a design principle where a class receives its colla
 In C#, constructor injection is the standard approach: dependencies are passed as constructor parameters typed to interfaces. .NET's built-in `IServiceCollection` container manages object lifetimes automatically — `AddTransient<T>()` creates a new instance per request, `AddScoped<T>()` creates one per HTTP request, and `AddSingleton<T>()` creates one for the entire application. Python equivalent: pass objects via `__init__` (no container needed — the language's dynamic nature makes a DI framework optional).
 
 > [!warning] Anti-pattern — hardcoded dependencies
+>
 > A class that creates its own database connection or API client internally (`new SqlConnection("prod-host")`) cannot be tested in isolation. Changing the provider means changing the class itself.
 
 > [!success] Inject dependencies via constructor
+>
 > Pass dependencies as constructor parameters typed to interfaces. Production code passes real implementations; tests pass mocks — zero changes to the service class in either case.
 
 > [!tip] C# 12 primary constructors simplify injection
+>
 > Starting with C# 12 (.NET 8+), classes can declare constructor parameters directly on the class declaration — eliminating the boilerplate of private fields and explicit constructors:
+>
+> *Show the primary-constructor form in a minimal example.*
 > ```csharp
 > public class PipelineService(IDataRepository repo, INotificationService notifier)
 > {
@@ -228,6 +235,7 @@ Interfaces define what operations are available without specifying how they work
 
 Declares `GetPrices` and `SaveScores` — same signature whether the backend is SQL Server, BigQuery, or an in-memory mock.
 
+*Define the repository contract.*
 ```csharp
 public interface IDataRepository
 {
@@ -236,15 +244,24 @@ public interface IDataRepository
 }
 ```
 
+```text
+No visible output.
+```
+
 #### INotificationService — notification contract
 
 Single-method contract for pipeline notifications.
 
+*Define the notification contract.*
 ```csharp
 public interface INotificationService
 {
     void Notify(string message);
 }
+```
+
+```text
+No visible output.
 ```
 
 ### Production implementations
@@ -255,6 +272,7 @@ Each concrete class implements one interface and handles the actual I/O — data
 
 Connects to SQL Server, implements both retrieval and persistence. Connection string is injected — the repository does not decide where to connect.
 
+*Define the SQL-backed repository implementation.*
 ```csharp
 public class SqlRepository : IDataRepository
 {
@@ -272,15 +290,24 @@ public class SqlRepository : IDataRepository
 }
 ```
 
+```text
+No visible output.
+```
+
 #### SlackNotifier — Slack channel notifications
 
 Sends formatted pipeline notifications to a Slack channel.
 
+*Define the Slack notification implementation.*
 ```csharp
 public class SlackNotifier : INotificationService
 {
     public void Notify(string message) => Console.WriteLine($"  Slack: {message}");
 }
+```
+
+```text
+No visible output.
 ```
 
 ### Test doubles
@@ -291,6 +318,7 @@ Test doubles replace production dependencies with in-memory alternatives. No dat
 
 Returns hardcoded prices, captures every saved score in a list. After the test, inspect `Saved` to verify correct tickers.
 
+*Define the in-memory repository test double.*
 ```csharp
 public class MockRepository : IDataRepository
 {
@@ -305,16 +333,25 @@ public class MockRepository : IDataRepository
 }
 ```
 
+```text
+No visible output.
+```
+
 #### MockNotifier — notification capture
 
 Collects notification messages instead of sending them. Inspect `Messages` after the run.
 
+*Define the notification test double.*
 ```csharp
 public class MockNotifier : INotificationService
 {
     public List<string> Messages { get; } = new();
     public void Notify(string message) => Messages.Add(message);
 }
+```
+
+```text
+No visible output.
 ```
 
 ### Pipeline service
@@ -325,6 +362,7 @@ The service class depends only on the two interfaces — it has no knowledge of 
 
 Constructor receives both dependencies. `Run` fetches prices, computes a score, persists it, notifies.
 
+*Define the pipeline orchestrator.*
 ```csharp
 public class PipelineService
 {
@@ -348,6 +386,10 @@ public class PipelineService
 }
 ```
 
+```text
+No visible output.
+```
+
 ### Wiring — production vs. test
 
 The same `PipelineService` class is used in both contexts. Only the objects passed to its constructor change.
@@ -356,6 +398,7 @@ The same `PipelineService` class is used in both contexts. Only the objects pass
 
 `SqlRepository` connects to the prod database, `SlackNotifier` sends to the team channel.
 
+*Run the production wiring example.*
 ```csharp
 var prodRepo = new SqlRepository("Server=prod-db;Database=stoxx");
 var prodNotifier = new SlackNotifier();
@@ -375,6 +418,7 @@ ASML.AS: momentum=0.85
 
 Replace every dependency with a mock. `PipelineService` constructor is identical. After the run, inspect the mock's captured state.
 
+*Run the mock-based test wiring example.*
 ```csharp
 var mockRepo = new MockRepository();
 var mockNotifier = new MockNotifier();
@@ -400,15 +444,18 @@ Design patterns are reusable solutions to common software design problems. In da
 The Singleton pattern ensures a class has exactly one instance throughout the application's lifetime and provides a global access point to it. In data engineering, singletons are common for database connection pools, configuration managers, and logging services — resources that are expensive to create and should be shared. `Lazy<T>` with a private constructor is the simplest thread-safe implementation — the runtime guarantees the delegate runs exactly once, even under concurrent access.
 
 > [!warning] Singleton and testing
+>
 > Singletons make unit testing difficult because they carry global state between tests. Test A modifies the singleton's state, and Test B sees the modified state. Prefer dependency injection with a singleton LIFETIME (registered once in the DI container) over the classic Singleton pattern — it gives you the same single-instance behavior but with testability.
 
 > [!success] Testable singleton via DI
+>
 > Register the dependency as `AddSingleton<T>()` in `IServiceCollection`. The DI container manages the single instance — tests can inject a mock or a fresh instance per test suite, eliminating shared state between test runs.
 
 #### AppConfig — singleton with Lazy\<T>
 
 A private constructor prevents external instantiation. `Lazy<T>` wraps the creation delegate — the runtime guarantees it runs exactly once, even under concurrent access. The static `Instance` property exposes the single instance.
 
+*Define the lazy singleton type.*
 ```csharp
 public class AppConfig
 {
@@ -423,10 +470,15 @@ public class AppConfig
 }
 ```
 
+```text
+No visible output.
+```
+
 #### Verifying single-instance behavior
 
 Both calls to `Instance` return the same reference — the constructor runs only once. `ReferenceEquals` confirms both variables point to the exact same object in memory.
 
+*Verify the singleton instance is reused.*
 ```csharp
 var c1 = AppConfig.Instance;
 var c2 = AppConfig.Instance;
@@ -448,6 +500,7 @@ The Factory pattern encapsulates object creation behind a static method or class
 
 The common interface declares a single `Upload` method. Three implementations — GCS, S3, and local filesystem — each format the upload result differently. Adding a new backend means adding one class.
 
+*Define the storage client contract and backends.*
 ```csharp
 public interface IStorageClient
 {
@@ -468,10 +521,15 @@ public class LocalClient : IStorageClient
 }
 ```
 
+```text
+No visible output.
+```
+
 #### StorageFactory — creation logic
 
 The static factory method maps a provider string to a concrete class using a switch expression. The caller never references `GCSClient` or `S3Client` directly.
 
+*Define the storage factory.*
 ```csharp
 public static class StorageFactory
 {
@@ -485,10 +543,15 @@ public static class StorageFactory
 }
 ```
 
+```text
+No visible output.
+```
+
 #### Provider-agnostic usage
 
 The loop creates three different clients through the factory. Each call to `Upload` returns a provider-specific path — the consuming code is identical regardless of backend.
 
+*Run the factory usage example.*
 ```csharp
 foreach (var provider in new[] { "gcs", "s3", "local" })
 {
@@ -511,6 +574,7 @@ The Observer pattern establishes a one-to-many relationship: when one object (th
 
 `StepEvent` is an immutable record carrying step name, status, row count, and message. `EventBus` holds a list of subscribers per event type — `Publish` iterates the list and invokes each callback.
 
+*Define the event payload and bus.*
 ```csharp
 public record StepEvent(string Step, string Status, int Rows, string Message);
 
@@ -521,10 +585,15 @@ public class EventBus
 }
 ```
 
+```text
+No visible output.
+```
+
 #### Subscribe handlers and publish events
 
 Three handlers subscribe to `StepCompleted` — a logger, a metric emitter, and an alerter. Publishing an event invokes all three. The `ohlcv_load` event triggers LOG + METRIC; the `gold_score` error triggers LOG + ALERT.
 
+*Run the event publish example.*
 ```csharp
 var bus = new EventBus();
 bus.StepCompleted += data => Console.WriteLine($"  [LOG]    {data.Step}: {data.Status}");
@@ -550,6 +619,7 @@ The Strategy pattern encapsulates interchangeable algorithms behind a common int
 
 Declares `Name` and `Score` — every strategy implements these two members.
 
+*Define the scoring strategy contract.*
 ```csharp
 public interface IScoringStrategy
 {
@@ -558,10 +628,15 @@ public interface IScoringStrategy
 }
 ```
 
+```text
+No visible output.
+```
+
 #### MomentumStrategy
 
 Scores based on the most recent price relative to the mean — positive means latest price is above average, suggesting upward momentum.
 
+*Define the momentum strategy.*
 ```csharp
 public class MomentumStrategy : IScoringStrategy
 {
@@ -575,10 +650,15 @@ public class MomentumStrategy : IScoringStrategy
 }
 ```
 
+```text
+No visible output.
+```
+
 #### VolatilityStrategy
 
 Scores using coefficient of variation (std dev / mean), negated so lower volatility scores higher — penalizes erratic price swings.
 
+*Define the volatility strategy.*
 ```csharp
 public class VolatilityStrategy : IScoringStrategy
 {
@@ -593,10 +673,15 @@ public class VolatilityStrategy : IScoringStrategy
 }
 ```
 
+```text
+No visible output.
+```
+
 #### StockScorer — strategy consumer
 
 The context class receives any `IScoringStrategy` via constructor. `Evaluate` delegates to the injected strategy — the scorer does not know or care which algorithm it uses.
 
+*Define the strategy consumer.*
 ```csharp
 public class StockScorer
 {
@@ -606,10 +691,15 @@ public class StockScorer
 }
 ```
 
+```text
+No visible output.
+```
+
 #### Evaluating with different strategies
 
 The same ASML.AS price series is scored with both strategies. Momentum shows a slight negative score (latest below mean), and Volatility returns a small negative penalty.
 
+*Run the strategy comparison example.*
 ```csharp
 var prices = new double[] { 685, 690, 680, 695, 710, 700, 685 };
 Console.WriteLine(string.Join(", ", prices));
@@ -648,6 +738,7 @@ Attribute-based validation built into .NET: decorate properties with `[Required]
 
 Each property carries an attribute — `[Required]`, `[Range]`, `[StringLength]`. `IValidatableObject.Validate()` adds the High >= Low cross-field check.
 
+*Define the validated OHLCV model.*
 ```csharp
 public class OhlcvRecord : IValidatableObject
 {
@@ -681,10 +772,15 @@ public class OhlcvRecord : IValidatableObject
 }
 ```
 
+```text
+No visible output.
+```
+
 #### Validate helper
 
 Creates a `ValidationContext`, runs `TryValidateObject` with `validateAllProperties: true`, returns bool and error list.
 
+*Define the validation helper.*
 ```csharp
 static (bool, List<ValidationResult>) Validate(object obj)
 {
@@ -695,10 +791,15 @@ static (bool, List<ValidationResult>) Validate(object obj)
 }
 ```
 
+```text
+No visible output.
+```
+
 #### Valid record — passes all constraints
 
 Well-formed OHLCV record. `TryValidateObject` returns `true`.
 
+*Validate a record that satisfies all constraints.*
 ```csharp
 var validRecord = new OhlcvRecord
 {
@@ -717,6 +818,7 @@ True
 
 Each record triggers a different rule: negative price fails `[Range]`, High < Low fails `IValidatableObject`, empty symbol fails `[StringLength]`, negative volume fails `[Range]`.
 
+*Validate records that fail different rules.*
 ```csharp
 var badRecords = new OhlcvRecord[]
 {
@@ -746,9 +848,11 @@ Symbol="X" Open=10 High=5 Vol=-1
 Reflection lets you examine a type's properties, methods, and constructors at runtime — and invoke them dynamically without compile-time knowledge of the type. This is the foundation of ORMs (mapping database columns to class properties), serializers (JSON/XML), DI containers (auto-resolving constructor parameters), and test frameworks (discovering test methods). The tradeoff is performance: reflection calls are 10-100× slower than direct calls, so avoid them in hot loops.
 
 > [!warning] Reflection performance
+>
 > `GetProperty().GetValue()` uses late binding on every call. If you need to read properties in a tight loop (e.g., mapping 100K database rows), cache the `PropertyInfo` objects or use compiled expressions / source generators instead. A single reflection call is fine; a million is not.
 
 > [!success] Cache PropertyInfo for hot paths
+>
 > Retrieve `PropertyInfo` objects once at startup and store them in a static dictionary. For maximum throughput, compile them into typed delegates with `Expression.Lambda<Func<T, object>>()` — this brings reflection-based access down to near-direct-call performance.
 
 ### Inspecting types at runtime
@@ -759,6 +863,7 @@ Reflection operates on a target object. The `TradeOrder` class below serves as t
 
 Simple trade model with four constructor params, a computed `Notional` property, and a custom `ToString`.
 
+*Define the reflection target type.*
 ```csharp
 public class TradeOrder
 {
@@ -777,10 +882,15 @@ public class TradeOrder
 }
 ```
 
+```text
+No visible output.
+```
+
 #### Type metadata — inspect a type's identity and characteristics
 
 Every .NET object carries a `Type` reference accessible via `GetType()`. The `Type` object exposes the type's name, namespace-qualified full name, and classification flags (`IsClass`, `IsSealed`, `IsValueType`). Use this as the entry point for all further reflection — once you have the `Type`, you can enumerate properties, methods, and constructors.
 
+*Inspect type metadata at runtime.*
 ```csharp
 var order = new TradeOrder("ASML.AS", "BUY", 100, 685.40);
 var type = order.GetType();
@@ -802,6 +912,7 @@ False
 
 `GetProperties()` returns a `PropertyInfo[]` for every public property on the type. Each `PropertyInfo` exposes the property's name, CLR type (`PropertyType`), and can read the current value from an instance via `GetValue()`. This is how ORMs map database columns to class members — iterate properties, match by name, and assign values.
 
+*Enumerate public properties and values.*
 ```csharp
 foreach (var prop in type.GetProperties())
 {
@@ -822,6 +933,7 @@ Notional     Double     = 68540
 
 `GetMethods()` returns `MethodInfo[]` for the type's methods. Without binding flags, it includes inherited members from `object` (`Equals`, `GetHashCode`). Adding `BindingFlags.DeclaredOnly` restricts the result to methods defined directly on the type — useful when you need to discover domain-specific behavior without noise from the base class. Test frameworks use this to find `[Test]`-attributed methods automatically.
 
+*Enumerate declared methods on the type.*
 ```csharp
 foreach (var method in type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
 {
@@ -843,6 +955,7 @@ String ToString()
 
 `GetProperty(name)` retrieves a single `PropertyInfo` by its string name — the C# equivalent of Python's `getattr()`. This is the core mechanism behind JSON serializers (System.Text.Json, Newtonsoft) and ORMs (Entity Framework, Dapper): given a column name from a database row or a JSON key, look up the matching property and set its value. Returns `null` if the name doesn't match, so always check before calling `GetValue()`.
 
+*Read properties by name with reflection.*
 ```csharp
 foreach (var name in new[] { "Ticker", "Side", "Quantity", "Price" })
 {
@@ -863,6 +976,7 @@ Price = 685.4
 
 `GetConstructors()` returns `ConstructorInfo[]` for all public constructors. Each `ConstructorInfo` exposes its parameters (name, type, position) via `GetParameters()`. DI containers use this to auto-resolve dependencies: read the constructor, look up each parameter type in the service registry, and create the object with all dependencies injected — no manual wiring needed.
 
+*Inspect constructor parameters.*
 ```csharp
 foreach (var ctor in type.GetConstructors())
 {
@@ -882,6 +996,7 @@ price: Double
 
 `Activator.CreateInstance(type, args)` constructs an object at runtime by finding a constructor whose parameter types match the provided arguments. This is how ORMs hydrate entity objects from database rows — the ORM knows the `Type` and the column values, but not the concrete class at compile time. Also used by plugin systems that load assemblies dynamically and instantiate classes by name.
 
+*Create an instance with `Activator`.*
 ```csharp
 var newOrder = Activator.CreateInstance(type, "MC.PA", "SELL", 50, 890.20);
 Console.WriteLine(newOrder);
@@ -1017,27 +1132,35 @@ flowchart TD
 ## Warnings
 
 > [!warning] Registering a `Scoped` service as `Singleton` causes captive dependency bugs
+>
 > A Singleton that holds a reference to a Scoped service keeps the same Scoped instance alive for the entire application lifetime, defeating per-request isolation and causing data leaks across HTTP requests.
 
 > [!success] Correct pattern — match lifetimes
+>
 > Register every service with the narrowest lifetime that satisfies its contract. If a Singleton needs a short-lived resource, inject `IServiceScopeFactory` and create a child scope explicitly rather than injecting the scoped service directly.
 
 > [!warning] Event delegates without `-=` unsubscription leak objects
+>
 > When a subscriber registers `publisher.DataReceived += OnData` but never calls `-=`, the publisher holds a strong reference to the subscriber. The subscriber cannot be garbage-collected as long as the publisher lives, silently growing memory.
 
 > [!success] Correct pattern — always unsubscribe
+>
 > Implement `IDisposable` on the subscriber and place `publisher.DataReceived -= OnData` in `Dispose()`. In ASP.NET Core, hosted services register in `StartAsync` and unregister in `StopAsync`.
 
 > [!warning] Classic double-checked locking Singleton is unsafe without `volatile`
+>
 > The pattern `if (_instance == null) { lock (_lock) { if (_instance == null) _instance = new T(); } }` can fail on pre-.NET 2.0 memory models without the `volatile` keyword, because instruction reordering may return a partially-constructed object.
 
 > [!success] Correct pattern — use `Lazy<T>`
+>
 > `private static readonly Lazy<T> _instance = new(() => new T(), LazyThreadSafetyMode.ExecutionAndPublication);` is thread-safe by default, readable, and removes all manual locking.
 
 > [!warning] Leaking `IQueryable` or `DbContext` through repository boundaries
+>
 > Returning `IQueryable<T>` from a repository method lets callers append LINQ clauses that translate to SQL, binding the caller to EF Core implementation details and making the repository boundary meaningless.
 
 > [!success] Correct pattern — return materialised collections
+>
 > Repository methods return `IReadOnlyList<T>` or `IEnumerable<T>` — the query is fully executed inside the repository. The caller is isolated from the ORM and can be tested with an in-memory `MockRepository`.
 
 ## Recommendations
@@ -1053,14 +1176,117 @@ flowchart TD
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `InvalidOperationException: Cannot resolve scoped service from root provider` | A Singleton attempts to resolve a Scoped service directly | Inject `IServiceScopeFactory`; create a child scope and resolve the service within it |
-| `NullReferenceException` when calling an event | No subscribers at publish time — `?.Invoke` guard missing | Always invoke as `EventName?.Invoke(this, args)` so a null delegate is a no-op |
-| DI constructor throws `ActivationException: Unable to resolve type X` | Service not registered or registered under wrong interface | Verify `services.AddXxx<IService, ConcreteService>()` in `Program.cs`; check for typos in type parameters |
-| Singleton returns stale data after config reload | Singleton captured `IConfiguration` values at startup, not on access | Inject `IOptionsMonitor<T>` instead of `IOptions<T>` to receive live updates |
-| Factory `switch` expression throws `SwitchExpressionException` for unknown type | Case not covered and no discard arm `_` | Add `_ => throw new ArgumentException($"Unknown type: {type}")` as the final switch arm |
-| DataAnnotations not triggering on model | `Validator.TryValidateObject` not called, or MVC model binding disabled | In non-MVC code, call `Validator.TryValidateObject(model, ctx, results, true)` explicitly |
-| Reflection `GetValue` returns `null` for a non-null property | Property is write-only or has a backing field with a different name | Check `PropertyInfo.CanRead`; use `GetField` with `BindingFlags.NonPublic` for backing fields |
-| Decorator not invoked — original service called directly | DI container still resolves the unwrapped concrete type | Register decorator via `services.Decorate<IService, LoggingDecorator>()` (Scrutor) or manually re-register |
+#### `InvalidOperationException`: resolving a scoped service from the root provider
+
+Inject `IServiceScopeFactory` into the singleton and resolve scoped services inside a child scope instead of from the root provider.
+
+*Create the child scope before resolving the scoped dependency.*
+```csharp
+using var scope = scopeFactory.CreateScope();
+var repo = scope.ServiceProvider.GetRequiredService<IDataRepository>();
+```
+
+```text
+Scoped service resolved inside the child scope.
+```
+
+#### `NullReferenceException`: calling an event with no subscribers
+
+Publish with the null-conditional operator so an empty subscriber list is a no-op.
+
+*Guard the event before publishing.*
+```csharp
+StepCompleted?.Invoke(data);
+```
+
+```text
+No subscribers means no exception.
+```
+
+#### `ActivationException`: constructor dependency not registered
+
+Register the implementation under the interface the constructor actually requests, and do it before `Build()`.
+
+*Map the interface to the concrete service.*
+```csharp
+builder.Services.AddScoped<IService, ConcreteService>();
+```
+
+```text
+Container resolution succeeds once the mapping is registered.
+```
+
+#### `IOptions<T>`: stale configuration captured at startup
+
+Use `IOptionsMonitor<T>` when the service must observe reloadable configuration instead of a one-time snapshot.
+
+*Read the current configuration value on demand.*
+```csharp
+public class Cache(IOptionsMonitor<PipelineOptions> options)
+{
+    public string Region => options.CurrentValue.Region;
+}
+```
+
+```text
+CurrentValue reflects updated configuration.
+```
+
+#### `SwitchExpressionException`: factory case missing a discard arm
+
+Make the factory fail fast with an explicit `ArgumentException` for unknown providers.
+
+*Include the fallback arm in the switch expression.*
+```csharp
+var client = provider switch
+{
+    "gcs" => new GCSClient(),
+    "s3" => new S3Client(),
+    _ => throw new ArgumentException($"Unknown type: {provider}")
+};
+```
+
+```text
+Unknown providers fail with a clear argument error.
+```
+
+#### `Validator.TryValidateObject`: DataAnnotations not running
+
+Call the validator explicitly in non-MVC code so attribute rules are evaluated and collected.
+
+*Validate the model outside MVC model binding.*
+```csharp
+var ok = Validator.TryValidateObject(model, ctx, results, true);
+```
+
+```text
+Validation runs outside MVC and collects every violation.
+```
+
+#### `PropertyInfo.CanRead`: reflection returning `null`
+
+Check the property metadata before calling `GetValue()` and fall back to fields only when needed.
+
+*Guard reflection access before reading the value.*
+```csharp
+if (prop?.CanRead == true)
+    Console.WriteLine(prop.GetValue(order));
+```
+
+```text
+Readable properties are accessed safely.
+```
+
+#### `services.Decorate<T>()`: decorator not taking effect
+
+Register the decorator at the container boundary so the decorated implementation is what gets resolved.
+
+*Wrap the service before resolution.*
+```csharp
+services.Decorate<IService, LoggingDecorator>();
+```
+
+```text
+The decorated implementation is resolved from the container.
+```
 

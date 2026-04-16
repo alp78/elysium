@@ -244,11 +244,17 @@ Columnstore indexes use their own segment-level compression (encoding, bit-packi
 
 `COLUMNSTORE_ARCHIVE` is specified per partition:
 
+*Apply archive compression to a single cold columnstore partition.*
+
 ```sql
 ALTER INDEX CCI_my_table
     ON dbo.my_table
 REBUILD PARTITION = 3
     WITH (DATA_COMPRESSION = COLUMNSTORE_ARCHIVE);
+```
+
+```text
+No result set. The statement rebuilds partition 3 with `COLUMNSTORE_ARCHIVE`.
 ```
 
 Use `COLUMNSTORE_ARCHIVE` only on cold partitions that are rarely queried but must remain online. The decompression cost is significant — every segment access pays the Xpress decompression penalty on top of normal columnstore decoding.
@@ -308,6 +314,7 @@ WHERE o.type = 'U'
 ORDER BY size_mb DESC;
 ```
 
+```text
 | table_name | index_name | type_desc | compression | size_mb | row_count |
 |---|---|---|---|---:|---:|
 | `dbo.demo_idxmaint_rowstore` | `CIX_demo_idxmaint_row_guid` | `CLUSTERED` | `NONE` | 376.64 | 671550 |
@@ -320,14 +327,15 @@ ORDER BY size_mb DESC;
 | `silver.stoxxusa50_ohlcv` | `PK__stoxxusa__3213E83FC84E3F24` | `CLUSTERED` | `NONE` | 5.77 | 66000 |
 | `dbo.demo_index_types_ncci` | `PK_demo_index_types_ncci` | `CLUSTERED` | `NONE` | 2.73 | 50000 |
 | `dbo.demo_index_types_covering` | `CIX_demo_index_types_covering` | `CLUSTERED` | `NONE` | 2.31 | 50000 |
+```
 
 _Every rowstore index in the top 10 by size is `NONE`. The real `silver` fact tables — `eurostoxx50_ohlcv` (6.02 MB), `stoxxasia50_ohlcv` (5.80 MB), `stoxxusa50_ohlcv` (5.77 MB) — are all uncompressed. The largest demo table (`demo_idxmaint_rowstore` at 376.64 MB) is also uncompressed. Any production compression recommendation still needs to be justified object by object, but the current posture shows that the entire rowstore surface is open for evaluation._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `compression` | `NONE` | Depends on workload | No row/page compression is active. | Default baseline; compression decision is still open. Evaluate with `sp_estimate_data_compression_savings`. |
-| `compression` | `ROW` | ✅ for mixed workloads | Row compression is active. Fixed-length columns stored as variable-length; NULL/zero optimization applied. | Good middle ground when page savings matter but write activity remains meaningful. |
-| `compression` | `PAGE` | ✅ for read-heavy rowstore | Page compression is active. Row compression plus prefix and dictionary compression per page. | Highest rowstore savings, but more CPU work per page access. |
+Compression-state interpretation:
+
+- `NONE`: no row/page compression is active. Use this as the baseline, then measure with `sp_estimate_data_compression_savings`.
+- `ROW`: row compression is active. It is the middle ground when page savings matter but write activity still matters.
+- `PAGE`: page compression is active. It delivers the highest rowstore savings, but it costs more CPU per page access.
 | `compression` | `COLUMNSTORE` | Depends on query pattern | Columnstore compression is active. Column-by-column storage with segment encoding. | Separate storage model from row/page. Best for scan/aggregate workloads. |
 | `compression` | `COLUMNSTORE_ARCHIVE` | ✅ for cold columnstore partitions | Columnstore plus Xpress algorithm. Maximum compression ratio. | Significant CPU cost on access. Use only on cold partitions. |
 
@@ -364,7 +372,7 @@ Never enable compression blindly. SQL Server provides `sp_estimate_data_compress
 
 #### `sp_estimate_data_compression_savings` | compare ROW and PAGE on `gold.index_performance`
 
-Before deciding whether to compress a specific table or index. It is typically triggered by storage audit identifies a candidate, or query tuning reveals I/O-heavy scans on a read-heavy table. Read-only stored procedure call. Acquires an IS lock on the source table and creates a temporary copy in `tempdb`. No schema changes. Requires `SELECT` on the table, `VIEW DATABASE STATE`, and `VIEW DEFINITION`. Compare the projected size under `ROW` and `PAGE` compression against the current uncompressed size, so the operator can decide which tier (if any) is worth applying.
+Before deciding whether to compress a specific table or index. It is typically triggered when a storage audit identifies a candidate or when query tuning reveals I/O-heavy scans on a read-heavy table. Read-only stored procedure call. Acquires an IS lock on the source table and creates a temporary copy in `tempdb`. No schema changes. Requires `SELECT` on the table, `VIEW DATABASE STATE`, and `VIEW DEFINITION`. Compare the projected size under `ROW` and `PAGE` compression against the current uncompressed size so the operator can decide which tier, if any, is worth applying.
 
 | Field | Source | Type | Meaning |
 |---|---|---|---|
@@ -388,10 +396,12 @@ EXEC sp_estimate_data_compression_savings
     @data_compression = 'ROW';
 ```
 
+```text
 | object_name | schema_name | index_id | partition_number | size_with_current_compression_setting(KB) | size_with_requested_compression_setting(KB) | sample_size_with_current_compression_setting(KB) | sample_size_with_requested_compression_setting(KB) |
 |---|---|---:|---:|---:|---:|---:|---:|
 | `index_performance` | `gold` | 1 | 1 | 672 | 496 | 728 | 544 |
 | `index_performance` | `gold` | 2 | 1 | 200 | 192 | 232 | 224 |
+```
 
 *Estimate the projected size of `gold.index_performance` under `PAGE` compression.*
 
@@ -404,20 +414,22 @@ EXEC sp_estimate_data_compression_savings
     @data_compression = 'PAGE';
 ```
 
+```text
 | object_name | schema_name | index_id | partition_number | size_with_current_compression_setting(KB) | size_with_requested_compression_setting(KB) | sample_size_with_current_compression_setting(KB) | sample_size_with_requested_compression_setting(KB) |
 |---|---|---:|---:|---:|---:|---:|---:|
 | `index_performance` | `gold` | 1 | 1 | 672 | 376 | 728 | 408 |
 | `index_performance` | `gold` | 2 | 1 | 200 | 120 | 232 | 144 |
+```
 
 _The clustered index (`index_id = 1`) estimate is the important signal. `ROW` compression would reduce it from 672 KB to 496 KB (26% reduction). `PAGE` would reduce it to 376 KB (44% reduction). The nonclustered index (`index_id = 2`) also benefits, particularly under PAGE (200 KB → 120 KB, 40% reduction). This is the exact pattern that justifies page compression on read-heavy, repetitive data: the extra CPU cost buys a meaningful page-count reduction._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `size_with_requested` much lower than current | ✅ | — | Compression should shrink the object materially. | Strong candidate for implementation. |
-| `size_with_requested` close to current | Depends | — | Compression benefit is small. | CPU tradeoff may not be worth it. Likely keep `NONE`. |
-| `PAGE` estimate much better than `ROW` | ✅ for read-heavy data | — | Page-level prefix/dictionary is finding repetition across rows on the same page. | Consider `PAGE` if write activity is low enough. |
-| `PAGE` estimate barely better than `ROW` | Depends | — | Page-level techniques add little beyond row compression. | `ROW` may be the safer balance. |
-| Requested size larger than current | ⚠️ | — | Compression overhead exceeds savings. Rows are already near-maximally dense. | Do not enable compression on this object. |
+Estimate interpretation:
+
+- `size_with_requested` much lower than current: compression should shrink the object materially. This is a strong candidate for implementation.
+- `size_with_requested` close to current: the compression benefit is small. The CPU tradeoff may not be worth it, so keep `NONE`.
+- `PAGE` much better than `ROW`: page-level prefix and dictionary compression is finding repetition across rows on the same page. Consider `PAGE` if write activity is low enough.
+- `PAGE` barely better than `ROW`: page-level techniques add little beyond row compression. `ROW` may be the safer balance.
+- Requested size larger than current: compression overhead exceeds savings. Rows are already near-maximally dense, so do not enable compression on this object.
 
 ## Validate The Actual Reduction On A Disposable Table
 
@@ -454,9 +466,11 @@ SELECT COUNT(*) AS row_count
 FROM dbo.demo_table_compression;
 ```
 
+```text
 | row_count |
 |---:|
 | 50000 |
+```
 
 #### `sys.partitions` | verify baseline before compression
 
@@ -490,9 +504,11 @@ WHERE i.object_id = OBJECT_ID('dbo.demo_table_compression')
   AND i.index_id > 0;
 ```
 
+```text
 | index_name | compression | row_count | used_page_count | size_mb |
 |---|---|---:|---:|---:|
 | `CIX_demo_table_compression` | `NONE` | 50000 | 296 | 2.31 |
+```
 
 _The uncompressed baseline is 296 pages (2.31 MB) for 50,000 rows._
 
@@ -520,6 +536,12 @@ ALTER INDEX CIX_demo_table_compression
 REBUILD WITH (DATA_COMPRESSION = ROW);
 ```
 
+```text
+No result set. The clustered index is rebuilt in place with `ROW` compression.
+```
+
+*Capture the row-compressed page count and size after the rebuild completes.*
+
 ```sql
 SELECT
     i.name AS index_name,
@@ -538,9 +560,11 @@ WHERE i.object_id = OBJECT_ID('dbo.demo_table_compression')
   AND i.index_id > 0;
 ```
 
+```text
 | index_name | compression | row_count | used_page_count | size_mb |
 |---|---|---:|---:|---:|
 | `CIX_demo_table_compression` | `ROW` | 50000 | 183 | 1.43 |
+```
 
 _Row compression reduced the clustered index from 296 pages to 183 pages — a 38% page-count reduction, from 2.31 MB to 1.43 MB. The savings come primarily from variable-length storage of the `int` (`id`), `float` (`close`), and `bigint` (`volume`) columns, plus trailing-blank removal on `varchar` (`symbol`)._
 
@@ -556,6 +580,12 @@ ALTER INDEX CIX_demo_table_compression
 REBUILD WITH (DATA_COMPRESSION = PAGE);
 ```
 
+```text
+No result set. The clustered index is rebuilt in place with `PAGE` compression.
+```
+
+*Capture the page-compressed page count and size after the rebuild completes.*
+
 ```sql
 SELECT
     i.name AS index_name,
@@ -574,19 +604,23 @@ WHERE i.object_id = OBJECT_ID('dbo.demo_table_compression')
   AND i.index_id > 0;
 ```
 
+```text
 | index_name | compression | row_count | used_page_count | size_mb |
 |---|---|---:|---:|---:|
 | `CIX_demo_table_compression` | `PAGE` | 50000 | 144 | 1.13 |
+```
 
-_Page compression reduced the index further to 144 pages (1.13 MB) — a 51% total reduction from the uncompressed baseline, and a 21% reduction beyond ROW alone. The `symbol` column (repeated stock tickers across many rows) is highly amenable to prefix and dictionary compression, which explains the additional PAGE benefit._
+_Page compression reduced the index further to 144 pages (1.13 MB) - a 51% total reduction from the uncompressed baseline, and a 21% reduction beyond ROW alone. The `symbol` column (repeated stock tickers across many rows) is highly amenable to prefix and dictionary compression, which explains the additional PAGE benefit._
 
 ### Three-Way Summary
 
+```text
 | Compression | Pages | Size (MB) | Reduction from NONE | Reduction from ROW |
 |---|---:|---:|---:|---:|
 | `NONE` | 296 | 2.31 | — | — |
 | `ROW` | 183 | 1.43 | 38% | — |
 | `PAGE` | 144 | 1.13 | 51% | 21% |
+```
 
 The pattern is clear: ROW compression alone delivers substantial savings on numeric-heavy OHLCV data. PAGE compression adds meaningful additional savings because the `symbol` column (and to some extent `date`) contains highly repetitive values across rows that land on the same page.
 
@@ -611,6 +645,8 @@ On Standard edition, all compression rebuilds are offline — the table is locke
 
 On Enterprise/Developer edition, use this syntax to apply or change compression with minimal workload disruption:
 
+*Apply compression online with low-priority waiting when the edition supports it.*
+
 ```sql
 ALTER INDEX CIX_my_table
     ON dbo.my_table
@@ -623,6 +659,10 @@ REBUILD WITH (
         )
     )
 );
+```
+
+```text
+No result set. The statement starts an online rebuild with low-priority lock handling.
 ```
 
 > [!info]- WAIT_AT_LOW_PRIORITY options explained
@@ -638,6 +678,8 @@ REBUILD WITH (
 
 SQL Server 2017+ and Azure SQL Database support resumable online index rebuilds. A resumable rebuild can be paused and resumed without losing progress:
 
+*Start a resumable compression rebuild when the index is large enough to span maintenance windows.*
+
 ```sql
 ALTER INDEX CIX_my_table
     ON dbo.my_table
@@ -649,10 +691,20 @@ REBUILD WITH (
 );
 ```
 
+```text
+No result set. The rebuild starts in resumable mode and pauses automatically after `MAX_DURATION`.
+```
+
 If the operation exceeds `MAX_DURATION` minutes, it pauses automatically. Resume with:
+
+*Resume the saved rebuild state after the maintenance window reopens.*
 
 ```sql
 ALTER INDEX CIX_my_table ON dbo.my_table RESUME;
+```
+
+```text
+No result set. The saved resumable rebuild continues from the paused state.
 ```
 
 > [!warning] Resumable rebuild limitations
@@ -679,6 +731,8 @@ SQL Server supports setting a different compression type on each partition of a 
 
 The syntax targets a specific partition number:
 
+*Rebuild a single partition with the chosen compression setting.*
+
 ```sql
 ALTER INDEX CIX_my_partitioned_table
     ON dbo.my_partitioned_table
@@ -686,7 +740,13 @@ REBUILD PARTITION = 5
     WITH (DATA_COMPRESSION = PAGE);
 ```
 
+```text
+No result set. Partition 5 is rebuilt with `PAGE` compression.
+```
+
 To set compression on multiple partitions in a single statement when creating or rebuilding:
+
+*Apply mixed compression settings across a partition range in one maintenance statement.*
 
 ```sql
 ALTER TABLE dbo.my_partitioned_table
@@ -695,6 +755,10 @@ REBUILD PARTITION = ALL WITH (
     DATA_COMPRESSION = ROW ON PARTITIONS (9 TO 10),
     DATA_COMPRESSION = NONE ON PARTITIONS (11 TO 12)
 );
+```
+
+```text
+No result set. The partition groups are rebuilt with their specified compression settings.
 ```
 
 > [!tip] Automate partition compression tiering
@@ -718,6 +782,8 @@ REBUILD PARTITION = ALL WITH (
 ## How To Choose ROW vs PAGE
 
 The decision between `ROW` and `PAGE` compression is not a general preference — it depends on the specific object's data characteristics and access pattern. The following flowchart captures the decision logic.
+
+*Use the flowchart to map object size, estimated savings, and write activity to a compression choice.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -765,6 +831,10 @@ flowchart TD
 
     NO4 --> ROW2["Use ROW — write activity makes PAGE CPU cost too high"]
     YES4 --> PAGE["Use PAGE — maximum rowstore savings justified"]
+```
+
+```text
+No runtime output. The mermaid block is a decision flowchart only.
 ```
 
 **Decision factors in detail:**
@@ -815,18 +885,20 @@ WHERE page_compression_attempt_count > 0
 ORDER BY page_compression_attempt_count DESC;
 ```
 
+```text
 | table_name | index_id | page_compression_attempt_count | page_compression_success_count | success_pct |
 |---|---|---:|---:|---:|
 | `dbo.demo_table_compression` | 1 | 282 | 161 | 57.1 |
+```
 
 _The demo table's clustered index shows 282 page compression attempts with 161 successes (57.1%). This means 57% of pages were dense enough for prefix/dictionary compression to yield net savings. The remaining 43% of pages were stored with row compression only because the CI overhead would have exceeded the savings. A success ratio above 50% is typical for mixed data; ratios above 80% indicate highly repetitive data where PAGE compression is an excellent fit._
 
-| success_pct range | Interpretation | Action |
-|---|---|---|
-| **80–100%** | Excellent. Nearly every page benefits from prefix/dictionary compression. | Keep PAGE compression. The CPU cost is well justified. |
-| **50–80%** | Good. Majority of pages benefit, but some are too diverse. | Keep PAGE compression. Monitor for workload changes that could shift the ratio. |
-| **20–50%** | Marginal. More pages are falling back to row-only than succeeding. | Consider switching to ROW compression. The PAGE CPU overhead may not be justified. |
-| **< 20%** | Poor. Almost no pages benefit from page-level techniques. | Switch to ROW compression or NONE. PAGE compression is wasting CPU on this object. |
+Success-ratio guidance:
+
+- `80-100%`: excellent. Nearly every page benefits from prefix and dictionary compression. Keep `PAGE`; the CPU cost is justified.
+- `50-80%`: good. Most pages benefit, but some are too diverse. Keep `PAGE` and monitor workload changes.
+- `20-50%`: marginal. More pages fall back to row-only than succeed. Consider `ROW`; the `PAGE` CPU cost may not be justified.
+- `< 20%`: poor. Almost no pages benefit from page-level techniques. Switch to `ROW` or `NONE`; `PAGE` is wasting CPU on this object.
 
 > [!warning] DMV counters reset on instance restart
 >
@@ -862,18 +934,55 @@ _The demo table's clustered index shows 282 page compression attempts with 161 s
 
 ## Troubleshooting
 
-Failure modes by symptom — the error, what it usually means, and the fix.
+Failure modes by symptom:
 
-| Error / symptom | Likely cause | Fix |
-|---|---|---|
-| **Error 5765:** `ALTER INDEX REBUILD ONLINE is not supported for index ...` | Online rebuild attempted on an unsupported index type (XML, spatial, disabled, local temp table) or on Standard/Web/Express edition. | Use offline rebuild (`ONLINE = OFF`), schedule in a maintenance window. On Standard edition, online rebuild is not available — plan accordingly. |
-| **Error 1101 / 1105:** `Could not allocate space for object ... in database ... because the filegroup is full` | The rebuild operation ran out of space. Online rebuilds require temporary space for the new copy alongside the old index. | Free disk space or extend the data file. For online rebuilds, ensure the filegroup has at least 1.5× the current index size available. |
-| **Compression rebuild takes unexpectedly long** | Large object, fragmented source data, or insufficient `tempdb` space causing spills. | Consider `SORT_IN_TEMPDB = ON` to isolate the sort work. Use `RESUMABLE = ON` on Enterprise to pause/resume across maintenance windows. |
-| **Lock escalation blocking queries during offline rebuild** | Offline `ALTER INDEX REBUILD` holds `Sch-M` for the entire duration, blocking all concurrent access. | Use `ONLINE = ON` on Enterprise/Developer edition, or schedule the rebuild during a maintenance window when no queries are running. |
-| **CPU increase after enabling PAGE compression** | Normal: page decompression is CPU-intensive. But excessive CPU may indicate PAGE compression on a write-heavy table. | Check `sys.dm_db_index_operational_stats` for page compression success ratio. If < 50%, switch to ROW compression. |
-| **Estimate shows size increase after compression** | Row overhead from the CD array and CI structure exceeds savings. Typically occurs on tables where rows are already near 8,060 bytes or data is highly diverse. | Do not enable compression on this object. The data is already near-maximally dense. |
-| **Error 8622 or poor plan after compression** | The optimizer's cardinality estimates may shift slightly because compressed pages hold more rows. | Update statistics on the compressed index with `UPDATE STATISTICS ... WITH FULLSCAN`. |
-| **`sp_estimate_data_compression_savings` blocked or slow** | The procedure acquires an IS lock on the source table and creates a `tempdb` copy. If the table is very large or `tempdb` is constrained, the procedure may be slow or blocked. | Run during off-peak hours. Ensure `tempdb` has adequate free space for the sample copy. |
+### `Error 5765`: unsupported online rebuild
+
+`ALTER INDEX REBUILD ONLINE` fails when the index type or the edition does not support online rebuilds. Common cases are XML, spatial, disabled, and local temp table indexes, plus Standard, Web, and Express editions.
+
+Use offline rebuild with `ONLINE = OFF` and schedule the change in a maintenance window. On Standard edition, online rebuild is not available.
+
+### `Error 1101 / 1105`: filegroup full
+
+These errors mean the rebuild ran out of space. Online rebuilds need temporary space for the new copy alongside the old index.
+
+Free disk space or extend the data file. For online rebuilds, plan for at least `1.5x` the current index size in the filegroup.
+
+### `Compression rebuild takes unexpectedly long`
+
+This usually means the object is large, the source data is fragmented, or `tempdb` is too small and the operation is spilling.
+
+Use `SORT_IN_TEMPDB = ON` to isolate the sort work. On Enterprise, `RESUMABLE = ON` lets you pause and resume across maintenance windows.
+
+### `Lock escalation` during offline rebuild
+
+An offline `ALTER INDEX REBUILD` holds `Sch-M` for the full duration and blocks concurrent access.
+
+Use `ONLINE = ON` on Enterprise or Developer edition. If online rebuild is not available, schedule the work when the table can be offline.
+
+### `CPU` increase after `PAGE` compression
+
+Some CPU increase is expected because page decompression is work. A large increase usually means `PAGE` compression was applied to a write-heavy table.
+
+Check `sys.dm_db_index_operational_stats` for the page-compression success ratio. If it is below `50%`, move the object to `ROW` compression.
+
+### Estimate shows a larger object
+
+If the estimated compressed size is larger than the current size, the row overhead from the CD array and CI structure is outweighing any savings.
+
+Do not enable compression on that object. The data is already near-maximally dense or too diverse for page-level savings.
+
+### `Error 8622` or a poor plan after compression
+
+Compression can shift cardinality estimates slightly because compressed pages hold more rows.
+
+Refresh statistics on the compressed index with `UPDATE STATISTICS ... WITH FULLSCAN`.
+
+### `sp_estimate_data_compression_savings` is blocked or slow
+
+The procedure takes an IS lock on the source table and builds a `tempdb` copy. Large tables or constrained `tempdb` can make it slow or block it.
+
+Run it off-peak and make sure `tempdb` has enough free space for the sample copy.
 
 ## References
 

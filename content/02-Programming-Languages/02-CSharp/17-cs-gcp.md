@@ -12,7 +12,8 @@ status: complete
 
 ![Pipeline Architecture](/static/index_lab.jpg)
 
-> [!quote]
+> [!quote] Reliability
+>
 > "Everything fails all the time, so plan for failure and nothing fails."
 >
 > — **Werner Vogels**, CTO of Amazon
@@ -55,86 +56,70 @@ status: complete
 > **ADC (Application Default Credentials)**
 > - `GoogleCredential.GetApplicationDefault()` — discovers credentials automatically: `GOOGLE_APPLICATION_CREDENTIALS` env var → `gcloud auth application-default login` → GCE/Cloud Run metadata server.
 > - All `Google.Cloud.*` SDK clients use this chain; no explicit credential wiring is needed in GCP-hosted environments.
->
-> > [!tip] ADC silent failure
-> > Setting `GOOGLE_APPLICATION_CREDENTIALS` to a non-existent path produces no startup error — authentication fails silently at the first API call.
+> - A bad `GOOGLE_APPLICATION_CREDENTIALS` path usually fails on the first API call rather than at process startup.
 >
 >  ---
 >
 > **`StorageClient`**
 > - The `Google.Cloud.Storage.V1` client for all Cloud Storage object operations: list, upload, download, delete.
 > - Thread-safe; create a single instance per process and reuse it — do not instantiate per-request.
->
-> > [!info] Lazy pagination
-> > `ListObjects` returns an `IEnumerable` that pages through GCS results automatically — it does not load all objects into memory at once.
+> - `ListObjects` returns an `IEnumerable` that pages through GCS results automatically instead of loading the full object set into memory.
 >
 >  ---
 >
 > **`BigQueryClient`**
 > - The `Google.Cloud.BigQuery.V2` client for running SQL queries, loading data from GCS, and managing tables.
 > - `ExecuteQuery(sql, null)` is synchronous and blocks the calling thread until results are ready.
->
-> > [!warning] Long queries block
-> > For queries expected to run more than a few seconds, use `CreateQueryJob` and poll for completion instead of `ExecuteQuery`.
+> - For queries expected to run more than a few seconds, use `CreateQueryJob` and poll for completion instead of `ExecuteQuery`.
 >
 >  ---
 >
 > **`PublisherClient`**
 > - The `Google.Cloud.PubSub.V1` async publisher created with `await PublisherClient.CreateAsync(topicName)`.
 > - Buffers messages internally in batches for throughput; unflushed messages are lost if the process exits without calling `ShutdownAsync`.
->
-> > [!warning] Flush before exit
-> > Always call `await publisher.ShutdownAsync(TimeSpan.FromSeconds(15))` in a `finally` block to avoid message loss on crash or graceful shutdown.
+> - Always call `await publisher.ShutdownAsync(TimeSpan.FromSeconds(15))` in a `finally` block to avoid message loss on crash or graceful shutdown.
 >
 >  ---
 >
 > **`SubscriberServiceApiClient`**
 > - The synchronous batch-pull client for Pub/Sub, suited for scripts and notebooks.
 > - Messages must be explicitly acknowledged via `.Acknowledge(subName, ackIds)` — unacknowledged messages are redelivered after the ack deadline.
->
-> > [!tip] Production alternative
-> > In long-running services, use the streaming `SubscriberClient` instead — it manages ack deadlines automatically and delivers messages via a callback.
+> - In long-running services, use the streaming `SubscriberClient` instead because it manages ack deadlines automatically and delivers messages via a callback.
 >
 >  ---
 >
 > **`FirestoreDb`**
 > - The `Google.Cloud.Firestore` client for document-oriented operations: `SetAsync` (upsert), `UpdateAsync` (partial merge), `DeleteAsync`.
 > - Document limit: 1 MB per document; write throughput limit: 1 write/sec per document (500 writes/sec across distinct documents).
->
-> > [!bug] .NET 10 Interactive incompatibility
-> > SDK reads (`GetSnapshotAsync`) and real-time listeners (`Listen`) throw a missing-assembly exception on .NET 10 Interactive due to a `Microsoft.Bcl.AsyncInterfaces` version conflict. Use the Firestore REST API as a workaround.
+> - On .NET 10 Interactive, SDK reads (`GetSnapshotAsync`) and real-time listeners (`Listen`) can fail because of a `Microsoft.Bcl.AsyncInterfaces` conflict; use the Firestore REST API as the workaround.
 >
 >  ---
 >
 > **`SecretManagerServiceClient`**
 > - The `Google.Cloud.SecretManager.V1` client for reading, listing, and managing secrets at runtime.
 > - Access the current active version with the path `projects/{project}/secrets/{name}/versions/latest`; the payload is a `ByteString`, decode with `.ToStringUtf8()`.
->
-> > [!danger] Never log secret values
-> > Printing or logging the decoded secret payload exposes credentials in Cloud Logging and stdout. Always mask or omit the value in any output.
+> - Never log the decoded secret payload; mask or omit it in any output to avoid leaking credentials into stdout or Cloud Logging.
 >
 >  ---
 >
 > **`MetricServiceClient`**
 > - The `Google.Cloud.Monitoring.V3` client for writing custom time-series metrics to Cloud Monitoring.
 > - Metric types must use the `custom.googleapis.com/` prefix; data appears in Metrics Explorer within ~60 seconds.
->
-> > [!tip] Retry on transient errors
-> > Cloud Monitoring `CreateTimeSeries` can return transient `Grpc.Core.StatusCode.Internal` errors. Wrap calls in a short retry loop with exponential backoff (3 attempts, 3 s × attempt).
+> - `CreateTimeSeries` can return transient `Grpc.Core.StatusCode.Internal` errors, so wrap writes in a short exponential-backoff retry loop.
 >
 >  ---
 >
 > **`TopicName` / `SubscriptionName`**
 > - Typed resource-name wrappers in `Google.Cloud.PubSub.V1` that encode `projects/{project}/topics/{topic}` and `projects/{project}/subscriptions/{sub}`.
 > - Prefer these over raw strings — they prevent malformed resource-path errors and provide `.ProjectId` / `.TopicId` accessors.
->
-> > [!info] Resource path format
-> > GCP APIs use hierarchical resource paths (`projects/*/topics/*`) as identifiers. All SDK name types parse and validate this format for you.
+> - GCP APIs use hierarchical resource paths such as `projects/*/topics/*`, and the SDK name types parse and validate that format for you.
 
 
 ## How the Pipeline Works
 
 The index ETL pipeline moves market data through three layers — Bronze (raw), Silver (cleaned), Gold (scored) — using GCP-managed services at each stage. Secret Manager and Cloud Monitoring are cross-cutting concerns that apply throughout.
+
+*This diagram maps the Bronze, Silver, Gold, and downstream service flow.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -191,6 +176,8 @@ flowchart TD
 
 Run this cell once before any others. It installs all required GCP SDK NuGet packages and suppresses CS1701/CS1702 assembly version warnings — these appear because packages targeting .NET 8/9 report version mismatches on .NET 10, but are harmless. The warning suppression uses reflection to set the internal `_scriptOptions.WarningLevel` to 0 on the .NET Interactive kernel.
 
+*This cell loads the Google Cloud packages and suppresses interactive warning noise.*
+
 ```csharp
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
@@ -236,6 +223,8 @@ WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
 
 `GoogleCredential.GetApplicationDefault()` reads the ADC chain and returns whichever credential is available: a service account key (when `GOOGLE_APPLICATION_CREDENTIALS` is set), user credentials from `gcloud auth application-default login`, or the GCE metadata server inside Cloud Run / GKE. Checking `.UnderlyingCredential.GetType().Name` confirms which source was used.
 
+*This snippet prints the resolved ADC credential type plus the core project identifiers used later in the note.*
+
 ```csharp
 var projectId = "index-lab-2";
 var region = "europe-west1";
@@ -266,13 +255,21 @@ index-lab-2-index-data
 
 `StorageClient.Create()` reads credentials from the ADC chain (same as `GoogleCredential.GetApplicationDefault()`). The client is thread-safe and should be reused across operations.
 
+*This snippet creates a reusable `StorageClient` instance.*
+
 ```csharp
 var storageClient = StorageClient.Create();
+```
+
+```text
+[no visible output]
 ```
 
 #### List objects in a prefix
 
 `ListObjects(bucket, prefix)` returns a lazy `IEnumerable<Google.Apis.Storage.v1.Data.Object>` — it pages through results automatically. Prefixes simulate folder hierarchy in GCS's flat namespace.
+
+*This snippet enumerates the `bronze/` prefix and prints each object name with its size.*
 
 ```csharp
 foreach (var obj in storageClient.ListObjects(bucketName, "bronze/"))
@@ -287,6 +284,8 @@ foreach (var obj in storageClient.ListObjects(bucketName, "bronze/"))
 #### Upload an object from a stream
 
 `UploadObject(bucket, objectName, contentType, stream)` writes a stream to GCS. Passing a `MemoryStream` avoids writing a temp file. The object name becomes the full blob path including any prefix.
+
+*This snippet uploads a small in-memory CSV file into the Bronze layer.*
 
 ```csharp
 var csvContent = "symbol,date,close\nASML.AS,2026-03-20,685.40\nMC.PA,2026-03-20,890.20";
@@ -305,6 +304,8 @@ Console.WriteLine($"  Uploaded: gs://{bucketName}/{blobName} ({csvBytes.Length} 
 #### Download an object to a stream
 
 `DownloadObject(bucket, objectName, stream)` writes the blob content into any writable `Stream`. Reading from a `MemoryStream` after download gives you the raw bytes without touching the filesystem.
+
+*This snippet downloads the uploaded CSV blob into memory and prints its lines.*
 
 ```csharp
 using var ms = new MemoryStream();
@@ -326,6 +327,8 @@ foreach (var line in downloaded.Split('\n'))
 
 `DeleteObject(bucket, objectName)` removes a single blob. In production, bronze-layer data is kept immutable — only delete test or staging objects.
 
+*This snippet deletes the temporary test object from Cloud Storage.*
+
 ```csharp
 storageClient.DeleteObject(bucketName, blobName);
 Console.WriteLine($"  Deleted: {blobName}");
@@ -341,8 +344,9 @@ Console.WriteLine($"  Deleted: {blobName}");
 
 `BigQueryClient.Create(projectId)` authenticates via ADC and targets the specified project. All query and load operations use this client. The Python equivalent is `bigquery.Client(project=PROJECT_ID)`.
 
-> [!info] C# notebook shows read-only queries
-> This notebook reads from tables pre-populated by the Python pipeline run. Loading data and running transform jobs (silver/gold SQL) is demonstrated in the Python file. In a production C# service you would use `bqClient.CreateLoadJob()` and `bqClient.CreateQueryJob()` for the full ETL flow.
+> [!info] This page shows read-only BigQuery queries
+>
+> The examples read from tables pre-populated by the Python pipeline run. In a production C# service, use `bqClient.CreateLoadJob()` and `bqClient.CreateQueryJob()` for the full ETL flow.
 
 ### Execute SQL queries
 
@@ -350,13 +354,21 @@ Console.WriteLine($"  Deleted: {blobName}");
 
 `BigQueryClient.Create(projectId)` returns a client that wraps the BigQuery REST API. It authenticates via the same ADC chain as all other Google Cloud clients.
 
+*This snippet creates a reusable `BigQueryClient` bound to the target project.*
+
 ```csharp
 var bqClient = BigQueryClient.Create(projectId);
+```
+
+```text
+[no visible output]
 ```
 
 #### Query the bronze OHLCV table
 
 `ExecuteQuery(sql, parameters)` runs a synchronous query and returns a `BigQueryResults` — an `IEnumerable<BigQueryRow>` that pages results automatically. Row values are accessed by column name as `object` and must be cast or formatted explicitly.
+
+*This query reads recent rows from the Bronze OHLCV table and formats them as a compact preview.*
 
 ```csharp
 var sql = $@"
@@ -391,6 +403,8 @@ Symbol     Date              Close         Volume
 
 The gold layer holds one row per ticker with pre-computed momentum scores and composite rankings. This query reads the final pipeline output — the same data written to Firestore for dashboard access.
 
+*This query reads the Gold ranking output and prints the composite order for each ticker.*
+
 ```csharp
 var goldSql = $@"
     SELECT symbol, ROUND(close, 2) AS close,
@@ -424,6 +438,8 @@ Messages are published to **topics** (named channels) and consumed via **subscri
 
 `PublisherClient.CreateAsync(topicName)` creates a batching, async publisher that buffers messages and sends them in batches for throughput. Each `PublishAsync` call returns the server-assigned `messageId`. Call `ShutdownAsync` to flush pending messages before the client goes out of scope.
 
+*This snippet publishes three pipeline events and flushes the buffered publisher before exit.*
+
 ```csharp
 var topicName = TopicName.FromProjectTopic(projectId, "pipeline-events");
 var subName = SubscriptionName.FromProjectSubscription(projectId, "pipeline-events-sub");
@@ -453,6 +469,8 @@ await Task.Delay(2000);  // allow messages to propagate
 #### Pull and acknowledge messages
 
 `SubscriberServiceApiClient` performs synchronous batch pulls — suited for scripts and notebooks. In production services use `SubscriberClient` for streaming pull, which manages ack deadlines automatically. Messages must be acknowledged via their `AckId` or they will be redelivered.
+
+*This snippet pulls the published messages synchronously and acknowledges them in one batch.*
 
 ```csharp
 var subscriber = SubscriberServiceApiClient.Create();
@@ -488,9 +506,11 @@ if (ackIds.Count > 0)
 Data is organized into **collections** (groups of documents) containing **documents** (JSON-like records). `FirestoreDb.Create(projectId)` returns the SDK client. `SetAsync` upserts a document — it creates or overwrites the entire document atomically.
 
 > [!bug] .NET 10 SDK read and listener incompatibility
+>
 > `FirestoreDb` SDK reads (`.GetSnapshotAsync()`) and real-time listeners (`.Listen()`) hit a missing assembly exception on .NET 10 Interactive due to a `Microsoft.Bcl.AsyncInterfaces` version conflict. Writes via `SetAsync` and `DeleteAsync` work correctly.
 
 > [!success] Workaround: Firestore REST API for reads
+>
 > Use the Firestore REST API directly with an OAuth2 bearer token obtained via `GoogleCredential.GetApplicationDefault()`. SDK reads and listeners work correctly in .NET 8/9 projects — this workaround is only needed in .NET Interactive on .NET 10.
 
 ### Write and read documents
@@ -498,6 +518,8 @@ Data is organized into **collections** (groups of documents) containing **docume
 #### Write documents with SetAsync
 
 `SetAsync(data)` upserts the document — if it exists, all fields are replaced. Use `UpdateAsync` to merge only specific fields. `Timestamp.GetCurrentTimestamp()` writes a server-side Firestore timestamp.
+
+*This snippet upserts three score documents into Firestore with a server timestamp.*
 
 ```csharp
 var firestoreDb = FirestoreDb.Create(projectId);
@@ -530,6 +552,8 @@ Console.WriteLine($"  Written {scores.Length} documents");
 #### Read a collection via the REST API
 
 Obtain an OAuth2 token scoped to `datastore` and call the Firestore REST endpoint directly. The response is standard JSON — parse with `JsonDocument` and navigate the typed-value structure (`doubleValue`, `stringValue`, etc.) that Firestore REST uses.
+
+*This snippet reads the `pulse_live` collection through the REST API and prints the decoded values.*
 
 ```csharp
 var credential = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault()
@@ -584,6 +608,8 @@ Console.WriteLine($"\n  Cleaned up {scores.Length} score documents");
 #### Poll pulse_live on an interval
 
 Because `Listen()` is unavailable on .NET 10 Interactive, polling simulates real-time awareness. Each poll fetches the full collection and compares prices against the previous poll to detect `NEW` / `CHANGED` / `UNCHANGED` states. In a .NET 8/9 project, replace this with `firestoreDb.Collection("pulse_live").Listen(snapshot => { ... })` for true push delivery.
+
+*This snippet polls Firestore repeatedly and classifies each ticker as `NEW`, `CHANGED`, or `UNCHANGED`.*
 
 ```csharp
 var cred = Google.Apis.Auth.OAuth2.GoogleCredential.GetApplicationDefault()
@@ -672,14 +698,17 @@ Polling complete. 4 polls, 5 tickers tracked.
 
 A **secret** is a named container. Each update creates a new immutable **version** — old versions can be disabled or destroyed for rotation. `SecretManagerServiceClient.Create()` authenticates via ADC.
 
-> [!info] Secret lifecycle not shown in C#
-> This notebook demonstrates read and list only. Creating secrets, adding versions, and deleting secrets is demonstrated in the Python file — the API structure is identical (`CreateSecret`, `AddSecretVersion`, `DeleteSecret`).
+> [!info] This page focuses on reading and listing secrets
+>
+> Secret creation, version addition, and deletion are omitted here, but the C# client exposes the matching `CreateSecret`, `AddSecretVersion`, and `DeleteSecret` operations.
 
 ### Read and list secrets
 
 #### Read the latest version of a secret
 
 `AccessSecretVersion(name)` fetches the secret payload for a specific version. Using `versions/latest` always retrieves the current active version. The response payload is a `ByteString` — call `.ToStringUtf8()` to decode. Never print or log raw secret values.
+
+*This snippet reads the latest version of two secrets and prints masked values only.*
 
 ```csharp
 var smClient = SecretManagerServiceClient.Create();
@@ -703,6 +732,8 @@ foreach (var secretId in new[] { "index-db-password", "index-api-key" })
 
 `ListSecrets` returns a lazy paginated enumerable of `Secret` objects. Each `Secret` has a `SecretName` property that parses the resource path — use `.SecretId` to extract just the name.
 
+*This snippet lists the secret identifiers that exist in the project.*
+
 ```csharp
 foreach (var secret in smClient.ListSecrets(new Google.Cloud.SecretManager.V1.ListSecretsRequest { Parent = $"projects/{projectId}" }))
     Console.WriteLine($"  {secret.SecretName.SecretId}");
@@ -719,14 +750,17 @@ foreach (var secret in smClient.ListSecrets(new Google.Cloud.SecretManager.V1.Li
 
 Custom metrics are written as **time series** — a metric type identifier, a monitored resource (e.g., `global`), and one or more `Point` values with timestamps. Data appears in Metrics Explorer within ~60 seconds of writing.
 
-> [!info] Cloud Logging not shown in C#
-> Writing structured log entries via the Cloud Logging SDK (`Google.Cloud.Logging.V2`) is demonstrated in the Python file. The C# equivalent is `LoggingServiceV2Client` with `WriteLogEntries`. This notebook focuses on custom metrics only.
+> [!info] This page focuses on custom metrics
+>
+> The matching Cloud Logging client is `LoggingServiceV2Client` with `WriteLogEntries`, but the example here stays on `MetricServiceClient` and `CreateTimeSeries`.
 
 ### Write custom metrics
 
 #### Write a data point to a custom metric
 
 `CreateTimeSeries` writes one or more time series points to Cloud Monitoring. The metric type string must follow the `custom.googleapis.com/` prefix convention. Cloud Monitoring can return transient `Internal` gRPC errors — a retry loop with backoff handles these gracefully.
+
+*This snippet writes one custom metric point and prints the relevant console links.*
 
 ```csharp
 var metricClient = MetricServiceClient.Create();
@@ -786,7 +820,7 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
 > | **GCS** | `client.DownloadObject(bucket, name, stream)` | Download |
 > | **BigQuery** | `BigQueryClient.Create(projectId)` | Create client |
 > | **BigQuery** | `client.ExecuteQuery(sql, params)` | Run SQL |
-> | **BigQuery** | `client.InsertRows(datasetId, tableId, rows)` | Insert rows |
+> | **BigQuery** | `client.CreateQueryJob(sql, params)` | Start async query job |
 > | **Pub/Sub** | `PublisherClient.CreateAsync(topicName)` | Create publisher |
 > | **Pub/Sub** | `publisher.PublishAsync(message)` | Publish |
 > | **Firestore** | `FirestoreDb.Create(projectId)` | Create client |
@@ -824,11 +858,23 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `InvalidOperationException: The Application Default Credentials are not available` | No ADC configured | Run `gcloud auth application-default login` or set `GOOGLE_APPLICATION_CREDENTIALS` |
-| BigQuery `403 Access Denied` | Service account lacks BigQuery permissions | Grant `roles/bigquery.dataEditor` or `roles/bigquery.jobUser` |
-| Pub/Sub messages lost on shutdown | `PublisherClient` not flushed | Call `await publisher.ShutdownAsync(timeout)` |
-| Firestore `PermissionDenied` | Missing Firestore IAM role | Grant `roles/datastore.user` to the service account |
-| Secret Manager `NotFound` | Wrong secret name or version | Check `projects/{project}/secrets/{name}/versions/latest` format |
+### ADC unavailable
+
+If `GoogleCredential.GetApplicationDefault()` throws `InvalidOperationException`, the host has no usable ADC source. Run `gcloud auth application-default login` for local development or set `GOOGLE_APPLICATION_CREDENTIALS` to a readable service-account key file.
+
+### BigQuery `403 Access Denied`
+
+If `ExecuteQuery(...)` fails with `403`, the principal can authenticate but lacks BigQuery authorization. Grant `roles/bigquery.jobUser` to run jobs and `roles/bigquery.dataEditor` or a narrower dataset role for table access.
+
+### Pub/Sub messages missing after shutdown
+
+If recently published messages never arrive, the process probably exited before `PublisherClient` flushed its in-memory batch. Always await `publisher.ShutdownAsync(TimeSpan.FromSeconds(15))` before the process terminates.
+
+### Firestore `PermissionDenied`
+
+If `SetAsync(...)` or the REST read returns `PermissionDenied`, the credential is valid but missing Firestore access. Grant `roles/datastore.user` or a narrower Firestore-compatible IAM role to the service account.
+
+### Secret Manager `NotFound`
+
+If `AccessSecretVersion(...)` returns `NotFound`, verify the resource path format `projects/{project}/secrets/{name}/versions/latest` and confirm that both the secret name and version exist in the target project.
 

@@ -56,7 +56,7 @@ status: complete
 
 ## Audit Architecture
 
-> [!abstract] SQL Server Audit scope
+> [!abstract]- Summary
 >
 > This section covers the three-object audit model (server audit + server audit specification + database audit specification), the predefined action groups versus direct object actions, and the built-in catalog that resolves `action_id` codes to human-readable names via `sys.dm_audit_actions`. Every SQL cell below runs against a SQL Server 2022 Developer Edition instance (16.0.4236.2) on Linux.
 
@@ -93,7 +93,7 @@ flowchart TD
 
 ## Build And Verify The Audit
 
-> [!abstract] Build order and demo scope
+> [!abstract]- Summary
 >
 > This section uses a disposable production-shaped example named `codex_audit_demo`. Objects are built in strict dependency order (directory → server audit → server audit specification → database audit specification) so each step produces a live verification row against stoxx. The commands are valid for real environments, but the object names are intentionally isolated so the note does not require changes to the real `stoxx` security surface. Every demo object is dropped at the end of the section.
 
@@ -113,6 +113,10 @@ GO
 
 EXEC xp_create_subdir '/var/opt/mssql/log/audit/';
 GO
+```
+
+```text
+Command completed successfully.
 ```
 
 | Setting | What it controls | Default | Production guidance |
@@ -188,6 +192,10 @@ ALTER SERVER AUDIT codex_audit_demo WITH (STATE = ON);
 GO
 ```
 
+```text
+Command completed successfully.
+```
+
 #### `sys.server_file_audits` + `sys.dm_server_audit_status` | verify the audit target
 
 Immediately after `CREATE SERVER AUDIT ... WITH (STATE = ON)` to confirm the audit started, and periodically thereafter as part of production health checks. Also use this when `sys.fn_get_audit_file` returns no rows — this query proves whether the audit is running or stopped. It is typically triggered by initial deployment verification, audit target move, volume fill alert, or routine health check after unexpected errors in the error log. Read-only T-SQL session. Requires `ALTER ANY SERVER AUDIT` or `VIEW ANY DEFINITION` for `sys.server_file_audits`, and `VIEW SERVER STATE` for `sys.dm_server_audit_status`. No restart impact. Return both the configured file-target properties (from the catalog view) and the live runtime state (from the DMV) in a single row, so an operator can distinguish between a misconfigured audit and a correctly configured but stopped audit.
@@ -237,6 +245,10 @@ JOIN sys.server_audits AS sa
 LEFT JOIN sys.dm_server_audit_status AS ds
     ON sf.audit_id = ds.audit_id
 WHERE sf.name = 'codex_audit_demo';
+```
+
+```text
+Result set shown below.
 ```
 
 | name | audit_guid | type_desc | on_failure_desc | is_state_enabled | queue_delay | max_file_size | max_rollover_files | max_files | reserve_disk_space | log_file_path | predicate | status_desc | status_time | audit_file_path | audit_file_size |
@@ -317,6 +329,10 @@ WITH (STATE = ON);
 GO
 ```
 
+```text
+Command completed successfully.
+```
+
 #### `sys.server_audit_specifications` | verify the specification header
 
 Immediately after `CREATE SERVER AUDIT SPECIFICATION` to confirm the object exists and is enabled, and whenever audit coverage is being reviewed. It is typically triggered by deployment verification, audit-change investigation after an `AUDIT_CHANGE_GROUP` event, or scheduled compliance review. Read-only T-SQL from any database. Requires `ALTER ANY SERVER AUDIT` or `VIEW ANY DEFINITION`. No runtime impact. Return the one-row header summary of the server audit specification, proving it is enabled and identifying which audit it is bound to.
@@ -340,6 +356,10 @@ SELECT
     modify_date
 FROM sys.server_audit_specifications
 WHERE name = 'codex_audit_server_spec';
+```
+
+```text
+Result set shown below.
 ```
 
 | name | is_state_enabled | is_session_context_enabled | create_date | modify_date |
@@ -381,6 +401,10 @@ JOIN sys.server_audit_specifications AS sas
     ON sad.server_specification_id = sas.server_specification_id
 WHERE sas.name = 'codex_audit_server_spec'
 ORDER BY sad.audit_action_name;
+```
+
+```text
+Result set shown below.
 ```
 
 | audit_action_id | audit_action_name | class_desc | audited_result | is_group |
@@ -445,6 +469,10 @@ WITH (STATE = ON);
 GO
 ```
 
+```text
+Command completed successfully.
+```
+
 #### `sys.database_audit_specifications` | verify the specification header
 
 After `CREATE DATABASE AUDIT SPECIFICATION` to confirm the object is enabled, and during any scheduled compliance review of per-database audit coverage. It is typically triggered by deployment verification, database onboarding, or follow-up on an `AUDIT_CHANGE_GROUP` event at the server scope. Read-only T-SQL connected to the target database. Requires `ALTER ANY DATABASE AUDIT` or `VIEW DEFINITION` on the database. Return the one-row header summary of the database audit specification to prove it is enabled and tied to the expected server audit.
@@ -471,6 +499,10 @@ SELECT
     modify_date
 FROM sys.database_audit_specifications
 WHERE name = 'codex_audit_db_spec';
+```
+
+```text
+Result set shown below.
 ```
 
 | name | is_state_enabled | is_session_context_enabled | create_date | modify_date |
@@ -515,6 +547,10 @@ JOIN sys.database_audit_specifications AS das
     ON dad.database_specification_id = das.database_specification_id
 WHERE das.name = 'codex_audit_db_spec'
 ORDER BY dad.audit_action_name;
+```
+
+```text
+Result set shown below.
 ```
 
 | audit_action_id | audit_action_name | class_desc | audited_result | is_group |
@@ -593,6 +629,10 @@ FROM sys.server_audits
 WHERE name = 'codex_audit_demo';
 ```
 
+```text
+Result set shown below.
+```
+
 | name | predicate | is_state_enabled |
 |---|---|---|
 | `codex_audit_demo` | `([server_principal_name]='sa')` | True |
@@ -632,6 +672,10 @@ WHERE action_id IN (
 ORDER BY action_id;
 ```
 
+```text
+Result set shown below.
+```
+
 | action_id | action_name |
 |---|---|
 | `APRL` | `ADD MEMBER` |
@@ -654,7 +698,7 @@ _The DMV resolves every code the note exercises. The two-character codes (`SL`, 
 
 ## Read And Triage Audit Files
 
-> [!abstract] Audit file reading scope
+> [!abstract]- Summary
 >
 > This section covers `sys.fn_get_audit_file`: how to query the binary `.sqlaudit` files from T-SQL, which columns to select for the common forensic questions (who, from where, running what, against which object), and how to compress a noisy event stream into a one-row summary per action type. The SQL Server 2022 permission to call this function is `VIEW SERVER SECURITY AUDIT`, a change from `CONTROL SERVER` in SQL Server 2019 and earlier.
 
@@ -710,6 +754,10 @@ FROM sys.fn_get_audit_file('/var/opt/mssql/log/audit/*.sqlaudit', DEFAULT, DEFAU
 WHERE action_id IN ('LGIF', 'SL  ', 'AUSC', 'CR  ')
   AND event_time > DATEADD(MINUTE, -5, GETUTCDATE())
 ORDER BY event_time DESC;
+```
+
+```text
+Result set shown below.
 ```
 
 | event_time | action_id | succeeded | server_principal_name | database_name | schema_name | object_name | statement_prefix | client_ip | application_name |
@@ -786,6 +834,10 @@ GROUP BY action_id
 ORDER BY event_count DESC, action_id;
 ```
 
+```text
+Result set shown below.
+```
+
 | action_id | event_count | distinct_principals | distinct_client_ips | earliest_event | latest_event |
 |---|---|---|---|---|---|
 | `LGIS` | 26 | 1 | 2 | `2026-04-11 16:37:51.436` | `2026-04-11 16:39:38.158` |
@@ -809,7 +861,7 @@ _The 26 successful logins (`LGIS`) span two distinct client IPs (host Python at 
 
 ## Detect Failed-Login Bursts
 
-> [!abstract] Burst detection scope
+> [!abstract]- Summary
 >
 > This section converts raw `LGIF` events into an actionable alert query: a single row per attacking source IP, with the total failure count, the duration of the burst, and the number of distinct logins targeted. The same pattern can be extended to grouping by `server_principal_name` (who is being attacked) or `application_name` (which tool is generating the burst).
 
@@ -841,6 +893,10 @@ HAVING COUNT(*) > 10
 ORDER BY failed_attempts DESC;
 ```
 
+```text
+Result set shown below.
+```
+
 | client_ip | failed_attempts | first_attempt | last_attempt | attack_duration_seconds | distinct_logins_tried |
 |---|---|---|---|---|---|
 | `172.18.0.2` | 12 | `2026-04-11 16:38:46.064` | `2026-04-11 16:38:48.759` | 2 | 1 |
@@ -859,7 +915,7 @@ _This is a clear burst. One client IP (`172.18.0.2` — the container internal n
 
 ## SQL Server Audit Permissions
 
-> [!abstract] Audit permissions scope
+> [!abstract]- Summary
 >
 > This section documents exactly which permissions are required to create, modify, read, and destroy audit objects. The set changed meaningfully in SQL Server 2022: reading the audit stream no longer requires `CONTROL SERVER`. Getting the permissions wrong produces either over-privileged auditors or silent failures where the function returns zero rows because the caller cannot read the audit files.
 
@@ -890,7 +946,7 @@ During initial audit deployment to assign the correct fixed server role or granu
 
 ## Break-Glass And Cleanup
 
-> [!abstract] Teardown order scope
+> [!abstract]- Summary
 >
 > This section covers the dependency order for safely dropping an audit, recovering from a wedged audit target, and cleaning up the `.sqlaudit` files on disk after a server audit is removed. Teardown order matters: `DROP SERVER AUDIT` fails while specifications are attached, and `DROP DATABASE AUDIT SPECIFICATION` fails if the specification is enabled, so the correct sequence is strictly bottom-up.
 
@@ -916,6 +972,10 @@ DROP DATABASE AUDIT SPECIFICATION codex_audit_db_spec;
 GO
 ```
 
+```text
+Command completed successfully.
+```
+
 #### `DROP SERVER AUDIT SPECIFICATION` | disable and drop the server spec
 
 After the database audit specification has been dropped and before the server audit itself is touched. It is typically triggered by full audit teardown or scope reduction that removes server-scope coverage. T-SQL session connected to `master`. Requires `ALTER ANY SERVER AUDIT` or `CONTROL SERVER`. Stop server-scope events from being captured and detach the specification from the server audit so the audit can be dropped cleanly.
@@ -932,6 +992,10 @@ GO
 
 DROP SERVER AUDIT SPECIFICATION codex_audit_server_spec;
 GO
+```
+
+```text
+Command completed successfully.
 ```
 
 #### `DROP SERVER AUDIT` | disable and drop the server audit
@@ -960,6 +1024,10 @@ DROP SERVER AUDIT codex_audit_demo;
 GO
 ```
 
+```text
+Command completed successfully.
+```
+
 #### `rm` | remove stale audit files from disk
 
 After `DROP SERVER AUDIT` has completed, once any off-host archive or evidence-retention requirement has been satisfied. It is typically triggered by final teardown step, or periodic filesystem hygiene when a retention policy is in place but `MAX_ROLLOVER_FILES` alone does not delete files that a replaced audit left behind. Shell command inside the SQL Server container, run as a privileged user (root in most containers). Requires write permission on the audit directory. Not reversible — preserve off-host copies first if the files are evidence. `DROP SERVER AUDIT` removes the metadata and stops writes, but the `.sqlaudit` files themselves are not deleted by the engine — a replaced audit with a different GUID would leave the old files in place forever. This step is the explicit filesystem cleanup that removes them.
@@ -978,7 +1046,7 @@ _The empty listing confirms the filesystem cleanup. Before this step runs, `ls -
 
 ## Operational Integration
 
-> [!abstract] Operational integration scope
+> [!abstract]- Summary
 >
 > This section covers the host-side view of the audit target — filesystem ownership, mode, and size verification — and the off-host forwarding pipeline that ships the `.sqlaudit` files plus a structured export to Cloud Logging and GCS. A local-only audit is weaker against host compromise and instance loss; off-host forwarding is the evidence-chain control.
 

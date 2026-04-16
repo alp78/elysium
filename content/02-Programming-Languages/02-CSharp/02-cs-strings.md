@@ -11,7 +11,7 @@ status: complete
 
 # 02. Strings - C#
 
-> [!quote]
+> [!quote]- Yukihiro Matsumoto
 > "In our daily lives as programmers, we process text strings a lot. So I tried to work hard on text processing, namely the string class and regular expressions."
 >
 > — **Yukihiro Matsumoto**, creator of Ruby
@@ -312,6 +312,7 @@ Console.WriteLine($"'{"hello" + " " + "world"}'");
 C# strings have three distinct "nothing" states: `null` (no object), `""` (empty string with zero length), and whitespace-only (contains only spaces, tabs, or newlines). `string.IsNullOrEmpty` catches the first two; `string.IsNullOrWhiteSpace` catches all three. Prefer `string.Empty` over `""` for clarity when declaring empty strings.
 
 > [!tip] IsNullOrEmpty vs IsNullOrWhiteSpace
+>
 > Use `IsNullOrWhiteSpace` when validating user input or external data — whitespace-only strings are almost never meaningful. Reserve `IsNullOrEmpty` for internal logic where whitespace may be intentional (e.g., formatting strings).
 
 *This example shows how to check for empty, null, and whitespace strings.*
@@ -348,9 +349,11 @@ The single most important property of `System.String` — every operation that a
 Once a `string` is created, its character sequence cannot change. Indexing into a string with assignment (`s[0] = 'H'`) is a compile error. Any transformation — `ToUpper()`, `Replace()`, `Substring()`, or concatenation — allocates a new `string` on the heap. The original is unchanged and becomes eligible for garbage collection if no other reference points to it.
 
 > [!warning] Anti-pattern — concatenation in loops
+>
 > Each `+=` in a loop creates a new string object, copying all previous characters. For *n* iterations this is O(n²) in both time and allocations.
 
 > [!success] Correct pattern
+>
 > Use `StringBuilder` for loop-based construction, `string.Join` for collections, and `+` or `$""` only for small, fixed concatenations (2–5 parts).
 
 *This example shows that string methods return new values instead of modifying the original string instance.*
@@ -470,9 +473,11 @@ Console.WriteLine($"'{new string(arr)}'");
 Accessing a character beyond the string length throws `IndexOutOfRangeException`. Using a Range that exceeds bounds throws `ArgumentOutOfRangeException`. Neither returns `null` or a default — C# fails fast on invalid access.
 
 > [!danger] No silent failure
+>
 > Unlike some languages that return empty strings or `None` for out-of-range access, C# throws immediately. Always validate indices against `s.Length` when working with dynamic positions.
 
 > [!success] Safe access pattern
+>
 > Check bounds before indexing, or use `TryGetValue`-style patterns with ranges:
 > ```csharp
 > string safe = index < s.Length ? s[index].ToString() : "(out of range)";
@@ -725,6 +730,7 @@ Methods for comparing strings for equality and sort order — distinct from sear
 `string.Compare` returns a negative, zero, or positive `int` indicating sort order. `CompareTo` is the instance-method equivalent but defaults to `CurrentCulture` comparison — making it culture-sensitive and inappropriate for programmatic keys. `string.CompareOrdinal` performs a fast code-point-by-code-point comparison without culture rules — use it for identifiers, keys, and paths where linguistic sorting is irrelevant.
 
 > [!question] Ordinal vs culture-aware comparison
+>
 > Use `StringComparison.Ordinal` (or `OrdinalIgnoreCase`) for internal identifiers, dictionary keys, file paths, and protocol strings. Use `StringComparison.CurrentCulture` only when displaying sorted results to users where locale-specific ordering matters (e.g., German ä sorting near a).
 
 *This example shows how to compare strings for ordering with string.Compare and CompareTo.*
@@ -811,6 +817,7 @@ Converting between strings (UTF-16 in memory) and byte arrays for I/O, hashing, 
 `Encoding.UTF8.GetBytes` serializes a string to a UTF-8 byte array; `GetString` reverses the process. Use `Encoding.ASCII` for 7-bit ASCII or `Encoding.Unicode` for UTF-16LE. For pure ASCII strings, UTF-8 and ASCII produce identical bytes.
 
 > [!tip] BOM awareness
+>
 > `Encoding.UTF8` does not emit a BOM (byte order mark). Use `new UTF8Encoding(true)` if a BOM is required for file interoperability.
 
 *This example shows how to convert between strings and byte arrays with Encoding.*
@@ -1469,6 +1476,7 @@ The `[GeneratedRegex]` attribute replaces `RegexOptions.Compiled` with build-tim
 Decorate a `partial` method returning `Regex` with `[GeneratedRegex]`. The source generator emits optimized matching code at compile time, eliminating the runtime IL-emit cost of `RegexOptions.Compiled`. The generated code is also compatible with Native AOT and trimming, which `Compiled` is not.
 
 > [!tip] When to use GeneratedRegex vs Compiled
+>
 > Use `[GeneratedRegex]` for all patterns known at compile time — it is strictly better than `Compiled` in every dimension (startup, throughput, AOT). Reserve `new Regex(..., RegexOptions.Compiled)` only when the pattern is constructed dynamically at runtime. Analyzer `SYSLIB1045` automatically flags existing `Regex` usages that can be converted, with a one-click fixer in Visual Studio.
 
 #### Declare and call a source-generated regex
@@ -1558,20 +1566,180 @@ Console.WriteLine(match.Value);
 - **Use `string.Create()`** (.NET 5+) for advanced zero-allocation string construction with a `SpanAction<char>` callback.
 - **Avoid `string.Format()`** in new code — prefer `$""` interpolation. Use `string.Format()` only when the template is a runtime variable.
 
-## Troubleshooting
+### Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `NullReferenceException` on string method | Called `.Length`, `.Trim()`, etc. on a `null` string | Check with `string.IsNullOrEmpty()` or use `?.` operator |
-| `IndexOutOfRangeException` on `s[i]` | Index exceeds `s.Length - 1` | Bounds-check first or use `s.AsSpan().Slice()` |
-| Case-insensitive match fails | Used `==` (ordinal, case-sensitive) | Use `string.Equals(a, b, StringComparison.OrdinalIgnoreCase)` |
-| Regex `Groups["name"]` returns empty | Named group didn't participate in the match | Check `group.Success` before accessing `.Value` |
-| `ArgumentException: parsing "..." - ...` | Invalid regex pattern syntax | Validate pattern separately; use `[GeneratedRegex]` for compile-time checking |
-| `StringBuilder` output has extra separators | Appended separator after every item including the last | Use `string.Join()` or skip the last separator with `if (i > 0)` |
-| Surrogate pair split | `s[i]` returned half of an emoji or rare character | Use `StringInfo.GetTextElementEnumerator()` for grapheme-safe iteration |
-| Encoding mismatch reading files | File is UTF-8 but read as default encoding | Specify `Encoding.UTF8` explicitly in `File.ReadAllText()` / `StreamReader` |
-| `Regex.Replace` performance is poor | Pattern not compiled and used in a tight loop | Use `[GeneratedRegex]` or `RegexOptions.Compiled` |
-| `FormatException` in `string.Format()` | Placeholder index exceeds number of arguments | Verify placeholder indices match the argument count |
+#### `NullReferenceException` on `string` methods
+`string` instance methods such as `.Length`, `.Trim()`, and `.Replace()` throw on `null`. Guard with `string.IsNullOrEmpty()` or a null-conditional fallback before you call the method.
+
+*This example checks a nullable `string` before trimming it.*
+
+```csharp
+string? input = null;
+Console.WriteLine(string.IsNullOrEmpty(input));
+Console.WriteLine(input?.Trim() ?? "(missing)");
+```
+
+```text
+True
+(missing)
+```
+
+#### `s[i]` throws `IndexOutOfRangeException`
+`string` indexing is 0-based and stops at `s.Length - 1`. Check the bounds first or slice with `s.AsSpan()` when you only need a safe range.
+
+*This example guards the index and then uses `AsSpan()` for a safe slice.*
+
+```csharp
+string s = "hello";
+int index = 7;
+Console.WriteLine(index < s.Length ? s[index] : '?');
+Console.WriteLine(s.AsSpan(1, 3).ToString());
+```
+
+```text
+?
+ell
+```
+
+#### `==` misses case-insensitive matches
+`==` is ordinal and case-sensitive. Use `string.Equals(a, b, StringComparison.OrdinalIgnoreCase)` when the comparison should ignore case.
+
+*This example compares the same two values with both operators.*
+
+```csharp
+string a = "Hello";
+string b = "hello";
+Console.WriteLine(a == b);
+Console.WriteLine(string.Equals(a, b, StringComparison.OrdinalIgnoreCase));
+```
+
+```text
+False
+True
+```
+
+#### `Groups["name"]` is empty
+A named group only carries text when it participated in the match. Check `group.Success` before reading `.Value`.
+
+*This example shows a named group that did not match any digits.*
+
+```csharp
+using System.Text.RegularExpressions;
+
+var match = Regex.Match("ID=", @"ID=(?<id>\d+)");
+var group = match.Groups["id"];
+Console.WriteLine(group.Success);
+Console.WriteLine($"'{group.Value}'");
+```
+
+```text
+False
+''
+```
+
+#### `ArgumentException` means the regex is invalid
+Regex syntax errors surface as `ArgumentException` when the pattern is parsed. Validate the pattern earlier, or rely on `[GeneratedRegex]` for compile-time patterns.
+
+*This example catches the parse error from an invalid pattern.*
+
+```csharp
+using System.Text.RegularExpressions;
+
+try
+{
+    _ = new Regex(@"(\d+");
+    Console.WriteLine("parsed");
+}
+catch (ArgumentException ex)
+{
+    Console.WriteLine(ex.GetType().Name);
+}
+```
+
+```text
+ArgumentException
+```
+
+#### `StringBuilder` separators should not trail
+Appending the separator after every item creates an extra suffix. Use `string.Join()` or add the separator only after the first item.
+
+*This example uses `string.Join()` to avoid a trailing separator.*
+
+```csharp
+string[] items = new[] { "a", "b", "c" };
+Console.WriteLine(string.Join(", ", items));
+```
+
+```text
+a, b, c
+```
+
+#### `s[i]` splits surrogate pairs
+A `char` is one UTF-16 code unit, not always one visible character. Use `StringInfo.GetTextElementEnumerator()` when you need grapheme-safe iteration.
+
+*This example enumerates text elements instead of raw UTF-16 code units.*
+
+```csharp
+using System.Globalization;
+
+string text = "A🙂B";
+var enumerator = StringInfo.GetTextElementEnumerator(text);
+while (enumerator.MoveNext())
+{
+    Console.WriteLine(enumerator.GetTextElement());
+}
+```
+
+```text
+A
+🙂
+B
+```
+
+#### `Encoding.UTF8` should be explicit
+Default encoding can differ from the file's actual bytes. Specify `Encoding.UTF8` when you read or write text that must round-trip cleanly.
+
+*This example encodes and decodes text with `Encoding.UTF8`.*
+
+```csharp
+using System.Text;
+
+byte[] bytes = Encoding.UTF8.GetBytes("café");
+Console.WriteLine(Encoding.UTF8.GetString(bytes));
+```
+
+```text
+café
+```
+
+#### `Regex.Replace()` slows down in tight loops
+A repeatedly parsed pattern wastes work. Cache the regex or use `[GeneratedRegex]` for patterns that are known at compile time.
+
+*This example reuses a compiled regex to replace phone numbers.*
+
+```csharp
+using System.Text.RegularExpressions;
+
+var phonePat = new Regex(@"\d{3}-\d{3}-\d{4}", RegexOptions.Compiled);
+Console.WriteLine(phonePat.Replace("Call 123-456-7890", "REDACTED"));
+```
+
+```text
+Call REDACTED
+```
+
+#### `string.Format()` needs matching placeholder indices
+`FormatException` usually means the composite-format indices do not line up with the argument list. Recheck the placeholders or switch to interpolation when the template is static.
+
+*This example uses matching indices and arguments.*
+
+```csharp
+Console.WriteLine(string.Format("{0} + {1} = {2}", 2, 3, 5));
+```
+
+```text
+2 + 3 = 5
+```
 
 ## Cross-References
 

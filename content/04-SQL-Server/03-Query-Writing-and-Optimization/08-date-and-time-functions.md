@@ -168,7 +168,7 @@ status: complete
 
 ## Date and Time Data Types
 
-> [!abstract] Naive vs zone-aware temporal types
+> [!abstract]- Summary
 >
 > SQL Server offers six temporal types in two families:
 >
@@ -182,6 +182,8 @@ status: complete
 *The cost and reach of each temporal type.*
 
 #### Storage bytes per type
+
+This query measures the on-disk footprint of representative temporal types.
 
 *Measure each type's on-disk footprint with `DATALENGTH()`.*
 
@@ -212,6 +214,8 @@ SELECT
 
 #### Full range of date and datetime2
 
+This query compares the minimum and maximum representable values.
+
 *Both types share a calendar range from year 1 to year 9999.*
 
 ```sql
@@ -233,6 +237,8 @@ The `dt2_max` output shows `.999999` not `.9999999` because the pyodbc client tr
 *The `(n)` in `datetime2(n)` chooses how many fractional-second digits are stored.*
 
 #### Scale 0, 3, and 7
+
+This query shows how `datetime2` precision changes as scale drops.
 
 *Watch the tail of the fractional seconds get trimmed as the scale drops.*
 
@@ -261,6 +267,8 @@ SELECT
 *Avoid `datetime` in new code; this is why.*
 
 #### 23:59:59.999 rounds forward a full day
+
+This query shows the legacy rounding trap at the end of the day.
 
 *`datetime` rounds to the nearest 1/300 second, and `.999` rounds up past midnight.*
 
@@ -298,6 +306,8 @@ The left column shows `datetime`'s infamous rounding bug: the value `23:59:59.99
 
 #### Rounding behaviour at 29, 30, and 59 seconds
 
+This query shows how `smalldatetime` rounds to the nearest minute.
+
 *`smalldatetime` rounds to the nearest whole minute at the 30-second mark.*
 
 ```sql
@@ -315,7 +325,7 @@ The 30-second mark rounds up; 29 seconds rounds down. This is independent of the
 
 ## Current Time Functions
 
-> [!abstract] Seven ways to ask "what time is it?"
+> [!abstract]- Summary
 >
 > SQL Server exposes seven built-in functions that return the current server time, and they differ in three important dimensions:
 >
@@ -330,6 +340,8 @@ The 30-second mark rounds up; 29 seconds rounds down. This is independent of the
 *Every current-time function called in the same query so their outputs can be compared directly.*
 
 #### All seven functions
+
+This query captures every current-time function in one result set.
 
 *Capture every variant at once. The `stoxx` Docker container runs at UTC, so the "local" and "UTC" values are identical — the precision and return-type differences are what matter.*
 
@@ -359,6 +371,8 @@ SELECT
 > - `CURRENT_TIMEZONE()` — returns a `sysname` naming the server's current Windows time zone.
 
 #### Precision: GETDATE vs SYSDATETIME
+
+This query compares the legacy and modern time functions at `datetime2(7)` precision.
 
 *Casting both to a high-precision `datetime2(7)` shows the legacy function's missing digits.*
 
@@ -395,7 +409,7 @@ SELECT
 
 ## DATEADD, DATEDIFF, and DATEDIFF_BIG
 
-> [!abstract] Temporal arithmetic
+> [!abstract]- Summary
 >
 > `DATEADD` shifts a date/time value forward or backward by a named unit. `DATEDIFF` counts how many boundaries of that unit are crossed between two values — **not** how much real time has elapsed. `DATEDIFF_BIG` is the large-integer variant for cases where the boundary count would overflow a 32-bit integer. Understanding the boundary-counting semantics is essential to avoiding the classic year-rollover and age-in-years traps.
 
@@ -404,6 +418,8 @@ SELECT
 *Shift a date/time value by a signed count of a given unit.*
 
 #### Basic shifts
+
+This query compares day, month, and year arithmetic on a fixed anchor date.
 
 *Add days, months, and years to a calendar date.*
 
@@ -426,6 +442,8 @@ SELECT
 > - Return type matches the input type (adding days to a `date` returns a `date`; adding hours to a `datetime2` returns a `datetime2`).
 
 #### Month-end rounding behaviour
+
+This query shows how `DATEADD` handles invalid target-month days.
 
 *Adding a month to January 31st does not produce a "March 3rd"; it produces the last valid day of February.*
 
@@ -455,6 +473,8 @@ SQL Server's rule is: after adding the named unit, if the resulting day would be
 
 #### The year-rollover trap
 
+This query shows why `DATEDIFF(YEAR, ...)` can overstate elapsed years.
+
 *One day apart across a year boundary returns "one year", "one month", and "one day" simultaneously.*
 
 ```sql
@@ -480,6 +500,8 @@ These two dates are 24 hours apart, yet `DATEDIFF(YEAR, ...)` returns **1**. The
 
 #### Exact age in years
 
+This query computes an age-style year difference and the birthday correction.
+
 *Subtract one from the DATEDIFF result when the anniversary has not yet been reached in the current year.*
 
 ```sql
@@ -500,6 +522,8 @@ SELECT
 The `CASE` subtracts `1` when the "as-of" month/day is before the birthday month/day. The `MONTH*100 + DAY` trick packs month and day into a single integer so a plain `<` comparison does the right thing without bumping into day-of-month edge cases.
 
 #### Boundary vs elapsed seconds
+
+This query contrasts boundary counting with elapsed-time intuition.
 
 *Two timestamps one second apart across an hour boundary return `1` for HOUR, MINUTE, and SECOND alike.*
 
@@ -528,6 +552,8 @@ SELECT
 
 #### 125 years in milliseconds overflows
 
+This query shows the 32-bit `DATEDIFF` overflow boundary.
+
 *`DATEDIFF(MILLISECOND, '1900-01-01', '2025-01-01')` cannot fit in a 32-bit integer.*
 
 ```sql
@@ -541,6 +567,8 @@ SELECT DATEDIFF(MILLISECOND, '1900-01-01', '2025-01-01');
 Error 535 is the overflow — the result would be about 3.9 trillion, far above the 2.1-billion limit of `int`.
 
 #### DATEDIFF_BIG — no overflow
+
+This query repeats the same span with `DATEDIFF_BIG`.
 
 *The `_BIG` variant returns `bigint` instead of `int`, so it can represent millisecond-scale differences across centuries.*
 
@@ -564,7 +592,7 @@ SELECT DATEDIFF_BIG(MILLISECOND, '1900-01-01', '2025-01-01') AS ms_since_1900;
 
 ## Date Parts and Components
 
-> [!abstract] Decomposing a date into its parts
+> [!abstract]- Summary
 >
 > T-SQL provides three overlapping ways to pull individual components out of a date/time value: `DATEPART` returns the numeric part, `DATENAME` returns the localized string form, and `YEAR` / `MONTH` / `DAY` are shortcuts for the most common `DATEPART` calls. Understanding all three is essential for building reporting queries, but using them in `WHERE` clauses against column values is the most common SARGability anti-pattern in T-SQL — so the second half of this section shows the fix.
 
@@ -573,6 +601,8 @@ SELECT DATEDIFF_BIG(MILLISECOND, '1900-01-01', '2025-01-01') AS ms_since_1900;
 *Extract numeric parts from a `datetime2` value.*
 
 #### Full part decomposition
+
+This query extracts the year, month, day, and clock parts from one timestamp.
 
 *Every datepart pulled from the same timestamp.*
 
@@ -610,6 +640,8 @@ SELECT
 
 #### DATENAME vs DATEPART
 
+This query compares string and numeric date-part extraction.
+
 *`DATENAME` returns the localized string form of a part, where applicable.*
 
 ```sql
@@ -639,6 +671,8 @@ The `month_name` and `weekday_name` values depend on the session's current langu
 
 #### The functions-on-column anti-pattern
 
+This query shows the SARGability cost of wrapping the column in a function.
+
 *Wrapping the column in a function disables index seeks.*
 
 ```sql
@@ -647,7 +681,7 @@ FROM silver.eurostoxx50_ohlcv
 WHERE YEAR([date]) = 2025 AND MONTH([date]) = 1;
 ```
 
-|  |
+| row_count |
 |---|
 | 1099 |
 
@@ -666,6 +700,8 @@ This query returns the correct answer, but the optimizer cannot seek an index on
 
 #### Half-open range fix
 
+This query rewrites the filter so the column stays bare.
+
 *Move all the computation to the literal side, leaving the column bare on the left side of the comparison.*
 
 ```sql
@@ -675,7 +711,7 @@ WHERE [date] >= '2025-01-01'
   AND [date] <  '2025-02-01';
 ```
 
-|  |
+| row_count |
 |---|
 | 1099 |
 
@@ -690,7 +726,7 @@ Same answer, 1099 rows. The difference is that this form is **SARGable** — the
 
 ## Parts-Based Constructors
 
-> [!abstract] Build dates from integers, not strings
+> [!abstract]- Summary
 >
 > The parts-based constructors `DATEFROMPARTS`, `DATETIME2FROMPARTS`, and `DATETIMEOFFSETFROMPARTS` assemble a temporal value from individual integer components. They are safer than concatenating strings and casting, because they type-check each argument at compile time and reject invalid combinations (February 30th, hour 25, negative months). Prefer them whenever the source data arrives as separate numeric columns.
 
@@ -699,6 +735,8 @@ Same answer, 1099 rows. The difference is that this form is **SARGable** — the
 *One constructor per temporal return type.*
 
 #### DATEFROMPARTS, DATETIME2FROMPARTS, DATETIMEOFFSETFROMPARTS
+
+This query builds equivalent values with parts-based constructors.
 
 *Build each type from integer inputs.*
 
@@ -726,6 +764,8 @@ SELECT
 
 #### Invalid combinations raise
 
+This query shows that invalid date parts fail fast.
+
 *Invalid date components produce a hard error — unlike string parsing which can quietly misinterpret them.*
 
 ```sql
@@ -747,7 +787,7 @@ February 30th does not exist and the constructor raises error 289. Compare this 
 
 ## EOMONTH and Business Boundaries
 
-> [!abstract] Period boundaries
+> [!abstract]- Summary
 >
 > Most reporting queries need period-boundary dates: first/last day of month, first/last day of quarter, first/last day of year. `EOMONTH` is the direct tool for month-end; the other boundaries are built from `DATEFROMPARTS`, `DATEADD`, and `DATEDIFF` with predictable patterns. Knowing these patterns by heart is what separates a fast writer of reporting SQL from someone who reinvents the wheel on every query.
 
@@ -756,6 +796,8 @@ February 30th does not exist and the constructor raises error 289. Compare this 
 *Return the last day of a given month, optionally offset by N months.*
 
 #### Basic and offset EOMONTH
+
+This query compares month-end calculation with and without an offset.
 
 *Last day of this month, next month, a leap-year February, and 11 months prior.*
 
@@ -783,6 +825,8 @@ SELECT
 *Build the start of the current month, quarter, and year.*
 
 #### First of month, quarter, year
+
+This query derives period starts from the same anchor date.
 
 *The three canonical period-start patterns.*
 
@@ -813,7 +857,7 @@ SELECT
 
 ## ISO 8601 Literals and Safe Parsing
 
-> [!abstract] Locale-independent date literals
+> [!abstract]- Summary
 >
 > SQL Server parses date literals according to the session's `DATEFORMAT` setting, which is derived from the login's default language. This means the string `'04/08/2025'` is `April 8` on an `mdy` session and `August 4` on a `dmy` session — a bug that will not be caught by any test because both parses succeed. The universal fix is to write every literal in **ISO 8601** form (`'2025-04-08'` or `'2025-04-08T14:30:00'`), which SQL Server interprets the same way regardless of `DATEFORMAT` or `LANGUAGE`.
 
@@ -822,6 +866,8 @@ SELECT
 *Two identical strings, two different parses.*
 
 #### DATEFORMAT mdy
+
+This query parses an ambiguous literal under U.S. month/day/year rules.
 
 *Session set to US-style month/day/year.*
 
@@ -835,6 +881,8 @@ SELECT CAST('04/08/2025' AS date) AS mdy_reading;
 | 2025-04-08 |
 
 #### DATEFORMAT dmy
+
+This query parses the same literal under day/month/year rules.
 
 *Same string, European-style day/month/year.*
 
@@ -865,6 +913,8 @@ The same string `'04/08/2025'` is interpreted as **April 8** on an `mdy` session
 
 #### ISO literal example
 
+This query shows the canonical ISO 8601 literal form.
+
 *A canonical ISO datetime literal cast to `datetime2`.*
 
 ```sql
@@ -880,6 +930,8 @@ SELECT CAST('2025-04-08T14:30:00' AS datetime2) AS iso_literal;
 *When you cannot control the input format, use `TRY_CONVERT` to parse without raising.*
 
 #### TRY_CONVERT returns NULL on failure
+
+This query shows how invalid inputs become `NULL` instead of errors.
 
 *Unparseable inputs produce `NULL` instead of an error, letting the query continue.*
 
@@ -904,7 +956,7 @@ SELECT
 
 ## AT TIME ZONE
 
-> [!abstract] Timezone-aware conversion
+> [!abstract]- Summary
 >
 > `AT TIME ZONE` is SQL Server's operator for timezone-aware date/time conversion. It always returns a `datetimeoffset` value in the target zone, regardless of the input type. Applied to a naive `datetime2`, it **attaches** the target zone's offset without converting. Applied to a `datetimeoffset`, it **converts** the stored instant into the target zone's wall-clock form. Chain two calls (`... AT TIME ZONE 'UTC' AT TIME ZONE 'Romance Standard Time'`) to convert a naive UTC value into Paris local time.
 >
@@ -915,6 +967,8 @@ SELECT
 *Treat a naive `datetime2` as if it were already in the target zone, and tag it with that zone's offset.*
 
 #### AT TIME ZONE 'UTC'
+
+This query attaches a UTC offset to a naive timestamp.
 
 *Wrap a naive value and declare "this was always UTC".*
 
@@ -942,6 +996,8 @@ The wall-clock value is unchanged (`15:30:00`), but the result is now a `datetim
 
 #### UTC to Paris
 
+This query converts a UTC instant into Paris local time.
+
 *First attach the zone (step 1), then convert to the target zone (step 2).*
 
 ```sql
@@ -968,6 +1024,8 @@ On `2025-03-10`, Paris was still on standard time (`+01:00` — DST starts on th
 *The catalog view listing every zone name SQL Server recognizes.*
 
 #### Sample zone offsets
+
+This query lists a few Windows zone names and their current offsets.
 
 *A handful of common zones and their current UTC offsets.*
 
@@ -1009,7 +1067,7 @@ The three columns are:
 
 ## DST and Boundary Pitfalls
 
-> [!abstract] Daylight saving is real
+> [!abstract]- Summary
 >
 > Daylight saving transitions create two pathological cases every year:
 >
@@ -1023,6 +1081,8 @@ The three columns are:
 *At 02:30 local on spring-forward day, the clock has already jumped to 03:30.*
 
 #### Paris spring-forward 2025
+
+This query shows how SQL Server handles the missing spring-forward hour.
 
 *March 30, 2025 was the European DST change day. 02:30 Paris local does not exist that day.*
 
@@ -1059,6 +1119,8 @@ The right column shows the correct way to handle the transition: start from UTC 
 *At 02:30 local on fall-back day, the clock says 02:30 twice — once at +02:00 and once at +01:00.*
 
 #### Paris fall-back 2025
+
+This query shows how SQL Server distinguishes the repeated fall-back hour.
 
 *October 26, 2025 was the European DST exit day. 02:30 Paris local happened twice.*
 
@@ -1098,6 +1160,8 @@ Both wall-clock strings are identical. Only the offset distinguishes them, and o
 
 #### BETWEEN misses the tail of the end day
 
+This query demonstrates why `BETWEEN` drops late-day rows.
+
 *A naive "BETWEEN start AND end" range excludes every event after midnight on the end day.*
 
 ```sql
@@ -1126,6 +1190,8 @@ Only the midnight event on April 30 is returned. The 12:00 and `23:59:59.9999999
 > - This is the most common production reporting bug in the entire temporal feature set.
 
 #### Half-open range covers the full day
+
+This query uses the half-open predicate to keep every row on the target day.
 
 *Use `>= start AND < next_start` to include every event in the target period.*
 
@@ -1159,7 +1225,7 @@ All three April 30 events are included, and the May 1 midnight event is correctl
 
 ## Practical Date Patterns
 
-> [!abstract] Production reporting shapes
+> [!abstract]- Summary
 >
 > Every reporting query in every organization boils down to the same handful of period-boundary patterns: "last N days", "current month", "year-to-date", "previous quarter". Writing them correctly means using SARGable predicates (half-open ranges, no functions on the column) and composing them from the EOMONTH / DATEFROMPARTS / DATEADD building blocks above.
 
@@ -1168,6 +1234,8 @@ All three April 30 events are included, and the May 1 midnight event is correctl
 *"Last N days" from a fixed anchor date.*
 
 #### Last 7 days against a real table
+
+This query pulls a real seven-day slice from `silver.eurostoxx50_ohlcv`.
 
 *Pull every row from the last week of trading through April 7, 2026.*
 
@@ -1194,6 +1262,8 @@ The half-open predicate `[date] >= '2026-04-01' AND [date] < '2026-04-08'` captu
 *Current-month window built from a parameterized anchor date.*
 
 #### Current month from an anchor
+
+This query computes an inclusive month start and exclusive month end.
 
 *Compute the first day of the month and the first day of the next month.*
 

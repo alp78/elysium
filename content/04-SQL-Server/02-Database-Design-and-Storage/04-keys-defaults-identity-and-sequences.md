@@ -275,6 +275,7 @@ FROM   dbo.race_keys_fact
 ORDER BY instrument_id, price_date;
 ```
 
+```text
 | instrument_id | price_date | close_price | volume |
 |---|---|---|---|
 | 1 | 2026-04-07 | 198.4300 | 15234000 |
@@ -282,6 +283,7 @@ ORDER BY instrument_id, price_date;
 | 1 | 2026-04-09 | 201.5500 | 17450000 |
 | 2 | 2026-04-07 | 62.1000  | 34120000 |
 | 2 | 2026-04-08 | 62.9400  | 29830000 |
+```
 
 Three rows for instrument 1 and two rows for instrument 2 coexist under a single primary key because the pair `(instrument_id, price_date)` is unique. The same `price_date = 2026-04-07` appears under both instruments without collision. A scan filtered by a single instrument is guaranteed to be a contiguous range on the clustered index, which is the I/O pattern fact queries overwhelmingly exhibit.
 
@@ -345,6 +347,7 @@ WHERE  object_id = OBJECT_ID('dbo.race_keys_instrument')
 ORDER BY column_id;
 ```
 
+```text
 | name | object_id | is_identity |
 |---|---|---|
 | instrument_id | 199671759 | True |
@@ -352,6 +355,7 @@ ORDER BY column_id;
 | valid_from | 199671759 | False |
 | valid_to | 199671759 | False |
 | is_current | 199671759 | False |
+```
 
 Exactly one column is flagged `is_identity = True` — SQL Server enforces the "one identity column per table" rule silently via metadata. The fact that `is_identity` is a `sys.columns` attribute (not a separate system table) means the identity property travels with the column definition through DDL changes.
 
@@ -383,9 +387,11 @@ FROM    sys.identity_columns c
 WHERE   c.object_id = OBJECT_ID('dbo.race_keys_instrument');
 ```
 
+```text
 | schema_name | table_name | column_name | seed_value | increment_value | last_value | is_not_for_replication |
 |---|---|---|---|---|---|---|
 | dbo | race_keys_instrument | instrument_id | 1 | 1 | NULL | False |
+```
 
 `last_value = NULL` confirms no rows have been inserted yet — the engine allocates the first value only on the first successful insert, and the catalog column stays `NULL` until then. `seed_value = 1` and `increment_value = 1` match the `IDENTITY(1,1)` declaration. The next successful insert will set `last_value = 1`.
 
@@ -423,9 +429,11 @@ SELECT SCOPE_IDENTITY() AS last_scope_identity,
        IDENT_CURRENT('dbo.race_keys_instrument') AS table_current_identity;
 ```
 
+```text
 | last_scope_identity | last_session_identity | table_current_identity |
 |---|---|---|
 | 1 | 1 | 1 |
+```
 
 On an empty, trigger-free table the three functions agree. The differences become visible only under triggers or concurrent load; the table above is only useful for teaching the call pattern. In production code always use `SCOPE_IDENTITY()` for single-row retrieval — even if there are no triggers today, adding one later must not silently corrupt existing identity reads.
 
@@ -457,11 +465,13 @@ VALUES  ('MSFT', '2026-01-01', '9999-12-31', 1),
         ('AMZN', '2026-01-01', '9999-12-31', 1);
 ```
 
+```text
 | instrument_id | symbol | valid_from |
 |---|---|---|
 | 2 | MSFT | 2026-01-01 00:00:00 |
 | 3 | NVDA | 2026-01-01 00:00:00 |
 | 4 | AMZN | 2026-01-01 00:00:00 |
+```
 
 The three identity values `2, 3, 4` follow the previous `1` and were assigned atomically by the engine. No follow-up SELECT is needed — the application can consume the result set directly from the INSERT. `SCOPE_IDENTITY()` after this statement would return only `4` (the last value issued), which is why `OUTPUT INSERTED` is the correct multi-row retrieval pattern.
 
@@ -496,6 +506,7 @@ FROM   dbo.race_keys_instrument
 ORDER BY instrument_id;
 ```
 
+```text
 | instrument_id | symbol |
 |---|---|
 | 1 | AAPL |
@@ -503,6 +514,7 @@ ORDER BY instrument_id;
 | 3 | NVDA |
 | 4 | AMZN |
 | 6 | GOOGL |
+```
 
 The identity value `5` is missing. It was reserved for the rejected `AAPL` duplicate (which failed `UQ_race_keys_instrument_symbol_valid_from`), then discarded. The subsequent successful `GOOGL` insert was assigned `6`. This is exactly the gap pattern that appears in production whenever retry logic, bulk loads, or constraint conflicts run through an identity table. It is not a bug to report.
 
@@ -524,9 +536,11 @@ SELECT IDENT_CURRENT('dbo.race_keys_instrument') AS current_identity,
        (SELECT MAX(instrument_id) FROM dbo.race_keys_instrument) AS max_in_table;
 ```
 
+```text
 | current_identity | max_in_table |
 |---|---|
 | 6 | 6 |
+```
 
 The engine's counter (`6`) and the physical maximum (`6`) match, which means the next insert will start at `7`. The missing `5` is a gap in the issued range, not a mismatch between the counter and the table. `DBCC CHECKIDENT ... RESEED` would not do anything here because the counter is already at the max. Reseeding would only be meaningful if the counter had drifted *below* the max — the common case when someone ran `SET IDENTITY_INSERT` to load a value beyond the current counter.
 
@@ -561,9 +575,11 @@ WHERE  instrument_id >= 100
 ORDER BY instrument_id;
 ```
 
+```text
 | instrument_id | symbol |
 |---|---|
 | 100 | META |
+```
 
 The row is now present at `instrument_id = 100`, jumping over all the intermediate values. Because `100` is above the previous counter (`6`), the engine reseeded automatically — SQL Server detects the override and advances the internal counter past the inserted value, so the next auto-insert will produce `101`.
 
@@ -578,6 +594,7 @@ FROM dbo.race_keys_instrument
 ORDER BY instrument_id DESC;
 ```
 
+```text
 | instrument_id | symbol |
 |---|---|
 | 101 | TSLA |
@@ -585,6 +602,7 @@ ORDER BY instrument_id DESC;
 | 6 | GOOGL |
 | 4 | AMZN |
 | 3 | NVDA |
+```
 
 The next auto-generated value is `101`, exactly one step above the explicit `100`. Notice the enormous gap from `6` to `100` in the middle of the table — legitimate, but guaranteed by the combination of the failed insert (loss of `5`) and the `IDENTITY_INSERT` override (skip of `7..99`). Anyone auditing the table who expects contiguous values will be puzzled; anyone who understands the `IDENTITY` contract will not.
 
@@ -632,9 +650,11 @@ JOIN    sys.types t ON t.user_type_id = c.user_type_id
 WHERE   c.object_id = OBJECT_ID('dbo.race_keys_instrument');
 ```
 
+```text
 | schema_name | table_name | column_name | data_type | last_value | type_max_value | pct_consumed |
 |---|---|---|---|---|---|---|
 | dbo | race_keys_instrument | instrument_id | int | 101 | 2147483647 | 0.000005 |
+```
 
 `pct_consumed` of `0.000005` is essentially zero — expected on a test table. In production the interesting rows are the ones climbing past single digits. A useful operational rule of thumb:
 
@@ -792,9 +812,11 @@ JOIN    sys.types t ON t.user_type_id = s.user_type_id
 WHERE   s.name = 'race_keys_seq';
 ```
 
+```text
 | sequence_name | schema_name | data_type | start_value | increment | minimum_value | maximum_value | is_cycling | is_cached | cache_size | current_value | last_used_value | is_exhausted |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | race_keys_seq | dbo | bigint | 1000 | 1 | 1000 | 9999999 | False | True | 50 | 1000 | NULL | False |
+```
 
 `current_value` shows `1000` — the engine reports the last obligated value, but since no `NEXT VALUE FOR` has been called yet, it still holds the `START WITH` value. `last_used_value` is `NULL` — this column (added in SQL Server 2017) only populates after the first consumption. `cache_size = 50` matches the DDL. Once `NEXT VALUE FOR` is called, the engine obligates the first 50 values in one system-table write, updates `current_value` to `1049`, and hands out `1000` from the in-memory cache.
 
@@ -838,13 +860,17 @@ SELECT pipeline_run_id, pipeline_name, started_at_utc, status_code
 FROM   dbo.race_keys_pipeline_run;
 ```
 
+```text
 | pipeline_run_id | pipeline_name | started_at_utc | status_code |
 |---|---|---|---|
 | 1000 | daily_eurostoxx_pipeline | 2026-04-11 21:19:36.373 | pending |
+```
 
 The row gets `pipeline_run_id = 1000` (the `START WITH` value), `started_at_utc` is populated by the `SYSUTCDATETIME()` default, and `status_code` is populated by the literal `'pending'` default. The caller only supplied the `pipeline_name`.
 
 #### Let the DEFAULT pull from the sequence
+
+Use this pattern when the table should own the surrogate allocation policy and callers should never hard-code the generated key.
 
 *This example inserts two more rows and lets every default fire.*
 
@@ -858,11 +884,13 @@ FROM   dbo.race_keys_pipeline_run
 ORDER BY pipeline_run_id;
 ```
 
+```text
 | pipeline_run_id | pipeline_name | status_code |
 |---|---|---|
 | 1000 | daily_eurostoxx_pipeline | pending |
 | 1001 | daily_stoxxusa_pipeline | pending |
 | 1002 | daily_oil20_pipeline | pending |
+```
 
 The two new rows take `1001` and `1002` — the sequence's internal counter moved even though the caller never named it. This is the smallest working example of a sequence behaving exactly like an identity column from the caller's point of view.
 
@@ -895,9 +923,11 @@ SELECT CAST(@first AS bigint)       AS first_value,
        @cycle_count                 AS cycle_count;
 ```
 
+```text
 | first_value | last_value | cycle_count |
 |---|---|---|
 | 1003 | 1012 | 0 |
+```
 
 The block starts at `1003` (right after the three rows we already inserted at `1000..1002`) and runs to `1012`. `cycle_count = 0` because this is a `NO CYCLE` sequence and the range fit without wrapping. The caller now owns ten consecutive values and can use them in any order, in any table, without a second round-trip.
 
@@ -910,9 +940,11 @@ FROM    sys.sequences
 WHERE   name = 'race_keys_seq';
 ```
 
+```text
 | current_value | last_used_value |
 |---|---|
 | 1012 | 1012 |
+```
 
 Both fields advanced to `1012` — the sequence records the end of the most recently issued block, even though the caller may not yet have consumed every value in it. This is why the "gap on crash" warning matters: if the instance were to crash now, the entire block `1003..1012` would be forever burned, even if the application had only actually used three of the ten.
 
@@ -942,9 +974,11 @@ SELECT NEXT VALUE FOR dbo.race_keys_seq AS first_after_restart,
        NEXT VALUE FOR dbo.race_keys_seq AS second_after_restart;
 ```
 
+```text
 | first_after_restart | second_after_restart |
 |---|---|
 | 5000 | 5000 |
+```
 
 Both columns show `5000` — per the ANSI rule, two `NEXT VALUE FOR` calls in the same `SELECT` bind to the same value for the single row being projected. This is a hard trap: a developer who writes `SELECT seq.NEXT, seq.NEXT` expecting `5000, 5001` will see `5000, 5000` in both columns. The fix is to split the calls across two statements, or to wrap them in `OVER (ORDER BY ...)` when the source produces multiple rows.
 
@@ -1034,11 +1068,13 @@ WHERE   dc.parent_object_id = OBJECT_ID('dbo.race_keys_event')
 ORDER BY dc.parent_column_id;
 ```
 
+```text
 | constraint_name | table_name | column_name | definition |
 |---|---|---|---|
 | DF_race_keys_event_created | race_keys_event | created_at_utc | (sysutcdatetime()) |
 | DF_race_keys_event_severity | race_keys_event | severity | ('info') |
 | DF_race_keys_event_payload | race_keys_event | payload | (N'{}') |
+```
 
 Three defaults are attached: two added inline at `CREATE TABLE`, one added later via `ALTER TABLE ... ADD CONSTRAINT ... FOR`. All three follow the `DF_` naming convention, so migration scripts can drop them by name. The `definition` column shows the exact expression — note the engine keeps the parentheses and the case/quoting SQL Server uses internally (`sysutcdatetime()` lower-case).
 
@@ -1060,11 +1096,13 @@ FROM   dbo.race_keys_event
 ORDER BY event_id;
 ```
 
+```text
 | event_id | event_name | created_at_utc | severity | payload |
 |---|---|---|---|---|
 | 1 | ingest_started | 2026-04-11 21:19:36.406 | info | {} |
 | 2 | rowcount_ok | 2026-04-11 21:19:36.406 | info | {} |
 | 3 | quarantine_hit | 2026-04-11 21:19:36.406 | warn | {"bad_rows":12} |
+```
 
 Row 1 omitted `created_at_utc`, `severity`, and `payload` — all three defaults fired. Row 2 supplied `severity` explicitly but still relied on the other defaults — only the omitted columns picked up defaults, the explicit `'info'` passed through as a regular value. Row 3 supplied all three columns, so no defaults fired and the explicit `{"bad_rows":12}` landed unchanged. This is the exact "fire only when omitted" contract, and it is why a default never replaces a value the application actually sent.
 
@@ -1121,9 +1159,11 @@ END;
 SELECT COUNT(*) AS rows_inserted FROM dbo.race_keys_guid_random;
 ```
 
+```text
 | rows_inserted |
 |---|
 | 2000 |
+```
 
 *This setup creates the sequential-GUID table with the same schema and row count.*
 
@@ -1146,9 +1186,11 @@ END;
 SELECT COUNT(*) AS rows_inserted FROM dbo.race_keys_guid_sequential;
 ```
 
+```text
 | rows_inserted |
 |---|
 | 2000 |
+```
 
 Both tables now hold 2000 rows of identical size. Each `payload` is a 200-character filler column, so the row width is dominated by the GUID key (16 bytes) plus the payload (200 bytes). The only difference between the two tables is the PK default expression.
 
@@ -1180,10 +1222,12 @@ WHERE   ips.object_id IN (
 ORDER BY table_name;
 ```
 
+```text
 | table_name | index_type_desc | page_count | record_count | avg_frag_pct | avg_page_fill_pct |
 |---|---|---|---|---|---|
 | race_keys_guid_random | CLUSTERED INDEX | 86 | 2000 | 97.67 | 68.65 |
 | race_keys_guid_sequential | CLUSTERED INDEX | 61 | 2000 | 1.64 | 96.79 |
+```
 
 The measurement is decisive. For the same 2000 rows:
 
@@ -1243,11 +1287,13 @@ FROM   dbo.race_keys_rowversion
 ORDER BY account_id;
 ```
 
+```text
 | account_id | balance | rv |
 |---|---|---|
 | 1 | 1000.00 | 0x00000000000529D0 |
 | 2 | 250.00 | 0x00000000000529D1 |
 | 3 | 5000.00 | 0x00000000000529D2 |
+```
 
 Each insert produced a `rowversion` value one greater than the previous one, confirming that the counter is database-scoped (not table-scoped). The hex values have no clock meaning, only an ordinal one: `0x529D2 > 0x529D1 > 0x529D0`, so account 3 was inserted after accounts 1 and 2.
 
@@ -1272,13 +1318,17 @@ SELECT @@ROWCOUNT AS rows_updated,
        CASE WHEN @@ROWCOUNT = 1 THEN 'applied' ELSE 'conflict' END AS outcome;
 ```
 
+```text
 | rows_updated | outcome |
 |---|---|
 | 1 | applied |
+```
 
 The UPDATE matched the stored `rv` token, so `@@ROWCOUNT = 1` and the balance is reduced by 100. In real code the client would typically re-read the row afterwards to get the new `rv` for the next edit.
 
 #### Detect an optimistic conflict
+
+Use this pattern when stale writes must be rejected instead of silently overwriting a concurrent change.
 
 *This example captures a rowversion, then lets something else update the row, and finally attempts an UPDATE against the stale token.*
 
@@ -1299,9 +1349,11 @@ SELECT @@ROWCOUNT AS rows_updated,
        CASE WHEN @@ROWCOUNT = 1 THEN 'applied' ELSE 'conflict - retry' END AS outcome;
 ```
 
+```text
 | rows_updated | outcome |
 |---|---|
 | 0 | conflict - retry |
+```
 
 The intermediate `UPDATE balance = balance + 1` advanced the row's `rv` value, so when the second `UPDATE` tried to match against the stale token, the `WHERE rv = @stale_rv` predicate found no row. `@@ROWCOUNT = 0` tells the client that a conflict occurred and the change was rejected — the correct response is to re-read the row, reapply the business logic, and retry. The database is never in an inconsistent state: either the update applies atomically or it is rejected atomically.
 
@@ -1324,9 +1376,11 @@ SELECT  CAST(MIN_ACTIVE_ROWVERSION() AS bigint) AS min_active_rv_as_bigint,
         CAST(@@DBTS                    AS bigint) AS db_ts_as_bigint;
 ```
 
+```text
 | min_active_rv_as_bigint | db_ts_as_bigint |
 |---|---|
 | 338392 | 338391 |
+```
 
 When no transactions are active, `MIN_ACTIVE_ROWVERSION()` equals `@@DBTS + 1` — the next value the engine will hand out. On a busy system with in-flight transactions, `MIN_ACTIVE_ROWVERSION()` is `<= @@DBTS` and the difference represents the window of "possibly-uncommitted" values the sync must wait on. Always store the `MIN_ACTIVE_ROWVERSION()` value as the watermark for the current window — not `@@DBTS` — and filter the next window's query on `rv >= previous_watermark AND rv < new_watermark`.
 

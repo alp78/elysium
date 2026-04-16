@@ -143,6 +143,8 @@ status: complete
 > >
 > > Stronger actions are justified only when the evidence is stronger. The ladder keeps operators from jumping straight to hints or forcing without enough diagnostic confidence.
 
+*Operational flow for Query Store regression triage.*
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -180,7 +182,7 @@ flowchart TD
 
 ## What Query Store Is
 
-> [!abstract] Persistent plan and runtime history per database
+> [!abstract]- Summary
 >
 > Query Store is a per-database feature introduced in SQL Server 2016 that captures, on disk, every query plan the optimizer compiles and every runtime observation made while executing those plans. It is **scoped to the database** (it lives inside the user database files, not `msdb` or `master`), **survives restarts** (the data is persisted, not just in-memory), and is the only tool in SQL Server that lets you compare two plan variants for the same logical query using historical data — the plan cache forgets plans as soon as they evict, Query Store does not.
 
@@ -205,7 +207,7 @@ The engine writes new query text, plans, and runtime statistics into an in-memor
 
 *Some Query Store features require specific SQL Server versions — check the server you are operating against.*
 
-Run this once before using Query Store Hints or the newer capture modes:
+*Check the server version before using Query Store Hints or the newer capture modes.*
 
 ```sql
 SELECT
@@ -214,9 +216,11 @@ SELECT
     SERVERPROPERTY('ProductLevel')        AS level;
 ```
 
+```text
 | v | major | level |
 |---|---|---|
 | Microsoft SQL Server 2022 (RTM-CU23) ... 16.0.4236.2 (X64) Developer Edition (64-bit) on Linux | 16 | RTM |
+```
 
 The `stoxx` lab runs on SQL Server 2022 (`major = 16`), so every feature in this note is available. The version gates that matter:
 
@@ -235,7 +239,7 @@ The `stoxx` lab runs on SQL Server 2022 (`major = 16`), so every feature in this
 
 ## Query Store Baseline
 
-> [!abstract] Verify Query Store is actually writable before trusting the workflow
+> [!abstract]- Summary
 >
 > Before using Query Store for regression analysis, plan forcing, or hints, verify that it is collecting writable runtime data. Query Store can silently switch to read-only mode (storage quota reached, database set to read-only, internal memory limits hit) and a read-only Query Store looks healthy at the configuration level while no longer capturing new data. The first query in any Query Store workflow is always "what state am I in right now?".
 
@@ -270,9 +274,11 @@ SELECT
 FROM sys.database_query_store_options;
 ```
 
+```text
 | desired_state_desc | actual_state_desc | readonly_reason | current_storage_size_mb | max_storage_size_mb | query_capture_mode_desc | wait_stats_capture_mode_desc |
 |---|---|---:|---:|---:|---|---|
 | `READ_WRITE` | `READ_WRITE` | 0 | 4 | 1000 | `ALL` | `ON` |
+```
 
 Desired and actual both report `READ_WRITE`, which means Query Store is actively collecting new plans and runtime observations. `readonly_reason = 0` confirms there is no active read-only blocker. Storage pressure is nowhere near the ceiling: 4 MB of 1000 MB in use. Capture mode is `ALL` (every query is captured), and wait statistics capture is `ON` — the strongest configuration for triage work.
 
@@ -294,6 +300,23 @@ Desired and actual both report `READ_WRITE`, which means Query Store is actively
 
 `readonly_reason` is a bitmap — multiple conditions can be active at once. Any non-zero value means Query Store is not capturing new data, and knowing which bits are set tells you what to fix.
 
+*Emit the bitmap lookup as a literal result set for reference.*
+
+```sql
+SELECT *
+FROM (VALUES
+    (1, N'Database is in read-only mode', N'Set the database read-write if you own it.'),
+    (2, N'Database is in single-user mode', N'Return to multi-user mode.'),
+    (4, N'Database is in emergency mode', N'Exit emergency mode; investigate the underlying failure.'),
+    (8, N'Database is a secondary replica (AG)', N'Expected on non-primary replicas; use READ_CAPTURE_SECONDARY if you need capture on secondaries (SQL 2022+).'),
+    (65536, N'Query Store reached max_storage_size_mb', N'Increase the ceiling or run SET QUERY_STORE CLEAR.'),
+    (131072, N'Internal in-memory limit on distinct statements hit', N'Clean old statements; consider upgrading SKU.'),
+    (262144, N'Pending in-memory items exceed the internal limit', N'Transient; resolves once the background flush catches up.'),
+    (524288, N'Database file size limit reached', N'Grow the database file or increase the disk quota.')
+) AS v([Bit value], [Meaning], [Fix]);
+```
+
+```text
 | Bit value | Meaning | Fix |
 |---:|---|---|
 | `1` | Database is in read-only mode | Set the database read-write if you own it. |
@@ -304,6 +327,7 @@ Desired and actual both report `READ_WRITE`, which means Query Store is actively
 | `131072` | Internal in-memory limit on distinct statements hit | Clean old statements; consider upgrading SKU. |
 | `262144` | Pending in-memory items exceed the internal limit | Transient; resolves once the background flush catches up. |
 | `524288` | Database file size limit reached | Grow the database file or increase the disk quota. |
+```
 
 > [!failure] Read-only mode is silent
 >
@@ -337,9 +361,11 @@ SELECT
 FROM sys.database_query_store_options;
 ```
 
+```text
 | interval_length_minutes | stale_query_threshold_days | max_plans_per_query | size_based_cleanup_mode_desc | flush_interval_seconds |
 |---:|---:|---:|---|---:|
 | 60 | 30 | 200 | `AUTO` | 900 |
+```
 
 The observation interval is 60 minutes, meaning all runtime statistics are aggregated into one-hour buckets. The retention policy keeps data for 30 days before cleanup. Each query may accumulate up to 200 plans before the cap applies. Size-based cleanup runs automatically when storage approaches the ceiling. The background flush task writes in-memory buffers to disk every 900 seconds (15 minutes).
 
@@ -353,6 +379,8 @@ The observation interval is 60 minutes, meaning all runtime statistics are aggre
 
 #### Force an immediate flush
 
+Use this when you need the latest runtime observations to appear in Query Store before you inspect them.
+
 *In lab or test scenarios, the runtime statistics you just generated may still be in the in-memory buffer, not yet visible to catalog views. Force the flush with `sp_query_store_flush_db`.*
 
 ```sql
@@ -360,9 +388,11 @@ EXEC sys.sp_query_store_flush_db;
 SELECT 'flushed' AS status;
 ```
 
+```text
 | status |
 |---|
 | flushed |
+```
 
 `sp_query_store_flush_db` writes the in-memory Query Store buffer to disk immediately, bypassing the `flush_interval_seconds` schedule. Use it between "run the query to be analyzed" and "read from `sys.query_store_*`" in reproducible lab workflows, otherwise you may query too early and see nothing.
 
@@ -375,7 +405,7 @@ SELECT 'flushed' AS status;
 
 ## Plan Regression Candidates
 
-> [!abstract] Find queries with materially different plan variants
+> [!abstract]- Summary
 >
 > A plan regression candidate is a query that Query Store has captured more than one plan for, where the plans have materially different runtime profiles. The fastest way to build a shortlist is to group `sys.query_store_runtime_stats` by `query_id`, count distinct plans, and compute the spread between the best and worst average duration across those plans. This shortlist is not proof that any of the listed queries are actually regressed — a query might legitimately be parameter-sensitive or might have had its plans captured across a schema change — but it is the correct starting point for triage.
 
@@ -413,6 +443,7 @@ HAVING COUNT(DISTINCT qsp.plan_id) > 1
 ORDER BY regression_factor DESC, worst_avg_ms DESC;
 ```
 
+```text
 | query_id | plan_count | best_avg_ms | worst_avg_ms | regression_factor | query_text |
 |---:|---:|---:|---:|---:|---|
 | 249 | 2 | 0.33 | 3.48 | 10.68 | `DELETE b FROM bronze.stoxxusa50_ohlcv b INNER JOIN ( SELECT symbol, MAX(date) AS max_date FROM bronze.stoxxusa50_ohlcv` |
@@ -425,6 +456,7 @@ ORDER BY regression_factor DESC, worst_avg_ms DESC;
 | 1880 | 4 | 10.21 | 14.92 | 1.46 | `UPDATE STATISTICS [silver].[stoxxusa50_ohlcv]` |
 | 2995 | 2 | 1675.26 | 2329.01 | 1.39 | `WITH n AS ( SELECT 1 AS batch_no UNION ALL SELECT 2 UNION ALL ... ) INSERT INTO dbo.demo_idxmaint_rowstore (batch` |
 | 3033 | 2 | 97.19 | 122.65 | 1.26 | `UPDATE STATISTICS dbo.demo_idxmaint_rowstore WITH FULLSCAN` |
+```
 
 The strongest candidates are the three `DELETE ... MAX(date)` bronze cleanup statements at the top, where the worst plan runs 7 to 11 times slower than the best. This is the kind of gap that justifies a closer look — not a command to force a plan blindly, but a strong signal to inspect those queries first. Notice that the bottom half of the list consists of `UPDATE STATISTICS` and index-maintenance statements; those are maintenance activities with inherently variable cost depending on the amount of data churn they encounter, so they produce "false positive" regression shortlist entries that should be filtered out of operational triage.
 
@@ -447,7 +479,7 @@ The strongest candidates are the three `DELETE ... MAX(date)` bronze cleanup sta
 
 ## Controlled Force-Plan Workflow
 
-> [!abstract] Reproducible lab demo for plan forcing
+> [!abstract]- Summary
 >
 > This section builds a disposable demo on `stoxx` to walk through the plan-forcing workflow end-to-end. It creates a lab table from real `silver.eurostoxx50_ohlcv` data, runs the same query twice (once without a supporting index, once with), inspects the two plans Query Store captured, forces the better plan, and finally applies a Query Store Hint to the same query. The goal is to make every step reproducible — and to show exactly what each catalog-view verification looks like so you can recognize success in production.
 
@@ -456,6 +488,8 @@ The strongest candidates are the three `DELETE ... MAX(date)` bronze cleanup sta
 The lab table is an intentionally simple copy of `silver.eurostoxx50_ohlcv` with no supporting index on the predicate columns. The clustered primary key is on a surrogate `id`, not on `symbol` or `date`, so the first execution of the target query has no useful access path and the optimizer falls back to a clustered index scan. This is the necessary starting condition for generating two distinct plans for the same logical query.
 
 #### Create the demo table from real stoxx data
+
+Use a disposable copy so the later scan-versus-seek contrast comes from indexing, not from synthetic data.
 
 *Create a fresh `dbo.qs_force_demo` table, seed it with every row from `silver.eurostoxx50_ohlcv`, and verify the row count.*
 
@@ -481,9 +515,11 @@ SELECT COUNT(*) AS row_count
 FROM dbo.qs_force_demo;
 ```
 
+```text
 | row_count |
 |---:|
 | 67155 |
+```
 
 The demo table holds the full `silver.eurostoxx50_ohlcv` rowset (67,155 rows), so the later scan-versus-seek difference is grounded in real table size and real data distribution, not a synthetic fixture. Note that `PRIMARY KEY` on `id` creates the clustered index — but that index is on the surrogate key, not on `(symbol, date)`, so a predicate like `WHERE symbol = 'X' AND date BETWEEN ...` cannot use it for a seek.
 
@@ -529,13 +565,13 @@ WHERE symbol = 'ASML.AS'
 OPTION (LABEL = 'qs_force_demo_count');
 ```
 
+```text
 | matching_rows |
 |---:|
 | 41 |
+```
 
 Both executions return the same 41 rows, which is exactly what a plan-forcing example needs: query semantics unchanged, only the available access path differs. `OPTION (LABEL = 'qs_force_demo_count')` is a SQL 2022 feature that attaches a literal label to the query text, making it trivially searchable in `sys.query_store_query_text` afterward — without the label, you would have to filter by the SQL body fragment.
-
-#### Compare the two plans stored for the tagged query
 
 The `CASE WHEN qsp.query_plan LIKE '%...%'` construction extracts a simplified `access_pattern` from the stored plan XML for human-readable comparison. This is a pragmatic shortcut — the authoritative form would parse the plan as XML with `.query('...')` — but for triage work "scan vs seek" is almost always enough to identify the better plan.
 
@@ -576,10 +612,12 @@ GROUP BY qsq.query_id, qsp.plan_id, qsp.query_plan, qsp.is_forced_plan, qsp.last
 ORDER BY avg_logical_io_reads DESC;
 ```
 
+```text
 | query_id | plan_id | access_pattern | is_forced_plan | last_force_failure_reason_desc | avg_ms | avg_logical_io_reads | query_text |
 |---:|---:|---|---:|---|---:|---:|---|
 | 3161 | 595 | `Clustered Index Scan` | 0 | `NONE` | 2.393 | 411.00 | `SELECT COUNT(*) AS matching_rows FROM dbo.qs_force_demo WHERE symbol = 'ASML.AS' AND [date] BETWEEN '2025-03-01' AND '2025-04-30' OPTION (LABEL = 'qs_force_demo_count')` |
 | 3161 | 594 | `Index Seek` | 0 | `NONE` | 0.057 | 4.00 | `SELECT COUNT(*) AS matching_rows FROM dbo.qs_force_demo WHERE symbol = 'ASML.AS' AND [date] BETWEEN '2025-03-01' AND '2025-04-30' OPTION (LABEL = 'qs_force_demo_count')` |
+```
 
 This is a textbook forcing candidate. The same `query_id` (3161) has two plans: `plan_id = 595` is a clustered index scan doing 411 logical reads in 2.393 ms average, and `plan_id = 594` is an index seek doing 4 logical reads in 0.057 ms average. Both plans have `is_forced_plan = 0` (neither has been forced yet) and `last_force_failure_reason_desc = NONE` (no prior force attempts have failed). The seek plan is roughly 100 times cheaper and dramatically faster — the kind of gap that justifies temporary forcing while the underlying cause is stabilized.
 
@@ -646,10 +684,12 @@ GROUP BY plan_id, is_forced_plan, force_failure_count, last_force_failure_reason
 ORDER BY avg_logical_io_reads DESC;
 ```
 
+```text
 | plan_id | is_forced_plan | force_failure_count | last_force_failure_reason_desc | avg_ms | avg_logical_io_reads |
 |---:|---:|---:|---|---:|---:|
 | 595 | 0 | 0 | `NONE` | 2.393 | 411.00 |
 | 594 | 1 | 0 | `NONE` | 0.057 | 4.00 |
+```
 
 The force worked cleanly. Plan 594 now has `is_forced_plan = 1`, `force_failure_count = 0`, and `last_force_failure_reason_desc = NONE`. Plan 595 is still in the catalog as a historical record but is not forced — SQL Server will only use it if forcing the preferred plan fails. This is exactly the verification step to perform in production after forcing a plan: do not assume the stored procedure returning without error means the forced plan is active, because forcing can silently degrade to fallback on the first execution.
 
@@ -720,9 +760,11 @@ EXEC sys.sp_query_store_clear_hints
     @query_id = @query_id;
 ```
 
+```text
 | query_hint_id | query_id | query_hint_text | source_desc | last_query_hint_failure_reason_desc | query_hint_failure_count | comment |
 |---:|---:|---|---|---|---:|---|
 | 2 | 3161 | `OPTION(RECOMPILE, MAXDOP 1)` | `User` | `NONE` | 0 | `NULL` |
+```
 
 The hint was created successfully. `query_hint_text` shows the exact `OPTION(...)` clause Query Store will apply. `source_desc = User` indicates a person or explicit process installed the hint. `last_query_hint_failure_reason_desc = NONE` and `query_hint_failure_count = 0` together confirm no application failure has occurred — the hint is syntactically valid and applicable in the query's context. The `comment` column is `NULL` here because `sp_query_store_set_hints` does not accept a comment argument; the vault convention is to track hint rationale in an external change log or ticket system.
 
@@ -743,7 +785,7 @@ The hint was created successfully. `query_hint_text` shows the exact `OPTION(...
 
 ## Operational Guidance
 
-> [!abstract] Observe, force, hint, or fix
+> [!abstract]- Summary
 >
 > Query Store offers four escalating levels of intervention: observe only, force a historical plan, apply a Query Store Hint, or fix the root cause. Each level has increasing cost and increasing long-term benefit. Choose the least invasive action that actually addresses the problem — forcing is safer than hinting (forcing pins to a known-good plan, hinting changes optimizer behaviour), and both are strictly temporary compared to fixing stats, indexes, or query structure.
 
@@ -751,24 +793,27 @@ The hint was created successfully. `query_hint_text` shows the exact `OPTION(...
 
 *Choose the action that matches the problem, not the action that feels most powerful.*
 
-| Action | Use it when | Strength | Main risk | Preferred exit |
-|---|---|---|---|---|
-| Observe only | Query has multiple plans but no clear winner yet | Low | Wasting time on noise | Collect more runtime, compare again |
-| Force a plan | One historical plan is clearly safer and root cause not yet fixed | Medium | Forced plan becomes stale after schema/data changes | Unforce after fixing stats, indexes, or query design |
-| Query Store Hint | Code cannot be changed quickly; targeted mitigation needed | Medium | Hint becomes long-lived technical debt | Remove after permanent fix lands |
-| Root-cause fix | Stats, indexing, predicates, parameterization, or schema is the real issue | High | Requires more effort and testing | Keep Query Store as validation, not as a crutch |
+Observe only when Query Store has multiple plans but no clear winner yet. The strength is low, the risk is mostly wasted time on noise, and the exit is to collect more runtime and compare again.
+
+Force a plan when one historical plan is clearly safer and the root cause is not yet fixed. The strength is medium, the risk is that the forced plan becomes stale after schema or data changes, and the exit is to unforce after fixing stats, indexes, or query design.
+
+Use a Query Store Hint when code cannot be changed quickly and you need a targeted mitigation. The strength is medium, the main risk is long-lived technical debt, and the exit is to remove the hint after the permanent fix lands.
+
+Choose the root-cause fix when stats, indexing, predicates, parameterization, or schema are the real issue. The strength is highest, the cost is more effort and testing, and Query Store should stay in the role of validation rather than a crutch.
 
 ### What to watch after forcing or hinting
 
 *Define the healthy and unhealthy states for each intervention signal so on-call can triage quickly.*
 
-| Signal | Healthy | Concerning | Next step |
-|---|---|---|---|
-| `is_forced_plan` | Forced plan stays `1` | Disappears or `force_failure_count` rises | Re-check `last_force_failure_reason_desc` and recent schema changes |
-| Runtime spread | Best and worst plans converge | Forced/hinted plan still underperforms | Re-open root-cause analysis; forcing was not enough |
-| `last_query_hint_failure_reason_desc` | `NONE` | Non-`NONE` or count rising | Remove or correct the hint |
-| `plan_count` | Stable small set (1–5) | Continues growing unexpectedly | Check parameter sensitivity, context settings, workload churn |
-| `current_storage_size_mb` | Stable, well below max | Climbing toward max | Lower `STALE_QUERY_THRESHOLD_DAYS` or raise `MAX_STORAGE_SIZE_MB` |
+Treat `is_forced_plan` as healthy when it stays at `1`. If it disappears or `force_failure_count` rises, re-check `last_force_failure_reason_desc` and recent schema changes.
+
+Treat runtime spread as healthy when the best and worst plans converge. If the forced or hinted plan still underperforms, reopen root-cause analysis because forcing was not enough.
+
+Treat `last_query_hint_failure_reason_desc` as healthy when it remains `NONE`. If it becomes non-`NONE` or the failure count rises, remove or correct the hint.
+
+Treat `plan_count` as healthy when it stays in a stable small range, roughly `1` to `5`. If it keeps growing unexpectedly, check parameter sensitivity, context settings, and workload churn.
+
+Treat `current_storage_size_mb` as healthy when it stays well below the maximum. If it climbs toward the ceiling, lower `STALE_QUERY_THRESHOLD_DAYS` or raise `MAX_STORAGE_SIZE_MB`.
 
 > [!tip] Query Store as validation, not crutch
 >

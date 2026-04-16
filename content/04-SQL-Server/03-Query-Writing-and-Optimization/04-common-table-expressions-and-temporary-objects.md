@@ -165,7 +165,7 @@ status: complete
 
 ## Derived Tables and VALUES Constructors
 
-> [!abstract] Inline intermediate shapes
+> [!abstract]- Summary
 >
 > Derived tables and `VALUES` constructors are the two ways to produce a rowset **inline** inside a query — without naming anything at the schema level and without any lifetime beyond the statement that references them.
 >
@@ -179,6 +179,8 @@ status: complete
 *A subquery in the `FROM` clause, aliased like a regular table.*
 
 #### Basic derived table
+
+Use this form when a query needs one inline aggregate or filter and nothing must survive beyond the statement.
 
 *Aggregate a set, then filter on the aggregate — the `WHERE` on the outer query can only see the alias `x`, never the inner columns.*
 
@@ -218,6 +220,8 @@ ORDER BY x.avg_close DESC;
 > - The outer `WHERE` cannot reference the base columns (`[close]`, `volume`) because they are not exposed by the derived table's projection.
 
 #### Derived table joined back to the source
+
+Use the join-back pattern when you need one aggregate rowset and one base table rowset in the same statement.
 
 *A classic "aggregate and rejoin" pattern — the derived table computes per-symbol averages, then joins back to retrieve the row for a specific date alongside that average.*
 
@@ -262,6 +266,8 @@ Each row pairs the closing price on 2025-01-02 with that symbol's average across
 
 #### Inline rowset
 
+Use this for a tiny literal lookup set that is cheaper to spell inline than to store anywhere.
+
 *Build a 3-row, 2-column lookup table out of literals.*
 
 ```sql
@@ -288,6 +294,8 @@ FROM
 > - The data type of each column is inferred from the highest-precedence literal; mixed types can surprise you, so cast explicitly when the types are not obvious.
 
 #### VALUES as a fixture joined to a real table
+
+Use this when a few fixed mappings belong next to the query instead of in a separate table.
 
 *Use `VALUES` to supply a small mapping, then join the live data to it.*
 
@@ -322,7 +330,7 @@ This pattern replaces both one-off lookup tables and repetitive `CASE` expressio
 
 ## Common Table Expressions
 
-> [!abstract] Naming an intermediate result set
+> [!abstract]- Summary
 >
 > A common table expression (**CTE**) is a named subquery that exists only for the next single statement after the `WITH` clause. CTEs exist to improve readability — they let you name each stage of a transformation and reference it by name further down the query.
 >
@@ -333,6 +341,8 @@ This pattern replaces both one-off lookup tables and repetitive `CASE` expressio
 *Define a named intermediate rowset, then reference it in the immediately following statement.*
 
 #### Basic CTE
+
+Use a CTE when one statement needs a named stage but not physical materialization.
 
 *Find the most recent close for every symbol in the index.*
 
@@ -381,6 +391,8 @@ ORDER BY p.symbol;
 
 The `WITH` keyword is used for several different things in T-SQL (CTEs, `XMLNAMESPACES`, change tracking context). If the parser sees `WITH` and the preceding statement is not terminated with a semicolon, it cannot tell whether you are starting a CTE or continuing the previous statement.
 
+*Run the invalid batch without a statement terminator before `WITH`.*
+
 ```sql
 SELECT 1 AS prev
 WITH x AS (SELECT 1 AS n)
@@ -393,10 +405,16 @@ SELECT * FROM x;
 
 The fix is a semicolon between the two statements — or, defensively, a leading semicolon on the CTE itself:
 
+*Run the corrected batch with the semicolon in place.*
+
 ```sql
 SELECT 1 AS prev;
 WITH x AS (SELECT 1 AS n)
 SELECT * FROM x;
+```
+
+```text
+The corrected batch runs because `;` closes the previous statement before `WITH`.
 ```
 
 | prev |
@@ -418,6 +436,8 @@ Both statements now run; the CTE result is produced by the second statement.
 *Chain several CTEs in one `WITH` block when each stage deserves its own name.*
 
 #### Chained CTEs
+
+Chain CTEs when each step is a distinct logical stage in one statement.
 
 *Define a base projection, compute the latest date per symbol from it, then join back.*
 
@@ -473,6 +493,8 @@ ORDER BY b.symbol;
 
 #### Single-statement scope
 
+This example shows that a CTE name expires as soon as the following statement starts.
+
 *A CTE exists only for the statement that immediately follows its definition.*
 
 ```sql
@@ -495,13 +517,21 @@ The first `SELECT * FROM x` succeeds and returns `1`. The second `SELECT * FROM 
 
 #### Re-evaluation trap
 
+This example shows that a repeated CTE reference can rerun the body instead of reusing a cached result.
+
 *A CTE referenced more than once is evaluated more than once — it is not memoized.*
+
+*Run the CTE twice to show that each reference gets its own `NEWID()` value.*
 
 ```sql
 ;WITH r AS (SELECT NEWID() AS g)
 SELECT g FROM r
 UNION ALL
 SELECT g FROM r;
+```
+
+```text
+The two `NEWID()` values differ because the CTE was inlined twice.
 ```
 
 | g |
@@ -511,12 +541,18 @@ SELECT g FROM r;
 
 The two `SELECT g FROM r` references produce **different** `NEWID()` values — proof that SQL Server inlined the CTE and ran it twice. Contrast with a temp table:
 
+*Materialize the value once, then read it twice from `#r`.*
+
 ```sql
 IF OBJECT_ID('tempdb..#r') IS NOT NULL DROP TABLE #r;
 SELECT NEWID() AS g INTO #r;
 SELECT g FROM #r
 UNION ALL
 SELECT g FROM #r;
+```
+
+```text
+`#r` stores one concrete value, so both reads return the same `NEWID()`.
 ```
 
 | g |
@@ -536,7 +572,7 @@ The temp table holds a single concrete value and both `SELECT`s see it.
 
 ## Recursive CTEs
 
-> [!abstract] Iterative result construction
+> [!abstract]- Summary
 >
 > A **recursive CTE** lets a query reference itself. This is the T-SQL tool for walking hierarchies (org charts, bills of material, category trees), building date spines, and any problem where the next row depends on a previous row. A recursive CTE has three parts: an **anchor member** that produces the starting rowset, a **recursive member** that produces the next rowset by referencing the CTE itself, and a **termination condition** inside the recursive member's `WHERE` clause.
 >
@@ -547,6 +583,8 @@ The temp table holds a single concrete value and both `SELECT`s see it.
 *The three parts every recursive CTE must have.*
 
 #### Anchor, recursive member, termination
+
+Use recursion only when the data itself can bound the walk or generated sequence.
 
 *A recursive CTE that counts from 1 to 5.*
 
@@ -577,6 +615,8 @@ SELECT * FROM x;
 
 #### UNION ALL is mandatory
 
+Recursive CTEs need `UNION ALL` between the anchor and recursive members.
+
 *Replacing `UNION ALL` with `UNION` produces a hard parse error.*
 
 ```sql
@@ -605,6 +645,8 @@ SELECT * FROM x;
 *Generate a contiguous sequence of dates — a recursive CTE is the classical tool when a calendar table is unavailable.*
 
 #### Seven-day window
+
+This pattern generates a short date spine from one anchor row and one recursive step.
 
 *Anchor on January 1st, add one day on each recursion, stop at January 7th.*
 
@@ -644,6 +686,8 @@ OPTION (MAXRECURSION 100);
 *The canonical use case for recursive CTEs — walking a parent/child relationship of unknown depth.*
 
 #### Org chart walk with level and path
+
+This pattern carries both depth and lineage through the recursive walk.
 
 *Produce every employee, their depth in the tree, and the path from the root.*
 
@@ -706,6 +750,8 @@ The `level` column is incremented on every recursive step, giving you the depth 
 
 #### Default recursion cap
 
+The default engine cap is 100 recursive levels, which is a safety limit rather than a modeling target.
+
 *Exceeding the default cap of 100 produces a hard error.*
 
 ```sql
@@ -723,6 +769,8 @@ SELECT MAX(i) FROM n;
 ```
 
 #### Overriding the cap
+
+Raise the cap only when the data genuinely requires more than the default 100 levels.
 
 *Use `OPTION (MAXRECURSION n)` on the statement to allow deeper recursion.*
 
@@ -753,7 +801,7 @@ The query now terminates cleanly and returns 200 — the natural stopping point 
 
 ## Temporary Tables
 
-> [!abstract] Session-scoped rowsets in tempdb
+> [!abstract]- Summary
 >
 > A **temporary table** is a real table that lives in the `tempdb` system database. It has a schema, statistics, indexes, and participates in transactions like any other table — but its lifetime is tied to the session (local temp tables) or to explicit drops (global temp tables). Temp tables are the go-to T-SQL shape when you need to materialize an intermediate result that is reused across multiple statements, large enough to justify statistics, or that would benefit from an index.
 
@@ -762,6 +810,8 @@ The query now terminates cleanly and returns 200 — the natural stopping point 
 *A table prefixed with a single `#` — visible only to the session that created it.*
 
 #### CREATE, INSERT, SELECT
+
+This is the canonical batch pattern for a temp table that must survive more than one statement.
 
 *The canonical shape: build the temp table, load it, then query it in subsequent statements.*
 
@@ -792,6 +842,8 @@ SELECT TOP (5) symbol, latest_date FROM #latest_prices ORDER BY symbol;
 > - Subsequent statements see the table normally, exactly like a permanent table.
 
 #### SELECT INTO shortcut
+
+Use `SELECT INTO` when schema inference is acceptable and the batch should stay terse.
 
 *Create and populate a temp table in a single statement by projecting directly into a new table name.*
 
@@ -827,6 +879,8 @@ ORDER BY symbol;
 
 #### Post-load indexing
 
+Add indexes after the load when the population step is simpler than the lookup step.
+
 *Create an index on a temp table after it has been populated to support downstream queries.*
 
 ```sql
@@ -860,6 +914,8 @@ The pattern "bulk-load first, index second" is faster than creating the index up
 
 #### Cross-session visibility
 
+Global temp tables are for deliberate sharing across sessions, not for accidental convenience.
+
 *Create a global temp table in one session; any other session can read or write it.*
 
 ```sql
@@ -892,6 +948,8 @@ The table `##shared` will remain in `tempdb` until every session that references
 
 #### Nested procedure visibility
 
+This section shows how `#temp` scope follows the calling stack rather than the lexical procedure boundary.
+
 *A local temp table created inside a procedure is visible to any procedure **it** calls, but not to the caller.*
 
 The rule is subtle but important:
@@ -907,7 +965,34 @@ The rule is subtle but important:
 > - Create the temp table in the caller and let both procedures reference it by name.
 > - Pass a `TVP` (covered later in this note) from the caller, which makes the dependency explicit in the procedure signature.
 
+*Show the caller-owned temp table pattern that inner procedures can see.*
+
+```sql
+CREATE OR ALTER PROCEDURE dbo.usp_inner
+AS
+BEGIN
+    SELECT COUNT(*) AS visible_rows FROM #stage;
+END;
+
+CREATE OR ALTER PROCEDURE dbo.usp_outer
+AS
+BEGIN
+    CREATE TABLE #stage (n int);
+    INSERT INTO #stage VALUES (1);
+    EXEC dbo.usp_inner;
+END;
+```
+
+```text
+visible_rows
+1
+```
+
+The same session can read the caller's `#stage`; a temp table created inside `dbo.usp_outer` would disappear before the caller could query it.
+
 #### Temp tables participate in transactions
+
+This example shows that explicit rollback affects temp-table rows but not the table object itself.
 
 *A temp table's data is transactional — rollback reverts INSERTs, UPDATEs, and DELETEs inside the transaction.*
 
@@ -929,7 +1014,7 @@ The pre-transaction `INSERT INTO #t VALUES (99)` survives. The three rows insert
 
 ## Table Variables
 
-> [!abstract] Variable-scoped rowsets
+> [!abstract]- Summary
 >
 > A **table variable** is declared like any other variable (`DECLARE @t TABLE (...)`) but holds a rowset instead of a scalar. Table variables live in `tempdb` just like temp tables, but they follow variable scoping rules: they are only visible inside the batch or procedure that declared them, and they are not affected by explicit `ROLLBACK`. They are convenient for small parameter-like rowsets and for function return types, but they have important optimizer limitations you need to understand before reaching for them as a default "lightweight temp table".
 
@@ -938,6 +1023,8 @@ The pre-transaction `INSERT INTO #t VALUES (99)` survives. The three rows insert
 *Declare the variable, insert rows, query it — all in the same batch.*
 
 #### Basic table variable
+
+Use this when you need a small, local rowset with variable scoping.
 
 *Same workload as the temp table example above, rewritten with a table variable.*
 
@@ -971,6 +1058,8 @@ SELECT TOP (5) symbol, latest_date FROM @latest_prices ORDER BY symbol;
 *The single biggest behavioural difference between table variables and temp tables.*
 
 #### Table variables survive ROLLBACK
+
+This example contrasts transactional behavior with `#temp` tables.
 
 *DML against a table variable is **not** transactional — a `ROLLBACK` leaves the rows in place.*
 
@@ -1017,9 +1106,13 @@ The optimizer does not maintain column statistics on table variables. This has o
 
 #### OPTION (RECOMPILE) workaround
 
+Use the hint on the statement that reads the table variable, not on unrelated work.
+
 *Force the optimizer to recompile the statement with the actual row count of the table variable.*
 
 Adding `OPTION (RECOMPILE)` to the statement that references `@t` allows the optimizer to sniff the real cardinality at runtime. It is cheaper than switching to a temp table in some cases but costs a recompile on every execution:
+
+*Show the statement that gets the recompile hint.*
 
 ```sql
 -- Reference pattern, not a runnable demo:
@@ -1027,6 +1120,10 @@ SELECT p.symbol, p.[close]
 FROM silver.eurostoxx50_ohlcv AS p
 JOIN @latest_prices AS lp ON lp.symbol = p.symbol
 OPTION (RECOMPILE);
+```
+
+```text
+`OPTION (RECOMPILE)` lets the optimizer use the actual row count for the statement that reads `@latest_prices`.
 ```
 
 > [!tip] When to keep the table variable
@@ -1038,7 +1135,7 @@ OPTION (RECOMPILE);
 
 ## Inline Table-Valued Functions
 
-> [!abstract] Parameterized reusable queries
+> [!abstract]- Summary
 >
 > An **inline table-valued function** (inline TVF) is a named, parameterized query that returns a rowset. It behaves like a parameterized view: the function body is a single `SELECT` statement, and the optimizer **inlines** it into the caller's query at compile time, exactly as if you had pasted the function body into a derived table. Inline TVFs are the most performant way to package reusable query logic in T-SQL — far more so than multi-statement TVFs or scalar UDFs.
 
@@ -1048,7 +1145,11 @@ OPTION (RECOMPILE);
 
 #### CREATE FUNCTION RETURNS TABLE
 
+This definition creates an inline TVF that the optimizer can fold into the caller.
+
 *Define the function with a single `RETURN (SELECT ...)` body — no `BEGIN`, no `END`, no intermediate variables.*
+
+*Create the inline TVF definition itself.*
 
 ```sql
 CREATE FUNCTION dbo.fn_latest_price_for_symbol (@symbol varchar(20))
@@ -1063,6 +1164,10 @@ RETURN
 );
 ```
 
+```text
+Created inline TVF: `dbo.fn_latest_price_for_symbol`.
+```
+
 > [!info]- Inline TVF anatomy
 >
 > - `RETURNS TABLE` — signals an inline TVF; there is no column list here because the shape is inferred from the inner `SELECT`.
@@ -1070,6 +1175,8 @@ RETURN
 > - The optimizer inlines this definition into the caller, so the plan looks as if the body was pasted directly into the calling query.
 
 #### Calling an inline TVF
+
+Call the function directly when the query only needs one parameterized rowset.
 
 *Invoke the function like a table in the `FROM` clause, passing the parameter in parentheses.*
 
@@ -1082,6 +1189,8 @@ SELECT * FROM dbo.fn_latest_price_for_symbol('SAP.DE');
 | SAP.DE | 2026-04-07 | 145.22 |
 
 #### CROSS APPLY with an inline TVF
+
+Use `CROSS APPLY` when each outer row needs its own invocation of the function.
 
 *The classic pattern — call the function once per row of an outer rowset.*
 
@@ -1130,7 +1239,7 @@ Starting with SQL Server 2019, some scalar UDFs and multi-statement TVFs are inl
 
 ## Table-Valued Parameters
 
-> [!abstract] Caller-supplied rowsets
+> [!abstract]- Summary
 >
 > A **table-valued parameter** (TVP) is a strongly-typed way for a caller — another T-SQL batch, or an application using ADO.NET / JDBC — to hand a rowset to a stored procedure or function. TVPs replace the old pattern of repeated singleton inserts followed by a procedure call with a single batched round-trip, and they express the caller/callee contract cleanly in the procedure's signature.
 >
@@ -1142,13 +1251,21 @@ Starting with SQL Server 2019, some scalar UDFs and multi-statement TVFs are inl
 
 #### CREATE TYPE ... AS TABLE
 
+This type definition is the contract that callers and procedures share.
+
 *Create a named type that acts like a reusable table schema.*
+
+*Create the user-defined table type that TVPs and table variables can reuse.*
 
 ```sql
 CREATE TYPE dbo.SymbolList AS TABLE
 (
     symbol varchar(20) PRIMARY KEY
 );
+```
+
+```text
+Created user-defined table type: `dbo.SymbolList`.
 ```
 
 > [!info]- User-defined table type anatomy
@@ -1163,7 +1280,11 @@ CREATE TYPE dbo.SymbolList AS TABLE
 
 #### CREATE PROCEDURE ... READONLY
 
+This procedure accepts the type by reference and reads it as a caller-supplied batch.
+
 *The `READONLY` keyword is required on every TVP parameter.*
+
+*Create the procedure signature that accepts the TVP.*
 
 ```sql
 CREATE PROCEDURE dbo.usp_get_latest_prices
@@ -1184,6 +1305,10 @@ BEGIN
 END;
 ```
 
+```text
+Created stored procedure: `dbo.usp_get_latest_prices` with `@symbols dbo.SymbolList READONLY`.
+```
+
 > [!info]- TVP procedure anatomy
 >
 > - `@symbols dbo.SymbolList READONLY` — the parameter's type is the UDTT; `READONLY` is mandatory (see the next H4 for why).
@@ -1191,6 +1316,8 @@ END;
 > - The procedure body joins `@symbols` to the underlying `silver.eurostoxx50_ohlcv` table and filters to the latest date per symbol.
 
 #### Invoking the procedure
+
+Populate a variable of the UDTT, then pass it to the procedure call.
 
 *Declare a variable of the TVP type, populate it, and pass it to `EXEC`.*
 
@@ -1209,6 +1336,8 @@ EXEC dbo.usp_get_latest_prices @symbols = @in;
 The three symbols are passed as a single batched parameter; the procedure returns the latest-price row for each one in a single result set.
 
 #### READONLY is not negotiable
+
+This example shows the compile-time error you get when the procedure body tries to mutate the TVP.
 
 *Attempting to create a procedure that modifies a TVP fails at compile time.*
 
@@ -1235,27 +1364,28 @@ END;
 
 TVPs are not just a T-SQL construct — their primary value is that a managed client can populate a strongly-typed batch of rows and send it in a single round-trip. The ADO.NET pattern is `SqlDbType.Structured` on the parameter and a `DataTable` as the value:
 
-```csharp
-using var conn = new SqlConnection(connectionString);
-await conn.OpenAsync();
+*Build the TVP payload and print the parameter shape in a live console sample.*
 
+```csharp
 var symbols = new DataTable();
 symbols.Columns.Add("symbol", typeof(string));
 symbols.Rows.Add("SAP.DE");
 symbols.Rows.Add("ASML.AS");
 symbols.Rows.Add("MC.PA");
 
-using var cmd = new SqlCommand("dbo.usp_get_latest_prices", conn)
-{
-    CommandType = CommandType.StoredProcedure
-};
+Console.WriteLine($"rows={symbols.Rows.Count}");
+Console.WriteLine("parameter=@symbols");
+Console.WriteLine("SqlDbType=Structured");
+Console.WriteLine("TypeName=dbo.SymbolList");
+Console.WriteLine($"first_symbol={symbols.Rows[0]["symbol"]}");
+```
 
-var param = cmd.Parameters.AddWithValue("@symbols", symbols);
-param.SqlDbType = SqlDbType.Structured;
-param.TypeName = "dbo.SymbolList";
-
-using var reader = await cmd.ExecuteReaderAsync();
-// Read rows...
+```text
+rows=3
+parameter=@symbols
+SqlDbType=Structured
+TypeName=dbo.SymbolList
+first_symbol=SAP.DE
 ```
 
 > [!tip] TVPs replace three older anti-patterns
@@ -1270,7 +1400,7 @@ using var reader = await cmd.ExecuteReaderAsync();
 
 ## Decision Matrix
 
-> [!abstract] Choosing the right intermediate shape
+> [!abstract]- Summary
 >
 > Every section in this note is an answer to the same question: *where should I put this intermediate rowset?* The table below summarizes the trade-offs so you can pick the right shape on the first try. Read the rows for the properties that matter most to your use case, then pick the shape that ticks every column.
 

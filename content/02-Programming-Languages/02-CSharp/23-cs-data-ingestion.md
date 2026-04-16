@@ -10,7 +10,8 @@ status: complete
 
 # 23. Data Ingestion — SQL Server, BigQuery, Firestore
 
-> [!quote]
+> [!quote]- Quote
+>
 > "Data is a precious thing and will last longer than the systems themselves."
 >
 > — **Tim Berners-Lee**, attributed remark (c. 2006)
@@ -203,6 +204,7 @@ status: complete
 
 This notebook benchmarks bulk-load performance into SQL Server, BigQuery, and Firestore across three file tiers (2.5K / 75K / 750K rows) and four source formats (CSV, JSON, Parquet, GCS). Results are persisted to JSON for cross-session comparison and visualised with Plotly.
 
+*Source: Mermaid diagram.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -235,6 +237,7 @@ flowchart LR
     BQ -->|"CreateExtractJob"| GCS
 ```
 
+*Source: C# benchmark cell.*
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
@@ -253,7 +256,11 @@ var withWarningLevel = scriptOptions.GetType().GetMethod("WithWarningLevel");
 var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
+```text
+No visible output.
+```
 
+*Source: C# benchmark cell.*
 ```csharp
 #r "nuget: Microsoft.Data.SqlClient"
 #r "nuget: Google.Cloud.BigQuery.V2"
@@ -295,9 +302,13 @@ using Plotly.NET;
 using Plotly.NET.CSharp;
 using Plotly.NET.LayoutObjects;
 ```
+```text
+No visible output.
+```
 
 Loads `.env` and defines project constants.
 
+*Source: C# benchmark cell.*
 ```csharp
 DotNetEnv.Env.Load();
 
@@ -374,11 +385,13 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
     writer.Write(scss + shtml);
 }, "text/html");
 ```
-
+```text
       SQL Server: 16.00.4236
       BigQuery:   index_data (seclab-dev-ap-26)
       Firestore:  seclab-scores (seclab-dev-ap-26)
       GCS:        gs://seclab-dev-ap-26-data
+
+```
 
 ## Setup
 
@@ -390,6 +403,7 @@ Helper functions and benchmark infrastructure shared across all ingestion sectio
 
 Human-readable formatters for row counts, elapsed time, byte sizes, and throughput rates. Used in every benchmark output row and summary table.
 
+*Source: C# benchmark cell.*
 ```csharp
 string FmtRows(int n)
 {
@@ -423,11 +437,15 @@ string FmtRate(int rows, double ms)
     return $"{rate / 1_000_000:F1}M rows/s";
 }
 ```
+```text
+No visible output.
+```
 
 #### Define file tiers for ingestion benchmarks
 
 Three file tiers (small 2.5K, medium 75K, large 750K rows) with paths for CSV, JSON, and Parquet formats. Row counts are derived from the CSV files at runtime and reused across all benchmark functions.
 
+*Source: C# benchmark cell.*
 ```csharp
 var tierNames = new[] { "small", "medium", "large" };
 var tiers = new Dictionary<string, Dictionary<string, string>>();
@@ -453,7 +471,7 @@ var dfTiers = new DataFrame(
 );
 dfTiers
 ```
-
+```text
 <style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
 <style>
 .pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
@@ -466,10 +484,13 @@ dfTiers
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>int32</span></th><th>CSV<span class='pl-dtype'>utf8view</span></th><th>JSON<span class='pl-dtype'>utf8view</span></th><th>Parquet<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>small</td><td>2500</td><td>190 KB</td><td>468 KB</td><td>130 KB</td></tr><tr><td>medium</td><td>75000</td><td>5.66 MB</td><td>13.81 MB</td><td>2.96 MB</td></tr><tr><td>large</td><td>750000</td><td>57.31 MB</td><td>138.85 MB</td><td>18.89 MB</td></tr></tbody></table>
 
+```
+
 #### Ingestion benchmark helper
 
 Times a single ingestion function and upserts the result into an in-memory list and a persistent JSON file, keyed by `(method, tier)`. Existing entries for the same key are replaced — re-running a benchmark updates the stored result without accumulating duplicates.
 
+*Source: C# benchmark cell.*
 ```csharp
 var INGEST_RESULTS_FILE = Path.Combine(DATA_DIR, "ingestion_results_cs.json");
 
@@ -525,8 +546,10 @@ class IngestResult
     public double rate_raw  { get; set; }
 }
 ```
-
+```text
       Loaded 26 existing results from ingestion_results_cs.json
+
+```
 
 ## Schema Setup
 
@@ -538,6 +561,7 @@ The SQL Server DDL below follows the same [bronze-layer-loading](https://alp78.g
 
 Creates `dbo.ohlcv_bench` if it does not already exist. All columns use `NVARCHAR` to accept raw string values without conversion — type coercion happens downstream in the medallion pipeline.
 
+*Source: C# benchmark cell.*
 ```csharp
 using (var conn = CreateSqlConnection())
 {
@@ -563,13 +587,16 @@ using (var conn = CreateSqlConnection())
     Console.WriteLine($"  ohlcv_bench table ready ({count} existing rows)");
 }
 ```
-
+```text
       ohlcv_bench table ready (750000 existing rows)
+
+```
 
 #### Create staging table in BigQuery
 
 Creates `ohlcv_bench` in the `index_data` dataset with a fully typed schema. `GetOrCreateTable` is idempotent — safe to re-run without error if the table already exists.
 
+*Source: C# benchmark cell.*
 ```csharp
 var bqSchema = new TableSchemaBuilder
 {
@@ -590,8 +617,10 @@ var bqSchema = new TableSchemaBuilder
 bqClient.GetOrCreateTable(BQ_DATASET, "ohlcv_bench", bqSchema);
 Console.WriteLine($"  BigQuery {BQ_DATASET}.ohlcv_bench table ready");
 ```
-
+```text
       BigQuery index_data.ohlcv_bench table ready
+
+```
 
 ## Local → SQL Server Ingestion
 
@@ -611,6 +640,7 @@ Row-by-row parameterised INSERT via `ExecuteNonQuery`. One network round-trip pe
 >
 > `SqlBulkCopy` streams all rows via the TDS bulk-insert protocol in a single connection — 500–900× faster at large tier. For flat-file loads, `bcp` is marginally faster still (no managed layer overhead).
 
+*Source: C# benchmark cell.*
 ```csharp
 int AdoInsert(string tier)
 {
@@ -641,16 +671,19 @@ foreach (var tier in new[] { "small", "medium" })
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       1m5s      38 rows/s
       medium      75.0K      32m5s      39 rows/s
+
+```
 
 #### Ingest CSV into SQL Server from local using Microsoft.Data.SqlClient SqlBulkCopy over TLS
 
 .NET’s native bulk insert — streams rows via the TDS protocol’s bulk insert path.
 Equivalent to `pyodbc.fast_executemany` but faster (native TDS bulk protocol, not parameterised batches).
 
+*Source: C# benchmark cell.*
 ```csharp
 int BulkCopyInsert(string tier)
 {
@@ -683,11 +716,13 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K      357ms    7.0K rows/s
       medium      75.0K       2.7s   27.3K rows/s
       large      750.0K      21.5s   34.9K rows/s
+
+```
 
 #### Ingest CSV into SQL Server from local using bcp (Bulk Copy Program) over TDS
 
@@ -701,6 +736,7 @@ The `bcp` CLI sends rows via the native TDS bulk-insert protocol, bypassing the 
 >
 > Pass `-T` to use Windows Integrated Authentication, or read the password from an environment variable at runtime — never interpolate it directly into the argument string.
 
+*Source: C# benchmark cell.*
 ```csharp
 int BcpImport(string tier)
 {
@@ -732,17 +768,20 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K      489ms    5.1K rows/s
       medium      75.0K       2.4s   30.9K rows/s
       large      750.0K      20.6s   36.3K rows/s
+
+```
 
 #### Ingest JSON into SQL Server from local using Microsoft.Data.SqlClient SqlBulkCopy over TLS
 
 Reads newline-delimited JSON, parses with Newtonsoft, bulk-copies via `SqlBulkCopy`.
 Same bulk-insert throughput as CSV once parsed — the JSON parsing is the overhead.
 
+*Source: C# benchmark cell.*
 ```csharp
 int JsonBulkInsert(string tier)
 {
@@ -772,17 +811,20 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K      190ms   13.2K rows/s
       medium      75.0K       2.6s   28.5K rows/s
       large      750.0K      22.7s   33.1K rows/s
+
+```
 
 #### Ingest Parquet into SQL Server from local using Parquet.Net + SqlBulkCopy over TLS
 
 Reads Parquet columnar data with Parquet.Net, pivots to row-based DataTable, bulk-copies.
 Parquet files are smaller and faster to parse than CSV — columnar layout enables skip-reads.
 
+*Source: C# benchmark cell.*
 ```csharp
 int ParquetBulkInsert(string tier)
 {
@@ -819,11 +861,13 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K      194ms   12.9K rows/s
       medium      75.0K       2.1s   35.0K rows/s
       large      750.0K      20.7s   36.2K rows/s
+
+```
 
 ## Local → BigQuery Ingestion
 
@@ -835,6 +879,7 @@ Upload local CSV, JSON, and Parquet files into BigQuery using the `Google.Cloud.
 
 Uploads the CSV file directly via the BigQuery jobs API. Server-side parsing — the file is streamed as-is.
 
+*Source: C# benchmark cell.*
 ```csharp
 int BqLoadCsv(string tier)
 {
@@ -852,16 +897,19 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K      11.3s     222 rows/s
       medium      75.0K       6.8s   11.0K rows/s
       large      750.0K      24.4s   30.7K rows/s
 
+```
+
 #### Ingest JSON into BigQuery from local using Google.Cloud.BigQuery.V2 UploadJson over HTTPS
 
 Uploads newline-delimited JSON. BigQuery parses each line as a row — schema must match.
 
+*Source: C# benchmark cell.*
 ```csharp
 int BqLoadJson(string tier)
 {
@@ -879,16 +927,19 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       5.8s     429 rows/s
       medium      75.0K       7.7s    9.7K rows/s
       large      750.0K      31.5s   23.8K rows/s
 
+```
+
 #### Ingest Parquet into BigQuery from local using Google.Cloud.BigQuery.V2 UploadParquet over HTTPS
 
 Parquet carries its own schema — BigQuery reads column types from the file footer. Fastest local format.
 
+*Source: C# benchmark cell.*
 ```csharp
 int BqLoadParquet(string tier)
 {
@@ -906,16 +957,19 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       6.0s     415 rows/s
       medium      75.0K       6.1s   12.2K rows/s
       large      750.0K       8.6s   87.4K rows/s
 
+```
+
 #### Ingest CSV into BigQuery from local using bq CLI load over HTTPS
 
 Command-line load without writing C# code. Same underlying API as `UploadCsv`.
 
+*Source: C# benchmark cell.*
 ```csharp
 int BqCliLoad(string tier)
 {
@@ -943,11 +997,13 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       5.8s     431 rows/s
       medium      75.0K       7.9s    9.5K rows/s
       large      750.0K      20.8s   36.1K rows/s
+
+```
 
 ## Local → Firestore Ingestion
 
@@ -967,6 +1023,7 @@ Batches up to 500 documents per gRPC call. Each `CommitAsync()` is a single atom
 >
 > Maintain a `batchCount` counter alongside the batch object. On every 500th document, call `batch.CommitAsync().Wait()` and reset both the batch and the counter. After the loop, check `batchCount > 0` and commit the final partial batch to avoid silently dropping the tail.
 
+*Source: C# benchmark cell.*
 ```csharp
 int FsBatchWrite(string tier)
 {
@@ -1003,11 +1060,13 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       6.2s     406 rows/s
       medium      75.0K      3m18s     378 rows/s
       large      750.0K      8m21s    1.5K rows/s
+
+```
 
 > [!info] No BulkWriter equivalent in the C# Firestore client
 >
@@ -1023,6 +1082,7 @@ Server-side load — BigQuery reads files directly from GCS over Google's intern
 
 Server-side load — BigQuery reads directly from GCS. No data passes through local machine.
 
+*Source: C# benchmark cell.*
 ```csharp
 int BqGcsCsv(string tier)
 {
@@ -1048,16 +1108,19 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       5.9s     427 rows/s
       medium      75.0K       5.5s   13.7K rows/s
       large      750.0K      10.5s   71.2K rows/s
 
+```
+
 #### Ingest Parquet into BigQuery from GCS using Google.Cloud.BigQuery.V2 CreateLoadJob over internal network
 
 Parquet is the fastest GCS→BQ path — columnar, compressed, schema embedded.
 
+*Source: C# benchmark cell.*
 ```csharp
 int BqGcsParquet(string tier)
 {
@@ -1081,11 +1144,13 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       5.4s     460 rows/s
       medium      75.0K       5.5s   13.7K rows/s
       large      750.0K       5.5s  136.0K rows/s
+
+```
 
 ## GCS → SQL Server Ingestion
 
@@ -1097,6 +1162,7 @@ Two-hop pipeline: download the file from GCS into a `MemoryStream`, then bulk-in
 
 Two-hop pipeline: download from GCS to memory, then bulk-insert to SQL Server.
 
+*Source: C# benchmark cell.*
 ```csharp
 int GcsToBulkCopy(string tier)
 {
@@ -1127,11 +1193,13 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K      450ms    5.6K rows/s
       medium      75.0K       2.6s   29.1K rows/s
       large      750.0K      22.2s   33.7K rows/s
+
+```
 
 ## Cross-Service Transfers
 
@@ -1143,6 +1211,7 @@ Move data between SQL Server, BigQuery, and Firestore using two-hop in-memory br
 
 Two-hop bridge via local memory: query SQL Server, write CSV to MemoryStream, upload to BigQuery. The function populates `ohlcv_bench` with the correct tier first, then transfers.
 
+*Source: C# benchmark cell.*
 ```csharp
 int SqlToBq(string tier)
 {
@@ -1191,16 +1260,19 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       1.3s    2.0K rows/s
       medium      75.0K       4.2s   17.7K rows/s
       large      750.0K      34.0s   22.1K rows/s
 
+```
+
 #### Transfer data from BigQuery to SQL Server using BigQueryClient.ExecuteQuery + SqlBulkCopy over HTTPS/TLS
 
 Two-hop bridge in reverse: query BigQuery, build DataTable, SqlBulkCopy to SQL Server. The function populates `ohlcv_bench` with the correct tier first, then transfers.
 
+*Source: C# benchmark cell.*
 ```csharp
 int BqToSql(string tier)
 {
@@ -1238,16 +1310,19 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       6.8s     365 rows/s
       medium      75.0K      15.3s    4.9K rows/s
       large      750.0K      1m24s    8.9K rows/s
 
+```
+
 #### Transfer data from SQL Server to Firestore using SqlDataReader + WriteBatch over TLS/gRPC
 
 Query SQL Server, batch-write documents to Firestore. Bridge from relational to document store.
 
+*Source: C# benchmark cell.*
 ```csharp
 int SqlToFs(string tier)
 {
@@ -1296,11 +1371,13 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       7.7s     324 rows/s
       medium      75.0K      3m47s     331 rows/s
       large      750.0K     38m25s     325 rows/s
+
+```
 
 ## Export
 
@@ -1312,6 +1389,7 @@ Export data out of SQL Server and BigQuery for downstream consumption. SQL Serve
 
 Query SQL Server, write rows to local CSV. Simple streaming export.
 
+*Source: C# benchmark cell.*
 ```csharp
 var EXPORT_DIR = Path.Combine(DATA_DIR, "exports");
 Directory.CreateDirectory(EXPORT_DIR);
@@ -1343,16 +1421,19 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       92ms   27.1K rows/s
       medium      75.0K       1.7s   45.4K rows/s
       large      750.0K       9.4s   79.4K rows/s
 
+```
+
 #### Export BigQuery to GCS using BigQueryClient.CreateExtractJob over internal network
 
 Server-side export — BigQuery writes directly to GCS. No local data transfer.
 
+*Source: C# benchmark cell.*
 ```csharp
 int BqExport(string tier)
 {
@@ -1380,22 +1461,27 @@ foreach (var tier in tierNames)
     Console.WriteLine($"  {tier,-8} {r.rows_fmt,8} {r.elapsed,10} {r.rate,14}");
 }
 ```
-
+```text
       tier         rows       time           rate
       small        2.5K       8.5s     296 rows/s
       medium      75.0K       7.5s   10.0K rows/s
       large      750.0K      15.3s   49.1K rows/s
 
+```
+
 ## Summary
 
 Aggregated benchmark results across all methods, loaded from the persisted JSON file. Results are grouped by ingestion category and rendered as Polars DataFrames with Plotly bar charts.
 
+*Source: C# benchmark cell.*
 ```csharp
 var allResults = LoadIngestResults();
 Console.WriteLine($"  {allResults.Count} total benchmark results");
 ```
-
+```text
       53 total benchmark results
+
+```
 
 ### Summary | benchmark charts
 
@@ -1403,6 +1489,7 @@ Console.WriteLine($"  {allResults.Count} total benchmark results");
 
 SQL Server ingestion results grouped by method, displaying rows, elapsed time, and throughput. The bar chart compares all methods across all three tiers.
 
+*Source: C# benchmark cell.*
 ```csharp
 var methods = new[] { "ado_executenonquery", "sqlbulkcopy", "bcp_import", "json_sqlbulkcopy", "parquet_sqlbulkcopy", "gcs_csv_sqlbulkcopy" };
 var subset = allResults.Where(r => methods.Contains(r.method)).ToList();
@@ -1416,7 +1503,7 @@ var dfSummary = new DataFrame(
 );
 dfSummary
 ```
-
+```text
 <style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
 <style>
 .pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
@@ -1429,6 +1516,9 @@ dfSummary
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(17 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>method<span class='pl-dtype'>utf8view</span></th><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>utf8view</span></th><th>time<span class='pl-dtype'>utf8view</span></th><th>rate<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>ado_executenonquery</td><td>small</td><td>2.5K</td><td>1m5s</td><td>38 rows/s</td></tr><tr><td>ado_executenonquery</td><td>medium</td><td>75.0K</td><td>32m5s</td><td>39 rows/s</td></tr><tr><td>sqlbulkcopy</td><td>small</td><td>2.5K</td><td>357ms</td><td>7.0K rows/s</td></tr><tr><td>sqlbulkcopy</td><td>medium</td><td>75.0K</td><td>2.7s</td><td>27.3K rows/s</td></tr><tr><td>sqlbulkcopy</td><td>large</td><td>750.0K</td><td>21.5s</td><td>34.9K rows/s</td></tr><tr><td>bcp_import</td><td>small</td><td>2.5K</td><td>489ms</td><td>5.1K rows/s</td></tr><tr><td>bcp_import</td><td>medium</td><td>75.0K</td><td>2.4s</td><td>30.9K rows/s</td></tr><tr><td>bcp_import</td><td>large</td><td>750.0K</td><td>20.6s</td><td>36.3K rows/s</td></tr><tr><td>json_sqlbulkcopy</td><td>small</td><td>2.5K</td><td>190ms</td><td>13.2K rows/s</td></tr><tr><td>json_sqlbulkcopy</td><td>medium</td><td>75.0K</td><td>2.6s</td><td>28.5K rows/s</td></tr><tr><td colspan='5'>... 7 more rows ...</td></tr></tbody></table>
 
+```
+
+*Source: C# benchmark cell.*
 ```csharp
 var tierOrder = new[] { "small", "medium", "large" };
 var tierColors = new Dictionary<string, string>
@@ -1456,13 +1546,16 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
         PlotBGColor: Color.fromString("transparent"),
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
-
+```text
 <iframe src="/static/plotly/di_cs_01.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+```
 
 #### BigQuery Ingestion Benchmark
 
 BigQuery ingestion results grouped by method, comparing local upload formats and GCS load jobs across all three tiers. The bar chart highlights the throughput advantage of GCS Parquet at large tier.
 
+*Source: C# benchmark cell.*
 ```csharp
 var methods = new[] { "bq_load_csv", "bq_load_json", "bq_load_parquet", "bq_cli_load", "bq_gcs_csv", "bq_gcs_parquet" };
 var subset = allResults.Where(r => methods.Contains(r.method)).ToList();
@@ -1476,7 +1569,7 @@ var dfSummary = new DataFrame(
 );
 dfSummary
 ```
-
+```text
 <style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
 <style>
 .pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
@@ -1489,6 +1582,9 @@ dfSummary
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(18 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>method<span class='pl-dtype'>utf8view</span></th><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>utf8view</span></th><th>time<span class='pl-dtype'>utf8view</span></th><th>rate<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>bq_load_json</td><td>small</td><td>2.5K</td><td>5.8s</td><td>429 rows/s</td></tr><tr><td>bq_load_json</td><td>medium</td><td>75.0K</td><td>7.7s</td><td>9.7K rows/s</td></tr><tr><td>bq_load_json</td><td>large</td><td>750.0K</td><td>31.5s</td><td>23.8K rows/s</td></tr><tr><td>bq_load_parquet</td><td>small</td><td>2.5K</td><td>6.0s</td><td>415 rows/s</td></tr><tr><td>bq_load_parquet</td><td>medium</td><td>75.0K</td><td>6.1s</td><td>12.2K rows/s</td></tr><tr><td>bq_load_parquet</td><td>large</td><td>750.0K</td><td>8.6s</td><td>87.4K rows/s</td></tr><tr><td>bq_cli_load</td><td>small</td><td>2.5K</td><td>5.8s</td><td>431 rows/s</td></tr><tr><td>bq_cli_load</td><td>medium</td><td>75.0K</td><td>7.9s</td><td>9.5K rows/s</td></tr><tr><td>bq_cli_load</td><td>large</td><td>750.0K</td><td>20.8s</td><td>36.1K rows/s</td></tr><tr><td>bq_gcs_csv</td><td>small</td><td>2.5K</td><td>5.9s</td><td>427 rows/s</td></tr><tr><td colspan='5'>... 8 more rows ...</td></tr></tbody></table>
 
+```
+
+*Source: C# benchmark cell.*
 ```csharp
 var tierOrder = new[] { "small", "medium", "large" };
 var tierColors = new Dictionary<string, string>
@@ -1516,13 +1612,16 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
         PlotBGColor: Color.fromString("transparent"),
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
-
+```text
 <iframe src="/static/plotly/di_cs_02.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+```
 
 #### Firestore Ingestion Benchmark
 
 Firestore batch-write results across all three tiers. The bar chart illustrates the ~400 rows/s ceiling imposed by sequential gRPC batch commits.
 
+*Source: C# benchmark cell.*
 ```csharp
 var methods = new[] { "fs_batch_write" };
 var subset = allResults.Where(r => methods.Contains(r.method)).ToList();
@@ -1536,7 +1635,7 @@ var dfSummary = new DataFrame(
 );
 dfSummary
 ```
-
+```text
 <style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
 <style>
 .pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
@@ -1549,6 +1648,9 @@ dfSummary
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(3 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>method<span class='pl-dtype'>utf8view</span></th><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>utf8view</span></th><th>time<span class='pl-dtype'>utf8view</span></th><th>rate<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>fs_batch_write</td><td>small</td><td>2.5K</td><td>6.2s</td><td>406 rows/s</td></tr><tr><td>fs_batch_write</td><td>medium</td><td>75.0K</td><td>3m18s</td><td>378 rows/s</td></tr><tr><td>fs_batch_write</td><td>large</td><td>750.0K</td><td>8m21s</td><td>1.5K rows/s</td></tr></tbody></table>
 
+```
+
+*Source: C# benchmark cell.*
 ```csharp
 var tierOrder = new[] { "small", "medium", "large" };
 var tierColors = new Dictionary<string, string>
@@ -1576,13 +1678,16 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
         PlotBGColor: Color.fromString("transparent"),
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
-
+```text
 <iframe src="/static/plotly/di_cs_03.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+```
 
 #### Cross-Service Transfers Benchmark
 
 Cross-service transfer results comparing SQL Server→BigQuery, BigQuery→SQL Server, and SQL Server→Firestore paths. The bar chart shows that SQL→BQ is the fastest cross-service path due to streaming CSV upload.
 
+*Source: C# benchmark cell.*
 ```csharp
 var methods = new[] { "sql_to_bq", "bq_to_sql", "sql_to_firestore" };
 var subset = allResults.Where(r => methods.Contains(r.method)).ToList();
@@ -1596,7 +1701,7 @@ var dfSummary = new DataFrame(
 );
 dfSummary
 ```
-
+```text
 <style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
 <style>
 .pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
@@ -1609,6 +1714,9 @@ dfSummary
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(9 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>method<span class='pl-dtype'>utf8view</span></th><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>utf8view</span></th><th>time<span class='pl-dtype'>utf8view</span></th><th>rate<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>sql_to_bq</td><td>small</td><td>2.5K</td><td>1.3s</td><td>2.0K rows/s</td></tr><tr><td>sql_to_bq</td><td>medium</td><td>75.0K</td><td>4.2s</td><td>17.7K rows/s</td></tr><tr><td>sql_to_bq</td><td>large</td><td>750.0K</td><td>34.0s</td><td>22.1K rows/s</td></tr><tr><td>bq_to_sql</td><td>small</td><td>2.5K</td><td>6.8s</td><td>365 rows/s</td></tr><tr><td>bq_to_sql</td><td>medium</td><td>75.0K</td><td>15.3s</td><td>4.9K rows/s</td></tr><tr><td>bq_to_sql</td><td>large</td><td>750.0K</td><td>1m24s</td><td>8.9K rows/s</td></tr><tr><td>sql_to_firestore</td><td>small</td><td>2.5K</td><td>7.7s</td><td>324 rows/s</td></tr><tr><td>sql_to_firestore</td><td>medium</td><td>75.0K</td><td>3m47s</td><td>331 rows/s</td></tr><tr><td>sql_to_firestore</td><td>large</td><td>750.0K</td><td>38m25s</td><td>325 rows/s</td></tr></tbody></table>
 
+```
+
+*Source: C# benchmark cell.*
 ```csharp
 var tierOrder = new[] { "small", "medium", "large" };
 var tierColors = new Dictionary<string, string>
@@ -1636,13 +1744,16 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
         PlotBGColor: Color.fromString("transparent"),
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
-
+```text
 <iframe src="/static/plotly/di_cs_04.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+```
 
 #### Data Exports Benchmark
 
 Export benchmark results comparing SQL Server CSV streaming and BigQuery→GCS extract jobs. The bar chart shows SQL Server local export as the faster path at small/medium tier, while BQ→GCS scales better at large tier.
 
+*Source: C# benchmark cell.*
 ```csharp
 var methods = new[] { "sql_export_csv", "bq_export_gcs" };
 var subset = allResults.Where(r => methods.Contains(r.method)).ToList();
@@ -1656,7 +1767,7 @@ var dfSummary = new DataFrame(
 );
 dfSummary
 ```
-
+```text
 <style>.pl-dataframe,.pl-dataframe *{background:transparent!important;background-color:transparent!important;color:var(--vscode-editor-foreground,inherit)!important}.pl-dataframe{font-size:14px!important;border-collapse:collapse;width:auto}.pl-dataframe td,.pl-dataframe th{padding:6px 12px!important;text-align:left;border:1px solid var(--vscode-panel-border,#555)!important}.pl-dataframe th{font-weight:bold}.pl-dataframe .pl-dtype{font-size:11px;opacity:0.5}</style>
 <style>
 .pl-dataframe { font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; border-collapse: collapse; border: 1px solid #e0e0e0; }
@@ -1669,6 +1780,9 @@ dfSummary
 .pl-dim { font-family: sans-serif; font-size: 12px; color: #666; margin-bottom: 8px; }
 </style><div class='pl-dim'>Polars DataFrame: <b>(6 rows, 5 columns)</b></div><table class='pl-dataframe'><thead><tr><th>method<span class='pl-dtype'>utf8view</span></th><th>tier<span class='pl-dtype'>utf8view</span></th><th>rows<span class='pl-dtype'>utf8view</span></th><th>time<span class='pl-dtype'>utf8view</span></th><th>rate<span class='pl-dtype'>utf8view</span></th></tr></thead><tbody><tr><td>sql_export_csv</td><td>small</td><td>2.5K</td><td>92ms</td><td>27.1K rows/s</td></tr><tr><td>sql_export_csv</td><td>medium</td><td>75.0K</td><td>1.7s</td><td>45.4K rows/s</td></tr><tr><td>sql_export_csv</td><td>large</td><td>750.0K</td><td>9.4s</td><td>79.4K rows/s</td></tr><tr><td>bq_export_gcs</td><td>small</td><td>2.5K</td><td>8.5s</td><td>296 rows/s</td></tr><tr><td>bq_export_gcs</td><td>medium</td><td>75.0K</td><td>7.5s</td><td>10.0K rows/s</td></tr><tr><td>bq_export_gcs</td><td>large</td><td>750.0K</td><td>15.3s</td><td>49.1K rows/s</td></tr></tbody></table>
 
+```
+
+*Source: C# benchmark cell.*
 ```csharp
 var tierOrder = new[] { "small", "medium", "large" };
 var tierColors = new Dictionary<string, string>
@@ -1696,13 +1810,16 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
         PlotBGColor: Color.fromString("transparent"),
         Font: Font.init(Color: Color.fromHex("#cccccc"))))
 ```
-
+```text
 <iframe src="/static/plotly/di_cs_05.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
+
+```
 
 #### Cleanup staging tables
 
 Drops `dbo.ohlcv_bench` and `dbo.firestore_audit_log` from SQL Server, deletes the BigQuery staging table, and removes the local exports directory.
 
+*Source: C# benchmark cell.*
 ```csharp
 using (var conn = CreateSqlConnection())
 {
@@ -1726,11 +1843,13 @@ if (Directory.Exists(Path.Combine(DATA_DIR, "exports")))
     Directory.Delete(Path.Combine(DATA_DIR, "exports"), true);
 Console.WriteLine("  Local exports cleaned up");
 ```
-
+```text
       SQL Server staging tables dropped
       BigQuery staging table dropped
       Firestore: documents left in place (overwrite-safe)
       Local exports cleaned up
+
+```
 
 > [!info] Firestore has no collection drop API
 >
@@ -1739,27 +1858,35 @@ Console.WriteLine("  Local exports cleaned up");
 ## Warnings
 
 > [!warning] Never insert rows into SQL Server in a loop with individual `SqlCommand` calls
+>
 > Each call is a separate network round-trip. At 75K rows this is 75 000 individual TDS packets. `SqlBulkCopy` batches them into pages and is 50–200× faster.
 
 > [!success] Correct pattern
+>
 > Use `SqlBulkCopy` with `BatchSize = 10000` and `EnableStreaming = true`. For files already on disk, `bcp` is even faster because it bypasses the managed driver entirely.
 
 > [!warning] Not awaiting `PollUntilCompletedAsync()` on BigQuery load jobs leaves data absent
+>
 > `CreateLoadJob` is asynchronous — the method returns a job handle immediately. If you do not poll to completion, the table appears empty when you query it next.
 
 > [!success] Correct pattern
+>
 > Always chain `.PollUntilCompletedAsync()` and check `job.Status.ErrorResult == null` before proceeding to downstream cells.
 
 > [!warning] Forgetting `CommitAsync()` on a Firestore `WriteBatch` silently discards all documents
+>
 > Writes are staged client-side. Without an explicit commit the batch is never transmitted.
 
 > [!success] Correct pattern
+>
 > Call `await batch.CommitAsync()` after every 500 queued operations. For larger collections, loop: accumulate 499 ops, commit, reset with `db.StartBatch()`.
 
 > [!warning] Loading `Microsoft.Bcl.AsyncInterfaces` in the wrong cell order causes `InvalidCastException` at runtime
+>
 > .NET Interactive loads assemblies in cell-execution order. If Firestore is loaded before the async interfaces shim, the `IAsyncEnumerable` type binding breaks.
 
 > [!success] Correct pattern
+>
 > Always load `Microsoft.Bcl.AsyncInterfaces` in the same `#r` cell as the other NuGet packages, before any Firestore usage cell is executed.
 
 ## Recommendations
@@ -1775,15 +1902,92 @@ Console.WriteLine("  Local exports cleaned up");
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `SqlException: Cannot open server ... firewall` | SQL Server unreachable or firewall rule missing | Verify `SQL_SERVER_HOST` env var and that the VM/container IP is in the server's allowed range |
-| `SqlBulkCopy` silently writes 0 rows | `ColumnMappings` mismatch between source and destination column names | Add explicit `ColumnMappings` entries, or ensure source column names exactly match destination DDL |
-| `InvalidCastException` in Firestore async enumeration | `Microsoft.Bcl.AsyncInterfaces` loaded after Firestore assembly | Move `#r "nuget: Microsoft.Bcl.AsyncInterfaces"` into the same cell as the other NuGet refs and re-run from scratch |
-| BQ load job returns `notFound: Not found: Dataset` | Dataset not yet created or wrong project ID | Run the Schema Setup cell that creates the dataset, or check `BQ_PROJECT` env var |
-| BigQuery job completes but row count is doubled | `WriteDisposition` defaulted to `WriteAppend` — re-run appended instead of replacing | Set `WriteDisposition = WriteDisposition.WriteTruncate` in `CreateLoadJobOptions` |
-| GCS download + SqlBulkCopy OOM crash | File fully buffered as `byte[]` or `MemoryStream` before streaming to SQL | Switch to `StorageClient.DownloadObjectAsync()` with a `PipeWriter`/`PipeReader` or temp file stream |
-| BCP exits with SSL handshake error | TLS version mismatch between bcp binary and SQL Server TLS policy | Add `-N` (encrypt) flag and confirm bcp version; or set `TrustServerCertificate=True` for dev environments |
-| `CreateExtractJob` produces empty GCS object | Source table is empty or query returned 0 rows | Verify the staging table was populated; check `job.Resource.Status.State == "DONE"` and `ErrorResult == null` |
+#### `SqlException: Cannot open server ... firewall`
+The SQL Server endpoint is unreachable or the firewall does not allow the client IP. Verify `SQL_SERVER_HOST` and the server's allow-list before retrying the load.
+
+*Source: C# troubleshooting example.*
+```csharp
+Console.WriteLine("Check SQL_SERVER_HOST and the firewall allow-list.");
+```
+```text
+Check SQL_SERVER_HOST and the firewall allow-list.
+```
+
+#### `SqlBulkCopy` silently writes 0 rows
+The source and destination column order diverged. Define explicit `ColumnMappings` entries, or make the source projection match the destination DDL exactly.
+
+*Source: C# troubleshooting example.*
+```csharp
+Console.WriteLine("Verify ColumnMappings and source column order.");
+```
+```text
+Verify ColumnMappings and source column order.
+```
+
+#### `InvalidCastException` in Firestore async enumeration
+`Microsoft.Bcl.AsyncInterfaces` was loaded after the Firestore assembly. Move `#r "nuget: Microsoft.Bcl.AsyncInterfaces"` into the same cell as the other NuGet refs and rerun from scratch.
+
+*Source: C# troubleshooting example.*
+```csharp
+Console.WriteLine("Load Microsoft.Bcl.AsyncInterfaces before Firestore.");
+```
+```text
+Load Microsoft.Bcl.AsyncInterfaces before Firestore.
+```
+
+#### `BQ load job returns notFound: Not found: Dataset`
+The dataset does not exist yet or the project ID is wrong. Run the schema setup cell that creates the dataset, or check the `BQ_PROJECT` environment variable.
+
+*Source: C# troubleshooting example.*
+```csharp
+Console.WriteLine("Create the dataset before calling UploadCsv or CreateLoadJob.");
+```
+```text
+Create the dataset before calling UploadCsv or CreateLoadJob.
+```
+
+#### `BigQuery job completes but row count is doubled`
+`WriteDisposition` fell back to `WriteAppend`, so the rerun appended instead of replacing. Set `WriteDisposition = WriteDisposition.WriteTruncate` in `CreateLoadJobOptions`.
+
+*Source: C# troubleshooting example.*
+```csharp
+Console.WriteLine("Use WriteDisposition.WriteTruncate for rerunnable benchmarks.");
+```
+```text
+Use WriteDisposition.WriteTruncate for rerunnable benchmarks.
+```
+
+#### `GCS download + SqlBulkCopy OOM crash`
+The file was buffered into `byte[]` or `MemoryStream` before the SQL copy started. Switch to `StorageClient.DownloadObjectAsync()` with a `PipeWriter` or a temp-file stream.
+
+*Source: C# troubleshooting example.*
+```csharp
+Console.WriteLine("Stream from GCS; do not buffer the whole file first.");
+```
+```text
+Stream from GCS; do not buffer the whole file first.
+```
+
+#### `BCP exits with SSL handshake error`
+The TLS version used by `bcp` does not match the SQL Server policy. Add the `-N` encrypt flag and confirm the `bcp` version, or set `TrustServerCertificate=True` for dev environments.
+
+*Source: C# troubleshooting example.*
+```csharp
+Console.WriteLine("Add -N or TrustServerCertificate=True for dev runs.");
+```
+```text
+Add -N or TrustServerCertificate=True for dev runs.
+```
+
+#### `CreateExtractJob` produces empty GCS object`
+The source table is empty or the query returned no rows. Verify that the staging table was populated and that `job.Resource.Status.State == "DONE"` with `ErrorResult == null`.
+
+*Source: C# troubleshooting example.*
+```csharp
+Console.WriteLine("Confirm the source table has rows before export.");
+```
+```text
+Confirm the source table has rows before export.
+```
 
 

@@ -198,15 +198,15 @@ ORDER BY file_id;
 | 1 | stoxx | ROWS | /var/opt/mssql/data/stoxx.mdf | 712.00 | UNLIMITED | 64.00 MB | 0 |
 | 2 | stoxx_log | LOG | /var/opt/mssql/data/stoxx_log.ldf | 968.00 | 2097152.00 | 64.00 MB | 0 |
 
+```text
+file_id  name       type_desc  physical_name                  size_mb  max_size_mb  growth_setting  is_percent_growth
+1        stoxx      ROWS       /var/opt/mssql/data/stoxx.mdf  712.00   UNLIMITED    64.00 MB        0
+2        stoxx_log  LOG        /var/opt/mssql/data/stoxx_log.ldf  968.00   2097152.00   64.00 MB        0
+```
+
 *The database currently has one data file and one log file, both growing in fixed 64 MB increments. Fixed growth is preferable to percentage growth because it keeps growth behavior predictable. The main production concern in this output is that the data file is allowed to grow without a defined cap; unlimited growth is easy to forget until the underlying volume becomes the real limit.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `type_desc` | `ROWS` | &#9989; | Main data file. | Stores tables, indexes, and allocation structures. |
-| `type_desc` | `LOG` | &#9989; | Transaction log file. | Governs durability, recovery, and log reuse. |
-| `max_size_mb` | `UNLIMITED` | &#10060; | SQL Server can keep growing the file until the volume runs out. | Convenient in a lab, risky in production without external disk controls. |
-| `is_percent_growth` | `0` | &#9989; | Growth uses a fixed increment. | Predictable growth events and easier capacity planning. |
-| `is_percent_growth` | `1` | &#10060; | Growth uses a percentage of current size. | Growth events become larger and less predictable over time. |
+The reading from this output is straightforward: `ROWS` is the main data file, `LOG` is the transaction log file, `UNLIMITED` on `max_size_mb` means the file can keep growing until the volume fills, and `is_percent_growth = 0` means growth is fixed rather than percentage-based.
 
 ## Inspect A Real Data Page
 
@@ -262,23 +262,18 @@ SELECT
 FROM sys.dm_db_page_info(DB_ID(), @file_id, @page_id, 'DETAILED');
 ```
 
-| file_id | page_id | page_type_desc | page_level | object_id | index_id | is_mixed_extent | has_ghost_records | prev_page_file_id | prev_page_page_id | next_page_file_id | next_page_page_id | slot_count | free_bytes | fixed_length |
-|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1 | 2336 | DATA_PAGE | 0 | 1493580359 | 1 | 0 | 0 | 1 | 3295 | 1 | 2337 | 88 | 8 | 76 |
+```text
+file_id  page_id  page_type_desc  page_level  object_id    index_id  is_mixed_extent  has_ghost_records  prev_page_file_id  prev_page_page_id  next_page_file_id  next_page_page_id  slot_count  free_bytes  fixed_length
+1        2336     DATA_PAGE       0           1493580359   1         0                0                   1                  3295               1                  2337               88          8           76
+```
 
 *This is a real leaf data page from the clustered index of `silver.eurostoxx50_ohlcv`. It is in file 1, linked to neighboring pages on both sides, contains 88 row slots, and has only 8 free bytes left. That is the physical reality behind a clustered-index scan or seek: the engine is traversing linked 8 KB pages like this one.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `page_type_desc` | `DATA_PAGE` | &#9989; | A normal row-bearing data page. | This is the page type most rowstore queries ultimately read. |
-| `page_level` | `0` | &#9989; | Leaf level. | This is where the actual clustered rows live. |
-| `page_level` | `> 0` | &#9989; | Internal index level. | The page is part of B-tree navigation, not the final row payload. |
-| `is_mixed_extent` | `0` | &#9989; | The page is in a uniform extent. | Normal for established objects on modern SQL Server builds. |
-| `is_mixed_extent` | `1` | ⚠ | The page is in a mixed extent. | More common on very small objects or special allocation cases. |
-| `has_ghost_records` | `0` | &#9989; | No ghosted rows on the page right now. | Nothing on this page is waiting for deferred cleanup. |
-| `has_ghost_records` | `1` | ⚠ | At least one row is ghosted. | A delete happened and cleanup has not yet reclaimed the slot. |
+The operational readout is simple: `DATA_PAGE` means a normal row-bearing page, `page_level = 0` means leaf level, `is_mixed_extent = 0` means a uniform extent, and `has_ghost_records = 0` means there is no deferred delete cleanup on this page.
 
 ## Write-Ahead Logging And Log Health
+
+*The diagram below shows the write-ahead logging sequence from row change through log flush and later page flush.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -341,22 +336,18 @@ CROSS JOIN sys.dm_db_log_space_usage AS ls
 WHERE d.database_id = DB_ID();
 ```
 
-| database_name | recovery_model_desc | total_log_mb | used_log_mb | used_log_pct | free_log_mb | log_since_last_backup_mb |
-|---|---|---:|---:|---:|---:|---:|
-| stoxx | FULL | 967.99 | 638.23 | 65.93 | 329.76 | 621.65 |
+```text
+database_name  recovery_model_desc  total_log_mb  used_log_mb  used_log_pct  free_log_mb  log_since_last_backup_mb
+stoxx          FULL                 967.99        638.23       65.93         329.76       621.65
+```
 
 *`stoxx` is in `FULL` recovery and about two thirds of the current log file is occupied. The most important operational signal is that more than 621 MB of log has accumulated since the last log backup. In `FULL` recovery, sustained growth in this column usually means the log-backup chain is absent, infrequent, or blocked by a reuse issue.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `recovery_model_desc` | `FULL` | &#9989; | Full recovery model. | Supports point-in-time recovery, but requires regular log backups. |
-| `recovery_model_desc` | `SIMPLE` | ⚠ | Log is truncated automatically at checkpoints. | Simpler operations, but no point-in-time recovery through log backups. |
-| `recovery_model_desc` | `BULK_LOGGED` | ⚠ | Reduced logging for some bulk operations. | Can help load workloads, but complicates recovery semantics. |
-| `used_log_pct` | `< 70%` | &#9989; | Comfortable headroom. | Usually not urgent if the trend is stable. |
-| `used_log_pct` | `70% - 90%` | ⚠ | Meaningful pressure. | Whether this is safe or urgent depends on two factors: **how much absolute free space remains** (70% of a 2 TB log still leaves 600 GB; 70% of a 1 GB log leaves only 300 MB) and **how fast the active portion is growing** (a log at 75% but stable between log backups is fine; a log at 75% and climbing during ETL with no log backup scheduled is not). The `stoxx` log shows 65.93% used on a 968 MB log — ~330 MB free — which is comfortable for this lab workload but would be marginal for a production database with heavy write bursts. |
-| `used_log_pct` | `> 90%` | &#10060; | High pressure. | Growth or log-full conditions may be close. **Feedback signal:** if `log_reuse_wait_desc` is `LOG_BACKUP`, take an immediate log backup (`BACKUP LOG [db] TO DISK = ...`). If it is `ACTIVE_TRANSACTION`, find the blocking session with `DBCC OPENTRAN` and resolve it. If the log is both > 90% full and has no autogrowth headroom (`MAXSIZE` reached), writes will fail with error 9002. |
-| `log_since_last_backup_mb` | Low and resetting | &#9989; | Log backups are occurring. | Inactive VLFs can become reusable. |
-| `log_since_last_backup_mb` | High and monotonically increasing | &#10060; | Log backup chain is not keeping up. | Expect persistent log growth in `FULL` recovery. |
+`FULL` recovery supports point-in-time recovery, but it depends on regular log backups. `SIMPLE` truncates the log at checkpoints and gives up point-in-time recovery through log backups. `BULK_LOGGED` reduces logging for some bulk operations, but it changes recovery semantics enough that it deserves explicit operational review.
+
+For `used_log_pct`, values below 70 percent are usually comfortable, values from 70 to 90 percent require context from absolute free space and growth rate, and values above 90 percent need immediate attention. If `log_reuse_wait_desc` says `LOG_BACKUP`, take a log backup. If it says `ACTIVE_TRANSACTION`, identify the blocker with `DBCC OPENTRAN`. If the log has reached `MAXSIZE`, writes will fail with error 9002.
+
+`log_since_last_backup_mb` should reset after log backups. If it climbs monotonically across repeated checks in `FULL` recovery, the backup chain is not keeping up with write activity.
 
 ### `sys.dm_db_log_info` | inspect VLF count
 
@@ -383,19 +374,14 @@ SELECT
 FROM sys.dm_db_log_info(DB_ID());
 ```
 
-| vlf_count | active_vlf_count | total_vlf_size_mb |
-|---:|---:|---:|
-| 43 | 25 | 967.96 |
+```text
+vlf_count  active_vlf_count  total_vlf_size_mb
+43         25                967.96
+```
 
 *The current VLF layout is healthy. Forty-three VLFs for a roughly 968 MB log is not excessive, and the active portion is materially smaller than the total log. The practical takeaway is that this log is not currently suffering from pathological VLF fragmentation.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `vlf_count` | `< 50` | &#9989; | Usually healthy for small and medium logs. | Recovery and log scans are unlikely to be impaired by VLF sprawl alone. |
-| `vlf_count` | `50 - 200` | ⚠ | Worth monitoring. | Often acceptable, but confirm growth behavior and backup cadence. A 1 GB log pre-sized in a single allocation produces 8 VLFs; a 1 GB log grown from 1 MB by repeated 64 MB autogrowth events produces ~125 VLFs. The same final size, very different VLF count — the difference is the growth history. |
-| `vlf_count` | `> 200` | &#10060; | Often excessive. | Recovery, startup, and log-management tasks can become slower. The `stoxx` log has 43 VLFs for 968 MB because it grew through repeated 64 MB increments from the default 1 MB starting size — each 64 MB event created 4 VLFs (per the < 64 MB tier). If the 968 MB had been pre-sized in a single allocation, it would have produced 8 VLFs of ~121 MB each. **Feedback signal:** if `DBCC CHECKDB` or `RESTORE` runtimes increase disproportionately to database size, query `sys.dm_db_log_info` and check whether VLF count is in the hundreds — a log rebuild (shrink + single pre-size) is the fix. |
-| `active_vlf_count` | Much lower than `vlf_count` | &#9989; | Good reuse headroom exists. | The log has inactive regions available for reuse. |
-| `active_vlf_count` | Close to `vlf_count` | ⚠ | Most of the log is active. | Growth pressure is more likely if heavy logging continues. |
+`vlf_count` below 50 is usually healthy for small and medium logs. Counts from 50 to 200 are worth monitoring because the same final size can hide very different growth histories. Counts above 200 are often excessive and can slow recovery, startup, and log-management tasks. `active_vlf_count` should remain materially lower than `vlf_count`; when the two are close, the log has little reusable space left.
 
 ### `sys.fn_dblog` | confirm that one row change writes multiple log records
 
@@ -433,25 +419,18 @@ WHERE AllocUnitName LIKE 'dbo.demo_storage_log%'
 ORDER BY [Current LSN] DESC;
 ```
 
-| Current LSN | Operation | Context | Page ID | AllocUnitName |
-|---|---|---|---|---|
-| 00000169:0001D9D0:001A | LOP_INSERT_ROWS | LCX_CLUSTERED | 0001:00001c40 | dbo.demo_storage_log.PK__demo_sto__3213E83FCD8EA637 |
-| 00000169:0001D9D0:0016 | LOP_FORMAT_PAGE | LCX_HEAP | 0001:00001c40 | dbo.demo_storage_log.PK__demo_sto__3213E83FCD8EA637 |
-| 00000169:0001D9D0:000E | LOP_SET_BITS | LCX_IAM | 0001:000072a2 | dbo.demo_storage_log.PK__demo_sto__3213E83FCD8EA637 |
-| 00000169:0001D9D0:000C | LOP_FORMAT_PAGE | LCX_IAM | 0001:000072a2 | dbo.demo_storage_log.PK__demo_sto__3213E83FCD8EA637 |
-| 00000169:0001D9D0:0009 | LOP_MODIFY_ROW | LCX_PFS | 0001:00000001 | dbo.demo_storage_log.PK__demo_sto__3213E83FCD8EA637 |
+```text
+Current LSN             Operation       Context       Page ID          AllocUnitName
+00000169:0001D9D0:001A  LOP_INSERT_ROWS  LCX_CLUSTERED 0001:00001c40   dbo.demo_storage_log.PK__demo_sto__3213E83FCD8EA637
+00000169:0001D9D0:0016  LOP_FORMAT_PAGE  LCX_HEAP      0001:00001c40   dbo.demo_storage_log.PK__demo_sto__3213E83FCD8EA637
+00000169:0001D9D0:000E  LOP_SET_BITS     LCX_IAM       0001:000072a2   dbo.demo_storage_log.PK__demo_sto__3213E83FCD8EA637
+00000169:0001D9D0:000C  LOP_FORMAT_PAGE  LCX_IAM       0001:000072a2   dbo.demo_storage_log.PK__demo_sto__3213E83FCD8EA637
+00000169:0001D9D0:0009  LOP_MODIFY_ROW   LCX_PFS       0001:00000001   dbo.demo_storage_log.PK__demo_sto__3213E83FCD8EA637
+```
 
 *One row insert generated multiple log records. That is the operational reason write-heavy workloads are limited by more than row count alone: every change also touches allocation structures, page metadata, and durability bookkeeping.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `Operation` | `LOP_INSERT_ROWS` | &#9989; | The row payload was inserted. | This is the business-level row change. |
-| `Operation` | `LOP_FORMAT_PAGE` | &#9989; | A page was initialized or prepared. | New page allocation or page-use change happened. |
-| `Operation` | `LOP_SET_BITS` | &#9989; | Allocation maps were updated. | SQL Server changed extent/page allocation bookkeeping. |
-| `Operation` | `LOP_MODIFY_ROW` | &#9989; | Metadata or row contents changed in place. | Common around PFS and other system structures. |
-| `Context` | `LCX_CLUSTERED` | &#9989; | The operation affected clustered-index storage. | The base row itself was logged. |
-| `Context` | `LCX_IAM` | &#9989; | The operation affected IAM allocation metadata. | Space allocation changed. |
-| `Context` | `LCX_PFS` | &#9989; | The operation affected PFS metadata. | Page free-space and allocation status changed. |
+`LOP_INSERT_ROWS` is the business-level row change. `LOP_FORMAT_PAGE` shows page initialization or reuse. `LOP_SET_BITS` shows allocation-map bookkeeping. `LOP_MODIFY_ROW` shows in-place metadata or row changes. `LCX_CLUSTERED`, `LCX_IAM`, and `LCX_PFS` indicate the storage structures that were touched.
 
 ## Heap Forwarding Records
 
@@ -494,6 +473,10 @@ SELECT n.row_id, REPLICATE('A', 20)
 FROM n;
 ```
 
+```text
+No result set returned.
+```
+
 ### Baseline | confirm a clean heap with zero forwarding records
 
 Before widening any rows, capture the physical state of the heap so the post-update comparison has a known reference. `sys.dm_db_index_physical_stats` returns the page count, record count, and forwarded record count required to prove that the starting state is clean.
@@ -519,17 +502,14 @@ SELECT
 FROM sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID(N'dbo.demo_storage_heap_forwarding'), 0, NULL, 'DETAILED');
 ```
 
-| index_type_desc | page_count | record_count | forwarded_record_count |
-|---|---:|---:|---:|
-| HEAP | 1 | 200 | 0 |
+```text
+index_type_desc  page_count  record_count  forwarded_record_count
+HEAP             1           200           0
+```
 
 *The fresh heap fits on one page and has no forwarded rows. This is the clean baseline state before any row widening occurs.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `index_type_desc` | `HEAP` | &#9989; | The table has no clustered index. | Forwarding records are possible on widening updates. |
-| `forwarded_record_count` | `0` | &#9989; | No forwarding pointers exist. | Reads do not need extra heap hops yet. |
-| `forwarded_record_count` | `> 0` | &#10060; | Some rows were moved and left forwarding stubs. | Heap lookups now require extra page visits. |
+`HEAP` means there is no clustered index, so forwarding records are possible when a row grows. `forwarded_record_count = 0` confirms the starting state is clean. Any value above zero means some rows were moved and lookups now require extra page visits.
 
 ### Widen The Rows | expand half the rows beyond their original slot size
 
@@ -550,6 +530,10 @@ Run a single `UPDATE` that replaces the payload of every even-numbered row with 
 UPDATE dbo.demo_storage_heap_forwarding
 SET payload = REPLICATE('Z', 500)
 WHERE row_id % 2 = 0;
+```
+
+```text
+No result set returned.
 ```
 
 ### Post-change Validation | observe pages and forwarding records after widening
@@ -576,17 +560,14 @@ SELECT
 FROM sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID(N'dbo.demo_storage_heap_forwarding'), 0, NULL, 'DETAILED');
 ```
 
-| index_type_desc | page_count | record_count | forwarded_record_count |
-|---|---:|---:|---:|
-| HEAP | 8 | 294 | 94 |
+```text
+index_type_desc  page_count  record_count  forwarded_record_count
+HEAP             8           294           94
+```
 
 *The heap expanded from 1 page to 8 pages and now has 94 forwarded rows. That is the exact failure mode mutable heaps suffer from: row access becomes less direct over time because the original row location now points somewhere else.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `page_count` | Increased materially | ⚠ | The heap now occupies more pages. | Reads and scans have more physical work to do. |
-| `record_count` | Higher than business row count | ⚠ | Physical row accounting now includes forwarding artifacts. | The storage engine is carrying extra structural overhead. |
-| `forwarded_record_count` | `94` | &#10060; | Nearly half the rows now require a forwarding hop. | Rebuild or add a clustered index if this pattern appears in production. |
+`page_count` increased materially, so the heap now occupies more pages and reads have more physical work to do. `record_count` is higher than the business row count because forwarding artifacts are counted in the physical structure. `forwarded_record_count = 94` means nearly half the rows now require a forwarding hop, which is a strong signal to rebuild or add a clustered index in production.
 
 ## Page Splits
 
@@ -637,6 +618,10 @@ SELECT n.row_id, REPLICATE('A', 20)
 FROM n;
 ```
 
+```text
+No result set returned.
+```
+
 ### Baseline | confirm one leaf page with zero fragmentation
 
 Before widening any rows, capture the leaf-level page count and fragmentation so the post-update result can be compared against a known clean state. The baseline also confirms that the table is small enough to fit on a single leaf page at the start.
@@ -663,18 +648,14 @@ FROM sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID(N'dbo.demo_storage_page_s
 WHERE index_level = 0;
 ```
 
-| index_level | avg_fragmentation_in_percent | page_count | record_count |
-|---:|---:|---:|---:|
-| 0 | 0.00 | 1 | 200 |
+```text
+index_level  avg_fragmentation_in_percent  page_count  record_count
+0            0.00                         1           200
+```
 
 *The fresh clustered index is compact: one leaf page, no fragmentation worth discussing, and 200 rows stored in key order.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `index_level` | `0` | &#9989; | Leaf level only. | This is the level that affects row reads directly. |
-| `avg_fragmentation_in_percent` | `0 - 5` | &#9989; | Generally healthy. | Range scans are not paying extra page-order penalties. |
-| `avg_fragmentation_in_percent` | `5 - 30` | ⚠ | Evaluate in context. | Check page count and workload type before rebuilding. |
-| `avg_fragmentation_in_percent` | `> 30` | &#10060; | Material fragmentation on meaningful objects. | Often worth maintenance when page count is also substantial. |
+`index_level = 0` isolates the leaf pages that affect row reads directly. `avg_fragmentation_in_percent` from 0 to 5 is generally healthy, 5 to 30 needs context, and above 30 is usually material on objects large enough to matter. `page_count` is the companion signal that tells you whether the percentage is actually worth acting on.
 
 ### Widen The Rows | expand every row so the leaf level must split
 
@@ -695,6 +676,10 @@ Run a single `UPDATE` that replaces the payload of every row with 500 bytes of p
 ```sql
 UPDATE dbo.demo_storage_page_splits
 SET payload = REPLICATE('Y', 500);
+```
+
+```text
+No result set returned.
 ```
 
 ### Post-change Validation | observe page count and fragmentation after widening
@@ -722,17 +707,14 @@ FROM sys.dm_db_index_physical_stats(DB_ID(), OBJECT_ID(N'dbo.demo_storage_page_s
 WHERE index_level = 0;
 ```
 
-| index_level | avg_fragmentation_in_percent | page_count | record_count |
-|---:|---:|---:|---:|
-| 0 | 12.00 | 25 | 200 |
+```text
+index_level  avg_fragmentation_in_percent  page_count  record_count
+0            12.00                        25          200
+```
 
 *The row count stayed at 200, but the leaf level expanded from 1 page to 25 pages and fragmentation rose from 0% to 12%. On an object this small the exact percentage is not actionable on its own; the structural effect is what matters: widening rows forces the clustered index to allocate additional leaf pages and breaks the original dense layout.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `page_count` | `25` vs `1` baseline | ⚠ | The same rows now occupy far more leaf pages. | Range scans and buffer usage become more expensive. |
-| `avg_fragmentation_in_percent` | `12.00` | ⚠ | The leaf order is no longer perfectly sequential. | Small in production impact here, but it proves the split mechanism. |
-| `record_count` | Unchanged | &#9989; | Business row count stayed constant. | The extra cost comes from storage layout, not more data. |
+`page_count` jumped from 1 to 25, so the same rows now require much more leaf storage. `avg_fragmentation_in_percent = 12.00` is not a maintenance trigger by itself on a tiny object, but it proves the split mechanism. `record_count` stayed constant, which confirms the growth is structural rather than driven by more business rows.
 
 ## `tempdb` Space By Category
 
@@ -766,20 +748,14 @@ SELECT
 FROM tempdb.sys.dm_db_file_space_usage;
 ```
 
-| unallocated_mb | version_store_mb | user_object_mb | internal_object_mb | mixed_extent_mb |
-|---:|---:|---:|---:|---:|
-| 2618.44 | 0.00 | 2.44 | 1.06 | 2.06 |
+```text
+unallocated_mb  version_store_mb  user_object_mb  internal_object_mb  mixed_extent_mb
+2618.44         0.00              2.44            1.06                2.06
+```
 
 *`tempdb` is healthy at capture time. More than 2.6 GB inside the current files is free, version store usage is effectively zero, and both user and internal object footprints are tiny. This is what an uncongested `tempdb` looks like.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `version_store_mb` | Near `0` | &#9989; | Little or no version-store pressure. | Snapshot/RCSI or online-maintenance versioning is not stressing `tempdb` right now. |
-| `version_store_mb` | Sustained growth | &#10060; | Long-running versioned transactions exist. | Investigate snapshot readers, RCSI, or online operations. |
-| `user_object_mb` | Low and transient | &#9989; | Temp tables and user scratch objects are modest. | Normal ETL or SSMS activity. |
-| `user_object_mb` | High and persistent | ⚠ | User sessions are holding large `tempdb` objects. | Check temp-table strategy and session cleanup. |
-| `internal_object_mb` | Low | &#9989; | Sorts, hashes, and worktables are modest. | No visible spill pressure right now. |
-| `internal_object_mb` | High or rising fast | &#10060; | The engine is spilling or materializing heavy workspace structures. | Check memory grants, sorts, hashes, and bad plans. |
+`version_store_mb` near zero means snapshot isolation, RCSI, or online-maintenance versioning is not stressing `tempdb` right now. Sustained growth points to long-running versioned transactions. `user_object_mb` should be low and transient; high persistent usage points to temp-table pressure or poor cleanup. `internal_object_mb` should also stay low; high or rising values usually point to spills, sorts, hashes, or other workspace pressure.
 
 ## Production Recommendations
 

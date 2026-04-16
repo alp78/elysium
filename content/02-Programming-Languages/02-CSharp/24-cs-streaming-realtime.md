@@ -8,13 +8,14 @@ tags:
 aliases: [Streaming CSharp, Real-Time Data CSharp, WebSocket, SSE, Pub/Sub]
 description: "C# streaming and real-time data reference — WebSocket, SSE, Pub/Sub, Firestore listeners, and latency benchmarks. See [24-py-streaming-realtime](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/24-py-streaming-realtime) for the Python equivalent."
 created: 2026-03-28
-updated: 2026-03-28
+updated: 2026-04-16
 status: complete
 ---
 
 # 24. Streaming & Real-Time Data — WebSocket, SSE, Pub/Sub, Firestore
 
-> [!quote]
+> [!quote] Stream Processing Framing
+>
 > "Turning the database inside out: take the implementation detail that was previously hidden inside the database, and make it a first-class citizen."
 >
 > — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
@@ -40,7 +41,7 @@ status: complete
 >
 > **Google Cloud Pub/Sub**
 > - `SubscriberClient` started before publishing to pre-warm the gRPC stream; `PublisherClient` publishes 550 ticks at ~50 msg/s.
-> - End-to-end delivery latency (europe-west1): p50 = 44ms, p99 = 54ms, avg = 43ms.
+> - End-to-end delivery latency (europe-west1): p50 = 44ms, p99 = 54ms, avg = 43ms, with 468 captured post-warmup measurements during the 60-second wait window.
 >
 > **Firestore Real-Time Listener**
 > - `Listen()` callback registered on a collection; 550 documents written one-at-a-time via `SetAsync` to trigger individual notifications.
@@ -53,127 +54,91 @@ status: complete
 >
 > **Enterprise Transfer & Streaming Patterns (Reference)**
 > - Architecture reference for MFT gateways, GCS Transfer Service, and Cloud Interconnect — no runnable code.
-> - Decision matrix maps six common scenarios to the correct pattern and rationale.
+> - Decision criteria map common scenarios to the correct pattern and rationale.
 
 > [!note]- Glossary
 >
 > **`ClientWebSocket`**
 > - .NET client-side WebSocket class in `System.Net.WebSockets` used to open, send on, receive from, and close a WebSocket connection.
 > - Used to maintain a persistent bidirectional connection to a WebSocket server after the initial HTTP upgrade handshake.
->
-> > [!warning] Close gracefully before dispose when possible
-> >
-> > Calling `CloseAsync(...)` before disposal gives the peer a proper WebSocket close handshake instead of an abrupt connection drop. On failure paths, still prioritize cleanup even if graceful close is not possible.
+> - Call `CloseAsync(...)` before disposal when possible so the peer receives a normal close frame instead of an abrupt TCP teardown.
 >
 > ---
 >
 > **`IAsyncEnumerable<T>`**
 > - C# interface representing an asynchronous sequence whose items are consumed with `await foreach`.
 > - Used to model streams of values that arrive over time without blocking a thread between items.
->
-> > [!tip] Prefer it for pull-based async streams
-> >
-> > `IAsyncEnumerable<T>` fits naturally when the consumer controls iteration with `await foreach`. It is often simpler than reactive abstractions when full Rx-style operators are not needed.
+> - Fits pull-based streaming APIs where the consumer controls iteration and full Rx-style composition is unnecessary.
 >
 > ---
 >
 > **`CancellationToken`**
 > - Struct used to signal cooperative cancellation to async operations, loops, and long-running workflows.
 > - Used to stop streaming reads, background message loops, and network operations cleanly when the caller or host is shutting down.
->
-> > [!warning] Cancellation works only if you pass the token through
-> >
-> > An infinite or long-running async loop is effectively uncancellable if the token is accepted by the outer API but never forwarded to the actual I/O calls or wait points.
+> - Cancellation only works if the token reaches the actual I/O call or wait point inside the stream loop.
 >
 > ---
 >
 > **`Channel<T>`**
 > - High-performance in-process producer/consumer queue from `System.Threading.Channels` with async read and write APIs.
 > - Used to decouple message ingestion from downstream processing while supporting backpressure and avoiding manual locking.
->
-> > [!tip] Prefer bounded channels when memory growth matters
-> >
-> > `Channel.CreateBounded<T>(...)` lets the system apply backpressure when producers outrun consumers instead of allowing unbounded queue growth.
+> - Prefer `Channel.CreateBounded<T>(...)` when memory growth matters and producers can outrun consumers.
 >
 > ---
 >
 > **`Google.Cloud.PubSub.V1`**
 > - Official Google Cloud Pub/Sub client library for .NET, providing high-level publisher and subscriber APIs on top of gRPC.
 > - Used to publish messages, consume subscriptions, and rely on library-managed batching, retries, and stream handling instead of reimplementing those concerns manually.
->
-> > [!warning] High-level clients have lifecycle responsibilities
-> >
-> > Long-lived Pub/Sub clients should be started, reused, and shut down deliberately. Leaving streaming subscribers running can delay process shutdown and leave background work active longer than intended.
+> - Treat its long-lived clients as reusable dependencies and shut them down deliberately during application exit.
 >
 > ---
 >
 > **At-least-once delivery**
 > - Delivery guarantee in which a message is delivered one or more times, so duplicates are possible even when the system is working as designed.
 > - Used to describe Pub/Sub-style messaging semantics where reliability is favored over a guarantee of exactly one delivery attempt.
->
-> > [!info] Idempotency is the practical requirement
-> >
-> > Consumers should be safe to run twice for the same logical message. Design handlers so duplicate delivery does not create duplicate side effects.
+> - Design handlers to be idempotent so duplicate delivery does not create duplicate side effects.
 >
 > ---
 >
 > **Ack deadline**
 > - Time window during which a subscriber is expected to acknowledge a delivered Pub/Sub message before it becomes eligible for redelivery.
 > - Used to bound how long a message can remain in-flight without confirmation from the subscriber.
->
-> > [!warning] The deadline must fit real handler latency
-> >
-> > If processing regularly exceeds the effective ack window and lease management is not sufficient, redelivery becomes normal behavior rather than an exceptional case.
+> - Size the deadline and lease-extension strategy to real handler latency so redelivery does not become normal behavior.
 >
 > ---
 >
 > **`HttpResponseMessage` streaming**
 > - Pattern of reading an HTTP response body incrementally from a stream instead of buffering the whole body into memory first.
 > - Used for long-lived or unbounded responses such as Server-Sent Events, large downloads, and chunked streaming APIs.
->
-> > [!warning] Full-buffer APIs do not fit infinite streams
-> >
-> > Methods such as `ReadAsStringAsync()` assume the response will finish. For open-ended event streams, read from `ReadAsStreamAsync()` and process incrementally.
+> - For open-ended streams, prefer `ReadAsStreamAsync()` over `ReadAsStringAsync()` so the consumer can process events incrementally.
 >
 > ---
 >
 > **Firestore `Listen()`**
 > - Firestore SDK operation that opens a persistent listener and invokes callbacks when documents in the watched query or collection change.
 > - Used to receive near-real-time change notifications without polling Firestore repeatedly.
->
-> > [!warning] Listener shutdown is explicit
-> >
-> > The returned listener keeps background resources active until it is stopped. Hold onto the listener handle and stop it during shutdown or disposal paths.
+> - Stop the returned listener explicitly during shutdown so the background gRPC stream does not remain open.
 >
 > ---
 >
 > **Dead-letter topic**
 > - Pub/Sub topic that receives messages after they exceed the configured maximum delivery attempts on the primary subscription path.
 > - Used to quarantine poison messages so they stop cycling endlessly through the main processing path.
->
-> > [!tip] Dead-lettering is only useful if it is monitored
-> >
-> > A dead-letter topic prevents repeated immediate failure in the main subscription, but it does not solve the underlying problem unless operators can see and inspect what landed there.
+> - Dead-lettering only helps if operators monitor the topic and inspect what failed.
 >
 > ---
 >
 > **`SubscriberClient`**
 > - High-level .NET Pub/Sub subscriber class that manages streaming pulls, ack-deadline extension, concurrency, and reconnection behavior for you.
 > - Used as the preferred production subscriber abstraction when you want the library to handle most operational mechanics of message consumption.
->
-> > [!info] High-level clients reduce operational footguns
-> >
-> > Lower-level pull APIs expose more control but also force you to manage leasing, flow control, and retries manually. `SubscriberClient` is usually the safer default.
+> - Prefer it over lower-level pull APIs unless you need to manage leasing, flow control, or retries yourself.
 >
 > ---
 >
 > **`PublisherClient`**
 > - High-level .NET Pub/Sub publisher class that batches messages and handles retry behavior under the hood.
 > - Used to publish efficiently at scale without creating a fresh gRPC publishing stack for every message.
->
-> > [!warning] Reuse publisher instances
-> >
-> > Creating a new `PublisherClient` per message is expensive and defeats batching benefits. Treat it as a long-lived dependency rather than a per-call object.
+> - Reuse publisher instances instead of creating a new `PublisherClient` per message, which defeats batching and adds connection overhead.
 
 ## Technologies Overview
 
@@ -193,6 +158,8 @@ Comparison of the four streaming protocols used in this notebook — from lowest
 **Pub/Sub** is a managed message bus — publishers and subscribers are fully decoupled. Messages are durably stored until acknowledged.
 
 **Firestore Listener** uses gRPC bidirectional streaming. The server pushes document-level change events as they happen.
+
+*This sequence diagram compares the message flow and directionality of the four streaming patterns covered in this note.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -256,6 +223,8 @@ Configures the .NET Interactive kernel and loads all required packages and GCP c
 
 The `.NET Interactive` kernel emits CS1701 and CS1702 warnings when NuGet package assembly versions differ from the runtime. This cell uses reflection to access the C# kernel's private `_scriptOptions` field and set the warning level to 0, silencing all compile-time warnings in subsequent cells.
 
+*This setup cell suppresses assembly-version warnings in the `.NET Interactive` C# kernel.*
+
 ```csharp
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
@@ -270,9 +239,15 @@ var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
 
+```text
+(no visible output)
+```
+
 #### Load NuGet packages and namespace imports
 
 External libraries used throughout the notebook: `DotNetEnv` for `.env` loading, `Google.Cloud.PubSub.V1` and `Google.Cloud.Firestore` for GCP streaming, `Newtonsoft.Json` for serialization, and `Plotly.NET` for latency charts.
+
+*This setup cell loads the NuGet packages and namespace imports used throughout the notebook.*
 
 ```csharp
 #r "nuget: DotNetEnv"
@@ -305,9 +280,15 @@ using Plotly.NET.CSharp;
 using Plotly.NET.LayoutObjects;
 ```
 
+```text
+(no visible output)
+```
+
 #### Set Windows timer resolution and initialize GCP clients
 
 Windows has a default timer resolution of 15.6ms — any `Task.Delay(10)` rounds up to that value, distorting latency measurements. The `timeBeginPeriod(1)` P/Invoke sets resolution to 1ms for the duration of this notebook. The cell also loads `.env` variables, sets the `GOOGLE_APPLICATION_CREDENTIALS` path, and creates `PublisherServiceApiClient`, `SubscriberServiceApiClient`, and `FirestoreDb` clients for all GCP operations that follow.
+
+*This setup cell enables 1 ms timer resolution and initializes the shared Google Cloud clients.*
 
 ```csharp
 [System.Runtime.InteropServices.DllImport("winmm.dll")]
@@ -347,6 +328,8 @@ Shared utility functions and a synthetic OHLCV tick generator used as the data s
 
 Two utility functions used throughout the notebook. `FmtTime` converts milliseconds to the most readable unit (µs, ms, s, or min). `FmtRate` converts a message count and elapsed duration into a throughput rate (msg/s, K msg/s, or M msg/s).
 
+*These helper functions format latency and throughput values for the later benchmark output cells.*
+
 ```csharp
 string FmtTime(double ms)
 {
@@ -367,9 +350,15 @@ string FmtRate(int n, double ms)
 }
 ```
 
+```text
+(no visible output)
+```
+
 #### Generate simulated OHLCV ticks with random-walk price movement
 
 Produces synthetic tick data for 5 European equity symbols (ASML, SAP, Siemens, LVMH, TotalEnergies). Each call to `GenerateTick()` applies a small random-walk price change (±0.2%) and returns a dictionary with symbol, timestamp, price, volume, bid, and ask fields. This function is the data source for all streaming patterns below.
+
+*This generator emits synthetic OHLCV ticks that the later transport examples publish and consume.*
 
 ```csharp
 var SYMBOLS = new[] { "ASML.AS", "SAP.DE", "SIE.DE", "MC.PA", "TTE.PA" };
@@ -408,8 +397,8 @@ for (int i = 0; i < 3; i++)
 
 ## WebSocket Streaming
 
-Full-duplex, persistent TCP connection. The server pushes ticks as they occur — no polling.
-Used by every real-time trading platform (Binance, Bloomberg Terminal, Refinitiv).
+Full-duplex, persistent TCP connection. The server pushes ticks as they occur without polling.
+Typical fit: low-latency dashboards, live order books, collaborative editing, and other sessions that need bidirectional messaging.
 
 ### WebSocket | System.Net.WebSockets | server and client
 
@@ -422,6 +411,8 @@ The client connects, receives ticks for 3 seconds, and collects them.
 
 **Scenario:** Real-time price dashboards, algorithmic trading, live order book feeds.
 **When NOT to use:** One-shot request/response — use REST instead.
+
+*This server cell starts a local `HttpListener` endpoint and broadcasts serialized ticks over `System.Net.WebSockets`.*
 
 ```csharp
 var WS_PORT = 8775;
@@ -462,6 +453,8 @@ Console.WriteLine($"  WebSocket server running on ws://localhost:{WS_PORT}");
 #### WebSocket streaming client — receive ticks for 3 seconds
 
 Connects to the local WebSocket server and receives 1,000 ticks (after 100 warmup messages). Each tick carries a `send_ts` from `Stopwatch.GetTimestamp()`, allowing one-way latency measurement in microseconds without clock synchronization.
+
+*This client cell consumes the local WebSocket feed and computes one-way latency from the embedded `send_ts` timestamp.*
 
 ```csharp
 var NUM_WS = 1_000;
@@ -505,8 +498,8 @@ Console.WriteLine($"  p50: {wsP50:F0}µs  p99: {wsP99:F0}µs");
 
 ## Server-Sent Events (SSE)
 
-One-directional server→client push over HTTP. Simpler than WebSocket — works through
-proxies/CDNs, auto-reconnects, text-only. Used by ChatGPT, GitHub notifications, stock tickers.
+One-directional server-to-client push over HTTP. Simpler than WebSocket, text-only, and easier to route through standard HTTP infrastructure.
+Typical fit: dashboards, notification feeds, and token-streaming responses where the client does not need a persistent upstream channel.
 
 ### SSE | HttpListener | server and client
 
@@ -520,6 +513,8 @@ Starts a local HttpListener SSE server that streams ticks as `text/event-stream`
 **When NOT to use:** Bi-directional communication — use WebSocket. Binary data — use gRPC.
 
 The inner `catch` block silently swallows exceptions triggered when the client disconnects mid-stream.
+
+*This server cell exposes an SSE endpoint and flushes serialized ticks as `data:` frames over `text/event-stream`.*
 
 ```csharp
 var SSE_PORT = 8776;
@@ -570,6 +565,8 @@ Console.WriteLine($"  SSE server running on http://localhost:{SSE_PORT}");
 
 Connects to the SSE endpoint and reads 1,000 `data:` lines (after 100 warmup). Each line is parsed from JSON and the embedded `send_ts` is compared to a `Stopwatch.GetTimestamp()` at receive time to compute one-way latency in microseconds.
 
+*This client cell reads the SSE response stream line-by-line and computes one-way latency for each tick event.*
+
 ```csharp
 var NUM_SSE = 1_000;
 var WARMUP_SSE = 100;
@@ -617,11 +614,13 @@ Decouples publishers from subscribers — the backbone of event-driven architect
 
 ### Pub/Sub | Google.Cloud.PubSub.V1 | topic, subscriber, publisher
 
-Creates a topic and subscription, starts a streaming subscriber, publishes 500 ticks at a steady ~50 msg/s rate, and measures end-to-end delivery latency using a custom `send_ts` attribute (same-machine clock, no NTP drift).
+Creates a topic and subscription, starts a streaming subscriber, publishes 550 ticks total (50 warmup + 500 measured) at a steady ~50 msg/s rate, and measures end-to-end delivery latency using a custom `send_ts` attribute (same-machine clock, no NTP drift).
 
 #### Create Pub/Sub topic and subscription
 
 Creates the topic and subscription used for tick streaming. Both operations are idempotent — if the resource already exists, the `GetTopic`/`GetSubscription` call succeeds and creation is skipped.
+
+*This setup cell ensures the benchmark topic and subscription exist before the streaming pull begins.*
 
 ```csharp
 var TOPIC_ID = "tick-feed";
@@ -643,7 +642,9 @@ catch { subscriber.CreateSubscription(subName, topicName, null, 10); Console.Wri
 
 #### Start streaming subscriber using Google.Cloud.PubSub.V1 SubscriberClient over gRPC
 
-Starts the subscriber before publishing so the gRPC stream is established when messages arrive.
+Starts the subscriber before publishing so the gRPC stream is established when messages arrive. The captured output preserved below shows that only 468 post-warmup samples arrived within the 60-second wait window, so the note retains that real result instead of normalizing it to 500.
+
+*This benchmark cell starts `SubscriberClient`, publishes the tick stream, and records the observed delivery latencies.*
 
 ```csharp
 var NUM_PS = 500;
@@ -715,6 +716,8 @@ Registers a callback on every document change. Runs as a background gRPC stream.
 **Scenario:** Live dashboards, mobile sync, cache invalidation.
 **When NOT to use:** High-throughput ingestion (>1K writes/s) — use Pub/Sub.
 
+*This listener cell subscribes to collection changes and records latency from each write to each `Listen()` callback.*
+
 ```csharp
 var FS_RT_COLLECTION = "realtime_ticks";
 var NUM_FS = 500;
@@ -746,9 +749,11 @@ Console.WriteLine($"  Listener registered on {FS_RT_COLLECTION}");
   Listener registered on realtime_ticks
 ```
 
-#### Write documents to Firestore using Google.Cloud.Firestore WriteBatch over gRPC
+#### Write documents to Firestore using repeated `SetAsync(...)` calls over gRPC
 
 Writes 550 documents (50 warmup + 500 measured) one at a time at a steady ~50 doc/s rate. Each document carries a `send_ts` field for latency measurement. Individual `SetAsync` calls are used instead of batch writes so each document triggers a separate listener notification.
+
+*This write cell emits one Firestore document per tick so the listener receives one notification per write.*
 
 ```csharp
 var totalFs = WARMUP_FS + NUM_FS;
@@ -772,6 +777,8 @@ Console.WriteLine($"  Wrote {totalFs} documents");
 
 Waits for the listener to receive all events, computes write-to-receive latency.
 
+*This analysis cell stops the listener and calculates the observed Firestore delivery latency percentiles.*
+
 ```csharp
 fsDone.Wait(TimeSpan.FromSeconds(60));
 await fsListener.StopAsync();
@@ -793,6 +800,8 @@ Console.WriteLine($"  p50: {fsP50:F0}ms  p99: {fsP99:F0}ms  avg: {fsAvgLatency:F
 
 Deletes all test documents created during the listener benchmark to leave the collection empty.
 
+*This cleanup cell removes the benchmark documents from the Firestore collection.*
+
 ```csharp
 for (int i = 0; i < totalFs; i++)
     await fsDb.Collection(FS_RT_COLLECTION).Document($"tick_{i:D4}").DeleteAsync();
@@ -805,16 +814,17 @@ Console.WriteLine($"  Deleted {totalFs} documents");
 
 ## Latency Comparison
 
-Two separate comparisons — local protocols vs GCP managed services — because mixing
-localhost (0ms network) with cross-continent GCP (~300ms RTT) would be meaningless.
+Two separate comparisons keep local transport measurements separate from the managed-service RTT baseline. The `WebSocket` and `SSE` numbers reflect `localhost` behavior, while the GCP results include a measured `33ms` network round trip plus service overhead.
 
 ### Latency | Plotly.NET | local protocols
 
 Both local protocols are sub-millisecond on localhost — network RTT dominates in production. Plotly.NET renders results as interactive HTML charts embedded via `<iframe>`.
 
-#### Local protocols — WebSocket vs SSE throughput (localhost, no network)
+#### Local protocols — WebSocket vs SSE latency (localhost, no network)
 
 Compares p50 one-way latency for both local protocols. Both are sub-millisecond on localhost — in production, network RTT dominates. C# uses HTTP.sys kernel-mode handling for both `HttpListener` (SSE) and WebSocket, which gives different performance characteristics than Python's user-space asyncio.
+
+*This chart cell compares the observed local `WebSocket` and `SSE` latency percentiles.*
 
 ```csharp
 var localMethods = new[] { "WebSocket", "SSE" };
@@ -852,6 +862,8 @@ Isolates network RTT from protocol overhead by measuring raw gRPC round-trip tim
 
 Measures raw gRPC RTT to GCP using a minimal Firestore metadata call (50 samples), then compares total delivery latency for Pub/Sub and Firestore against that baseline.
 
+*This probe cell measures the raw gRPC round-trip time used as the managed-service baseline.*
+
 ```csharp
 var rttSamples = new List<double>();
 for (int r = 0; r < 50; r++)
@@ -869,6 +881,8 @@ Console.WriteLine($"  gRPC RTT to GCP (50 samples): p50={rttP50Ms:F0}ms");
 ```text
   gRPC RTT to GCP (50 samples): p50=33ms
 ```
+
+*This chart cell separates the measured network RTT baseline from the additional `Pub/Sub` and Firestore service overhead.*
 
 ```csharp
 var psOverheadMs = Math.Max(0, psAvgLatency - rttP50Ms);
@@ -915,6 +929,8 @@ Plotly.NET.CSharp.Chart.Combine(new[] {
 
 Deletes the subscription and topic created for the latency benchmark. Both operations are wrapped in try/catch — if the resource was already deleted, the error is silently caught.
 
+*This cleanup cell removes the Pub/Sub resources created for the benchmark run.*
+
 ```csharp
 try { subscriber.DeleteSubscription(subName); Console.WriteLine($"  Deleted subscription"); }
 catch { Console.WriteLine($"  Subscription already deleted"); }
@@ -929,25 +945,21 @@ catch { Console.WriteLine($"  Topic already deleted"); }
 
 ## Enterprise Transfer & Streaming Patterns (Reference)
 
-Production patterns for large-scale data movement. Included as architecture reference — no runnable code.
+Production patterns for large-scale data movement that complement the real-time transports above. This section is reference-only and does not add new live service benchmarks.
 
 ### Enterprise patterns | reference architecture
 
 Architecture reference for large-scale data movement — MFT gateways, GCS Transfer Service, and dedicated interconnect options — with decision guidance for selecting the right pattern.
 
-#### Enterprise Streaming — MFT (Managed File Transfer)
+#### `MFT` gateways for controlled partner exchange
 
-**What:** Dedicated gateways for large file transfers with multiplexing, packet-level resume, encryption, audit.
+Use `MFT` when an external partner workflow depends on `SFTP`, `AS2`, checksum validation, approval steps, or audit trails. It is a better fit than a streaming transport when file-level governance, resumability, and compliance controls matter more than per-message latency.
 
+#### `Storage Transfer Service` for scheduled bulk movement
 
+Use `Storage Transfer Service` when the workload is repetitive, bandwidth-heavy, or cross-cloud enough that retry orchestration and progress tracking should move out of application code. It fits large backfills, scheduled partner drops, and object-store replication better than handwritten copy loops.
 
-#### GCS Transfer Service
-
-**What:** Managed service for scheduled transfers between GCS/S3/Azure/HTTP endpoints.
-
-Use GCS Transfer Service when the job is long-running, bandwidth-heavy, or operationally repetitive enough that retries, scheduling, and managed state tracking should move out of your own code. It fits cross-cloud replication, multi-terabyte migrations, and on-prem NAS ingestion where an agent-based transfer path is more reliable than ad hoc upload scripts.
-
-#### Transfer Acceleration & Cloud Interconnect
+#### Public internet vs `Interconnect` bandwidth envelope
 
 | Method | Bandwidth | Latency | Use Case |
 |--------|-----------|---------|----------|
@@ -956,67 +968,98 @@ Use GCS Transfer Service when the job is long-running, bandwidth-heavy, or opera
 | Dedicated Interconnect | 10-100 Gbps | Low | Production pipelines |
 | Partner Interconnect | 50 Mbps-50 Gbps | Low | Smaller dedicated link |
 
-#### When to Use What
+## Decision Criteria
 
-Decision matrix for selecting the right streaming or transfer pattern based on the scenario requirements.
+### Choose `WebSocket` for bidirectional low-latency sessions
 
-| Scenario | Pattern | Why |
-|----------|---------|-----|
-| Live price dashboard | **WebSocket** | Full-duplex, lowest latency, server push |
-| AI chat token streaming | **SSE** | One-directional, works through CDN, auto-reconnect |
-| Event-driven microservices | **Pub/Sub** | Decoupled, at-least-once, auto-scaling |
-| Mobile live sync | **Firestore listener** | Offline support, per-document granularity |
-| Nightly ETL batch | **GCS + BigQuery load** | Highest throughput, lowest cost per byte |
-| Cross-cloud migration | **Transfer Service** | Managed, scheduled, resumable |
+Choose `WebSocket` when the client must both receive server pushes and send low-latency commands on the same long-lived connection. It fits `order-entry`, collaborative editing, and any session where polling or half-duplex delivery would distort the control path.
 
-## Warnings
+### Choose `SSE` for one-way `HTTP` event delivery
 
-> [!warning] Disposing `ClientWebSocket` without a close handshake leaves the server connection in an error state
-> If you dispose or let `ClientWebSocket` go out of scope without calling `CloseAsync(WebSocketCloseStatus.NormalClosure, ...)` first, the server receives an abrupt TCP teardown and logs a fault. The remote endpoint may not release associated resources immediately.
+Choose `SSE` when the server only needs to stream text events and the deployment path benefits from standard `HTTP` semantics, proxy friendliness, and reconnect behavior. It is simpler than `WebSocket` when the client does not need a persistent upstream message channel.
 
-> [!success] Correct pattern
-> Always call `await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "done", CancellationToken.None)` before disposing, wrapped in a try/finally block so it runs even on exception paths.
+### Choose `Pub/Sub` for decoupled event pipelines
 
-> [!warning] `SubscriberClient` not stopped at application shutdown blocks the process from exiting
-> `SubscriberClient.StartAsync()` opens a persistent gRPC streaming connection. If `StopAsync()` is never called — for example, when the application receives SIGTERM — the process hangs waiting for the open stream to close.
+Choose `Pub/Sub` when publishers and subscribers must scale independently, tolerate duplicate delivery, and continue processing even if consumers are temporarily offline. The correct mental model is `at-least-once` fan-out, not a direct user session.
 
-> [!success] Correct pattern
-> Register `await subscriber.StopAsync(CancellationToken.None)` in the `IHostedService.StopAsync` method or `IAsyncDisposable.DisposeAsync` so it runs during graceful shutdown.
+### Choose Firestore `Listen()` for document-centric sync
 
-> [!warning] Calling `ReadAsStringAsync()` on an SSE stream buffers the entire response body in memory
-> SSE connections are indefinite — `ReadAsStringAsync()` will not return until the server closes the connection. For a live dashboard, this means the method blocks the thread indefinitely and never delivers any events to the consumer.
+Choose Firestore `Listen()` when the consumer wants live document state rather than an append-only event bus. It fits dashboards, mobile sync, and cache invalidation where the application already centers on Firestore collections and document snapshots.
 
-> [!success] Correct pattern
-> Use `await response.Content.ReadAsStreamAsync()` to get the raw stream, then wrap it in a `StreamReader` and call `ReadLineAsync()` in a loop to process events incrementally as they arrive.
+### Choose batch transfer for bulk movement
 
-> [!warning] Firestore `Listen()` not disposed leaks a persistent gRPC stream
-> The `FirestoreChangeListener` returned by `Listen()` holds an open gRPC bidirectional stream. Not calling `StopAsync()` on it keeps the stream alive until the process exits, consuming network and quota without bound.
+Choose `Storage Transfer Service`, `BigQuery` loads, or `Interconnect` when the workload is dominated by bytes moved rather than per-message latency. Nightly ETL, cross-cloud replication, and partner file exchange are batch-transfer problems, not `WebSocket` or `SSE` problems.
 
-> [!success] Correct pattern
-> Store the listener reference and call `await listener.StopAsync()` in the `finally` block or `DisposeAsync` method of the owning class.
+## Operational Risks
 
-## Recommendations
+### `ClientWebSocket` teardown without `CloseAsync(...)`
 
-- **Use `Channel<T>` to decouple WebSocket receive from message processing.** The receive loop should only write to the channel; a separate consumer task reads from it. This isolates I/O errors from business logic and allows backpressure.
-- **Always pass a `CancellationToken` through every async streaming call.** This is the only cooperative mechanism for stopping infinite streams — without it, the only option is process termination.
-- **Reuse `PublisherClient` and `SubscriberClient` across the application lifetime.** Both are expensive to construct; creating them per message adds significant overhead and can exhaust gRPC channel limits.
-- **Configure the ack deadline to at least 1.5× the handler's worst-case execution time.** For handlers that write to SQL Server or call external services, set `AckDeadline = TimeSpan.FromSeconds(60)` or higher and periodically extend it for very long jobs.
-- **Make all Pub/Sub message handlers idempotent.** At-least-once delivery is not negotiable — design handlers so processing the same message twice produces the same result as processing it once.
-- **Use `IAsyncEnumerable<T>` as the public contract for streaming methods** rather than `IObservable<T>` or callbacks. It integrates naturally with `await foreach`, supports `CancellationToken`, and avoids the complexity of Rx operator chains for simple sequential streams.
-- **Monitor dead-letter topics with Cloud Monitoring alerts.** An unmonitored dead-letter topic is a silent data loss vector — set an alert on `subscription/num_undelivered_messages` for the dead-letter subscription.
-- **Test connection resilience by simulating network partition.** Use `tc netem` or the GCP network emulation tools to verify that all streaming clients recover cleanly after a 30-second outage without manual intervention.
+If `ClientWebSocket` is disposed or aborted without a normal close handshake, the peer sees an abrupt disconnect and the application loses the chance to distinguish expected shutdown from transport failure. Put `CloseAsync(...)` in the normal shutdown path and reserve `Abort()` for failure recovery.
+
+### Leaving `SubscriberClient` or Firestore `Listen()` running at shutdown
+
+`SubscriberClient.StartAsync()` and Firestore `Listen()` both keep background gRPC work alive until explicitly stopped. Application shutdown should call `StopAsync()` on both handles so the host does not hang with active streams.
+
+### Reading an SSE body with `ReadAsStringAsync()`
+
+`ReadAsStringAsync()` assumes the response will finish, which is incompatible with an open-ended `text/event-stream`. Use `ReadAsStreamAsync()` and process lines incrementally so the consumer can react to each event as it arrives.
+
+### Assuming managed-service latency equals local transport latency
+
+The local `WebSocket` and `SSE` numbers measure in-process `localhost` transport costs, while the GCP figures include a real measured `33ms` network round trip. Compare local transports against each other and managed services against the RTT baseline, not against raw localhost microsecond numbers.
+
+## Recommended Patterns
+
+### Use `Channel<T>` to separate ingress from processing
+
+A receive loop that only performs `ChannelWriter.WriteAsync(...)` is easier to reason about than a loop that mixes network I/O, business logic, and persistence. A bounded `Channel<T>` also gives explicit backpressure instead of silent queue growth.
+
+### Thread `CancellationToken` through every async wait
+
+Long-lived streaming loops only stop cleanly if `CancellationToken` reaches `ReceiveAsync(...)`, `ReadLineAsync(...)`, `Task.Delay(...)`, and any downstream I/O. Accepting a token at the API boundary but not passing it forward makes the stream effectively unkillable.
+
+### Reuse long-lived Pub/Sub clients and design for duplicates
+
+`PublisherClient` and `SubscriberClient` are meant to be shared across the application lifetime. Pair that reuse with idempotent handlers because `at-least-once` delivery means duplicate messages are normal, not exceptional.
+
+### Prefer `IAsyncEnumerable<T>` for pull-based application APIs
+
+If your application layer wants consumers to process streamed values with `await foreach`, `IAsyncEnumerable<T>` is usually the cleanest public contract. Reach for `IObservable<T>` only when you specifically need reactive composition semantics rather than straightforward sequential consumption.
+
+### Monitor dead-letter paths and rehearse recovery
+
+A `dead-letter topic` is only valuable if operators watch it, and reconnect logic is only trustworthy if it has been exercised under failure. Monitor `subscription/num_undelivered_messages` and rehearse network interruption scenarios before treating the pipeline as production-ready.
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `WebSocketException: The remote party closed the WebSocket connection` immediately | Server rejected the connection (wrong URL, missing auth header, TLS mismatch) | Verify the `ws://`/`wss://` scheme, check the `Authorization` header is included in the `ClientWebSocket.Options`, confirm the server is running |
-| Pub/Sub handler receives every message two or more times | Ack deadline shorter than processing time; handler throws and nacks implicitly | Set a longer `AckDeadline`; add a try/catch inside the handler and return `SubscriberClient.Reply.Ack` after successful processing |
-| `Grpc.Core.RpcException: StatusCode=Unauthenticated` | Application Default Credentials not found or expired | Run `gcloud auth application-default login` or set `GOOGLE_APPLICATION_CREDENTIALS` to a valid service account key path |
-| `SubscriberClient.StartAsync` returns immediately with no messages | Subscription has no messages; topic name or subscription name is wrong | Verify topic/subscription names in the GCP console; publish a test message manually and confirm it appears |
-| SSE stream delivers events in bursts instead of continuously | Nginx/proxy `proxy_buffering on` is buffering the response before forwarding | Add `X-Accel-Buffering: no` response header on the server, or set `proxy_buffering off` in Nginx for the SSE endpoint |
-| Firestore listener fires with an empty change list on reconnect | SDK replays the full snapshot on reconnect — first callback always contains the full document set | Check `DocumentChange.ChangeType` — filter for `Added`/`Modified`/`Removed` rather than assuming every callback is a new change |
-| `Channel.Writer.WriteAsync` blocks indefinitely | Channel created with `BoundedChannel` and the consumer is too slow — the channel is full | Increase channel capacity, speed up the consumer, or use `TryWrite` with a drop/log strategy to shed load |
-| Process does not exit after `Ctrl+C` | `SubscriberClient` or `FirestoreChangeListener` was not stopped | Ensure `StopAsync()` is called for all streaming clients in the shutdown path; use a `CancellationTokenSource` linked to `ConsoleLifetime` |
+### `WebSocketException` immediately after connect
 
-| High-bandwidth production | **Cloud Interconnect** | Dedicated line, consistent 10+ Gbps |
+Immediate closure usually means the server rejected the upgrade because of the URL, headers, authentication, or TLS scheme. Verify the `ws://` versus `wss://` endpoint, confirm required headers in `ClientWebSocket.Options`, and make sure the server is listening on the expected path.
+
+### Duplicate `Pub/Sub` deliveries
+
+Repeated delivery is usually an `AckDeadline` or handler-failure problem, not a broker bug. Increase the ack window to match real handler latency, catch failures inside the handler, and only return `SubscriberClient.Reply.Ack` after the side effects succeed.
+
+### `Grpc.Core.RpcException: StatusCode=Unauthenticated`
+
+This error points to missing or expired Application Default Credentials or an invalid `GOOGLE_APPLICATION_CREDENTIALS` path. Reauthenticate with `gcloud auth application-default login` or point the process to a valid service-account key file.
+
+### `SubscriberClient.StartAsync(...)` receives nothing
+
+If the streaming pull stays idle, check whether the subscription actually has messages and whether the code is pointing at the intended `TopicName` and `SubscriptionName`. A manual publish test is the fastest way to separate naming mistakes from empty input.
+
+### SSE messages arrive in bursts
+
+Burst delivery usually means an intermediary is buffering the response instead of forwarding each event frame immediately. Disable proxy buffering for the SSE path or emit headers such as `X-Accel-Buffering: no` where the reverse proxy supports them.
+
+### Firestore listener callbacks contain unexpected initial data
+
+Firestore listeners can replay the current snapshot after connect or reconnect, so the first callback is not always a brand-new mutation. Inspect `DocumentChange.ChangeType` and treat `Added`, `Modified`, and `Removed` as separate cases instead of assuming every callback is an incremental update.
+
+### `ChannelWriter.WriteAsync(...)` blocks indefinitely
+
+A blocked bounded channel means producers are outrunning consumers and backpressure is working as configured. Increase capacity, speed up the consumer, or switch to an explicit `TryWrite(...)` plus drop/log policy if load shedding is acceptable.
+
+### The process does not exit after `Ctrl+C`
+
+Shutdown hangs usually trace back to an active `SubscriberClient`, Firestore listener, or other task waiting without a linked cancellation source. Wire application lifetime events to `CancellationTokenSource`, then stop every long-lived stream explicitly in the termination path.

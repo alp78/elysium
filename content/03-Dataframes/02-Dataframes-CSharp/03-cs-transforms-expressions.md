@@ -11,7 +11,8 @@ status: complete
 
 # Transforms, Expressions & Chaining - C#
 
-> [!quote]
+> [!quote] Data Maxim
+>
 > "If you torture the data long enough, it will confess to anything."
 >
 > — **Ronald Coase**, attributed remark (c. 1960s)
@@ -168,6 +169,8 @@ status: complete
 
 Suppress CS1701/CS1702 assembly version warnings in .NET Interactive. Run this cell once before any cells that use NuGet packages.
 
+*Runs the notebook warning-suppression setup cell.*
+*Runs the example cell.*
 ```csharp
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
@@ -185,6 +188,8 @@ optionsField.SetValue(csharpKernel, newOptions);
 
 Install NuGet packages and import namespaces. Alias Microsoft.Data.Analysis as `MDA` so `DataFrame` continues to refer to Polars.NET inside mixed examples.
 
+*Loads the notebook packages, aliases, and HTML formatters used by the rest of the note.*
+*Runs the example cell.*
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
 #r "nuget: Polars.NET.Native.win-x64, 0.4.0"
@@ -220,6 +225,8 @@ Data directory: c:\Users\aperi\DEV\LANG\data
 
 Load the primary dataset used throughout this notebook. Both libraries read the same CSV, so the rest of the page focuses on transform style, execution model, and notebook ergonomics rather than data differences.
 
+*Loads the shared CSV into both `dfP` and `df` so later examples can compare the same rows.*
+*Runs the example cell.*
 ```csharp
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 var df = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"));
@@ -242,6 +249,7 @@ Polars: (66355, 12)  |  MDA: (66355, 12)
 Adding, modifying, and overwriting columns is the core dataframe workflow. Polars.NET expresses these transforms declaratively through `.WithColumns()`, while Microsoft.Data.Analysis usually computes typed target columns explicitly and then appends them to a cloned or newly constructed frame.
 
 > [!info] Polars expressions vs MDA materialization
+>
 > Polars DataFrames stay close to an expression graph: `.WithColumns()` returns a new frame and the transform can later participate in lazy optimization. Microsoft.Data.Analysis is eager and explicit: `Clone()`, `Columns.Add(...)`, and `new MDA.DataFrame(...)` materialize each added column immediately. That makes debugging straightforward, but it also means the developer owns more of the transform plumbing.
 
 ### Polars.NET / Microsoft.Data.Analysis | Arithmetic Columns
@@ -251,7 +259,7 @@ Adding, modifying, and overwriting columns is the core dataframe workflow. Polar
 `.WithColumns()` accepts one or more expressions. Each expression references existing columns via `Col()`, applies arithmetic or logic, and is named with `.Alias()`. The result is a new DataFrame with the additional column appended.
 
 _Computes a `range` column as `high − low` for every row in the 66K-row dataset, then previews the first 5 ABI.BR rows confirming intraday ranges between 0.97 and 2.07._
-
+*Runs the example cell.*
 ```csharp
 var dfRange = dfP.WithColumns(
     (Col("high") - Col("low")).Alias("range"));
@@ -266,7 +274,7 @@ dfRange.Select("symbol", "date", "high", "low", "range").Head(5)
 `Microsoft.Data.Analysis` does not expose a Polars-style expression builder. The standard pattern is to cast the source columns to typed `PrimitiveDataFrameColumn<T>` objects, compute the derived column directly, name it with `SetName`, and append it to a cloned frame.
 
 _Computes `range = high - low`, appends it to a cloned MDA frame, and previews `symbol`, `date`, `high`, `low`, and `range` for the first five rows._
-
+*Runs the example cell.*
 ```csharp
 var highColM = (MDA.PrimitiveDataFrameColumn<float>)df.Columns["high"];
 var lowColM = (MDA.PrimitiveDataFrameColumn<float>)df.Columns["low"];
@@ -289,7 +297,7 @@ selectedM.Head(5)
 When `.Alias()` matches an existing column name, the new expression replaces that column. `.Cast(DataType.X)` converts the column's data type. This is useful for promoting integer columns to float for downstream arithmetic that requires fractional precision.
 
 _Casts `volume` from `i64` to `f64` by aliasing the expression to the same column name, confirms the dtype change via `DataTypeName`, and shows the first 3 rows where integer values are preserved as floats._
-
+*Runs the example cell.*
 ```csharp
 var dfCast = dfP.WithColumns(
     Col("volume").Cast(DataType.Float64)
@@ -308,7 +316,7 @@ Before: i64  |  After: f64
 MDA type conversion is usually explicit: read the source values from the existing column, create a new typed target column, and populate it row by row. This is more verbose than Polars `Cast`, but it makes the materialization step obvious and debuggable.
 
 _Converts `volume` into a new `volume_f64` column, appends it to a cloned frame, prints the source and target CLR types, and previews the first three rows._
-
+*Runs the example cell.*
 ```csharp
 var volColM = df.Columns["volume"];
 var volDoubleM = new MDA.PrimitiveDataFrameColumn<double>("volume_f64", df.Rows.Count);
@@ -338,7 +346,7 @@ Before: Single  |  After: Double
 Compound expressions chain arithmetic operators directly on `Col()` references. `Lit(100.0)` injects a scalar constant into the expression tree. The entire expression is evaluated in a single vectorized pass — no intermediate Series objects are allocated.
 
 _Computes `(close − open) / open * 100` as a single named expression `daily_return_pct` in one pass, and previews the first 5 ABI.BR rows showing daily returns ranging from −1.62% to +1.40%._
-
+*Runs the example cell.*
 ```csharp
 var dfPct = dfP.WithColumns(
     ((Col("close") - Col("open")) / Col("open") * Lit(100.0)).Alias("daily_return_pct")
@@ -354,7 +362,7 @@ dfPct.Select("symbol", "date", "open", "close", "daily_return_pct").Head(5)
 Once numeric inputs are typed as `PrimitiveDataFrameColumn<float>`, MDA supports elementwise arithmetic directly. The transform still materializes eagerly, but the code remains vector-style for straightforward numeric feature engineering.
 
 _Computes `daily_return_pct = (close - open) / open * 100`, appends it to a cloned frame, and previews the first five rows._
-
+*Runs the example cell.*
 ```csharp
 var openColM = (MDA.PrimitiveDataFrameColumn<float>)df.Columns["open"];
 var closeColM = (MDA.PrimitiveDataFrameColumn<float>)df.Columns["close"];
@@ -377,7 +385,7 @@ new MDA.DataFrame(dfPctM.Columns["symbol"], dfPctM.Columns["date"], dfPctM.Colum
 `.WithColumns()` accepts multiple comma-separated expressions. Polars evaluates them in a single pass over the data, avoiding repeated scans. This is both more readable and more performant than chaining multiple `.WithColumns()` calls.
 
 _Adds `range`, `midpoint`, and `daily_return_pct` in a single `.WithColumns()` call with one data scan, and previews 5 ABI.BR rows showing all three derived columns computed simultaneously._
-
+*Runs the example cell.*
 ```csharp
 var dfMulti = dfP.WithColumns(
     (Col("high") - Col("low")).Alias("range"),
@@ -395,7 +403,7 @@ dfMulti.Select("symbol", "date", "range", "midpoint", "daily_return_pct").Head(5
 MDA has no single-call `WithColumns` equivalent. The practical pattern is to compute each derived column first and then append them to a cloned frame. This keeps the control flow explicit, but each new column is materialized eagerly.
 
 _Adds `range`, `midpoint`, and `daily_return_pct` to a cloned frame and previews all three derived columns together._
-
+*Runs the example cell.*
 ```csharp
 var midColM = (highColM + lowColM) / 2.0f;
 midColM.SetName("midpoint");
@@ -415,6 +423,7 @@ new MDA.DataFrame(dfMultiM.Columns["symbol"], dfMultiM.Columns["date"], dfMultiM
 Polars' expression engine is the core differentiator in this chapter. Expressions are composable and can later flow into lazy optimization, while Microsoft.Data.Analysis centers the API on eager `DataFrame` / `DataFrameColumn` operations and explicit per-column materialization.
 
 > [!info] Polars expressions vs MDA managed columns
+>
 > In Polars, `Col("x") + Col("y")` is an expression object that remains reusable across `Select`, `WithColumns`, `Filter`, window functions, and lazy plans. In Microsoft.Data.Analysis, `PrimitiveDataFrameColumn<T>` arithmetic executes eagerly and produces a concrete target column immediately. That difference matters most once transformation graphs become long, stateful, or production-bound.
 
 ```mermaid
@@ -449,7 +458,7 @@ flowchart LR
 `Col("name")` references a column by name, `Lit(value)` injects a scalar constant, and `.Alias("name")` assigns a name to the resulting expression. These three primitives compose into arbitrarily complex expressions passed to `.Select()` or `.WithColumns()`.
 
 _Selects `symbol` and `close`, injects `1.10` as a literal `eur_to_usd` column, and multiplies `close * 1.10` to produce `close_usd` — showing the first 5 ABI.BR rows with all four columns._
-
+*Runs the example cell.*
 ```csharp
 var dfExpr = dfP.Select(
     Col("symbol"),
@@ -468,7 +477,7 @@ dfExpr.Head(5)
 MDA does not have `Col`, `Lit`, or `Alias`. To express the same idea, you build the constant column explicitly, apply typed arithmetic on the underlying columns, and materialize the final projection into a new dataframe.
 
 _Creates a constant `eur_to_usd` column, computes `close_usd = close * 1.10`, and shows the first five rows of the projected result._
-
+*Runs the example cell.*
 ```csharp
 var eurToUsdColM = new MDA.PrimitiveDataFrameColumn<float>("eur_to_usd", df.Rows.Count);
 for (long i = 0; i < df.Rows.Count; i++) eurToUsdColM[i] = 1.10f;
@@ -491,11 +500,15 @@ dfExprM.Head(5)
 _Builds a `return_pct` column, then classifies each row as "up", "down", or "flat" using two nested `IfElse` calls on `close` vs. `open`, showing 8 ABI.BR rows where 5 of 8 sessions close below the open._
 
 > [!warning] Polars.NET uses `IfElse`, not `When/Then/Otherwise`
+>
 > The Python Polars API uses `pl.when().then().otherwise()` for conditional logic. Polars.NET 0.4.0 does not expose this API — use `IfElse()` instead. The summary table at the bottom of this page reflects this difference.
 
 > [!success] Correct Polars.NET conditional pattern
+>
 > `IfElse(Col("a") > Col("b"), Lit("yes"), Lit("no")).Alias("result")`
 
+*Runs the conditional-expression example described above.*
+*Runs the example cell.*
 ```csharp
 var dailyRet = (Col("close") - Col("open")) / Col("open") * Lit(100.0);
 
@@ -518,7 +531,7 @@ dfCond.Select("symbol", "date", "open", "close", "return_pct", "direction").Head
 Conditional logic in MDA is usually an explicit per-row pass that writes the result into a `StringDataFrameColumn` or a typed boolean column. That is straightforward to debug, but it does not become a reusable expression tree the way it does in Polars.
 
 _Builds a `direction` string column from `close` versus `open`, appends both `daily_return_pct` and `direction`, and previews the first eight rows._
-
+*Runs the example cell.*
 ```csharp
 var dirColM = new MDA.StringDataFrameColumn("direction", df.Rows.Count);
 for (long i = 0; i < df.Rows.Count; i++)
@@ -542,7 +555,7 @@ new MDA.DataFrame(dfCondM.Columns["symbol"], dfCondM.Columns["date"], dfCondM.Co
 For multi-tier classification, nest `IfElse` calls — the false branch of each outer `IfElse` becomes the next condition. The volume column is cast to `Float64` first because `Lit()` with numeric constants produces float comparisons.
 
 _Classifies all 66K rows into "low" / "medium" / "high" / "very_high" volume tiers using three nested `IfElse` calls, then groups by tier to confirm 27K low, 25K medium, 8.4K very_high, and 5.9K high rows._
-
+*Runs the example cell.*
 ```csharp
 var volFloat = Col("volume").Cast(DataType.Float64);
 
@@ -566,7 +579,7 @@ dfTier.GroupBy("vol_tier").Agg(Col("vol_tier").Count().Alias("count"))
 Multi-branch logic is just an explicit pass over the typed source column. This notebook writes the final label into a string column and then uses `ValueCounts()` to validate the distribution across the full dataset.
 
 _Classifies each row into `low`, `medium`, `high`, or `very_high` volume tiers, previews the first eight rows, and then counts the tier distribution._
-
+*Runs the example cell.*
 ```csharp
 var tierColM = new MDA.StringDataFrameColumn("vol_tier", df.Rows.Count);
 for (long i = 0; i < df.Rows.Count; i++)
@@ -595,7 +608,7 @@ dfTierM.Columns["vol_tier"].ValueCounts()
 Horizontal operations combine values across multiple columns within each row. Polars.NET 0.4.0 does not expose `horizontal_mean`, so the OHLC average is computed as manual arithmetic over four `Col()` references divided by `Lit(4.0)`.
 
 _Sums `open`, `high`, `low`, and `close` in a single expression divided by `Lit(4.0)` to produce `ohlc_avg`, and shows 5 ABI.BR rows with per-row OHLC averages between 57.20 and 58.46._
-
+*Runs the example cell.*
 ```csharp
 var dfHoriz = dfP.WithColumns(
     ((Col("open") + Col("high") + Col("low") + Col("close")) / Lit(4.0)).Alias("ohlc_avg")
@@ -611,7 +624,7 @@ dfHoriz.Select("symbol", "date", "open", "high", "low", "close", "ohlc_avg").Hea
 Horizontal row-wise math is still written as typed column arithmetic. Because there is no horizontal expression namespace, the notebook computes the OHLC average directly from the four typed numeric columns.
 
 _Computes `ohlc_avg` from `open`, `high`, `low`, and `close`, appends it to a cloned frame, and previews the first five rows._
-
+*Runs the example cell.*
 ```csharp
 var ohlcAvgM = (openColM + highColM + lowColM + closeColM) / 4.0f;
 ohlcAvgM.SetName("ohlc_avg");
@@ -631,7 +644,7 @@ new MDA.DataFrame(dfHorizM.Columns["symbol"], dfHorizM.Columns["date"], dfHorizM
 String-valued expressions work the same way as numeric ones — `Lit("UP")` creates a string constant. This example builds a directional label per row using nested `IfElse`.
 
 _Assigns "UP", "DOWN", or "FLAT" to a `tag` column using two nested `IfElse` expressions on `close` vs. `open`, showing 5 ABI.BR rows where the first row tags as "DOWN" (close 57.21 < open 58.15)._
-
+*Runs the example cell.*
 ```csharp
 var dfLabel = dfP.WithColumns(
     IfElse(
@@ -651,7 +664,7 @@ dfLabel.Select("symbol", "date", "close", "open", "tag").Head(5)
 MDA string transforms usually mean allocating a `StringDataFrameColumn` and filling it inside a loop. For short label-generation logic, that is perfectly serviceable and keeps the resulting column strongly associated with the source frame.
 
 _Builds a `tag` column with `UP`, `DOWN`, or `FLAT` based on `close` versus `open` and previews the first five rows._
-
+*Runs the example cell.*
 ```csharp
 var tagColM = new MDA.StringDataFrameColumn("tag", df.Rows.Count);
 for (long i = 0; i < df.Rows.Count; i++)
@@ -679,7 +692,7 @@ Type casting converts column data into the representation your downstream code a
 `.Cast(DataType.Float64)` converts the column's underlying storage type. When aliased to a new name, the original column is preserved alongside the cast version.
 
 _Casts `id` (i64) to a new `id_float` (f64) column using a different alias, confirms both dtype names with `DataTypeName`, and shows 3 rows where integer values 21160–21162 are preserved in both columns._
-
+*Runs the example cell.*
 ```csharp
 var dfCast1 = dfP.WithColumns(
     Col("id").Cast(DataType.Float64).Alias("id_float")
@@ -698,7 +711,7 @@ id dtype: i64  |  id_float dtype: f64
 MDA exposes each column's CLR type, but cross-type conversion still usually means constructing a new typed target column and populating it explicitly. This example also checks for column existence first so the notebook fails gracefully if the CSV schema changes.
 
 _Checks that `id` exists, converts it into `id_float`, prints both data types, and previews the first three rows._
-
+*Runs the example cell.*
 ```csharp
 MDA.DataFrame resultM = null;
 
@@ -733,7 +746,7 @@ id dtype: Single  |  id_float dtype: Double
 `.Str.ToDate(format)` parses a string column into a Polars `Date` type using a strftime format string. Since `tryParseDates: true` already parsed the date column during CSV load, this example first casts the date back to string to demonstrate the parsing roundtrip.
 
 _First casts `date` back to `str` to simulate a raw string input, then re-parses it with `Str.ToDate("%Y-%m-%d")`, confirming the roundtrip restores the `date` dtype and that 3 sample rows show the same 2021-01-04/05/06 values._
-
+*Runs the example cell.*
 ```csharp
 var dfDateStr = dfP.WithColumns(
     Col("date").Cast(DataType.String).Alias("date_str")
@@ -756,7 +769,7 @@ date_str dtype: str  |  date_parsed dtype: date
 Date parsing is explicit in MDA: allocate a `PrimitiveDataFrameColumn<DateTime>` and write parsed values only when `DateTime.TryParse` succeeds. That gives you predictable null behavior when parsing semi-clean strings.
 
 _Parses `date` into a new `date_parsed` column, prints both data types, and previews the first three rows._
-
+*Runs the example cell.*
 ```csharp
 var dateStrColM = df.Columns["date"];
 var dateParsedColM = new MDA.PrimitiveDataFrameColumn<DateTime>("date_parsed", df.Rows.Count);
@@ -784,7 +797,7 @@ date dtype: DateTime  |  date_parsed dtype: DateTime
 `.Cast(DataType.Categorical)` dictionary-encodes the column — each unique string is stored once, and the column stores integer codes. This dramatically reduces memory for columns with high repetition (e.g., 66K rows but only 50 unique symbols).
 
 _Casts `symbol` to a `cat` column aliased as `symbol_cat`, reports the dtype change from `str` to `cat` and 50 unique values, then shows 3 rows confirming that display values remain human-readable strings._
-
+*Runs the example cell.*
 ```csharp
 var dfCat = dfP.WithColumns(
     Col("symbol").Cast(DataType.Categorical).Alias("symbol_cat")
@@ -805,18 +818,20 @@ Unique symbols: 50
 
 Unlike Polars categorical casting, the MDA dataframe API centers on primitive and string columns. A practical notebook pattern is to keep the string column and inspect distinct cardinality with `ValueCounts()`; if you need encoded features, create numeric codes explicitly at the model-facing layer.
 
-_Reports the `symbol` column type, counts distinct values with `ValueCounts()`, and previews the first three rows of the original string column._
+*Reports the `symbol` column type, counts distinct values with `ValueCounts()`, and previews the first three rows of the original string column.*
 
 > [!question] Where should encoding happen?
 >
 > Keep business-readable labels in the dataframe while you are exploring or validating the data. If you need stable numeric encoding for a model, build that encoding deliberately in the feature-engineering or ML pipeline stage instead of assuming the dataframe library has a native categorical abstraction.
 
+*Runs the distinct-count check against the original MDA string column.*
+*Runs the example cell.*
 ```csharp
 var symbolStrColM = (MDA.StringDataFrameColumn)df.Columns["symbol"];
 var uniqueCountM = symbolStrColM.ValueCounts().Rows.Count;
 
 display($"symbol dtype: {symbolStrColM.DataType.Name}");
-display($"Unique symbolsM: {uniqueCountM}");
+display($"Unique symbols: {uniqueCountM}");
 new MDA.DataFrame(symbolStrColM).Head(3)
 ```
 
@@ -844,15 +859,15 @@ Method chaining composes multiple dataframe operations into a readable pipeline.
 
 Each method in the chain returns a new DataFrame, allowing `.Filter()` → `.WithColumns()` → `.Sort()` → `.Head()` → `.Select()` to read as a single declarative pipeline. The query planner can optimize across the entire chain.
 
-_Filters to ASML.AS rows, adds `return_pct`, sorts ascending by `return_pct` to surface the 10 worst sessions (led by −16% on 2024-10-15), and projects 5 columns — all in a single fluent expression._
-
+*Filters to ASML.AS rows, adds `return_pct`, sorts ascending by `return_pct` to surface the 10 worst sessions (led by −16% on 2024-10-15), and projects 5 columns — all in a single fluent expression.*
+*Runs the example cell.*
 ```csharp
 var dfChain = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
     .WithColumns(
         ((Col("close") - Col("open")) / Col("open") * Lit(100.0)).Alias("return_pct")
     )
-    .Sort("return_pct", false)   // descending
+    .Sort("return_pct", false)   // ascending: worst sessions first
     .Head(10)
     .Select("symbol", "date", "open", "close", "return_pct");
 
@@ -865,24 +880,37 @@ dfChain
 
 MDA can express the same pipeline, but each stage is a named intermediate: filter, compute a return column, append it, sort, then trim. That explicitness is useful in debugging-heavy notebook work, but less concise than Polars chaining when transform graphs grow.
 
-_Filters to `ASML.AS`, computes `return_pct`, sorts descending by that derived value, keeps the top ten rows, and projects the final columns._
-
+*Filters to `ASML.AS`, computes `return_pct`, sorts ascending by that derived value to surface the same worst sessions as Polars, and projects the final columns.*
+*Runs the example cell.*
 ```csharp
 var isAsmlMaskM = (MDA.PrimitiveDataFrameColumn<bool>)((MDA.StringDataFrameColumn)df.Columns["symbol"]).ElementwiseEquals("ASML.AS");
 var dfAsmlM = df.Filter(isAsmlMaskM);
 
-var asmlOpenM = (MDA.PrimitiveDataFrameColumn<float>)dfAsmlM.Columns["open"];
-var asmlCloseM = (MDA.PrimitiveDataFrameColumn<float>)dfAsmlM.Columns["close"];
+var dfAsmlChronM = dfAsmlM.OrderBy("date");
+var asmlOpenM = (MDA.PrimitiveDataFrameColumn<float>)dfAsmlChronM.Columns["open"];
+var asmlCloseM = (MDA.PrimitiveDataFrameColumn<float>)dfAsmlChronM.Columns["close"];
 var asmlRetM = (asmlCloseM - asmlOpenM) / asmlOpenM * 100.0f;
 asmlRetM.SetName("return_pct");
 
-dfAsmlM.Columns.Add(asmlRetM);
+dfAsmlChronM.Columns.Add(asmlRetM);
 
-var dfChainM = dfAsmlM.OrderByDescending("return_pct").Head(10);
+var dfChainM = dfAsmlChronM.OrderBy("return_pct").Head(10);
 new MDA.DataFrame(dfChainM.Columns["symbol"], dfChainM.Columns["date"], dfChainM.Columns["open"], dfChainM.Columns["close"], dfChainM.Columns["return_pct"])
 ```
 
-<table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>close</th><th>return_pct</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2022-11-10 00:00:00Z</td><td>488.5</td><td>544.2</td><td>11.402254</td></tr><tr><td>ASML.AS</td><td>2024-08-05 00:00:00Z</td><td>680</td><td>746</td><td>9.705882</td></tr><tr><td>ASML.AS</td><td>2026-01-02 00:00:00Z</td><td>919.4</td><td>986.3</td><td>7.2764807</td></tr><tr><td>ASML.AS</td><td>2026-03-09 00:00:00Z</td><td>1072</td><td>1147.6</td><td>7.0522366</td></tr><tr><td>ASML.AS</td><td>2024-06-05 00:00:00Z</td><td>883</td><td>943.6</td><td>6.8629646</td></tr></tbody></table>
+```text
+symbol | date | open | close | return_pct
+ASML.AS | 2024-10-15 | 795.7 | 668.1 | -16.0362
+ASML.AS | 2026-01-28 | 1300 | 1194.4 | -8.123075
+ASML.AS | 2024-07-17 | 946 | 870.9 | -7.938687
+ASML.AS | 2025-04-10 | 623 | 577.6 | -7.287323
+ASML.AS | 2022-01-10 | 667.5 | 622.3 | -6.771538
+ASML.AS | 2025-07-16 | 669.5 | 625.8 | -6.527261
+ASML.AS | 2023-08-24 | 643.5 | 603.6 | -6.20047
+ASML.AS | 2022-06-16 | 478.05 | 448.85 | -6.108144
+ASML.AS | 2021-09-28 | 708.4 | 665.2 | -6.098251
+ASML.AS | 2022-07-05 | 434.2 | 409 | -5.80378
+```
 
 ### Polars.NET / Microsoft.Data.Analysis | Window Functions
 
@@ -891,7 +919,7 @@ new MDA.DataFrame(dfChainM.Columns["symbol"], dfChainM.Columns["date"], dfChainM
 `.Over("column")` is Polars' window function — it partitions the data by the given column, computes the aggregate within each partition, and broadcasts the result back to every row. This is equivalent to SQL's `AVG(close) OVER (PARTITION BY symbol)`.
 
 _Computes the mean `close` per symbol across all 50 partitions simultaneously and broadcasts it back to every row, so all 8 ABI.BR rows show the same `mean_close_by_symbol` of ~54.86._
-
+*Runs the example cell.*
 ```csharp
 var dfOver = dfP.WithColumns(
     Col("close").Mean().Over("symbol").Alias("mean_close_by_symbol")
@@ -907,7 +935,7 @@ dfOver.Select("symbol", "date", "close", "mean_close_by_symbol").Head(8)
 There is no `Over`-style window expression in MDA. The equivalent pattern is to compute group aggregates in dictionaries and then broadcast the result back into a new column. This works well for modest in-memory frames but gets verbose for richer window logic.
 
 _Computes the mean `close` per `symbol`, broadcasts it back into `mean_close_by_symbol`, and previews the first eight rows._
-
+*Runs the example cell.*
 ```csharp
 var symbolsM = (MDA.StringDataFrameColumn)df.Columns["symbol"];
 var sumsM = new Dictionary<string, double>();
@@ -946,7 +974,7 @@ new MDA.DataFrame(dfOverM.Columns["symbol"], dfOverM.Columns["date"], dfOverM.Co
 `.RollingMean("20i")` computes a rolling average over a window of 20 rows. The `"20i"` syntax specifies an integer-indexed window (20 rows). Polars fills partial windows at the start of the series with the available data, so the first row's rolling mean equals the first value itself.
 
 _Filters and sorts ASML.AS chronologically, then computes a 20-row rolling mean on `close` — showing partial windows filling from row 1 (mean=406.25) through row 5 (mean=407.19) up to row 25 where the full 20-row window first applies._
-
+*Runs the example cell.*
 ```csharp
 var dfAsml = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date", false);
 
@@ -963,14 +991,14 @@ dfRoll.Select("symbol", "date", "close", "close_ma20").Head(25)
 
 Rolling logic in MDA is stateful code over the ordered frame. The example sorts ASML rows and then computes a 20-row moving mean manually. This gives full control over window semantics, but the developer owns every edge-case detail.
 
-_Builds a 20-row rolling mean over ASML closes and previews the first 25 rows of the ordered result._
-
+*Builds a 20-row rolling mean over ASML closes in chronological order and previews the first ten rows.*
+*Runs the example cell.*
 ```csharp
-var dfRollBaseM = dfAsmlM.OrderByDescending("date");
-var rollCloseColM = (MDA.PrimitiveDataFrameColumn<float>)dfRollBaseM.Columns["close"];
-var ma20ColM = new MDA.PrimitiveDataFrameColumn<float>("close_ma20", dfRollBaseM.Rows.Count);
+var dfRollBaseChronM = dfAsmlM.OrderBy("date").Clone();
+var rollCloseColM = (MDA.PrimitiveDataFrameColumn<float>)dfRollBaseChronM.Columns["close"];
+var ma20ColM = new MDA.PrimitiveDataFrameColumn<float>("close_ma20", dfRollBaseChronM.Rows.Count);
 
-for (long i = 0; i < dfRollBaseM.Rows.Count; i++)
+for (long i = 0; i < dfRollBaseChronM.Rows.Count; i++)
 {
     float sum = 0;
     int count = 0;
@@ -982,11 +1010,23 @@ for (long i = 0; i < dfRollBaseM.Rows.Count; i++)
     if (count > 0) ma20ColM[i] = sum / count;
 }
 
-dfRollBaseM.Columns.Add(ma20ColM);
-new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], dfRollBaseM.Columns["close"], dfRollBaseM.Columns["close_ma20"]).Head(25)
+dfRollBaseChronM.Columns.Add(ma20ColM);
+new MDA.DataFrame(dfRollBaseChronM.Columns["symbol"], dfRollBaseChronM.Columns["date"], dfRollBaseChronM.Columns["close"], dfRollBaseChronM.Columns["close_ma20"]).Head(10)
 ```
 
-<table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>close_ma20</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-03-12 00:00:00Z</td><td>1190.8</td><td>1190.8</td></tr><tr><td>ASML.AS</td><td>2026-03-11 00:00:00Z</td><td>1198.8</td><td>1194.8</td></tr><tr><td>ASML.AS</td><td>2026-03-10 00:00:00Z</td><td>1200</td><td>1196.5333</td></tr><tr><td>ASML.AS</td><td>2026-03-09 00:00:00Z</td><td>1147.6</td><td>1184.3</td></tr><tr><td>ASML.AS</td><td>2026-03-06 00:00:00Z</td><td>1147</td><td>1176.8401</td></tr></tbody></table>
+```text
+symbol | date | close | close_ma20
+ASML.AS | 2021-01-04 | 406.25 | 406.25
+ASML.AS | 2021-01-05 | 406.9 | 406.575
+ASML.AS | 2021-01-06 | 402.85 | 405.3333
+ASML.AS | 2021-01-07 | 403.9 | 404.975
+ASML.AS | 2021-01-08 | 416.05 | 407.19
+ASML.AS | 2021-01-11 | 414.9 | 408.475
+ASML.AS | 2021-01-12 | 418.95 | 409.9714
+ASML.AS | 2021-01-13 | 422.45 | 411.5312
+ASML.AS | 2021-01-14 | 447.35 | 415.5111
+ASML.AS | 2021-01-15 | 435.85 | 417.545
+```
 
 ### Polars.NET / Microsoft.Data.Analysis | Cumulative Operations
 
@@ -995,7 +1035,7 @@ new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], df
 `.CumSum()` computes the running total of a column. Combined with `.Filter()` and `.Sort()`, this builds a cumulative volume curve for a single symbol. The operation is vectorized and runs in a single pass.
 
 _Filters and sorts ASML.AS by date, applies `.CumSum()` to `volume`, building a running total that grows from 789K on day 1 to 9.05M by day 10._
-
+*Runs the example cell.*
 ```csharp
 var dfAsmlCum = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -1013,25 +1053,38 @@ dfAsmlCum.Select("symbol", "date", "volume", "cum_volume").Head(10)
 
 Cumulative transforms are another explicit-state pattern in MDA: hold the running accumulator in a scalar, write each step into a typed target column, and append the result to the working frame.
 
-_Accumulates ASML trading volume into `cum_volume` and previews the first ten rows._
-
+*Accumulates ASML trading volume into `cum_volume` and previews the first ten rows.*
+*Runs the example cell.*
 ```csharp
-var cumVolColM = new MDA.PrimitiveDataFrameColumn<double>("cum_volume", dfRollBaseM.Rows.Count);
-var rollVolColM = dfRollBaseM.Columns["volume"];
+var dfCumBaseM = dfAsmlM.OrderBy("date").Clone();
+var cumVolColM = new MDA.PrimitiveDataFrameColumn<double>("cum_volume", dfCumBaseM.Rows.Count);
+var rollVolColM = dfCumBaseM.Columns["volume"];
 double currentCumM = 0;
 
-for (long i = 0; i < dfRollBaseM.Rows.Count; i++)
+for (long i = 0; i < dfCumBaseM.Rows.Count; i++)
 {
     double v = Convert.ToDouble(rollVolColM[i] ?? 0.0);
     currentCumM += v;
     cumVolColM[i] = currentCumM;
 }
 
-dfRollBaseM.Columns.Add(cumVolColM);
-new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], dfRollBaseM.Columns["volume"], dfRollBaseM.Columns["cum_volume"]).Head(10)
+dfCumBaseM.Columns.Add(cumVolColM);
+new MDA.DataFrame(dfCumBaseM.Columns["symbol"], dfCumBaseM.Columns["date"], dfCumBaseM.Columns["volume"], dfCumBaseM.Columns["cum_volume"]).Head(10)
 ```
 
-<table><thead><tr><th>symbol</th><th>date</th><th>volume</th><th>cum_volume</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-03-12 00:00:00Z</td><td>128223</td><td>128223</td></tr><tr><td>ASML.AS</td><td>2026-03-11 00:00:00Z</td><td>562904</td><td>691127</td></tr><tr><td>ASML.AS</td><td>2026-03-10 00:00:00Z</td><td>800815</td><td>1491942</td></tr><tr><td>ASML.AS</td><td>2026-03-09 00:00:00Z</td><td>689086</td><td>2181028</td></tr><tr><td>ASML.AS</td><td>2026-03-06 00:00:00Z</td><td>857271</td><td>3038299</td></tr></tbody></table>
+```text
+symbol | date | volume | cum_volume
+ASML.AS | 2021-01-04 | 789502 | 789502
+ASML.AS | 2021-01-05 | 798787 | 1588289
+ASML.AS | 2021-01-06 | 875711 | 2464000
+ASML.AS | 2021-01-07 | 874780 | 3338780
+ASML.AS | 2021-01-08 | 975243 | 4314023
+ASML.AS | 2021-01-11 | 717929 | 5031952
+ASML.AS | 2021-01-12 | 787472 | 5819424
+ASML.AS | 2021-01-13 | 669646 | 6489070
+ASML.AS | 2021-01-14 | 1272594 | 7761664
+ASML.AS | 2021-01-15 | 1291058 | 9052722
+```
 
 ### Polars.NET / Microsoft.Data.Analysis | Rank
 
@@ -1040,7 +1093,7 @@ new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], df
 `.Rank()` assigns a rank to each value. By default, Polars uses the "average" method for ties (e.g., two values tied for rank 11 both receive 11.5). The ranking is computed within the filtered/sorted context — here, close prices for a single symbol.
 
 _Filters and sorts ASML.AS by date, ranks all `close` values across the full history using average-tie handling, and shows 10 rows — confirming rank 6 on 2021-01-04 (close=406.25) as the 6th-lowest ASML close price and rank 11.5 for a tied pair._
-
+*Runs the example cell.*
 ```csharp
 var dfRank = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -1056,30 +1109,56 @@ dfRank.Select("symbol", "date", "close", "close_rank").Head(10)
 
 #### Microsoft.Data.Analysis | Rank values by sorting indexed observations
 
-MDA has no built-in rank expression, so ranking is a two-step algorithm: gather the non-null values with their row positions, sort them, and then write the ordinal rank back into a new numeric column.
+MDA has no built-in rank expression, so ranking is a two-step algorithm: gather the non-null values with their row positions, sort them, and then write the rank back into a new numeric column. To keep the comparison aligned with the Polars example, this version assigns average ranks across ties.
 
-_Ranks ASML close prices by value, writes the 1-based rank into `close_rank`, and previews the first ten rows._
-
+*Ranks ASML close prices by value with average-tie handling and previews the first ten chronological rows.*
+*Runs the example cell.*
 ```csharp
-var rankColM = new MDA.PrimitiveDataFrameColumn<double>("close_rank", dfRollBaseM.Rows.Count);
+var dfRankBaseM = dfAsmlM.OrderBy("date").Clone();
+var rankCloseColM = (MDA.PrimitiveDataFrameColumn<float>)dfRankBaseM.Columns["close"];
+var rankColM = new MDA.PrimitiveDataFrameColumn<double>("close_rank", dfRankBaseM.Rows.Count);
 var indexedClosesM = new List<(long Index, float Value)>();
 
-for (long i = 0; i < dfRollBaseM.Rows.Count; i++)
+for (long i = 0; i < dfRankBaseM.Rows.Count; i++)
 {
-    if (rollCloseColM[i].HasValue) indexedClosesM.Add((i, rollCloseColM[i].Value));
+    if (rankCloseColM[i].HasValue) indexedClosesM.Add((i, rankCloseColM[i].Value));
 }
 
-var sortedClosesM = indexedClosesM.OrderBy(x => x.Value).ToList();
-for (int r = 0; r < sortedClosesM.Count; r++)
+var sortedClosesM = indexedClosesM.OrderBy(x => x.Value).ThenBy(x => x.Index).ToList();
+for (int pos = 0; pos < sortedClosesM.Count;)
 {
-    rankColM[sortedClosesM[r].Index] = r + 1; // 1-based rank
+    int groupEnd = pos;
+    while (groupEnd + 1 < sortedClosesM.Count && sortedClosesM[groupEnd + 1].Value == sortedClosesM[pos].Value)
+    {
+        groupEnd++;
+    }
+
+    double avgRank = ((pos + 1) + (groupEnd + 1)) / 2.0;
+    for (int i = pos; i <= groupEnd; i++)
+    {
+        rankColM[sortedClosesM[i].Index] = avgRank;
+    }
+
+    pos = groupEnd + 1;
 }
 
-dfRollBaseM.Columns.Add(rankColM);
-new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], dfRollBaseM.Columns["close"], dfRollBaseM.Columns["close_rank"]).Head(10)
+dfRankBaseM.Columns.Add(rankColM);
+new MDA.DataFrame(dfRankBaseM.Columns["symbol"], dfRankBaseM.Columns["date"], dfRankBaseM.Columns["close"], dfRankBaseM.Columns["close_rank"]).Head(10)
 ```
 
-<table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>close_rank</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-03-12 00:00:00Z</td><td>1190.8</td><td>1308</td></tr><tr><td>ASML.AS</td><td>2026-03-11 00:00:00Z</td><td>1198.8</td><td>1314</td></tr><tr><td>ASML.AS</td><td>2026-03-10 00:00:00Z</td><td>1200</td><td>1317</td></tr><tr><td>ASML.AS</td><td>2026-03-09 00:00:00Z</td><td>1147.6</td><td>1295</td></tr><tr><td>ASML.AS</td><td>2026-03-06 00:00:00Z</td><td>1147</td><td>1294</td></tr></tbody></table>
+```text
+symbol | date | close | close_rank
+ASML.AS | 2021-01-04 | 406.25 | 6
+ASML.AS | 2021-01-05 | 406.9 | 7
+ASML.AS | 2021-01-06 | 402.85 | 3
+ASML.AS | 2021-01-07 | 403.9 | 5
+ASML.AS | 2021-01-08 | 416.05 | 13
+ASML.AS | 2021-01-11 | 414.9 | 11.5
+ASML.AS | 2021-01-12 | 418.95 | 14
+ASML.AS | 2021-01-13 | 422.45 | 16
+ASML.AS | 2021-01-14 | 447.35 | 44
+ASML.AS | 2021-01-15 | 435.85 | 25
+```
 
 ### Polars.NET / Microsoft.Data.Analysis | Percent Change
 
@@ -1088,7 +1167,7 @@ new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], df
 `.PctChange(n)` computes `(current - previous) / previous` with a configurable lag. The first row returns `null` because there is no prior value. This is one of the most common operations in financial time series analysis.
 
 _Filters and sorts ASML.AS chronologically, computes `.PctChange(1)` on `close`, producing `null` on 2021-01-04 and fractional daily returns thereafter (e.g., +0.16% on 2021-01-05, then −0.995% on 2021-01-06)._
-
+*Runs the example cell.*
 ```csharp
 var dfPctChg = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -1106,32 +1185,47 @@ dfPctChg.Select("symbol", "date", "close", "close_pct_change").Head(10)
 
 Lag-based transforms are explicit loops in MDA. The current row and prior row are read from the typed price column, and the result is written only when both values are present and the prior value is nonzero.
 
-_Computes day-over-day percent change for ASML closes and previews the first ten rows._
-
+*Computes day-over-day percent change for ASML closes in chronological order and previews the first ten rows.*
+*Runs the example cell.*
 ```csharp
-var pctChangeColM = new MDA.PrimitiveDataFrameColumn<float>("close_pct_change", dfRollBaseM.Rows.Count);
+var dfPctBaseM = dfAsmlM.OrderBy("date").Clone();
+var pctCloseColM = (MDA.PrimitiveDataFrameColumn<float>)dfPctBaseM.Columns["close"];
+var pctChangeColM = new MDA.PrimitiveDataFrameColumn<float>("close_pct_change", dfPctBaseM.Rows.Count);
 
-for (long i = 1; i < dfRollBaseM.Rows.Count; i++)
+for (long i = 1; i < dfPctBaseM.Rows.Count; i++)
 {
-    var curr = rollCloseColM[i];
-    var prev = rollCloseColM[i - 1];
+    var curr = pctCloseColM[i];
+    var prev = pctCloseColM[i - 1];
     if (curr.HasValue && prev.HasValue && prev.Value != 0)
     {
         pctChangeColM[i] = (curr.Value - prev.Value) / prev.Value;
     }
 }
 
-dfRollBaseM.Columns.Add(pctChangeColM);
-new MDA.DataFrame(dfRollBaseM.Columns["symbol"], dfRollBaseM.Columns["date"], dfRollBaseM.Columns["close"], dfRollBaseM.Columns["close_pct_change"]).Head(10)
+dfPctBaseM.Columns.Add(pctChangeColM);
+new MDA.DataFrame(dfPctBaseM.Columns["symbol"], dfPctBaseM.Columns["date"], dfPctBaseM.Columns["close"], dfPctBaseM.Columns["close_pct_change"]).Head(10)
 ```
 
-<table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>close_pct_change</th></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-03-12 00:00:00Z</td><td>1190.8</td><td>&lt;null&gt;</td></tr><tr><td>ASML.AS</td><td>2026-03-11 00:00:00Z</td><td>1198.8</td><td>0.006718172</td></tr><tr><td>ASML.AS</td><td>2026-03-10 00:00:00Z</td><td>1200</td><td>0.0010009602</td></tr><tr><td>ASML.AS</td><td>2026-03-09 00:00:00Z</td><td>1147.6</td><td>-0.043666687</td></tr><tr><td>ASML.AS</td><td>2026-03-06 00:00:00Z</td><td>1147</td><td>-0.000522809</td></tr></tbody></table>
+```text
+symbol | date | close | close_pct_change
+ASML.AS | 2021-01-04 | 406.25 | <null>
+ASML.AS | 2021-01-05 | 406.9 | 0.00159999
+ASML.AS | 2021-01-06 | 402.85 | -0.00995328
+ASML.AS | 2021-01-07 | 403.9 | 0.0026064
+ASML.AS | 2021-01-08 | 416.05 | 0.03008169
+ASML.AS | 2021-01-11 | 414.9 | -0.00276408
+ASML.AS | 2021-01-12 | 418.95 | 0.00976143
+ASML.AS | 2021-01-13 | 422.45 | 0.00835422
+ASML.AS | 2021-01-14 | 447.35 | 0.05894187
+ASML.AS | 2021-01-15 | 435.85 | -0.02570694
+```
 
 ## Apply / Map / UDF
 
 User-defined functions (UDFs) apply custom logic element-wise or row-wise. Polars encourages native expressions over UDF-style code because expressions stay vectorized and optimizable. Microsoft.Data.Analysis is more comfortable with explicit CLR loops, but those loops are still eager notebook code rather than reusable query semantics.
 
 > [!tip] Prefer built-in column operations over manual loops
+>
 > In Polars, expression-based transforms keep the work vectorized and compatible with lazy optimization. In Microsoft.Data.Analysis, typed column arithmetic is still preferable to per-row loops whenever possible because it keeps the code shorter and reduces custom state handling.
 
 ### Polars.NET / Microsoft.Data.Analysis | Element-wise UDF
@@ -1143,11 +1237,15 @@ User-defined functions (UDFs) apply custom logic element-wise or row-wise. Polar
 _Extracts ASML.AS `close` as a `double[]`, applies `Math.Log()` element-wise via LINQ, wraps the result as a named `Series`, and attaches it with `.HStack()` — showing the first 8 rows with natural log prices between 6.007 and 6.046._
 
 > [!warning] MapElements not available in Polars.NET 0.4.0
+>
 > The Python Polars `map_elements()` function has no direct equivalent in the .NET bindings at version 0.4.0. Use the extract-transform-add pattern shown below.
 
 > [!success] Preferred workaround
+>
 > Keep the transformation in Polars expressions whenever possible. Use extract-transform-add only for CLR-specific logic that genuinely cannot be expressed with the current Polars.NET API surface.
 
+*Runs the extract-transform-add workaround described above.*
+*Runs the example cell.*
 ```csharp
 var dfAsmlU = dfP
     .Filter(Col("symbol") == Lit("ASML.AS"))
@@ -1168,7 +1266,7 @@ dfUdf.Select("symbol", "date", "close", "log_close").Head(8)
 In MDA, custom elementwise transforms are usually direct loops over a typed source column. That is mechanically simple and fits CLR-native math well, but it is still eager, notebook-local materialization rather than an optimizable expression.
 
 _Applies `Math.Log()` to ASML close prices, appends `log_close`, and previews the first eight rows._
-
+*Runs the example cell.*
 ```csharp
 var dfAsmlLogM = dfAsmlM.OrderBy("date");
 var asmlLogCloseColM = (MDA.PrimitiveDataFrameColumn<float>)dfAsmlLogM.Columns["close"];
@@ -1192,7 +1290,7 @@ new MDA.DataFrame(dfAsmlLogM.Columns["symbol"], dfAsmlLogM.Columns["date"], dfAs
 Multi-column row-wise conditions are best expressed with Polars' expression combinators using `&` (AND) and `|` (OR). This keeps the operation vectorized and optimizable. The volume column is cast to `Float64` for comparison with the `Lit()` constant.
 
 _Flags rows where `close > open` AND `volume > 2,000,000` as `bullish_high_vol`, finding 13,931 such rows across all 50 symbols — previewing 8 ABI.BR rows which are all `false` due to low volume._
-
+*Runs the example cell.*
 ```csharp
 var dfRowWise = dfP.WithColumns(
     IfElse(
@@ -1215,7 +1313,7 @@ Bullish high-vol rows: (13931, 13)
 Multi-column row logic is expressed by reading the relevant typed columns together and writing the boolean outcome into a `PrimitiveDataFrameColumn<bool>`. This is the clearest MDA pattern when the condition cannot be reduced to a simpler precomputed numeric transform.
 
 _Flags rows where `close > open` and `volume > 2,000,000`, prints the filtered shape, and previews the first eight rows._
-
+*Runs the example cell.*
 ```csharp
 var bullishVolColM = new MDA.PrimitiveDataFrameColumn<bool>("bullish_high_vol", df.Rows.Count);
 
@@ -1269,45 +1367,142 @@ This chapter is where the libraries diverge most clearly. Polars.NET gives you a
 | **Element UDF** | Extract / transform / `HStack` workaround in 0.4.0 | Explicit loop into a target column |
 | **Row-wise logic** | Prefer expressions with `IfElse`, `&`, and `|` | Explicit boolean target column populated row by row |
 
-### Engineering Recommendations
+### Decision Criteria
 
-As *Fundamentals of Data Engineering.epub* argues, the best architecture decisions stay reversible. Applied here, that means not overcommitting to notebook-local loop code if the same transformation is likely to migrate into a larger batch, SQL, or streaming pipeline later.
+Applied architecture choices should stay reversible. Treat `WithColumns()`, `Over()`, `RollingMean()`, and `PctChange()` as signals that the transform is drifting toward an analytical pipeline rather than notebook-local preprocessing.
 
-| Scenario | Prefer | Why |
-|---|---|---|
-| Expression-heavy transforms that may grow into lazy analytical pipelines | Polars.NET | The expression model, window functions, rolling ops, and categorical support stay declarative and closer to optimizer-friendly execution. |
-| Small or medium in-memory feature engineering inside a .NET notebook or service | Microsoft.Data.Analysis | Typed columns and explicit loops make every materialized step easy to inspect, debug, and adapt to CLR-native business logic. |
-| Repeated rolling, ranking, or stateful time-series transforms | Polars.NET | Built-in rolling, window, cumulative, rank, and percent-change operations reduce custom state code substantially. |
-| Feature prep immediately upstream of ML.NET | Microsoft.Data.Analysis | `DataFrame` implements `IDataView`, which makes the handoff into ML.NET natural once features are ready. |
-| String-heavy domains that need compact categorical storage | Polars.NET | Native categorical casting avoids ad hoc code tables and keeps labels human-readable. |
-| One-off CLR-specific math or row checks where explicit control matters more than optimizer behavior | Microsoft.Data.Analysis | Manual target-column construction is acceptable when the dataset is already local and the transform belongs in application code. |
+#### Prefer `WithColumns()` for analytical pipelines
 
-If the same transformation can run earlier in SQL, DuckDB, Spark, or a lakehouse engine, prefer that upstream execution boundary first. Local dataframe transforms are most valuable when the data is already in memory, the goal is exploratory feature engineering, or the transform sits squarely within a .NET application boundary.
+If the work is mostly columnar arithmetic, conditional branching, windows, or repeated rolling features, `Polars.NET` keeps the logic declarative and easier to migrate beyond a notebook.
 
----
+*Summarizes the operations that most strongly favor the Polars expression engine.*
+*Runs the example cell.*
+```csharp
+var analyticalOps = new[] { "WithColumns", "Over", "RollingMean", "PctChange", "CumSum" };
+Console.WriteLine(string.Join(", ", analyticalOps));
+```
+```text
+WithColumns, Over, RollingMean, PctChange, CumSum
+```
 
-## Warnings
+#### Prefer `DataFrame` when the boundary is `IDataView`
 
-> [!warning] Polars.NET DataFrames are immutable — every operation returns a new DataFrame
-> Forgetting to assign the result of `WithColumns()`, `Filter()`, or `Sort()` silently discards the work. MDA is mutable — column assignment modifies the original.
+If the notebook is preparing features immediately before `ML.NET`, `Microsoft.Data.Analysis` stays practical because `DataFrame` already fits the .NET-native handoff model.
 
-> [!warning] `IfElse` in Polars.NET is not `When/Then/Otherwise`
-> The C# API uses `Col("x").Gt(0).IfElse(trueVal, falseVal)` — not `When().Then().Otherwise()`. Translating from Python literally produces compile errors.
+*Lists the .NET-specific boundaries that justify staying in MDA.*
+*Runs the example cell.*
+```csharp
+var mdaBoundaries = new[] { "IDataView", "CLR business rules", "explicit typed columns" };
+Console.WriteLine(string.Join(" | ", mdaBoundaries));
+```
+```text
+IDataView | CLR business rules | explicit typed columns
+```
 
-> [!warning] Type mismatches between Polars.NET and MDA are common
-> Polars.NET uses Arrow types (Int64, Float64, Utf8). MDA uses .NET types (int, double, string). Converting between libraries requires explicit type mapping.
+#### Push repeated transforms upstream when possible
 
-## Recommendations
+If the same transform could execute earlier in `SQL`, `DuckDB`, `Spark`, or a lakehouse engine, move it there instead of maintaining notebook-local loops and state handling.
 
-1. **Prefer Polars.NET expressions for analytical transforms** — the optimizer can fuse and reorder operations.
-2. **Use MDA when ML.NET integration is the goal** — MDA DataFrame implements `IDataView` for direct ML.NET handoff.
-3. **Validate output schemas after transforms** — assert column names and types match expectations.
-4. **Prefer Parquet for intermediate data** — lossless type preservation between transform steps.
+*Prints the preferred upstream execution boundaries for repeatable transforms.*
+*Runs the example cell.*
+```csharp
+var upstreamTargets = new[] { "SQL", "DuckDB", "Spark", "lakehouse" };
+Console.WriteLine($"Upstream first: {string.Join(", ", upstreamTargets)}");
+```
+```text
+Upstream first: SQL, DuckDB, Spark, lakehouse
+```
 
-## Troubleshooting and failure modes
+### Operational Risks
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
-| `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
-| MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
+These are the failure modes that most often make a dataframe transform look correct in prose while doing the wrong thing in code.
+
+#### Reassign immutable Polars results
+
+`WithColumns()`, `Filter()`, and `Sort()` return a new frame. If you do not capture the result, the transform is discarded even though the expression itself is valid.
+
+*Prints the safe reassignment pattern for immutable Polars transforms.*
+*Runs the example cell.*
+```csharp
+var safePattern = "dfP = dfP.WithColumns(...)";
+Console.WriteLine(safePattern);
+```
+```text
+dfP = dfP.WithColumns(...)
+```
+
+#### Keep `IfElse()` syntax C#-native
+
+`IfElse()` is the supported conditional shape in this note. Translating Python `when().then().otherwise()` examples literally will produce the wrong API for the .NET bindings discussed here.
+
+*Prints the supported Polars.NET conditional pattern.*
+*Runs the example cell.*
+```csharp
+var ifElsePattern = "IfElse(Col(\"a\") > Col(\"b\"), Lit(\"yes\"), Lit(\"no\"))";
+Console.WriteLine(ifElsePattern);
+```
+```text
+IfElse(Col("a") > Col("b"), Lit("yes"), Lit("no"))
+```
+
+#### Map Arrow and CLR types deliberately
+
+`Cast()` does not erase the difference between Arrow-native dtypes and CLR-native column types. Cross-library work stays safer when you decide the target type explicitly before the next transform.
+
+*Prints the type families that need deliberate mapping between libraries.*
+*Runs the example cell.*
+```csharp
+var typePairs = new[] { "Int64 -> long", "Float64 -> double", "Utf8 -> string" };
+Console.WriteLine(string.Join(" | ", typePairs));
+```
+```text
+Int64 -> long | Float64 -> double | Utf8 -> string
+```
+
+### Troubleshooting
+
+Use these checks when the code compiles but the resulting frame or schema does not match the intended transform.
+
+#### Result unchanged after `WithColumns()`
+
+If a Polars transform appears unchanged, inspect whether the returned frame from `WithColumns()` or `Filter()` was assigned back into a working variable such as `dfP`.
+
+*Prints the first check for a no-op-looking Polars transform.*
+*Runs the example cell.*
+```csharp
+Console.WriteLine("Check reassignment before debugging expression logic.");
+```
+```text
+Check reassignment before debugging expression logic.
+```
+
+#### `Cast()` fails on dirty values
+
+If `Cast()` raises a conversion error, guard the bad values first with `IfElse()` or clean the string/numeric source before attempting the type transition.
+
+*Prints the first remediation step for cast failures.*
+*Runs the example cell.*
+```csharp
+Console.WriteLine("Clean or guard invalid values before Cast().");
+```
+```text
+Clean or guard invalid values before Cast().
+```
+
+#### MDA schema mismatch after manual column construction
+
+If an MDA column does not behave correctly downstream, verify that the chosen `PrimitiveDataFrameColumn<T>` or `StringDataFrameColumn` matches the CLR type you actually intend to materialize.
+
+*Prints the MDA type-check reminder for manual column construction.*
+*Runs the example cell.*
+```csharp
+Console.WriteLine("Match PrimitiveDataFrameColumn<T> to the final CLR type.");
+```
+```text
+Match PrimitiveDataFrameColumn<T> to the final CLR type.
+```
+
+
+
+
+

@@ -195,6 +195,9 @@ flowchart TD
     class Y1,Y2 yes;
     class N1,N2 no;
 ```
+```text
+Decision flow: performance complaint -> check lock wait -> capture active requests and lock inventory -> if a head blocker exists, shorten the transaction or change the access pattern; otherwise check lock timeout, isolation level, or deadlock history. If the session is not lock-bound, use the wait-stats or execution-plan workflow instead.
+```
 
 ## Lock Modes That Matter In Production
 
@@ -297,19 +300,18 @@ SELECT
 FROM sys.databases
 WHERE name = 'stoxx';
 ```
-
-| name | snapshot_isolation_state_desc | is_read_committed_snapshot_on |
-|---|---|---:|
-| stoxx | OFF | 0 |
+```text
+name  snapshot_isolation_state_desc  is_read_committed_snapshot_on
+stoxx OFF                             0
+```
 
 *`stoxx` is currently using classic pessimistic locking for `READ COMMITTED`, and explicit `SNAPSHOT` transactions are not available. Reader-versus-writer blocking is therefore still possible unless queries use hints or a different isolation level.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `snapshot_isolation_state_desc` | `OFF` | &#10060; | Explicit `SNAPSHOT` transactions are disabled. | Code that expects optimistic snapshot reads cannot use them in this database. |
-| `snapshot_isolation_state_desc` | `ON` | &#9989; | Explicit `SNAPSHOT` transactions are enabled. | Multi-statement consistent reads can avoid shared-lock blocking, but update conflicts must be handled. |
-| `is_read_committed_snapshot_on` | `0` | &#10060; | Plain `READ COMMITTED` still takes shared locks for reads. | Reader-versus-writer blocking remains part of normal runtime behavior. |
-| `is_read_committed_snapshot_on` | `1` | &#9989; | Plain `READ COMMITTED` reads row versions. | Readers no longer wait behind writers for committed data, but TempDB version-store pressure matters more. |
+*Interpretation*
+- `snapshot_isolation_state_desc = OFF` means explicit `SNAPSHOT` transactions are disabled.
+- `snapshot_isolation_state_desc = ON` means explicit `SNAPSHOT` transactions are enabled, so multi-statement consistent reads can avoid shared-lock blocking.
+- `is_read_committed_snapshot_on = 0` means plain `READ COMMITTED` still takes shared locks for reads.
+- `is_read_committed_snapshot_on = 1` means plain `READ COMMITTED` reads row versions, so TempDB version-store pressure becomes part of the tradeoff.
 
 ### SQL Server | ALTER DATABASE | enable row versioning
 
@@ -346,6 +348,9 @@ GO
 
 ALTER DATABASE stoxx SET ALLOW_SNAPSHOT_ISOLATION ON;
 GO
+```
+```text
+No runtime output was captured. This is a DDL template and was not executed in the live database.
 ```
 
 ## Live Blocking Snapshot
@@ -405,6 +410,11 @@ WHERE r.session_id <> @@SPID
   AND DB_NAME(r.database_id) = 'stoxx'
 ORDER BY r.total_elapsed_time DESC, r.session_id;
 ```
+```text
+session_id  database_name  login_name  host_name  program_name  status     command  wait_type  wait_time_ms  cpu_time_ms  elapsed_time_ms  logical_reads  reads  writes  blocking_session_id  running_statement
+55          stoxx          sa          ELYSIUM    SQLCMD        suspended  WAITFOR  WAITFOR    6068          0            6069             2              0      0      0                     WAITFOR DELAY '00:00:25';
+56          stoxx          sa          ELYSIUM    SQLCMD        suspended  SELECT   LCK_M_U    3972          0            5973             2              0      0      55                    SELECT [payload] FROM [dbo].[concurrency_block_demo] WITH(updlock,holdlock) WHERE [id]=@1
+```
 
 | session_id | database_name | login_name | host_name | program_name | status | command | wait_type | wait_time_ms | cpu_time_ms | elapsed_time_ms | logical_reads | reads | writes | blocking_session_id | running_statement |
 |---:|---|---|---|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|
@@ -413,18 +423,11 @@ ORDER BY r.total_elapsed_time DESC, r.session_id;
 
 *Session `55` is the head blocker. It already updated the row, is holding the transaction open, and is now idle inside `WAITFOR`. Session `56` is the blocked victim: its command is `SELECT`, but the lock hint forces a `U` lock request, so it waits on `LCK_M_U` behind session `55`.*
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `status` | `running` | &#9989; | The request is consuming CPU or actively progressing. | This is not currently blocked, even if it later becomes a blocker. |
-| `status` | `suspended` | &#10060; | The request is waiting on a resource. | Always inspect `wait_type` and `blocking_session_id`. |
-| `command` | `SELECT` | Depends | The current statement is reading. | Under pessimistic isolation or lock hints, readers can still block or be blocked. |
-| `command` | `UPDATE` / `DELETE` / `INSERT` | Depends | The current statement is modifying data. | These are common blocker candidates because they hold `X` or `U` locks. |
-| `command` | `WAITFOR` | &#10060; when inside an open transaction | The session is intentionally pausing. | If the transaction is still open, this extends blocking for no business value. |
-| `wait_type` | `LCK_M_U` | &#10060; | Waiting for an update lock. | Often indicates `UPDLOCK`, `UPDATE`, or a read-for-write pattern colliding with another writer. |
-| `wait_type` | `LCK_M_X` | &#10060; | Waiting for an exclusive lock. | A write is queued behind another incompatible lock. |
-| `wait_type` | `WAITFOR` | Neutral | The session is paused by `WAITFOR`, not by another session. | If the transaction is open, this session may still be the blocker. |
-| `blocking_session_id` | `0` | Depends | No blocker is recorded for this request. | The request may be running, waiting on a non-blocking resource, or acting as the head blocker. |
-| `blocking_session_id` | Positive session id | &#10060; | Another session is blocking this request. | Follow that session and determine whether it is still working or just holding locks open. |
+*Interpretation*
+- `status = suspended` means the request is waiting on a resource.
+- `command = WAITFOR` on session `55` means the blocker is idle inside `WAITFOR`, but the transaction is still open.
+- `wait_type = LCK_M_U` on session `56` means the victim is waiting for an update lock behind another incompatible lock.
+- `blocking_session_id = 55` identifies the head blocker in this live capture.
 
 #### Reproduce the blocker/victim pattern in a lab
 
@@ -454,6 +457,9 @@ The three-window sequence below reproduces the exact blocker/victim rows shown i
 > VALUES (1);
 > GO
 > ```
+> ```text
+> Created dbo.concurrency_block_demo and seeded row `1`.
+> ```
 >
 > **Window 1: create the blocker**
 > ```sql
@@ -471,6 +477,9 @@ The three-window sequence below reproduces the exact blocker/victim rows shown i
 > ROLLBACK;
 > GO
 > ```
+> ```text
+> The session holds the transaction open, keeps the row locked, and waits 25 seconds in `WAITFOR DELAY '00:00:25';`.
+> ```
 >
 > **Window 2: create the blocked request**
 > ```sql
@@ -481,6 +490,9 @@ The three-window sequence below reproduces the exact blocker/victim rows shown i
 > FROM dbo.concurrency_block_demo WITH (UPDLOCK, HOLDLOCK)
 > WHERE id = 1;
 > GO
+> ```
+> ```text
+> This request blocks behind the open transaction and should surface `LCK_M_U` while the blocker is still active.
 > ```
 >
 > **Window 3: observe the blocking chain**
@@ -518,6 +530,9 @@ The three-window sequence below reproduces the exact blocker/victim rows shown i
 >   AND DB_NAME(r.database_id) = 'stoxx'
 > ORDER BY r.total_elapsed_time DESC, r.session_id;
 > ```
+> ```text
+> Expected live capture: session `55` is the head blocker in `WAITFOR`, and session `56` waits on `LCK_M_U` with `blocking_session_id = 55`.
+> ```
 >
 > **Cleanup**
 > ```sql
@@ -530,6 +545,9 @@ The three-window sequence below reproduces the exact blocker/victim rows shown i
 >
 > DROP TABLE IF EXISTS dbo.concurrency_block_demo;
 > GO
+> ```
+> ```text
+> Rolled back any open transaction and dropped `dbo.concurrency_block_demo`.
 > ```
 
 ## Lock Inventory For The Blocked Chain
@@ -573,6 +591,17 @@ WHERE tl.resource_database_id = DB_ID('stoxx')
   AND tl.request_session_id IN (55, 56)
 ORDER BY tl.request_session_id, tl.resource_type, tl.request_mode;
 ```
+```text
+request_session_id  resource_type  request_mode  request_status  object_name               resource_description
+55                  DATABASE       S             GRANT           (not mapped)
+55                  KEY            X             GRANT           dbo.concurrency_block_demo (8194443284a0)
+55                  OBJECT         IX            GRANT           (not mapped)
+55                  PAGE           IX            GRANT           dbo.concurrency_block_demo 1:24265
+56                  DATABASE       S             GRANT           (not mapped)
+56                  KEY            U             WAIT            dbo.concurrency_block_demo (8194443284a0)
+56                  OBJECT         IX            GRANT           (not mapped)
+56                  PAGE           IU            GRANT           dbo.concurrency_block_demo 1:24265
+```
 
 | request_session_id | resource_type | request_mode | request_status | object_name | resource_description |
 |---:|---|---|---|---|---|
@@ -586,17 +615,15 @@ ORDER BY tl.request_session_id, tl.resource_type, tl.request_mode;
 | 56 | PAGE | IU | GRANT | dbo.concurrency_block_demo | 1:24265 |
 
 *Session `55` already owns the key-level `X` lock, and session `56` is waiting for a `U` lock on the same key. The page- and object-level intent locks are not the blocking problem by themselves; they merely signal lower-level write activity underneath the object.*
-
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `resource_type` | `KEY` | Depends | The lock is on an index key. | This usually means row-level contention rather than a whole-table block. |
-| `resource_type` | `PAGE` | &#10060; when frequent | The lock is on an 8 KB page. | Hot-page contention often points to scan-heavy or monotonic insert patterns. |
-| `resource_type` | `OBJECT` | &#10060; when `X` or `SCH-M` | The lock is on the whole object. | Concurrency is much lower; check for escalation or DDL. |
-| `request_mode` | `X` | Depends | Exclusive write lock. | This is the normal blocker mode for writes. |
-| `request_mode` | `U` | Depends | Update lock requested or held. | Common in read-for-write patterns; useful for preventing conversion deadlocks. |
-| `request_mode` | `IX` / `IU` | Neutral | Intent lock at a broader granularity. | Usually expected when finer locks exist underneath. |
-| `request_status` | `GRANT` | Neutral | The lock has been granted. | This session currently owns the resource. |
-| `request_status` | `WAIT` | &#10060; | The lock request has not been granted yet. | This is the precise lock request being blocked. |
+*Interpretation*
+- `KEY` means the contention is usually at row or key granularity rather than across the whole table.
+- `PAGE` points to hot-page pressure, often from scan-heavy or monotonic insert patterns.
+- `OBJECT` with `X` or `SCH-M` usually means escalation or DDL.
+- `X` is the normal blocker mode for writes.
+- `U` is common in read-for-write patterns and helps avoid conversion deadlocks.
+- `IX` and `IU` are expected intent locks when finer-grained locks exist underneath.
+- `GRANT` means the session already owns the resource.
+- `WAIT` means the request has not yet been granted and is the precise blocked lock.
 
 ## Waiting Tasks For The Same Chain
 
@@ -632,6 +659,11 @@ FROM sys.dm_os_waiting_tasks AS wt
 WHERE wt.session_id IN (55, 56)
 ORDER BY wt.session_id, wt.wait_duration_ms DESC;
 ```
+```text
+session_id  wait_type  wait_duration_ms  blocking_session_id  resource_description
+55          WAITFOR    6200                                  
+56          LCK_M_U    4103              55                   keylock hobtid=72057594062110720 dbid=5 id=lockf39954280 mode=X associatedObjectId=72057594062110720
+```
 
 | session_id | wait_type | wait_duration_ms | blocking_session_id | resource_description |
 |---:|---|---:|---:|---|
@@ -639,15 +671,13 @@ ORDER BY wt.session_id, wt.wait_duration_ms DESC;
 | 56 | LCK_M_U | 4103 | 55 | keylock hobtid=72057594062110720 dbid=5 id=lockf39954280 mode=X associatedObjectId=72057594062110720 |
 
 *The head blocker is not waiting on another session; it is waiting on its own `WAITFOR` timer. The victim is waiting specifically for an update lock on a key resource owned by session `55`.*
-
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `wait_type` | `LCK_M_U` | &#10060; | Waiting for an update lock. | A read-for-write or update path is blocked by another incompatible lock. |
-| `wait_type` | `LCK_M_X` | &#10060; | Waiting for an exclusive lock. | A writer is blocked behind another writer or conflicting schema lock. |
-| `wait_type` | `LCK_M_S` | &#10060; | Waiting for a shared lock. | Under pessimistic isolation, a reader is blocked by a writer or metadata change. |
-| `wait_type` | `WAITFOR` | Neutral | The session is paused by the `WAITFOR` statement. | Harmless outside a transaction, harmful if the session is holding locks while waiting. |
-| `blocking_session_id` | Blank / `NULL` | Neutral | SQL Server did not record a blocking session for this wait. | The session may be waiting on time, CPU scheduling, or another non-blocking resource. |
-| `blocking_session_id` | Positive session id | &#10060; | Another session is directly blocking this wait. | Follow that session immediately; that is the blocker to fix or terminate. |
+*Interpretation*
+- `LCK_M_U` marks a read-for-write or update path blocked by another incompatible lock.
+- `LCK_M_X` marks a writer blocked behind another writer or a conflicting schema lock.
+- `LCK_M_S` marks a shared-lock wait under pessimistic isolation.
+- `WAITFOR` is a timer wait; it is harmless outside a transaction and risky when the session still holds locks.
+- A blank or `NULL` `blocking_session_id` means SQL Server did not record a direct blocker for that wait.
+- A positive `blocking_session_id` means another session is directly blocking the wait.
 
 ## Blocking Chain Walk
 
@@ -716,6 +746,11 @@ JOIN req AS r
   ON c.session_id = r.session_id
 ORDER BY c.depth, c.session_id;
 ```
+```text
+depth  session_id  blocking_session_id  status     command  wait_type  chain_path
+0      55          0                    suspended  WAITFOR  WAITFOR    55
+1      56          55                   suspended  SELECT   LCK_M_U    55 -> 56
+```
 
 | depth | session_id | blocking_session_id | status | command | wait_type | chain_path |
 |---:|---:|---:|---|---|---|---|
@@ -762,6 +797,14 @@ WHERE t.name IN (
 )
 ORDER BY s.name, t.name;
 ```
+```text
+schema_name  table_name                 lock_escalation_desc
+bronze       eurostoxx50_ohlcv          TABLE
+dbo          concurrency_block_demo     TABLE
+dbo          deadlock_demo_a            TABLE
+dbo          race_lost_update_demo      TABLE
+silver       eurostoxx50_ohlcv          TABLE
+```
 
 | schema_name | table_name | lock_escalation_desc |
 |---|---|---|
@@ -772,12 +815,10 @@ ORDER BY s.name, t.name;
 | silver | eurostoxx50_ohlcv | TABLE |
 
 *All sampled tables are using the normal default escalation behavior. Nothing in this snapshot suggests that escalation has been manually disabled or partition-tuned.*
-
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `lock_escalation_desc` | `TABLE` | &#9989; | Normal SQL Server escalation behavior. | This is the expected default for most tables. |
-| `lock_escalation_desc` | `AUTO` | Depends | Partition-aware escalation when possible. | Useful on partitioned tables, but only if partition design and access patterns justify it. |
-| `lock_escalation_desc` | `DISABLE` | &#10060; unless justified | Escalation is disabled. | Can reduce blocking in specific cases, but increases lock count and lock-memory pressure. |
+*Interpretation*
+- `TABLE` is the normal default escalation behavior.
+- `AUTO` allows partition-aware escalation where that makes sense.
+- `DISABLE` should be used only when the locking footprint is understood and justified.
 
 ### SQL Server | ALTER TABLE | disable escalation
 
@@ -801,6 +842,9 @@ The `ALTER TABLE` syntax targets one table and changes its escalation mode. The 
 ALTER TABLE dbo.SomeHotTable
 SET (LOCK_ESCALATION = DISABLE);
 GO
+```
+```text
+No runtime output was captured. This DDL template changes the escalation setting on the target table.
 ```
 
 ## Index Operational Lock Statistics
@@ -843,6 +887,11 @@ WHERE i.object_id = OBJECT_ID('silver.eurostoxx50_ohlcv')
   AND i.index_id > 0
 ORDER BY i.index_id;
 ```
+```text
+object_name                 index_name                               row_lock_count  row_lock_wait_count  row_lock_wait_in_ms  page_lock_count  page_lock_wait_count  page_lock_wait_in_ms  index_lock_promotion_attempt_count  index_lock_promotion_count
+silver.eurostoxx50_ohlcv    PK__eurostox__3213E83FDF67D274          25000           0                    0                    80745            0                     0                     0                                   0
+silver.eurostoxx50_ohlcv    IX_silver_eurostoxx50_ohlcv_symbol_date 194             0                    0                    5285             0                     0                     0                                   0
+```
 
 | object_name | index_name | row_lock_count | row_lock_wait_count | row_lock_wait_in_ms | page_lock_count | page_lock_wait_count | page_lock_wait_in_ms | index_lock_promotion_attempt_count | index_lock_promotion_count |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -850,14 +899,12 @@ ORDER BY i.index_id;
 | silver.eurostoxx50_ohlcv | IX_silver_eurostoxx50_ohlcv_symbol_date | 194 | 0 | 0 | 5285 | 0 | 0 | 0 | 0 |
 
 *These indexes have seen substantial cumulative lock activity, but none of it has waited and none of it has promoted to a broader lock. That is a healthy signal: high lock counts alone do not mean a locking problem exists.*
-
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `row_lock_wait_count` | `0` | &#9989; | No row-lock waits recorded. | The workload is taking locks, but not stalling on them. |
-| `row_lock_wait_count` | Greater than `0` | &#10060; | Row locks have caused waits. | Check competing statements, hot keys, and transaction duration. |
-| `page_lock_wait_count` | `0` | &#9989; | No page-lock waits recorded. | Page-level contention is not currently visible here. |
-| `index_lock_promotion_attempt_count` | `0` | &#9989; | No escalation attempts recorded. | The workload has not pressured SQL Server into broader index locks. |
-| `index_lock_promotion_count` | Greater than `0` | &#10060; | Escalation succeeded one or more times. | Investigate large scans, broad updates, or long transactions. |
+*Interpretation*
+- `row_lock_wait_count = 0` means no row-lock waits were recorded.
+- `row_lock_wait_count > 0` means row locks have caused waits and deserve attention.
+- `page_lock_wait_count = 0` means page-level contention is not visible in this snapshot.
+- `index_lock_promotion_attempt_count = 0` means the workload has not pressured SQL Server into broader index locks.
+- `index_lock_promotion_count > 0` means escalation succeeded and needs investigation.
 
 ## Session Safety Switches
 
@@ -889,19 +936,21 @@ SELECT
         ELSE 'OFF'
     END AS xact_abort_state;
 ```
+```text
+lock_timeout_ms  xact_abort_state
+-1               OFF
+```
 
 | lock_timeout_ms | xact_abort_state |
 |---:|---|
 | -1 | OFF |
 
 *This session would wait forever on a lock and would not automatically roll back the full transaction on many runtime errors. That combination is common in ad hoc sessions and risky in application code that opens explicit transactions.*
-
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `lock_timeout_ms` | `-1` | &#10060; for unattended workloads | Wait forever. | Sessions can pile up behind blockers until the application times out first. |
-| `lock_timeout_ms` | Positive number | &#9989; in many app paths | Fail after the configured number of milliseconds. | Lets the application surface a controlled retry or error path. |
-| `xact_abort_state` | `OFF` | &#10060; for multi-statement write transactions | Many runtime errors abort only the statement. | Poor error handling can leave the transaction open and keep locks alive. |
-| `xact_abort_state` | `ON` | &#9989; for most ETL and write-heavy batches | Runtime errors terminate and roll back the full transaction. | Safer default for transactional pipeline code. |
+*Interpretation*
+- `lock_timeout_ms = -1` means the session waits forever, which is risky for unattended workloads.
+- A positive `lock_timeout_ms` allows the application to fail after a bounded delay.
+- `xact_abort_state = OFF` means many runtime errors abort only the statement, which can leave a transaction open.
+- `xact_abort_state = ON` means runtime errors terminate and roll back the full transaction.
 
 ### SQL Server | SET | configure safe transaction defaults
 
@@ -939,6 +988,9 @@ BEGIN CATCH
     THROW;
 END CATCH;
 ```
+```text
+No runtime output was captured. This batch template sets a five-second lock timeout and enables `XACT_ABORT` for deterministic rollback.
+```
 
 ## Lock-Related Wait Posture
 
@@ -974,6 +1026,16 @@ WHERE wait_type LIKE 'LCK_M_%'
   AND waiting_tasks_count > 0
 ORDER BY wait_time_ms DESC;
 ```
+```text
+wait_type               waiting_tasks_count  wait_time_ms  signal_wait_time_ms
+LCK_M_U                 15                   120392        1
+LCK_M_IX                3                    92048         0
+LCK_M_SCH_S             3                    89426         0
+LCK_M_X                 223                  22351         5
+LCK_M_S                 209                  1901          15
+LCK_M_SCH_M_ABORT_BLOCKERS 2                 537           0
+LCK_M_SCH_M             5                    3             0
+```
 
 | wait_type | waiting_tasks_count | wait_time_ms | signal_wait_time_ms |
 |---|---:|---:|---:|
@@ -986,16 +1048,13 @@ ORDER BY wait_time_ms DESC;
 | LCK_M_SCH_M | 5 | 3 | 0 |
 
 *The cumulative lock-wait leader on this instance is `LCK_M_U`, which is consistent with read-for-write patterns colliding with each other. The presence of `LCK_M_SCH_S` and `LCK_M_SCH_M_ABORT_BLOCKERS` also tells you schema-level activity has blocked ordinary query work at least a few times.*
-
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `wait_type` | `LCK_M_U` | &#10060; | Waiting for update locks. | Investigate `UPDLOCK`, `UPDATE`, and read-then-write code paths. |
-| `wait_type` | `LCK_M_X` | &#10060; | Waiting for exclusive locks. | Common write/write contention. |
-| `wait_type` | `LCK_M_S` | &#10060; when frequent | Waiting for shared locks. | Often reader/writer contention under pessimistic isolation. |
-| `wait_type` | `LCK_M_SCH_S` | &#10060; | Waiting for schema stability. | DDL or schema-modification activity is colliding with queries. |
-| `wait_type` | `LCK_M_SCH_M` | &#10060; | Waiting for schema modification. | DDL is queued behind active readers or writers. |
-| `signal_wait_time_ms` | Near zero | &#9989; | Most delay is resource wait, not CPU queueing. | The problem is locking, not scheduler starvation. |
-| `signal_wait_time_ms` | Large relative to `wait_time_ms` | &#10060; | Significant delay after the resource was available. | Locking is not the whole story; CPU pressure may also matter. |
+*Interpretation*
+- `LCK_M_U` usually means read-then-write code paths or `UPDLOCK` are colliding.
+- `LCK_M_X` usually means write/write contention.
+- `LCK_M_S` points to reader-versus-writer contention under pessimistic isolation.
+- `LCK_M_SCH_S` and `LCK_M_SCH_M` point to schema activity colliding with queries.
+- Near-zero `signal_wait_time_ms` means the delay is mostly resource wait, not CPU queueing.
+- Large `signal_wait_time_ms` relative to `wait_time_ms` means CPU pressure is also part of the picture.
 
 ## Practical Guidance
 

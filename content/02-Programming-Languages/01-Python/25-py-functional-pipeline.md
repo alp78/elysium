@@ -10,7 +10,8 @@ status: complete
 
 # Functional Data Pipeline — Python
 
-> [!quote]
+> [!quote] Layering And State
+>
 > "The object-oriented version of spaghetti code is, of course, 'lasagna code'. Too many layers."
 >
 > — **Roberto Waltman**
@@ -44,7 +45,7 @@ status: complete
 >
 > **Lineage, serving & visualization (§10–§13)**
 > - Lineage review queries: stage-level row counts and durations, SHA-256 tamper detection, quarantine inspection.
-> - FastAPI: three endpoints (`/daily`, `/profile`, `/health`) serving pre-materialized Parquet; `run_in_executor` pattern for non-blocking reads.
+> - FastAPI: five endpoints (`/health`, `/daily-summary`, `/symbol-profile`, `/symbol/{symbol}/timeseries`, `/lineage/{batch_id_prefix}`) serving pre-materialized Parquet; blocking reads stay off the event loop.
 > - Plotly dashboard: daily return distribution, volatility ranking, volume heatmap, quality metrics gauge.
 > - Audit workflow: dispute resolution from Gold number back to Bronze source row using `batch_id` and hash comparison.
 
@@ -156,7 +157,7 @@ status: complete
 >
 > > [!info] Endpoint design
 > >
-> > Three endpoints: `GET /daily` returns the daily summary Parquet as JSON, `GET /profile` returns the symbol profile, `GET /health` confirms file availability. All reads are wrapped in `run_in_executor`.
+> > Five endpoints: `GET /health`, `GET /daily-summary`, `GET /symbol-profile`, `GET /symbol/{symbol}/timeseries`, and `GET /lineage/{batch_id_prefix}`. All blocking reads are wrapped in `run_in_executor`.
 >
 >  ---
 >
@@ -191,10 +192,11 @@ status: complete
 This note implements an end-to-end functional data pipeline in Python using Polars, Pydantic, FastAPI, and SQL Server with medallion architecture, lineage tracking, and SHA-256 tamper detection.
 
 
-> [!abstract] Pipeline Dependencies
+> [!note] Pipeline Dependencies
 >
 > All imports organized by category: stdlib, data, validation, database, serving, visualization.
 
+*Reference snippet for Functional Data Pipeline — Python.*
 ```python
 import hashlib
 import importlib.util
@@ -248,6 +250,9 @@ logging.basicConfig(
 )
 log = logging.getLogger("pipeline")
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 ## 1. Configuration & Constants
 
@@ -265,6 +270,7 @@ Single cell that defines all pipeline-wide constants used by every downstream st
 >
 > All downstream cells reference these constants. Change paths, SQL connection, stock universe, and date range here only.
 
+*Reference snippet for Python — define pipeline paths, SQL connection, and stock universe.*
 ```python
 DATA_DIR    = Path(r"C:\Users\aperi\DEV\LANG\data")
 EXPORT_DIR  = DATA_DIR / "pipeline"
@@ -275,10 +281,12 @@ LANDING_DIR.mkdir(parents=True, exist_ok=True)
 LINEAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── SQL Server (local Docker instance) ──
+os.environ.setdefault("PIPELINE_SQL_USER", "sa")
+os.environ.setdefault("PIPELINE_SQL_PASSWORD", "change-me")
 SQL_CONN_STR = (
     "Driver={ODBC Driver 18 for SQL Server};"
     "Server=localhost,1434;Database=stoxx;"
-    "UID=sa;PWD=EsgDev2026Pass1;"
+    f"UID={os.environ["PIPELINE_SQL_USER"]};PWD={os.environ["PIPELINE_SQL_PASSWORD"]};"
     "Encrypt=yes;TrustServerCertificate=yes;"
 )
 sql_engine = create_engine(f"mssql+pyodbc:///?odbc_connect={quote_plus(SQL_CONN_STR)}")
@@ -307,6 +315,9 @@ EXCHANGE_MAP = {
 EXPORT_DIR
 SYMBOLS
 START_DATE, END_DATE  # date range
+```
+```text
+Notebook stdout is preserved below.
 ```
 
       C:\Users\aperi\DEV\LANG\data\pipeline
@@ -356,6 +367,7 @@ Structural models for each stage boundary: Bronze, Silver, Gold, and operational
 >
 > Validates raw yfinance data BEFORE persistence. Enforces positive prices, non-negative volume. Model validator: high >= low (market invariant).
 
+*Reference snippet for Pydantic — define Bronze validation model with `BaseModel` and `Field()`.*
 ```python
 
 class RawOHLCV(BaseModel):
@@ -388,6 +400,9 @@ sample = RawOHLCV(
 )
 sample.symbol, sample.date, sample.close  # RawOHLCV validated
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     SAP.DE 2024-01-02 close=145.2
 
@@ -397,6 +412,7 @@ sample.symbol, sample.date, sample.close  # RawOHLCV validated
 >
 > Extends Bronze with computed fields: daily_return, intraday_range, sma_20. Daily return constrained to [-50%, +50%].
 
+*Reference snippet for Pydantic — define Silver validation model with `BaseModel` and `Field()`.*
 ```python
 
 class CleanOHLCV(BaseModel):
@@ -426,6 +442,9 @@ class CleanOHLCV(BaseModel):
         return self
 
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     CleanOHLCV model defined — 14 fields
 
@@ -435,6 +454,7 @@ class CleanOHLCV(BaseModel):
 >
 > DailySummary: one row per trading day. SymbolProfile: one row per symbol with full-history stats. max_drawdown always <= 0.
 
+*Reference snippet for Pydantic — define Gold validation models with `BaseModel` and `Field()`.*
 ```python
 
 class DailySummary(BaseModel):
@@ -464,6 +484,9 @@ class SymbolProfile(BaseModel):
 len(DailySummary.model_fields)   # DailySummary fields
 len(SymbolProfile.model_fields)  # SymbolProfile fields
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     8 fields
     10 fields
@@ -474,6 +497,7 @@ len(SymbolProfile.model_fields)  # SymbolProfile fields
 >
 > Records what each stage produced: input/output/rejected rows, SHA-256 hash for tamper detection, duration.
 
+*Reference snippet for Pydantic — define lineage tracking models with `BaseModel` and `Field()`.*
 ```python
 
 class StageLineage(BaseModel):
@@ -490,6 +514,9 @@ class StageLineage(BaseModel):
     @property
     def duration_ms(self) -> float:
         return (self.completed_at - self.started_at).total_seconds() * 1000
+```
+```text
+No direct stdout was emitted by this cell.
 ```
 
 ### Context Architecture — Semantic Metadata Layer
@@ -518,6 +545,7 @@ This is where the two dimensions of the architecture intersect. The structural m
 >
 > Describes WHAT a column means: computation formula, source columns, null semantics, valid range, derived vs raw.
 
+*Reference snippet for Pydantic — define column semantic metadata model with `BaseModel`.*
 ```python
 
 class ColumnContext(BaseModel):
@@ -531,6 +559,9 @@ class ColumnContext(BaseModel):
     is_business_key: bool = Field(default=False)
     is_derived: bool = Field(default=False)
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 #### Pydantic — define column registries for each medallion layer
 
@@ -538,6 +569,7 @@ class ColumnContext(BaseModel):
 >
 > Each column has a ColumnContext entry. Feeds into data contracts and StageContext for cross-stage propagation.
 
+*Reference snippet for Pydantic — define column registries for each medallion layer.*
 ```python
 
 BRONZE_COLUMNS = [
@@ -602,6 +634,9 @@ GOLD_PROFILE_COLUMNS = [
 
 len(BRONZE_COLUMNS), len(SILVER_COLUMNS), len(GOLD_DAILY_COLUMNS), len(GOLD_PROFILE_COLUMNS)  # column registries
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     Bronze=10, Silver=13, Gold Daily=7, Gold Profile=7
 
@@ -611,6 +646,7 @@ len(BRONZE_COLUMNS), len(SILVER_COLUMNS), len(GOLD_DAILY_COLUMNS), len(GOLD_PROF
 >
 > Captures WHY this pipeline ran: scheduled, manual, backfill, reprocess, or test. is_correction flags data overwrites.
 
+*Reference snippet for Pydantic — define business context model with `BaseModel`.*
 ```python
 
 class BusinessContext(BaseModel):
@@ -628,6 +664,9 @@ class BusinessContext(BaseModel):
             raise ValueError(f"trigger must be one of {valid}")
         return v
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 #### Pydantic — define temporal context model with `BaseModel`
 
@@ -635,6 +674,7 @@ class BusinessContext(BaseModel):
 >
 > as_of_date: business date the data represents. knowledge_date: when pipeline ingested it. Critical for backfills.
 
+*Reference snippet for Pydantic — define temporal context model with `BaseModel`.*
 ```python
 
 class TemporalContext(BaseModel):
@@ -645,6 +685,9 @@ class TemporalContext(BaseModel):
     timezone: str = Field(default="UTC")
     is_backfill: bool = Field(default=False)
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 #### Pydantic — define stage context model for cross-stage propagation with `BaseModel`
 
@@ -652,6 +695,7 @@ class TemporalContext(BaseModel):
 >
 > Created at stage start, carried forward. Each stage inherits upstream warnings and adds its own.
 
+*Reference snippet for Pydantic — define stage context model for cross-stage propagation with `BaseModel`.*
 ```python
 
 class StageContext(BaseModel):
@@ -679,6 +723,9 @@ class StageContext(BaseModel):
             temporal_context=self.temporal_context,
         )
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 #### Pydantic — define pipeline run context model with `BaseModel`
 
@@ -686,6 +733,7 @@ class StageContext(BaseModel):
 >
 > Aggregates everything: stages, business context, temporal context, data warnings, contract version.
 
+*Reference snippet for Pydantic — define pipeline run context model with `BaseModel`.*
 ```python
 
 class RunContext(BaseModel):
@@ -703,6 +751,9 @@ class RunContext(BaseModel):
     data_warnings:     list[str]              = Field(default_factory=list)
     contract_version:  str                    = Field(default="1.0")
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 #### Pydantic — define data contract export function with `model_json_schema()`
 
@@ -710,6 +761,7 @@ class RunContext(BaseModel):
 >
 > Generates JSON Schema contracts with x-column-context: descriptions, formulas, units, null semantics.
 
+*Reference snippet for Pydantic — define data contract export function with `model_json_schema()`.*
 ```python
 
 def export_data_contracts(export_dir: Path) -> list[Path]:
@@ -735,6 +787,9 @@ def export_data_contracts(export_dir: Path) -> list[Path]:
         log.info(f"  Contract exported: {path.name}")
     return paths
 
+```
+```text
+No direct stdout was emitted by this cell.
 ```
 
 
@@ -769,6 +824,7 @@ Utility functions for batch identification, deterministic hashing, stage timing,
 >
 > Every row carries this UUID. Trace any disputed value back to its pipeline run in one query.
 
+*Reference snippet for uuid — generate unique batch ID with `uuid4()`.*
 ```python
 
 def generate_batch_id() -> str:
@@ -779,6 +835,9 @@ def generate_batch_id() -> str:
 demo_batch = generate_batch_id()
 demo_batch  # Sample batch_id
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     22d9d5c9-3ea5-4474-b7e1-702da6e2e599
 
@@ -788,6 +847,7 @@ demo_batch  # Sample batch_id
 >
 > Same data produces the same hash. Modified rows break the hash match.
 
+*Reference snippet for hashlib — compute deterministic DataFrame hash with `sha256()`.*
 ```python
 
 def compute_hash(df: pl.DataFrame) -> str:
@@ -799,6 +859,9 @@ def compute_hash(df: pl.DataFrame) -> str:
 demo_df = pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
 compute_hash(demo_df)  # Hash of demo frame
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     f67a232f1bb81bfa
 
@@ -808,6 +871,7 @@ compute_hash(demo_df)  # Hash of demo frame
 >
 > start_stage(): captures timestamp + input count. end_stage(): fills output metrics, computes hash.
 
+*Reference snippet for Python — define stage start and end tracker with `datetime.now()`.*
 ```python
 
 def start_stage(batch_id: str, stage: str, input_rows: int,
@@ -836,6 +900,9 @@ def end_stage(ctx: dict, output_df: pl.DataFrame,
     )
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### Pydantic — save run context to JSON with `model_dump_json()`
@@ -844,6 +911,7 @@ def end_stage(ctx: dict, output_df: pl.DataFrame,
 >
 > One JSON file per run, named by batch_id prefix. Full audit trail on disk.
 
+*Reference snippet for Pydantic — save run context to JSON with `model_dump_json()`.*
 ```python
 
 def save_run_context(ctx: RunContext) -> Path:
@@ -852,6 +920,9 @@ def save_run_context(ctx: RunContext) -> Path:
     path.write_text(ctx.model_dump_json(indent=2), encoding="utf-8")
     return path
 
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     save_run_context() defined — writes to C:\Users\aperi\DEV\LANG\data\pipeline\lineage
@@ -898,6 +969,7 @@ DDL for all nine schema tables: medallion data tables, dimension tables, and ope
 >
 > Stores raw yfinance output exactly as received. UNIQUE on (symbol, date) enables MERGE upsert.
 
+*Reference snippet for SQL Server — create Bronze OHLCV table with `cursor.execute()`.*
 ```python
 
 sql_conn = pyodbc.connect(SQL_CONN_STR)
@@ -924,6 +996,9 @@ CREATE TABLE bronze_ohlcv (
 """)
 sql_conn.commit()
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     bronze_ohlcv table ready (with UNIQUE on symbol+date)
 
@@ -933,6 +1008,7 @@ sql_conn.commit()
 >
 > Adds computed columns: daily_return, intraday_range, sma_20. UNIQUE on (symbol, date) enables MERGE upsert.
 
+*Reference snippet for SQL Server — create Silver OHLCV table with `cursor.execute()`.*
 ```python
 
 cur.execute("""
@@ -960,6 +1036,9 @@ CREATE TABLE silver_ohlcv (
 """)
 sql_conn.commit()
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     silver_ohlcv table ready (with UNIQUE on symbol+date)
 
@@ -969,6 +1048,7 @@ sql_conn.commit()
 >
 > One row per trading day with cross-sectional metrics. Clustered on date for efficient range scans.
 
+*Reference snippet for SQL Server — create Gold daily summary table with `cursor.execute()`.*
 ```python
 
 cur.execute("""
@@ -988,6 +1068,9 @@ CREATE TABLE gold_daily_summary (
 """)
 sql_conn.commit()
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — create Gold symbol profile table with `cursor.execute()`
@@ -996,6 +1079,7 @@ sql_conn.commit()
 >
 > One row per symbol with aggregate statistics. Clustered on symbol for efficient lookups.
 
+*Reference snippet for SQL Server — create Gold symbol profile table with `cursor.execute()`.*
 ```python
 
 cur.execute("""
@@ -1017,6 +1101,9 @@ CREATE TABLE gold_symbol_profile (
 """)
 sql_conn.commit()
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — create SCD Type 2 symbol dimension with `cursor.execute()`
@@ -1025,6 +1112,7 @@ sql_conn.commit()
 >
 > Tracks historical changes in symbol metadata. valid_from/valid_to/is_current enable point-in-time queries.
 
+*Reference snippet for SQL Server — create SCD Type 2 symbol dimension with `cursor.execute()`.*
 ```python
 
 cur.execute("""
@@ -1053,6 +1141,9 @@ CREATE TABLE dim_symbol (
 """)
 sql_conn.commit()
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     dim_symbol table ready (SCD Type 2)
 
@@ -1062,6 +1153,7 @@ sql_conn.commit()
 >
 > Per-exchange trading calendar with holiday flags. Composite PK on (date, exchange_code).
 
+*Reference snippet for SQL Server — create per-exchange trading calendar with `cursor.execute()`.*
 ```python
 
 cur.execute("""
@@ -1082,6 +1174,9 @@ CREATE TABLE dim_calendar (
 """)
 sql_conn.commit()
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     dim_calendar table ready (per-exchange)
 
@@ -1091,6 +1186,7 @@ sql_conn.commit()
 >
 > Persists StageLineage records to SQL Server. Enables querying pipeline history: which batch produced what.
 
+*Reference snippet for SQL Server — create lineage tracking table with `cursor.execute()`.*
 ```python
 
 cur.execute("""
@@ -1109,6 +1205,9 @@ CREATE TABLE lineage_stages (
 """)
 sql_conn.commit()
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — create quarantine table for rejected rows with `cursor.execute()`
@@ -1117,6 +1216,7 @@ sql_conn.commit()
 >
 > Stores every row that failed Pydantic validation with raw data + rejection reason.
 
+*Reference snippet for SQL Server — create quarantine table for rejected rows with `cursor.execute()`.*
 ```python
 
 cur.execute("""
@@ -1134,6 +1234,9 @@ CREATE TABLE quarantine (
 """)
 sql_conn.commit()
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     quarantine table ready (dead letter queue)
 
@@ -1145,6 +1248,7 @@ Helper functions for writing to operational tables, MERGE upserts, and API retry
 
 Persists StageContext records: business context, temporal context, and data warnings per stage.
 
+*Reference snippet for SQL Server — create context log table with `cursor.execute()`.*
 ```python
 
 cur.execute("""
@@ -1166,12 +1270,16 @@ CREATE TABLE context_log (
 sql_conn.commit()
 log.info("context_log table ready")
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — define context persistence helper with `cursor.execute()`
 
 Writes a StageContext record to the context_log table, including business date, trigger type, warnings, and column context JSON.
 
+*Reference snippet for SQL Server — define context persistence helper with `cursor.execute()`.*
 ```python
 
 def persist_context(stage_ctx: StageContext | None) -> None:
@@ -1194,6 +1302,9 @@ def persist_context(stage_ctx: StageContext | None) -> None:
     sql_conn.commit()
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — define lineage persistence helper with `cursor.execute()`
@@ -1202,6 +1313,7 @@ def persist_context(stage_ctx: StageContext | None) -> None:
 >
 > Inserts a StageLineage into lineage_stages. Deletes any existing record for the same batch+stage first.
 
+*Reference snippet for SQL Server — define lineage persistence helper with `cursor.execute()`.*
 ```python
 
 def persist_lineage(lineage: StageLineage) -> None:
@@ -1223,6 +1335,9 @@ def persist_lineage(lineage: StageLineage) -> None:
     sql_conn.commit()
 
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     persist_lineage() defined — idempotent: deletes before insert
 
@@ -1232,6 +1347,7 @@ def persist_lineage(lineage: StageLineage) -> None:
 >
 > Converts Polars to pandas for SQLAlchemy. chunksize=100 avoids SQL Server 2100 parameter limit.
 
+*Reference snippet for SQLAlchemy — define DataFrame write helper with `to_sql()`.*
 ```python
 
 def write_to_sql(df: pl.DataFrame, table: str, truncate: bool = True) -> int:
@@ -1244,6 +1360,9 @@ def write_to_sql(df: pl.DataFrame, table: str, truncate: bool = True) -> int:
     return len(pdf)
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — define Bronze MERGE upsert with `MERGE INTO`
@@ -1252,6 +1371,7 @@ def write_to_sql(df: pl.DataFrame, table: str, truncate: bool = True) -> int:
 >
 > Idempotent: MERGE on (symbol, date). Existing rows updated, new rows inserted. Safe to re-run.
 
+*Reference snippet for SQL Server — define Bronze MERGE upsert with `MERGE INTO`.*
 ```python
 
 def merge_bronze(df: pl.DataFrame, batch_id: str) -> int:
@@ -1285,6 +1405,9 @@ def merge_bronze(df: pl.DataFrame, batch_id: str) -> int:
     return rows_affected
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — define Silver MERGE upsert with `MERGE INTO`
@@ -1293,6 +1416,7 @@ def merge_bronze(df: pl.DataFrame, batch_id: str) -> int:
 >
 > Same pattern as Bronze, plus enrichment columns: daily_return, intraday_range, sma_20.
 
+*Reference snippet for SQL Server — define Silver MERGE upsert with `MERGE INTO`.*
 ```python
 
 def merge_silver(df: pl.DataFrame, batch_id: str) -> int:
@@ -1330,6 +1454,9 @@ def merge_silver(df: pl.DataFrame, batch_id: str) -> int:
     return rows_affected
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — define quarantine persistence helper with `cursor.execute()`
@@ -1338,6 +1465,7 @@ def merge_silver(df: pl.DataFrame, batch_id: str) -> int:
 >
 > Saves rejected row to quarantine table with its error message.
 
+*Reference snippet for SQL Server — define quarantine persistence helper with `cursor.execute()`.*
 ```python
 
 def quarantine_row(batch_id: str, stage: str, row_data: dict, error: str) -> None:
@@ -1356,6 +1484,9 @@ def quarantine_row(batch_id: str, stage: str, row_data: dict, error: str) -> Non
 
 log.info("quarantine_row() defined \u2014 dead letter queue helper")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     23:19:35 | INFO  | quarantine_row() defined — dead letter queue helper
 
@@ -1365,6 +1496,7 @@ log.info("quarantine_row() defined \u2014 dead letter queue helper")
 >
 > 3 attempts, exponential backoff. Catches network errors without killing the pipeline.
 
+*Reference snippet for tenacity — define API retry wrapper with `@retry()` exponential backoff.*
 ```python
 
 @retry(
@@ -1379,6 +1511,9 @@ def fetch_with_retry(ticker, start: str, end: str):
 
 log.info("fetch_with_retry() defined \u2014 3 attempts, exponential backoff")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     23:19:35 | INFO  | fetch_with_retry() defined — 3 attempts, exponential backoff
 
@@ -1392,12 +1527,16 @@ Reusable assertion functions that check DataFrame properties; run together as a 
 >
 > Raised when a data quality gate fails. Blocks downstream stages from processing bad data.
 
+*Reference snippet for Python — define custom `Exception` subclass for quality gate failures.*
 ```python
 
 class DataQualityError(Exception):
     """Raised when a data quality gate fails."""
     pass
 
+```
+```text
+No direct stdout was emitted by this cell.
 ```
 
 
@@ -1407,6 +1546,7 @@ class DataQualityError(Exception):
 >
 > Verifies the output table/frame is not empty after a stage.
 
+*Reference snippet for Polars — assert DataFrame is not empty with `len()`.*
 ```python
 
 def dq_check_not_empty(df: pl.DataFrame, stage: str) -> tuple[bool, str]:
@@ -1414,6 +1554,9 @@ def dq_check_not_empty(df: pl.DataFrame, stage: str) -> tuple[bool, str]:
     ok = len(df) > 0
     return ok, f"{stage}: {len(df)} rows" if ok else f"{stage}: EMPTY DataFrame"
 
+```
+```text
+No direct stdout was emitted by this cell.
 ```
 
 
@@ -1423,6 +1566,7 @@ def dq_check_not_empty(df: pl.DataFrame, stage: str) -> tuple[bool, str]:
 >
 > Checks each key column individually, reports first failure found.
 
+*Reference snippet for Polars — assert no nulls in key columns with `null_count()`.*
 ```python
 
 def dq_check_no_null_keys(df: pl.DataFrame, keys: list[str], stage: str) -> tuple[bool, str]:
@@ -1436,6 +1580,9 @@ def dq_check_no_null_keys(df: pl.DataFrame, keys: list[str], stage: str) -> tupl
     return True, f"{stage}: no null keys in {keys}"
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### Polars — assert no duplicate rows with `unique()`
@@ -1444,6 +1591,7 @@ def dq_check_no_null_keys(df: pl.DataFrame, keys: list[str], stage: str) -> tupl
 >
 > Compares total rows vs unique key combinations to detect duplicates.
 
+*Reference snippet for Polars — assert no duplicate rows with `unique()`.*
 ```python
 
 def dq_check_no_duplicates(df: pl.DataFrame, keys: list[str], stage: str) -> tuple[bool, str]:
@@ -1455,6 +1603,9 @@ def dq_check_no_duplicates(df: pl.DataFrame, keys: list[str], stage: str) -> tup
     return ok, f"{stage}: {dupes} duplicates on {keys}" if not ok else f"{stage}: no duplicates"
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### Polars — assert values within range with `filter()`
@@ -1463,6 +1614,7 @@ def dq_check_no_duplicates(df: pl.DataFrame, keys: list[str], stage: str) -> tup
 >
 > Reports count of out-of-range values in the specified column.
 
+*Reference snippet for Polars — assert values within range with `filter()`.*
 ```python
 
 def dq_check_range(df: pl.DataFrame, col: str, min_val: float, max_val: float, stage: str) -> tuple[bool, str]:
@@ -1474,6 +1626,9 @@ def dq_check_range(df: pl.DataFrame, col: str, min_val: float, max_val: float, s
     return ok, f"{stage}: {out_of_range} values outside [{min_val}, {max_val}] in '{col}'" if not ok else f"{stage}: '{col}' within range"
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### Polars — assert data freshness against SLA with `max()`
@@ -1482,6 +1637,7 @@ def dq_check_range(df: pl.DataFrame, col: str, min_val: float, max_val: float, s
 >
 > Detects stale data that missed recent trading days.
 
+*Reference snippet for Polars — assert data freshness against SLA with `max()`.*
 ```python
 
 def dq_check_freshness(df: pl.DataFrame, date_col: str, max_age_days: int, stage: str) -> tuple[bool, str]:
@@ -1497,6 +1653,9 @@ def dq_check_freshness(df: pl.DataFrame, date_col: str, max_age_days: int, stage
     return ok, f"{stage}: latest date {latest} ({age}d ago)" + ("" if ok else f" EXCEEDS {max_age_days}d SLA")
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### Polars — assert minimum row count with `len()`
@@ -1505,6 +1664,7 @@ def dq_check_freshness(df: pl.DataFrame, date_col: str, max_age_days: int, stage
 >
 > Catches partial loads or missing symbols.
 
+*Reference snippet for Polars — assert minimum row count with `len()`.*
 ```python
 
 def dq_check_row_count(df: pl.DataFrame, min_rows: int, stage: str) -> tuple[bool, str]:
@@ -1512,6 +1672,9 @@ def dq_check_row_count(df: pl.DataFrame, min_rows: int, stage: str) -> tuple[boo
     ok = len(df) >= min_rows
     return ok, f"{stage}: {len(df)} rows" + ("" if ok else f" BELOW minimum {min_rows}")
 
+```
+```text
+No direct stdout was emitted by this cell.
 ```
 
 
@@ -1521,6 +1684,7 @@ def dq_check_row_count(df: pl.DataFrame, min_rows: int, stage: str) -> tuple[boo
 >
 > Executes all checks, logs PASS/FAIL. fail_fast=True raises DataQualityError, blocking downstream.
 
+*Reference snippet for Pipeline — run all quality gate assertions with `log.info()`.*
 ```python
 
 def run_quality_gate(checks: list[tuple[bool, str]], stage: str, fail_fast: bool = True) -> pl.DataFrame:
@@ -1540,6 +1704,9 @@ def run_quality_gate(checks: list[tuple[bool, str]], stage: str, fail_fast: bool
 
     return pl.DataFrame(results)
 
+```
+```text
+No direct stdout was emitted by this cell.
 ```
 
 
@@ -1573,6 +1740,7 @@ Fetch, load, and SCD Type 2 upsert company metadata from yfinance into `dim_symb
 >
 > Fetches company metadata from yfinance. Saves to landing/dim_symbol.json for replay.
 
+*Reference snippet for yfinance — fetch symbol metadata to JSON landing zone with `Ticker.info`.*
 ```python
 
 SCD2_COMPARE_COLS = ["company_name", "sector", "industry", "country", "exchange", "currency"]
@@ -1620,6 +1788,9 @@ def fetch_symbols_to_landing(symbols: list[str]) -> Path:
     return landing_path
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### JSON — load symbol metadata from landing zone with `json.loads()`
@@ -1628,6 +1799,7 @@ def fetch_symbols_to_landing(symbols: list[str]) -> Path:
 >
 > Reads the JSON landing file and returns records ready for SCD2 upsert.
 
+*Reference snippet for JSON — load symbol metadata from landing zone with `json.loads()`.*
 ```python
 
 def load_symbols_from_landing() -> list[dict]:
@@ -1635,6 +1807,9 @@ def load_symbols_from_landing() -> list[dict]:
     landing_path = LANDING_DIR / "dim_symbol.json"
     return json.loads(landing_path.read_text(encoding="utf-8"))
 
+```
+```text
+No direct stdout was emitted by this cell.
 ```
 
 
@@ -1644,6 +1819,7 @@ def load_symbols_from_landing() -> list[dict]:
 >
 > New symbol: INSERT. Unchanged: skip. Changed: close old record, INSERT new version.
 
+*Reference snippet for SQL Server — define SCD Type 2 upsert for one symbol with `MERGE INTO`.*
 ```python
 
 def scd2_upsert_symbol(rec: dict) -> str:
@@ -1720,6 +1896,9 @@ def scd2_upsert_symbol(rec: dict) -> str:
     return "SCD2_UPDATE"
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — orchestrate SCD Type 2 upsert for all symbols with `cursor.execute()`
@@ -1728,6 +1907,7 @@ def scd2_upsert_symbol(rec: dict) -> str:
 >
 > Read landing JSON, SCD2 upsert each symbol, log action taken per symbol.
 
+*Reference snippet for SQL Server — orchestrate SCD Type 2 upsert for all symbols with `cursor.execute()`.*
 ```python
 
 def populate_dim_symbol_from_landing() -> pl.DataFrame:
@@ -1742,10 +1922,16 @@ def populate_dim_symbol_from_landing() -> pl.DataFrame:
     return pl.DataFrame(results)
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — load symbols from landing and SCD2 upsert with `MERGE INTO`
 
+This orchestration step makes the two-stage boundary explicit: fetch external metadata into the landing zone first, then apply the SCD2 `MERGE` against `dim_symbol`. Keeping the fetch and merge in one visible sequence makes it easier to audit whether a bad attribute came from the source payload or from warehouse logic.
+
+*Reference snippet for SQL Server — load symbols from landing and SCD2 upsert with `MERGE INTO`.*
 ```python
 # Step 1: Fetch from yfinance API → JSON landing zone
 fetch_symbols_to_landing(SYMBOLS)
@@ -1753,6 +1939,9 @@ fetch_symbols_to_landing(SYMBOLS)
 # Step 2: Load from landing JSON → SCD2 upsert into dim_symbol
 dim_symbol_df = populate_dim_symbol_from_landing()
 dim_symbol_df.select("symbol", "longName", "sector", "country", "exchange", "_action")
+```
+```text
+Notebook stdout is preserved below.
 ```
 
 
@@ -1834,6 +2023,7 @@ Build and persist a per-exchange trading calendar using `pandas-market-calendars
 >
 > Uses pandas-market-calendars for accurate per-exchange trading days with holiday detection.
 
+*Reference snippet for pandas-market-calendars — generate trading calendar with `get_calendar().schedule()`.*
 ```python
 
 def generate_dim_calendar(start: str, end: str, exchange_codes: list[str]) -> pl.DataFrame:
@@ -1894,6 +2084,9 @@ exchanges = dim_symbol_df.select("exchange").unique().to_series().to_list()
 exchanges = [e for e in exchanges if e is not None]
 cal_df = generate_dim_calendar(START_DATE, END_DATE, exchanges)
 cal_df.head()
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
     
@@ -1985,6 +2178,7 @@ cal_df.head()
 >
 > MERGE upsert into dim_calendar. Key: (date, exchange_code).
 
+*Reference snippet for SQL Server — persist calendar dimension with `MERGE INTO`.*
 ```python
 
 def persist_dim_calendar(cal_df: pl.DataFrame) -> int:
@@ -2020,6 +2214,9 @@ def persist_dim_calendar(cal_df: pl.DataFrame) -> int:
 
 persist_dim_calendar(cal_df)
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 ```
@@ -2032,6 +2229,7 @@ persist_dim_calendar(cal_df)
 >
 > Display holidays detected by pandas-market-calendars (weekdays with no trading).
 
+*Reference snippet for Polars — display detected exchange holidays with `filter()`.*
 ```python
 
 holidays = cal_df.filter(
@@ -2041,6 +2239,9 @@ holidays = cal_df.filter(
 
 len(holidays)  # holidays detected (weekdays with no trading)
 holidays.head()
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -2111,6 +2312,7 @@ Functions to download OHLCV data from yfinance to the JSON landing zone and relo
 >
 > Downloads OHLCV data to landing/ohlcv_{symbol}.json. Each symbol gets its own file.
 
+*Reference snippet for yfinance — fetch OHLCV to JSON landing zone with `Ticker.history()`.*
 ```python
 
 def fetch_ohlcv_to_landing(symbol: str, start: str, end: str) -> Path | None:
@@ -2144,6 +2346,9 @@ def fetch_ohlcv_to_landing(symbol: str, start: str, end: str) -> Path | None:
     return landing_path
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### Polars — load OHLCV from JSON landing zone with `pl.DataFrame()`
@@ -2152,6 +2357,7 @@ def fetch_ohlcv_to_landing(symbol: str, start: str, end: str) -> Path | None:
 >
 > Reads a symbol JSON landing file into a Polars DataFrame. Casts dates.
 
+*Reference snippet for Polars — load OHLCV from JSON landing zone with `pl.DataFrame()`.*
 ```python
 
 def load_ohlcv_from_landing(symbol: str) -> pl.DataFrame:
@@ -2170,12 +2376,16 @@ def load_ohlcv_from_landing(symbol: str) -> pl.DataFrame:
     return df
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### yfinance — test single symbol landing zone fetch with `fetch_ohlcv_to_landing()`
 
 Verifies the landing zone pattern: fetch to JSON, then load back into a Polars DataFrame.
 
+*Reference snippet for yfinance — test single symbol landing zone fetch with `fetch_ohlcv_to_landing()`.*
 ```python
 
 test_path = fetch_ohlcv_to_landing("SAP.DE", "2024-06-01", "2024-06-30")
@@ -2187,6 +2397,9 @@ else:
 test_df = load_ohlcv_from_landing("SAP.DE")
 len(test_df), test_df.columns  # rows, columns
 test_df.head()
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -2279,6 +2492,7 @@ Row-level Pydantic validation at the Bronze boundary; rejected rows are routed t
 >
 > Valid rows collected; rejected rows go to quarantine with error details.
 
+*Reference snippet for Pydantic — validate Bronze rows with `BaseModel()` row-level check.*
 ```python
 
 def validate_bronze(df: pl.DataFrame, batch_id: str = "") -> tuple[pl.DataFrame, int]:
@@ -2313,6 +2527,9 @@ def validate_bronze(df: pl.DataFrame, batch_id: str = "") -> tuple[pl.DataFrame,
 
 log.info("validate_bronze() defined \u2014 rejects go to quarantine")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     23:19:37 | INFO  | validate_bronze() defined — rejects go to quarantine
 
@@ -2320,11 +2537,15 @@ log.info("validate_bronze() defined \u2014 rejects go to quarantine")
 
 All rows should pass since yfinance data is generally clean.
 
+*Reference snippet for Pydantic — test Bronze validation on sample data.*
 ```python
 
 valid_df, rejected = validate_bronze(test_df, batch_id="test")
 len(valid_df), rejected  # valid rows, rejected rows
 valid_df.head(5)
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -2417,6 +2638,7 @@ End-to-end Bronze orchestration: incremental fetch, Pydantic validation, MERGE u
 >
 > Three-step: land, validate, MERGE upsert. Fetches only new data since last known date per symbol.
 
+*Reference snippet for Bronze — define incremental ingestion pipeline with landing zone + `MERGE INTO`.*
 ```python
 
 def ingest_bronze(symbols: list[str], start: str, end: str, batch_id: str) -> tuple[pl.DataFrame, StageLineage]:
@@ -2483,6 +2705,9 @@ def ingest_bronze(symbols: list[str], start: str, end: str, batch_id: str) -> tu
     return bronze_full, lineage
 
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     ingest_bronze() defined — landing zone + incremental MERGE
 
@@ -2492,6 +2717,7 @@ def ingest_bronze(symbols: list[str], start: str, end: str, batch_id: str) -> tu
 >
 > Creates BusinessContext, TemporalContext, StageContext, then runs Bronze ingestion.
 
+*Reference snippet for Bronze — execute incremental ingestion for all symbols.*
 ```python
 
 batch_id = generate_batch_id()
@@ -2536,6 +2762,9 @@ persist_context(bronze_stage_ctx)
 silver_stage_ctx = bronze_stage_ctx.for_next_stage("silver", bronze_lineage, SILVER_COLUMNS)
 log.info(f"Bronze complete: {len(bronze_df)} rows in {elapsed:.0f}ms")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     23:19:37 | INFO  | Pipeline batch_id: 05a35d97...
     23:19:37 | INFO  | Range: 2024-03-29 → 2026-03-29
@@ -2550,9 +2779,13 @@ log.info(f"Bronze complete: {len(bronze_df)} rows in {elapsed:.0f}ms")
 
 Shows the first rows of ingested data to verify schema and values.
 
+*Reference snippet for Polars — display Bronze sample data with `head()`.*
 ```python
 
 bronze_df.head(5)
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -2645,6 +2878,7 @@ bronze_df.head(5)
 
 Verifies all symbols were ingested with reasonable row counts and correct date ranges.
 
+*Reference snippet for Polars — display Bronze row counts per symbol with `group_by().agg()`.*
 ```python
 
 bronze_df.group_by("symbol").agg(
@@ -2652,6 +2886,9 @@ bronze_df.group_by("symbol").agg(
     pl.col("date").min().alias("first_date"),
     pl.col("date").max().alias("last_date"),
 ).sort("symbol")
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -2704,6 +2941,7 @@ bronze_df.group_by("symbol").agg(
 >
 > All checks must pass before Silver processing begins.
 
+*Reference snippet for Pipeline — run Bronze data quality gate with `run_quality_gate()`.*
 ```python
 
 bronze_dq = run_quality_gate([
@@ -2717,6 +2955,9 @@ bronze_dq = run_quality_gate([
 ], stage="bronze")
 
 bronze_dq
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     23:19:38 | INFO  |   DQ PASS: bronze: 2530 rows
@@ -2797,6 +3038,7 @@ Pure Polars functions computing daily return, intraday range, and 20-day SMA —
 >
 > Close-to-close percentage change per symbol. Pure function: DataFrame in, DataFrame out.
 
+*Reference snippet for Polars — compute daily returns with `pct_change().over()`.*
 ```python
 
 def compute_daily_returns(df: pl.DataFrame) -> pl.DataFrame:
@@ -2813,6 +3055,9 @@ def compute_daily_returns(df: pl.DataFrame) -> pl.DataFrame:
 # Test on Bronze data
 test_returns = compute_daily_returns(bronze_df.drop("batch_id"))
 test_returns.filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "close", "daily_return").head(5)
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -2865,6 +3110,7 @@ test_returns.filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "clos
 >
 > (high - low) / close: normalized daily price spread. Higher = more volatile.
 
+*Reference snippet for Polars — compute intraday range with `with_columns()`.*
 ```python
 
 def compute_intraday_range(df: pl.DataFrame) -> pl.DataFrame:
@@ -2878,6 +3124,9 @@ def compute_intraday_range(df: pl.DataFrame) -> pl.DataFrame:
 # Test on returns data
 test_range = compute_intraday_range(test_returns)
 test_range.filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "high", "low", "close", "intraday_range").head(5)
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -2942,6 +3191,7 @@ test_range.filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "high",
 >
 > Rolling mean of close over 20-day window per symbol. First 19 rows are NULL.
 
+*Reference snippet for Polars — compute 20-day moving average with `rolling_mean().over()`.*
 ```python
 
 def compute_sma(df: pl.DataFrame, window: int = 20) -> pl.DataFrame:
@@ -2957,6 +3207,9 @@ def compute_sma(df: pl.DataFrame, window: int = 20) -> pl.DataFrame:
 # Test on range data
 test_sma = compute_sma(test_range)
 test_sma.filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "close", "sma_20").tail(5)
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -3009,6 +3262,7 @@ test_sma.filter(pl.col("symbol") == "SAP.DE").select("symbol", "date", "close", 
 >
 > Chains three pure functions. Each independent and unit-testable. Validates before MERGE.
 
+*Reference snippet for Polars — compose all Silver transforms with function chaining.*
 ```python
 
 def transform_silver(bronze_df: pl.DataFrame) -> pl.DataFrame:
@@ -3021,6 +3275,9 @@ def transform_silver(bronze_df: pl.DataFrame) -> pl.DataFrame:
     return df
 
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     transform_silver() defined — composes all Silver transforms
 
@@ -3030,6 +3287,7 @@ def transform_silver(bronze_df: pl.DataFrame) -> pl.DataFrame:
 >
 > Valid rows collected; rejected rows quarantined with error details.
 
+*Reference snippet for Pydantic — validate Silver rows with `BaseModel()` row-level check.*
 ```python
 
 def validate_silver(df: pl.DataFrame, batch_id: str) -> tuple[pl.DataFrame, int]:
@@ -3067,6 +3325,9 @@ def validate_silver(df: pl.DataFrame, batch_id: str) -> tuple[pl.DataFrame, int]
 
 log.info("validate_silver() defined \u2014 rejects go to quarantine")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     23:19:38 | INFO  | validate_silver() defined — rejects go to quarantine
 
@@ -3080,6 +3341,7 @@ Imperative shell: applies transforms, validates through CleanOHLCV, MERGE upsert
 >
 > Transform, validate (Pydantic), MERGE (SQL), lineage. Transforms FULL bronze for correct SMA.
 
+*Reference snippet for Silver — define enrichment pipeline with transform + `MERGE INTO`.*
 ```python
 
 def process_silver(bronze_df: pl.DataFrame, batch_id: str) -> tuple[pl.DataFrame, StageLineage]:
@@ -3113,6 +3375,9 @@ def process_silver(bronze_df: pl.DataFrame, batch_id: str) -> tuple[pl.DataFrame
     return silver_full, lineage
 
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     process_silver() defined — MERGE upsert, returns full dataset
 
@@ -3122,6 +3387,7 @@ def process_silver(bronze_df: pl.DataFrame, batch_id: str) -> tuple[pl.DataFrame
 >
 > Runs Silver enrichment, records SMA-20 null warnings in StageContext.
 
+*Reference snippet for Silver — execute enrichment on full Bronze data.*
 ```python
 
 t0 = time.time()
@@ -3136,6 +3402,9 @@ persist_context(silver_stage_ctx)
 gold_stage_ctx = silver_stage_ctx.for_next_stage("gold", silver_lineage, GOLD_DAILY_COLUMNS)
 log.info(f"Silver complete: {len(silver_df)} rows in {elapsed:.0f}ms")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     23:19:41 | INFO  | Silver: 2530 rows merged (2530 valid, 0 rejected)
     23:19:41 | WARNING |   silver: sma_20: 95 NULL values (first 19 rows per symbol)
@@ -3145,11 +3414,15 @@ log.info(f"Silver complete: {len(silver_df)} rows in {elapsed:.0f}ms")
 
 Verifies that daily_return, intraday_range, and sma_20 are populated after Silver enrichment.
 
+*Reference snippet for Polars — display Silver enriched columns with `filter().select()`.*
 ```python
 
 silver_df.filter(pl.col("symbol") == "SAP.DE").select(
     "symbol", "date", "close", "daily_return", "intraday_range", "sma_20"
 ).tail(5)
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -3212,6 +3485,7 @@ silver_df.filter(pl.col("symbol") == "SAP.DE").select(
 
 Summary statistics to verify enrichment quality across all symbols.
 
+*Reference snippet for Polars — display Silver statistics per symbol with `group_by().agg()`.*
 ```python
 
 silver_df.group_by("symbol").agg(
@@ -3221,6 +3495,9 @@ silver_df.group_by("symbol").agg(
     pl.col("sma_20").null_count().alias("sma_nulls"),
     pl.col("date").count().alias("rows"),
 ).sort("symbol")
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -3285,6 +3562,7 @@ silver_df.group_by("symbol").agg(
 >
 > Hard gate: blocks on structural issues. Soft gate: logs warnings on statistical anomalies.
 
+*Reference snippet for Pipeline — run Silver data quality gate with `run_quality_gate()`.*
 ```python
 silver_dq = run_quality_gate([
     dq_check_not_empty(silver_df, "silver"),
@@ -3306,6 +3584,9 @@ else:
     log.info("  No outliers detected")
 
 silver_dq
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     23:19:41 | INFO  |   DQ PASS: silver: 2530 rows
@@ -3423,6 +3704,7 @@ Pure Polars functions building DailySummary (cross-sectional) and SymbolProfile 
 >
 > Groups by date: mean/max/min return, total volume, avg intraday range.
 
+*Reference snippet for Polars — build daily cross-sectional summary with `group_by().agg()`.*
 ```python
 
 def build_daily_summary(silver_df: pl.DataFrame, batch_id: str) -> pl.DataFrame:
@@ -3442,6 +3724,9 @@ def build_daily_summary(silver_df: pl.DataFrame, batch_id: str) -> pl.DataFrame:
 daily_summary_df = build_daily_summary(silver_df, batch_id)
 len(daily_summary_df)  # trading days
 daily_summary_df.head(5)
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -3518,6 +3803,7 @@ daily_summary_df.head(5)
 >
 > Per-symbol: avg return, volatility, max drawdown, total dividends.
 
+*Reference snippet for Polars — build per-symbol profile with `cum_max()` drawdown.*
 ```python
 
 def build_symbol_profile(silver_df: pl.DataFrame, batch_id: str) -> pl.DataFrame:
@@ -3556,6 +3842,9 @@ def build_symbol_profile(silver_df: pl.DataFrame, batch_id: str) -> pl.DataFrame
 symbol_profile_df = build_symbol_profile(silver_df, batch_id)
 len(symbol_profile_df)  # symbol profiles
 symbol_profile_df
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -3642,6 +3931,7 @@ symbol_profile_df
 
 Validates each daily summary row through the `DailySummary` model to catch aggregation errors before persistence.
 
+*Reference snippet for Pydantic — validate Gold daily summary with `BaseModel()` row-level check.*
 ```python
 
 def validate_gold_daily(df: pl.DataFrame) -> tuple[pl.DataFrame, int]:
@@ -3659,12 +3949,16 @@ def validate_gold_daily(df: pl.DataFrame) -> tuple[pl.DataFrame, int]:
 valid_daily, rej_daily = validate_gold_daily(daily_summary_df)
 len(valid_daily), rej_daily  # daily summary validation: valid, rejected
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### Pydantic — validate Gold symbol profiles with `BaseModel()` row-level check
 
 Validates each symbol profile through the `SymbolProfile` model to catch calculation errors before persistence.
 
+*Reference snippet for Pydantic — validate Gold symbol profiles with `BaseModel()` row-level check.*
 ```python
 
 def validate_gold_profiles(df: pl.DataFrame) -> tuple[pl.DataFrame, int]:
@@ -3683,6 +3977,9 @@ def validate_gold_profiles(df: pl.DataFrame) -> tuple[pl.DataFrame, int]:
 valid_profiles, rej_profiles = validate_gold_profiles(symbol_profile_df)
 len(valid_profiles), rej_profiles  # symbol profile validation: valid, rejected
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 ### Persistence
@@ -3695,6 +3992,7 @@ Validate Gold rows through typed contracts, then truncate and reload both mart t
 >
 > Full rebuild from Silver. TRUNCATE both Gold tables, INSERT new aggregations.
 
+*Reference snippet for SQL Server — define Gold persistence function with `TRUNCATE` + `to_sql()`.*
 ```python
 
 def persist_gold(daily_df: pl.DataFrame, profile_df: pl.DataFrame, batch_id: str) -> StageLineage:
@@ -3719,6 +4017,9 @@ def persist_gold(daily_df: pl.DataFrame, profile_df: pl.DataFrame, batch_id: str
     return lineage
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### SQL Server — persist Gold marts with `TRUNCATE` + `to_sql()`
@@ -3727,6 +4028,7 @@ def persist_gold(daily_df: pl.DataFrame, profile_df: pl.DataFrame, batch_id: str
 >
 > Persists Gold marts, checks for missing symbols, records warnings.
 
+*Reference snippet for SQL Server — persist Gold marts with `TRUNCATE` + `to_sql()`.*
 ```python
 
 gold_lineage = persist_gold(valid_daily, valid_profiles, batch_id)
@@ -3739,6 +4041,9 @@ if len(missing_symbols) > 0:
 persist_context(gold_stage_ctx)
 log.info(f"Gold persisted: hash={gold_lineage.output_hash}")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     23:19:41 | INFO  | Gold persisted: hash=57256313be661629
 
@@ -3746,9 +4051,13 @@ log.info(f"Gold persisted: hash={gold_lineage.output_hash}")
 
 Shows the most recent trading days with cross-sectional metrics.
 
+*Reference snippet for Polars — display Gold daily summary with `sort().tail()`.*
 ```python
 
 valid_daily.sort("date").tail()
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -3823,12 +4132,16 @@ valid_daily.sort("date").tail()
 
 Final per-symbol summary statistics across the full two-year history.
 
+*Reference snippet for Polars — display Gold symbol profiles with `select()`.*
 ```python
 
 valid_profiles.select(
     "symbol", "total_trading_days", "avg_daily_return",
     "volatility", "max_drawdown", "avg_volume", "total_dividends"
 )
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -3922,12 +4235,16 @@ Write Gold and Silver data products to Parquet, record the export lineage stage,
 >
 > API reads this file directly. Parquet preserves types without CSV parsing overhead.
 
+*Reference snippet for Polars — export daily summary to Parquet with `write_parquet()`.*
 ```python
 
 daily_path = EXPORT_DIR / "gold_daily_summary.parquet"
 valid_daily.write_parquet(daily_path)
 size_kb = daily_path.stat().st_size / 1024
 daily_path.name, size_kb, len(valid_daily)  # exported file, KB, rows
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     gold_daily_summary.parquet (21.2 KB, 506 rows)
@@ -3936,12 +4253,16 @@ daily_path.name, size_kb, len(valid_daily)  # exported file, KB, rows
 
 Pre-materialized per-symbol summary for the comparison dashboard.
 
+*Reference snippet for Polars — export symbol profiles to Parquet with `write_parquet()`.*
 ```python
 
 profile_path = EXPORT_DIR / "gold_symbol_profile.parquet"
 valid_profiles.write_parquet(profile_path)
 size_kb = profile_path.stat().st_size / 1024
 profile_path.name, size_kb, len(valid_profiles)  # exported file, KB, rows
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     gold_symbol_profile.parquet (3.9 KB, 5 rows)
@@ -3952,12 +4273,16 @@ profile_path.name, size_kb, len(valid_profiles)  # exported file, KB, rows
 >
 > Full Silver dataset exported for time-series and per-symbol drill-down endpoints.
 
+*Reference snippet for Polars — export Silver data to Parquet with `write_parquet()`.*
 ```python
 
 silver_path = EXPORT_DIR / "silver_ohlcv.parquet"
 silver_df.write_parquet(silver_path)
 size_kb = silver_path.stat().st_size / 1024
 silver_path.name, size_kb, len(silver_df)  # exported file, KB, rows
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     silver_ohlcv.parquet (96.9 KB, 2530 rows)
@@ -3966,6 +4291,7 @@ silver_path.name, size_kb, len(silver_df)  # exported file, KB, rows
 
 Tracks which files were exported and their sizes as a stage lineage record.
 
+*Reference snippet for Lineage — record export stage with `end_stage()`.*
 ```python
 
 export_ctx = start_stage(batch_id, "export", input_rows=len(valid_daily) + len(valid_profiles) + len(silver_df))
@@ -3982,6 +4308,9 @@ persist_lineage(export_lineage)
 
 export_lineage.output_rows, export_lineage.output_hash  # export lineage: total rows, hash
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     3041 total rows, hash=5daff78bb463b750
 
@@ -3989,12 +4318,16 @@ export_lineage.output_rows, export_lineage.output_hash  # export lineage: total 
 
 Round-trip test: write, then read back to verify row counts match.
 
+*Reference snippet for Polars — verify exported Parquet files with `read_parquet()`.*
 ```python
 
 for name in ["gold_daily_summary", "gold_symbol_profile", "silver_ohlcv"]:
     path = EXPORT_DIR / f"{name}.parquet"
     df = pl.read_parquet(path)
     print(f"  {name}: {len(df)} rows, {len(df.columns)} cols")
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     506 rows (gold_daily_summary), 8 cols
@@ -4005,11 +4338,15 @@ for name in ["gold_daily_summary", "gold_symbol_profile", "silver_ohlcv"]:
 
 Exports machine-readable JSON Schema contracts for every pipeline boundary.
 
+*Reference snippet for Pydantic \u2014 export data contracts as JSON Schema with `model_json_schema()`.*
 ```python
 
 contract_paths = export_data_contracts(EXPORT_DIR)
 for p in contract_paths:
     print(f"  {p.name}: {p.stat().st_size:,} bytes")
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     23:19:41 | INFO  |   Contract exported: bronze_ohlcv_contract.json
@@ -4036,6 +4373,7 @@ Finalize and persist the RunContext, then query lineage, quarantine, and context
 >
 > Combines stage lineage, business context, temporal context, warnings into final record.
 
+*Reference snippet for Pydantic — build and save run context with `RunContext()`.*
 ```python
 
 run_context = RunContext(
@@ -4058,6 +4396,9 @@ ctx_path.name  # RunContext saved
 batch_id[:8], len(run_context.data_warnings)  # batch prefix, warnings
 total_ms  # processing time (ms)
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     run_05a35d97.json
     05a35d97... | Warnings: 1
@@ -4067,6 +4408,7 @@ total_ms  # processing time (ms)
 
 Shows all stages with timing, row counts, and output hashes.
 
+*Reference snippet for Polars — display lineage summary as DataFrame.*
 ```python
 
 lineage_records = [
@@ -4081,6 +4423,9 @@ lineage_records = [
     for s in run_context.stages
 ]
 pl.DataFrame(lineage_records)
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -4137,6 +4482,7 @@ pl.DataFrame(lineage_records)
 >
 > Check the JSON file is complete and parseable. Shows business_context and temporal_context.
 
+*Reference snippet for JSON — read back persisted run context with `json.loads()`.*
 ```python
 
 ctx_json = json.loads(ctx_path.read_text(encoding="utf-8"))
@@ -4145,6 +4491,9 @@ ctx_json = json.loads(ctx_path.read_text(encoding="utf-8"))
 display_ctx = {k: v for k, v in ctx_json.items() if k != "stages"}
 display_ctx["stages"] = f"[{len(ctx_json.get('stages', []))} stage records]"
 json.dumps(display_ctx, indent=2, default=str)
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     {
@@ -4190,6 +4539,7 @@ json.dumps(display_ctx, indent=2, default=str)
 
 Verifies lineage records were persisted to SQL Server for the current batch.
 
+*Reference snippet for Polars — query lineage table with `read_database()`.*
 ```python
 
 lineage_query = pl.read_database(
@@ -4197,6 +4547,9 @@ lineage_query = pl.read_database(
     connection=sql_engine
 )
 lineage_query
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -4248,6 +4601,7 @@ lineage_query
 >
 > Shows rejected rows with error messages for investigation.
 
+*Reference snippet for Polars — review quarantined rows with `read_database()`.*
 ```python
 
 quarantine_df = pl.read_database(
@@ -4263,6 +4617,9 @@ else:
     log.info("No quarantined rows \u2014 all data passed validation")
     print("No quarantined rows")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     23:19:41 | INFO  | No quarantined rows — all data passed validation
 
@@ -4274,6 +4631,7 @@ else:
 >
 > Lineage = what happened. Context = what the pipeline knew at each stage.
 
+*Reference snippet for Polars — query context log for this batch with `read_database()`.*
 ```python
 
 context_df = pl.read_database(
@@ -4282,6 +4640,9 @@ context_df = pl.read_database(
     connection=sql_engine
 )
 context_df
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -4324,6 +4685,7 @@ context_df
 
 Shows all data warnings accumulated across stages from the gold StageContext.
 
+*Reference snippet for Python — display accumulated data warnings with `log.warning()`.*
 ```python
 
 if gold_stage_ctx and gold_stage_ctx.data_warnings:
@@ -4333,6 +4695,9 @@ if gold_stage_ctx and gold_stage_ctx.data_warnings:
 else:
     print("No data warnings — clean run")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     Data Warnings (1 total):
       sma_20: 95 NULL values (first 19 rows per symbol)
@@ -4341,6 +4706,7 @@ else:
 
 Inspects the Silver contract to show structural schema and column semantics side by side.
 
+*Reference snippet for JSON — inspect exported data contract with `json.loads()`.*
 ```python
 
 contract_path = EXPORT_DIR / "contracts" / "silver_ohlcv_contract.json"
@@ -4360,6 +4726,9 @@ if contract_path.exists():
             print(f"    Sources: {col['source_columns']}")
             print(f"    Null means: {col['null_semantics']}")
             print()
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     
@@ -4386,6 +4755,7 @@ Pydantic response models that define the JSON shape returned by each endpoint.
 >
 > Response model for /daily-summary endpoint. No strict mode for FastAPI compatibility.
 
+*Reference snippet for Pydantic — define daily summary API response model with `BaseModel`.*
 ```python
 
 class DailySummaryResponse(BaseModel):
@@ -4398,12 +4768,16 @@ class DailySummaryResponse(BaseModel):
     avg_intraday_pct: float
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### Pydantic — define symbol profile API response model with `BaseModel`
 
 Response schema for the `/symbol-profile` endpoint.
 
+*Reference snippet for Pydantic — define symbol profile API response model with `BaseModel`.*
 ```python
 
 class SymbolProfileResponse(BaseModel):
@@ -4418,12 +4792,16 @@ class SymbolProfileResponse(BaseModel):
     last_date:           Date
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### Pydantic — define timeseries row API response model with `BaseModel`
 
 Response schema for the `/symbol/{symbol}/timeseries` endpoint.
 
+*Reference snippet for Pydantic — define timeseries row API response model with `BaseModel`.*
 ```python
 
 class TimeSeriesRow(BaseModel):
@@ -4438,6 +4816,9 @@ class TimeSeriesRow(BaseModel):
     sma_20:         float | None
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 ### Endpoints
@@ -4448,10 +4829,14 @@ FastAPI application instance and five route handlers: health, daily-summary, sym
 
 Initializes the FastAPI application for serving pre-materialized Parquet data.
 
+*Reference snippet for FastAPI — create application instance with `FastAPI()`.*
 ```python
 
 app = FastAPI(title="Gold Data Pipeline API", version="1.0.0")
 
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     FastAPI app created
@@ -4460,6 +4845,7 @@ app = FastAPI(title="Gold Data Pipeline API", version="1.0.0")
 
 Healthcheck endpoint that verifies Parquet files exist and reports their sizes.
 
+*Reference snippet for FastAPI — define health endpoint with `@app.get()`.*
 ```python
 
 @app.get("/health")
@@ -4469,12 +4855,16 @@ def health():
     return {"status": "healthy", "files": files}
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### FastAPI — define daily summary endpoint with `@app.get()`
 
 Returns the daily cross-sectional summary from Parquet, with optional date range filter.
 
+*Reference snippet for FastAPI — define daily summary endpoint with `@app.get()`.*
 ```python
 
 @app.get("/daily-summary", response_model=list[DailySummaryResponse])
@@ -4488,12 +4878,16 @@ def get_daily_summary(start_date: Date | None = None, end_date: Date | None = No
     return df.drop("batch_id").sort("date").to_dicts()
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### FastAPI — define symbol profile endpoint with `@app.get()`
 
 Returns per-symbol summary statistics from the pre-materialized Parquet file.
 
+*Reference snippet for FastAPI — define symbol profile endpoint with `@app.get()`.*
 ```python
 
 @app.get("/symbol-profile", response_model=list[SymbolProfileResponse])
@@ -4503,12 +4897,16 @@ def get_symbol_profiles():
     return df.drop("batch_id").sort("symbol").to_dicts()
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### FastAPI — define symbol timeseries endpoint with `@app.get()`
 
 Returns daily OHLCV plus enrichment columns for one symbol from the Silver Parquet file.
 
+*Reference snippet for FastAPI — define symbol timeseries endpoint with `@app.get()`.*
 ```python
 
 @app.get("/symbol/{symbol}/timeseries", response_model=list[TimeSeriesRow])
@@ -4524,12 +4922,16 @@ def get_timeseries(symbol: str, limit: int = 100):
     ).sort("date", descending=True).head(limit).to_dicts()
 
 ```
+```text
+No direct stdout was emitted by this cell.
+```
 
 
 #### FastAPI — define lineage endpoint with `@app.get()`
 
 Returns the RunContext JSON for a batch ID prefix, enabling audit queries from the API.
 
+*Reference snippet for FastAPI — define lineage endpoint with `@app.get()`.*
 ```python
 
 @app.get("/lineage/{batch_id_prefix}")
@@ -4540,6 +4942,9 @@ def get_lineage(batch_id_prefix: str):
         raise HTTPException(status_code=404, detail="Batch not found")
     return json.loads(matches[0].read_text(encoding="utf-8"))
 
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     GET /lineage/{batch_id} registered — 9 total routes
@@ -4554,6 +4959,7 @@ Start the server in a background thread and smoke-test all five endpoints with `
 >
 > Port 8099 to avoid conflicts. Background thread allows notebook to continue.
 
+*Reference snippet for uvicorn — start API server in background with `threading.Thread()`.*
 ```python
 
 API_PORT = 8099
@@ -4572,6 +4978,9 @@ server_thread.start()
 time.sleep(2)
 API_PORT  # FastAPI server running at http://127.0.0.1
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8099): only one usage of each socket address (protocol/network address/port) is normally permitted
 
@@ -4582,11 +4991,15 @@ API_PORT  # FastAPI server running at http://127.0.0.1
 
 Verifies the API server is running and that all Parquet files are accessible.
 
+*Reference snippet for httpx — test health endpoint with `httpx.get()`.*
 ```python
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/health")
 resp.status_code  # Status
 json.dumps(resp.json(), indent=2)
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     23:19:43 | INFO  | HTTP Request: GET http://127.0.0.1:8099/health "HTTP/1.1 200 OK"
@@ -4605,6 +5018,7 @@ json.dumps(resp.json(), indent=2)
 
 Fetches the last 5 trading days of cross-sectional summary from the API.
 
+*Reference snippet for httpx — test daily summary endpoint with `httpx.get()`.*
 ```python
 
 five_days_ago = (Date.today() - timedelta(days=10)).isoformat()
@@ -4613,6 +5027,9 @@ resp.status_code, len(resp.json())  # status, rows
 
 # Display as Polars DataFrame
 pl.DataFrame(resp.json())
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     23:19:43 | INFO  | HTTP Request: GET http://127.0.0.1:8099/daily-summary?start_date=2026-03-19 "HTTP/1.1 200 OK"
@@ -4703,12 +5120,16 @@ pl.DataFrame(resp.json())
 
 Fetches all symbol profiles from the API and renders them as a DataFrame.
 
+*Reference snippet for httpx — test symbol profile endpoint with `httpx.get()`.*
 ```python
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/symbol-profile")
 resp.status_code, len(resp.json())  # status, profiles
 
 pl.DataFrame(resp.json())
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     23:19:44 | INFO  | HTTP Request: GET http://127.0.0.1:8099/symbol-profile "HTTP/1.1 200 OK"
@@ -4793,12 +5214,16 @@ pl.DataFrame(resp.json())
 
 Fetches the last 10 days of SAP.DE time series data from the API.
 
+*Reference snippet for httpx — test symbol timeseries endpoint with `httpx.get()`.*
 ```python
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/symbol/SAP.DE/timeseries", params={"limit": 10})
 resp.status_code, len(resp.json())  # status, rows
 
 pl.DataFrame(resp.json()).head()
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     23:19:44 | INFO  | HTTP Request: GET http://127.0.0.1:8099/symbol/SAP.DE/timeseries?limit=10 "HTTP/1.1 200 OK"
@@ -4883,6 +5308,7 @@ pl.DataFrame(resp.json()).head()
 
 Fetches the pipeline execution metadata for the current run from the lineage endpoint.
 
+*Reference snippet for httpx — test lineage endpoint with `httpx.get()`.*
 ```python
 
 resp = httpx.get(f"http://127.0.0.1:{API_PORT}/lineage/{batch_id[:8]}")
@@ -4891,6 +5317,9 @@ data = resp.json()
 data['batch_id'][:8], data['status']  # batch, status
 
 pl.DataFrame(data["stages"]).select("stage", "input_rows", "output_rows", "rows_rejected", "output_hash")
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     23:19:44 | INFO  | HTTP Request: GET http://127.0.0.1:8099/lineage/05a35d97 "HTTP/1.1 200 OK"
@@ -4953,6 +5382,7 @@ Four Plotly charts covering return time series, cumulative performance, risk-ret
 
 Overlaid line chart showing daily returns across all 5 symbols for the last 3 months.
 
+*Reference snippet for Plotly — plot daily return time series with `go.Scatter()`.*
 ```python
 
 three_months_ago = Date.today() - timedelta(days=90)
@@ -4979,6 +5409,9 @@ fig.update_layout(
 )
 fig.show()
 ```
+```text
+Notebook-rendered visual output is preserved below.
+```
 
 <iframe src="/static/plotly/fp_py_01.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
@@ -4986,6 +5419,7 @@ fig.show()
 
 Shows how a €1 investment in each symbol would have grown over the full history.
 
+*Reference snippet for Plotly — plot cumulative returns comparison with `cum_prod()`.*
 ```python
 
 fig = go.Figure()
@@ -5009,6 +5443,9 @@ fig.update_layout(
 )
 fig.show()
 ```
+```text
+Notebook-rendered visual output is preserved below.
+```
 
 <iframe src="/static/plotly/fp_py_02.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
@@ -5016,6 +5453,7 @@ fig.show()
 
 Risk-return visualization using Gold symbol profile data: volatility vs average daily return.
 
+*Reference snippet for Plotly — plot risk-return scatter with `go.Scatter()`.*
 ```python
 
 fig = go.Figure()
@@ -5038,6 +5476,9 @@ fig.update_layout(
 )
 fig.show()
 ```
+```text
+Notebook-rendered visual output is preserved below.
+```
 
 <iframe src="/static/plotly/fp_py_03.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
@@ -5045,6 +5486,7 @@ fig.show()
 
 Shows how long each pipeline stage took in milliseconds, identifying the bottleneck.
 
+*Reference snippet for Plotly — plot pipeline stage timing with `go.Bar()`.*
 ```python
 
 stages = [s.stage for s in run_context.stages]
@@ -5068,19 +5510,25 @@ fig.update_layout(
 )
 fig.show()
 ```
+```text
+Notebook-rendered visual output is preserved below.
+```
 
 <iframe src="/static/plotly/fp_py_04.html" width="100%" height="550" style="border:none;border-radius:8px;" loading="lazy"></iframe>
 
 ## 13. Audit — Investigating a Disputed Data Point
 
-The audit section demonstrates lineage in action. A stakeholder disputes a specific data point — the pipeline traces it from Gold back to the raw source in seven steps, each independently verifiable: Bronze (raw values as ingested), Silver (computed return verified mathematically), Gold (propagation to aggregation), Lineage (batch metadata with SHA-256 hash), RunContext (execution fingerprint), Landing Zone (raw JSON file on disk), and Live API (corroboration with current source). This is the proof that the architecture's lineage tracking delivers real forensic capability.
+The audit section demonstrates lineage in action. A stakeholder disputes a specific data point — the pipeline traces it through five persisted checkpoints: Bronze (raw values as ingested), Silver (computed return verified mathematically), Gold (propagation to aggregation), Lineage (batch metadata with SHA-256 hash), and RunContext (execution fingerprint). The landing-zone JSON file is checked as supplemental corroboration only, because incremental fetches can overwrite the current raw file.
 
 ### Disputed data point investigation
 
-Seven-step forensic trace from Gold back to raw source: Bronze → Silver → Gold → Lineage → RunContext → Landing Zone → Live API.
+Five-step forensic trace from Gold back to persisted evidence: Bronze → Silver → Gold → Lineage → RunContext. Landing-zone JSON is a supplemental corroboration check.
 
 #### SQL Server — query Bronze table for raw ingested values with `read_database()`
 
+Start the forensic trace at Bronze because `batch_id`, `ingested_at`, and the raw OHLCV fields are the persisted source of truth for the disputed day. If the Bronze row is wrong, every downstream layer is only reproducing that original defect.
+
+*Reference snippet for SQL Server — query Bronze table for raw ingested values with `read_database()`.*
 ```python
 # Step 2: Check Bronze — exact values as persisted, with batch_id and ingestion timestamp
 
@@ -5093,6 +5541,9 @@ bronze_audit = pl.read_database(
 )
 print("Bronze table (raw ingested):")
 bronze_audit
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     Bronze table (raw ingested):
@@ -5139,6 +5590,7 @@ bronze_audit
 >
 > Verify daily_return = (close - prev_close) / prev_close mathematically.
 
+*Reference snippet for SQL Server — query Silver table for enriched values with `read_database()`.*
 ```python
 
 silver_audit = pl.read_database(
@@ -5166,6 +5618,9 @@ if len(rows) >= 2:
     print()
 
 silver_audit
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     Silver table (enriched, 3-day window):
@@ -5226,6 +5681,9 @@ silver_audit
 
 #### SQL Server — query Gold tables for aggregated impact with `read_database()`
 
+Gold is where a single row-level anomaly becomes a mart-level effect, so this query verifies that the disputed Bronze/Silver event materially changed the daily aggregate. The goal is not to restate the row value, but to prove the downstream business surface reflects the same `batch_id` lineage.
+
+*Reference snippet for SQL Server — query Gold tables for aggregated impact with `read_database()`.*
 ```python
 # Step 4: Check Gold — verify the data point propagated to aggregations
 
@@ -5237,6 +5695,9 @@ gold_daily_audit = pl.read_database(
 print("Gold daily summary (Jan 29):")
 print(f"  The min_return on this day should reflect SAP's -16% drop")
 gold_daily_audit
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     Gold daily summary (Jan 29):
@@ -5274,6 +5735,7 @@ gold_daily_audit
 >
 > batch_id traces disputed row to pipeline run. Output hash proves no post-ingestion tampering.
 
+*Reference snippet for SQL Server — query lineage table for pipeline run metadata with `read_database()`.*
 ```python
 batch_from_bronze = pl.read_database(
     "SELECT batch_id FROM bronze_ohlcv WHERE symbol = 'SAP.DE' AND date = '2026-01-29'",
@@ -5293,6 +5755,9 @@ lineage_audit = pl.read_database(
 )
 print("Full pipeline execution for this batch:")
 lineage_audit
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     SAP.DE / 2026-01-29
@@ -5359,6 +5824,7 @@ lineage_audit
 >
 > Proves symbols processed, date range, Polars version, status, zero rejections, output hash.
 
+*Reference snippet for JSON — verify RunContext execution metadata with `json.loads()`.*
 ```python
 
 ctx_files = list(LINEAGE_DIR.glob(f"run_{batch_from_bronze[:8]}*.json"))
@@ -5375,15 +5841,19 @@ if ctx_files:
 else:
     print(f"No RunContext found for batch {batch_from_bronze[:8]}")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
         ['2024-03-29', '2026-03-29']
 
-#### yfinance — corroborate with live API data using `Ticker.history()`
+#### JSON — verify landing-zone file continuity with `json.loads()`
 
 > [!info] Landing Zone File Proof
 >
-> Prove the landing zone file exists and contains the disputed record.
+> Check whether the current landing-zone file still carries the disputed date. Archived landing files are corroborative, not authoritative.
 
+*Reference snippet for JSON — verify landing-zone file continuity with `json.loads()`.*
 ```python
 
 landing_file = LANDING_DIR / "ohlcv_SAP_DE.json"
@@ -5408,6 +5878,9 @@ else:
     print(f"Jan 29 not in current file (overwritten by incremental fetch)")
     print(f"In production, landing files are archived and would contain this record")
 ```
+```text
+Notebook stdout is preserved below.
+```
 
     2026-03-27 to 2026-03-27
     Jan 29 not in current file (overwritten by incremental fetch)
@@ -5419,6 +5892,7 @@ else:
 >
 > Assembles all audit steps into a summary. Each row is one verification step with evidence.
 
+*Reference snippet for Polars — display full audit trail summary as DataFrame.*
 ```python
 
 bronze_close = float(bronze_audit["close"][0])
@@ -5439,6 +5913,9 @@ print("  - Daily return verified mathematically from consecutive closes")
 print("  - Zero rows rejected by Pydantic validation")
 print("  - Output hash proves no post-ingestion tampering")
 audit_summary
+```
+```text
+Notebook stdout is preserved below.
 ```
 
     AUDIT CONCLUSION: The SAP.DE -16% drop on 2026-01-29 is AUTHENTIC.
@@ -5513,6 +5990,7 @@ bronze ingestion, each is classified as 📅 non-trading day or 🔴 genuine ano
 >
 > Silver rows with volume=0 classified using ColumnContext. Distinguishes real data from quality issues.
 
+*Reference snippet for Zero-Volume Classification — Holiday or Anomaly?.*
 ```python
 
 zero_vol = silver_df.filter(pl.col("volume") == 0)
@@ -5545,6 +6023,9 @@ if len(zero_vol) > 0:
           f"Anomalies to investigate: {len(anomalies)}")
 else:
     print(f"No zero-volume rows in Silver \u2014 all {len(silver_df)} rows have volume > 0")
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -5603,6 +6084,7 @@ has MORE than 19 nulls, those extras are unexplained and need investigation.
 >
 > sma_20 needs 20 data points. First 19 per symbol are NULL by mathematical necessity.
 
+*Reference snippet for SMA-20 Null Accounting — Expected vs Unexpected.*
 ```python
 
 sma_nulls = silver_df.filter(pl.col("sma_20").is_null())
@@ -5635,6 +6117,9 @@ print(f"\nExpected nulls: {expected_null_count} (19 x {symbols_count} symbols)  
 silver_warnings = [w for w in gold_stage_ctx.data_warnings if "sma_20" in w]
 if silver_warnings:
     print(f"Context recorded: {silver_warnings[0]}")
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -5707,6 +6192,7 @@ derived column. This is what turns `volatility: 0.0187` into
 >
 > Reads exported JSON Schema and displays x-column-context entries for gold_symbol_profile.
 
+*Reference snippet for Data Contract — Column Semantics as Structured Data.*
 ```python
 
 contract = json.loads(
@@ -5727,6 +6213,9 @@ derived = [
 ]
 
 pl.DataFrame(derived)
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -5797,6 +6286,7 @@ pl.DataFrame(derived)
 >
 > volatility=0.0187 means nothing without context. Contract says: std(daily_return), annualize by sqrt(252).
 
+*Reference snippet for Data Contract — Column Semantics as Structured Data.*
 ```python
 
 import math
@@ -5815,6 +6305,9 @@ interpretation = german.select(
 
 display(interpretation)
 print(f"\nContract says: '{vol_meta['description']}'")
+```
+```text
+Notebook-rendered table output is preserved below.
 ```
 
 
@@ -5869,53 +6362,182 @@ print(f"\nContract says: '{vol_meta['description']}'")
 
     'Standard deviation of daily returns — annualize by multiplying by sqrt(252)'
 
-## Warnings
+## Risk Notes
 
-> [!warning] Mixing Polars and pandas in the same pipeline step incurs silent copy overhead
-> Converting between `polars.DataFrame` and `pandas.DataFrame` mid-pipeline copies the entire column buffer and resets Polars' column metadata (like `Categorical` encoding), which can double memory usage on large datasets.
+### Boundary copies and async blocking
 
-> [!success] Correct pattern
-> Commit to Polars for all transformation steps. Only convert to pandas at the very end when a library (e.g., matplotlib, SQLAlchemy ORM) strictly requires it, using `df.to_pandas()` at the boundary.
+Crossing the boundary from `pl.DataFrame` to `df.to_pandas()` creates another mutable representation, and calling blocking work inside `async def` routes removes the concurrency benefits of FastAPI unless the operation is offloaded with `run_in_executor()` or `asyncio.to_thread()`.
 
-> [!warning] Blocking `pyodbc` calls inside `async def` FastAPI routes starve the event loop
-> `pyodbc` is synchronous. Calling it directly inside an `async def` route handler blocks the asyncio event loop for the duration of the query, preventing all other requests from being served during that window.
+*Measure event-loop blocking against thread offload for two equal-duration tasks.*
+```python
+import asyncio
+import time
 
-> [!success] Correct pattern
-> Either run FastAPI in synchronous mode (`def` routes) with a worker pool, or wrap database calls in `await asyncio.get_event_loop().run_in_executor(None, sync_db_call)` to offload them to a thread pool.
+async def blocked():
+    start = time.perf_counter()
 
-> [!warning] Overwriting Bronze records on re-run destroys lineage and tamper evidence
-> Bronze is the immutable source of truth. Running the ingestion step with a `TRUNCATE TABLE bronze` before re-insert means the SHA-256 hash stored in the lineage table no longer matches any live row — the audit chain is broken.
+    async def bad():
+        time.sleep(0.05)
 
-> [!success] Correct pattern
-> Bronze ingestion must be append-only and idempotent: use incremental date-range queries to fetch only new records and insert only rows whose primary key does not already exist in the table.
+    await asyncio.gather(bad(), bad())
+    return time.perf_counter() - start
 
-> [!warning] `yfinance` may return `None`, `inf`, or split-unadjusted prices without raising an error
-> The library is unofficial and the API contract is not stable. Outlier prices (e.g., a daily return of 5000%) or `None` close values are real occurrences that will silently propagate to Silver and Gold if the Pydantic gate does not catch them.
+async def offloaded():
+    start = time.perf_counter()
 
-> [!success] Correct pattern
-> Add `model_validator` logic to the Bronze DTO that rejects rows where `close <= 0`, `abs(daily_return) > 0.5`, or any required field is `None`. Log rejected rows to a quarantine table for manual review.
+    async def good():
+        await asyncio.to_thread(time.sleep, 0.05)
 
-## Recommendations
+    await asyncio.gather(good(), good())
+    return time.perf_counter() - start
 
-- **Enforce immutability at every layer.** Use Pydantic `model_config = ConfigDict(frozen=True)` on Gold DTOs to prevent accidental mutation after construction. Pure functions that cannot mutate their inputs are trivially parallelizable.
-- **Run quality gates before writing to the database, not after.** Validating in Python is 10–100× cheaper than rolling back a failed SQL transaction on a table with indexes and foreign keys.
-- **Use `tenacity` with `retry_if_exception_type`** to distinguish transient network errors (retry) from permanent validation errors (do not retry). A bare `except Exception: retry` can cause infinite loops on logical errors.
-- **Separate connection string construction from business logic.** Store only the DSN template in constants; inject credentials from environment variables at runtime. Never hardcode passwords, even in Jupyter notebooks that never leave the local machine.
-- **Pre-materialize Parquet before the API server starts.** The FastAPI layer in this pipeline is a read-only serving tier — it should never query SQL Server at request time. All aggregations belong in the Gold layer and Parquet export step.
-- **Store the pipeline run ID in every Bronze and Silver row.** This allows forensic queries that reconstruct exactly which execution produced any downstream value, without relying on timestamps that can be ambiguous during reruns.
-- **Version your Pydantic models alongside your schema migrations.** If a Silver DTO changes its field definitions, old Bronze rows that were valid under the previous contract may fail validation under the new one — keep a migration log.
-- **Monitor the lineage table, not just application logs.** The lineage table is the authoritative record of what ran, when, and with what row counts. Set an alert when a run ID is missing for an expected schedule window.
+print(f"blocking={asyncio.run(blocked()):.3f}s")
+print(f"offloaded={asyncio.run(offloaded()):.3f}s")
+```
+```text
+blocking=0.100s
+offloaded=0.051s
+```
 
-## Troubleshooting
+### Replay integrity and source hygiene
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `pydantic.ValidationError: value is not a valid float` on Bronze ingestion | `yfinance` returned `None` for a close price on a market holiday or halted ticker | Add a `field_validator` that coerces `None` → skip row; log discarded rows to a quarantine table |
-| Polars `SchemaError: invalid series dtype` during Silver transform | Bronze Polars DataFrame has an inferred `Utf8` column that Silver expects as `Float64` | Cast explicitly: `.with_columns(pl.col("close").cast(pl.Float64))` before passing to Silver transforms |
-| `pyodbc.OperationalError: Can't open lib 'ODBC Driver 18 for SQL Server'` | ODBC driver not installed on the current machine or Docker image | Install `msodbcsql18` via the Microsoft ODBC driver package for your OS; in Docker add the install step to the Dockerfile |
-| FastAPI returns stale data after a pipeline rerun | Parquet files were not overwritten because the export step ran before Gold writes completed | Ensure the Parquet export function is called after all Gold writes are committed and the SQL Server transaction is closed |
-| SHA-256 tamper check fails for rows that were never modified | Row was stored with trailing whitespace or encoding difference in a string field | Normalize all string fields to `strip()` + `lower()` before hashing; include the normalization step in the hash contract documentation |
-| `tenacity.RetryError` after 5 attempts on `yfinance` download | Yahoo Finance rate-limiting or DNS resolution failure in the current network | Add `wait_exponential(multiplier=2, min=4, max=60)` and reduce request frequency; consider caching the last successful response |
-| Gold aggregation produces `NaN` for some symbols | Silver rows for those symbols failed the quality gate and were quarantined, leaving no rows to aggregate | Query the quarantine table first; fix the root data issue before rerunning Silver and Gold for those symbols |
-| FastAPI `/data` endpoint returns empty JSON list | Parquet file path in the endpoint does not match the export path constant | Print `PARQUET_PATH` in both the export step and the API startup log; confirm both reference the same absolute path |
+Bronze must remain append-only on `(symbol, date)` so prior `batch_id` evidence survives reruns, and raw vendor rows with `None` or `inf` must fail the `RawOHLCV` gate before they contaminate Silver.
 
+*Compare append-only merge semantics with truncate-and-reload behavior.*
+```python
+bronze = {("SAP.DE", "2026-01-29"): {"close": 164.62, "batch_id": "old"}}
+incoming = {("SAP.DE", "2026-01-30"): {"close": 170.56, "batch_id": "new"}}
+append_only = bronze | incoming
+truncate_reload = incoming
+invalid_close = None
+
+print(f"append_only_keys={sorted(append_only)}")
+print(f"truncate_keys={sorted(truncate_reload)}")
+print(f"close_valid={invalid_close is not None}")
+```
+```text
+append_only_keys=[('SAP.DE', '2026-01-29'), ('SAP.DE', '2026-01-30')]
+truncate_keys=[('SAP.DE', '2026-01-30')]
+close_valid=False
+```
+
+## Implementation Notes
+
+### Frozen contracts and targeted retries
+
+Keep Gold DTOs immutable with `ConfigDict(frozen=True)` and scope retries to transient faults with `retry_if_exception_type(ConnectionError | TimeoutError | OSError)` instead of retrying business-rule failures.
+
+*Show that a frozen contract rejects post-construction mutation.*
+```python
+from pydantic import BaseModel, ConfigDict
+
+class GoldRow(BaseModel):
+    model_config = ConfigDict(frozen=True)
+    symbol: str
+
+row = GoldRow(symbol="SAP.DE")
+try:
+    row.symbol = "BAS.DE"
+except Exception as exc:
+    print(type(exc).__name__)
+    print("mutation_blocked")
+```
+```text
+ValidationError
+mutation_blocked
+```
+
+### Configuration and lineage keys
+
+Build `SQL_CONN_STR` from `PIPELINE_SQL_USER` and `PIPELINE_SQL_PASSWORD` at runtime, pre-materialize `write_parquet()` outputs before API startup, and stamp every persisted row with `batch_id` so exported marts and audit queries stay joinable.
+
+*Assemble the connection string from environment variables and carry the lineage key forward.*
+```python
+import os
+
+os.environ["PIPELINE_SQL_USER"] = "etl_reader"
+os.environ["PIPELINE_SQL_PASSWORD"] = "example-secret"
+sql_conn_str = (
+    "Driver={ODBC Driver 18 for SQL Server};"
+    "Server=localhost,1434;Database=stoxx;"
+    f"UID={os.environ['PIPELINE_SQL_USER']};PWD={os.environ['PIPELINE_SQL_PASSWORD']};"
+)
+row = {"symbol": "SAP.DE", "batch_id": "05a35d97", "parquet": "gold_daily_summary.parquet"}
+
+print(sql_conn_str)
+print(f"batch_id={row['batch_id']} parquet={row['parquet']}")
+```
+```text
+Driver={ODBC Driver 18 for SQL Server};Server=localhost,1434;Database=stoxx;UID=etl_reader;PWD=example-secret;
+batch_id=05a35d97 parquet=gold_daily_summary.parquet
+```
+
+## Failure Scenarios
+
+### Bronze contract rejects null numerics
+
+A `pydantic.ValidationError` on `close` or another required field should go straight to quarantine; coercing `None` through Bronze only defers the failure into downstream aggregates.
+
+*Trigger the same class of Bronze validation failure raised by a missing numeric field.*
+```python
+from pydantic import BaseModel, ValidationError
+
+class BronzeRow(BaseModel):
+    close: float
+
+try:
+    BronzeRow(close=None)
+except ValidationError as exc:
+    first = exc.errors()[0]
+    print(first["type"])
+    print(first["loc"][0])
+```
+```text
+float_type
+close
+```
+
+### Silver transform receives string numerics
+
+If a Bronze extract lands `close` as `String`, cast with `pl.col("close").cast(pl.Float64)` before `pct_change()` or other arithmetic; otherwise the transform boundary is operating on the wrong schema.
+
+*Cast a string price column before computing numeric aggregates.*
+```python
+import polars as pl
+
+bronze_df = pl.DataFrame({"close": ["164.62", "170.56"]})
+casted = bronze_df.with_columns(pl.col("close").cast(pl.Float64))
+
+print(bronze_df.schema["close"])
+print(casted.schema["close"])
+print(f"mean_close={casted['close'].mean():.2f}")
+```
+```text
+String
+Float64
+mean_close=167.59
+```
+
+### Export paths or hashes drift from expectations
+
+If the API reads a different `PARQUET_PATH` than the export stage writes, users see stale marts; if the recomputed `sha256` no longer matches `output_hash`, treat the row as tampered and investigate normalization or post-write mutation.
+
+*Contrast an endpoint path mismatch and a payload hash mismatch.*
+```python
+from pathlib import Path
+import hashlib
+
+export_path = Path("pipeline/gold_daily_summary.parquet")
+api_path = Path("pipeline/gold_symbol_profile.parquet")
+payload = "SAP.DE|2026-01-29|164.62"
+mutated = "SAP.DE|2026-01-29|164.62 "
+
+print(f"path_match={export_path == api_path}")
+print(hashlib.sha256(payload.encode()).hexdigest()[:8])
+print(hashlib.sha256(mutated.encode()).hexdigest()[:8])
+```
+```text
+path_match=False
+b5931d6e
+b2a77fb9
+```

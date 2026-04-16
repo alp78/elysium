@@ -125,7 +125,7 @@ The triage flowchart captures the decision path from symptom to first diagnostic
 
 ## Critical — Data loss or pipeline outage
 
-> [!abstract] When to reach for this section
+> [!abstract]- Summary
 >
 > These five problems are the ones that wake on-call. Each one can break the publication SLA or lose data outright if not fixed within minutes. The diagnostic queries are all read-only and safe to run from a second session even while the primary workload is failing. Every fix procedure assumes you have `sysadmin` or `db_owner` on the affected database; if you do not, stop and escalate before running `KILL`, `BACKUP LOG`, or `DBCC SHRINKFILE`.
 
@@ -1199,7 +1199,7 @@ WITH REPLACE, RECOVERY, STATS = 5;
 
 ## High — Data quality failure or degraded SLA
 
-> [!abstract] Same-day response required
+> [!abstract]- Summary
 >
 > These eight problems degrade data quality or performance severely enough to miss the publication SLA, corrupt silver or gold layers, or spike API latency — but unlike the Critical class they do not destroy data. The fix window is usually the same business day. Most of them have a clear diagnostic signal in the plan cache, Query Store, or a DMV query that can be run while the workload is still degraded; none require exclusive access to the database.
 
@@ -2008,7 +2008,7 @@ ADD CONSTRAINT UQ_esg_scores_isin_date UNIQUE (instrument_isin, score_date);
 
 ## Moderate — Operational pain workable with monitoring
 
-> [!abstract] Current-sprint response
+> [!abstract]- Summary
 >
 > These seven problems degrade correctness or performance enough to cause real operational pain, but they do not halt the pipeline and can usually be worked around in the short term. The fix window is the current sprint rather than same-day. Most have clean diagnostic queries and deterministic fixes; none require exclusive database access.
 
@@ -2489,7 +2489,7 @@ CREATE TABLE #esg_stage (
 
 ## Low — Annoyances and technical debt
 
-> [!abstract] Backlog class
+> [!abstract]- Summary
 >
 > These five problems are technical debt that degrades code quality, maintainability, and future performance but does not cause immediate incidents. The fix window is "tech debt week" or a dedicated cleanup sprint. None require emergency attention but leaving them unfixed compounds over time.
 
@@ -2755,7 +2755,7 @@ See [11-memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/01
 
 ## Operational reference tables
 
-> [!abstract] Command options consolidated in one place
+> [!abstract]- Summary
 >
 > This section pulls together the flag tables for the commands used across all 25 problems — BACKUP / RESTORE WITH options, DBCC CHECKDB options, ALTER INDEX REBUILD options, sqlcmd flags, and mssql-conf settings. Every command that appears in a code cell above is documented here with its full documented option set, not just the flags used in the examples.
 

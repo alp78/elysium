@@ -5,8 +5,8 @@ tags:
   - gcp
   - data-transfer
   - benchmarks
-aliases: [Data Transfer CSharp, GCS Transfer, BigQuery Load]
-description: "C# data transfer reference — GCS upload/download, VM file copy, SQL Server bulk insert, BigQuery load benchmarks with interactive charts. See [22-py-data-transfer](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/22-py-data-transfer) for the Python equivalent."
+aliases: [Data Transfer CSharp, GCS Transfer]
+description: "C# data transfer reference — GCS upload/download, VM file copy, compression, and end-to-end transfer pipeline benchmarks with interactive charts. See [22-py-data-transfer](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/22-py-data-transfer) for the Python equivalent."
 created: 2026-03-27
 updated: 2026-03-27
 status: complete
@@ -14,7 +14,8 @@ status: complete
 
 # Data Transfer — C#
 
-> [!quote]
+> [!quote] Benchmarking Principle
+>
 > "Make it work, make it right, make it fast — in that order. But when moving data at scale, make it parallel."
 >
 > — **Kent Beck**
@@ -27,7 +28,7 @@ status: complete
 >
 > **Upload Files from Local to GCS**
 > - Benchmark harness: `BenchUpload` times each method, upserts results to JSON keyed by `(method, tier)`.
-> - Six methods: simple sequential, resumable chunked (10 MB chunks), parallel composite (`ComposeObject`), buffered stream, gzip-compressed, Parquet-converted, `gcloud storage cp`, raw `HttpClient` JSON API.
+> - Eight methods: simple sequential, resumable chunked (10 MB chunks), parallel composite (`ComposeObject`), buffered stream, gzip-compressed, Parquet-converted, `gcloud storage cp`, raw `HttpClient` JSON API.
 > - Results: all methods plateau at ~6.6–6.9 MB/s on a home connection. Gzip cuts total wall-clock time by 60% on large files. Parquet useful when consumers need columnar format.
 >
 > **Local → VM Transfer Benchmarks**
@@ -63,6 +64,7 @@ status: complete
 > - Object keys are prefixes, not directory paths — no true subdirectory concept exists in GCS.
 >
 > > [!tip] Treating GCS like a filesystem
+> >
 > > Paths such as `data/2024/file.csv` are a single key string, not a nested folder. Listing with a prefix filter simulates directory listing but returns all matching objects regardless of depth.
 >
 >  ---
@@ -72,6 +74,7 @@ status: complete
 > - The object name is the complete key — there is no relative path resolution inside GCS.
 >
 > > [!tip] Object name vs local path
+> >
 > > `storageClient.UploadObject(bucket, "reports/2024/data.csv", ...)` stores a single object whose name is the string `reports/2024/data.csv`, not a file inside a `reports/2024/` folder.
 >
 >  ---
@@ -81,6 +84,7 @@ status: complete
 > - Construction involves TLS handshake and credential exchange — instantiate once per pipeline run, not once per file.
 >
 > > [!warning] Per-call instantiation is expensive
+> >
 > > Creating a new `StorageClient` for each upload call adds measurable latency (credential fetch, TCP/TLS setup). Reuse one instance via dependency injection or a static field.
 >
 >  ---
@@ -90,6 +94,7 @@ status: complete
 > - `ChunkSize` determines resumable-upload chunk boundaries and HTTP round-trip count — omitting it defaults to 256 KB, producing ~4 000 requests for a 1 GB file.
 >
 > > [!tip] Recommended chunk size
+> >
 > > Set `ChunkSize = 8 * 1024 * 1024` (8 MB) or larger for any file above ~50 MB. This reduces round-trips by 32x versus the default 256 KB.
 >
 >  ---
@@ -99,34 +104,8 @@ status: complete
 > - Required for files >5 MB to avoid a full restart on any transient error; `StorageClient` switches to resumable mode automatically above that threshold.
 >
 > > [!warning] Simple upload on large files
+> >
 > > Using a non-resumable (simple) upload for files >100 MB means a single dropped connection forces the entire transfer to restart from byte zero.
->
->  ---
->
-> **`SqlBulkCopy`**
-> - `Microsoft.Data.SqlClient` class that streams a `DataTable` or `IDataReader` directly into SQL Server via TDS Bulk Load, bypassing row-by-row `INSERT` entirely.
-> - The fastest C# path for loading large datasets; throughput is orders of magnitude higher than parameterised `INSERT` in a loop.
->
-> > [!warning] `FireTriggers` negates bulk throughput
-> > `SqlBulkCopyOptions.FireTriggers` executes `INSERT` triggers per row, collapsing bulk-load speed to row-by-row rates and risking `tempdb` log exhaustion at scale.
->
->  ---
->
-> **`BigQueryClient`**
-> - `Google.Cloud.BigQuery.V2.BigQueryClient` wrapper around the BigQuery REST API; used to trigger load jobs and run queries against BigQuery tables.
-> - Load jobs (GCS → BQ, async, free egress) are distinct from streaming inserts (`InsertRows`, HTTP per-row, billed per byte).
->
-> > [!warning] Using `InsertRows` for bulk loads
-> > `BigQueryClient.InsertRows()` is designed for low-latency append (e.g., real-time events). For GB-scale historical loads it costs ~5x more per byte and runs significantly slower than a GCS-staged load job.
->
->  ---
->
-> **Load job**
-> - Asynchronous BigQuery server-side operation that reads Parquet/CSV/JSON from GCS and writes to a table without consuming streaming insert quota.
-> - The correct pattern for bulk historical loads; job completion is polled via `PollUntilCompleted`.
->
-> > [!tip] Stage-then-load pattern
-> > Write the payload to GCS (even transiently), then call `BigQueryClient.CreateLoadJob()` with `WriteDisposition.WriteAppend`. Load jobs run server-side, complete in seconds for GB-scale files, and have no per-byte cost.
 >
 >  ---
 >
@@ -135,16 +114,8 @@ status: complete
 > - Process failures are silently swallowed if only `ExitCode` is checked and `StandardError` is not read.
 >
 > > [!warning] Silent failures from unchecked stderr
+> >
 > > A `gcloud` process may return `ExitCode = 0` while printing partial-failure errors to `stderr`. Always redirect and assert both `ExitCode == 0` and an empty (or parsed) `StandardError`.
->
->  ---
->
-> **`SqlBulkCopyOptions`**
-> - Flags enum controlling `SqlBulkCopy` behaviour: `TableLock`, `FireTriggers`, `CheckConstraints`, `KeepIdentity`, `KeepNulls`.
-> - `TableLock` dramatically improves throughput by locking the destination table for the duration of the load — use it on otherwise-idle load windows.
->
-> > [!tip] Optimal flags for nightly batch loads
-> > Combine `TableLock | KeepNulls` for maximum throughput on staging-table loads. Add `KeepIdentity` only when the source data contains explicit identity values that must be preserved.
 >
 >  ---
 >
@@ -153,6 +124,7 @@ status: complete
 > - Used in the production pipeline to reduce wire bytes before upload; consistently outperforms `GZipStream` at equivalent or better ratios.
 >
 > > [!tip] zstd vs GZip in production pipelines
+> >
 > > At level 3, zstd compresses at 2.5x the speed of `GZipStream.Optimal` while achieving a comparable ratio (2.8x vs 2.9x). For any internal pipeline not requiring cross-tool compatibility, zstd is the default choice.
 >
 >  ---
@@ -162,16 +134,8 @@ status: complete
 > - File-size matches alone do not catch partial bit-flip corruption — a CRC or MD5 comparison per chunk is required.
 >
 > > [!tip] Enable server-side CRC32C via `UploadObjectOptions`
+> >
 > > Set `UploadObjectOptions.Hash` to include a `CRC32C` value computed client-side before upload. GCS validates on ingest and rejects mismatched objects, catching corruption before the object is ever committed.
->
->  ---
->
-> **`Microsoft.Data.SqlClient`**
-> - The actively maintained SQL Server client library replacing the deprecated `System.Data.SqlClient`; required for `SqlBulkCopy`, `SqlConnection`, and `SqlCommand` in modern .NET.
-> - Supports Always Encrypted, Active Directory authentication, and receives active security patches; `System.Data.SqlClient` does not.
->
-> > [!warning] Mixing client library namespaces
-> > Mixing `System.Data.SqlClient` and `Microsoft.Data.SqlClient` types in the same project produces compile-time type conflicts — `SqlConnection` from one namespace is not assignable to the other. Migrate the entire project to `Microsoft.Data.SqlClient`.
 
 ## Setup
 
@@ -179,6 +143,7 @@ Installs NuGet packages, loads environment variables, and defines shared helper 
 
 Suppresses CS1701/CS1702 assembly version warnings in .NET Interactive — NuGet packages targeting .NET 8/9 trigger these on .NET 10, but they are harmless. Run this cell once before any cell that uses NuGet packages.
 
+*C# example - Suppresses CS1701/CS1702 assembly version warnings in .NET Interactive — NuGet packages ta.*
 ```csharp
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
@@ -194,6 +159,7 @@ var newOptions = withWarningLevel.Invoke(scriptOptions, new object[] { 0 });
 optionsField.SetValue(csharpKernel, newOptions);
 ```
 
+*C# example - optionsField.SetValue(csharpKernel, newOptions).*
 ```csharp
 #r "nuget: Google.Cloud.Storage.V1"
 #r "nuget: Google.Apis.Auth"
@@ -235,6 +201,7 @@ using K4os.Compression.LZ4.Streams;
 
 Loads the `.env` file and defines project constants — GCP project ID, bucket name, VM IP, SQL IP, and the service account key path. Also creates the shared `StorageClient`.
 
+*C# example - Loads the .env file and defines project constants — GCP project ID, bucket name, VM IP, SQ.*
 ```csharp
 DotNetEnv.Env.Load();
 
@@ -269,6 +236,7 @@ Console.WriteLine($"  Bucket:  {BUCKET_NAME}");
 
 Utility functions for human-readable byte and duration formatting — shared across all benchmark output in this notebook.
 
+*C# example - Utility functions for human-readable byte and duration formatting — shared across all benc.*
 ```csharp
 string FmtBytes(long b)
 {
@@ -291,6 +259,7 @@ string FmtTime(double ms)
 
 `UploadResult` holds raw and formatted metrics for a single benchmark run. The `method` + `tier` pair is the composite key used for upsert logic — re-running a method replaces its prior result. Fields `wire_bytes`, `ratio`, and `throughput` reflect the payload on the wire (post-compression, if applicable).
 
+*C# example - UploadResult holds raw and formatted metrics for a single benchmark run. The method + tier.*
 ```csharp
 class UploadResult
 {
@@ -311,6 +280,7 @@ class UploadResult
 
 Three test files at increasing sizes (10 MB → 200 MB → 1 GB) expose how each method scales from latency-dominated small transfers to bandwidth-dominated large ones. File paths resolve relative to `DATA_DIR`.
 
+*C# example - Three test files at increasing sizes (10 MB → 200 MB → 1 GB) expose how each method scales.*
 ```csharp
 var uploadFiles = new Dictionary<string, string>
 {
@@ -344,6 +314,7 @@ Each method uploads the same three CSV files (10 MB, 200 MB, 1 GB) to GCS over H
 
 Defines the benchmark runner that times each upload, computes throughput, and upserts results into a JSON file keyed by `(method, tier)`. All upload H4s below call `BenchUpload` with a method-specific upload function.
 
+*C# example - Defines the benchmark runner that times each upload, computes throughput, and upserts resu.*
 ```csharp
 var GCS_PREFIX   = "benchmarks/uploads";
 var RESULTS_FILE = Path.Combine(DATA_DIR, "upload_results_cs.json");
@@ -402,25 +373,31 @@ var uploadResults = LoadResults();
 Console.WriteLine($"  Loaded {uploadResults.Count} existing results from {Path.GetFileName(RESULTS_FILE)}");
 ```
 
-      Loaded 24 existing results from upload_results_cs.json
+```text
+  Loaded 24 existing results from upload_results_cs.json
+```
 
 > [!warning] Parallel composite uploads can leave orphaned chunk objects
+>
 > GCS single-stream uploads are effectively atomic — an object only becomes visible after the final PUT succeeds. However, parallel composite uploads that fail mid-way leave named chunk objects behind (e.g., `file.csv__chunk_0001`). These count against storage quota and are never cleaned up automatically. Always wrap compose operations in a try/finally block that deletes all chunk names on failure.
 
 > [!success] Stage-then-rename for safe atomic publishing
+>
 > Upload to a staging prefix first (e.g., `staging/YYYY-MM-DD/file.csv`), then use `CopyObject` + `DeleteObject` to move it to the production path. `CopyObject` is server-side and near-instantaneous — downstream consumers never observe a partial file at the canonical path.
 
 > [!tip] Resumable uploads auto-retry failed chunks
+>
 > `StorageClient.UploadObject` with `UploadObjectOptions(ChunkSize)` automatically retries each failed chunk with exponential backoff. For large files on unreliable connections, prefer `resumable_chunked` over `simple_upload` — retry granularity is one chunk, not the whole file.
 
 ### GCS upload | transfer methods
 
-Six methods are benchmarked: simple sequential upload, resumable chunked, parallel composite, buffered stream, gzip-compressed, and Parquet-converted. Each method trades off simplicity, fault tolerance, and wire efficiency differently.
+Eight methods are benchmarked: simple sequential upload, resumable chunked, parallel composite, buffered stream, gzip-compressed, Parquet-converted, `gcloud storage cp`, and raw `HttpClient` JSON API. Each method trades off simplicity, fault tolerance, and wire efficiency differently.
 
 #### StorageClient.UploadObject | simple sequential upload
 
 The most straightforward approach. Opens a `FileStream` and uploads via the client library, which automatically switches to a resumable upload for files over 5 MB. No tuning required. The benchmark calls `SimpleUpload` for each tier and prints elapsed time and throughput — proving that the baseline single-stream method achieves ~6 MB/s on this connection.
 
+*C# example - The most straightforward approach. Opens a FileStream and uploads via the client library,.*
 ```csharp
 long? SimpleUpload(string filePath, string destBlobName)
 {
@@ -446,6 +423,7 @@ foreach (var (tier, path) in uploadFiles)
 
 Explicitly configures the resumable upload chunk size to 10 MB. Each chunk is sent in a separate HTTP request, enabling recovery from mid-upload failures. If a chunk fails, only that chunk is retried rather than the whole file. The benchmark shows that explicit chunking performs identically to the simple method on stable connections — the value is fault tolerance, not speed.
 
+*C# example - Explicitly configures the resumable upload chunk size to 10 MB. Each chunk is sent in a se.*
 ```csharp
 const int CHUNK_SIZE = 10 * 1024 * 1024;
 
@@ -474,6 +452,7 @@ foreach (var (tier, path) in uploadFiles)
 
 Splits the file into 32 MB chunks and uploads them in parallel (8 workers) via `Task.WhenAll` with a `SemaphoreSlim`. Once all chunks are in GCS, `ComposeObject` merges them server-side into a single object (batched in groups of 32, the GCS compose limit). The benchmark demonstrates that parallelism provides modest throughput gains (~7 MB/s vs ~6.6 MB/s) — the bottleneck is upstream bandwidth, not concurrency.
 
+*C# example - Splits the file into 32 MB chunks and uploads them in parallel (8 workers) via Task.WhenAl.*
 ```csharp
 const int PARALLEL_CHUNK = 32 * 1024 * 1024;
 const int MAX_WORKERS = 8;
@@ -581,6 +560,7 @@ foreach (var (tier, path) in uploadFiles)
 
 Wraps the `FileStream` in a `BufferedStream` with a 32 MB buffer. Reduces the number of I/O syscalls on the read side, useful when data comes from a pipeline or network socket. The benchmark shows no throughput difference vs simple upload — confirming that the client library already buffers internally, so the extra `BufferedStream` is redundant for file-backed streams.
 
+*C# example - Wraps the FileStream in a BufferedStream with a 32 MB buffer. Reduces the number of I/O sy.*
 ```csharp
 long? StreamedUpload(string filePath, string destBlobName)
 {
@@ -607,6 +587,7 @@ foreach (var (tier, path) in uploadFiles)
 
 Compresses the CSV to gzip locally via `GZipStream`, then uploads the smaller payload. Trades CPU time for reduced network transfer. The blob's `ContentEncoding` is set to `gzip` so GCS transparently decompresses on download. The benchmark times compression and upload separately — the output shows that the 3x compression ratio cuts wire time significantly, making this the fastest method for total wall-clock time on large files despite the CPU overhead.
 
+*C# example - Compresses the CSV to gzip locally via GZipStream, then uploads the smaller payload. Trade.*
 ```csharp
 long? GzipUpload(string filePath, string destBlobName)
 {
@@ -663,6 +644,7 @@ foreach (var (tier, path) in uploadFiles)
 
 Converts CSV to Parquet (columnar, Snappy-compressed) via `Parquet.Net` before uploading. The benchmark times conversion and upload separately — the output shows that CSV-to-Parquet conversion is CPU-heavy (parsing every cell, type-inferring columns, columnar encoding) but the resulting file is 2–2.5x smaller, yielding a shorter upload phase. Useful when downstream consumers (BigQuery, Spark) prefer Parquet anyway, making the conversion cost amortized across all reads.
 
+*C# example - Converts CSV to Parquet (columnar, Snappy-compressed) via Parquet.Net before uploading. Th.*
 ```csharp
 long? ParquetUpload(string filePath, string destBlobName)
 {
@@ -749,6 +731,7 @@ foreach (var (tier, path) in uploadFiles)
 
 The `gcloud storage cp` command replaces `gsutil` and uses the same Python client library under the hood. It automatically enables parallel uploads for large files. The benchmark shells out to `gcloud.cmd` via `Process.Start` and measures the total wall-clock time — the overhead of process spawning is visible in the small-tier results (~5.6s vs ~1.8s for the client library), but large files converge to similar throughput.
 
+*C# example - The gcloud storage cp command replaces gsutil and uses the same Python client library unde.*
 ```csharp
 var GCLOUD = @"C:\Users\aperi\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd";
 
@@ -791,6 +774,7 @@ foreach (var (tier, path) in uploadFiles)
 
 Bypasses the client library entirely and drives the GCS JSON API directly via `HttpClient` with a `GoogleCredential` bearer token. Initiates a resumable upload session with a POST, then sends the file in 8 MB chunks with explicit `Content-Range` headers. This demonstrates the underlying protocol that all other methods build on — the benchmark shows identical throughput to the client library, confirming that `StorageClient` adds negligible overhead.
 
+*C# example - Bypasses the client library entirely and drives the GCS JSON API directly via HttpClient w.*
 ```csharp
 const int RAW_CHUNK = 8 * 1024 * 1024;
 
@@ -862,6 +846,7 @@ Aggregates all benchmark results grouped by file size tier to compare methods si
 
 Method order reflects insertion order — sort by throughput column to identify the fastest approach for your target file size.
 
+*C# example - Method order reflects insertion order — sort by throughput column to identify the fastest.*
 ```csharp
 var tiers = new[] { "small", "medium", "large" };
 foreach (var tier in tiers)
@@ -913,6 +898,7 @@ foreach (var tier in tiers)
 
 Interactive bar chart grouped by upload method, with bars colored by file size tier (small / medium / large). Methods are sorted by mean throughput descending so the fastest method appears first.
 
+*C# example - Interactive bar chart grouped by upload method, with bars colored by file size tier (small.*
 ```csharp
 var deduped = uploadResults
     .GroupBy(r => (r.method, r.tier))
@@ -957,6 +943,7 @@ Plotly.NET.CSharp.Chart.Combine(tierCharts)
 
 Deletes all objects under `benchmarks/uploads/` to avoid ongoing storage charges. Run after capturing results.
 
+*C# example - Deletes all objects under benchmarks/uploads/ to avoid ongoing storage charges. Run after.*
 ```csharp
 var blobs = storageClient.ListObjects(BUCKET_NAME, GCS_PREFIX).ToList();
 Console.WriteLine($"  Deleting {blobs.Count} benchmark blobs...");
@@ -980,6 +967,7 @@ Defines VM connection constants, factory methods for `SshClient` and `SftpClient
 
 Sets up the VM username, SSH key path, and remote data directory. Defines `MakeConnInfo`, `CreateSshClient`, and `CreateSftpClient` factory helpers used by all transfer methods. The test connection prints VM memory, CPU count, and Python version to confirm connectivity.
 
+*C# example - Sets up the VM username, SSH key path, and remote data directory. Defines MakeConnInfo, Cr.*
 ```csharp
 var VM_USER     = "alexper_recovery_gmail_com";
 var VM_SSH_KEY  = @"C:\Users\aperi\.ssh\google_compute_engine";
@@ -1027,6 +1015,7 @@ Python 3.11.2
 
 Reuses the `UploadResult` shape from the GCS benchmarks. The helper times each copy, computes throughput, and upserts results into `vm_transfer_results_cs.json` keyed by `(method, tier)` — re-running a method replaces its prior result without duplicating entries.
 
+*C# example - Reuses the UploadResult shape from the GCS benchmarks. The helper times each copy, compute.*
 ```csharp
 var COPY_RESULTS_FILE = Path.Combine(DATA_DIR, "vm_transfer_results_cs.json");
 
@@ -1095,6 +1084,7 @@ Each method copies the same three CSV files (10 MB, 200 MB, 1 GB) from the local
 
 Standard SFTP over SSH. Single-threaded, no compression. Baseline method. The benchmark shows ~4 MB/s on small files (latency-dominated) scaling to ~6.9 MB/s on large files — establishing the SSH transport ceiling for all SFTP-based methods.
 
+*C# example - Standard SFTP over SSH. Single-threaded, no compression. Baseline method. The benchmark sh.*
 ```csharp
 long? SftpCopy(string filePath)
 {
@@ -1125,6 +1115,7 @@ Uses Windows OpenSSH `scp` via subprocess. Same SSH transport as SFTP but a simp
 
 Equivalent shell command: `scp -i ~/.ssh/google_compute_engine -o StrictHostKeyChecking=no -o BatchMode=yes file.csv user@VM_IP:/home/user/bench_data/file.csv`
 
+*C# example - Equivalent shell command: scp -i ~/.ssh/googlecomputeengine -o StrictHostKeyChecking=no -o.*
 ```csharp
 long? ScpCopy(string filePath)
 {
@@ -1169,6 +1160,7 @@ Same as Method 2 but enables SSH-level compression. Trades CPU for reduced bytes
 
 Equivalent shell command: `scp -C -i ~/.ssh/google_compute_engine -o StrictHostKeyChecking=no -o BatchMode=yes file.csv user@VM_IP:/home/user/bench_data/file.csv`. SSH `-C` uses zlib compression — the code pre-computes the gzip-equivalent wire size and measures compression and transfer separately; throughput is calculated from wire bytes over transfer time only. The benchmark shows total wall-clock time of ~1.2min on the large file vs ~2.9min for plain scp, with 3.0x compression ratio — proving that for CSV data, SSH-level compression cuts total transfer time by 60% despite the zlib CPU overhead.
 
+*C# example - Equivalent shell command: scp -C -i ~/.ssh/googlecomputeengine -o StrictHostKeyChecking=no.*
 ```csharp
 var gzipSizes = new Dictionary<string, long>();
 var scpCompSplitTimes = new Dictionary<string, (double compressMs, double transferMs)>();
@@ -1237,6 +1229,7 @@ Uses the gcloud CLI which handles authentication via OS Login automatically, no 
 
 Equivalent shell command: `gcloud compute scp --zone=europe-west1-b --strict-host-key-checking=no file.csv notebook-vm:/home/user/bench_data/file.csv`.
 
+*C# example - Equivalent shell command: gcloud compute scp --zone=europe-west1-b --strict-host-key-check.*
 ```csharp
 long? GcloudScpCopy(string filePath)
 {
@@ -1279,6 +1272,7 @@ foreach (var (tier, path) in uploadFiles)
 
 Same as Method 1 but increases the SFTP `BufferSize` to 64 KB and extends `OperationTimeout`, reducing round-trip overhead for large transfers. The benchmark shows no improvement over the default buffer (~6.0–6.5 MB/s), indicating that buffer size is not the bottleneck on this connection — the limit is upload bandwidth, not SFTP framing overhead.
 
+*C# example - Same as Method 1 but increases the SFTP BufferSize to 64 KB and extends OperationTimeout,.*
 ```csharp
 long? SftpTunedCopy(string filePath)
 {
@@ -1315,6 +1309,7 @@ Aggregates all benchmark results grouped by file size tier to compare transfer m
 
 Prints all five methods grouped by file-size tier, sorted by insertion order. The output shows that all methods converge to ~6.9 MB/s on large files — confirming upload bandwidth as the shared ceiling — while `scp_compressed` wins on total wall-clock time for large files via 3x compression.
 
+*C# example - Prints all five methods grouped by file-size tier, sorted by insertion order. The output s.*
 ```csharp
 foreach (var tier in new[] { "small", "medium", "large" })
 {
@@ -1356,6 +1351,7 @@ foreach (var tier in new[] { "small", "medium", "large" })
 
 Interactive bar chart grouped by transfer method, bars colored by file-size tier. Methods are sorted by mean throughput descending so the fastest appears first.
 
+*C# example - Interactive bar chart grouped by transfer method, bars colored by file-size tier. Methods.*
 ```csharp
 var cpDeduped = copyResults
     .GroupBy(r => (r.method, r.tier))
@@ -1405,6 +1401,7 @@ Copies the CSV test files and service account key to the VM so the remote benchm
 
 Copies the small/medium/large CSV files plus the service account key to the VM via SFTP. The SA key is needed for both Python client library auth (`GOOGLE_APPLICATION_CREDENTIALS`) and for activating the `gcloud` CLI in the next cell.
 
+*C# example - Copies the small/medium/large CSV files plus the service account key to the VM via SFTP. T.*
 ```csharp
 var filesToCopy = uploadFiles.Values.Concat(new[] { SA_KEY_PATH }).ToList();
 
@@ -1441,6 +1438,7 @@ Executes the same upload methods on the VM via SSH. The VM is in `europe-west1-b
 
 Activates the service account on the VM so `gsutil`/`gcloud` CLI tools can authenticate. Without this step, only Python client library methods work (they read `GOOGLE_APPLICATION_CREDENTIALS` directly).
 
+*C# example - Activates the service account on the VM so gsutil/gcloud CLI tools can authenticate. Witho.*
 ```csharp
 using (var ssh = CreateSshClient())
 {
@@ -1462,6 +1460,7 @@ Defines and executes the Python benchmark script remotely. Results stream back a
 
 The same eight upload methods benchmarked locally are replicated in a Python script that runs on the VM. The script is defined as a C# string literal and uploaded via SFTP — this keeps the benchmark self-contained and avoids a separate `.py` file dependency. Results are printed as `__RESULT__<JSON>` lines for unambiguous parsing across import warnings and other stderr output.
 
+*C# example - The same eight upload methods benchmarked locally are replicated in a Python script that r.*
 ```csharp
 var VM_BENCHMARK_SCRIPT = @"
 import os, time, shutil, tempfile, subprocess, json, sys, gzip as gzip_mod
@@ -1621,6 +1620,7 @@ Uploads the Python benchmark script to the VM via SFTP, runs it over an SSH `She
 
 Uploads the Python script via SFTP, then executes it with `CreateCommand` + `BeginExecute` (a non-interactive SSH channel that avoids shell echo). Reads `cmd.OutputStream` line-by-line: lines prefixed with `__RESULT__` are parsed as JSON into `UploadResult` records, printed live, and persisted to `vm_upload_results_cs.json` after each result — making the save crash-safe if the VM times out mid-run.
 
+*C# example - Uploads the Python script via SFTP, then executes it with CreateCommand + BeginExecute (a.*
 ```csharp
 var vmScriptPath = $"{VM_DATA_DIR}/bench_upload.py";
 var VM_UPLOAD_RESULTS_FILE = Path.Combine(DATA_DIR, "vm_upload_results_cs.json");
@@ -1739,6 +1739,7 @@ Pivots results to compare VM vs local throughput per method on the large file, t
 
 Side-by-side pivot of local vs VM throughput for the large file, with speedup factor per method. The output shows a 10–52x speedup from the VM — `parallel_composite` jumps from 6.9 MB/s local to 361 MB/s from the VM, confirming that internal GCP network bandwidth eliminates the local uplink bottleneck.
 
+*C# example - Side-by-side pivot of local vs VM throughput for the large file, with speedup factor per m.*
 ```csharp
 var vmUploadResults = File.Exists(VM_UPLOAD_RESULTS_FILE)
     ? JsonConvert.DeserializeObject<List<UploadResult>>(File.ReadAllText(VM_UPLOAD_RESULTS_FILE))
@@ -1814,6 +1815,7 @@ method (`StorageClient.UploadObject`, ranked #1 by mean throughput): sequential,
 Measures total wall-clock time and aggregate throughput.
 
 > [!tip] Prefer `async/await` over `Thread` for I/O-bound parallelism in .NET
+>
 > Both `Task.Run` (thread-based) and `async/await` + `Task.WhenAll` achieve similar throughput when the bottleneck is upload bandwidth — the benchmark results confirm near-identical timing. However, `async/await` with `SemaphoreSlim.WaitAsync()` does not block thread-pool threads while waiting for I/O, making it significantly more scalable at high concurrency (100+ tasks). Use `SemaphoreSlim` to cap simultaneous uploads in both strategies; GCS connections degrade under too many concurrent streams due to SSL handshake overhead and buffer contention.
 
 ### Parallel transfer | setup
@@ -1824,6 +1826,7 @@ Prepares the test corpus and benchmark helper for the parallel transfer comparis
 
 Creates 8 physical copies of the medium file rather than reusing the same file. Using distinct copies avoids OS read-cache effects that would skew sequential vs. parallel timings.
 
+*C# example - Creates 8 physical copies of the medium file rather than reusing the same file. Using dist.*
 ```csharp
 var PARALLEL_DIR = Path.Combine(DATA_DIR, "parallel_8");
 Directory.CreateDirectory(PARALLEL_DIR);
@@ -1849,6 +1852,7 @@ Console.WriteLine($"  {parallelFiles.Count} files, {FmtBytes(parTotalSize)} tota
 
 Measures wall-clock time for the full 8-file batch (not per-file), so elapsed time reflects true concurrency gain. Persists results to JSON keyed by method name.
 
+*C# example - Measures wall-clock time for the full 8-file batch (not per-file), so elapsed time reflect.*
 ```csharp
 var PARALLEL_RESULTS_FILE = Path.Combine(DATA_DIR, "parallel_transfer_results_cs.json");
 var PARALLEL_GCS_PREFIX = "benchmarks/parallel";
@@ -1925,6 +1929,7 @@ Three strategies are benchmarked against the same 1.51 GB payload (8 × 193 MB f
 
 Baseline — uploads each file one after the other in a single thread. Total time = sum of individual upload times. No concurrency overhead. The benchmark shows 3.9min for 1.51 GB (6.6 MB/s) — matching the per-file rate, confirming no queueing cost is added by the sequential approach.
 
+*C# example - Baseline — uploads each file one after the other in a single thread. Total time = sum of i.*
 ```csharp
 void SequentialUpload(List<string> files)
 {
@@ -1944,6 +1949,7 @@ Console.WriteLine($"  {r.files} files  {r.total_size}  {r.elapsed}  {r.throughpu
 
 Concurrent uploads using 8 threads. A `SemaphoreSlim(4)` limits simultaneous uploads to avoid SSL buffer saturation — remaining threads queue and start as earlier uploads finish. The benchmark shaves ~8% off total time (3.6min vs 3.9min sequential), showing modest gains when upload bandwidth — not thread-pool contention — is the real limit.
 
+*C# example - Concurrent uploads using 8 threads. A SemaphoreSlim(4) limits simultaneous uploads to avoi.*
 ```csharp
 const int THREAD_CONCURRENCY = 4;
 
@@ -1971,6 +1977,7 @@ Console.WriteLine($"  {r2.files} files  {r2.total_size}  {r2.elapsed}  {r2.throu
 
 Async task-based parallelism using `Task.WhenAll`. Same semaphore throttle as the threaded version but uses `async/await` — the idiomatic .NET pattern for I/O-bound concurrency. The benchmark matches threaded performance (3.6min, 7.1 MB/s) while using non-blocking waits, proving that on bandwidth-limited uploads async provides the same throughput at lower thread-pool pressure.
 
+*C# example - Async task-based parallelism using Task.WhenAll. Same semaphore throttle as the threaded v.*
 ```csharp
 const int ASYNC_CONCURRENCY = 4;
 
@@ -2008,6 +2015,7 @@ Prints the summary table comparing all three strategies and cleans up GCS benchm
 
 Compares total wall-clock time and aggregate throughput across sequential, threaded, and async strategies for the same 1.5 GB payload.
 
+*C# example - Compares total wall-clock time and aggregate throughput across sequential, threaded, and a.*
 ```csharp
 Console.WriteLine($"  {"method",-18} {"files",6} {"total",10} {"time",10} {"throughput",14}");
 foreach (var r in parallelResults)
@@ -2025,6 +2033,7 @@ foreach (var r in parallelResults)
 
 Removes all objects under `benchmarks/parallel/` after results are captured.
 
+*C# example - Removes all objects under benchmarks/parallel/ after results are captured.*
 ```csharp
 var parBlobs = storageClient.ListObjects(BUCKET_NAME, PARALLEL_GCS_PREFIX).ToList();
 Console.WriteLine($"  Deleting {parBlobs.Count} parallel benchmark blobs...");
@@ -2041,6 +2050,7 @@ Top 3 methods per category, selected by mean upload throughput across small/medi
 
 Three download methods are benchmarked: direct stream download, buffered stream, and `gcloud storage cp`.
 
+*C# example - Three download methods are benchmarked: direct stream download, buffered stream, and gclou.*
 ```csharp
 var DL_DIR = Path.Combine(DATA_DIR, "downloads");
 Directory.CreateDirectory(DL_DIR);
@@ -2050,6 +2060,7 @@ Directory.CreateDirectory(DL_DIR);
 
 Downloads the entire blob to a local file via `FileStream`. The client library handles resumable downloads automatically for large files. Counterpart to `resumable_chunked` upload (#1 by mean throughput). The benchmark shows ~104 MB/s on the large file — roughly 15x faster than the upload rate, demonstrating that GCS download bandwidth from a CDN edge is not the bottleneck; local disk write speed is.
 
+*C# example - Downloads the entire blob to a local file via FileStream. The client library handles resum.*
 ```csharp
 Console.WriteLine($"  {"tier",-8} {"size",10} {"time",10} {"throughput",14}");
 foreach (var (tier, path) in uploadFiles)
@@ -2078,6 +2089,7 @@ foreach (var (tier, path) in uploadFiles)
 
 Wraps the output `FileStream` in a `BufferedStream` with a 32 MB buffer, reducing I/O syscalls on the write side. Counterpart to `streamed_buffered` upload (#3 by mean throughput). The benchmark shows identical throughput to simple download (~97–105 MB/s), confirming that the client library already buffers HTTP responses internally — the extra `BufferedStream` layer adds no measurable benefit for file-backed writes.
 
+*C# example - Wraps the output FileStream in a BufferedStream with a 32 MB buffer, reducing I/O syscalls.*
 ```csharp
 Console.WriteLine($"  {"tier",-8} {"size",10} {"time",10} {"throughput",14}");
 foreach (var (tier, path) in uploadFiles)
@@ -2109,6 +2121,7 @@ The `gcloud storage cp` command in reverse direction (GCS → local). Automatica
 
 Equivalent shell command: `gcloud storage cp gs://BUCKET/PREFIX/file.csv ./downloads/file.csv`
 
+*C# example - Equivalent shell command: gcloud storage cp gs://BUCKET/PREFIX/file.csv ./downloads/file.c.*
 ```csharp
 Console.WriteLine($"  {"tier",-8} {"size",10} {"time",10} {"throughput",14}");
 foreach (var (tier, path) in uploadFiles)
@@ -2161,6 +2174,7 @@ Uses Windows OpenSSH `scp` in reverse direction (VM → local). Counterpart to `
 
 Equivalent shell command: `scp -i ~/.ssh/google_compute_engine -o StrictHostKeyChecking=no user@VM_IP:/home/user/bench_data/file.csv ./downloads/file.csv`
 
+*C# example - Equivalent shell command: scp -i ~/.ssh/googlecomputeengine -o StrictHostKeyChecking=no us.*
 ```csharp
 Console.WriteLine($"  {"tier",-8} {"size",10} {"time",10} {"throughput",14}");
 foreach (var (tier, path) in uploadFiles)
@@ -2202,6 +2216,7 @@ foreach (var (tier, path) in uploadFiles)
 
 Standard SFTP download over SSH. Single-threaded, no compression. Counterpart to `sftp_upload` upload (#2 by mean throughput). The benchmark times the full SFTP download round-trip — run this cell to confirm whether SFTP or scp delivers higher download throughput on this connection.
 
+*C# example - Standard SFTP download over SSH. Single-threaded, no compression. Counterpart to sftpuploa.*
 ```csharp
 Console.WriteLine($"  {"tier",-8} {"size",10} {"time",10} {"throughput",14}");
 foreach (var (tier, path) in uploadFiles)
@@ -2221,12 +2236,14 @@ foreach (var (tier, path) in uploadFiles)
 ```
 
 > [!info] Output cell missing
+>
 > Run this cell to capture benchmark output, then add a ` ```text ` block here.
 
 #### Download CSV from VM with Renci.SshNet - SftpClient.DownloadFile (tuned buffer) over SFTP/SSH
 
 Same as baseline but with `BufferSize = 64 KB` and extended `OperationTimeout`. Counterpart to `sftp_tuned` upload (#3 by mean throughput). The benchmark measures whether doubling the SFTP buffer size improves download throughput on high-latency GCP connections — compare output against the baseline SFTP cell above.
 
+*C# example - Same as baseline but with BufferSize = 64 KB and extended OperationTimeout. Counterpart to.*
 ```csharp
 Console.WriteLine($"  {"tier",-8} {"size",10} {"time",10} {"throughput",14}");
 foreach (var (tier, path) in uploadFiles)
@@ -2250,6 +2267,7 @@ foreach (var (tier, path) in uploadFiles)
 ```
 
 > [!info] Output cell missing
+>
 > Run this cell to capture benchmark output, then add a ` ```text ` block here.
 
 ## File Compression Benchmarks
@@ -2265,6 +2283,7 @@ Generates the test corpus and benchmark helper that times compress/decompress ro
 
 Generates the multi-file benchmark corpus by splitting the large CSV into 1000 chunks (~1 MB each). This tier tests compression overhead on many small files versus a single large file — a pattern common in partitioned dataset pipelines.
 
+*C# example - Generates the multi-file benchmark corpus by splitting the large CSV into 1000 chunks (~1.*
 ```csharp
 var SMALL_FILES_DIR = Path.Combine(DATA_DIR, "small_files_1000");
 if (Directory.Exists(SMALL_FILES_DIR)) Directory.Delete(SMALL_FILES_DIR, true);
@@ -2299,6 +2318,7 @@ Console.WriteLine($"  Total size: {FmtBytes(totalSize)}  Avg: {FmtBytes(totalSiz
 
 Runs a full compress → decompress round-trip for each method, recording wall-clock time and throughput for both directions. Input can be a single large file or a directory (contents concatenated for a consistent byte count). Results persist to JSON keyed by `(method, tier)`.
 
+*C# example - Runs a full compress → decompress round-trip for each method, recording wall-clock time an.*
 ```csharp
 var COMPRESS_RESULTS_FILE = Path.Combine(DATA_DIR, "compression_results_cs.json");
 
@@ -2410,6 +2430,7 @@ Five algorithms are benchmarked: GZip, Zstandard (zstd), LZ4, Brotli, and ZIP �
 
 Standard gzip compression built into .NET. The most widely supported format — every tool, language, and OS can decompress it. The benchmark shows ~88 MB/s compress and ~613 MB/s decompress on the large file, with a 2.9x ratio — establishing the baseline for all other algorithms to beat on either speed or size.
 
+*C# example - Standard gzip compression built into .NET. The most widely supported format — every tool,.*
 ```csharp
 byte[] ReadInputBytes(string inputPath)
 {
@@ -2461,6 +2482,7 @@ foreach (var (tier, path) in compressFiles)
 
 Modern compression algorithm by Facebook. Near-gzip ratio at LZ4-like speed. Managed .NET port via ZstdSharp — no native binaries needed. The benchmark shows ~225 MB/s compress (2.5x faster than gzip) with a 2.8x ratio — confirming zstd as the production sweet spot between LZ4 speed and gzip ratio.
 
+*C# example - Modern compression algorithm by Facebook. Near-gzip ratio at LZ4-like speed. Managed .NET.*
 ```csharp
 long ZstdCompress(string inputPath, string outputPath)
 {
@@ -2497,6 +2519,7 @@ foreach (var (tier, path) in compressFiles)
 
 Fastest compression algorithm — optimized for speed over ratio. Decompression is extremely fast (multi-GB/s). Used in real-time systems and databases where latency matters more than size. The benchmark shows ~370 MB/s compress and 1.34 GB/s decompress on the large file — but only a 1.6x ratio, showing the explicit tradeoff: maximum throughput at the cost of roughly half the size savings compared to gzip.
 
+*C# example - Fastest compression algorithm — optimized for speed over ratio. Decompression is extremely.*
 ```csharp
 long Lz4Compress(string inputPath, string outputPath)
 {
@@ -2533,6 +2556,7 @@ foreach (var (tier, path) in compressFiles)
 
 Google-developed algorithm optimized for web content. Built into .NET 6+. Better ratio than gzip at similar speed. Used by all modern browsers for HTTP content-encoding. The benchmark shows ~88 MB/s compress — identical to gzip — but achieves a 3.0x ratio, making it the best compression density among the five algorithms at no CPU cost penalty.
 
+*C# example - Google-developed algorithm optimized for web content. Built into .NET 6+. Better ratio tha.*
 ```csharp
 long BrotliCompress(string inputPath, string outputPath)
 {
@@ -2569,6 +2593,7 @@ foreach (var (tier, path) in compressFiles)
 
 Standard ZIP format — compresses each file individually within the archive. Unlike the stream-based methods above, ZIP preserves file boundaries and names. Universal format supported by every OS. The benchmark shows ~83 MB/s compress and ~472 MB/s decompress — slightly slower than gzip on both ends — confirming that per-file entry overhead makes ZIP the slowest option for homogeneous datasets, but its filename-preserving structure justifies it for multi-file archives.
 
+*C# example - Standard ZIP format — compresses each file individually within the archive. Unlike the str.*
 ```csharp
 long ZipCompress(string inputPath, string outputPath)
 {
@@ -2622,6 +2647,7 @@ Aggregates all compression results and provides a mermaid decision flowchart and
 
 Loads all persisted results and prints a table sorted by compress time ascending for both the single large file and the 1000-small-file corpus — revealing how each algorithm scales across file-count tiers.
 
+*C# example - Loads all persisted results and prints a table sorted by compress time ascending for both.*
 ```csharp
 var allComp = LoadCompressResults();
 foreach (var tier in new[] { "large", "1000_small" })
@@ -2673,6 +2699,7 @@ flowchart TD
 
 Scatter plot with compress throughput on the x-axis and compression ratio on the y-axis for the large file — visually separating the speed/ratio tradeoff: LZ4 in the top-left (fast, low ratio), Brotli/GZip in the top-right (slower, high ratio), zstd in the sweet spot between both.
 
+*C# example - Scatter plot with compress throughput on the x-axis and compression ratio on the y-axis fo.*
 ```csharp
 var largComp = allComp.Where(r => r.tier == "large").ToList();
 
@@ -2707,9 +2734,11 @@ checksums per chunk, and merge back to the original file.
 Uses the large upload file (~1.19 GB) as input.
 
 > [!danger] Skipping checksum verification silently corrupts data
+>
 > GCS transfers are reliable but not immune to client-side memory errors, disk I/O faults, or SDK edge cases. A file that decompresses without throwing an error can still contain flipped bits. Omitting per-chunk verification allows corruption to propagate silently into your production dataset.
 
 > [!success] Verify checksums at both ends of the transfer
+>
 > Compute MD5 immediately after splitting (pre-upload manifest) and again after each download — compare against the manifest. This isolates upload corruption from download corruption independently. For higher assurance, replace MD5 with SHA-256, or enable GCS's built-in CRC32C validation via `UploadObjectOptions.Hash`.
 
 ### Pipeline | compress, split, and upload
@@ -2720,6 +2749,7 @@ Compresses the source file with zstd, splits into 8 equal chunks with per-chunk 
 
 Compress the full file before splitting. Zstd level 3 gives ~3x ratio at near-LZ4 speed — the production sweet spot.
 
+*C# example - Compress the full file before splitting. Zstd level 3 gives ~3x ratio at near-LZ4 speed —.*
 ```csharp
 using System.Security.Cryptography;
 
@@ -2764,6 +2794,7 @@ Console.WriteLine($"  Time: {FmtTime(swCompress.Elapsed.TotalMilliseconds)}  Thr
 
 Split the compressed file into 8 equal chunks. Compute MD5 for each chunk — used to verify integrity after download.
 
+*C# example - Split the compressed file into 8 equal chunks. Compute MD5 for each chunk — used to verify.*
 ```csharp
 const int NUM_CHUNKS = 8;
 var CHUNK_DIR = Path.Combine(PIPELINE_DIR, "chunks");
@@ -2811,6 +2842,7 @@ foreach (var (name, md5, size) in chunkManifest)
 
 Two levels of parallelism: outer `Task.WhenAll` dispatches 8 chunks (4 concurrent via semaphore), each chunk uploaded with `StorageClient.UploadObject`. CRC32C integrity check on the server side.
 
+*C# example - Two levels of parallelism: outer Task.WhenAll dispatches 8 chunks (4 concurrent via semaph.*
 ```csharp
 var uploadSem = new SemaphoreSlim(4);
 var chunkFiles = Directory.GetFiles(CHUNK_DIR, "*.zst").OrderBy(f => f).ToArray();
@@ -2857,6 +2889,7 @@ Downloads chunks in parallel, verifies per-chunk checksums against the pre-uploa
 
 Download all 8 chunks back in parallel using `StorageClient.DownloadObject`.
 
+*C# example - Download all 8 chunks back in parallel using StorageClient.DownloadObject.*
 ```csharp
 var DL_CHUNK_DIR = Path.Combine(PIPELINE_DIR, "downloaded_chunks");
 if (Directory.Exists(DL_CHUNK_DIR)) Directory.Delete(DL_CHUNK_DIR, true);
@@ -2901,6 +2934,7 @@ Console.WriteLine($"  Downloaded {NUM_CHUNKS} chunks in {FmtTime(swDownload.Elap
 
 Compare MD5 of each downloaded chunk against the manifest computed at split time. Any mismatch means corruption during transfer.
 
+*C# example - Compare MD5 of each downloaded chunk against the manifest computed at split time. Any mism.*
 ```csharp
 var allOk = true;
 Console.WriteLine($"  {"chunk",-16} {"expected",34} {"actual",34} {"status"}");
@@ -2935,6 +2969,7 @@ Console.WriteLine(allOk ? "  All chunks verified OK" : "  CHECKSUM FAILURE \u201
 
 Concatenate the downloaded chunks back into the compressed file, then decompress with zstd. Verify the final file matches the original via MD5.
 
+*C# example - Concatenate the downloaded chunks back into the compressed file, then decompress with zstd.*
 ```csharp
 var mergedCompressed = Path.Combine(PIPELINE_DIR, "merged.csv.zst");
 var finalOutput = Path.Combine(PIPELINE_DIR, "restored_large_upload.csv");
@@ -2990,6 +3025,7 @@ Breaks total wall-clock time by step and cleans up GCS blobs and local temporary
 
 Breaks total wall-clock time by pipeline step. The upload step dominates on local connections (~6 MB/s outbound); from a same-region VM this collapses to seconds. Compare "TOTAL" against a naive single-file upload to see the overhead cost of the chunk-based approach.
 
+*C# example - Breaks total wall-clock time by pipeline step. The upload step dominates on local connecti.*
 ```csharp
 var compressMs = swCompress.Elapsed.TotalMilliseconds;
 var splitMs = swSplit.Elapsed.TotalMilliseconds;
@@ -3033,6 +3069,7 @@ Console.WriteLine($"  Original: {FmtBytes(origSize)}  Wire: {FmtBytes(compSize)}
 
 Removes all GCS pipeline blobs and the local `pipeline/` directory. Run after validating the end-to-end results.
 
+*C# example - Removes all GCS pipeline blobs and the local pipeline/ directory. Run after validating the.*
 ```csharp
 var pipelineBlobs = storageClient.ListObjects(BUCKET_NAME, PIPELINE_GCS_PREFIX).ToList();
 Console.WriteLine($"  Deleting {pipelineBlobs.Count} pipeline blobs...");
@@ -3060,14 +3097,6 @@ Console.WriteLine("  Cleanup done");
 >
 > Set `ChunkSize` to at least `8 * 1024 * 1024` (8 MB) in `UploadObjectOptions`. For maximum throughput on a VM with ≥4 vCPUs, run multiple concurrent `Task.Run()` uploads — the benchmarks in this note show near-linear scaling up to 8 concurrent workers on a `n2-standard-8` instance.
 
-> [!warning] `SqlBulkCopy` with `FireTriggers` negates the throughput advantage
->
-> `SqlBulkCopyOptions.FireTriggers` causes SQL Server to execute any `INSERT` triggers on the destination table for each row. At 1 M+ rows this collapses bulk-load throughput to row-by-row speeds and can cause `tempdb` log exhaustion.
-
-> [!success] Correct pattern
->
-> Use `SqlBulkCopyOptions.TableLock` for maximum throughput on an otherwise-idle load window. If triggers must fire, re-evaluate whether `SqlBulkCopy` is the right mechanism — a staging table loaded with `TableLock` followed by a merge statement is the standard production pattern.
-
 > [!warning] `Process`-launched shell commands fail silently when only `ExitCode` is checked
 >
 > `Process.Start()` with `gcloud` or `rsync` may return `ExitCode = 0` while still printing errors to `stderr` for partial failures (e.g., a single file in a directory copy that was skipped due to permissions). Checking only `ExitCode` treats these as successes.
@@ -3076,35 +3105,28 @@ Console.WriteLine("  Cleanup done");
 >
 > Always redirect and read both `StandardOutput` and `StandardError` (`RedirectStandardOutput = true`, `RedirectStandardError = true`). Assert `ExitCode == 0` **and** that `stderr` is empty (or parse it for known-harmless warning patterns) before treating the transfer as complete.
 
-> [!warning] BigQuery `InsertRows()` is billed per byte and not designed for bulk loads
->
-> `BigQueryClient.InsertRows()` (streaming insert) sends each batch as an HTTP POST and is billed at $0.01 per 200 MB regardless of table partitioning. For a 1 GB daily load this costs ~5× more than a GCS-staged load job and runs significantly slower due to per-request overhead.
-
-> [!success] Correct pattern
->
-> Write the data to GCS first (even transiently), then call `BigQueryClient.CreateLoadJob()` with a `CreateLoadJobOptions` specifying `WriteDisposition.WriteAppend` or `WriteDisposition.WriteTruncate`. Load jobs run server-side, complete in seconds for GB-scale files, and do not consume streaming insert quota.
-
 ## Recommendations
 
-- Instantiate `StorageClient`, `BigQueryClient`, and `SqlConnection` once per pipeline run and pass them as dependencies — construction is expensive (TLS handshake, credential exchange) and creates noticeable overhead when repeated per-file.
-- Prefer `Microsoft.Data.SqlClient` over the deprecated `System.Data.SqlClient`; the newer package supports Always Encrypted, Active Directory authentication, and receives active security patches.
-- For `SqlBulkCopy` loads exceeding 10 M rows, set `BulkCopyTimeout = 0` (no timeout) and `BatchSize = 50_000`; the default `BatchSize = 0` (all rows in one transaction) risks `tempdb` exhaustion on wide tables.
+- Instantiate `StorageClient` once per pipeline run and pass it as a dependency — construction is expensive (TLS handshake, credential exchange) and adds avoidable per-file overhead.
 - Use `Google.Cloud.Storage.V1.UrlSigner` to generate signed URLs for time-limited cross-account transfers instead of sharing service-account keys — signed URLs expire automatically and do not require the recipient to have GCP credentials.
 - When running on a Compute Engine VM, use Application Default Credentials (ADC) via `GoogleCredential.GetApplicationDefault()` rather than loading a JSON key file from disk — ADC rotates automatically and eliminates the key-management surface.
 - Pin `Google.Cloud.Storage.V1` to `>=4.7.0` to get the `UploadObjectOptions.UploadType` enum that controls resumable vs multipart selection — earlier versions infer this heuristically and can fall back to simple uploads on slow networks.
+- Default to `zstd` level `3` for large internal transfers — the compression benchmarks show it preserving most of Brotli's ratio while remaining close to LZ4-class throughput.
 - For production pipelines, wrap each pipeline stage in a structured log entry (timestamp, stage name, bytes processed, elapsed ms) — the benchmarks in this note demonstrate how to capture these metrics as a `DataTable` for interactive chart rendering.
 - Always run the cleanup cell after a pipeline benchmark to delete GCS prefix objects and the local `pipeline/` directory; abandoned chunks accumulate storage charges and can cause key collisions on the next run.
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `Google.Apis.Auth.OAuth2.TokenResponseException: access_denied` | Service account lacks the required IAM role on the bucket | Grant `roles/storage.objectAdmin` (or narrower `objectCreator`/`objectViewer`) on the target bucket to the SA |
-| Upload throughput plateaus below expected bandwidth | Default 256 KB chunk size causes excessive round-trips | Set `ChunkSize = 8 * 1024 * 1024` in `UploadObjectOptions` and increase concurrent workers |
-| `SqlException: Cannot open server ... Login failed` | Connection string uses wrong server name, port, or authentication mode | Verify the `Server=` token, confirm TCP/IP is enabled on the SQL instance, and check the login mode (`Integrated Security` vs `User ID`/`Password`) |
-| `InvalidOperationException: The given ColumnMappings are invalid` in `SqlBulkCopy` | Column names in the source `DataTable` do not match destination table columns | Add explicit `SqlBulkCopyColumnMapping` entries for each source→destination column pair |
-| BigQuery load job fails with `Schema mismatch` | Parquet column types (e.g., nullable `Int64`) do not map cleanly to the BigQuery schema | Define the BigQuery schema explicitly in `CreateLoadJobOptions.Schema` rather than relying on auto-detect, and cast nullable types before writing Parquet |
-| `Process.Start` for `gcloud` throws `Win32Exception: The system cannot find the file` | `gcloud` is not on the system `PATH` for the user running the .NET process | Add the Cloud SDK `bin` directory to `PATH`, or specify the full path to `gcloud.cmd` in `ProcessStartInfo.FileName` |
-| CRC32C mismatch after chunk download | Network corruption or incomplete download (connection dropped mid-stream) | Re-download the affected chunk; add retry logic with `Polly` (`RetryPolicy` with exponential back-off) around the download call |
-| `ZstdSharp` compression throws `DllNotFoundException` on Linux | Native `libzstd` not present on the target OS image | Install `libzstd-dev` via `apt`, or switch to the `ZstdNet` package which bundles the native library as an embedded resource |
+Check these first when the transfer benchmarks diverge from the numbers in this note:
+
+- `Google.Apis.Auth.OAuth2.TokenResponseException: access_denied`
+  Confirm the service account has bucket access such as `roles/storage.objectAdmin`, or narrower `objectCreator` plus `objectViewer` if you split write and read paths.
+- Upload throughput plateaus far below expected bandwidth
+  Increase `UploadObjectOptions.ChunkSize` to at least `8 * 1024 * 1024`, then re-run the parallel upload cells to separate single-stream latency from uplink saturation.
+- `Process.Start` cannot find `gcloud`
+  Add the Cloud SDK `bin` directory to `PATH`, or point `ProcessStartInfo.FileName` at the explicit `gcloud.cmd` path.
+- Checksum mismatch after chunk download
+  Re-download the affected chunk and compare the recorded MD5 again. If mismatches recur, inspect the local disk path and any intermediate copy step before blaming GCS.
+- `DllNotFoundException` from `ZstdSharp`
+  Install `libzstd` on the target Linux image, or move the compression step back to a Windows host where the package's native dependency is already available.
 

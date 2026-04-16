@@ -4,7 +4,7 @@ tags: [sql-server, security, linux]
 aliases: [SQL Server authentication, login hardening, SQL login hardening, mixed mode, TLS SQL Server, network encryption, force encryption]
 description: "Production guide to SQL Server authentication and connection hardening on Linux and GCP: login inventory, sysadmin exposure, database principal surface, TLS posture, Entra and Active Directory integration, server audit, and perimeter recommendations."
 created: 2026-03-22
-updated: 2026-04-11
+updated: 2026-04-16
 status: complete
 ---
 
@@ -42,136 +42,99 @@ status: complete
 > **Mixed mode**
 > - The SQL Server authentication mode where both SQL logins and integrated logins are allowed.
 > - It matters because `IsIntegratedSecurityOnly = 0` immediately expands the password-management and secret-rotation surface of the instance.
->
-> > [!warning] More compatibility, more attack surface
-> >
-> > Mixed mode is often operationally necessary, especially on Linux, but it also means SQL login hygiene becomes a first-class security problem.
+> - Mixed mode is often operationally necessary on Linux, but it makes SQL login hygiene a first-class security problem.
 >
 > ---
 >
 > **Server principal**
 > - A login-capable or role-like security object defined at the SQL Server instance level.
 > - It matters because `sys.server_principals` is the authoritative inventory for who can authenticate to the instance and what kind of identity each principal represents.
->
-> > [!info] Login inventory starts here
-> >
-> > If a principal can connect at the instance boundary, it will show up here before any database-level permissions are even considered.
+> - If a principal can connect at the instance boundary, it shows up here before any database-level permissions are considered.
 >
 > ---
 >
 > **SQL login**
 > - A SQL Server-managed username and password identity stored and authenticated by the engine itself.
 > - It matters because SQL logins remain common for application connectivity, but they require deliberate secret management and audit coverage.
->
-> > [!warning] Convenience does not equal centralized identity
-> >
-> > SQL logins are portable and easy to provision, but they do not inherit the lifecycle controls, MFA posture, or centralized policy model of directory-backed identities.
+> - SQL logins are portable and easy to provision, but they do not inherit the lifecycle controls, MFA posture, or centralized policy model of directory-backed identities.
 >
 > ---
 >
 > **`sysadmin`**
 > - The fixed server role with effectively unrestricted control over the entire SQL Server instance.
 > - It matters because reviewing `sysadmin` membership is the single highest-leverage audit step in the note: any principal here can bypass almost every lower permission boundary.
->
-> > [!danger] This role collapses most other controls
-> >
-> > A weakly controlled `sysadmin` surface can make careful object-level permission design irrelevant in practice.
+> - A weakly controlled `sysadmin` surface can make careful object-level permission design irrelevant in practice.
 >
 > ---
 >
 > **`securityadmin`**
 > - The fixed server role that can manage many login and permission operations.
 > - It matters because it is often treated as "less dangerous than sysadmin" when in practice it can still become an escalation path.
->
-> > [!warning] Often treated too casually
-> >
-> > A principal that can reset passwords and grant access should be reviewed with nearly the same caution as a full instance administrator.
+> - A principal that can reset passwords and grant access should be reviewed with nearly the same caution as a full instance administrator.
 >
 > ---
 >
 > **`CHECK_POLICY` / `CHECK_EXPIRATION`**
 > - SQL login settings that control whether password policy and expiration rules are enforced.
 > - It matters because the meaning of these flags differs between Windows-backed and Linux-backed SQL Server environments, which directly affects compliance interpretation.
->
-> > [!warning] Linux enforcement is not Windows AD policy
-> >
-> > On Linux, `CHECK_POLICY` is not equivalent to full Active Directory password enforcement. Audits should document that limitation explicitly.
+> - On Linux, `CHECK_POLICY` is not equivalent to full Active Directory password enforcement. Audits should document that limitation explicitly.
 >
 > ---
 >
 > **Microsoft Entra ID**
 > - Microsoft’s cloud identity platform, used for centralized authentication and group-based access control.
 > - It matters because Entra-backed access can materially reduce password sprawl and improve attribution compared with shared SQL login patterns.
->
-> > [!info] Strongest when the platform path exists
-> >
-> > Entra integration is most valuable when the surrounding SQL Server deployment path actually supports it cleanly, such as Arc-connected scenarios.
+> - Entra integration is most valuable when the surrounding SQL Server deployment path actually supports it cleanly, such as Arc-connected scenarios.
 >
 > ---
 >
 > **`adutil`**
 > - The Linux-side utility used to integrate SQL Server with Active Directory-backed identities.
 > - It matters because Linux deployments do not inherit Windows-integrated authentication behavior automatically; identity integration has to be configured deliberately.
->
-> > [!warning] Linux identity integration is never "just there"
-> >
-> > On Linux, directory integration is a designed capability, not a default operating state. The supporting host and domain assumptions have to be met first.
+> - On Linux, directory integration is a designed capability, not a default operating state. The supporting host and domain assumptions have to be met first.
 >
 > ---
 >
 > **TLS / force encryption**
 > - The transport-security layer that protects client-server traffic and lets the server prove its identity through certificate-backed encryption.
 > - It matters because even perfectly permissioned principals are still risky if credentials or query traffic move over a weak or unauthenticated channel.
->
-> > [!warning] Permissions do not compensate for plaintext transport
-> >
-> > A secure role model cannot rescue an insecure wire path. Authentication and transport security are separate boundaries.
+> - A secure role model cannot rescue an insecure wire path. Authentication and transport security are separate boundaries.
 >
 > ---
 >
 > **`mssql-conf`**
 > - The Linux-side configuration utility and file surface used to manage SQL Server engine settings such as network and TLS behavior.
 > - It matters because transport hardening on Linux SQL Server depends on both database configuration and host-level configuration discipline.
->
-> > [!info] Linux-specific operational boundary
-> >
-> > On Linux, instance security is partly a host-configuration problem. `mssql-conf` is one of the tools that makes that boundary explicit.
+> - On Linux, instance security is partly a host-configuration problem. `mssql-conf` is one of the tools that makes that boundary explicit.
 >
 > ---
 >
 > **SQL Server Audit**
 > - The engine-native auditing feature that records selected security and activity events for later review.
 > - It matters because authentication hardening is incomplete if access and permission changes cannot be reconstructed during an investigation.
->
-> > [!warning] Configuration without telemetry is blind trust
-> >
-> > A hardened surface still needs evidence. Without audit data, incident response becomes guesswork instead of analysis.
+> - A hardened surface still needs evidence. Without audit data, incident response becomes guesswork instead of analysis.
 >
 > ---
 >
 > **`CONTROL SERVER`**
 > - A server-level permission that grants near-instance-wide control without requiring explicit `sysadmin` membership.
 > - It matters because role review alone does not catch every high-risk privilege path; direct grants can create equivalent exposure outside fixed-role membership.
->
-> > [!danger] Hidden admin path
-> >
-> > A principal can be non-sysadmin on paper and still be effectively administrative if permissions like `CONTROL SERVER` are granted directly.
+> - A principal can be non-`sysadmin` on paper and still be effectively administrative if permissions like `CONTROL SERVER` are granted directly.
 >
 > ---
 >
 > **GCP perimeter**
 > - The cloud-layer access boundary formed by the VM service account, firewall rules, and administrative ingress path such as IAP or bastion access.
 > - It matters because SQL Server on a cloud VM is never secured purely inside the engine; network reachability and VM identity decide who gets to try authenticating in the first place.
->
-> > [!warning] Engine hardening starts outside the engine
-> >
-> > If the VM edge is too open, SQL Server is exposed before its own login model even gets a chance to help.
+> - If the VM edge is too open, SQL Server is exposed before its own login model even gets a chance to help.
 >
 > ---
 
 ## Identity boundaries
 
 For SQL Server running on Linux in GCP, think about identity and access in concentric layers rather than as one flat security problem.
+
+*Model the authentication boundary as a four-layer path from GCP ingress to database objects.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -233,18 +196,15 @@ SELECT
     CAST(SERVERPROPERTY('IsIntegratedSecurityOnly') AS int) AS is_windows_auth_only;
 ```
 
-| server_name | edition | product_version | product_level | engine_edition | is_windows_auth_only |
-|---|---|---|---|---:|---:|
-| `9b9b89176e4b` | `Developer Edition (64-bit)` | `16.0.4236.2` | `RTM` | 3 | 0 |
+```text
+server_name  edition                  product_version  product_level  engine_edition  is_windows_auth_only
+-----------  -----------------------  ---------------  -------------  --------------  --------------------
+9b9b89176e4b Developer Edition (64-bit) 16.0.4236.2    RTM            3               0
+```
 
 _This instance accepts SQL logins because `is_windows_auth_only = 0`. On Linux that is the expected outcome for this environment, but it also means SQL login hygiene matters immediately. `engine_edition = 3` identifies the standard on-premises SQL Server engine family rather than Azure SQL Database._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `engine_edition` | `3` | ✅ | Box-product SQL Server engine. | Normal for SQL Server on Linux or Windows Server. |
-| `engine_edition` | `5` | Depends | Azure SQL Database. | Security and authentication behavior differ materially from box SQL Server. |
-| `is_windows_auth_only` | `0` | Depends | Mixed mode or SQL logins allowed. | Required when applications use SQL authentication, but it increases password-management surface. |
-| `is_windows_auth_only` | `1` | ✅ when feasible on Windows | Only integrated authentication is allowed. | Stronger when Windows or Entra-backed auth is available. |
+Treat `engine_edition = 3` as the standard box-product SQL Server engine. Treat `engine_edition = 5` as Azure SQL Database, where the authentication model differs materially. Treat `is_windows_auth_only = 0` as mixed mode and `1` as integrated-only authentication.
 
 ### SQL Server | sys.server_principals | instance login inventory
 
@@ -288,26 +248,18 @@ WHERE sp.type IN ('S', 'U', 'G')
 ORDER BY sp.name;
 ```
 
-| login_name | type_desc | is_disabled | create_date | is_policy_checked | is_expiration_checked | password_last_set |
-|---|---|---:|---|---:|---:|---|
-| `BUILTIN\Administrators` | `WINDOWS_GROUP` | 0 | 2026-01-22 20:23:42.077 | NULL | NULL | NULL |
-| `NT AUTHORITY\NETWORK SERVICE` | `WINDOWS_LOGIN` | 0 | 2026-03-04 22:09:29.657 | NULL | NULL | NULL |
-| `NT AUTHORITY\SYSTEM` | `WINDOWS_LOGIN` | 0 | 2026-03-04 22:09:29.657 | NULL | NULL | NULL |
-| `sa` | `SQL_LOGIN` | 0 | 2003-04-08 09:10:35.460 | 1 | 0 | 2026-03-04 22:09:29.133 |
+```text
+login_name                  type_desc      is_disabled  create_date              is_policy_checked  is_expiration_checked  password_last_set
+--------------------------  -------------  -----------  -----------------------  -----------------  ---------------------  -----------------------
+BUILTIN\Administrators      WINDOWS_GROUP  0            2026-01-22 20:23:42.077 NULL               NULL                   NULL
+NT AUTHORITY\NETWORK SERVICE WINDOWS_LOGIN 0            2026-03-04 22:09:29.657 NULL               NULL                   NULL
+NT AUTHORITY\SYSTEM         WINDOWS_LOGIN  0            2026-03-04 22:09:29.657 NULL               NULL                   NULL
+sa                          SQL_LOGIN      0            2003-04-08 09:10:35.460 1                  0                      2026-03-04 22:09:29.133
+```
 
 _The login surface is still small, which is good, but it is not yet production-tight. The `sa` login is enabled, password policy enforcement is on, password expiration is off, and three Windows principals remain present at the instance level. On Linux-backed deployments, those Windows principals usually exist because of the container or host security model; the important next step is not to confuse their presence with a safe privilege posture._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `type_desc` | `SQL_LOGIN` | Depends | SQL Server-managed username and password. | Common for applications, but requires strict secret management and audit coverage. |
-| `type_desc` | `WINDOWS_LOGIN` | Depends | Mapped Windows principal. | Fine if intentionally used, but verify actual role membership and necessity. |
-| `type_desc` | `WINDOWS_GROUP` | Depends | Group principal can grant broad access indirectly. | Review carefully because group membership often grows outside the DBA workflow. |
-| `is_disabled` | `0` | Depends | The login can authenticate. | Expected for active service principals, risky for dormant administrative accounts. |
-| `is_disabled` | `1` | ✅ for unused privileged logins | The login cannot authenticate. | Good state for retired or emergency-only logins. |
-| `is_policy_checked` | `1` | ✅ for SQL logins | Windows password policy is enforced for the SQL login. | Strong baseline for SQL-authenticated service accounts. |
-| `is_policy_checked` | `0` | ❌ for SQL logins | Password policy is not enforced. | Weakens password-quality controls and should be justified explicitly. |
-| `is_expiration_checked` | `1` | Depends | Password expiration policy is enforced. | Often unsuitable for non-interactive service accounts unless rotation is automated safely. |
-| `is_expiration_checked` | `0` | Depends | Password expiration is not enforced. | Acceptable for service accounts only if an external rotation process exists. |
+Review `SQL_LOGIN`, `WINDOWS_LOGIN`, and `WINDOWS_GROUP` differently because they imply different lifecycle controls. Treat `is_disabled = 1` as the safer state for retired privileged identities. Treat `is_policy_checked = 0` for SQL logins as an explicit finding, and justify `is_expiration_checked = 0` for service accounts with an external rotation process.
 
 ### SQL Server | sysadmin | privileged role exposure
 
@@ -343,20 +295,17 @@ WHERE r.name = 'sysadmin'
 ORDER BY m.name;
 ```
 
-| role_name | member_name | type_desc |
-|---|---|---|
-| `sysadmin` | `BUILTIN\Administrators` | `WINDOWS_GROUP` |
-| `sysadmin` | `NT AUTHORITY\NETWORK SERVICE` | `WINDOWS_LOGIN` |
-| `sysadmin` | `sa` | `SQL_LOGIN` |
+```text
+role_name member_name                 type_desc
+--------  --------------------------  -------------
+sysadmin  BUILTIN\Administrators      WINDOWS_GROUP
+sysadmin  NT AUTHORITY\NETWORK SERVICE WINDOWS_LOGIN
+sysadmin  sa                          SQL_LOGIN
+```
 
 _This is broader than a production-safe posture. `sa` in `sysadmin` is inherent, but `BUILTIN\Administrators` and `NT AUTHORITY\NETWORK SERVICE` both need explicit justification. `NETWORK SERVICE` especially deserves review because it represents a host/service identity rather than an interactive DBA identity._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `member_name` | Named emergency or DBA principal only | ✅ | Privileged membership is narrow and intentional. | Easier to review and far safer operationally. |
-| `member_name` | `sa` | Depends | Default SQL superuser. | Keep password strong, audit it heavily, and disable or rename if the operating model permits. |
-| `member_name` | Broad OS group | ❌ unless strictly governed | Many people or processes may inherit SQL Server superuser rights indirectly. | Review immediately; blast radius is large. |
-| `member_name` | Service identity such as `NETWORK SERVICE` | ❌ unless required and documented | A host/service account can administer the entire instance. | Replace with narrower grants whenever possible. |
+The safest shape is a small set of named DBA or break-glass principals. Treat `sa` as transitional hardening debt, broad OS groups as indirect privilege sprawl, and service identities such as `NETWORK SERVICE` as high-risk unless they are documented and unavoidable.
 
 ### SQL Server | sys.server_role_members | fixed server roles capability reference
 
@@ -402,16 +351,18 @@ WHERE sp.type = 'R'
 ORDER BY sp.name;
 ```
 
-| role_name | type_desc | is_fixed_role | member_count |
-|---|---|---:|---:|
-| `bulkadmin` | `SERVER_ROLE` | 1 | 0 |
-| `dbcreator` | `SERVER_ROLE` | 1 | 0 |
-| `diskadmin` | `SERVER_ROLE` | 1 | 0 |
-| `processadmin` | `SERVER_ROLE` | 1 | 0 |
-| `securityadmin` | `SERVER_ROLE` | 1 | 0 |
-| `serveradmin` | `SERVER_ROLE` | 1 | 0 |
-| `setupadmin` | `SERVER_ROLE` | 1 | 0 |
-| `sysadmin` | `SERVER_ROLE` | 1 | 3 |
+```text
+role_name    type_desc    is_fixed_role  member_count
+-----------  -----------  -------------  ------------
+bulkadmin    SERVER_ROLE  1              0
+dbcreator    SERVER_ROLE  1              0
+diskadmin    SERVER_ROLE  1              0
+processadmin SERVER_ROLE  1              0
+securityadmin SERVER_ROLE 1              0
+serveradmin  SERVER_ROLE  1              0
+setupadmin   SERVER_ROLE  1              0
+sysadmin     SERVER_ROLE  1              3
+```
 
 _Only `sysadmin` has members on this instance. The eight other fixed server roles are empty, which is the desired baseline for a fresh container. The three `sysadmin` members are the ones already audited in the previous H3 (`sa`, `BUILTIN\Administrators`, `NT AUTHORITY\NETWORK SERVICE`). The `##MS_*##` hidden roles added in SQL Server 2022 are filtered out by the `NOT LIKE '##%'` predicate because they are not user-facing role targets._
 
@@ -450,6 +401,10 @@ CREATE LOGIN [svc_etl_app]
     CHECK_POLICY          = ON;
 ```
 
+```text
+Template only. This state-changing example was not executed in the lab snapshot.
+```
+
 #### Create a login from an existing password hash for migration
 
 When moving an application login from one instance to another without forcing an application password reset. It is typically triggered by database restore onto a new instance, DR failover, standing up a reporting replica that needs the same login SID. T-SQL session, requires `ALTER ANY LOGIN`, state-changing. The source hash must come from `sys.sql_logins.password_hash` on the original instance. Recreate the login with identical credentials and SID so the application continues to work and `sys.database_principals.sid` on the restored database still matches (no orphan remediation required).
@@ -462,6 +417,10 @@ CREATE LOGIN [svc_etl_app]
     SID           = 0x241C...,
     DEFAULT_DATABASE = [stoxx],
     CHECK_POLICY  = ON;
+```
+
+```text
+Template only. This state-changing example was not executed in the lab snapshot.
 ```
 
 ### SQL Server | ALTER LOGIN | disable or rename sa
@@ -490,6 +449,10 @@ Immediately after a named sysadmin login has been provisioned, tested, and confi
 ```sql
 ALTER LOGIN sa WITH NAME = [sqladm_disabled];
 ALTER LOGIN [sqladm_disabled] DISABLE;
+```
+
+```text
+Template only. This state-changing example was not executed in the lab snapshot.
 ```
 
 ### SQL Server | sys.server_permissions | granular instance permissions
@@ -548,21 +511,16 @@ WHERE sp.permission_name IN (
 ORDER BY pr.name, sp.permission_name;
 ```
 
-| grantee | grantee_type | state_desc | permission_name | class_desc |
-|---|---|---|---|---|
-| `NT AUTHORITY\SYSTEM` | `WINDOWS_LOGIN` | `GRANT` | `VIEW SERVER STATE` | `SERVER` |
-| `public` | `SERVER_ROLE` | `GRANT` | `VIEW ANY DATABASE` | `SERVER` |
+```text
+grantee             grantee_type   state_desc  permission_name    class_desc
+------------------  -------------  ----------  -----------------  ----------
+NT AUTHORITY\SYSTEM WINDOWS_LOGIN  GRANT       VIEW SERVER STATE  SERVER
+public              SERVER_ROLE    GRANT       VIEW ANY DATABASE  SERVER
+```
 
 _Two grants exist outside the hidden system roles. `NT AUTHORITY\SYSTEM` holds `VIEW SERVER STATE`, which is the built-in pattern for the host process identity and is expected on a Linux container. `public` holds `VIEW ANY DATABASE`, which is the SQL Server 2005+ default that lets every login enumerate the catalog of every database. Neither is surprising; the point of this query is that if a third row appeared (`CONTROL SERVER` to some named login, for example), it would be immediately visible and auditable._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `permission_name` | `CONTROL SERVER` | ❌ unless the grantee is explicitly a sysadmin-equivalent | Complete instance control. | Equivalent to `sysadmin`; revoke unless justified. |
-| `permission_name` | `ALTER ANY LOGIN` | ❌ unless the grantee is a documented auth admin | Login create/drop and password reset authority. | Review immediately. |
-| `permission_name` | `IMPERSONATE ANY LOGIN` | ❌ | Session-level impersonation of any login. | Often an indicator of over-broad ORM or admin tooling. |
-| `permission_name` | `UNSAFE ASSEMBLY` | ❌ | CLR unsafe-assembly load capability. | Arbitrary in-process code execution. Revoke unless a specific CLR assembly requires it. |
-| `permission_name` | `VIEW SERVER STATE` | Depends | Read-only DMV access. | Expected for monitoring and APM identities. |
-| `state_desc` | `GRANT_WITH_GRANT_OPTION` | ❌ | The grantee can re-grant the permission. | Privilege-escalation path; prefer plain `GRANT`. |
+Treat direct `CONTROL SERVER`, `ALTER ANY LOGIN`, `ALTER ANY SERVER ROLE`, `IMPERSONATE ANY LOGIN`, and `UNSAFE ASSEMBLY` grants as immediate review items. Treat `VIEW SERVER STATE` as potentially legitimate for monitoring. Treat `GRANT_WITH_GRANT_OPTION` as a privilege-escalation path unless it is tightly justified.
 
 ### SQL Server | sys.databases and sys.database_principals | database principal surface in stoxx
 
@@ -589,18 +547,15 @@ FROM sys.databases AS db
 WHERE db.name = 'stoxx';
 ```
 
-| database_name | owner_name | is_encrypted |
-|---|---|---:|
-| `stoxx` | `sa` | 0 |
+```text
+database_name owner_name is_encrypted
+------------- ---------- ------------
+stoxx         sa         0
+```
 
 _`stoxx` is still owned by `sa`, and it is not encrypted with TDE. The owner itself is not an authentication method, but database ownership matters because ownership chaining and implicit authority often become harder to reason about when production databases remain owned by a generic superuser login._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `owner_name` | Dedicated admin principal | ✅ | Ownership is explicit and intentional. | Better separation than leaving production databases owned by `sa`. |
-| `owner_name` | `sa` | Depends | Default superuser owns the database. | Common in labs, but many teams standardize on a named admin principal instead. |
-| `is_encrypted` | `0` | Depends | TDE is not enabled. | Acceptable only if the at-rest encryption decision is intentional. |
-| `is_encrypted` | `1` | ✅ when TDE is required | The database is encrypted at rest. | Backup and certificate management become part of the operational surface. |
+Treat a dedicated named owner as the cleaner production boundary. Treat `owner_name = sa` as common lab state but weak separation. Treat `is_encrypted = 0` as an intentional decision point, not a neutral default.
 
 #### Inventory non-system database principals in stoxx
 
@@ -634,27 +589,23 @@ WHERE principal_id > 4
 ORDER BY name;
 ```
 
-| name | type_desc | authentication_type_desc | create_date | modify_date |
-|---|---|---|---|---|
-| `db_accessadmin` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.333 | 2009-04-13 12:59:14.467 |
-| `db_backupoperator` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.350 | 2009-04-13 12:59:14.467 |
-| `db_datareader` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.363 | 2009-04-13 12:59:14.467 |
-| `db_datawriter` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.363 | 2009-04-13 12:59:14.467 |
-| `db_ddladmin` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.350 | 2009-04-13 12:59:14.467 |
-| `db_denydatareader` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.380 | 2009-04-13 12:59:14.467 |
-| `db_denydatawriter` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.380 | 2009-04-13 12:59:14.467 |
-| `db_owner` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.333 | 2009-04-13 12:59:14.467 |
-| `db_securityadmin` | `DATABASE_ROLE` | `NONE` | 2003-04-08 09:10:42.350 | 2009-04-13 12:59:14.467 |
+```text
+name              type_desc      authentication_type_desc create_date              modify_date
+----------------  -------------  ------------------------ -----------------------  -----------------------
+db_accessadmin    DATABASE_ROLE  NONE                     2003-04-08 09:10:42.333 2009-04-13 12:59:14.467
+db_backupoperator DATABASE_ROLE  NONE                     2003-04-08 09:10:42.350 2009-04-13 12:59:14.467
+db_datareader     DATABASE_ROLE  NONE                     2003-04-08 09:10:42.363 2009-04-13 12:59:14.467
+db_datawriter     DATABASE_ROLE  NONE                     2003-04-08 09:10:42.363 2009-04-13 12:59:14.467
+db_ddladmin       DATABASE_ROLE  NONE                     2003-04-08 09:10:42.350 2009-04-13 12:59:14.467
+db_denydatareader DATABASE_ROLE  NONE                     2003-04-08 09:10:42.380 2009-04-13 12:59:14.467
+db_denydatawriter DATABASE_ROLE  NONE                     2003-04-08 09:10:42.380 2009-04-13 12:59:14.467
+db_owner          DATABASE_ROLE  NONE                     2003-04-08 09:10:42.333 2009-04-13 12:59:14.467
+db_securityadmin  DATABASE_ROLE  NONE                     2003-04-08 09:10:42.350 2009-04-13 12:59:14.467
+```
 
 _There are currently no custom users in `stoxx`; the principal surface is only the built-in fixed database roles. That is better than an uncontrolled sprawl of users, but it also means the application-facing permission model has not yet been explicitly expressed inside the database._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `type_desc` | `DATABASE_ROLE` | ✅ in this snapshot | Built-in or user-defined role rather than a direct user principal. | The database currently exposes only role scaffolding, not custom users. |
-| `type_desc` | `SQL_USER`, `WINDOWS_USER`, `WINDOWS_GROUP` | Depends | Direct database principals exist. | Review mappings and memberships for least privilege. |
-| `authentication_type_desc` | `NONE` | ✅ for roles | Roles do not authenticate directly. | Expected for fixed database roles. |
-| `authentication_type_desc` | `INSTANCE` | Depends | The user maps to an instance login. | Standard for most non-contained databases. |
-| `authentication_type_desc` | `DATABASE` | Depends | The user authenticates at the database level. | Review contained-database posture and password controls carefully. |
+In this snapshot every row is a `DATABASE_ROLE` with `authentication_type_desc = NONE`, so the database contains scaffolding rather than actual mapped users. Once `SQL_USER`, `WINDOWS_USER`, or contained `DATABASE` users appear, review the mapping and least-privilege design explicitly.
 
 #### Verify the guest user has no explicit permissions in stoxx
 
@@ -706,21 +657,15 @@ WHERE dp.name = 'guest'
 ORDER BY perm.permission_name;
 ```
 
-| database_user | class_desc | state_desc | permission_name |
-|---|---|---|---|
-| `guest` | `DATABASE` | `GRANT` | `CONNECT` |
+```text
+database_user class_desc state_desc permission_name
+------------- ---------- ---------- ---------------
+guest         DATABASE   GRANT      CONNECT
+```
 
 _In `master`, `guest` holds `GRANT CONNECT`. That is deliberate: every login on the instance needs to be able to enter `master` to read server metadata, and the `guest` fallback is how that happens when the login does not have its own user. The same pattern applies to `msdb` for SQL Agent visibility. In user databases, on the other hand, `guest` must stay without `CONNECT` — otherwise every authenticated login automatically has database access it was never explicitly granted._
 
-| Result shape | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| Row count | `0` in user databases | ✅ | `guest` has no direct grants. | Good baseline. Any login without a mapped user cannot reach the database. |
-| Row count | `≥ 1` in user databases | ❌ | `guest` has been granted explicit permissions. | Revoke unless justified; any authenticated login can use the `guest` fallback. |
-| `state_desc` | `GRANT` | Depends | Granted directly. | Revoke unless documented. |
-| `state_desc` | `GRANT_WITH_GRANT_OPTION` | ❌ | `guest` can re-grant. | Revoke immediately; privilege escalation path. |
-| `state_desc` | `DENY` | Depends | Explicitly denied. | Usually harmless but signals an earlier threat model. |
-| `permission_name` | `CONNECT` in `master`/`msdb` | ✅ | System database fallback. | Expected; do not revoke or logins will fail to enter `master`. |
-| `permission_name` | `CONNECT` in a user database | ❌ | Any authenticated login can enter. | Revoke; use explicit `CREATE USER` mappings instead. |
+Treat zero rows in user databases as the desired baseline. Treat any explicit `CONNECT` grant to `guest` in a user database as a real exposure. Keep the `CONNECT` grant in `master` and `msdb`, because those system databases depend on that fallback.
 
 > [!warning] Disabling guest CONNECT in master or msdb breaks every login
 >
@@ -774,21 +719,31 @@ ORDER BY dp.name;
 
 _No orphans exist in `stoxx`, which matches the fact that no custom users have been created in the database yet. Once application users are added, this query becomes a routine post-restore check. The `LEFT JOIN` against `sys.server_principals` is the mechanism — any user whose SID cannot be matched on the right side of the join shows up with `sp.sid IS NULL`, which the `CASE` expression relabels as `ORPHANED`._
 
-> [!info]- Remediation patterns for orphaned users
->
-> Two remediation paths exist, depending on whether the matching login still exists on the instance:
->
-> - **Login already exists** — rewrite the user's SID to match the existing login:
->   ```sql
->   ALTER USER [app_user] WITH LOGIN = [app_login];
->   ```
-> - **Login does not exist** — recreate the login using the SID stored in the user row so the mapping is restored without touching the database:
->   ```sql
->   CREATE LOGIN [app_login]
->       WITH PASSWORD = N'<strong>',
->       SID = 0x<binary_sid_from_sys.database_principals>;
->   ```
->   The SID binary value can be retrieved with `SELECT sid FROM sys.database_principals WHERE name = 'app_user'`.
+Two remediation paths exist, depending on whether the matching login still exists on the instance:
+
+*Remap an orphaned database user to an existing login.*
+
+```sql
+ALTER USER [app_user] WITH LOGIN = [app_login];
+```
+
+```text
+Template only. This state-changing example was not executed in the lab snapshot.
+```
+
+*Recreate the missing login with the original SID so the database user maps cleanly again.*
+
+```sql
+CREATE LOGIN [app_login]
+    WITH PASSWORD = N'<strong>',
+    SID = 0x<binary_sid_from_sys.database_principals>;
+```
+
+```text
+Template only. This state-changing example was not executed in the lab snapshot.
+```
+
+Retrieve the source SID with `SELECT sid FROM sys.database_principals WHERE name = 'app_user'` before recreating the login.
 
 ## External identity integration
 
@@ -820,6 +775,10 @@ After the instance has been Azure Arc-onboarded and the Entra admin has been con
 CREATE LOGIN [alice@contoso.onmicrosoft.com] FROM EXTERNAL PROVIDER;
 CREATE LOGIN [DataPlatformOps]               FROM EXTERNAL PROVIDER;  -- Entra group
 CREATE LOGIN [etl-prod-mi]                   FROM EXTERNAL PROVIDER;  -- managed identity
+```
+
+```text
+Template only. This state-changing example was not executed in the lab snapshot.
 ```
 
 > [!info] Source: Microsoft Learn — Microsoft Entra authentication for SQL Server
@@ -888,6 +847,10 @@ sudo systemctl restart mssql-server
 sudo /opt/mssql/bin/mssql-conf validate-ad-config
 ```
 
+```text
+Template only. This staged provisioning sequence was not executed in the lab snapshot.
+```
+
 #### Create an AD-backed SQL Server login
 
 After `mssql-conf validate-ad-config` reports success and the host can resolve AD users via `id <DOMAIN\user>`. It is typically triggered by first AD login provisioning, onboarding additional AD users or groups. T-SQL session as sysadmin, state-changing. Requires the `FROM WINDOWS` clause; no password is stored in SQL Server. Map an Active Directory user or group to a SQL Server login so the user can authenticate with their AD Kerberos credential from a Windows client.
@@ -897,6 +860,10 @@ After `mssql-conf validate-ad-config` reports success and the host can resolve A
 ```sql
 CREATE LOGIN [CONTOSO\alice]        FROM WINDOWS;
 CREATE LOGIN [CONTOSO\DBAdmins]     FROM WINDOWS;  -- AD group
+```
+
+```text
+Template only. This state-changing example was not executed in the lab snapshot.
 ```
 
 > [!info] Source: Microsoft Learn — Active Directory authentication with adutil
@@ -942,21 +909,15 @@ GROUP BY
 ORDER BY connection_count DESC;
 ```
 
-| encrypt_option | auth_scheme | net_transport | connection_count |
-|---|---|---|---:|
-| `FALSE` | `NTLM` | `TCP` | 3 |
+```text
+encrypt_option auth_scheme net_transport connection_count
+-------------- ----------- ------------- ----------------
+FALSE          NTLM        TCP           3
+```
 
 _Every live user-process session on the instance (excluding the observer) is unencrypted NTLM over TCP. That is the real transport posture on this container: the only traffic right now is SQL Agent background connections over loopback, all of them plaintext. The lack of any `TRUE` rows confirms there is no client currently enforcing TLS, which in turn confirms the server is not enforcing TLS either. This is the baseline state that hardening must change._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `encrypt_option` | `TRUE` | ✅ | The connection negotiated TLS at handshake. | Desired baseline for every remote client. |
-| `encrypt_option` | `FALSE` | ❌ remote / Depends loopback | The connection is in plaintext. | Investigate immediately for remote clients; loopback SQL Agent traffic is typically the only acceptable case. |
-| `auth_scheme` | `SQL` | Depends | SQL-login authentication (username + password over TDS). | Credentials cross the wire; TLS is mandatory for any non-loopback traffic. |
-| `auth_scheme` | `NTLM` | Depends | NTLM handshake. On Linux, seen for SQL Agent loopback and for clients still using NTLM-capable drivers. | TLS still matters; NTLMv1 is deprecated and NTLMv2 without TLS is weak. |
-| `auth_scheme` | `KERBEROS` | ✅ when AD is configured | Kerberos-backed Windows auth via `adutil`/SSSD on Linux. | Stronger than NTLM; use this path once Active Directory is integrated. |
-| `net_transport` | `TCP` | ✅ | Standard remote transport. | Expected for almost every connection on Linux (no named pipes). |
-| `net_transport` | `Shared memory` | Depends | Same-host connection. | Loopback only; cannot cross the network. |
+Treat `encrypt_option = TRUE` as the target for every remote client. Treat `FALSE` as urgent for remote traffic and tolerable only as temporary loopback lab state. Treat `KERBEROS` as the preferred integrated-auth handshake once Active Directory is configured, and treat `TCP` as the expected transport for Linux SQL Server.
 
 #### Inspect per-session connection detail
 
@@ -992,23 +953,17 @@ WHERE c.session_id <> @@SPID
 ORDER BY c.encrypt_option, c.session_id;
 ```
 
-| session_id | login_name | host_name | program_name | encrypt_option | auth_scheme | net_transport | client_net_address |
-|---|---|---|---|---|---|---|---|
-| 74 | `NT AUTHORITY\NETWORK SERVICE` | `8482aae8ad0a` | `SQLAgent - Generic Refresher` | `FALSE` | `NTLM` | `TCP` | `127.0.0.1` |
-| 75 | `NT AUTHORITY\NETWORK SERVICE` | `8482aae8ad0a` | `SQLAgent - Email Logger` | `FALSE` | `NTLM` | `TCP` | `127.0.0.1` |
-| 78 | `NT AUTHORITY\NETWORK SERVICE` | `8482aae8ad0a` | `SQLAgent - Contained AG` | `FALSE` | `NTLM` | `TCP` | `127.0.0.1` |
+```text
+session_id login_name                   host_name    program_name                    encrypt_option auth_scheme net_transport client_net_address
+---------- ---------------------------  -----------  ------------------------------  -------------- ----------- ------------- ------------------
+74         NT AUTHORITY\NETWORK SERVICE 8482aae8ad0a SQLAgent - Generic Refresher   FALSE          NTLM        TCP           127.0.0.1
+75         NT AUTHORITY\NETWORK SERVICE 8482aae8ad0a SQLAgent - Email Logger        FALSE          NTLM        TCP           127.0.0.1
+78         NT AUTHORITY\NETWORK SERVICE 8482aae8ad0a SQLAgent - Contained AG        FALSE          NTLM        TCP           127.0.0.1
+```
 
 _Every live non-observer session is a SQL Agent background worker running as `NT AUTHORITY\NETWORK SERVICE`, connecting over loopback `127.0.0.1`, and using NTLM without TLS. Loopback plaintext traffic is a lower risk than cross-network plaintext, but the larger point is that the entire current observable surface is unencrypted — the server is not enforcing TLS and clients are not requesting it. Once TLS is enforced, these Agent sessions will need valid certificate trust just like any remote client._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `client_net_address` | `127.0.0.1` | Depends | Loopback traffic, same-container or same-host. | Lower interception risk, but must still be encrypted once force-encryption is on. |
-| `client_net_address` | `172.x.x.x` / `192.168.x.x` / private range | Depends | Private network traffic, often from a Docker bridge or a VPC. | Encryption is mandatory; document the expected source ranges. |
-| `client_net_address` | Public IP | ❌ unless a bastion/NAT is documented | Traffic from a public source. | Should never reach SQL Server directly; review firewall and ingress. |
-| `program_name` | `SQLAgent - *` | ✅ | SQL Server Agent internal worker. | Expected on Linux builds that ship Agent. |
-| `program_name` | Known application name | ✅ | Attributable client. | Helps distinguish approved tooling from unknown sessions. |
-| `program_name` | Unexpected tool or empty | ❌ | Unknown session source. | Investigate login, host, and query activity. |
-| `login_name` | `NT AUTHORITY\NETWORK SERVICE` | Depends | SQL Agent loopback identity on Linux. | Expected for internal Agent jobs; should not appear from a remote client. |
+Treat loopback `127.0.0.1` sessions as lower interception risk but still subject to forced-encryption once hardening is complete. Treat private or public remote addresses as requiring TLS immediately. Treat `SQLAgent - *` as expected internal traffic and unexpected program names as an investigation trigger.
 
 ### SQL Server Linux | mssql-conf | network settings reference
 
@@ -1054,24 +1009,23 @@ docker exec stoxx-db /opt/mssql/bin/mssql-conf get network.tlscert
 docker exec stoxx-db /opt/mssql/bin/mssql-conf get network.tlskey
 ```
 
-| setting | value |
-|---|---|
-| `network.forceencryption` | `not set` |
-| `network.tlsprotocols` | `not set` |
-| `network.tlscert` | `not set` |
-| `network.tlskey` | `not set` |
+```text
+network.forceencryption
+not set
+
+network.tlsprotocols
+not set
+
+network.tlscert
+not set
+
+network.tlskey
+not set
+```
 
 _No explicit TLS settings are configured in `mssql.conf`. The server is running on its self-signed default certificate with `forceencryption = 0`, which means any client that asks for plaintext gets it. Incidentally-encrypted sessions (because a client chose `Encrypt=yes`) are not the same as an enforced posture: change a single client config and traffic falls back to plaintext without the server objecting._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `network.forceencryption` | `1` | ✅ | SQL Server requires TLS on every incoming connection. | Strongest production posture for remote clients; clients without TLS cannot connect. |
-| `network.forceencryption` | `0` or not set | ❌ | Encryption is client-negotiated only. | Client misconfiguration or downgrade attacks can produce unencrypted sessions. |
-| `network.tlsprotocols` | `1.2` or `1.2,1.3` | ✅ | The accepted TLS versions are restricted intentionally. | Matches common compliance baselines and is auditable. |
-| `network.tlsprotocols` | `1.0` or `1.1` included | ❌ | Legacy TLS versions accepted. | Revoke for any PCI/SOC2/HIPAA scope; deprecated across the industry. |
-| `network.tlsprotocols` | Not set | Depends | Default engine behavior applies (`1.2,1.1,1.0`). | Implicit default — harder to audit and leaves legacy TLS accepted. |
-| `network.tlscert` / `network.tlskey` | Configured paths to managed cert | ✅ | SQL Server has explicit certificate material, ideally from a managed PKI. | Required for a deliberate server-authenticated TLS posture and rotation. |
-| `network.tlscert` / `network.tlskey` | Not set | ❌ | Server uses its self-signed first-boot certificate. | Works but cannot be trusted by clients without `TrustServerCertificate=yes`, which defeats identity verification. |
+Treat `network.forceencryption = 1` plus explicit `network.tlscert` and `network.tlskey` paths as the auditable production baseline. Treat `network.tlsprotocols = 1.2` or `1.2,1.3` as the normal restricted set. Treat `not set` as drift from an explicit posture, because it falls back to legacy-accepting defaults and self-signed certificate behavior.
 
 ### SQL Server Linux | mssql-conf | force encrypted client traffic
 
@@ -1114,6 +1068,10 @@ sudo /opt/mssql/bin/mssql-conf set network.tlskey /var/opt/mssql/tls/server.key
 sudo /opt/mssql/bin/mssql-conf set network.tlsprotocols 1.2
 sudo /opt/mssql/bin/mssql-conf set network.forceencryption 1
 sudo systemctl restart mssql-server
+```
+
+```text
+Template only. This state-changing maintenance sequence was not executed in the lab snapshot.
 ```
 
 #### Require encryption and cert validation in client connection strings
@@ -1223,6 +1181,10 @@ WITH (
 ALTER SERVER AUDIT [SecAudit] WITH (STATE = ON);
 ```
 
+```text
+Template only. This state-changing example was not executed in the lab snapshot.
+```
+
 ### SQL Server | CREATE SERVER AUDIT SPECIFICATION | cover authentication events
 
 The audit object is just the sink. The audit specification is what actually tells SQL Server which events to capture. Specifications come in two flavors: server-level (`CREATE SERVER AUDIT SPECIFICATION`) for instance-wide events like logins and role changes, and database-level (`CREATE DATABASE AUDIT SPECIFICATION`) for per-database object access. For authentication hardening, the server-level spec is the critical one.
@@ -1258,6 +1220,10 @@ FOR SERVER AUDIT [SecAudit]
     ADD (DATABASE_PRINCIPAL_CHANGE_GROUP),
     ADD (AUDIT_CHANGE_GROUP)
 WITH (STATE = ON);
+```
+
+```text
+Template only. This state-changing example was not executed in the lab snapshot.
 ```
 
 ### SQL Server | sys.fn_get_audit_file | read captured audit events
@@ -1305,6 +1271,10 @@ WHERE action_id IN ('LGF', 'LGS')
 ORDER BY event_time DESC;
 ```
 
+```text
+No lab output is shown here because the baseline snapshot had no configured server audit and therefore no `.sqlaudit` files to query.
+```
+
 > [!info]- Audit file path wildcards
 >
 > `sys.fn_get_audit_file` accepts three patterns for the first argument:
@@ -1315,17 +1285,19 @@ ORDER BY event_time DESC;
 >
 > The second and third arguments (`DEFAULT, DEFAULT`) are starting-file and starting-offset; `DEFAULT` reads from the beginning.
 
-## GCP perimeter recommendations
+## GCP perimeter hardening
 
 The SQL Server layer is only one part of the authentication boundary. On GCP, the VM service account, firewall rules, and administrative access path should be narrow and explicit, because anyone who can reach `tcp/1433` has already bypassed half of the defense-in-depth model.
 
-### GCP | Compute Engine | dedicated VM service account
+### GCP | Compute Engine | service account scope
 
-Do not run a production SQL Server VM on the default Compute Engine service account with broad project-level permissions. Use a dedicated service account and grant only the roles that the VM really needs, such as:
+Do not run a production SQL Server VM on the default Compute Engine service account with broad project-level permissions. Use a dedicated service account and grant only the roles that the VM really needs:
 
 - object access to the backup bucket
 - metric or log publication permissions
 - nothing else unless a workload requires it
+
+Treat the service account identity as part of the authentication surface, because it determines what the VM can read or write after a host compromise.
 
 ### GCP | IAP | administrative ingress
 
@@ -1335,42 +1307,44 @@ Prefer an administrative path that is attributable and narrow:
 - keep SQL Server ports closed to broad source ranges
 - document which admin tools are expected to connect and from where
 
-## Recommendations
+Treat direct exposure of `tcp/1433` from broad source ranges as a perimeter failure even if the SQL login model itself looks disciplined.
 
-**Identity and principals:**
+## Hardening priorities
+
+### Identity and principals
 
 - Prefer Entra ID (SQL Server 2022 on Arc-connected Linux) or Active Directory via `adutil` over SQL logins whenever either is available. Centralized identity lifecycle, MFA, and Conditional Access are materially stronger than password files.
 - Create a named sysadmin login, test it, then rename and disable `sa`. Never disable `sa` without another confirmed sysadmin first.
-- Keep `sysadmin` membership minimal and review it regularly. Treat `securityadmin` with the same caution — it is effectively sysadmin-equivalent because it can reset passwords and grant permissions.
-- Audit `sys.server_permissions` for any direct grant of `CONTROL SERVER`, `ALTER ANY LOGIN`, `IMPERSONATE ANY LOGIN`, or `UNSAFE ASSEMBLY`. Role review alone does not catch these.
-- Replace generic shared SQL logins with dedicated application identities. Use `HASHED` + `SID` pinning when migrating logins across instances to avoid orphan remediation.
+- Keep `sysadmin` membership minimal and review it regularly. Treat `securityadmin` with nearly the same caution because it can reset passwords and grant access.
+- Audit `sys.server_permissions` for direct grants such as `CONTROL SERVER`, `ALTER ANY LOGIN`, `IMPERSONATE ANY LOGIN`, or `UNSAFE ASSEMBLY`. Role review alone does not catch those paths.
+- Replace shared SQL logins with dedicated application identities. Use `HASHED` plus `SID` pinning when migrating logins across instances to avoid orphan remediation.
 
-**Password policy on Linux:**
+### Password policy on Linux
 
-- On SQL Server 2022 and earlier, `CHECK_POLICY` enforces only the built-in minimum; there is no Windows/AD policy integration. Document this limitation explicitly for compliance reviews.
+- On SQL Server 2022 and earlier, `CHECK_POLICY` enforces only the built-in minimum; there is no Windows or AD policy integration. Document this limitation explicitly for compliance reviews.
 - On SQL Server 2022 CU23+ and SQL Server 2025, configure the `[passwordpolicy]` section in `mssql.conf` to match the organizational password policy.
 
-**Database principal surface:**
+### Database principal surface
 
-- Keep `guest` without `CONNECT` in every user database. Revoke explicitly if found. Do **not** touch `guest CONNECT` in `master` or `msdb` — the instance depends on it.
-- Run the orphaned-user detection query after every database restore or login drop. Use `ALTER USER ... WITH LOGIN = ...` for remediation; do not use the deprecated `sp_change_users_login`.
-- Set `contained database authentication` to `0` at the instance level unless explicitly required, because contained databases can grant access without the receiving instance's sysadmin consent.
+- Keep `guest` without `CONNECT` in every user database. Revoke it explicitly if found. Do not change `guest CONNECT` in `master` or `msdb`, because the instance depends on that system-database fallback.
+- Run the orphaned-user detection query after every database restore or login drop. Use `ALTER USER ... WITH LOGIN = ...` for remediation, not the deprecated `sp_change_users_login`.
+- Set `contained database authentication` to `0` at the instance level unless it is explicitly required, because contained databases can grant access without the receiving instance's `sysadmin` consent.
 
-**Transport encryption:**
+### Transport encryption
 
-- Make every `network.*` TLS setting in `mssql.conf` explicit. Treat `not set` as a finding, even if the default is acceptable today.
-- Provision a trusted certificate first, test with `TrustServerCertificate=no` from one client, then enable `network.forceencryption 1` and restart. Do not flip force-encryption without a validated cert path.
-- Restrict `network.tlsprotocols` to `1.2` (SQL 2019) or `1.2,1.3` (SQL 2022). Do not accept `1.0` or `1.1` in any audited scope.
-- Treat a few encrypted live sessions as a snapshot, not as proof that TLS enforcement is hardened. The authoritative view is `mssql-conf get network.forceencryption`, not `sys.dm_exec_connections`.
+- Make every `network.*` TLS setting in `mssql.conf` explicit. Treat `not set` as a finding even when the current default is acceptable.
+- Provision a trusted certificate first, validate one client with `TrustServerCertificate=no`, then enable `network.forceencryption 1` and restart. Do not enable forced encryption without a verified certificate path.
+- Restrict `network.tlsprotocols` to `1.2` on SQL Server 2019 or `1.2,1.3` on SQL Server 2022. Do not accept `1.0` or `1.1` in an audited scope.
+- Treat a few encrypted live sessions as a snapshot rather than proof of enforcement. The authoritative configuration check is `mssql-conf get network.forceencryption`.
 
-**Audit:**
+### Audit
 
 - Create at least one `CREATE SERVER AUDIT` object with a file target under `/var/opt/mssql/audit/` and a rollover cap that matches disk budget.
 - Attach a `CREATE SERVER AUDIT SPECIFICATION` that covers `FAILED_LOGIN_GROUP`, `SUCCESSFUL_LOGIN_GROUP`, `SERVER_ROLE_MEMBER_CHANGE_GROUP`, `SERVER_PRINCIPAL_CHANGE_GROUP`, `DATABASE_PRINCIPAL_CHANGE_GROUP`, and `AUDIT_CHANGE_GROUP`.
 - Use `ON_FAILURE = FAIL_OPERATION` for compliance workloads, `CONTINUE` for best-effort availability. Reserve `SHUTDOWN` for scopes where the audit trail is more important than the engine staying up.
 - Grant `VIEW SERVER SECURITY AUDIT` (SQL 2022+) instead of `CONTROL SERVER` to audit-review identities.
 
-**Perimeter:**
+### Perimeter
 
 - Run the VM under a dedicated GCP service account with backup-bucket and log-publication roles only. Do not use the default Compute Engine service account.
 - Close `tcp/1433` to broad source ranges. Use IAP TCP forwarding or a documented bastion for administrative access, and record the expected admin source IPs.

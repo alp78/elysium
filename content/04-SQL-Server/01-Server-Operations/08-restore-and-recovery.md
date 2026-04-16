@@ -114,7 +114,7 @@ flowchart LR
 
 ## Restore Fundamentals
 
-> [!abstract] Recovery state semantics and the msdb restore audit trail
+> [!abstract]- Summary
 >
 > Most restore mistakes come from using the wrong recovery state on the wrong step. The three options (`NORECOVERY`, `RECOVERY`, `STANDBY`) decide whether SQL Server expects more backup sets to follow. Get this wrong and the restore sequence either cannot be continued or the database comes online half-way through the chain and cannot be rolled forward.
 
@@ -228,15 +228,16 @@ WHERE rh.destination_database_name LIKE 'stoxx_backup%'
 ORDER BY rh.restore_history_id DESC;
 ```
 
-| restore_history_id | restore_date | destination | type | replace | recovery | stop_at | backup_set_id | physical_device_name |
-|---:|---|---|---|---:|---:|---|---:|---|
-| 2008 | 2026-04-11 16:33:29 | stoxx_backup_check | D | 0 | 1 | NULL | 2011 | s3://storage.googleapis.com/stoxx-sql-bucket/stoxx/full/stoxx_full.bak |
-| 2007 | 2026-04-11 16:33:04 | stoxx_backup | L | 0 | 1 | 2026-04-11 16:32:20.000 | 2013 | /var/opt/mssql/backup/stoxx_log_004.trn |
-| 2006 | 2026-04-11 16:33:04 | stoxx_backup | L | 0 | 0 | NULL | 2012 | /var/opt/mssql/backup/stoxx_log_003.trn |
-| 2005 | 2026-04-11 16:33:04 | stoxx_backup | L | 0 | 0 | NULL | 2008 | /var/opt/mssql/backup/stoxx_log_002.trn |
-| 2004 | 2026-04-11 16:33:04 | stoxx_backup | L | 0 | 0 | NULL | 2007 | /var/opt/mssql/backup/stoxx_log_001.trn |
-| 2003 | 2026-04-11 16:33:03 | stoxx_backup | I | 0 | 0 | NULL | 2006 | /var/opt/mssql/backup/stoxx_diff.bak |
-| 2002 | 2026-04-11 16:32:59 | stoxx_backup | D | 0 | 0 | NULL | 2004 | /var/opt/mssql/backup/stoxx_full_chain.bak |
+```text
+restore_history_id | restore_date | destination | type | replace | recovery | stop_at | backup_set_id | physical_device_name
+2008 | 2026-04-11 16:33:29 | stoxx_backup_check | D | 0 | 1 | NULL | 2011 | s3://storage.googleapis.com/stoxx-sql-bucket/stoxx/full/stoxx_full.bak
+2007 | 2026-04-11 16:33:04 | stoxx_backup | L | 0 | 1 | 2026-04-11 16:32:20.000 | 2013 | /var/opt/mssql/backup/stoxx_log_004.trn
+2006 | 2026-04-11 16:33:04 | stoxx_backup | L | 0 | 0 | NULL | 2012 | /var/opt/mssql/backup/stoxx_log_003.trn
+2005 | 2026-04-11 16:33:04 | stoxx_backup | L | 0 | 0 | NULL | 2008 | /var/opt/mssql/backup/stoxx_log_002.trn
+2004 | 2026-04-11 16:33:04 | stoxx_backup | L | 0 | 0 | NULL | 2007 | /var/opt/mssql/backup/stoxx_log_001.trn
+2003 | 2026-04-11 16:33:03 | stoxx_backup | I | 0 | 0 | NULL | 2006 | /var/opt/mssql/backup/stoxx_diff.bak
+2002 | 2026-04-11 16:32:59 | stoxx_backup | D | 0 | 0 | NULL | 2004 | /var/opt/mssql/backup/stoxx_full_chain.bak
+```
 
 *Two restore sequences are visible in this output. The `stoxx_backup` sequence (rows 2002–2007) is a complete PITR restore chain: full (2002) → differential (2003) → log001 (2004) → log002 (2005) → log003 (2006) → log004 WITH STOPAT (2007). Only the last row has `recovery = 1` because only the last step used `WITH RECOVERY`; every intermediate step has `recovery = 0` (i.e., `NORECOVERY`). Row 2007 also has `stop_at = 2026-04-11 16:32:20.000`, the PITR target. The `stoxx_backup_check` sequence is a single-step full restore from the GCS URL (row 2008), landing directly with `recovery = 1` because no further backup sets needed to be applied.*
 
@@ -257,7 +258,7 @@ ORDER BY rh.restore_history_id DESC;
 
 ## Side-By-Side Restore
 
-> [!abstract] Restore to a new database name with WITH MOVE
+> [!abstract]- Summary
 >
 > The safest way to validate a backup is to restore it under a new database name and inspect the data before touching any existing database. This section walks through the full side-by-side pattern: the `MOVE` clause, the new-name target, the validation queries, and the audit trail it leaves.
 
@@ -347,15 +348,16 @@ UNION ALL SELECT 'gold.index_performance',   COUNT(*) FROM gold.index_performanc
 UNION ALL SELECT 'dbo.backup_demo_marker',   COUNT(*) FROM dbo.backup_demo_marker;
 ```
 
-| current_db | server_name |
-|---|---|
-| stoxx_backup | 8482aae8ad0a |
-| source_table | row_count |
-|---|---:|
-| silver.eurostoxx50_ohlcv | 67155 |
-| silver.index_dim | 169 |
-| gold.index_performance | 5351 |
-| dbo.backup_demo_marker | 3 |
+```text
+current_db | server_name
+stoxx_backup | 8482aae8ad0a
+
+source_table | row_count
+silver.eurostoxx50_ohlcv | 67155
+silver.index_dim | 169
+gold.index_performance | 5351
+dbo.backup_demo_marker | 3
+```
 
 *The restored `stoxx_backup` database contains 67,155 OHLCV rows, 169 index dimension rows, 5,351 index performance rows, and 3 demo-marker rows. The row counts for the silver and gold tables match the source, confirming the full-chain restore preserved the primary workload data exactly. The 3-row count on the marker table is the PITR target — three markers were committed before the STOPAT timestamp of 16:32:20, and the fourth marker (committed at 16:32:21.219) was correctly excluded. Both facts together prove the restore is both complete and precisely bounded.*
 
@@ -363,7 +365,7 @@ UNION ALL SELECT 'dbo.backup_demo_marker',   COUNT(*) FROM dbo.backup_demo_marke
 
 ## Point-In-Time Recovery
 
-> [!abstract] Replay the backup chain and stop at an exact moment
+> [!abstract]- Summary
 >
 > Point-in-time recovery is a chain-replay procedure, not a single restore command. It exists only when the backup chain and recovery-model design support it. This section walks through the full PITR sequence: the differential after the full, the log chain in order, and the final log applied with `STOPAT` to stop just before the target moment.
 
@@ -461,6 +463,8 @@ RESTORE LOG successfully processed 4 pages in 0.010 seconds (3.125 MB/sec).
 
 #### Verify the PITR target state
 
+Use the restored database to verify the `STOPAT` boundary before treating the chain as complete.
+
 *This query confirms which markers are present in the restored database.*
 
 ```sql
@@ -469,11 +473,12 @@ FROM dbo.backup_demo_marker
 ORDER BY id;
 ```
 
-| id | marker | created_at |
-|---:|---|---|
-| 1 | between_log_001_and_log_002 | 2026-04-11 16:30:24.921 |
-| 2 | after_log_002_before_striped | 2026-04-11 16:30:48.652 |
-| 3 | pitr_target | 2026-04-11 16:32:16.894 |
+```text
+id | marker | created_at
+1 | between_log_001_and_log_002 | 2026-04-11 16:30:24.921
+2 | after_log_002_before_striped | 2026-04-11 16:30:48.652
+3 | pitr_target | 2026-04-11 16:32:16.894
+```
 
 *The output shows markers 1, 2, and 3 — all committed before the STOPAT of 16:32:20 — and no row for marker 4 (`after_pitr_target`, committed at 16:32:21.219). This is the canonical PITR validation: a row known to exist after the target is verifiably absent, and every row known to exist before the target is present.*
 
@@ -492,7 +497,7 @@ ORDER BY id;
 
 ## Restore From Object Storage
 
-> [!abstract] Restore a full backup directly from GCS via the S3 connector
+> [!abstract]- Summary
 >
 > A URL restore is the mirror image of a URL backup: same credential, same URL, same S3 connector. This section demonstrates a complete round-trip by restoring the full backup written to GCS earlier into a second disposable database, `stoxx_backup_check`.
 
@@ -532,6 +537,8 @@ RESTORE DATABASE successfully processed 76354 pages in 7.271 seconds (82.039 MB/
 
 #### Validate the URL-restored database
 
+Use the disposable database to verify the restored row counts and timestamped marker state before dropping the validation copy.
+
 *This query confirms row counts match the source and reports the marker state captured in the URL backup.*
 
 ```sql
@@ -539,10 +546,11 @@ SELECT 'url_restored_row_counts' AS metric, COUNT(*) AS value FROM silver.eurost
 UNION ALL SELECT 'url_restored_markers', COUNT(*) FROM dbo.backup_demo_marker;
 ```
 
-| metric | value |
-|---|---:|
-| url_restored_row_counts | 67155 |
-| url_restored_markers | 2 |
+```text
+metric | value
+url_restored_row_counts | 67155
+url_restored_markers | 2
+```
 
 *The 67,155-row count matches the source `stoxx` database exactly. The 2-row marker count is significant for a different reason: the URL backup was taken at 16:31:07, which was after markers 1 and 2 were committed (16:30:24 and 16:30:48) but before markers 3 and 4 (16:32:16 and 16:32:21). So the restored database correctly reflects the state captured at 16:31:07 — not the state of `stoxx` now, not the state reached by the PITR restore into `stoxx_backup`, but the exact state at the moment the URL backup was written. This confirms the backup-chain timeline and the restore is working on the correct source data.*
 
@@ -552,13 +560,17 @@ UNION ALL SELECT 'url_restored_markers', COUNT(*) FROM dbo.backup_demo_marker;
 DROP DATABASE stoxx_backup_check;
 ```
 
+```text
+No visible output. `DROP DATABASE` completed successfully and removed `stoxx_backup_check` from the instance.
+```
+
 *`stoxx_backup_check` was created for this side-by-side URL restore validation and has no further purpose. Dropping it releases the disk space and removes the row from `sys.databases`. The `stoxx_backup` database (produced by the PITR chain) is retained for further use.*
 
 ---
 
 ## Tail-Log Backup and Disaster Restore
 
-> [!abstract] Capture the last log records and restore to the moment of failure
+> [!abstract]- Summary
 >
 > A tail-log backup is a log backup taken with `WITH NORECOVERY` against a database that is about to be replaced. It captures the final log records — including any transactions committed between the last scheduled log backup and the failure event — and leaves the source database in `RESTORING` state. This is the disaster recovery surface; use it only when the source database is being replaced from backup.
 
@@ -608,6 +620,10 @@ FROM DISK = '/var/opt/mssql/backup/stoxx_tail.trn'
 WITH RECOVERY;
 ```
 
+```text
+No live stdout. This is a template-only example and is not executed against the teaching database.
+```
+
 *The tail-log backup is not executed against live `stoxx` in this note because it would take the production teaching database offline. The template shown is the exact pattern to apply in a real disaster scenario.*
 
 #### Flag reference — BACKUP LOG disaster options
@@ -626,7 +642,7 @@ WITH RECOVERY;
 
 ## Recovery Monitoring
 
-> [!abstract] Observe active recovery and restore operations
+> [!abstract]- Summary
 >
 > Not every recovery event is a manual restore. Crash recovery after a restart also matters operationally, and it should be observable from the two DMVs that expose active work: `sys.dm_exec_requests` for in-flight commands and `sys.dm_db_log_info` for VLF pressure during recovery.
 
@@ -670,9 +686,10 @@ FROM sys.dm_exec_requests
 WHERE command IN ('RESTORE DATABASE','RESTORE LOG','BACKUP DATABASE','BACKUP LOG','DB STARTUP','RECOVERY WRITER');
 ```
 
-| session_id | database_name | command | percent_complete | est_minutes_remaining | wait_type | blocking_session_id |
-|---:|---|---|---:|---:|---|---:|
-| 37 | master | RECOVERY WRITER | 0.0 | 0 | NULL | 0 |
+```text
+session_id | database_name | command | percent_complete | est_minutes_remaining | wait_type | blocking_session_id
+37 | master | RECOVERY WRITER | 0.0 | 0 | NULL | 0
+```
 
 *The only active command at capture time is the background `RECOVERY WRITER` in `master`. This row is always present on a running instance — it is the system task that flushes recovery-related writes, not a user restore operation. If a real restore were in progress, an additional row would appear with `command = 'RESTORE DATABASE'` or `command = 'RESTORE LOG'`, with `percent_complete` climbing toward 100 and a database_name matching the restore target. The absence of such rows is the healthy steady state.*
 
@@ -721,9 +738,10 @@ SELECT
 FROM sys.dm_db_log_info(DB_ID('stoxx_backup'));
 ```
 
-| vlf_total | vlf_active | total_size_mb | active_size_mb |
-|---:|---:|---:|---:|
-| 44 | 1 | 1031.96 | 64.00 |
+```text
+vlf_total | vlf_active | total_size_mb | active_size_mb
+44 | 1 | 1031.96 | 64.00
+```
 
 *The restored `stoxx_backup` database has 44 VLFs in a 1032 MB log file — roughly 23 MB per VLF on average. That is on the high side of healthy (the target is around 64 MB per VLF for this log size), but well below the "hundreds of small VLFs" pathology that slows recovery. Only 1 VLF is currently active, holding 64 MB of live log — the rest are available for reuse. This is a healthy post-restore baseline.*
 

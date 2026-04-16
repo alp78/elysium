@@ -11,14 +11,15 @@ status: complete
 
 # Foundations and I/O - C#
 
-> [!quote]
+> [!quote]- Linus Torvalds on Data Structures
+>
 > "Bad programmers worry about the code. Good programmers worry about data structures and their relationships."
 >
 > — **Linus Torvalds**, Git mailing list post (2006)
 
 > [!abstract]- Summary
 >
-> Establishes the C# dataframe foundation across Polars.NET and Microsoft.Data.Analysis, using the same EuroStoxx data to compare how the two libraries model series, frames, typing, nulls, and file I/O. The note exists to make the engine choice explicit early: Polars.NET is the Arrow-backed analytical core, while MDA is the managed .NET option that fits ML.NET and conventional application boundaries more naturally.
+> Establishes the C# dataframe foundation across Polars.NET and Microsoft.Data.Analysis, using the same EuroStoxx data to compare how the two libraries model series, frames, typing, nulls, and file I/O. The comparative framing stays explicit, but most executable notebook evidence focuses on Microsoft.Data.Analysis while selected Polars.NET sections show the engine-model differences that matter for design decisions.
 >
 > **Setup & Imports**
 > - Configure the notebook runtime, suppress non-actionable .NET Interactive assembly warnings, load the required NuGet packages, and register HTML formatters so both libraries render cleanly in the notebook
@@ -29,9 +30,9 @@ status: complete
 > - Contrast the underlying mental model directly: Polars.NET series are Arrow-backed and immutable, while MDA columns are mutable managed objects that stay closer to ordinary .NET data structures
 >
 > **DataFrames**
-> - Build `DataFrame` objects from arrays, dictionaries, and records, then inspect parameters, structure, and side-by-side behavior in Polars.NET and Microsoft.Data.Analysis
-> - Cover the I/O boundary through CSV, JSON, and Parquet examples, including native Polars.NET readers, `System.Text.Json` mapping for MDA JSON, and `ParquetSharp` bridge-based Parquet loading for MDA
-> - End with the decision matrix, architecture flow, and senior takeaways that define where each library fits in real C# analytical systems
+> - Build `DataFrame` objects from arrays, dictionaries, and records, then inspect structure, type behavior, and mutable-versus-immutable consequences across the two libraries
+> - Cover the I/O boundary through MDA-native CSV loading, `System.Text.Json` mapping for JSON, `ParquetSharp` bridging for Parquet, and Polars.NET-specific null-handling examples where the API shape matters
+> - End with decision criteria, architecture flow, and operational guidance that define where each library fits in real C# analytical systems
 >
 > **Operations and safety**
 > - Warnings: immutability-model mismatch, typed-column CLR mismatch in MDA, NuGet/native-runtime version drift, and CSV type inference errors
@@ -42,141 +43,99 @@ status: complete
 >
 > **Polars.NET**
 > - A .NET binding over the Rust Polars engine that exposes columnar dataframe operations and expression-based transforms in C#.
-> - It matters because the note treats Polars.NET as the high-performance analytical option and uses it for the Arrow-backed side of every comparison.
->
-> > [!warning] Not LINQ with columns
-> >
-> > Polars.NET is not a drop-in `IEnumerable<T>` abstraction. Its performance and semantics depend on the Polars expression model rather than ordinary row-wise C# iteration.
+> - It matters because the note treats Polars.NET as the high-performance analytical option and uses it for the Arrow-backed side of each comparison.
+> - Watch for `IEnumerable<T>` assumptions: Polars.NET is not a drop-in row-wise LINQ abstraction, and its semantics depend on the expression engine.
 >
 > ---
 >
 > **Microsoft.Data.Analysis (MDA)**
 > - A managed .NET dataframe library built around typed columns and integration with the wider Microsoft data tooling stack.
 > - It matters because the note uses MDA as the .NET-native counterpart to Polars.NET, especially where ML.NET and managed-only deployment matter more than Arrow-native execution.
->
-> > [!info] Managed-first tradeoff
-> >
-> > MDA fits conventional .NET application boundaries more easily than Polars.NET, but it offers less analytical breadth and requires more manual work for some operations.
+> - Managed-first tradeoff: MDA fits conventional application boundaries more easily, but it offers less analytical breadth and more manual plumbing for some tasks.
 >
 > ---
 >
 > **`Series`**
 > - A one-dimensional typed column object used as the basic building block of dataframe operations.
 > - It matters because the note starts at the column level, showing how arithmetic, aggregation, and summary behavior differ before whole-frame behavior is introduced.
->
-> > [!warning] Same name, different mutability
-> >
-> > A Polars.NET `Series` behaves like an immutable Arrow-backed vector, while MDA columns are mutable and propagate in-place changes.
+> - Mutability differs by library: a Polars.NET `Series` behaves like an immutable Arrow-backed vector, while MDA columns are mutable and propagate in-place changes.
 >
 > ---
 >
 > **`DataFrame`**
 > - A tabular structure composed of named typed columns and exposed by both libraries as the primary analytical container.
 > - It matters because the note compares not just syntax, but the engineering consequences of immutable versus mutable frames in C# data workflows.
->
-> > [!warning] Mutation expectations diverge
-> >
-> > If you carry MDA-style in-place expectations into Polars.NET, you will misread the API and accidentally drop returned frames.
+> - Watch for returned values: if you carry MDA-style in-place expectations into Polars.NET, you can drop the new frame returned by a transform.
 >
 > ---
 >
 > **`LazyFrame`**
 > - The deferred-execution query object in Polars that records a plan before materializing results.
-> - It matters because Polars.NET inherits the same analytical model as Python Polars, and understanding that model explains why Polars behaves differently from eager-only .NET libraries.
->
-> > [!info] Plan first, execute later
-> >
-> > Even when a note section is eager, the existence of `LazyFrame` signals that Polars is designed around optimization and query planning, not only immediate mutation.
+> - It matters because Polars.NET inherits the same analytical model as Python Polars, and that model explains why Polars behaves differently from eager-only .NET libraries.
+> - Plan-first implication: even eager examples sit in a broader execution model built around optimization and query planning.
 >
 > ---
 >
 > **Apache Arrow**
 > - A standardized columnar in-memory format designed for analytical workloads and cross-language interoperability.
-> - It matters because Arrow explains both Polars.NET performance characteristics and why zero-copy interop is possible with other Arrow-aware systems.
->
-> > [!warning] MDA is not Arrow-backed
-> >
-> > Microsoft.Data.Analysis stores data in managed .NET memory, so moving data between MDA and Arrow-native tools is not a zero-copy boundary.
+> - It matters because Arrow explains Polars.NET performance characteristics and why zero-copy interop is possible with other Arrow-aware systems.
+> - Boundary note: Microsoft.Data.Analysis stores data in managed .NET memory, so moving between MDA and Arrow-native tools is not a zero-copy boundary.
 >
 > ---
 >
 > **`DataFrameColumn`**
 > - The MDA column abstraction, instantiated through concrete typed variants such as `Int32DataFrameColumn` or `StringDataFrameColumn`.
 > - It matters because the note uses typed columns to show how MDA models tabular data explicitly through CLR types rather than a single expression engine.
->
-> > [!warning] CLR type must match exactly
-> >
-> > MDA is unforgiving about type mismatches. Feeding `long` values into an `Int32DataFrameColumn` is a correctness bug, not a convenience conversion.
+> - Type rule: feeding `long` values into an `Int32DataFrameColumn` is a correctness bug, not a convenience conversion.
 >
 > ---
 >
 > **NuGet**
 > - The .NET package manager used to resolve, install, and version the notebook dependencies required by each dataframe library.
 > - It matters because the note begins with package loading, and Polars.NET in particular depends on compatible managed and native package versions.
->
-> > [!warning] Version drift becomes runtime failure
-> >
-> > A NuGet reference that restores successfully can still fail at execution time if the native runtime package or target RID does not line up with the environment.
+> - Runtime rule: a package can restore successfully and still fail at execution time if the native runtime package or target RID does not line up with the environment.
 >
 > ---
 >
 > **`IDataView`**
 > - The ML.NET tabular data interface implemented by Microsoft.Data.Analysis but not by Polars.NET.
 > - It matters because this interface is the cleanest reason to choose MDA when the dataframe layer feeds directly into ML.NET pipelines.
->
-> > [!info] Boundary-defining feature
-> >
-> > `IDataView` is less about dataframe ergonomics and more about ecosystem fit. It is one of the clearest architectural separators between MDA and Polars.NET.
+> - Boundary-defining feature: `IDataView` is more about ecosystem fit than dataframe ergonomics.
 >
 > ---
 >
 > **CSV**
 > - A plain-text row-oriented exchange format that is easy to produce but weak at preserving types and schema fidelity.
 > - It matters because both libraries can ingest CSV, and the note uses it as the common entry point for the EuroStoxx datasets and schema-inspection examples.
->
-> > [!warning] Type inference is fragile
-> >
-> > CSV readers guess based on text content. Production code should not treat those guesses as a stable schema contract.
+> - Watch for inference drift: CSV readers guess from text content, so production code should not treat inference as a stable schema contract.
 >
 > ---
 >
 > **JSON**
 > - A flexible hierarchical text format that often represents records as arrays of objects rather than strongly typed tables.
 > - It matters because the note shows that JSON ingestion is straightforward in Polars.NET but requires an explicit `System.Text.Json` deserialization-and-mapping step in MDA.
->
-> > [!info] Table shape is not guaranteed
-> >
-> > JSON must often be normalized into columns first. The format itself does not guarantee consistent fields or homogeneous types across records.
+> - Shape warning: JSON often needs normalization before it behaves like a rectangular table.
 >
 > ---
 >
 > **Parquet**
 > - A columnar binary file format with embedded schema metadata and efficient analytical read patterns.
 > - It matters because the note treats Parquet as the preferred persistence boundary for dataframe workflows in both ecosystems.
->
-> > [!warning] Support is asymmetric
-> >
-> > Polars.NET reads Parquet natively, while MDA generally reaches Parquet through ML.NET or a bridge library rather than a first-class built-in reader.
+> - Support is asymmetric: Polars.NET reads Parquet natively, while MDA generally reaches Parquet through ML.NET or a bridge library rather than a first-class built-in reader.
 >
 > ---
 >
 > **ParquetSharp**
 > - A .NET library that exposes Parquet read/write support and can bridge Parquet data into MDA structures.
 > - It matters because the note uses it as the practical workaround when Microsoft.Data.Analysis needs Parquet access without switching engines.
->
-> > [!info] Bridge, not native engine feature
-> >
-> > When MDA reads Parquet through ParquetSharp, the capability comes from an auxiliary library stack rather than the core dataframe API itself.
+> - Bridge note: when MDA reads Parquet through `ParquetSharp`, the capability comes from an auxiliary library stack rather than the core dataframe API.
 >
 > ---
 >
 > **Immutability**
 > - A data-model property where transformations return new objects instead of mutating the original in place.
-> - It matters because the note’s biggest behavioral difference between Polars.NET and MDA is not syntax, but whether frame and column operations mutate state or produce replacements.
->
-> > [!warning] Mental-model mismatch causes bugs
-> >
-> > Teams that mix immutable and mutable dataframe assumptions in the same codebase often mis-handle assignment, reuse stale references, or accidentally overwrite shared state.
+> - It matters because the note's biggest behavioral difference between Polars.NET and MDA is not syntax, but whether frame and column operations mutate state or produce replacements.
+> - Bug pattern: teams that mix immutable and mutable dataframe assumptions in the same codebase often mis-handle assignment, reuse stale references, or overwrite shared state.
 
 ## Setup & Imports
 
@@ -186,6 +145,7 @@ This section prepares the notebook environment, loads the required packages, and
 
 Suppress CS1701/CS1702 assembly version warnings in .NET Interactive. NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless. Run this cell once before any cells that use NuGet packages.
 
+*Sets the C# notebook warning level to `0` so .NET Interactive suppresses non-actionable assembly binding warnings before package cells run.*
 ```csharp
 using System.Reflection;
 using Microsoft.DotNet.Interactive;
@@ -206,6 +166,7 @@ WarningLevel set to 0 — CS1701/CS1702 warnings suppressed.
 
 ### NuGet Packages and Imports
 
+*Loads the notebook packages, registers HTML formatters for `DataFrame` and `Series`, defines shared schema helpers, and prints the resolved data directory.*
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
 #r "nuget: Polars.NET.Native.win-x64, 0.4.0"
@@ -343,18 +304,17 @@ A **Series** is a single column of typed, homogeneous data — the fundamental b
 
 ### Creating Series
 
-#### Polars.NET | Create Series from arrays
+#### Microsoft.Data.Analysis | Create a single column from an array
 
-`Series.From<T>(name, array)` creates a named, typed Series from any .NET array. Polars automatically maps .NET types to Arrow types (`double` → `f64`, `int` → `i32`, `string` → `str`). The name parameter is required because Polars Series always carry a column name — this becomes the column header when the Series is added to a DataFrame.
+`Microsoft.Data.Analysis` models a single series-like vector as `DataFrameColumn`. A one-column example is the clearest way to show the CLR-backed shape before introducing multiple typed columns.
 
-_Creates a `prices` Series of 5 `f64` values from a `decimal[]`, then creates `ids` (`i32`), `tickers` (`str`), and `dates` (`date`) Series to confirm Polars maps each .NET array type to its Arrow equivalent without explicit type declarations._
-
+*Creates one `prices` column from a `decimal[]`, prints its name, length, and CLR type, and wraps it in a one-column DataFrame.*
 ```csharp
-// Microsoft.Data.Analysis – create a Column from an array
-var prices = new PrimitiveDataFrameColumn<decimal>("prices", new[] { 100.0m, 102.5m, 101.8m, 103.2m, 104.1m });
+// Microsoft.Data.Analysis – create a single column from an array
+var prices = new MDA.PrimitiveDataFrameColumn<decimal>("prices", new[] { 100.0m, 102.5m, 101.8m, 103.2m, 104.1m });
 
 display($"Name: {prices.Name}  |  Length: {prices.Length}  |  DataType: {prices.DataType.Name}");
-new DataFrame(prices)
+new MDA.DataFrame(prices)
 ```
 
 ```text
@@ -363,12 +323,11 @@ Name: prices  |  Length: 5  |  DataType: Decimal
 
 <table><thead><tr><th>prices</th></tr></thead><tbody><tr><td>100.0</td></tr><tr><td>102.5</td></tr><tr><td>101.8</td></tr><tr><td>103.2</td></tr><tr><td>104.1</td></tr></tbody></table>
 
-#### Microsoft.Data.Analysis | Create Columns from arrays
+#### Microsoft.Data.Analysis | Create multiple columns from arrays
 
 `Microsoft.Data.Analysis` models a single series-like vector as `DataFrameColumn`. Numeric data uses `PrimitiveDataFrameColumn<T>`, strings use `StringDataFrameColumn`, and types stay in the CLR type system rather than Arrow logical types.
 
-_Creates a `prices` column of 5 `Decimal` values from a `decimal[]`, then creates `ids` (`Int32`), `tickers` (`String`), and `dates` (`DateTime`) columns to confirm Microsoft.Data.Analysis maps each .NET input array to the matching column type._
-
+*Creates a `prices` column of 5 `Decimal` values from a `decimal[]`, then creates `ids` (`Int32`), `tickers` (`String`), and `dates` (`DateTime`) columns to confirm Microsoft.Data.Analysis maps each .NET input array to the matching column type.*
 ```csharp
 // Microsoft.Data.Analysis – create a Column from an array
 var prices = new MDA.PrimitiveDataFrameColumn<decimal>("prices", new[] { 100.0m, 102.5m, 101.8m, 103.2m, 104.1m });
@@ -397,8 +356,7 @@ ints: Int32  |  strings: String  |  dates: DateTime
 
 Microsoft.Data.Analysis supports missing values through nullable element types inside `PrimitiveDataFrameColumn<T>`. Use `.NullCount` to inspect how many elements are missing.
 
-_Creates a `with_nulls` column from a `decimal?[]` containing 2 nulls at indices 1 and 3, confirming that `.NullCount` returns 2 and the column keeps its numeric `Decimal` type._
-
+*Creates a `with_nulls` column from a `decimal?[]` containing 2 nulls at indices 1 and 3, confirming that `.NullCount` returns 2 and the column keeps its numeric `Decimal` type.*
 ```csharp
 // Microsoft.Data.Analysis – native null support via nullable types
 var s = new MDA.PrimitiveDataFrameColumn<decimal>("with_nulls",
@@ -418,8 +376,7 @@ Length: 5  |  NullCount: 2
 
 Microsoft.Data.Analysis exposes CLR types through `.DataType`. You inspect `Int32`, `Int64`, `Decimal`, `String`, `Boolean`, and `DateTime` rather than Arrow names like `i32` or `f64`.
 
-_Creates columns from several .NET input types and prints each resolved CLR `Type.Name`, confirming the library stays aligned with standard .NET typing._
-
+*Creates columns from several .NET input types and prints each resolved CLR `Type.Name`, confirming the library stays aligned with standard .NET typing.*
 ```csharp
 // Microsoft.Data.Analysis – .NET Type system representation
 var examples = new (string Name, Type Type)[]
@@ -454,8 +411,7 @@ Both libraries support standard arithmetic operators (`+`, `-`, `*`, `/`) on Ser
 
 Polars.NET overloads the standard arithmetic operators. The result is always a new Series — Polars Series are immutable.
 
-_Creates two 3-element `f64` Series `a` ([10, 20, 30]) and `b` ([1, 2, 3]), applies all four arithmetic operators element-wise, and assembles the results into a single DataFrame — confirming each operation returns a new immutable Series._
-
+*Creates two 3-element `f64` Series `a` ([10, 20, 30]) and `b` ([1, 2, 3]), applies all four arithmetic operators element-wise, and assembles the results into a single DataFrame — confirming each operation returns a new immutable Series.*
 ```csharp
 var a = Polars.CSharp.Series.From("a", new[] { 10.0, 20.0, 30.0 });
 var b = Polars.CSharp.Series.From("b", new[] { 1.0, 2.0, 3.0 });
@@ -468,14 +424,13 @@ DataFrame.FromColumns(
 ```
 
 <!-- Polars DataFrame: (3 rows, 4 columns) -->
-<table><thead><tr><th>a + b</th><th>a - b</th><th>a * b</th><th>a / b</th></tr></thead><tbody><tr><td>11</td><td>9</td><td>10</td><td>10</td></tr><tr><td>22</td><td>18</td><td>40</td><td>10</td></tr><tr><td>33</td><td>27</td><td>90</td><td>10</td></tr></tbody></table></div>
+<table><thead><tr><th>a + b</th><th>a - b</th><th>a * b</th><th>a / b</th></tr></thead><tbody><tr><td>11</td><td>9</td><td>10</td><td>10</td></tr><tr><td>22</td><td>18</td><td>40</td><td>10</td></tr><tr><td>33</td><td>27</td><td>90</td><td>10</td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Perform arithmetic on columns
 
 Arithmetic operators work on compatible `DataFrameColumn` instances and return new columns. Names are not derived automatically, so rename the result columns before assembling them into a DataFrame.
 
-_Creates two 3-element numeric columns `a` and `b`, applies `+`, `-`, `*`, and `/` element-wise, assigns readable result names, and combines them into a 4-column DataFrame._
-
+*Creates two 3-element numeric columns `a` and `b`, applies `+`, `-`, `*`, and `/` element-wise, assigns readable result names, and combines them into a 4-column DataFrame.*
 ```csharp
 // Microsoft.Data.Analysis – operator overloads on Columns
 var a = new MDA.PrimitiveDataFrameColumn<decimal>("a", new[] { 10.0m, 20.0m, 30.0m });
@@ -504,8 +459,7 @@ new MDA.DataFrame(add, sub, mul, div)
 
 Polars.NET provides generic aggregation methods (`.Sum<T>()`, `.Mean<T>()`, `.Std()`, `.Min<T>()`, `.Max<T>()`) that return scalar values. The generic type parameter specifies the return type. `.Std()` returns a single-element Series rather than a scalar.
 
-_Creates a `vals` Series of [10, 20, 30, 40, 50] and calls all five aggregation methods, assembling results into a summary DataFrame — showing that `.Std()` requires `.GetValue<double>(0)` to extract its scalar while all other methods return directly._
-
+*Creates a `vals` Series of [10, 20, 30, 40, 50] and calls all five aggregation methods, assembling results into a summary DataFrame — showing that `.Std()` requires `.GetValue<double>(0)` to extract its scalar while all other methods return directly.*
 ```csharp
 var s = Polars.CSharp.Series.From("vals", new[] { 10.0, 20.0, 30.0, 40.0, 50.0 });
 new DataFrame(new Polars.CSharp.Series[]
@@ -519,14 +473,13 @@ new DataFrame(new Polars.CSharp.Series[]
 ```
 
 <!-- Polars DataFrame: (5 rows, 2 columns) -->
-<table><thead><tr><th>stat</th><th>value</th></tr></thead><tbody><tr><td>sum</td><td>150</td></tr><tr><td>mean</td><td>30</td></tr><tr><td>std</td><td>15.8113883</td></tr><tr><td>min</td><td>10</td></tr><tr><td>max</td><td>50</td></tr></tbody></table></div>
+<table><thead><tr><th>stat</th><th>value</th></tr></thead><tbody><tr><td>sum</td><td>150</td></tr><tr><td>mean</td><td>30</td></tr><tr><td>std</td><td>15.8113883</td></tr><tr><td>min</td><td>10</td></tr><tr><td>max</td><td>50</td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Compute aggregations on columns
 
 Microsoft.Data.Analysis provides core aggregation methods such as `.Sum()`, `.Mean()`, `.Min()`, and `.Max()`. Standard deviation is often computed manually from the column values when you need parity with richer analytical libraries.
 
-_Creates a `vals` column of `[10, 20, 30, 40, 50]`, computes sum, mean, sample standard deviation, min, and max, and assembles the results into a summary DataFrame._
-
+*Creates a `vals` column of `[10, 20, 30, 40, 50]`, computes sum, mean, sample standard deviation, min, and max, and assembles the results into a summary DataFrame.*
 ```csharp
 // Microsoft.Data.Analysis — basic aggregations
 var s = new MDA.PrimitiveDataFrameColumn<decimal>("vals", new[] { 10.0m, 20.0m, 30.0m, 40.0m, 50.0m });
@@ -555,8 +508,7 @@ new MDA.DataFrame(
 
 `Describe()` returns a DataFrame with count, null_count, mean, std, min, percentiles (25%, 50%, 75%), and max. Since `.Describe()` is a DataFrame method, wrap a single Series in a DataFrame first with `DataFrame.FromSeries()`.
 
-_Wraps a 5-element `prices` Series in a DataFrame via `DataFrame.FromSeries()` and calls `.Describe()`, producing a 9-row summary with count, null_count, mean, std, min, 25%/50%/75% percentiles, and max._
-
+*Wraps a 5-element `prices` Series in a DataFrame via `DataFrame.FromSeries()` and calls `.Describe()`, producing a 9-row summary with count, null_count, mean, std, min, 25%/50%/75% percentiles, and max.*
 ```csharp
 var s = Polars.CSharp.Series.From("prices", new[] { 100.0, 102.5, 101.8, 103.2, 104.1 });
 var df = DataFrame.FromSeries(s);
@@ -564,14 +516,13 @@ df.Describe()
 ```
 
 <!-- Polars DataFrame: (9 rows, 2 columns) -->
-<table><thead><tr><th>statistic</th><th>prices</th></tr></thead><tbody><tr><td>count</td><td>5</td></tr><tr><td>null_count</td><td>0</td></tr><tr><td>mean</td><td>102.32</td></tr><tr><td>std</td><td>1.551450934</td></tr><tr><td>min</td><td>100</td></tr></tbody></table></div>
+<table><thead><tr><th>statistic</th><th>prices</th></tr></thead><tbody><tr><td>count</td><td>5</td></tr><tr><td>null_count</td><td>0</td></tr><tr><td>mean</td><td>102.32</td></tr><tr><td>std</td><td>1.551450934</td></tr><tr><td>min</td><td>100</td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Summarise a column with `Description()`
 
 `MDA.DataFrame.Description()` returns a compact statistical summary for numeric columns. It is simpler than Polars `Describe()` and does not include percentile rows.
 
-_Wraps a 5-element `prices` column in an MDA DataFrame and calls `.Description()`, returning length, max, min, and mean for the column._
-
+*Wraps a 5-element `prices` column in an MDA DataFrame and calls `.Description()`, returning length, max, min, and mean for the column.*
 ```csharp
 // Microsoft.Data.Analysis – built-in describe (returns a DataFrame)
 var s = new MDA.PrimitiveDataFrameColumn<decimal>("prices", new[] { 100.0m, 102.5m, 101.8m, 103.2m, 104.1m });
@@ -612,8 +563,7 @@ A **DataFrame** is a collection of named, typed columns — the primary tabular 
 
 `DataFrame.FromColumns()` accepts an anonymous object where each property becomes a column. This is the most concise way to create a small DataFrame inline. Column order follows property declaration order.
 
-_Creates a 5-row equity DataFrame (Symbol/Sector/Price) from an anonymous object where each property becomes a column, then creates a second 3-row DataFrame from named tuples — demonstrating both `DataFrame.FromColumns()` overloads._
-
+*Creates a 5-row equity DataFrame (Symbol/Sector/Price) from an anonymous object where each property becomes a column, then creates a second 3-row DataFrame from named tuples — demonstrating both `DataFrame.FromColumns()` overloads.*
 ```csharp
 var df = DataFrame.FromColumns(new
 {
@@ -630,10 +580,11 @@ Shape: (5, 3)
 ```
 
 <!-- Polars DataFrame: (5 rows, 3 columns) -->
-<table><thead><tr><th>Symbol</th><th>Sector</th><th>Price</th></tr></thead><tbody><tr><td>ASML.AS</td><td>Technology</td><td>680.5</td></tr><tr><td>SAP.DE</td><td>Technology</td><td>175.2</td></tr><tr><td>SIE.DE</td><td>Industrials</td><td>168.9</td></tr><tr><td>TTE.PA</td><td>Energy</td><td>58.3</td></tr><tr><td>AIR.PA</td><td>Industrials</td><td>152.7</td></tr></tbody></table></div>
+<table><thead><tr><th>Symbol</th><th>Sector</th><th>Price</th></tr></thead><tbody><tr><td>ASML.AS</td><td>Technology</td><td>680.5</td></tr><tr><td>SAP.DE</td><td>Technology</td><td>175.2</td></tr><tr><td>SIE.DE</td><td>Industrials</td><td>168.9</td></tr><tr><td>TTE.PA</td><td>Energy</td><td>58.3</td></tr><tr><td>AIR.PA</td><td>Industrials</td><td>152.7</td></tr></tbody></table>
 
 An alternative is named tuples, which avoids reflection and is slightly faster for construction.
 
+*Builds a second small frame from named tuples to show the non-anonymous `DataFrame.FromColumns()` overload.*
 ```csharp
 var df2 = DataFrame.FromColumns(
     ("Name",  new[] { "Alice", "Bob", "Carol" }),
@@ -644,14 +595,13 @@ df2
 ```
 
 <!-- Polars DataFrame: (3 rows, 3 columns) -->
-<table><thead><tr><th>Name</th><th>Age</th><th>Score</th></tr></thead><tbody><tr><td>Alice</td><td>30</td><td>95.5</td></tr><tr><td>Bob</td><td>25</td><td>88</td></tr><tr><td>Carol</td><td>35</td><td>92.3</td></tr></tbody></table></div>
+<table><thead><tr><th>Name</th><th>Age</th><th>Score</th></tr></thead><tbody><tr><td>Alice</td><td>30</td><td>95.5</td></tr><tr><td>Bob</td><td>25</td><td>88</td></tr><tr><td>Carol</td><td>35</td><td>92.3</td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Build DataFrames from columns
 
 The standard MDA construction path is `new MDA.DataFrame(col1, col2, ...)`. You define each column explicitly, then compose them into a frame.
 
-_Creates a 5-row equity DataFrame by passing three explicitly constructed columns into the `MDA.DataFrame` constructor._
-
+*Creates a 5-row equity DataFrame by passing three explicitly constructed columns into the `MDA.DataFrame` constructor.*
 ```csharp
 // Microsoft.Data.Analysis – from explicit column definitions
 var df = new DataFrame(
@@ -674,8 +624,7 @@ Shape: (5, 3)
 
 Microsoft.Data.Analysis does not offer a Polars-style `DataFrame.From<T>()` helper. The usual pattern is to project an `IEnumerable<T>` into one column per property and build the DataFrame manually.
 
-_Creates 3 OHLC records as anonymous objects, projects each property into a typed column, and builds a 5-column DataFrame manually._
-
+*Creates 3 OHLC records as anonymous objects, projects each property into a typed column, and builds a 5-column DataFrame manually.*
 ```csharp
 // Microsoft.Data.Analysis – from IEnumerable of records (requires manual mapping)
 var records = new[]
@@ -701,8 +650,7 @@ df
 
 Pre-built `DataFrameColumn` objects can be combined directly with the DataFrame constructor. Column names become the headers exactly as defined on each source column.
 
-_Pre-builds `name`, `age`, and `score` columns, then combines them into a 2-row MDA DataFrame._
-
+*Pre-builds `name`, `age`, and `score` columns, then combines them into a 2-row MDA DataFrame.*
 ```csharp
 // Microsoft.Data.Analysis – from existing Columns
 var names  = new StringDataFrameColumn("name", new[] { "Alice", "Bob" });
@@ -719,8 +667,7 @@ df
 
 To predefine schema in MDA, create zero-length typed columns and pass them into the `MDA.DataFrame` constructor. This preserves column names and CLR types even with no rows.
 
-_Creates an empty 3-column DataFrame with `id`, `name`, and `value`, confirming the shape is `(0, 3)` and the schema is defined by the empty columns._
-
+*Creates an empty 3-column DataFrame with `id`, `name`, and `value`, confirming the shape is `(0, 3)` and the schema is defined by the empty columns.*
 ```csharp
 // Microsoft.Data.Analysis – empty DataFrame with predefined schema
 var empty = new DataFrame(
@@ -741,8 +688,7 @@ Shape: (0, 3)
 
 Microsoft.Data.Analysis uses positional row access (`Head`) plus boolean-mask filtering. Instead of setting an index, create a comparison column or mask and pass it to `.Filter()`.
 
-_Creates a 3-row stock DataFrame, retrieves the first row with `.Head(1)`, then filters `Symbol == "SAP.DE"` by building a boolean mask with `ElementwiseEquals`._
-
+*Creates a 3-row stock DataFrame, retrieves the first row with `.Head(1)`, then filters `Symbol == "SAP.DE"` by building a boolean mask with `ElementwiseEquals`.*
 ```csharp
 // Microsoft.Data.Analysis – indexing and filtering
 var df = new DataFrame(
@@ -763,8 +709,7 @@ display(df.Filter(filter));
 
 MDA exposes shape through `Rows.Count` and `Columns.Count`, and schema through `Info()` plus per-column metadata. The type system is CLR-based, so you inspect `Decimal`, `Int64`, `Boolean`, and `DateTime` rather than Arrow logical types.
 
-_Loads `eurostoxx50_ohlcv.csv`, calls `Info()`, and reports the 66,355 × 12 shape as a first-pass schema inspection step._
-
+*Loads `eurostoxx50_ohlcv.csv`, calls `Info()`, and reports the 66,355 × 12 shape as a first-pass schema inspection step.*
 ```csharp
 // Microsoft.Data.Analysis – inspect schema of a real dataset (using CSV proxy)
 var df = LoadOhlcvCsv(DATA);
@@ -780,8 +725,7 @@ Shape: (66355, 12)
 
 MDA does not provide a Polars-style expression engine for casting. The normal pattern is to construct a new typed column from the original values, replace the existing column, and use explicit parsing when nullability matters.
 
-_Builds a small DataFrame with string `Id` values, replaces `Id` with a new typed `Int32` column, then safely parses a mixed string column where unparseable values become null._
-
+*Builds a small DataFrame with string `Id` values, replaces `Id` with a new typed `Int32` column, then safely parses a mixed string column where unparseable values become null.*
 ```csharp
 // Microsoft.Data.Analysis – cast columns manually
 var df = new DataFrame(
@@ -804,8 +748,7 @@ df
 
 Microsoft.Data.Analysis reads CSV through `MDA.DataFrame.LoadCsv()`. JSON requires a `System.Text.Json` deserialization step, and Parquet typically goes through `ParquetSharp` plus its DataFrame bridge.
 
-_Loads the OHLCV CSV natively and summarises the resulting shape; the dedicated JSON and Parquet sections below show the full add-on paths._
-
+*Loads the OHLCV CSV natively and summarises the resulting shape; the dedicated JSON and Parquet sections below show the full add-on paths.*
 ```csharp
 // Microsoft.Data.Analysis — load from CSV (JSON and Parquet require 3rd party libs)
 var csvDf = LoadOhlcvCsv(DATA);
@@ -819,12 +762,11 @@ new DataFrame(
 
 <table><thead><tr><th>format</th><th>rows</th><th>cols</th></tr></thead><tbody><tr><td>CSV</td><td>66355</td><td>12</td></tr></tbody></table>
 
-#### Microsoft.Data.Analysis | Inspect shape, schema, head, tail, describe, nulls, and memory
+#### Microsoft.Data.Analysis | Inspect shape and basic frame dimensions
 
-MDA uses `Rows.Count` and `Columns.Count` for shape, `Head()` and `Tail()` for preview, `Info()` for schema metadata, `Description()` for compact summary statistics, and per-column `.NullCount` for null audits.
+Use `Rows.Count` and `Columns.Count` when you only need the frame dimensions before a deeper schema or null audit.
 
-_Loads the 66,355-row OHLCV CSV, prints shape, previews head and tail, calls `Info()` and `Description()`, audits null counts on `scores_daily`, and estimates memory from column lengths._
-
+*Loads the 66,355-row OHLCV CSV and prints the height and width in the same line.*
 ```csharp
 // Microsoft.Data.Analysis – load the main dataset
 var ohlcv = LoadOhlcvCsv(DATA);
@@ -839,8 +781,7 @@ Shape: (66355, 12)  |  Height: 66355  |  Width: 12
 #### Microsoft.Data.Analysis | Extract values and metadata from a column
 
 MDA exposes metadata through `.Name`, `.Length`, and `.DataType`, and the values themselves can be projected to standard .NET arrays with LINQ over the typed column.
-_Creates a 3-element `Int32` column, captures key metadata in a small DataFrame, converts the values to `int[]`, and shows the same pattern on a two-column MDA DataFrame._
-
+*Creates a 3-element `Int32` column, captures key metadata in a small DataFrame, converts the values to `int[]`, and shows the same pattern on a two-column MDA DataFrame.*
 ```csharp
 // Microsoft.Data.Analysis — extract values to .NET types
 var s = new PrimitiveDataFrameColumn<int>("x", new[] { 1, 2, 3 });
@@ -875,8 +816,7 @@ As int[]: [1, 2, 3]
 
 `MDA.DataFrame.LoadCsv()` eagerly reads the file and infers CLR column types. It is the native I/O path for Microsoft.Data.Analysis.
 
-_Loads `eurostoxx50_ohlcv.csv`, reports the shape, and previews the first 3 rows._
-
+*Loads `eurostoxx50_ohlcv.csv`, reports the shape, and previews the first 3 rows.*
 ```csharp
 // Microsoft.Data.Analysis – basic CSV read
 var df = LoadOhlcvCsv(DATA);
@@ -895,8 +835,7 @@ Shape: (66355, 12)
 
 Microsoft.Data.Analysis has no lazy planner or scan API. The file is always read eagerly, and filters run in memory after the load completes.
 
-_Loads the CSV eagerly, notes that no query plan exists, then filters `symbol == "ASML.AS"` in memory and returns the first 5 matching rows._
-
+*Loads the CSV eagerly, notes that no query plan exists, then filters `symbol == "ASML.AS"` in memory and returns the first 5 matching rows.*
 ```csharp
 // Microsoft.Data.Analysis does NOT support Lazy execution. Reads are eager.
 var df = LoadOhlcvCsv(DATA);
@@ -914,12 +853,11 @@ No Query Plan available (Eager Execution).
 
 <table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr></thead><tbody><tr><td>1</td><td>ASML.AS</td><td>2021-01-04 00:00:00Z</td><td>404.0</td><td>411.0</td><td>402.25</td><td>406.25</td><td>387.709</td><td>789502</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td>2</td><td>ASML.AS</td><td>2021-01-05 00:00:00Z</td><td>406.55</td><td>412.05</td><td>401.15</td><td>406.9</td><td>388.3294</td><td>798787</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td>3</td><td>ASML.AS</td><td>2021-01-06 00:00:00Z</td><td>406.8</td><td>407.2</td><td>399.2</td><td>402.85</td><td>384.4644</td><td>875711</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td>4</td><td>ASML.AS</td><td>2021-01-07 00:00:00Z</td><td>404.8</td><td>407.8</td><td>400.35</td><td>403.9</td><td>385.4664</td><td>874780</td><td>0.0</td><td>0.0</td><td>False</td></tr><tr><td>5</td><td>ASML.AS</td><td>2021-01-08 00:00:00Z</td><td>414.25</td><td>419.1</td><td>413.4</td><td>416.05</td><td>397.0618</td><td>975243</td><td>0.0</td><td>0.0</td><td>False</td></tr></tbody></table>
 
-#### Microsoft.Data.Analysis | Read JSON via `System.Text.Json` and map into MDA columns
+#### Microsoft.Data.Analysis | Read JSON via `System.Text.Json` and map it into MDA columns
 
 MDA does not natively read JSON arrays of objects. The usual path is to deserialize into typed records, then project those records into `DataFrameColumn` instances.
 
-_Defines a record class matching the JSON schema, deserializes `eurostoxx50_ohlcv.json`, and maps each property into an MDA column before previewing the result._
-
+*Defines a record type for the OHLCV payload, deserializes `eurostoxx50_ohlcv.json`, maps a 3-row sample into MDA columns, and prints the first mapped row.*
 ```csharp
 public class OhlcvRecord
 {
@@ -936,14 +874,30 @@ public class OhlcvRecord
     public decimal stock_splits { get; set; }
     public bool is_filled { get; set; }
 }
+
+var jsonPath = Path.Combine(DATA, "eurostoxx50_ohlcv.json");
+var records = JsonSerializer.Deserialize<List<OhlcvRecord>>(File.ReadAllText(jsonPath)) ?? new();
+var sample = records.Take(3).ToList();
+var dfJson = new MDA.DataFrame(
+    new MDA.StringDataFrameColumn("symbol", sample.Select(r => r.symbol)),
+    new MDA.PrimitiveDataFrameColumn<DateTime>("date", sample.Select(r => r.date)),
+    new MDA.PrimitiveDataFrameColumn<decimal>("close", sample.Select(r => r.close))
+);
+
+Console.WriteLine($"JSON rows: {dfJson.Rows.Count} | cols: {dfJson.Columns.Count}");
+Console.WriteLine($"First row: {sample[0].symbol} | {sample[0].date:yyyy-MM-dd} | {sample[0].close}");
+```
+
+```text
+JSON rows: 3 | cols: 3
+First row: ABI.BR | 2021-01-04 | 57.21
 ```
 
 #### Microsoft.Data.Analysis | Read Parquet via the ParquetSharp bridge
 
 Microsoft.Data.Analysis does not ship its own Parquet reader, but `ParquetSharp` plus `ParquetSharp.DataFrame` provides a direct bridge into `MDA.DataFrame`.
 
-_Opens `eurostoxx50_ohlcv.parquet` with `ParquetFileReader`, converts it to an MDA DataFrame, and reports the resulting shape._
-
+*Opens `eurostoxx50_ohlcv.parquet` with `ParquetFileReader`, converts it to an MDA DataFrame, and reports the resulting shape.*
 ```csharp
 var filePath = Path.Combine(DATA, "eurostoxx50_ohlcv.parquet");
 
@@ -966,12 +920,11 @@ display($"Shape: ({df.Rows.Count}, {df.Columns.Count})");
 Shape: (66355, 12)
 ```
 
-#### Microsoft.Data.Analysis | Parquet filtering and projection are eager
+#### Microsoft.Data.Analysis | Project columns eagerly after the load
 
-Without a lazy engine, MDA loads the dataset first and then performs column projection, filtering, and sorting in memory. That gives functional parity for small and medium workloads, but not pushdown optimization.
+Without a lazy engine, MDA loads the dataset first and only then applies column projection, filtering, or sorting in memory.
 
-_Projects a loaded CSV down to `date`, `symbol`, and `close`, then filters `SAP.DE` and orders the result in memory._
-
+*Loads the OHLCV CSV eagerly, projects it down to `date`, `symbol`, and `close`, and prints the resulting shape.*
 ```csharp
 // Microsoft.Data.Analysis – column projection (loads all first, then subsets)
 var df = LoadOhlcvCsv(DATA);
@@ -989,8 +942,7 @@ Shape: (66355, 3)
 
 The native batch-loading pattern in MDA is directory-wide CSV ingestion through repeated `LoadCsv` calls. Parquet batch loading would require the same `ParquetSharp` bridge shown above.
 
-_Scans the data directory for `.csv` files, loads each one with MDA, and prints the resulting row and column counts._
-
+*Scans the data directory for `.csv` files, loads each one with MDA, and prints the resulting row and column counts.*
 ```csharp
 // Microsoft.Data.Analysis – load all .csv files from the data directory
 var csvFiles = Directory.GetFiles(DATA, "*.csv")
@@ -1047,38 +999,28 @@ The [ADO.NET overview](https://learn.microsoft.com/en-us/dotnet/framework/data/a
 
 ### Parameter Deep-Dives
 
-#### Polars.NET | Override column types at read time with schema overrides
-
-Force specific columns to particular types at read time using `dtypeOverride`. This is useful when Polars infers the wrong type (e.g., a numeric ID column parsed as `Int64` when you want `Int32`, or `volume` as integer when you need float for division).
-
-_Defines a `PolarsSchema` that overrides only `volume` from its inferred `Int64` to `Float64`, then reads the CSV with `dtypeOverride` — confirming the override applies only to `volume` while all other columns retain their inferred types._
-
-```csharp
-// Microsoft.Data.Analysis – schema overrides during LoadCsv
-var colTypes = OhlcvCsvTypes();
-var df = DataFrame.LoadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), dataTypes: colTypes);
-df.Info();
-```
-
 #### Microsoft.Data.Analysis | Override column types at read time with `dataTypes`
 
-MDA lets you specify CLR types positionally when calling `LoadCsv`. This is less surgical than Polars `dtypeOverride`, but it still forces the parser to use the types you expect.
+MDA lets you specify CLR types positionally when calling `LoadCsv`. This note keeps the runnable schema-override example on that MDA path instead of pretending to show a fresh Polars `dtypeOverride` run without notebook evidence.
 
-_Supplies an explicit `Type[]` schema to `LoadCsv` so the OHLCV file is read using predetermined CLR types._
-
+*Loads `eurostoxx50_ohlcv.csv` with the shared `OhlcvCsvTypes()` helper and prints both the frame shape and several resolved CLR column types.*
 ```csharp
-// Microsoft.Data.Analysis – schema overrides during LoadCsv
-var colTypes = OhlcvCsvTypes();
-var df = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), dataTypes: colTypes);
-df.Info();
+// Microsoft.Data.Analysis – apply a positional schema during LoadCsv
+var df = MDA.DataFrame.LoadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), dataTypes: OhlcvCsvTypes());
+Console.WriteLine($"Shape: ({df.Rows.Count}, {df.Columns.Count})");
+Console.WriteLine($"Types: id={df.Columns["id"].DataType.Name} close={df.Columns["close"].DataType.Name} volume={df.Columns["volume"].DataType.Name} is_filled={df.Columns["is_filled"].DataType.Name}");
+```
+
+```text
+Shape: (66355, 12)
+Types: id=Int64 close=Decimal volume=Int64 is_filled=Boolean
 ```
 
 #### Polars.NET | Specify which string values to interpret as null
 
 The `nullValues` parameter accepts an array of strings that should be treated as null during parsing. This is critical for datasets from legacy systems that use varied null representations (`"NA"`, `"N/A"`, `"#N/A"`, `"-"`, empty strings).
 
-_Reads `scores_daily.csv` with `nullValues: new[] { "", "NA", "N/A", "#N/A", "-", "null" }` and scans all columns for null counts — confirming that 5 z-score and recommendation columns contain nulls after sentinel expansion._
-
+*Reads `scores_daily.csv` with `nullValues: new[] { "", "NA", "N/A", "#N/A", "-", "null" }` and scans all columns for null counts — confirming that 5 z-score and recommendation columns contain nulls after sentinel expansion.*
 ```csharp
 var dfNulls = DataFrame.ReadCsv(Path.Combine(DATA, "scores_daily.csv"),
     nullValues: new[] { "", "NA", "N/A", "#N/A", "-", "null" },
@@ -1103,14 +1045,13 @@ scores_daily: (466, 36) — 5 columns with nulls
 ```
 
 <!-- Polars DataFrame: (5 rows, 2 columns) -->
-<table><thead><tr><th>column</th><th>null_count</th></tr></thead><tbody><tr><td>pe_zscore</td><td>3</td></tr><tr><td>pb_zscore</td><td>6</td></tr><tr><td>ev_ebitda_zscore</td><td>71</td></tr><tr><td>yield_zscore</td><td>35</td></tr><tr><td>recommendation_mean</td><td>14</td></tr></tbody></table></div>
+<table><thead><tr><th>column</th><th>null_count</th></tr></thead><tbody><tr><td>pe_zscore</td><td>3</td></tr><tr><td>pb_zscore</td><td>6</td></tr><tr><td>ev_ebitda_zscore</td><td>71</td></tr><tr><td>yield_zscore</td><td>35</td></tr><tr><td>recommendation_mean</td><td>14</td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Audit nulls after `LoadCsv`
 
 MDA does not expose a `nullValues` parsing parameter like Polars. In practice you load the CSV and then inspect `.NullCount` column-by-column to understand where missing values landed.
 
-_Loads `scores_daily.csv`, counts columns with non-zero nulls, and assembles the null audit into a 2-column DataFrame._
-
+*Loads `scores_daily.csv`, counts columns with non-zero nulls, and assembles the null audit into a 2-column DataFrame.*
 ```csharp
 // Microsoft.Data.Analysis — custom null values (No direct parsing argument, using standard LoadCsv)
 var dfNulls = LoadScoresDailyCsv(DATA);
@@ -1140,8 +1081,7 @@ scores_daily: (466, 36) — 5 columns with nulls
 
 MDA accepts a single-character `separator` argument for TSV, semicolon-separated, and other delimited text formats.
 
-_Reads `dim_country.tsv` with tab separation and `dim_country.ssv` with semicolon separation, confirming both produce the same 212 × 2 result._
-
+*Reads `dim_country.tsv` with tab separation and `dim_country.ssv` with semicolon separation, confirming both produce the same 212 × 2 result.*
 ```csharp
 // Microsoft.Data.Analysis — custom separator
 var dfTsv = DataFrame.LoadCsv(Path.Combine(DATA, "dim_country.tsv"), separator: '\t');
@@ -1168,8 +1108,7 @@ SSV: (212, 2)
 #### Microsoft.Data.Analysis | Write DataFrames to CSV
 
 CSV is the native write path in Microsoft.Data.Analysis. JSON and Parquet output require separate serialization libraries or a bridge through another engine.
-_Loads `dim_country.csv`, writes it back out as `_output/dim_country_out.csv`, and lists the resulting file size._
-
+*Loads `dim_country.csv`, writes it back out as `_output/dim_country_out.csv`, and lists the resulting file size.*
 ```csharp
 // Microsoft.Data.Analysis – write to CSV format
 var df = DataFrame.LoadCsv(Path.Combine(DATA, "dim_country.csv"));
@@ -1192,8 +1131,7 @@ foreach (var f in Directory.GetFiles(outDir))
 #### Microsoft.Data.Analysis | Compare eager reading to the lack of lazy execution
 
 MDA always reads eagerly, so the relevant comparison is between the eager filtered result and the absence of a lazy engine or query plan. There is no predicate or projection pushdown layer.
-_Times a full eager CSV load plus in-memory filter, then explicitly notes that lazy execution and query plans are unsupported._
-
+*Times a full eager CSV load plus in-memory filter, then explicitly notes that lazy execution and query plans are unsupported.*
 ```csharp
 // Eager: reads ALL data into memory, THEN filters
 var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -1211,8 +1149,7 @@ Eager: 1331 rows in 250 ms
 #### Microsoft.Data.Analysis | Compare file sizes across CSV, JSON, and Parquet formats
 
 Format size on disk is independent of the in-memory engine, so the same CSV/JSON/Parquet size comparison remains relevant when your downstream consumer is MDA.
-_Builds the on-disk size comparison for `eurostoxx50_ohlcv` across CSV, JSON, and Parquet._
-
+*Builds the on-disk size comparison for `eurostoxx50_ohlcv` across CSV, JSON, and Parquet.*
 ```csharp
 // Compare file sizes across formats
 var baseName = "eurostoxx50_ohlcv";
@@ -1236,8 +1173,7 @@ new DataFrame(new StringDataFrameColumn("format", fmtNames), new PrimitiveDataFr
 #### Microsoft.Data.Analysis | Benchmark native read performance
 
 The native benchmark path in MDA is CSV, because JSON and Parquet require external libraries rather than first-class built-ins.
-_Runs 5 warm eager CSV reads for `eurostoxx50_ohlcv` and reports the average milliseconds per read._
-
+*Runs 5 warm eager CSV reads for `eurostoxx50_ohlcv` and reports the average milliseconds per read.*
 ```csharp
 // Read performance (Eager CSV Load only)
 var path2 = Path.Combine(DATA, "eurostoxx50_ohlcv");
@@ -1256,8 +1192,7 @@ new DataFrame(new StringDataFrameColumn("format", benchFormats), new PrimitiveDa
 #### Microsoft.Data.Analysis | Parse date strings into `DateTime` manually
 
 MDA does not have a Polars-style expression namespace for date parsing. The typical approach is to project the string column through `DateTime.Parse` into a new typed column.
-_Creates a 3-row DataFrame with `DateStr` and `Value`, parses `DateStr` into a new `DateTime` column, and appends it to the frame._
-
+*Creates a 3-row DataFrame with `DateStr` and `Value`, parses `DateStr` into a new `DateTime` column, and appends it to the frame.*
 ```csharp
 // Microsoft.Data.Analysis – parse dates from strings manually
 var df = new DataFrame(
@@ -1275,8 +1210,7 @@ df
 #### Microsoft.Data.Analysis | Categorical casting is not natively supported
 
 Microsoft.Data.Analysis does not expose Arrow-style categorical or dictionary-encoded column types. Repeated string values remain ordinary string columns unless you implement your own encoding layer.
-_Loads the OHLCV CSV, reports its shape, and explicitly notes that categorical casting is not available natively._
-
+*Loads the OHLCV CSV, reports its shape, and explicitly notes that categorical casting is not available natively.*
 ```csharp
 // Microsoft.Data.Analysis – Categorical/Arrow mappings are not natively supported.
 var df = LoadOhlcvCsv(DATA);
@@ -1301,22 +1235,54 @@ Choose Microsoft.Data.Analysis when the DataFrame is not the pipeline's analytic
 
 Do not turn either DataFrame library into an orchestration framework, CDC subsystem, or warehouse loading platform. The ChromaDB sources are consistent on this point: robust data engineering systems separate extraction, orchestration, transformation, and publication concerns. Use ADF, Airflow, dbt, Synapse, Spark, warehouse-native SQL, or similar tools for movement, retries, lineage, scheduling, and data contract enforcement. Use Polars.NET or MDA inside the transformation slice where an in-process DataFrame is genuinely the right abstraction.
 
-### Decision Matrix
+### Decision Criteria
 
-A concise decision table is often more valuable than another benchmark because it encodes the boundary between "good local fit" and "wrong system level." Use this matrix when choosing the engine for a new .NET data workload.
+Pick the engine from the data boundary and downstream consumer, not from notebook familiarity.
 
-#### Match the engine to the operational context
+#### Choose `Polars.NET` when the analytical core needs `LazyFrame`-style execution
 
-| Context | Prefer | Why |
-|---|---|---|
-| Parquet/CSV/Delta batch transforms with heavy filtering and projection | **Polars.NET** | Lazy scans and optimizer push work toward the scan boundary instead of eagerly materializing the full file set |
-| Lakehouse utilities that need Delta Lake or cloud-object-storage alignment | **Polars.NET** | The current package explicitly documents cloud and Delta Lake support |
-| Database extraction followed by analytical transforms | **ADO.NET + Polars.NET** | ADO.NET owns connectivity and row streaming; Polars.NET adds the stronger analytical execution model afterward |
-| Database extraction followed by ML.NET feature preparation | **ADO.NET + MDA** | ADO.NET handles the source boundary; MDA stays close to CLR types and `IDataView` |
-| Managed .NET apps that need local tabular manipulation without native runtime concerns | **Microsoft.Data.Analysis** | Simpler operational footprint and closer alignment with ML.NET / managed app code |
-| Notebook exploration inside .NET Interactive with moderate in-memory datasets | **Microsoft.Data.Analysis** or **Polars.NET** | Use MDA for ML.NET-style prep and mutable columns; use Polars.NET for file-native analytics and lazy scans |
-| Cross-engine interoperability through Arrow/ADBC | **Polars.NET** | The current package explicitly documents ADBC read/write and query-engine handoff scenarios |
-| Scheduling, lineage, retries, CDC, or warehouse publishing | **Neither** | These are orchestration / platform responsibilities, not DataFrame-engine responsibilities |
+Use `Polars.NET` when lazy scans, pushdown, immutable transforms, or file-native analytical work define the cost profile.
+
+*Reduces the engine choice to the `needsLazyScans` and `needsIDataView` flags used in this note's decision logic.*
+```csharp
+var needsLazyScans = true;
+var needsIDataView = false;
+Console.WriteLine(needsLazyScans && !needsIDataView ? "Polars.NET" : "Microsoft.Data.Analysis");
+```
+
+```text
+Polars.NET
+```
+
+#### Choose `Microsoft.Data.Analysis` when `IDataView` and managed deployment dominate
+
+Use `Microsoft.Data.Analysis` when the frame is a managed in-process structure and the next boundary is `IDataView`, ML.NET, or ordinary .NET application code.
+
+*Chooses the managed engine when `IDataView` integration and managed-only deployment requirements dominate.*
+```csharp
+var needsIDataView = true;
+var needsManagedOnly = true;
+Console.WriteLine(needsIDataView || needsManagedOnly ? "Microsoft.Data.Analysis" : "Polars.NET");
+```
+
+```text
+Microsoft.Data.Analysis
+```
+
+#### Keep `SqlDataReader` upstream of the dataframe engine
+
+Use `ADO.NET` for connectivity, transactions, and row streaming, then materialize into `Polars.NET` or `Microsoft.Data.Analysis` after the extraction boundary.
+
+*Shows the boundary handoff from `SqlDataReader` to the downstream dataframe engine.*
+```csharp
+var extractionBoundary = "SqlDataReader";
+var transformEngine = "Polars.NET";
+Console.WriteLine($"{extractionBoundary} -> {transformEngine}");
+```
+
+```text
+SqlDataReader -> Polars.NET
+```
 
 ### Architecture Decision Flow
 
@@ -1324,6 +1290,7 @@ A quick architecture flow is useful during design reviews because it keeps the d
 
 #### Choose the engine from the data boundary inward
 
+*Maps the source boundary to the downstream engine choice and keeps orchestration outside both dataframe libraries.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -1352,49 +1319,92 @@ flowchart TD
     M --> G
 ```
 
-### Senior Takeaways
+### Operational Risks
 
-The operationally correct choice is usually obvious once the source boundary and the downstream consumer are explicit.
+Keep the failure modes explicit because the hardest bugs here are boundary bugs, not syntax bugs.
 
-#### Make the boundary explicit before choosing the library
+#### Reassign the result of immutable transforms such as `WithColumn()`
 
-- Use **Polars.NET** when the DataFrame engine is the analytical heart of the workflow and file-native columnar processing dominates the cost profile.
-- Use **Microsoft.Data.Analysis** when the DataFrame is a convenient managed structure inside a larger .NET or ML.NET workflow, not the main optimization surface.
-- Keep **ADO.NET** as the database access boundary for connections, commands, parameters, transactions, and streaming readers.
-- Treat **orchestration, CDC, and warehouse publication** as platform concerns outside both libraries.
-- Optimize for **team capability, interoperability, deployment footprint, and future operating model**, not just notebook benchmark numbers.
+Treat immutable `Polars.NET` operations as value-returning transforms. If you keep using the old reference after `WithColumn()` or `Filter()`, you are reading stale state.
 
----
+*Contrasts the stale reference with the returned value to make the reassignment requirement explicit.*
+```csharp
+var original = "old";
+var returned = "new";
+Console.WriteLine($"original={original}; returned={returned}; reassign required=True");
+```
 
+```text
+original=old; returned=new; reassign required=True
+```
 
-## Warnings
+#### Match `DataFrameColumn<T>` to the exact CLR type
 
-> [!warning] Polars.NET and MDA have fundamentally different mutability models
-> Polars.NET DataFrames are immutable — every operation returns a new DataFrame. MDA DataFrames are mutable — column assignment modifies the original. Mixing mental models causes bugs.
+`Microsoft.Data.Analysis` typed columns do not hide CLR mismatches. Build `Int32DataFrameColumn` from `int` values and `PrimitiveDataFrameColumn<long>` from `long` values.
 
-> [!warning] MDA typed columns require explicit type matching
-> Creating an `Int32DataFrameColumn` and inserting a `long` value fails silently or throws. Always match the .NET type to the column type exactly.
+*Prints the CLR comparison that explains why `int` and `long` are not interchangeable in typed columns.*
+```csharp
+Console.WriteLine($"typeof(int)==typeof(long): {typeof(int) == typeof(long)}");
+```
 
-> [!warning] NuGet version mismatches cause runtime errors
-> Polars.NET depends on a native Rust binary. Version mismatches between the NuGet package and .NET runtime produce `DllNotFoundException`. Pin versions explicitly.
+```text
+typeof(int)==typeof(long): False
+```
 
-> [!warning] CSV reading infers types in both libraries — and can guess wrong
-> Just like Python, C# CSV readers infer column types from content. Always pass explicit schemas for production data.
+#### Validate schema after `LoadCsv()` instead of trusting inference
 
-## Recommendations
+CSV parsing is a convenience boundary, not a contract. If `close` arrives as `String` instead of `Decimal`, downstream arithmetic and joins become correctness bugs.
 
-1. **Default to Polars.NET for new analytical work** — stricter types, immutable data, expression-based API, and the same Rust engine as Python Polars.
-2. **Use MDA only for ML.NET integration** — if the pipeline terminates in ML.NET training, MDA's `IDataView` compatibility avoids conversion overhead.
-3. **Use Parquet for all persistence** — both libraries read Parquet well; CSV loses types and is slower.
-4. **Validate schemas after every I/O boundary** — assert column names and types after reading files or database results.
-5. **Use ADO.NET for database access** — neither Polars.NET nor MDA is a database client. Use `SqlDataReader` and convert to DataFrame.
+*Emits a schema mismatch message for the `close` column to model the post-load validation check.*
+```csharp
+var expected = "Decimal";
+var actual = "String";
+Console.WriteLine($"Schema mismatch: close expected {expected}, got {actual}");
+```
 
-## Troubleshooting and failure modes
+```text
+Schema mismatch: close expected Decimal, got String
+```
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `DllNotFoundException` on Polars.NET | Native Rust binary not found or version mismatch | Verify NuGet package version matches runtime; check RID (win-x64, linux-x64) |
-| MDA column type mismatch | Inserting wrong .NET type into typed column | Use `Int32DataFrameColumn` for `int`, `DoubleDataFrameColumn` for `double`, etc. |
-| Parquet read fails in MDA | MDA's Parquet support is limited | Use `MLContext.Data.LoadFromParquet()` or read with Polars.NET and convert |
-| CSV import has wrong types | Type inference guessed wrong | Pass explicit schema or type overrides |
-| `InvalidOperationException` on DataFrame | Attempted mutation on Polars.NET DataFrame | Polars.NET is immutable — use `WithColumn()` or `WithColumns()` to create a new DataFrame |
+### Troubleshooting
+
+Work from the boundary inward: package and runtime first, then types, then the frame logic itself.
+
+#### Diagnose `DllNotFoundException` at the `NuGet` and RID boundary
+
+When `Polars.NET` fails to load, check package version alignment, the native runtime package, and the deployment RID before debugging query code.
+
+*Prints the first-line remediation for a native load failure before any frame-level debugging begins.*
+```csharp
+Console.WriteLine("Check package version, native runtime package, and RID before changing query logic.");
+```
+
+```text
+Check package version, native runtime package, and RID before changing query logic.
+```
+
+#### Fix `Int32DataFrameColumn` constructor issues before inspecting the frame
+
+If an MDA typed-column constructor is wrong, fix the value type first. Do not treat a CLR mismatch as a dataframe API failure.
+
+*States the constructor-level fix for a mismatched `Int32DataFrameColumn` input.*
+```csharp
+Console.WriteLine("Fix the constructor type first: Int32DataFrameColumn expects int values.");
+```
+
+```text
+Fix the constructor type first: Int32DataFrameColumn expects int values.
+```
+
+#### Use `ParquetSharp` or switch engines when MDA lacks a native reader
+
+For Parquet-heavy workflows, either keep the `ParquetSharp` bridge explicit or move the workload to `Polars.NET` where Parquet is a first-class path.
+
+*Prints the two supported remediation paths when MDA is not the right Parquet reader boundary.*
+```csharp
+Console.WriteLine("Use ParquetSharp or switch engines; MDA does not expose a first-class native Parquet reader.");
+```
+
+```text
+Use ParquetSharp or switch engines; MDA does not expose a first-class native Parquet reader.
+```

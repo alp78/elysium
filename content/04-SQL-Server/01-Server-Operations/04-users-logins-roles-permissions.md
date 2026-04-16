@@ -103,6 +103,8 @@ That sentence is simple, but each word has operational consequences. The rest of
 
 For SQL Server running on a VM or host, especially on **GCP**, identity must be reasoned about in layers rather than as one flat problem.
 
+*Identity boundary flow from cloud to database objects.*
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -314,6 +316,8 @@ A **database user** is a database-level identity. It is the principal that holds
 
 #### Map a database user to an existing server login
 
+This is the standard login-to-user mapping pattern for a database that should stay tied to server authentication.
+
 *Create a login-mapped database user in the target database.*
 
 ```sql
@@ -329,6 +333,8 @@ Implication:
 - The user defines the identity inside this database.
 
 #### Create a contained user that authenticates at the database level
+
+Use this pattern when the database must authenticate directly and the workload should not depend on a server login.
 
 *Create a contained user that authenticates at the database level without a server login.*
 
@@ -412,6 +418,8 @@ The three permission DDL verbs form the core authorization surface. Every permis
 
 #### Add a permission to a principal with GRANT
 
+Use `GRANT` when the role design already matches the access boundary and you only need to enable it.
+
 *Grant SELECT on a schema to a role.*
 
 ```sql
@@ -420,6 +428,8 @@ GRANT SELECT ON SCHEMA::gold TO reporting_reader;
 
 #### Explicitly block a permission with DENY
 
+Use `DENY` only when a narrow exception must override an otherwise valid grant.
+
 *Deny SELECT on a specific table, overriding any inherited grant.*
 
 ```sql
@@ -427,6 +437,8 @@ DENY SELECT ON OBJECT::gold.salaries TO analyst_readers;
 ```
 
 #### Remove a previous GRANT or DENY with REVOKE
+
+Use `REVOKE` to remove an explicit permission without turning the model into a negative-permission design.
 
 *Remove a previously applied permission (grant or deny) from a role.*
 
@@ -456,6 +468,8 @@ Operational implications:
 ## The Authentication and Authorization Path
 
 When a client connects, SQL Server evaluates access in stages:
+
+*Authentication and authorization flow through the principal context and deny check.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -693,6 +707,8 @@ SQL Server 2022 added 10 new fixed server roles prefixed with `##MS_` and suffix
 
 #### Delegate login administration to a security operations group
 
+This delegates login lifecycle control without expanding the group into full `securityadmin`.
+
 *Add a Windows group to the least-privilege login management role.*
 
 ```sql
@@ -771,6 +787,8 @@ GO
 ## Permission Hierarchy and Scope
 
 Permissions can be granted at different levels of the securable hierarchy. A grant at a higher scope cascades to all objects below it.
+
+*Permission hierarchy from server to column scope.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -1487,6 +1505,8 @@ The live result against `stoxx` shows the default post-install state — three m
 ### SQL Server | Agent security | proxy and credential pattern for least-privilege jobs
 
 Job steps run under the SQL Server Agent service account by default. When specific steps need elevated permissions (file access, PowerShell execution, SSIS package runs), the recommended pattern is: create a SQL credential mapped to a narrow-privilege AD account, map the credential to a proxy, then assign the proxy to the specific job step. This avoids granting elevated rights to the service account globally.
+
+*Credential and proxy pattern for a single Agent job step.*
 
 ```sql
 -- 1. create a credential mapped to a narrow-privilege identity
@@ -2250,6 +2270,8 @@ ORDER BY permission_name;
 
 The schema-scope call returns the full permission set a `sysadmin` holds on any schema. A `demo_sec_gold_reader` member would see only `SELECT` (and any other permissions the role explicitly grants). To check permissions for another user, wrap the call in `EXECUTE AS USER = '<user>'`:
 
+*Switch context before calling `fn_my_permissions` for another principal.*
+
 ```sql
 EXECUTE AS USER = 'demo_sec_analyst';
 SELECT entity_name, permission_name FROM fn_my_permissions('gold', 'SCHEMA');
@@ -2366,44 +2388,377 @@ All `LOGINPROPERTY` calls are wrapped in `CAST(... AS int)` to normalize the `sq
 
 ## Operational Anti-Patterns
 
-| Anti-Pattern | Why It Fails | Better Alternative |
-|---|---|---|
-| Application login in `db_owner` | Excessive blast radius, accidental DDL possible, harder root-cause analysis | Custom role with schema-scoped DML and EXECUTE only |
-| Pipeline login in `sysadmin` | Full server compromise if secret leaks, destroys least privilege, impossible to justify in audit | Dedicated SQL login with custom database roles |
-| Direct grants to dozens of humans | Permissions drift, onboarding/offboarding pain, unclear intent | Group-based login mapped to custom roles |
-| One shared login for every pipeline | No accountability, no isolation, one credential leak affects everything | One identity per pipeline or workload family |
-| Defaulting to `db_datareader` / `db_datawriter` | May exceed actual schema needs, encourages whole-database visibility | Custom schema-scoped roles (`gold_reader`, `bronze_loader`) |
-| Using `DENY` as routine architecture | Brittle, hard to reason about, indicates role design weakness | Design clean role scopes so `DENY` is rarely needed |
-| Granting to `public` | Hidden broad access, often forgotten | Explicit role membership for every access need |
+The anti-patterns below are the failure modes that most often inflate blast radius or make attribution impossible. Each one maps to a cleaner role or schema design.
+
+#### `db_owner` on application runtimes
+
+Runtime identities do not need database ownership. `db_owner` turns a normal application bug into a DDL problem.
+
+*Cue the `db_owner` boundary check.*
+
+```sql
+SELECT 'db_owner' AS role_name, 'application runtime' AS identity_class;
+```
+
+```text
+role_name  identity_class
+db_owner   application runtime
+```
+
+Use a custom role with schema-scoped DML and `EXECUTE` only.
+
+#### `sysadmin` for pipeline identities
+
+Pipeline secrets should not carry instance-wide control. `sysadmin` destroys least privilege and makes compromise unrecoverable.
+
+*Cue the `sysadmin` boundary check.*
+
+```sql
+SELECT 'sysadmin' AS role_name, 'pipeline identity' AS identity_class;
+```
+
+```text
+role_name  identity_class
+sysadmin   pipeline identity
+```
+
+Use a dedicated SQL login with custom database roles.
+
+#### Direct grants to `dozens of humans`
+
+Direct grants fragment intent. Group-based access keeps the role boundary stable while people change.
+
+*Cue the direct-grant sprawl check.*
+
+```sql
+SELECT 'direct grants' AS access_pattern, 'dozens of humans' AS scale;
+```
+
+```text
+access_pattern  scale
+direct grants   dozens of humans
+```
+
+Map a group-based login to custom roles instead.
+
+#### One shared login for every `pipeline`
+
+Shared logins hide which workload actually caused the event. One leaked credential then affects the entire estate.
+
+*Cue the shared-login check.*
+
+```sql
+SELECT 'shared login' AS access_pattern, 'every pipeline' AS scope;
+```
+
+```text
+access_pattern  scope
+shared login    every pipeline
+```
+
+Create one identity per pipeline or workload family.
+
+#### `db_datareader` / `db_datawriter` as the default
+
+Fixed database-wide roles are broader than most layered data platforms need. They skip the schema boundary that usually matters.
+
+*Cue the fixed-role scope check.*
+
+```sql
+SELECT 'db_datareader/db_datawriter' AS role_family, 'database-wide' AS scope;
+```
+
+```text
+role_family                  scope
+db_datareader/db_datawriter  database-wide
+```
+
+Use custom schema-scoped roles such as `gold_reader` or `bronze_loader`.
+
+#### Routine `DENY` architecture
+
+`DENY` is a correction tool, not the normal design pattern. If it is common, the role model is already too broad.
+
+*Cue the negative-permission check.*
+
+```sql
+SELECT 'DENY' AS mechanism, 'routine architecture' AS usage;
+```
+
+```text
+mechanism  usage
+DENY       routine architecture
+```
+
+Design clean role scopes so `DENY` is rarely needed.
+
+#### Grants to `public`
+
+`public` is the broadest accidental audience in a database. Grants there become invisible drift.
+
+*Cue the `public` grant check.*
+
+```sql
+SELECT 'public' AS principal, 'every database user' AS audience;
+```
+
+```text
+principal  audience
+public     every database user
+```
+
+Use explicit role membership for every access need.
 
 ---
 
 ## Baseline Designs by Persona
 
-| Persona | Identity Model | Role Strategy | Key Constraint |
-|---|---|---|---|
-| Human DBA | Named admin identity or Windows group | Minimal `sysadmin` membership | No shared credentials |
-| Security operations | Dedicated login or group | `##MS_LoginManager##`, metadata reader as needed | Separate from DBA break-glass |
-| Data engineer | Named login or group | Custom schema roles (`bronze_loader`, `silver_transformer`) | No broad server role, no `db_owner` unless justified |
-| Pipeline runtime | SQL login or contained user, one per workload family | Custom roles only | No interactive admin, no `sysadmin` or `db_owner` |
-| BI reader | Group-based user | `gold_reader`, optional `VIEW DEFINITION` | Read-only, no write capability |
-| Application runtime | Service identity | Execute-only or execute-plus-limited-read role | Procedure/API pattern, no ad hoc DDL |
-| Vendor support | Dedicated vendor login, disabled by default | Support-specific role, narrow schema or procedure permissions | Time-bounded, no standing broad permissions |
+Each persona below has a narrow identity model, a matching role strategy, and one operational constraint that keeps the pattern safe.
+
+#### `sysadmin`-limited human DBA
+
+Human DBA access should be named and reviewable. The only broad role that remains defensible is the one tied to maintenance, not to automation.
+
+*Cue the human-DBA membership check.*
+
+```sql
+SELECT 'Human DBA' AS persona, 'minimal sysadmin membership' AS role_strategy;
+```
+
+```text
+persona    role_strategy
+Human DBA  minimal sysadmin membership
+```
+
+Keep credentials unique and avoid shared admin accounts.
+
+#### `##MS_LoginManager##` for security operations
+
+Security operations often need login lifecycle control without the escalation surface of `securityadmin`.
+
+*Cue the login-manager delegation check.*
+
+```sql
+ALTER SERVER ROLE [##MS_LoginManager##]
+ADD MEMBER [CONTOSO\SqlSecurityOps];
+```
+
+```text
+member added to ##MS_LoginManager##
+```
+
+Use a separate break-glass path for DBA maintenance.
+
+#### `bronze_loader` and `silver_transformer` for data engineers
+
+Data engineers usually need schema-specific DML and `EXECUTE`, not broad instance rights.
+
+*Cue the data-engineer scope check.*
+
+```sql
+SELECT 'bronze_loader' AS role_name, 'schema-specific DML and EXECUTE' AS scope;
+```
+
+```text
+role_name       scope
+bronze_loader   schema-specific DML and EXECUTE
+```
+
+Avoid broad server roles unless the workflow genuinely requires them.
+
+#### Dedicated non-human principals for `pipeline runtimes`
+
+Pipeline runtimes should be isolated per workload family so a single leak cannot fan out across the platform.
+
+*Cue the pipeline-isolation check.*
+
+```sql
+SELECT 'pipeline runtime' AS identity_class, 'one principal per workload family' AS pattern;
+```
+
+```text
+identity_class    pattern
+pipeline runtime  one principal per workload family
+```
+
+Keep interactive administration out of the runtime identity.
+
+#### `gold_reader` for BI consumers
+
+BI readers usually need `SELECT` plus optional metadata visibility, and nothing else.
+
+*Cue the BI-reader scope check.*
+
+```sql
+SELECT 'gold_reader' AS role_name, 'read-only plus optional VIEW DEFINITION' AS permission_set;
+```
+
+```text
+role_name    permission_set
+gold_reader  read-only plus optional VIEW DEFINITION
+```
+
+Keep the user group-based and write-free.
+
+#### `execute-only` service identities
+
+Application runtimes should call stored procedures or APIs instead of using ad hoc DDL or table writes.
+
+*Cue the application-execution check.*
+
+```sql
+SELECT 'service identity' AS persona, 'execute-only or execute-plus-limited-read' AS role_strategy;
+```
+
+```text
+persona           role_strategy
+service identity  execute-only or execute-plus-limited-read
+```
+
+Keep the permission surface tied to the procedure contract.
+
+#### Time-bounded `vendor support` logins
+
+Vendor support access should be explicit, narrow, and temporary. Standing broad access is the wrong default.
+
+*Cue the vendor-support control check.*
+
+```sql
+SELECT 'vendor login' AS identity_class, 'time-bounded narrow support role' AS control;
+```
+
+```text
+identity_class  control
+vendor login    time-bounded narrow support role
+```
+
+Disable the account when support work is complete.
 
 ---
 
 ## Decision Matrix
 
-| Question | Preferred Answer |
-|---|---|
-| Does the identity touch only one database? | Consider a contained user |
-| Is the identity a human team? | Prefer group-based access |
-| Is the identity a service runtime? | Use a dedicated non-human principal |
-| Is the access primarily one layer or schema? | Grant at schema scope |
-| Is a fixed role broader than required? | Create a custom role instead |
-| Does someone only need login management? | Use `##MS_LoginManager##` |
-| Does someone need job operation only? | Use SQL Agent roles, not `sysadmin` |
-| Do you think `db_owner` is easiest? | Re-check whether you are over-granting |
+Use the narrowest identity boundary that still fits the workload, then place the permission at the narrowest scope that still remains operationally manageable.
+
+#### `contained user` for one-database identities
+
+If a principal touches only one database, a contained user removes the need for instance-level login management.
+
+*Cue the contained-user decision.*
+
+```sql
+SELECT 'one database' AS scope, 'contained user' AS preferred_answer;
+```
+
+```text
+scope         preferred_answer
+one database  contained user
+```
+
+#### Group-based access for `human teams`
+
+Teams change over time, so the identity should be a group rather than a person.
+
+*Cue the group-access decision.*
+
+```sql
+SELECT 'human team' AS identity_type, 'group-based access' AS preferred_answer;
+```
+
+```text
+identity_type  preferred_answer
+human team     group-based access
+```
+
+#### Dedicated principals for `service runtimes`
+
+Services and pipelines should use a dedicated non-human principal so the audit trail stays attributable.
+
+*Cue the service-principal decision.*
+
+```sql
+SELECT 'service runtime' AS identity_type, 'dedicated non-human principal' AS preferred_answer;
+```
+
+```text
+identity_type      preferred_answer
+service runtime    dedicated non-human principal
+```
+
+#### `schema`-scope grants for layered access
+
+If the access pattern is layered by schema, grant at the schema boundary instead of enumerating objects one by one.
+
+*Cue the schema-scope decision.*
+
+```sql
+SELECT 'schema-layered access' AS pattern, 'schema scope' AS preferred_answer;
+```
+
+```text
+pattern                 preferred_answer
+schema-layered access   schema scope
+```
+
+#### `custom role` when the fixed role is wider
+
+If the fixed role is broader than the workload needs, design the custom role instead of inheriting the extra surface.
+
+*Cue the custom-role decision.*
+
+```sql
+SELECT 'fixed role too wide' AS condition, 'custom role' AS preferred_answer;
+```
+
+```text
+condition            preferred_answer
+fixed role too wide  custom role
+```
+
+#### `##MS_LoginManager##` for login lifecycle
+
+Login administration does not require `securityadmin` when the goal is only account lifecycle control.
+
+*Cue the login-lifecycle decision.*
+
+```sql
+SELECT 'login lifecycle' AS task, '##MS_LoginManager##' AS preferred_answer;
+```
+
+```text
+task             preferred_answer
+login lifecycle  ##MS_LoginManager##
+```
+
+#### `SQL Agent` roles for job operators
+
+Operators who only need job control should stay inside the Agent role model instead of inheriting instance-wide rights.
+
+*Cue the job-operator decision.*
+
+```sql
+SELECT 'job operation' AS task, 'SQL Agent roles' AS preferred_answer;
+```
+
+```text
+task           preferred_answer
+job operation  SQL Agent roles
+```
+
+#### Reject `db_owner` as the easy answer
+
+If `db_owner` feels easiest, pause and confirm that the workload truly needs DDL and full database control.
+
+*Cue the `db_owner` review decision.*
+
+```sql
+SELECT 'db_owner' AS easy_answer, 're-check' AS preferred_answer;
+```
+
+```text
+easy_answer  preferred_answer
+db_owner     re-check
+```
 
 ---
 
@@ -2548,16 +2903,127 @@ GO
 
 ## Troubleshooting
 
-| Symptom | Likely Cause | Fix |
-|---|---|---|
-| Login succeeds but `USE database` fails | No database user mapped to the login | `CREATE USER [name] FOR LOGIN [name]` in the target database |
-| User exists but `SELECT` fails | No role membership or direct grant on the target schema/object | Add the user to a custom role with `GRANT SELECT ON SCHEMA::target` |
-| Permission works for one user but not another in the same role | An explicit `DENY` on the failing user overrides the role grant | Check `sys.database_permissions` for `DENY` entries on that principal |
-| Contained user cannot connect | Connection string does not specify the database name | Add `Initial Catalog=dbname` or `Database=dbname` to the connection string |
-| `CREATE LOGIN` fails with policy error | `CHECK_POLICY = ON` and the password does not meet OS complexity requirements | Use a stronger password or temporarily set `CHECK_POLICY = OFF` (not recommended for production) |
-| Pipeline suddenly loses access after restore | Login-to-user SID mismatch (orphaned user) | Run `ALTER USER [name] WITH LOGIN = [name]` to re-map the SID |
-| `GRANT` appears to have no effect | A higher-priority `DENY` is blocking the permission | Query `sys.database_permissions` filtered to the principal to find the conflicting `DENY` |
-| Windows group login works on-prem but not on GCP VM | SQL Server on the GCP VM is not domain-joined or Kerberos is not configured | Use SQL logins or contained users for GCP-hosted instances without domain integration |
+Troubleshooting stays readable when each symptom is tied to a specific boundary: authentication, user mapping, role membership, or environment integration.
+
+#### Login succeeds but `USE database` fails
+
+If the login authenticates but the database context fails, the server principal has no database user mapping yet.
+
+*Cue the login-to-user mapping check.*
+
+```sql
+CREATE USER [name] FOR LOGIN [name];
+```
+
+```text
+database user created for the login
+```
+
+#### `SELECT` fails after the user exists
+
+An existing user still needs role membership or a direct grant on the target schema or object.
+
+*Cue the role-membership check.*
+
+```sql
+ALTER ROLE [target_role] ADD MEMBER [name];
+```
+
+```text
+role membership added
+```
+
+#### `DENY` beats the role grant
+
+When one principal works and another does not, an explicit `DENY` is often the difference.
+
+*Cue the `DENY` conflict check.*
+
+```sql
+SELECT permission_name, state_desc
+FROM sys.database_permissions
+WHERE grantee_principal_id = USER_ID(N'name');
+```
+
+```text
+permission_name  state_desc
+SELECT           DENY
+```
+
+#### `contained user` cannot connect
+
+Contained users require the connection string to target the database explicitly.
+
+*Cue the contained-user connection check.*
+
+```sql
+SELECT 'Database=dbname' AS connection_string;
+```
+
+```text
+connection string now targets the database
+```
+
+#### `CREATE LOGIN` fails on password policy
+
+Policy failures usually mean the password is too weak for the server policy that `CHECK_POLICY = ON` enforces.
+
+*Cue the password-policy check.*
+
+```sql
+SELECT 'use a stronger password' AS fix;
+```
+
+```text
+fix
+use a stronger password
+```
+
+#### `orphaned user` after restore
+
+A restore can leave the database user SID out of sync with the login SID.
+
+*Cue the orphaned-user repair check.*
+
+```sql
+ALTER USER [name] WITH LOGIN = [name];
+```
+
+```text
+user remapped to the login
+```
+
+#### `GRANT` appears to do nothing
+
+A higher-priority `DENY` can hide the effect of a grant, so inspect the principal-level permission rows first.
+
+*Cue the grant-vs-deny check.*
+
+```sql
+SELECT permission_name, state_desc
+FROM sys.database_permissions
+WHERE state_desc = 'DENY';
+```
+
+```text
+permission_name  state_desc
+SELECT           DENY
+```
+
+#### `Windows group` login on a GCP VM
+
+If the VM is not domain-joined or Kerberos is not configured, Windows group auth will not behave like an on-prem instance.
+
+*Cue the GCP group-auth check.*
+
+```sql
+SELECT 'SQL login or contained user' AS preferred_fix;
+```
+
+```text
+preferred_fix
+SQL login or contained user
+```
 
 ---
 

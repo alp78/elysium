@@ -11,7 +11,8 @@ status: complete
 
 # Missing Data, Strings & DateTime - C#
 
-> [!quote]
+> [!quote] Oz du Soleil
+>
 > "Life is dirty. So is your data. Get used to it."
 >
 > — **Oz du Soleil**
@@ -162,6 +163,7 @@ status: complete
 
 ### Warning Suppression
 
+*Suppresses assembly version warnings before any NuGet-dependent cells run.*
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
@@ -183,6 +185,7 @@ optionsField.SetValue(csharpKernel, newOptions);
 
 ### Install NuGet packages and import namespaces
 
+*Loads the packages, imports namespaces, and registers the notebook formatters used below.*
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
 #r "nuget: Polars.NET.Native.win-x64, 0.4.0"
@@ -280,6 +283,7 @@ Data directory: c:\Users\aperi\DEV\LANG\data
 
 ### Load the datasets used throughout this notebook
 
+*Example for Load the datasets used throughout this notebook.*
 ```csharp
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 var dfM = LoadOhlcvCsv(DATA);
@@ -324,6 +328,7 @@ Real-world datasets almost always contain missing values — sensor gaps, option
 >
 > Pick the least misleading repair strategy for the data-generation pattern, not just the shortest code path.
 
+*Maps the missing-data decision path used in this section.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -357,8 +362,7 @@ Null detection is the first step in any data quality check. Scan each column for
 
 The `IsNull()` expression returns a boolean mask that can be passed to `Filter()` to isolate rows where a specific column is null. Iterating over `Columns` and checking the `NullCount` property on each `Series` gives a quick per-column summary without constructing a full filtered DataFrame.
 
-_Iterates over all columns in `scP` to print null counts for the 5 columns with missing values, then filters with `IsNull()` to display the 5 rows where `ev_ebitda_zscore` is null alongside their `pe_zscore` values._
-
+*Iterates over all columns in `scP` to print null counts for the 5 columns with missing values, then filters with `IsNull()` to display the 5 rows where `ev_ebitda_zscore` is null alongside their `pe_zscore` values.*
 ```csharp
 display("Null counts per column:");
 foreach (var col in scP.Columns)
@@ -389,8 +393,7 @@ Rows where ev_ebitda_zscore IS null (first 5):
 
 MDA uses direct `NullCount` metadata and boolean masks for null inspection.
 
-_Prints sparse-column null counts and previews the first five null `ev_ebitda_zscore` rows._
-
+*Prints sparse-column null counts and previews the first five null `ev_ebitda_zscore` rows.*
 ```csharp
 // Microsoft.Data.Analysis — Detect nulls in scores_daily (has real nulls)
 display("Null counts per column:");
@@ -429,8 +432,7 @@ Rows where ev_ebitda_zscore IS null (first 5):
 
 `NullCount` is direct in MDA, so completeness checks are simpler than indirect present-value counting patterns.
 
-_Reports null counts for the five known sparse score columns._
-
+*Reports null counts for the five known sparse score columns.*
 ```csharp
 // Microsoft.Data.Analysis — Count nulls per column with NullCount property
 var nullCols = new[] { "pe_zscore", "pb_zscore", "ev_ebitda_zscore", "yield_zscore", "recommendation_mean" };
@@ -458,8 +460,7 @@ Total rows: 466
 
 The notebook uses an explicit boolean mask plus `Filter(...)` for whole-row null dropping.
 
-_Scans each score row for nulls, filters valid rows, and previews the first five survivors._
-
+*Scans each score row for nulls, filters valid rows, and previews the first five survivors.*
 ```csharp
 // Microsoft.Data.Analysis — Drop rows where any column has null
 var validMask = new PrimitiveDataFrameColumn<bool>("mask", scP.Rows.Count);
@@ -488,8 +489,7 @@ Before: 466 rows  |  After DropNulls: 346 rows
 
 MDA repairs a column by materializing a typed output column and swapping it back into the frame.
 
-_Fills null `ev_ebitda_zscore` values with `0.0` and confirms the null count drops to zero._
-
+*Fills null `ev_ebitda_zscore` values with `0.0` and confirms the null count drops to zero.*
 ```csharp
 // Microsoft.Data.Analysis — Fill null ev_ebitda_zscore with 0.0
 var filledCol = new PrimitiveDataFrameColumn<decimal>("ev_ebitda_zscore_filled", scP.Rows.Count);
@@ -510,8 +510,7 @@ Nulls after FillNull(0.0): 0
 
 Forward fill in MDA is usually an ordered scan with explicit state.
 
-_Carries the last observed `ev_ebitda_zscore` value forward through later gaps._
-
+*Carries the last observed `ev_ebitda_zscore` value forward through later gaps.*
 ```csharp
 // Microsoft.Data.Analysis — Forward fill: propagate last valid value forward
 var ffillCol = new PrimitiveDataFrameColumn<decimal>("ev_ebitda_zscore", scP.Rows.Count);
@@ -532,8 +531,7 @@ Nulls after ForwardFill: 1
 
 Backward fill is the same idea in reverse order.
 
-_Propagates the next observed `ev_ebitda_zscore` value backward into earlier gaps._
-
+*Propagates the next observed `ev_ebitda_zscore` value backward into earlier gaps.*
 ```csharp
 // Microsoft.Data.Analysis — Backward fill: propagate next valid value backward
 var bfillCol = new PrimitiveDataFrameColumn<decimal>("ev_ebitda_zscore", scP.Rows.Count);
@@ -554,8 +552,7 @@ Nulls after BackwardFill: 0
 
 A common MDA pattern is compute-then-materialize: first the statistic, then the repaired column.
 
-_Computes the mean of non-null values and fills gaps with that mean._
-
+*Computes the mean of non-null values and fills gaps with that mean.*
 ```csharp
 // Microsoft.Data.Analysis — Fill null with column mean
 decimal sum = 0m; int count = 0;
@@ -578,8 +575,7 @@ Nulls after FillNull(mean): 0
 
 MDA has no interpolation expression, so the notebook computes linear interpolation explicitly.
 
-_Searches backward and forward for neighboring values and linearly interpolates each gap._
-
+*Searches backward and forward for neighboring values and linearly interpolates each gap.*
 ```csharp
 // Microsoft.Data.Analysis — Linear interpolation of missing values
 var interpCol = new PrimitiveDataFrameColumn<decimal>("ev_ebitda_zscore", scP.Rows.Count);
@@ -611,8 +607,7 @@ Nulls after Interpolate: 0
 
 MDA emulates `coalesce` by testing candidate columns in order and writing the first non-null value.
 
-_Combines `primary`, `secondary`, and `fallback` into a single `best` column._
-
+*Combines `primary`, `secondary`, and `fallback` into a single `best` column.*
 ```csharp
 // Microsoft.Data.Analysis — Coalesce columns
 var primaryCol = new PrimitiveDataFrameColumn<decimal>("primary", new decimal?[] { 100.0m, null, 300.0m, null });
@@ -630,8 +625,7 @@ var coalResult = coalDf.Clone(); coalResult.Columns.Add(bestCol); coalResult
 
 MDA uses CLR string transforms plus new typed string columns.
 
-_Builds uppercase and lowercase symbol columns and previews the first ten rows._
-
+*Builds uppercase and lowercase symbol columns and previews the first ten rows.*
 ```csharp
 var symbolsM = dfM.Columns["symbol"].Cast<string>().Distinct().ToArray();
 var upperColM = new MDA.StringDataFrameColumn("upper", symbolsM.Select(s => s?.ToUpper()));
@@ -651,8 +645,7 @@ Pattern matching on string columns is the primary way to filter by exchange code
 
 `Str.Contains(pattern)` takes a plain string argument (not wrapped in `Lit()`) and returns a boolean expression. Pass it to `Filter()` to keep only matching rows.
 
-_Filters the OHLCV DataFrame to rows where `symbol` contains `".DE"`, then selects unique symbols — returning the 16 German-listed stocks from the 50-member index._
-
+*Filters the OHLCV DataFrame to rows where `symbol` contains `".DE"`, then selects unique symbols — returning the 16 German-listed stocks from the 50-member index.*
 ```csharp
 var germanP = dfP.Filter(Col("symbol").Str.Contains(".DE"))
     .Select(new[] { "symbol" }).Unique();
@@ -668,8 +661,7 @@ German exchange symbols (.DE):
 
 For light string filters, MDA often materializes a string array and filters it with CLR predicates.
 
-_Filters unique symbols to the German exchange tickers containing `.DE`._
-
+*Filters unique symbols to the German exchange tickers containing `.DE`.*
 ```csharp
 var germanSymbolsM = symbolsM.Where(s => s != null && s.Contains(".DE")).ToArray();
 display("German exchange symbolsM (.DE):");
@@ -686,8 +678,7 @@ German exchange symbols (.DE):
 
 `Str.StartsWith()` and `Str.EndsWith()` take plain string arguments, like `Str.Contains()`. They can be combined with `Filter()` to select rows matching a prefix or suffix pattern.
 
-_Applies `Str.StartsWith("S")` and `Str.EndsWith(".BR")` in separate filter passes, rendering both result sets side by side as HTML — 7 symbols starting with S and 2 Brussels-listed symbols._
-
+*Applies `Str.StartsWith("S")` and `Str.EndsWith(".BR")` in separate filter passes, rendering both result sets side by side as HTML — 7 symbols starting with S and 2 Brussels-listed symbols.*
 ```csharp
 var startsS = dfP.Filter(Col("symbol").Str.StartsWith("S"))
     .Select(new[] { "symbol" }).Unique();
@@ -709,8 +700,7 @@ display(HTML($"<div style='display:flex;gap:40px'><div><b>StartsWith S</b>{leftH
 
 Prefix and suffix filters follow the same CLR-first pattern.
 
-_Displays symbols starting with `S` and symbols ending with `.BR`._
-
+*Displays symbols starting with `S` and symbols ending with `.BR`.*
 ```csharp
 var startsSM = symbolsM.Where(s => s != null && s.StartsWith("S")).ToArray();
 var endsBRM = symbolsM.Where(s => s != null && s.EndsWith(".BR")).ToArray();
@@ -741,8 +731,7 @@ Substring replacement is used for cleaning identifiers, normalizing naming conve
 
 `Str.ReplaceAll(old, new)` replaces every occurrence of the pattern in each string. For single-match replacement, use `Str.Replace()`. Both accept plain strings (not `Lit()`).
 
-_Applies `Str.ReplaceAll(".DE", "_GER")` to all 50 symbols, then filters to the 16 replaced entries — showing `ADS.DE → ADS_GER`, `ALV.DE → ALV_GER`, etc._
-
+*Applies `Str.ReplaceAll(".DE", "_GER")` to all 50 symbols, then filters to the 16 replaced entries — showing `ADS.DE → ADS_GER`, `ALV.DE → ALV_GER`, etc.*
 ```csharp
 var replaced = dfP.Select(new[] { "symbol" }).Unique()
     .WithColumns(
@@ -760,8 +749,7 @@ Replace '.DE' with '_GER':
 
 Replacement is explicit managed-code work over the string values.
 
-_Replaces `.DE` with `_GER` and shows only the affected identifiers._
-
+*Replaces `.DE` with `_GER` and shows only the affected identifiers.*
 ```csharp
 var replacedArrM = symbolsM.Select(s => s?.Replace(".DE", "_GER")).ToArray();
 var replacedDfM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.StringDataFrameColumn("replaced", replacedArrM));
@@ -786,8 +774,7 @@ Measuring string length and extracting fixed-position substrings are building bl
 
 In Polars.NET 0.4.0, the `Str.LenChars()` method is not yet exposed. As a workaround, extract the column to a C# array, compute lengths with LINQ, and stack the result back onto the DataFrame.
 
-_Extracts symbols to a C# array, computes each string's `.Length`, stacks the result back as a `char_len` series, then sorts descending to show that `NDA-FI.HE` (9 chars) is the longest ticker in the index._
-
+*Extracts symbols to a C# array, computes each string's `.Length`, stacks the result back as a `char_len` series, then sorts descending to show that `NDA-FI.HE` (9 chars) is the longest ticker in the index.*
 ```csharp
 var symDf = dfP.Select(new[] { "symbol" }).Unique();
 var symArr = symDf.Column("symbol").ToArray<string>();
@@ -803,8 +790,7 @@ lengths.Sort("char_len", descending: true).Head(10)
 
 String length in MDA is usually projected into a numeric typed column.
 
-_Computes symbol lengths and orders the result by descending length._
-
+*Computes symbol lengths and orders the result by descending length.*
 ```csharp
 var lengthsM = symbolsM.Select(s => s != null ? (double)s.Length : 0).ToArray();
 var lenDfM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.PrimitiveDataFrameColumn<decimal>("char_len", lengthsM));
@@ -817,8 +803,7 @@ lenDfM.OrderByDescending("char_len").Head(10)
 
 `Str.Slice(offset, length)` extracts a fixed-position substring from each value. The offset is zero-based. This is useful for fixed-width parsing but not for variable-length identifiers — use `Str.Split()` or `Str.Extract()` with regex for those.
 
-_Applies `Str.Slice(0, 3)` to all unique symbols, creating a `first_3` column — the first 10 rows show three-character prefixes like `ABI`, `AD.`, `ADS`, `ADY`._
-
+*Applies `Str.Slice(0, 3)` to all unique symbols, creating a `first_3` column — the first 10 rows show three-character prefixes like `ABI`, `AD.`, `ADS`, `ADY`.*
 ```csharp
 var sliced = dfP.Select(new[] { "symbol" }).Unique()
     .WithColumns(
@@ -833,8 +818,7 @@ sliced.Head(10)
 
 Fixed-position slicing uses CLR substring logic before materialization.
 
-_Extracts the first three characters of each symbol into `first_3`._
-
+*Extracts the first three characters of each symbol into `first_3`.*
 ```csharp
 var first3ArrM = symbolsM.Select(s => s != null ? (s.Length >= 3 ? s.Substring(0, 3) : s) : null).ToArray();
 var slicedM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.StringDataFrameColumn("first_3", first3ArrM));
@@ -851,8 +835,7 @@ Splitting strings by a delimiter decomposes composite identifiers into their par
 
 `Str.Split(separator)` splits each string into a list of substrings. The result is a column of type `List[Str]`. Access individual elements using list indexing expressions in downstream operations.
 
-_Splits all unique symbols on `"."`, producing a `List[Str]` column where each cell contains the ticker and exchange code as a two-element list — e.g., `ABI.BR → [ABI, BR]`._
-
+*Splits all unique symbols on `"."`, producing a `List[Str]` column where each cell contains the ticker and exchange code as a two-element list — e.g., `ABI.BR → [ABI, BR]`.*
 ```csharp
 var split = dfP.Select(new[] { "symbol" }).Unique()
     .WithColumns(
@@ -867,8 +850,7 @@ split.Head(10)
 
 MDA does not expose a list-typed split result, so the notebook stores a readable serialized form.
 
-_Splits each symbol on `.` and stores the rendered parts string for inspection._
-
+*Splits each symbol on `.` and stores the rendered parts string for inspection.*
 ```csharp
 var splitArrM = symbolsM.Select(s => s != null ? $"[\"{string.Join("\", \"", s.Split('.'))}\"]" : null).ToArray();
 var splitDfM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.StringDataFrameColumn("parts", splitArrM));
@@ -885,8 +867,7 @@ Regular expressions provide flexible pattern matching for extracting structured 
 
 `Str.Extract(pattern, groupIndex)` applies a regex to each string and returns the specified capture group. Group index `1` refers to the first parenthesized group. Returns `null` for non-matching strings.
 
-_Applies the regex `\.(\w+)` with `Str.Extract(pattern, 1)` to extract the exchange code suffix from all 50 unique symbols, returning `null` for any symbol without a dot — the first 10 rows show `BR`, `AS`, `DE`, etc._
-
+*Applies the regex `\.(\w+)` with `Str.Extract(pattern, 1)` to extract the exchange code suffix from all 50 unique symbols, returning `null` for any symbol without a dot — the first 10 rows show `BR`, `AS`, `DE`, etc.*
 ```csharp
 var extracted = dfP.Select(new[] { "symbol" }).Unique()
     .WithColumns(
@@ -901,8 +882,7 @@ extracted.Head(10)
 
 Regex extraction is standard .NET regex work over the materialized string values.
 
-_Captures the exchange code after the dot and previews the first ten results._
-
+*Captures the exchange code after the dot and previews the first ten results.*
 ```csharp
 var regexM = new Regex(@"\.(\w+)");
 var exchangeArrM = symbolsM.Select(s => s != null && regexM.IsMatch(s) ? regexM.Match(s).Groups[1].Value : null).ToArray();
@@ -920,8 +900,7 @@ Padding strings to a fixed width is common when generating fixed-width output fi
 
 In Polars.NET 0.4.0, `Str.PadStart()` is not yet exposed. As a workaround, extract values to a C# array, apply `string.PadLeft()`, and stack the result back.
 
-_Extracts unique symbols to a C# array, pads each to 10 characters with leading zeros using `PadLeft(10, '0')`, and stacks the result back — showing `ABI.BR → 0000ABI.BR` and `ADYEN.AS → 00ADYEN.AS`._
-
+*Extracts unique symbols to a C# array, pads each to 10 characters with leading zeros using `PadLeft(10, '0')`, and stacks the result back — showing `ABI.BR → 0000ABI.BR` and `ADYEN.AS → 00ADYEN.AS`.*
 ```csharp
 var symDfPad = dfP.Select(new[] { "symbol" }).Unique();
 var symArrPad = symDfPad.Column("symbol").ToArray<string>();
@@ -936,8 +915,7 @@ symDfPad.HStack(paddedSeries).Head(10)
 
 Padding fits naturally with MDA's CLR-centric string workflow.
 
-_Pads each symbol to width 10 with leading zeroes._
-
+*Pads each symbol to width 10 with leading zeroes.*
 ```csharp
 var paddedArrM = symbolsM.Select(s => s?.PadLeft(10, '0')).ToArray();
 var symDfPadM = new MDA.DataFrame(new MDA.StringDataFrameColumn("symbol", symbolsM), new MDA.StringDataFrameColumn("padded", paddedArrM));
@@ -954,8 +932,7 @@ Combining values from multiple string columns into a single formatted string —
 
 Extract string columns to arrays, combine with `Zip` and string interpolation, then stack the result back as a new series.
 
-_Extracts `short_name` and `country` arrays from `dimP`, zips them with string interpolation to produce `"ASML HOLDING (Netherlands)"` style labels, and stacks the result back as a `display_name` column._
-
+*Extracts `short_name` and `country` arrays from `dimP`, zips them with string interpolation to produce `"ASML HOLDING (Netherlands)"` style labels, and stacks the result back as a `display_name` column.*
 ```csharp
 var nameArr = dimP.Column("short_name").ToArray<string>();
 var countryArr = dimP.Column("country").ToArray<string>();
@@ -970,8 +947,7 @@ dimP.Select("short_name", "country").HStack(dnSeries).Head(10)
 
 String interpolation over source columns is the common MDA pattern for labels and reporting fields.
 
-_Builds `display_name = short_name + " (country)"` from `index_dim` and previews the first ten rows._
-
+*Builds `display_name = short_name + " (country)"` from `index_dim` and previews the first ten rows.*
 ```csharp
 // Microsoft.Data.Analysis — Build display name "SHORT_NAME (COUNTRY)"
 var shortNameCol = dimP.Columns["short_name"];
@@ -992,8 +968,7 @@ new DataFrame(shortNameCol, countryCol, displayNames).Head(10)
 
 Whitespace stripping is straightforward once values are already materialized as CLR strings.
 
-_Builds a small demo frame and trims leading and trailing whitespace from each value._
-
+*Builds a small demo frame and trims leading and trailing whitespace from each value.*
 ```csharp
 // Microsoft.Data.Analysis — Trim whitespace
 var dirtyArr = new[] { "  ASML  ", "  SAP ", " MC" };
@@ -1011,8 +986,7 @@ dirtyDf
 
 For all-match extraction, MDA relies on the CLR regex engine and explicit output columns.
 
-_Extracts all numeric substrings, stores the joined matches, and records their count._
-
+*Extracts all numeric substrings, stores the joined matches, and records their count.*
 ```csharp
 // Microsoft.Data.Analysis — Extract all numbers from text using Regex
 var textArr = new[] { "ASML closed at 900.5 up from 895.2", "No numbers", "PE: 45.3, PB: 12.1" };
@@ -1031,8 +1005,7 @@ textDf
 
 MDA often lands dates as CLR `DateTime` values during `LoadCsv`; reparsing is explicit when needed.
 
-_Prints the inferred type, materializes a string version, reparses it, and shows the columns together._
-
+*Prints the inferred type, materializes a string version, reparses it, and shows the columns together.*
 ```csharp
 display($"date column type: {dfM.Columns["date"].DataType.Name}");
 
@@ -1076,8 +1049,7 @@ Extracting year, month, day, and weekday from date columns enables time-based gr
 
 The `.Dt` accessor provides `.Year()`, `.Month()`, `.Day()`, `.Weekday()`, and other component extractors. These return integer expressions. Polars weekday numbering: Monday = 1, Sunday = 7 (ISO 8601).
 
-_Adds `year`, `month`, and `weekday` columns to the OHLCV DataFrame using `.Dt.Year()`, `.Dt.Month()`, and `.Dt.Weekday()`, showing the first 10 rows for `ABI.BR` in January 2021 — weekdays 1–5 confirming sequential trading day ordering._
-
+*Adds `year`, `month`, and `weekday` columns to the OHLCV DataFrame using `.Dt.Year()`, `.Dt.Month()`, and `.Dt.Weekday()`, showing the first 10 rows for `ABI.BR` in January 2021 — weekdays 1–5 confirming sequential trading day ordering.*
 ```csharp
 var dateComponents = dfP.WithColumns(
     Col("date").Dt.Year().Alias("year"),
@@ -1093,8 +1065,7 @@ dateComponents.Select(new[] { "symbol", "date", "year", "month", "weekday" }).He
 
 Temporal feature extraction uses `DateTime` properties and typed target columns.
 
-_Adds `year`, `month`, and ISO-like `weekday` columns derived from the typed date column._
-
+*Adds `year`, `month`, and ISO-like `weekday` columns derived from the typed date column.*
 ```csharp
 var yearColM = new MDA.PrimitiveDataFrameColumn<int>("year", dfM.Rows.Count);
 var monthColM = new MDA.PrimitiveDataFrameColumn<int>("month", dfM.Rows.Count);
@@ -1123,8 +1094,7 @@ Adding or subtracting durations from date columns is essential for computing set
 
 `Dt.OffsetBy("7d")` adds a duration string to every value in a date column. Supported units: `d` (days), `w` (weeks), `mo` (months), `y` (years), `h` (hours), `m` (minutes), `s` (seconds). Returns a new date expression.
 
-_Uses `Dt.OffsetBy("7d")` to add exactly 7 calendar days to each trading date, producing `date_plus_7` — the first row shows `2021-01-04 → 2021-01-11`, confirming the offset is calendar days, not trading days._
-
+*Uses `Dt.OffsetBy("7d")` to add exactly 7 calendar days to each trading date, producing `date_plus_7` — the first row shows `2021-01-04 → 2021-01-11`, confirming the offset is calendar days, not trading days.*
 ```csharp
 var dfPlus7 = dfP.WithColumns(
     Col("date").Dt.OffsetBy("7d").Alias("date_plus_7")
@@ -1138,8 +1108,7 @@ dfPlus7.Select(new[] { "symbol", "date", "date_plus_7" }).Head(5)
 
 Date arithmetic in MDA is direct CLR date logic written into a typed target column.
 
-_Adds seven calendar days to each date and previews the first five rows._
-
+*Adds seven calendar days to each date and previews the first five rows.*
 ```csharp
 var plus7ColM = new MDA.PrimitiveDataFrameColumn<DateTime>("date_plus_7", dfM.Rows.Count);
 for(long i = 0; i < dfM.Rows.Count; i++)
@@ -1159,8 +1128,7 @@ Shifting a column by N positions creates lagged (previous) or lead (future) vers
 
 `Shift(n)` offsets the column values by `n` positions. Positive `n` shifts down (lag — previous values), negative shifts up (lead — future values). The resulting nulls at the edges represent the missing boundary values.
 
-_Filters to `ABI.BR` rows, shifts `close` by 1 to create `prev_close`, and displays the first 5 rows — the first row shows `null` in `prev_close` (no preceding value), while row 2 shows `57.21` (the row-1 close) appearing in both columns._
-
+*Filters to `ABI.BR` rows, shifts `close` by 1 to create `prev_close`, and displays the first 5 rows — the first row shows `null` in `prev_close` (no preceding value), while row 2 shows `57.21` (the row-1 close) appearing in both columns.*
 ```csharp
 var abiPrices = dfP.Filter(Col("symbol") == Lit("ABI.BR"));
 var abiShifted = abiPrices.WithColumns(
@@ -1178,47 +1146,41 @@ ABI.BR with lagged close (first 5):
 
 Lagging a column in MDA means reading the typed source and writing each previous value into a target column.
 
-_Filters to `ABI.BR`, shifts close by one row, and previews the first five lagged values._
-
+*Filters to `ABI.BR`, shifts close by one row, and previews the first five lagged values.*
 ```csharp
-// Microsoft.Data.Analysis — Rolling mean (SMA-7 and SMA-30)
-var asmlP = df.Filter((PrimitiveDataFrameColumn<bool>)((StringDataFrameColumn)df.Columns["symbol"]).ElementwiseEquals("ASML.AS")).OrderBy("date");
-var sma7Col = new PrimitiveDataFrameColumn<decimal>("sma_7", asmlP.Rows.Count);
-var sma30Col = new PrimitiveDataFrameColumn<decimal>("sma_30", asmlP.Rows.Count);
-var rc = asmlP.Columns["close"];
-for(long i = 0; i < asmlP.Rows.Count; i++)
+// Microsoft.Data.Analysis — Lagged close values via an explicit shift loop
+var abiPricesM = dfM.Filter((MDA.PrimitiveDataFrameColumn<bool>)((MDA.StringDataFrameColumn)dfM.Columns["symbol"]).ElementwiseEquals("ABI.BR")).OrderBy("date");
+var prevCloseColM = new MDA.PrimitiveDataFrameColumn<decimal>("prev_close", abiPricesM.Rows.Count);
+
+for(long i = 1; i < abiPricesM.Rows.Count; i++)
 {
-    decimal sum7 = 0m; int count7 = 0;
-    for(long j = 0; j < 7 && (i - j) >= 0; j++) if (rc[i - j] != null) { sum7 += Convert.ToDecimal(rc[i - j]); count7++; }
-    if (count7 > 0) sma7Col[i] = sum7 / count7;
-    decimal sum30 = 0m; int count30 = 0;
-    for(long j = 0; j < 30 && (i - j) >= 0; j++) if (rc[i - j] != null) { sum30 += Convert.ToDecimal(rc[i - j]); count30++; }
-    if (count30 > 0) sma30Col[i] = sum30 / count30;
+    if (abiPricesM.Columns["close"][i - 1] != null)
+        prevCloseColM[i] = Convert.ToDecimal(abiPricesM.Columns["close"][i - 1]);
 }
-var asmlRolling = asmlP.Clone(); asmlRolling.Columns.Add(sma7Col); asmlRolling.Columns.Add(sma30Col);
-new DataFrame(asmlRolling.Columns["date"], asmlRolling.Columns["close"], sma7Col, sma30Col).Tail(10)
+new MDA.DataFrame(abiPricesM.Columns["date"], abiPricesM.Columns["close"], prevCloseColM).Head(5)
 ```
 
-<table><thead><tr><th>date</th><th>close</th><th>sma_7</th><th>sma_30</th></tr></thead><tbody><tr><td><span>2026-02-27 00:00:00Z</span></td><td>1233.4</td><td>1251.5142857142857142857142857</td><td>1201.4</td></tr><tr><td><span>2026-03-02 00:00:00Z</span></td><td>1210.4</td><td>1247.5428571428571428571428571</td><td>1204.4</td></tr><tr><td><span>2026-03-03 00:00:00Z</span></td><td>1161.8</td><td>1234.1428571428571428571428571</td><td>1205.1266666666666666666666667</td></tr><tr><td><span>2026-03-04 00:00:00Z</span></td><td>1199.8</td><td>1227.0857142857142857142857143</td><td>1206.6266666666666666666666667</td></tr><tr><td><span>2026-03-05 00:00:00Z</span></td><td>1186.0</td><td>1216.0285714285714285714285714</td><td>1206.9466666666666666666666667</td></tr><tr><td><span>2026-03-06 00:00:00Z</span></td><td>1147.0</td><td>1195.8285714285714285714285714</td><td>1205.9066666666666666666666667</td></tr><tr><td><span>2026-03-09 00:00:00Z</span></td><td>1147.6</td><td>1183.7142857142857142857142857</td><td>1204.8933333333333333333333333</td></tr><tr><td><span>2026-03-10 00:00:00Z</span></td><td>1200.0</td><td>1178.9428571428571428571428571</td><td>1204.3066666666666666666666667</td></tr><tr><td><span>2026-03-11 00:00:00Z</span></td><td>1198.8</td><td>1177.2857142857142857142857143</td><td>1204.4533333333333333333333333</td></tr><tr><td><span>2026-03-12 00:00:00Z</span></td><td>1190.8</td><td>1181.4285714285714285714285714</td><td>1204.4133333333333333333333333</td></tr></tbody></table>
+<table><thead><tr><th>date</th><th>close</th><th>prev_close</th></tr></thead><tbody><tr><td>2021-01-04 00:00:00Z</td><td>57.21</td><td>null</td></tr><tr><td>2021-01-05 00:00:00Z</td><td>57.18</td><td>57.21</td></tr><tr><td>2021-01-06 00:00:00Z</td><td>58.77</td><td>57.18</td></tr><tr><td>2021-01-07 00:00:00Z</td><td>58.4</td><td>58.77</td></tr><tr><td>2021-01-08 00:00:00Z</td><td>57.86</td><td>58.4</td></tr></tbody></table>
 
 #### Microsoft.Data.Analysis | Cumulative volume with a running accumulator
 
 Running totals are explicit stateful scans in MDA.
 
-_Accumulates `ABI.BR` volume into `cum_volume` and previews the first ten rows._
-
+*Accumulates `ABI.BR` volume into `cum_volume` and previews the first five rows.*
 ```csharp
+var abiPricesM = dfM.Filter((MDA.PrimitiveDataFrameColumn<bool>)((MDA.StringDataFrameColumn)dfM.Columns["symbol"]).ElementwiseEquals("ABI.BR")).OrderBy("date");
 var abiVolM = abiPricesM.Columns["volume"];
 var cumVolColM = new MDA.PrimitiveDataFrameColumn<decimal>("cum_volume", abiPricesM.Rows.Count);
-double currentCumM = 0;
+decimal currentCumM = 0m;
 
 for(long i = 0; i < abiPricesM.Rows.Count; i++)
 {
-    currentCumM += Convert.ToDouble(abiVolM[i] ?? 0.0);
+    if (abiVolM[i] != null)
+        currentCumM += Convert.ToDecimal(abiVolM[i]);
     cumVolColM[i] = currentCumM;
 }
 
-new MDA.DataFrame(abiPricesM.Columns["date"], abiPricesM.Columns["volume"], cumVolColM).Head(10)
+new MDA.DataFrame(abiPricesM.Columns["date"], abiPricesM.Columns["volume"], cumVolColM).Head(5)
 ```
 
 <table><thead><tr><th>date</th><th>volume</th><th>cum_volume</th></tr></thead><tbody><tr><td>2021-01-04 00:00:00Z</td><td>1513937</td><td>1513937</td></tr><tr><td>2021-01-05 00:00:00Z</td><td>1382722</td><td>2896659</td></tr><tr><td>2021-01-06 00:00:00Z</td><td>1370204</td><td>4266863</td></tr><tr><td>2021-01-07 00:00:00Z</td><td>1469911</td><td>5736774</td></tr><tr><td>2021-01-08 00:00:00Z</td><td>1428681</td><td>7165455</td></tr></tbody></table>
@@ -1231,8 +1193,7 @@ Filtering rows by date range is the most common datetime operation — selecting
 
 Combine `Dt.Year()`, `Dt.Month()`, and column equality expressions with `&` (and) to build complex date filters. Each component comparison returns a boolean expression; combine with `&` for intersection.
 
-_Chains three expression filters with `&` to select `SAP.DE` rows in January 2024, returning all 22 trading days in that month with close prices ranging from `137.34` to `160.76`._
-
+*Chains three expression filters with `&` to select `SAP.DE` rows in January 2024, returning all 22 trading days in that month with close prices ranging from `137.34` to `160.76`.*
 ```csharp
 var jan2024 = dfP.Filter(
     (Col("date").Dt.Year() == Lit(2024))
@@ -1251,8 +1212,7 @@ SAP.DE in January 2024:
 
 Date filters in MDA are CLR predicates over typed `DateTime` values.
 
-_Builds a mask for `SAP.DE` rows in January 2024 and renders the matching records._
-
+*Builds a mask for `SAP.DE` rows in January 2024 and renders the matching records.*
 ```csharp
 var jan24MaskM = new MDA.PrimitiveDataFrameColumn<bool>("maskM", dfM.Rows.Count);
 var dfSymbolM = (MDA.StringDataFrameColumn)dfM.Columns["symbol"];
@@ -1285,8 +1245,7 @@ Generate a sequence of dates between a start and end point. Useful for building 
 
 Build date strings with `Enumerable.Range` and `AddDays`, then parse to Polars `Date` type.
 
-_Generates a 10-element date sequence from `2026-01-01` to `2026-01-10` using `Enumerable.Range` with `AddDays`, formats them as strings, then parses back to Polars `Date` type with `Str.ToDate("%Y-%m-%d")`._
-
+*Generates a 10-element date sequence from `2026-01-01` to `2026-01-10` using `Enumerable.Range` with `AddDays`, formats them as strings, then parses back to Polars `Date` type with `Str.ToDate("%Y-%m-%d")`.*
 ```csharp
 var start = new DateTime(2026, 1, 1);
 var end = new DateTime(2026, 1, 10);
@@ -1309,8 +1268,7 @@ Date range: 10 days from 2026-01-01 to 2026-01-10
 
 Date-range generation in MDA is explicit CLR date arithmetic written into a typed date column.
 
-_Builds a 10-day inclusive `DateTime` range from 2026-01-01 through 2026-01-10._
-
+*Builds a 10-day inclusive `DateTime` range from 2026-01-01 through 2026-01-10.*
 ```csharp
 var startM = new DateTime(2026, 1, 1);
 var endM = new DateTime(2026, 1, 10);
@@ -1341,8 +1299,7 @@ Compute statistics over a sliding window of N consecutive rows — moving averag
 
 `RollingMean("7")` computes the 7-period simple moving average. The window size is passed as a string in Polars.NET 0.4.0. Combine with `WithColumns` and `Alias` for multiple rolling columns.
 
-_Filters to `ASML.AS` sorted by date, computes both a 7-period and 30-period simple moving average on `close`, and displays the last 10 rows — showing SMA-7 (`1181`) tracking below SMA-30 (`1204`) in the declining price period._
-
+*Filters to `ASML.AS` sorted by date, computes both a 7-period and 30-period simple moving average on `close`, and displays the last 10 rows — showing SMA-7 (`1181`) tracking below SMA-30 (`1204`) in the declining price period.*
 ```csharp
 var asmlP = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date");
 var asmlRolling = asmlP.WithColumns(
@@ -1358,8 +1315,7 @@ asmlRolling.Select(new[] { "date", "close", "sma_7", "sma_30" }).Tail(10)
 
 Rolling windows are explicit loops over ordered rows in MDA.
 
-_Computes 7-row and 30-row moving averages for `ASML.AS` close prices._
-
+*Computes 7-row and 30-row moving averages for `ASML.AS` close prices.*
 ```csharp
 var asmlPM = dfM.Filter((MDA.PrimitiveDataFrameColumn<bool>)((MDA.StringDataFrameColumn)dfM.Columns["symbol"]).ElementwiseEquals("ASML.AS")).OrderBy("date");
 var sma7ColM = new MDA.PrimitiveDataFrameColumn<decimal>("sma_7", asmlPM.Rows.Count);
@@ -1397,8 +1353,7 @@ Change time frequency by downsampling daily data to monthly OHLC bars. Polars.NE
 
 Extract year and month components with the `.Dt` accessor, group by both, then aggregate with `First` (open), `Max` (high), `Min` (low), `Last` (close), and `Sum` (volume).
 
-_Groups `ASML.AS` by extracted `year` and `month` components, aggregating `open` (first), `high` (max), `low` (min), `close` (last), and `volume` (sum) — the last 6 months show the stock's rally from close 918 (Oct 2025) to 1190 (Mar 2026)._
-
+*Groups `ASML.AS` by extracted `year` and `month` components, aggregating `open` (first), `high` (max), `low` (min), `close` (last), and `volume` (sum) — the last 6 months show the stock's rally from close 918 (Oct 2025) to 1190 (Mar 2026).*
 ```csharp
 var asmlSorted = dfP.Filter(Col("symbol") == Lit("ASML.AS")).Sort("date");
 var asmlMonthly = asmlSorted
@@ -1427,8 +1382,7 @@ ASML.AS — Monthly OHLC (last 6 months):
 
 MDA has no dynamic time-window grouping API, so monthly OHLC becomes explicit grouping state over ordered rows.
 
-_Groups `ASML.AS` observations by calendar month and shows the last six monthly bars._
-
+*Groups `ASML.AS` observations by calendar month and shows the last six monthly bars.*
 ```csharp
 // Microsoft.Data.Analysis — Monthly OHLC resampling (GroupBy Dynamic replacement using LINQ)
 var grouped = new List<(int Year, int Month, decimal Open, decimal High, decimal Low, decimal Close, decimal Volume)>();
@@ -1458,8 +1412,7 @@ ASML.AS — Monthly OHLC (last 6 months):
 
 Running extrema use the same explicit state pattern as cumulative totals.
 
-_Tracks cumulative volume together with the running high and running low for `ASML.AS`._
-
+*Tracks cumulative volume together with the running high and running low for `ASML.AS`.*
 ```csharp
 // Microsoft.Data.Analysis — Cumulative max, min (running high / running low)
 var cumVol = new PrimitiveDataFrameColumn<decimal>("cum_volume", asmlP.Rows.Count);
@@ -1483,12 +1436,15 @@ new DataFrame(asmlCum.Columns["date"], asmlCum.Columns["close"], asmlCum.Columns
 ## Warnings
 
 > [!warning] Polars.NET DataFrames are immutable — every operation returns a new DataFrame
+>
 > Forgetting to assign the result of `WithColumns()`, `Filter()`, or `Sort()` silently discards the work. MDA is mutable — column assignment modifies the original.
 
 > [!warning] `IfElse` in Polars.NET is not `When/Then/Otherwise`
+>
 > The C# API uses `Col("x").Gt(0).IfElse(trueVal, falseVal)` — not `When().Then().Otherwise()`. Translating from Python literally produces compile errors.
 
 > [!warning] Type mismatches between Polars.NET and MDA are common
+>
 > Polars.NET uses Arrow types (Int64, Float64, Utf8). MDA uses .NET types (int, double, string). Converting between libraries requires explicit type mapping.
 
 ## Recommendations
@@ -1500,8 +1456,41 @@ new DataFrame(asmlCum.Columns["date"], asmlCum.Columns["close"], asmlCum.Columns
 
 ## Troubleshooting and failure modes
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
-| `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
-| MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
+#### `df.WithColumns(...)` appears to do nothing
+
+Polars.NET returns a new `DataFrame`. If you do not assign the result, the transform is discarded.
+
+*Example for `df.WithColumns(...)` appears to do nothing.*
+```csharp
+df = df.WithColumns(Col("x").FillNull(Lit(0)));
+```
+
+```text
+Assign the returned frame so the update persists.
+```
+
+#### `ComputeError` on `Cast`
+
+Cast failures usually mean the source column still contains values that do not fit the target type.
+
+*Example for `ComputeError` on `Cast`.*
+```csharp
+// Clean or coerce the source column before casting it.
+```
+
+```text
+Handle missing or malformed values before the cast.
+```
+
+#### MDA column type mismatch with `Int32DataFrameColumn`
+
+Microsoft.Data.Analysis requires the CLR column type to match the source values exactly.
+
+*Example for MDA column type mismatch with `Int32DataFrameColumn`.*
+```csharp
+var counts = new MDA.Int32DataFrameColumn("count", rowCount);
+```
+
+```text
+Use the typed column that matches the underlying CLR values.
+```

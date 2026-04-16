@@ -10,7 +10,8 @@ status: complete
 
 # 08. Error Handling - C#
 
-> [!quote]
+> [!quote]- Dijkstra remark
+>
 > "If debugging is the process of removing software bugs, then programming must be the process of putting them in."
 >
 > — **Edsger W. Dijkstra**, attributed remark (c. 1970s)
@@ -188,6 +189,8 @@ The `try`/`catch`/`finally` construct is C#'s primary error handling mechanism. 
 
 Wrap risky code in `try { }` and catch specific exception types in `catch (ExceptionType ex) { }`. Unmatched exceptions propagate up the call stack. Use for I/O operations, parsing external data, and network calls — not for expected conditions (use `TryParse`, `if`/`else`, or null checks).
 
+*Run a minimal `try`/`catch` example that catches a specific exception type.*
+
 > [!warning] Anti-patterns
 >
 > - **`catch (Exception)` everywhere** — hides bugs, catches too broadly
@@ -198,6 +201,7 @@ Wrap risky code in `try { }` and catch specific exception types in `catch (Excep
 >
 > Catch the most specific exception type applicable, always log or handle meaningfully, and use `TryParse`/null checks for expected conditions rather than exceptions for flow control.
 
+*Run the `try`/`catch` example that follows this guidance.*
 ```csharp
 using System.IO;
 
@@ -239,6 +243,7 @@ Caught: Index was outside the bounds of the array.
 Multiple catch blocks let you handle different exception types with different recovery strategies. C# evaluates them top-to-bottom and executes the FIRST matching block. Order matters: put the most specific exception types first and the most general (`Exception`) last — otherwise the general catch swallows everything and the specific blocks never execute.
 
 > [!danger] Catch order matters
+>
 > `catch (Exception)` before `catch (SqlException)` means SQL errors are caught by the general handler and your SQL-specific retry logic never runs. The compiler warns about this in some cases, but not all. Always order: most specific → most general.
 
 > [!success] Order most specific first
@@ -249,6 +254,7 @@ Multiple catch blocks let you handle different exception types with different re
 
 Three catch blocks handle the three possible outcomes of parsing and multiplying a string value: a valid result, a non-numeric input (`FormatException`), and a value that overflows during the `checked` multiplication (`OverflowException`). The general `Exception` fallback catches anything not covered by the two specific handlers.
 
+*Show how catch order separates `OverflowException`, `FormatException`, and a general fallback.*
 ```csharp
 void ParseRow(string input)
 {
@@ -287,6 +293,7 @@ Overflow: Arithmetic operation resulted in an overflow.
 
 Three catch blocks distinguish between a missing file (`FileNotFoundException`), a permissions failure (`UnauthorizedAccessException`), and any other I/O error (`IOException`). The `IOException` base class acts as the general fallback for disk, network, or device errors not covered by the two specific handlers.
 
+*Demonstrate `FileNotFoundException`, `UnauthorizedAccessException`, and general `IOException` handling.*
 ```csharp
 void LoadFile(string path)
 {
@@ -321,6 +328,7 @@ Permission denied: C:\Windows\System32
 
 `catch when` adds a boolean filter to a catch block: the exception is caught ONLY if the condition is true. Unlike catching and re-throwing, `catch when (false)` doesn't unwind the stack — the runtime skips the block entirely and tries the next one. This enables catching the same exception type differently based on context (e.g., transient vs permanent errors).
 
+*Use an exception filter with `when` to split strict and lenient handling.*
 ```csharp
 void ParseValue(string input, bool strict)
 {
@@ -350,6 +358,9 @@ Strict caught: Strict mode: bad value 'bad'
 
 #### finally — always runs
 
+Use `finally` when cleanup must run regardless of whether the `try` block throws.
+
+*Show that `finally` executes for both success and failure paths.*
 ```csharp
 void ProcessWithCleanup(bool throwError)
 {
@@ -388,6 +399,8 @@ Closing resource (finally)
 
 #### throw vs throw ex — preserving the stack trace
 
+*Compare bare `throw;` with `throw ex;` so the stack trace difference is visible.*
+
 > [!danger] throw ex resets the stack trace
 >
 > `throw ex` resets the stack trace — use `throw` to preserve it
@@ -397,6 +410,7 @@ Closing resource (finally)
 >
 > Use `throw;` to re-throw and preserve the full original stack trace, or `throw new WrapperException("context", ex)` to add domain context while keeping the root cause accessible via `InnerException`. Never use `throw ex;`.
 
+*Run the wrapper example and inspect the inner exception chain.*
 ```csharp
 void Wrapper()
 {
@@ -440,6 +454,7 @@ All C# exceptions inherit from `System.Exception`. The built-in hierarchy branch
 > - `Data` — key-value diagnostic context
 > - Hierarchical catching: `catch (SystemException)` handles the entire family
 
+*Render the exception family tree and pair it with a textual summary.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -521,10 +536,25 @@ flowchart TD
     style UA fill:#1a1b26,stroke:#7dcfff,color:#c0caf5
 ```
 
+```text
+Exception
+  SystemException
+    ArgumentException -> ArgumentNullException, ArgumentOutOfRangeException
+    ArithmeticException -> DivideByZeroException, OverflowException
+    InvalidOperationException
+    NullReferenceException
+    FormatException
+    KeyNotFoundException
+    IOException -> FileNotFoundException, DirectoryNotFoundException
+    UnauthorizedAccessException
+AggregateException and custom exceptions branch directly from Exception
+```
+
 #### Inspect exception properties
 
 Catching an `ArgumentException` exposes its `Message`, `ParamName`, and runtime type via `GetType().Name`. These properties are available on all exception types — `ParamName` is specific to `ArgumentException` and its subclasses.
 
+*Inspect `ArgumentException` members with a short runnable example.*
 ```csharp
 #nullable enable
 
@@ -548,6 +578,9 @@ Type:       ArgumentException
 
 #### Common exceptions in data engineering
 
+These examples focus on the exception types that show up most often in parsing and dictionary lookups.
+
+*Show the exception types that commonly appear in parsing and dictionary lookups.*
 ```csharp
 string[] csvRow = { "Alice", "not_a_number", "2024-01-15" };
 try { int salary = int.Parse(csvRow[1]); }
@@ -573,11 +606,15 @@ Overflow: Arithmetic operation resulted in an overflow.
 
 #### Common exceptions — NullReferenceException, ArgumentNullException, InvalidOperationException
 
+Use these checks to keep null handling and empty-sequence behavior explicit.
+
+*Demonstrate null-safe access, argument validation, and empty-sequence handling.*
 ```csharp
 #nullable enable
 
 string? optionalField = null;
 int len = optionalField?.Length ?? 0;
+Console.WriteLine($"  Safe null handling: length = {len}");
 
 void ProcessRecord(string record)
 {
@@ -589,6 +626,7 @@ catch (ArgumentNullException ex) { Console.WriteLine($"  {ex.Message}"); }
 
 var emptyList = new List<int>();
 int safe = emptyList.FirstOrDefault();
+Console.WriteLine($"  FirstOrDefault on empty: {safe}");
 ```
 
 ```text
@@ -599,6 +637,9 @@ FirstOrDefault on empty: 0
 
 #### Exception.Data — attaching context
 
+`Exception.Data` is a lightweight way to attach row, file, or value context to a thrown exception.
+
+*Attach diagnostic fields to `Exception.Data` and read them back.*
 ```csharp
 try
 {
@@ -634,6 +675,9 @@ Custom exception classes add structured diagnostic fields (`RowNumber`, `ColumnN
 
 Custom exceptions add structured diagnostic fields (`RowNumber`, `ColumnName`, `RawValue`) that built-in types lack. Type-safe catching (`catch (CsvParseException)`) is more precise than catching generic `Exception`. `InnerException` chain preserves full error history. Only create custom exceptions when you need extra context — otherwise built-in types like `FormatException` or `IOException` suffice.
 
+Use this pattern when the built-in exception types do not carry enough domain data.
+
+*Define custom exception types and exercise their constructors with a small demo.*
 ```csharp
 public class CsvParseException : Exception
 {
@@ -670,10 +714,23 @@ public class PipelineException : Exception
         Stage = stage;
     }
 }
+
+var demoCsv = new CsvParseException(7, "salary", "abc", new FormatException("bad format"));
+var demoPipeline = new PipelineException("sales_etl", "transform", "Parse failed", demoCsv);
+Console.WriteLine($"  {demoCsv.GetType().Name}: row {demoCsv.RowNumber}, column {demoCsv.ColumnName}, value {demoCsv.RawValue}");
+Console.WriteLine($"  {demoPipeline.GetType().Name}: {demoPipeline.Stage} -> {demoPipeline.InnerException?.GetType().Name}");
+```
+
+```text
+CsvParseException: row 7, column salary, value abc
+PipelineException: transform -> CsvParseException
 ```
 
 #### Using custom exceptions — catch, wrap, re-throw with context
 
+This example shows how to translate a low-level parse failure into a domain-specific exception.
+
+*Catch the custom exception and show the wrapped inner exception chain.*
 ```csharp
 int ParseSalary(string value, int rowNum)
 {
@@ -714,6 +771,9 @@ Row 3: Charlie salary=110'000
 
 #### Pipeline-level exception wrapping — inner exception chain
 
+Wrap domain exceptions again at the pipeline boundary when you need stage-level context.
+
+*Wrap a domain exception again at the pipeline boundary and inspect the chain.*
 ```csharp
 void RunPipeline(string name)
 {
@@ -753,6 +813,9 @@ The `using` statement provides deterministic resource cleanup by calling `Dispos
 
 #### using statement and declaration
 
+Use both `using` forms when you want deterministic disposal with different scope boundaries.
+
+*Demonstrate both `using` forms and print the lines they read.*
 ```csharp
 #nullable enable
 
@@ -769,8 +832,8 @@ using (var reader = new StreamReader(tempFile))
 void ReadCsvFile(string path)
 {
     using var reader = new StreamReader(path);
-    reader.ReadLine();
-    reader.ReadLine();
+    Console.WriteLine($"  Header: {reader.ReadLine()}");
+    Console.WriteLine($"  First row: {reader.ReadLine()}");
 }
 ReadCsvFile(tempFile);
 ```
@@ -785,6 +848,9 @@ First row: 1,2,3
 
 #### Custom IDisposable
 
+Implement `IDisposable` when a type owns a resource that must be closed deterministically.
+
+*Define `CsvWriter` and exercise disposal with a temporary file.*
 ```csharp
 public class CsvWriter : IDisposable
 {
@@ -814,10 +880,27 @@ public class CsvWriter : IDisposable
         }
     }
 }
+
+var disposableFile = Path.GetTempFileName();
+using (var demoWriter = new CsvWriter(disposableFile))
+{
+    demoWriter.WriteRow("Ada", 100, "Research");
+}
+Console.WriteLine(File.ReadAllText(disposableFile).Trim());
+File.Delete(disposableFile);
+```
+
+```text
+CsvWriter disposed (file flushed and closed)
+name,salary,dept
+Ada,100,Research
 ```
 
 #### Using custom IDisposable — CsvWriter with `using`
 
+Use a `using` block when the disposal point must be explicit in the example.
+
+*Use `using` with `CsvWriter` and verify the file contents on disk.*
 ```csharp
 var outFile = Path.GetTempFileName();
 using (var csv = new CsvWriter(outFile))
@@ -848,13 +931,26 @@ In data pipelines, throwing on the first bad row kills the entire batch. Instead
 
 `record ParseResult(Name, Salary, IsValid, Error)` captures both successful parses and failures. Process all rows, partition results into valid/invalid, route errors to dead-letter. No exceptions for expected bad data — faster than try/catch per row. Throwing on each bad row is 1000x slower at scale.
 
+This record keeps per-row validity and error text together so the batch can finish.
+
+*Define a `ParseResult` record and print a sample instance.*
 ```csharp
 #nullable enable
 record ParseResult(string Name, int Salary, bool IsValid, string? Error);
+
+var sample = new ParseResult("Ada", 42, true, null);
+Console.WriteLine($"  {sample.Name}: {sample.Salary}, valid={sample.IsValid}, error={sample.Error ?? "<none>"}");
+```
+
+```text
+Ada: 42, valid=True, error=<none>
 ```
 
 #### TryParse pattern
 
+Use `TryParse` for bad input that is expected and should not throw.
+
+*Use `TryParse` to skip invalid input without throwing.*
 ```csharp
 string[] values = { "42", "bad", "100", "", "999" };
 foreach (var v in values)
@@ -880,6 +976,9 @@ Date parsed: 2024-01-15
 
 #### Error accumulation — ETL pattern
 
+Accumulate all row failures first, then report them together at the end of the batch.
+
+*Accumulate row-level validation failures and report the batch summary.*
 ```csharp
 ParseResult ParseEmployee(string csvLine, int rowNum)
 {
@@ -925,13 +1024,17 @@ Processed: 6 rows, Valid: 3, Rejected: 3
 
 When multiple tasks run in parallel and several fail, .NET wraps all their exceptions into a single `AggregateException`. Calling `.Wait()` or `.Result` on a faulted `Task` throws `AggregateException`, not the original exception. Use `.Flatten()` to unwrap nested AggregateExceptions, and `.Handle()` to process each inner exception individually.
 
+*Collect parallel task failures and inspect the flattened exception list.*
+
 > [!warning] await unwraps, .Result doesn't
+>
 > `await task` automatically unwraps the AggregateException and throws the first inner exception. `task.Result` throws the AggregateException itself. This means catch blocks behave differently depending on whether you use `await` or `.Result` — a common source of confusion in mixed async/sync code.
 
 > [!success] Prefer await and inspect allTasks.Exception
 >
 > Use `await Task.WhenAll(tasks)` so the compiler unwraps cleanly, then access `allTasks.Exception!.Flatten().InnerExceptions` to inspect every failure. Avoid `.Result` or `.Wait()` in async code paths to prevent deadlocks and unexpected `AggregateException` wrapping.
 
+*Run the parallel task example and flatten `AggregateException`.*
 ```csharp
 var tasks = new[]
 {
@@ -959,6 +1062,9 @@ Task error: [FormatException] Bad value in file A
 
 #### Retry pattern for transient errors
 
+Retry only transient failures and stop after an explicit maximum number of attempts.
+
+*Retry a transient failure with backoff and stop at `maxAttempts`.*
 ```csharp
 async Task<T> WithRetry<T>(Func<Task<T>> operation, int maxAttempts = 3, int delayMs = 100)
 {
@@ -1040,14 +1146,12 @@ Result after 3 attempts: data loaded successfully
 
 ## Troubleshooting
 
-| Problem | Cause | Fix |
-|---|---|---|
-| Stack trace shows wrong line number | Used `throw ex;` instead of `throw;` | Use bare `throw;` to preserve original stack trace |
-| `InnerException` is `null` | Forgot to pass the original exception to the wrapper constructor | Use `throw new WrapperException("msg", originalEx)` |
-| Connection pool exhaustion / `SqlException: Timeout expired` | `SqlConnection` not disposed — connections leak | Always wrap in `using var conn = ...` |
-| `catch` block never executes | Catching the wrong exception type, or exception occurs outside `try` | Check the actual exception type in the debugger |
-| Exception filter has side effects | Filter expression evaluated even when catch doesn't execute | Keep filters pure — no mutations or I/O |
-| `AggregateException.InnerException` only shows first error | `InnerException` is singular — only the first of possibly many | Use `InnerExceptions` (plural) to access all errors, or `Flatten()` |
-| `ObjectDisposedException` on resource access | Used a resource after its `using` scope ended | Ensure the `using` scope covers all usage of the resource |
-| Retry loop runs forever | No maximum retry count | Always set `maxRetries` and `throw` after exhaustion |
+- **`Stack trace shows wrong line number`**: usually means `throw ex;` was used instead of `throw;`. Use bare `throw;` to preserve the original stack trace.
+- **`InnerException` is `null`**: the wrapper constructor did not receive the original exception. Use `throw new WrapperException("msg", originalEx)`.
+- **`SqlException: Timeout expired` or connection pool exhaustion**: `SqlConnection` was not disposed and connections leaked. Wrap it in `using var conn = ...`.
+- **`catch` block never executes**: the code is catching the wrong exception type, or the exception is thrown outside the `try` block. Verify the runtime type in the debugger.
+- **Exception filter has side effects**: the `when (...)` expression ran even though the catch did not execute. Keep filters pure and avoid mutations or I/O.
+- **`AggregateException.InnerException` only shows the first error**: `InnerException` is singular. Use `InnerExceptions` or `Flatten()` to inspect every failure.
+- **`ObjectDisposedException` on resource access**: the resource escaped its `using` scope. Extend the scope to cover all usage.
+- **Retry loop runs forever**: there is no maximum retry count. Set `maxRetries` and `throw` after exhaustion.
 

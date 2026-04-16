@@ -76,6 +76,8 @@ Use this matrix as a first-look index when an incident is reported. Each row map
 
 Start here when the complaint is latency or throughput. The first production question is not "should I add an index?" It is "what resource family is the workload waiting on?"
 
+*Route generic slowness by dominant wait family before opening deeper DMVs.*
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -204,22 +206,24 @@ WHERE wait_sec > 0
 ORDER BY wait_sec DESC;
 ```
 
+```text
+wait_type                        wait_sec   resource_wait_sec   signal_wait_sec   waiting_tasks_count
+-------------------------------  ---------  ------------------  ----------------  -------------------
+LCK_M_U                          71.029000  71.028000           0.001000          11
+BACKUPTHREAD                     16.211000  16.196000           0.015000          384
+BACKUPIO                         15.216000  15.056000           0.160000          6232
+STARTUP_DEPENDENCY_MANAGER       8.644000   8.623000            0.021000          90
+LCK_M_X                          5.946000   5.945000            0.001000          9
+PREEMPTIVE_OS_AUTHENTICATIONOPS  4.461000   4.461000            0.000000          4166
+LCK_M_S                          3.478000   3.469000            0.009000          110
+PREEMPTIVE_HTTP_EVENT_WAIT       2.694000   2.694000            0.000000          17
+ASYNC_IO_COMPLETION              2.415000   2.414000            0.001000          42
+BACKUPBUFFER                     2.353000   2.163000            0.190000          5215
+```
+
 > [!info] As-of timestamp for this capture
 >
 > Captured against `stoxx` on **2026-04-11 20:30 UTC**. Instance `sqlserver_start_time = 2026-04-11 15:55:55`, approximately 5 hours of uptime. Re-run the query against the current instance during any incident — these values are frozen and will drift.
-
-| wait_type | wait_sec | resource_wait_sec | signal_wait_sec | waiting_tasks_count |
-|---|---:|---:|---:|---:|
-| `LCK_M_U` | 71.029000 | 71.028000 | 0.001000 | 11 |
-| `BACKUPTHREAD` | 16.211000 | 16.196000 | 0.015000 | 384 |
-| `BACKUPIO` | 15.216000 | 15.056000 | 0.160000 | 6232 |
-| `STARTUP_DEPENDENCY_MANAGER` | 8.644000 | 8.623000 | 0.021000 | 90 |
-| `LCK_M_X` | 5.946000 | 5.945000 | 0.001000 | 9 |
-| `PREEMPTIVE_OS_AUTHENTICATIONOPS` | 4.461000 | 4.461000 | 0.000000 | 4166 |
-| `LCK_M_S` | 3.478000 | 3.469000 | 0.009000 | 110 |
-| `PREEMPTIVE_HTTP_EVENT_WAIT` | 2.694000 | 2.694000 | 0.000000 | 17 |
-| `ASYNC_IO_COMPLETION` | 2.415000 | 2.414000 | 0.001000 | 42 |
-| `BACKUPBUFFER` | 2.353000 | 2.163000 | 0.190000 | 5215 |
 
 **Per-row read of the live capture.** The output is an unusually informative one because the `stoxx` instance has only been up 5 hours and the recent activity is mixed (concurrency race demos + AG backup seeding + telemetry callouts). Walking the rows top-to-bottom:
 
@@ -232,15 +236,15 @@ ORDER BY wait_sec DESC;
 
 The dominant decision-relevant family today is locking (`LCK_M_*`), not storage or parallelism. The correct branch of the master flowchart on this instance right now is the blocking/lock-serialization branch — open the live-requests query and find the root blocker in `sys.dm_exec_requests` joined to `sys.dm_tran_locks`. None of the `PAGEIOLATCH_*` / `WRITELOG` / `CX*` families survive the filter, so storage and parallelism branches are off the table for this capture.
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `wait_type` | `LCK_M_*` (e.g. `LCK_M_IX`, `LCK_M_SCH_S`, `LCK_M_U`, `LCK_M_X`) | &#10060; | Sessions are waiting on lock modes (IX, SCH-S, U, X). Every `LCK_M_*` family indicates a transaction-level contention where one session holds a lock another session needs. | Blocking is the dominant class today; open the blocking-chain workflow, not the query plan. |
-| `wait_type` | `CXPACKET`, `CXCONSUMER`, `CXSYNC_PORT` | Depends | Parallel worker threads are waiting on each other. By itself `CXPACKET` is not a problem — it indicates the engine is running parallel plans. Combined with high `CXCONSUMER` or `CXSYNC_PORT` it signals parallelism skew or bad MAXDOP. | Review `cost threshold for parallelism`, `max degree of parallelism`, and the actual plan of the slow queries before reaching for any fix. |
-| `wait_type` | `LATCH_*` (e.g. `LATCH_EX`) | Depends | Non-buffer latches protecting in-memory structures (spinlocks, bitmap filters, allocation maps). High `LATCH_EX` often co-occurs with parallel plans and `TempDB` pressure. | Check parallel-plan hot spots and `TempDB` allocation contention (`PAGELATCH_*` on PFS/GAM/SGAM), not storage. |
-| `wait_type` | `PAGEIOLATCH_*`, `WRITELOG` | &#10060; | Sessions are waiting on physical I/O — `PAGEIOLATCH` is read-from-disk into the buffer pool, `WRITELOG` is flush-to-log-file. | Storage path or buffer-pool pressure; open memory and disk diagnostics before touching queries. |
-| `wait_type` | `SOS_SCHEDULER_YIELD` | Depends | Workers yielding cooperatively to the scheduler. By itself it means tasks are CPU-bound, not waiting on anything external. | Confirmed CPU pressure; move to CPU-bound diagnostics (plan cache, parameter sniffing, expensive queries). |
-| `wait_type` | `RESERVED_MEMORY_ALLOCATION_EXT`, `PREEMPTIVE_OS_*` | Depends | Internal memory-grant plumbing and out-of-SQL-Server calls (authentication, OS file ops). Rarely actionable by itself. | Document in the incident timeline but do not route off this signal alone. |
-| `wait_type` | Only idle/background waits survive the filter | Depends | The instance is either very fresh (small `sqlserver_start_time` window) or genuinely idle right now. | Not enough cumulative evidence to pick a branch; fall back to point-in-time requests (`sys.dm_exec_requests`) and repeat the delta capture after a longer observation window. |
+**How to route the dominant `wait_type`**
+
+- `LCK_M_*` such as `LCK_M_IX`, `LCK_M_SCH_S`, `LCK_M_U`, and `LCK_M_X` means transaction-level contention. Route to blocking-chain analysis before looking at plans.
+- `CXPACKET`, `CXCONSUMER`, and `CXSYNC_PORT` means parallel workers are coordinating. Review `cost threshold for parallelism`, `MAXDOP`, and the actual plan before changing anything.
+- `LATCH_*` such as `LATCH_EX` means in-memory latch contention. Check parallel hot spots and `tempdb` allocator pressure rather than storage latency.
+- `PAGEIOLATCH_*` and `WRITELOG` means physical I/O waits. Open memory and storage diagnostics before touching query text or indexes.
+- `SOS_SCHEDULER_YIELD` means workers are CPU-bound after cooperative yields. Move to CPU-bound diagnostics such as expensive plans, bad estimates, and parameter sensitivity.
+- `RESERVED_MEMORY_ALLOCATION_EXT` and `PREEMPTIVE_OS_*` means internal memory plumbing or out-of-engine OS work. Record it in the timeline, but do not route on it alone.
+- Only idle or background waits surviving the filter means the cumulative signal is too thin. Fall back to point-in-time DMVs like `sys.dm_exec_requests` and re-run the delta capture later.
 
 The "first linked note" for each of these families lives in the routing paragraph directly below, so the table stays focused on interpretation.
 
@@ -249,6 +253,8 @@ The "first linked note" for each of these families lives in the routing paragrap
 > [!tip] Shortcut for isolating the blocked index on `LCK_M_*` waits
 >
 > When the dominant family is `LCK_M_U` or `LCK_M_S` and the count is small (long blockers, not many short ones), the fastest next step is not `sys.dm_exec_requests` at all — it is `sys.dm_db_index_operational_stats`, which exposes per-index lock-wait counters:
+>
+> *Rank indexes by accumulated row and page lock wait time to find the hot contention target.*
 >
 > ```sql
 > SELECT TOP (20)
@@ -270,6 +276,8 @@ The "first linked note" for each of these families lives in the routing paragrap
 ## Flowchart 2: "Pipeline Failed" — Data Pipeline Troubleshooting
 
 Start here when a pipeline task failed. The first question is not "what SQL statement was running?" It is "did the failure reach SQL Server at all?"
+
+*Decide whether the pipeline ever established a SQL Server session before analyzing query behavior.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -348,17 +356,19 @@ GROUP BY program_name, login_name
 ORDER BY total_sessions DESC, program_name;
 ```
 
+```text
+program_name                 login_name                    total_sessions   sleeping_sessions   active_sessions
+---------------------------  ----------------------------  ---------------  ------------------  ---------------
+Python                       sa                            1                0                   1
+SQLAgent - Contained AG      NT AUTHORITY\NETWORK SERVICE  1                1                   0
+SQLAgent - Email Logger      NT AUTHORITY\NETWORK SERVICE  1                1                   0
+SQLAgent - Generic Refresher NT AUTHORITY\NETWORK SERVICE  1                1                   0
+SQLServerCEIP                NT AUTHORITY\SYSTEM           1                1                   0
+```
+
 > [!info] As-of timestamp for this capture
 >
 > Captured against `stoxx` on **2026-04-11 20:30 UTC**. Session counts are point-in-time — re-run the query during an incident, they change on every new connect or disconnect.
-
-| program_name | login_name | total_sessions | sleeping_sessions | active_sessions |
-|---|---|---:|---:|---:|
-| `Python` | `sa` | 1 | 0 | 1 |
-| `SQLAgent - Contained AG` | `NT AUTHORITY\NETWORK SERVICE` | 1 | 1 | 0 |
-| `SQLAgent - Email Logger` | `NT AUTHORITY\NETWORK SERVICE` | 1 | 1 | 0 |
-| `SQLAgent - Generic Refresher` | `NT AUTHORITY\NETWORK SERVICE` | 1 | 1 | 0 |
-| `SQLServerCEIP` | `NT AUTHORITY\SYSTEM` | 1 | 1 | 0 |
 
 **Per-row read of the live capture.** The capture is a textbook illustration of why `Application Name` discipline matters — two very different identity patterns sit side by side in the same result:
 
@@ -368,20 +378,22 @@ ORDER BY total_sessions DESC, program_name;
 
 All non-Python sessions are sleeping, meaning none of them have an active request in flight. The pipeline triage lesson from this capture is sharper than the text alone: **the row you want to see when you're chasing a failed pipeline is the one with the specific pipeline name, not the one labeled `Python`**. If your failing service is not in the result at all, the failure never reached SQL Server — pivot to network, driver, or auth diagnostics.
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `program_name` | Stable service name | &#9989; | The client identifies itself clearly. | Easier to distinguish connection failures from query failures. |
-| `program_name` | Generic tool name (`SQLCMD`, `.Net SqlClient Data Provider`) | &#10060; for production services | Identity is coarse or ambiguous. | Harder to prove whether the failed task even reached SQL Server. Enforce a distinct `Application Name` per pipeline in the connection string. |
-| `program_name` | Pipeline name missing entirely from result | &#10060; | Pipeline never connected during the window. | Failure is client-side: check network, TLS, login, driver. Do not dig into query-level DMVs yet. |
-| `sleeping_sessions` | High and growing | &#10060; | Many idle connections remain open. | Check pool sizing and connection cleanup in the pipeline. |
-| `active_sessions` | Zero during a failure | Depends | No live request is currently running for that client. | Failure may have occurred before query execution or after disconnect. |
-| `active_sessions` | Non-zero and stuck | &#10060; | At least one request is running but may be blocked or long-running. | Join to `sys.dm_exec_requests` and `sys.dm_exec_sql_text` to see the active statement before declaring the pipeline "stuck". |
+**How to read the session footprint**
+
+- A stable `program_name` means the client identifies itself clearly. That makes it easy to distinguish connection failures from query failures.
+- A generic `program_name` such as `SQLCMD` or `.Net SqlClient Data Provider` is a production smell. Enforce a distinct `Application Name` per pipeline so triage can prove which service connected.
+- A pipeline name missing entirely from the result means the failure was client-side. Check network, TLS, login, and driver behavior before opening query-level DMVs.
+- High or growing `sleeping_sessions` means idle pooled connections are accumulating. Review pool sizing and connection cleanup in the client.
+- `active_sessions = 0` during a reported failure means no live request is running for that client right now. The error may have happened before execution or after disconnect.
+- Non-zero `active_sessions` that stay stuck means at least one request is still in flight. Join to `sys.dm_exec_requests` and `sys.dm_exec_sql_text` before declaring the pipeline hung.
 
 → **Continue in:** [sql-server-problems](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-problems) for the full incident catalogue (timeout vs deadlock vs constraint violation vs data error), [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries) for the joined `sys.dm_exec_requests + sys.dm_exec_sessions + sys.dm_exec_sql_text` live-request query, and [users-logins-roles-permissions](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/users-logins-roles-permissions) when the failure class is authentication or permission denial.
 
 ## Flowchart 3: "Should I Add an Index?" — Index Decision Tree
 
 Start here only after you have a slow-query candidate. Index creation is a response to an access-path problem, not a first reflex for every latency complaint.
+
+*Use missing-index DMVs as ranking input, not as automatic DDL instructions.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -497,16 +509,18 @@ WHERE mid.database_id = DB_ID()
 ORDER BY improvement_measure DESC;
 ```
 
+```text
+improvement_measure   schema_name   table_name          equality_columns   inequality_columns          included_columns          user_seeks   user_scans   avg_user_impact_pct
+--------------------  ------------  ------------------  -----------------  --------------------------  ------------------------  -----------  ----------   -------------------
+0.6444                silver        eurostoxx50_ohlcv  NULL               [high], [close], [volume]  NULL                      1            0            88.45
+0.6029                silver        eurostoxx50_ohlcv  NULL               [close], [dividends]       [symbol], [date], [volume] 1         0            81.90
+0.5827                silver        stoxxusa50_ohlcv   NULL               [high], [adj_close]        [symbol], [close]         1            0            82.79
+0.0088                silver        eurostoxx50_ohlcv  [symbol]           NULL                       [date], [close]           1            0            53.81
+```
+
 > [!info] As-of timestamp for this capture
 >
 > Captured against `stoxx` on **2026-04-11 20:30 UTC**. These DMVs reset when SQL Server restarts, so all rows here reflect compile events since `sqlserver_start_time = 2026-04-11 15:55:55` — roughly 5 hours of workload.
-
-| improvement_measure | schema_name | table_name | equality_columns | inequality_columns | included_columns | user_seeks | user_scans | avg_user_impact_pct |
-|---:|---|---|---|---|---|---:|---:|---:|
-| 0.6444 | `silver` | `eurostoxx50_ohlcv` | `NULL` | `[high], [close], [volume]` | `NULL` | 1 | 0 | 88.45 |
-| 0.6029 | `silver` | `eurostoxx50_ohlcv` | `NULL` | `[close], [dividends]` | `[symbol], [date], [volume]` | 1 | 0 | 81.90 |
-| 0.5827 | `silver` | `stoxxusa50_ohlcv` | `NULL` | `[high], [adj_close]` | `[symbol], [close]` | 1 | 0 | 82.79 |
-| 0.0088 | `silver` | `eurostoxx50_ohlcv` | `[symbol]` | `NULL` | `[date], [close]` | 1 | 0 | 53.81 |
 
 **Per-row read of the live capture.** The capture contains four suggestions and **every single one has `user_seeks = 1` and `user_scans = 0`**. That is the most important thing to notice on the page: regardless of how high the `avg_user_impact_pct` column looks, the DMVs have only seen each suggestion fire exactly once since the instance started. Walking the rows top-to-bottom:
 
@@ -517,21 +531,23 @@ ORDER BY improvement_measure DESC;
 
 The unambiguous routing decision for this capture is **`NO` on every branch of Flowchart 3**. Even the top suggestion (`0.6444`, `88.45%`) collapses as soon as the `user_seeks + user_scans = 1` column is read. In the rare case where a suggestion survives this filter (credible frequency and credible score), the next step is still not DDL — it is the plan-confirmation path from the `[!success]` callout above.
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `improvement_measure` | Very low (single-digit or below) | &#10060; for auto-DDL | Weak optimizer evidence so far. | Do not create an index from this output alone. |
-| `improvement_measure` | Four- to five-digit on a hot table | Depends | Plausible signal for a real indexing discussion. | Combine with plan, workload, and existing-index review before writing DDL. |
-| `user_seeks + user_scans` | `1` | &#10060; | Single observed opportunity only. | Evidence is too sparse for a production change by itself. |
-| `user_seeks + user_scans` | Hundreds or thousands | Depends | Repeated workload hit the suggestion frequently. | Credible candidate — advance to the plan-confirmation step of the decision tree. |
-| `avg_user_impact_pct` | High but low-frequency | Depends | Optimizer predicts benefit if the pattern repeats. | Useful only when combined with real repeated workload and plan evidence. |
-| `equality_columns` / `inequality_columns` | Single narrow column on the leading side | Depends | Suggestion is specific and implementable as stated. | Good draft; still verify selectivity and column order against the workload. |
-| `included_columns` | Very wide list (many columns) | &#10060; | Wide `INCLUDE` payload creates a half-copy of the base table. | Trim the included list to only the columns the real queries project; never accept the raw DMV shape verbatim. |
+**How to judge a missing-index row**
+
+- A low `improvement_measure` is weak evidence. Do not create an index from that number alone.
+- A four- or five-digit `improvement_measure` on a hot table is a plausible discussion starter, but it still needs plan review and existing-index reconciliation.
+- `user_seeks + user_scans = 1` means the suggestion fired once. That is too little evidence for production DDL by itself.
+- Hundreds or thousands in `user_seeks + user_scans` means the workload hits the pattern repeatedly. That is the threshold for moving to plan confirmation.
+- High `avg_user_impact_pct` with low frequency is still weak. Benefit only matters when the workload actually repeats.
+- Narrow `equality_columns` and `inequality_columns` often produce an implementable draft, but verify selectivity and key order against the real query.
+- A wide `included_columns` payload is a red flag. Trim the `INCLUDE` list to what the workload actually projects instead of accepting the raw DMV shape.
 
 → **Continue in:** [performance-audit-playbook](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/performance-audit-playbook) for the full index-decision workflow (execution plan capture, existing-index reconciliation, DDL drafting). For the broader DMV toolkit around plan cache and usage stats, see [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries). For index-maintenance and rebuild strategy after the new index is created, see [sql-server-problems](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-problems).
 
 ## Flowchart 4: "Disk Space Emergency" — Storage Recovery
 
 Start here when file-growth alerts fire or a write operation fails because a database file or volume is full. The first question is not "should I shrink something?" It is "which file type is tight, and is the problem inside the database file or on the host volume?"
+
+*Separate file-level pressure from host-volume pressure before taking any storage action.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -637,14 +653,16 @@ CROSS APPLY sys.dm_os_volume_stats(DB_ID(), mf.file_id) AS vs
 ORDER BY mf.type_desc, mf.file_id;
 ```
 
+```text
+database_name   logical_name   type_desc   file_size_mb   space_used_mb   free_space_mb   logical_volume_name   volume_total_gb   volume_free_gb
+--------------  -------------  ---------   ------------   -------------   -------------   -------------------   ---------------   --------------
+stoxx           stoxx_log      LOG         1032.00        14.70           1017.30         NULL                  1006.85           921.70
+stoxx           stoxx          ROWS        712.00         597.69          114.31          NULL                  1006.85           921.70
+```
+
 > [!info] As-of timestamp for this capture
 >
 > Captured against `stoxx` on **2026-04-11 20:30 UTC**. File-size and volume numbers are point-in-time — re-run during any incident, these values drift with every auto-growth and every log backup.
-
-| database_name | logical_name | type_desc | file_size_mb | space_used_mb | free_space_mb | logical_volume_name | volume_total_gb | volume_free_gb |
-|---|---|---|---:|---:|---:|---|---:|---:|
-| `stoxx` | `stoxx_log` | `LOG` | 1032.00 | 14.70 | 1017.30 | `NULL` | 1006.85 | 921.70 |
-| `stoxx` | `stoxx` | `ROWS` | 712.00 | 597.69 | 114.31 | `NULL` | 1006.85 | 921.70 |
 
 **Per-row read of the live capture.** Two rows, three distinct pieces of state to read: log file pressure, data file pressure, host volume pressure. Walking row-by-row:
 
@@ -655,21 +673,23 @@ ORDER BY mf.type_desc, mf.file_id;
 
 The routing decision for this capture is unambiguous: **no emergency, no shrink, no log action**. The only forward-looking recommendation is to plan a data-file growth before the `ROWS` file crosses ~95% used and forces an unscheduled auto-grow during a production load. The query shape itself is the reusable asset — it is how the next real incident (when it comes) will be decomposed in one pass.
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `type_desc = ROWS` | Data file | Depends | Holds tables and indexes. | Data-file pressure usually comes from actual data or index growth. |
-| `type_desc = LOG` | Log file | Depends | Holds transaction log records. | Log pressure usually comes from reuse or backup-chain problems, not table size directly. |
-| `free_space_mb` | Low inside one file (`< 10%` of `file_size_mb`) | &#10060; | The file itself is close to its sized capacity. | Check `log_reuse_wait_desc` for `LOG` files; check actual growth pattern for `ROWS` files. Fix file sizing, growth policy, or log reuse. |
-| `free_space_mb` | Comfortable inside every file | &#9989; | File-level pressure is not the root cause. | If the alert still fires, the incident is at the volume level — read `volume_free_gb` on the same row. |
-| `volume_free_gb` | Low on the host volume (`< 10%` of `volume_total_gb`) | &#10060; | The whole underlying volume is tight. | Treat as host-capacity incident, not just a database-file issue. Free the volume before doing anything inside the database. |
-| `volume_free_gb` | Low and file-level is also low | &#10060; | Both layers are pressurized. | Host-level action first (always), file-level action second. |
-| `logical_volume_name` | `NULL` | Depends | Container or Linux host where the volume has no assigned label. | Expected on `stoxx` (Docker); interpret by `volume_total_gb` and `volume_free_gb` instead of by name. |
+**How to route the space signal**
+
+- `type_desc = ROWS` means a data file. Pressure there usually comes from table or index growth.
+- `type_desc = LOG` means a transaction log file. Pressure there usually comes from log reuse or backup-chain issues, not table size directly.
+- Low `free_space_mb` inside one file means the file is near its current sized capacity. Check `log_reuse_wait_desc` for `LOG` files and growth behavior for `ROWS` files.
+- Comfortable `free_space_mb` in every file means the file itself is not the issue. If the alert still fires, inspect `volume_free_gb`.
+- Low `volume_free_gb` means the whole host volume is tight. Treat that as a host-capacity incident before doing anything inside SQL Server.
+- Low `volume_free_gb` combined with low `free_space_mb` means both layers are under pressure. Host-level action comes first, file-level action second.
+- `logical_volume_name = NULL` is expected in containers and some Linux environments. Read `volume_total_gb` and `volume_free_gb` instead of relying on a label.
 
 → **Continue in:** [restore-and-recovery](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/restore-and-recovery) for the log-backup, recovery-model, and point-in-time workflow that frees a `LOG_BACKUP`-stalled log file. For the underlying backup strategy (which drives how often `LOG_BACKUP` log truncation happens), see [backup-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/backup-types-and-strategy). For host-level incident patterns (volume grew because of runaway logs, checkpoint files, or telemetry), cross-reference [sql-server-problems](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-problems).
 
 ## Flowchart 5: "Deadlock Reported" — Retry vs Code Fix
 
 Start here when the application reports SQL Server error `1205` (`Transaction was deadlocked on lock resources with another process and has been chosen as the deadlock victim`). The first question is not "which query deadlocked?" It is "did the deadlock happen once under load or is it a repeating pattern?" The answer comes from the `system_health` Extended Events session, which is enabled and running by default on every SQL Server instance and captures every deadlock graph the engine emits into a ring-buffer target. From the ring buffer you learn how many deadlocks are recorded, which two resources the locking cycle is crossing, which client applications are involved, and what isolation level each participating session is using. Those facts alone determine whether the fix is a client-side retry policy or a server-side change in lock acquisition order.
+
+*Use the `system_health` ring buffer to separate one-off deadlocks from stable repeat cycles.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -776,13 +796,15 @@ CROSS APPLY target_data.nodes('RingBufferTarget/event[@name="xml_deadlock_report
 ORDER BY e.value('@timestamp', 'datetime2') DESC;
 ```
 
+```text
+deadlock_time            victim_id         process_count   p1_clientapp   p1_isolation         resource1                  resource2
+-----------------------  ----------------  -------------   ------------   -------------------  -------------------------  -------------------------
+2026-04-11 17:23:08.071  process100006e8c8 2               Python         read committed (2)   stoxx.dbo.race_deadlock_b  stoxx.dbo.race_deadlock_a
+```
+
 > [!info] As-of timestamp for this capture
 >
 > Captured against `stoxx` on **2026-04-11 20:30 UTC**. Instance `sqlserver_start_time = 2026-04-11 15:55:55` (~5 hours of uptime). The single row below is a real deadlock that fired earlier in the session lifetime during `race_demo.py` reproductions.
-
-| deadlock_time | victim_id | process_count | p1_clientapp | p1_isolation | resource1 | resource2 |
-|---|---|---:|---|---|---|---|
-| `2026-04-11 17:23:08.0710000` | `process100006e8c8` | 2 | `Python` | `read committed (2)` | `stoxx.dbo.race_deadlock_b` | `stoxx.dbo.race_deadlock_a` |
 
 **Per-row read of the live capture.** One deadlock report is present in the ring buffer, from about three hours before the capture time. Reading it column by column tells the full story:
 
@@ -791,22 +813,24 @@ ORDER BY e.value('@timestamp', 'datetime2') DESC;
 - **`p1_clientapp = Python`**, **`p1_isolation = read committed (2)`.** Both participating sessions are `Python` clients running under read committed isolation. The fact that a two-table update deadlock fires under RC is the canonical "missing index on foreign key" or "inconsistent lock acquisition order" pattern — RC by itself is not the cause, but it does not prevent the cycle either.
 - **`resource1 = stoxx.dbo.race_deadlock_b`**, **`resource2 = stoxx.dbo.race_deadlock_a`.** The cycle crosses two tables from the `race_demo` suite. The known reproduction in `race_demo.py` is: session 1 writes to `a` then `b`; session 2 writes to `b` then `a`. That is exactly the shape the deadlock monitor caught, and it is the textbook "always acquire in the same order" anti-pattern. Because this is a controlled reproduction, the routing decision is "this is a code-fix candidate, not a retry-policy candidate", but because the frequency is `1 in 5 hours`, the production-equivalent response would still lean toward "retry once with backoff, and add a code fix on the next sprint."
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `process_count` | `2` | Depends | Two-process cycle. | Standard A↔B pattern, solvable by consistent lock acquisition order. |
-| `process_count` | `3` or more | &#10060; | Multi-way cycle. | Much harder to solve; indicates broad contention across many objects. Escalate to a wider schema review. |
-| `deadlock_time` | Clustered within minutes of each other | &#10060; | Recurring cycle under live load. | Code fix required; retry policy alone will not scale. |
-| `deadlock_time` | Single row across hours or days | Depends | One-off under load. | Retry policy is usually sufficient; monitor for recurrence. |
-| `victim_id` | Same across all rows | Depends | One side is always losing, either by priority or by speed. | Check `SET DEADLOCK_PRIORITY` on that side; confirm it is deliberate. |
-| `p1_isolation` | `read committed (2)` | Depends | Default isolation level. | RC by itself is not the cause; look at lock order and indexing instead. |
-| `p1_isolation` | `serializable (4)` or `repeatable read (3)` | &#10060; | Wider lock scope increases deadlock probability. | Consider dropping to RC or snapshot isolation if business rules allow. |
-| `(resource1, resource2)` | Stable pair across rows | &#10060; | Repeating cycle over the same two objects. | Top candidate for a code fix: enforce consistent ordering, add a missing covering index, or narrow the writing transaction. |
+**How to read a deadlock row**
+
+- `process_count = 2` is the classic A↔B cycle. It is usually solvable by consistent lock acquisition order.
+- `process_count >= 3` means a multi-way cycle. Escalate to a wider schema and workload review.
+- `deadlock_time` values clustered within minutes means the cycle is recurring under live load. Retry alone will not scale.
+- A single `deadlock_time` row across hours or days suggests a one-off under load. A bounded retry policy is usually enough while you monitor recurrence.
+- The same `victim_id` losing repeatedly usually means one side has lower deadlock priority or systematically loses the race. Confirm that `SET DEADLOCK_PRIORITY` choice is deliberate.
+- `p1_isolation = read committed (2)` means the default isolation level was in effect. Look at lock order and indexing, not isolation alone.
+- `p1_isolation = serializable (4)` or `repeatable read (3)` means lock scope is wider. Consider a lower isolation level or row versioning if business rules allow it.
+- A stable `(resource1, resource2)` pair across rows is the strongest code-fix signal. Enforce consistent access order, add the missing supporting index, or shorten the writing transaction.
 
 → **Continue in:** [sql-server-problems](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-problems) for the full deadlock-resolution taxonomy (retry patterns, lock-order fixes, covering indexes for FK cycles). For the live two-session race-demo reproductions that generated this specific ring-buffer entry, see [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/race-conditions) in the query-writing chapter.
 
 ## Flowchart 6: "tempdb Under Pressure" — Allocation vs Space vs Version Store
 
 Start here when `tempdb` is implicated — either by a spike in `PAGELATCH_*` waits on pages in database ID 2, by a failed write reporting `1105` against `tempdb`, by a visible slowdown during sort/hash operations, or by uncontrolled row-versioning growth. `tempdb` is a special database: every user session competes for the same small set of allocation pages (PFS, GAM, SGAM) at the head of each data file, and those three page types are the classic allocation-contention hotspot. The first branch of this flowchart is therefore not "is tempdb full?" but "is the pressure on allocation pages (many files, allocator contention), on space (one type of object is ballooning), or on the version store (row-versioning isolation pushing state into tempdb)?"
+
+*Split `tempdb` incidents into allocator contention, workspace spill, or version-store growth before tuning anything else.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -911,13 +935,15 @@ SELECT
 FROM totals;
 ```
 
+```text
+data_file_count   total_unallocated_mb   total_user_object_mb   total_internal_object_mb   total_version_store_mb
+---------------   --------------------   --------------------   ------------------------   ----------------------
+8                 567.00                 2.44                   2.50                       0.00
+```
+
 > [!info] As-of timestamp for this capture
 >
 > Captured against `stoxx` on **2026-04-11 20:30 UTC**. These values are point-in-time and swing by megabytes second-to-second under active load; re-run during any live incident.
-
-| data_file_count | total_unallocated_mb | total_user_object_mb | total_internal_object_mb | total_version_store_mb |
-|---:|---:|---:|---:|---:|
-| 8 | 567.00 | 2.44 | 2.50 | 0.00 |
 
 **Per-row read of the live capture.** A single row, but every number matters:
 
@@ -928,6 +954,8 @@ FROM totals;
 - **`total_version_store_mb = 0.00`.** The row-versioning store is empty. Per the 09-ha-overview and concurrency notes, `stoxx` has `ALLOW_SNAPSHOT_ISOLATION = ON` but `READ_COMMITTED_SNAPSHOT = OFF`, so snapshot isolation is opt-in per session. Right now nothing is using it, so the version store carries no state. A non-zero value here during an incident would immediately nominate the row-versioning branch of the flowchart.
 
 The routing decision on this capture is: **no `tempdb` pressure of any kind right now**. The value of the capture is not the row values — it is that the same query shape decomposes any future `tempdb` incident into one of four clearly-named buckets in a single pass. To confirm the "allocator contention" branch during an actual incident, pair this query with a `PAGELATCH` waiting-tasks check — on an idle instance this second query returns zero rows, which is itself the healthy baseline:
+
+*Check whether any session is currently waiting on `tempdb` allocation pages.*
 
 ```sql
 SELECT
@@ -946,15 +974,15 @@ WHERE wt.wait_type LIKE 'PAGELATCH%'
 
 _Zero rows against this filter means no current session is waiting on a `tempdb` data page. During an actual allocator-contention incident, the `resource_description` column would return strings like `2:1:1` (PFS), `2:1:2` (GAM), or `2:1:3` (SGAM) — the famous three hotspot pages at the head of each file._
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `data_file_count` | `1` on a multi-CPU instance | &#10060; | Single allocation head for the whole instance. | First fix, before anything else: add more data files. |
-| `data_file_count` | `min(8, logical_CPUs)` with equal sizes | &#9989; | Baseline configuration matches modern guidance. | File-count branch is ruled out; diagnose by category instead. |
-| `total_unallocated_mb` | Low and decreasing across captures | &#10060; | Space is running out. | Identify the dominant object category (`user_object`, `internal_object`, `version_store`) and address the root. |
-| `total_user_object_mb` | High | Depends | User code is materializing large `#temp` sets. | Query tuning opportunity: rewrite to avoid unnecessary `#temp` materialization, or add indexes so the source query does not need one. |
-| `total_internal_object_mb` | High | Depends | Plans are spilling to worktables, hash joins, or sorts. | Memory grant tuning; consider `MAX_GRANT_PERCENT` / `MIN_GRANT_PERCENT` query hints or plan-level fixes. |
-| `total_version_store_mb` | High or growing | Depends | Row-versioning traffic is heavy (RCSI or snapshot isolation active). | Review which databases have RCSI on; look for long-running snapshot transactions holding old versions alive. |
-| `PAGELATCH_*` waits on `2:*:*` pages | Non-zero | &#10060; | Active allocator contention. | Confirm equal file sizes; consider trace flag 1118 on pre-2016 instances; on 2016+ the allocator fix is automatic. |
+**How to route the `tempdb` pressure class**
+
+- `data_file_count = 1` on a multi-CPU instance means one allocation head for the whole server. Add more data files before doing anything else.
+- `data_file_count = min(8, logical_CPUs)` with equal sizes means the baseline file-count guidance is already met. Diagnose by category instead.
+- Low and falling `total_unallocated_mb` means `tempdb` is genuinely running out of space. Identify which object class is growing.
+- High `total_user_object_mb` means user code is materializing large `#temp` sets. Rewrite the query shape or reduce the need for large temporary objects.
+- High `total_internal_object_mb` means plans are spilling to worktables, hashes, or sorts. Focus on memory grants and plan shape.
+- High or growing `total_version_store_mb` means row-versioning traffic is heavy. Review `RCSI`, `SNAPSHOT`, and long-running readers that pin old versions.
+- Non-zero `PAGELATCH_*` waits on `2:*:*` pages means allocator contention. Confirm equal file sizes and apply the version-appropriate mitigation path.
 
 > [!tip] SQL Server 2022 reduces the need for the multi-file workaround
 >
@@ -970,6 +998,8 @@ _Zero rows against this filter means no current session is waiting on a `tempdb`
 ## Flowchart 7: "AG Secondary Fallen Behind" — Send Queue vs Redo Queue vs Sync-Commit Impact
 
 Start here when an Always On Availability Group replica is reported as out of sync: the dashboard is yellow, a `HADR_SYNC_COMMIT` wait is spiking on the primary, a secondary is refusing read intent connections, or monitoring is alerting on `log_send_queue_size` or `redo_queue_size`. The first question is not "which replica is broken?" It is "is the backlog on the **send** side (primary has more log than it has transmitted) or on the **redo** side (secondary has received log but hasn't applied it yet)?" Those two failure modes have completely different remediations: send-queue backlog points at network path, replica endpoint, or flow control; redo-queue backlog points at the secondary's `CPU`, I/O, or redo-thread health.
+
+*Route AG lag by distinguishing send backlog, redo backlog, and non-backlog replica health failures.*
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
@@ -1072,32 +1102,32 @@ JOIN sys.availability_groups AS ag ON ag.group_id = ar.group_id
 ORDER BY ag.name, ar.replica_server_name;
 ```
 
-> [!info] Live capture limitation on this instance
->
-> The `stoxx` instance is a standalone SQL Server 2022 Developer edition container with no Always On availability group configured, so this query returns **zero rows** on the local instance. The live 3-replica reference capture for this query shape, including real `synchronization_state_desc`, `log_send_queue_size`, and `redo_queue_size` values, is recorded against the `project_ag` three-replica demo in [09-high-availability-overview](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/high-availability-overview). Treat the zero-row result below as the correct "no AG on this instance" response rather than as a failed capture.
-
 ```text
 (0 rows)
 ```
 
+> [!info] Live capture limitation on this instance
+>
+> The `stoxx` instance is a standalone SQL Server 2022 Developer edition container with no Always On availability group configured, so this query returns **zero rows** on the local instance. The live 3-replica reference capture for this query shape, including real `synchronization_state_desc`, `log_send_queue_size`, and `redo_queue_size` values, is recorded against the `project_ag` three-replica demo in [09-high-availability-overview](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/high-availability-overview). Treat the zero-row result below as the correct "no AG on this instance" response rather than as a failed capture.
+
 **Per-row read of the live capture.** The result is empty by design — `stoxx` is standalone. The interpretation below describes how to read this query's output **on any AG-hosting instance**; the per-row reads are framed as "what each row state means" rather than "what the live row says", because there is no live row on this instance. For the concrete row-level numbers captured against the project_ag three-replica demo, read the [09-high-availability-overview](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/high-availability-overview) note's AG-health section end-to-end.
 
-| Column | Value | Watch | Meaning | Implication |
-|---|---|---|---|---|
-| `synchronization_state_desc` | `SYNCHRONIZED` on a sync-commit replica | &#9989; | Fully caught up and hardened. | No action; replica is healthy. |
-| `synchronization_state_desc` | `SYNCHRONIZING` on an async-commit replica | &#9989; | Expected steady-state for async-commit. | No action; replica is healthy. |
-| `synchronization_state_desc` | `SYNCHRONIZING` on a sync-commit replica | &#10060; | Sync-commit replica has fallen behind and is catching up. | Primary is accumulating `HADR_SYNC_COMMIT` waits; route to send-queue or redo-queue branch. |
-| `synchronization_state_desc` | `NOT SYNCHRONIZING` | &#10060; | Replica is disconnected or the database is offline/recovering on this replica. | Check endpoint state, SQL Server service, and database state on the affected replica. |
-| `synchronization_health_desc` | `HEALTHY` | &#9989; | AG-level rollup is green. | Read the queue columns anyway; health is a lagging signal. |
-| `synchronization_health_desc` | `PARTIALLY_HEALTHY` or `NOT_HEALTHY` | &#10060; | AG dashboard is yellow or red. | Match with the specific row's queue columns to identify the failing replica and database. |
-| `log_send_queue_size` | Near-zero and flat | &#9989; | Primary is keeping up sending log to this secondary. | No send-side action. |
-| `log_send_queue_size` | Growing across captures | &#10060; | Send-side backlog: log is being generated faster than it can be sent. | Route to network path, AG endpoint, flow-control, or primary-side network throughput diagnostics. |
-| `redo_queue_size` | Near-zero and flat | &#9989; | Secondary is keeping up redoing log locally. | No redo-side action. |
-| `redo_queue_size` | Growing across captures | &#10060; | Redo-side backlog: secondary has the log but can't redo it fast enough. | Route to secondary CPU, I/O, and redo-thread diagnostics. Consider failover if the secondary has become unfit for role. |
-| `redo_rate` | High (`redo_queue_size / redo_rate` ⇒ seconds) | &#9989; | Even a big queue will clear quickly. | Wait it out; no action required. |
-| `redo_rate` | Low or zero with non-zero queue | &#10060; | Secondary is stalled on redo. | Inspect `wait_type` of the `HADR_WORK_POOL` and `WRITELOG` waits on the secondary; common causes include storage saturation, CPU starvation, or a blocked readable-secondary query path. |
-| `last_hardened_time` | Within seconds of `SYSDATETIME()` on primary | &#9989; | Secondary is hardening log in near-real-time. | Sync-commit path is healthy. |
-| `last_hardened_time` | Stale by minutes or more | &#10060; | Secondary has not hardened log for a long time. | Primary-side `HADR_SYNC_COMMIT` waits are explained by this stale value; treat as sync-commit stall. |
+**How to read AG lag columns**
+
+- `synchronization_state_desc = SYNCHRONIZED` on a sync-commit replica means it is fully caught up. No action is required.
+- `synchronization_state_desc = SYNCHRONIZING` on an async-commit replica is the expected steady state. No action is required.
+- `synchronization_state_desc = SYNCHRONIZING` on a sync-commit replica means it has fallen behind. Route immediately to the send-queue or redo-queue branch.
+- `synchronization_state_desc = NOT SYNCHRONIZING` means the replica is disconnected or the database is unavailable there. Check endpoint, service, and database state.
+- `synchronization_health_desc = HEALTHY` is good, but it is still a lagging rollup. Read the queue columns anyway.
+- `synchronization_health_desc = PARTIALLY_HEALTHY` or `NOT_HEALTHY` means the dashboard already sees degradation. Match that row with the queue columns to find the failing replica and database.
+- Near-zero, flat `log_send_queue_size` means the primary is shipping log fast enough. No send-side action is needed.
+- Growing `log_send_queue_size` means send-side backlog. Route to network path, endpoint, or AG flow-control diagnostics.
+- Near-zero, flat `redo_queue_size` means the secondary is keeping up on replay. No redo-side action is needed.
+- Growing `redo_queue_size` means the secondary has the log but cannot replay it fast enough. Route to secondary CPU, I/O, and redo-thread diagnostics.
+- High `redo_rate` relative to `redo_queue_size` means even a large queue will clear quickly. Monitoring is enough.
+- Low or zero `redo_rate` with a non-zero queue means redo is stalled. Inspect wait patterns on the secondary.
+- A recent `last_hardened_time` means the sync-commit path is healthy.
+- A stale `last_hardened_time` explains primary-side `HADR_SYNC_COMMIT` waits and should be treated as a sync-commit stall.
 
 > [!tip] Readable secondaries compete with the redo thread
 >

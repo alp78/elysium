@@ -177,7 +177,7 @@ status: complete
 
 Before automating anything against a SQL Server host, confirm which `sqlcmd` variant is actually installed and which PowerShell alternatives exist. The command surface is similar between variants but not identical, and writing automation for the wrong client is a common cause of flag-mismatch incidents on hand-over.
 
-> [!abstract] Identify the client before writing automation
+> [!abstract]- Summary
 >
 > - **Two sqlcmd binaries.** Classic ODBC `sqlcmd` ships with SQL Server tooling; `go-sqlcmd` is a standalone cross-platform rewrite.
 > - **PowerShell alternative.** `Invoke-Sqlcmd` from the legacy `SQLPS` module (ships with SQL Server) or the modern `SqlServer` module (PowerShell Gallery).
@@ -211,6 +211,8 @@ During initial environment validation, or after installing or upgrading SQL Serv
 >
 > *This command prints the installed sqlcmd banner and flag surface.*
 >
+
+*This command prints the installed sqlcmd banner and flag surface.*
 
 ```powershell
 sqlcmd -?
@@ -293,6 +295,8 @@ During environment validation, or before writing a PowerShell-first automation t
 > *This command reports whether `Invoke-Sqlcmd` is installed and which module provides it.*
 >
 
+*This command reports whether `Invoke-Sqlcmd` is installed and which module provides it.*
+
 ```powershell
 if (Get-Command Invoke-Sqlcmd -ErrorAction SilentlyContinue) {
     Get-Command Invoke-Sqlcmd | Select-Object Name, Source, Version
@@ -301,9 +305,11 @@ if (Get-Command Invoke-Sqlcmd -ErrorAction SilentlyContinue) {
 }
 ```
 
-| Name | Source | Version |
-|---|---|---|
-| Invoke-Sqlcmd | SQLPS | 17.0 |
+```text
+Name         Source   Version
+----         ------   -------
+Invoke-Sqlcmd SQLPS    17.0
+```
 
 *`Invoke-Sqlcmd` is available on this host via the legacy `SQLPS` module. It is sufficient for SQL-authenticated local automation, but it lacks the `-TrustServerCertificate` switch that the modern `SqlServer` module exposes. For automation that needs to negotiate TLS explicitly, or to talk to Azure SQL with Microsoft Entra ID, install the modern module from the PowerShell Gallery.*
 
@@ -338,7 +344,7 @@ SqlServer 22.x.x     C:\Users\<you>\Documents\PowerShell\Modules\SqlServer\22.x.
 
 This section covers the three authentication modes you realistically meet on SQL Server: SQL logins, Windows integrated auth, and Microsoft Entra ID against Azure SQL Database. It also covers TLS encryption choices, because authentication and transport security are typically configured on the same command line.
 
-> [!abstract] Authentication decision guide
+> [!abstract]- Summary
 >
 > - **Local dev, CI lab, or disconnected development.** SQL authentication with `SQLCMDPASSWORD` env var. Never hardcode `-P` in scripts.
 > - **Domain-joined Windows host against on-prem SQL Server.** Windows integrated auth (`-E`). Falls through Kerberos or NTLM automatically.
@@ -378,13 +384,16 @@ During routine automation, scripted health checks, backup scripts, or when provi
 > *This command opens a SQL-authenticated session, executes a probe query, and exits.*
 >
 
+*This command opens a SQL-authenticated session, executes a probe query, and exits.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -Q "SELECT DB_NAME() AS current_database;"
 ```
 
-| current_database |
-|---|
-| master |
+```text
+current_database
+master
+```
 
 *Login succeeded and the session defaulted to `master`, exactly as requested by `-d master`. This is the minimum viable connectivity test for scripted administration: it proves login success, network reachability, TDS handshake, SQL execution, and database targeting in one short command. For production use, pair this with `-b` so that a login failure or query error propagates a non-zero exit code to the caller.*
 
@@ -405,15 +414,18 @@ Every time SQL authentication is needed from automation, deployment scripts, CI 
 > *This command authenticates via `SQLCMDPASSWORD` without exposing the secret on the command line.*
 >
 
+*This command authenticates via `SQLCMDPASSWORD` without exposing the secret on the command line.*
+
 ```powershell
 $env:SQLCMDPASSWORD = 'EsgDev2026Pass1'
 sqlcmd -S localhost,1434 -U sa -d master -C -W -Q "SELECT SUSER_SNAME() AS logged_in_as, DB_NAME() AS current_db;"
 Remove-Item Env:SQLCMDPASSWORD
 ```
 
-| logged_in_as | current_db |
-|---|---|
-| sa | master |
+```text
+logged_in_as  current_db
+sa            master
+```
 
 *The probe returns the expected login and database without ever quoting the password on the command line. The trailing `Remove-Item Env:SQLCMDPASSWORD` clears the variable from the session so that a later invocation in the same shell does not reuse a stale credential. For CI, prefer to materialize the password from a secret store immediately before `sqlcmd` runs and overwrite the variable after.*
 
@@ -434,6 +446,8 @@ On domain-joined Windows hosts (or Linux hosts with properly configured Kerberos
 >
 > *This command connects with the current Windows identity and proves the authenticated principal.*
 >
+
+*This command connects with the current Windows identity and proves the authenticated principal.*
 
 ```powershell
 sqlcmd -S <prod-sql-server> -E -d master -C -Q "SELECT SUSER_SNAME() AS windows_principal, ORIGINAL_LOGIN() AS original_login;"
@@ -464,6 +478,8 @@ Whenever the target is Azure SQL Database, Azure SQL Managed Instance, or Azure 
 >
 > *This command opens an interactive Entra login against an Azure SQL Database.*
 >
+
+*This command opens an interactive Entra login against an Azure SQL Database.*
 
 ```powershell
 sqlcmd -S myserver.database.windows.net -d esg_prod -G -U alice@contoso.onmicrosoft.com -l 30 -N s -Q "SELECT CURRENT_USER AS current_user, DB_NAME() AS db;"
@@ -504,6 +520,8 @@ On every connection to production — Azure SQL, an on-prem server with a CA-iss
 > *This command attempts a strict-encryption connection against the self-signed container and expects failure.*
 >
 
+*This command attempts a strict-encryption connection against the self-signed container and expects failure.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -N s -Q "SELECT 1 AS strict_encrypt_ok;"
 ```
@@ -521,11 +539,17 @@ When the SQL Server hostname differs from the certificate CN or SAN — typicall
 
 *This command connects through a DNS alias and validates the certificate against the underlying host name.*
 
+*This command connects through a DNS alias and validates the certificate against the underlying host name.*
+
 ```powershell
 sqlcmd -S sql-prod-alias,1433 -U app_user -d esg_prod -N s -F sql-prod-01.corp.example.com -Q "SELECT @@SERVERNAME;"
 ```
 
-*No live capture: the stoxx container is reached directly by host and does not have a separate alias. This pattern is critical for Availability Group listeners and multi-subnet failovers where the TCP connection goes to the listener name but the certificate is issued to the underlying node name.*
+```text
+No live capture: the stoxx container is reached directly by host and does not have a separate alias.
+```
+
+*This pattern is critical for Availability Group listeners and multi-subnet failovers where the TCP connection goes to the listener name but the certificate is issued to the underlying node name.*
 
 ---
 
@@ -533,7 +557,7 @@ sqlcmd -S sql-prod-alias,1433 -U app_user -d esg_prod -N s -F sql-prod-01.corp.e
 
 Beyond the one-shot `-Q` query, `sqlcmd` runs on two very different models: non-interactive execution of a `.sql` file from the shell (via `-i`), and interactive execution of the `sqlcmd` REPL where SQLCMD-mode commands like `:r`, `:setvar`, `:Connect`, and `:!!` are available. Any `.sql` file passed to `-i` can contain the same SQLCMD-mode commands, which is how deployment tooling like SSDT and DACPACs chain multiple scripts into one run.
 
-> [!abstract] Two execution models that share the same SQLCMD-mode grammar
+> [!abstract]- Summary
 >
 > - **Non-interactive batch.** `sqlcmd -i script.sql` reads the file, executes it, and exits. Best for CI pipelines, cron jobs, and scheduled deployments. The script can use any SQLCMD-mode command (`:r`, `:setvar`, `$(var)`), but it cannot prompt for input.
 > - **Interactive REPL.** `sqlcmd` with no `-Q` or `-i` enters the interactive prompt. SQLCMD-mode commands operate against the live session. Useful for exploratory diagnostics, DAC sessions, and ad-hoc recovery work.
@@ -551,6 +575,8 @@ Every deployment, health check, or diagnostic that ships as a versioned `.sql` f
 >
 > *This command runs a versioned health-check script against the instance and captures both result sets.*
 >
+
+*This command runs a versioned health-check script against the instance and captures both result sets.*
 
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -W -s "|" -i "C:\Users\aperi\AppData\Local\Temp\sqlcmd-demo\health-check.sql"
@@ -581,15 +607,18 @@ When a deployment or migration script depends on shared setup logic — variable
 > *This command runs a main script that `:r`-includes a variables file and substitutes the resulting variables into a query.*
 >
 
+*This command runs a main script that `:r`-includes a variables file and substitutes the resulting variables into a query.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -W -s "|" -i "C:\Users\aperi\AppData\Local\Temp\sqlcmd-demo\main.sql"
 ```
 
-| symbol | date | close |
-|---|---|---|
-| ABI.BR | 2026-04-07 | 61.619999999999997 |
-| AD.AS | 2026-04-07 | 41.689999999999998 |
-| ADS.DE | 2026-04-07 | 130.84999999999999 |
+```text
+symbol  date        close
+ABI.BR  2026-04-07  61.619999999999997
+AD.AS   2026-04-07  41.689999999999998
+ADS.DE  2026-04-07  130.84999999999999
+```
 
 *The included `setvars.sql` defined `target_db=stoxx` and `top_n=3`, both substituted into the main query before the batch was sent to SQL Server. The result shows three EuroStoxx 50 constituents at the most recent close date in the `silver` layer. The floating-point artifacts in the `close` column (`61.619999999999997` instead of `61.62`) are a property of the underlying `FLOAT` storage type surfacing through the default text renderer — use `CAST(... AS DECIMAL(18,6))` in the query if operational output needs clean fixed-point formatting.*
 
@@ -621,13 +650,16 @@ Whenever the same script must target different environments, databases, or data 
 > *This command defines a SQLCMD variable and proves the client substitutes it before the batch reaches SQL Server.*
 >
 
+*This command defines a SQLCMD variable and proves the client substitutes it before the batch reaches SQL Server.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -b -W -s "|" -Q 'SET NOCOUNT ON; SELECT ''$(dbname)'' AS sqlcmd_variable_value;' -v dbname="stoxx"
 ```
 
-| sqlcmd_variable_value |
-|---|
-| stoxx |
+```text
+sqlcmd_variable_value
+stoxx
+```
 
 *The output confirms real SQLCMD substitution, not a shell-level variable or a comment convention. SQL Server received the literal string `stoxx` because the client replaced `$(dbname)` before the batch was serialized to TDS. If the value had contained a single quote, the T-SQL string literal would have broken — this is the injection vector the `[!warning]` above describes.*
 
@@ -637,9 +669,15 @@ When variables need to be set inside a script file instead of on the command lin
 
 *This command file shows the `:setvar` usage captured in the setvars.sql demo file.*
 
+*This command file shows the `:setvar` usage captured in the setvars.sql demo file.*
+
 ```sql
 :setvar target_db stoxx
 :setvar top_n 3
+```
+
+```text
+No visible output: `:setvar` updates client-side state only.
 ```
 
 *These two lines, included from `main.sql` via `:r setvars.sql`, register the `target_db` and `top_n` variables for the remainder of the batch. `:setvar` without a value clears the variable. Variable names are case-insensitive; values containing whitespace must be double-quoted (`:setvar message "hello world"`). The `:Listvar` command in an interactive session enumerates all currently-registered variables plus the reserved `SQLCMD*` set.*
@@ -650,7 +688,7 @@ When variables need to be set inside a script file instead of on the command lin
 
 `sqlcmd`'s default error handling is permissive: a SQL batch can raise an error, print an error message, and still exit with code `0`. That is a correct design choice for interactive usage — the operator sees the error and reacts — but it is an abject failure mode for automation, because the caller has no way to know the deployment just broke. The fix is the `-b` flag plus explicit severity and stderr routing flags. This section covers all four in the order they typically appear on a production command line.
 
-> [!abstract] Four flags that turn sqlcmd into a reliable CI citizen
+> [!abstract]- Summary
 >
 > - **`-b`** — exit with `ERRORLEVEL = 1` on any SQL error at severity 11 or above. Without `-b`, `sqlcmd` exits `0` even when the batch failed.
 > - **`-V <severity>`** — raise the severity floor so low-severity `RAISERROR` progress messages do not fail the build.
@@ -682,6 +720,8 @@ On every invocation of `sqlcmd` from CI, deployment scripts, scheduled tasks, or
 > *This command runs a script that deliberately raises a severity-16 error and proves the exit code.*
 >
 
+*This command runs a script that deliberately raises a severity-16 error and proves the exit code.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d stoxx -C -b -i "C:\Users\aperi\AppData\Local\Temp\sqlcmd-demo\deploy.sql"
 $LASTEXITCODE
@@ -703,8 +743,14 @@ When a deployment script intentionally uses low-severity `RAISERROR` calls for p
 
 *This command combines `-b` and `-V 16` so only severity 16+ errors fail the shell.*
 
+*This command combines `-b` and `-V 16` so only severity 16+ errors fail the shell.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d stoxx -C -b -V 16 -i ".\deploy.sql"
+```
+
+```text
+No visible output: `-V 16` changes the exit-code threshold; the visible effect is on `$LASTEXITCODE`.
 ```
 
 *The `-V 16` floor means a `RAISERROR(..., 11, 1)` or `RAISERROR(..., 15, 1)` progress message inside `deploy.sql` is reported to stdout but does not fail the exit code. Severity 16, 17, 18, 19, 20 all still fail. This is the cleanest way to let legitimate progress output through without silencing real errors.*
@@ -715,8 +761,14 @@ When the caller needs to split `sqlcmd` output by stream — typically to captur
 
 *This command routes all errors to stderr while leaving query output on stdout.*
 
+*This command routes all errors to stderr while leaving query output on stdout.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d stoxx -C -b -r 1 -Q "PRINT 'this goes to stderr'; SELECT 1 AS ok;" 2> errors.log
+```
+
+```text
+No live capture: stderr is redirected to errors.log and stdout retains the query result.
 ```
 
 *After this runs, `errors.log` contains the `PRINT` text (because `-r 1` widens error routing to include `PRINT`) and `stdout` contains the `SELECT 1` result. This stream-splitting pattern is useful for pipelines that pipe `sqlcmd` output into a downstream parser that would break on error text.*
@@ -727,7 +779,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d stoxx -C -b -r 1 -Q "PRIN
 
 Most `sqlcmd` automation either wants human-readable console output or machine-friendly delimited output. `sqlcmd` can produce both, but the output flags are surprisingly interlocked: the column separator (`-s`) interacts with trailing-space behavior (`-W`), header printing (`-h`), column widths (`-y`/`-Y`), and file redirection (`-o`).
 
-> [!abstract] Output shaping flag set at a glance
+> [!abstract]- Summary
 >
 > - **Delimiters.** `-s "<char>"` chooses a column separator; `-W` strips trailing padding so columns actually end at the separator; pair them in every delimited export.
 > - **Headers.** `-h -1` removes the header row entirely; `-h 0` (default) keeps one header at the top; `-h N` repeats the header every N rows for very long result sets.
@@ -751,6 +803,8 @@ When an operational export is needed as flat text for downstream tooling — ETL
 > *This command exports a top-5 EuroStoxx 50 slice as a pipe-delimited file with no header row.*
 >
 
+*This command exports a top-5 EuroStoxx 50 slice as a pipe-delimited file with no header row.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d stoxx -C -Q "SET NOCOUNT ON; SELECT TOP (5) symbol, [date], [close] FROM silver.eurostoxx50_ohlcv ORDER BY [date] DESC, symbol;" -s "|" -W -h-1 -o "C:\Users\aperi\AppData\Local\Temp\sqlcmd-demo\export.txt"
 Get-Content "C:\Users\aperi\AppData\Local\Temp\sqlcmd-demo\export.txt"
@@ -772,6 +826,8 @@ Whenever downstream text processing treats the header row as a data row, or the 
 
 *This command omits the header line by passing `-h -1`.*
 
+*This command omits the header line by passing `-h -1`.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -h-1 -W -s "|" -Q "SET NOCOUNT ON; SELECT name, recovery_model_desc, state_desc FROM sys.databases WHERE database_id > 4 ORDER BY name;"
 ```
@@ -789,8 +845,14 @@ When the default column widths truncate wide `VARCHAR` or `NVARCHAR` columns in 
 
 *This command widens variable-length columns to 8000 characters and fixed-length columns to 4000.*
 
+*This command widens variable-length columns to 8000 characters and fixed-length columns to 4000.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -y 8000 -Y 4000 -Q "SELECT name, definition FROM sys.sql_modules WHERE object_id = OBJECT_ID(N'sys.sp_helpdb');"
+```
+
+```text
+No visible output: the point of this demo is the widened text rendering rather than a separate capture.
 ```
 
 *`-y` defaults to `256` and silently truncates wide `VARCHAR(MAX)` columns like `sys.sql_modules.definition`. Bumping to `8000` lets the full body of a stored procedure through. `-y 0` is unlimited but is dangerous: a single `VARCHAR(MAX)` column holding several megabytes will balloon the output file by the same amount, and wide terminals may wrap the output into unreadable chunks.*
@@ -801,7 +863,7 @@ sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -y 8000 -Y 4000
 
 The Dedicated Admin Connection (DAC) is SQL Server's escape hatch for cases where the normal workload endpoint is too impaired to serve diagnostic queries — a wedged `tempdb`, a scheduler stall, a memory pressure event, or a schema-level lock that blocks every user session. The DAC listens on its own port, runs with its own scheduler, and guarantees one and only one diagnostic session at a time. It is intentionally narrow: connect to `master`, keep the workload light, and use only the DMVs required to understand the fault.
 
-> [!abstract] DAC in one page
+> [!abstract]- Summary
 >
 > - **Access method.** `sqlcmd -A` (ODBC only — Go `sqlcmd` does not yet support `-A`) or the `admin:` server prefix (`sqlcmd -S admin:<server>`).
 > - **Listener.** Loopback only by default. `sp_configure 'remote admin connections', 1` enables remote access, but the DAC port must still be reachable from the client.
@@ -821,13 +883,16 @@ Before attempting a DAC session from a remote host, or during a routine server-c
 
 *This command reads the `remote admin connections` value from `sys.configurations`.*
 
+*This command reads the `remote admin connections` value from `sys.configurations`.*
+
 ```powershell
 sqlcmd -S localhost,1434 -U sa -P "EsgDev2026Pass1" -d master -C -W -s "|" -Q "SELECT name, value, value_in_use, [description] FROM sys.configurations WHERE name = 'remote admin connections';"
 ```
 
-| name | value | value_in_use | description |
-|---|---|---|---|
-| remote admin connections | 0 | 0 | Dedicated Admin Connections are allowed from remote clients |
+```text
+name  value  value_in_use  description
+remote admin connections  0  0  Dedicated Admin Connections are allowed from remote clients
+```
 
 *`value_in_use = 0` means only local clients can attach to the DAC. To allow operators on another host to reach the DAC, set `remote admin connections = 1` via `sp_configure` and `RECONFIGURE`. The configuration takes effect immediately — no SQL Server restart required. Note that on clustered SQL Server installations the DAC listener is off by default, so enabling `remote admin connections` is the recommended baseline for any clustered production instance.*
 
@@ -837,9 +902,15 @@ During instance initial hardening, after a cluster node failover where DAC may h
 
 *This command enables remote DAC access via `sp_configure`.*
 
+*This command enables remote DAC access via `sp_configure`.*
+
 ```sql
 EXEC sp_configure 'remote admin connections', 1;
 RECONFIGURE;
+```
+
+```text
+No visible output: `sp_configure` changes server state; the visible effect is on the subsequent DAC connection.
 ```
 
 *`RECONFIGURE` commits the configuration change. The DAC listener is refreshed without a service restart, and remote `sqlcmd -A` connections begin working immediately. This change should be baked into the instance's standard configuration so that every new cluster node inherits it; setting it once and losing it on failover is a classic "everything is fine until the incident" trap.*
@@ -847,6 +918,8 @@ RECONFIGURE;
 #### Locate the DAC port in the SQL Server errorlog
 
 Before connecting through the DAC for the first time on a given instance, or whenever the port assignment might have changed (dynamic ports, container restart, instance rename). It is typically triggered by a planned DAC session, a restart of the instance, or a container recreate where the DAC listener was rebound. Reads `/var/opt/mssql/log/errorlog` on Linux containers or `ERRORLOG` on Windows installations. Requires host-level read access to the errorlog file or `sys.xp_readerrorlog` via the regular endpoint. Discover the actual TCP port the DAC listener bound to at startup.
+
+*This command reads the DAC-announcement lines from the SQL Server errorlog via `docker exec`.*
 
 *This command reads the DAC-announcement lines from the SQL Server errorlog via `docker exec`.*
 
@@ -884,13 +957,16 @@ During an incident where the regular workload endpoint is unresponsive and the i
 > *This command opens a DAC session inside the container and queries `sys.dm_exec_connections` to prove the session is routed through the DAC endpoint.*
 >
 
+*This command opens a DAC session inside the container and queries `sys.dm_exec_connections` to prove the session is routed through the DAC endpoint.*
+
 ```powershell
 docker exec stoxx-db /opt/mssql-tools18/bin/sqlcmd -S "admin:127.0.0.1" -U sa -P "EsgDev2026Pass1" -d master -C -W -s "|" -Q "SELECT s.session_id, s.login_name, c.endpoint_id, CASE c.endpoint_id WHEN 1 THEN 'DAC' ELSE 'Regular' END AS endpoint_kind FROM sys.dm_exec_sessions s INNER JOIN sys.dm_exec_connections c ON s.session_id = c.session_id WHERE s.session_id = @@SPID;"
 ```
 
-| session_id | login_name | endpoint_id | endpoint_kind |
-|---|---|---|---|
-| 55 | sa | 1 | DAC |
+```text
+session_id  login_name  endpoint_id  endpoint_kind
+55          sa          1            DAC
+```
 
 *The session is genuinely routed through the DAC endpoint. The signature is `endpoint_id = 1` in `sys.dm_exec_connections`: the DAC is always endpoint 1, and no other connection type ever uses that ID. `@@SPID = 55` is an ordinary user-session ID — DAC sessions do not use a reserved range. If `endpoint_id` came back as anything other than 1, the `admin:` prefix was ignored and the connection fell through to the regular workload listener (most commonly because the operator hit a non-DAC instance, or because the `sysadmin` check on the server rejected the DAC attempt and downgraded to a regular login).*
 

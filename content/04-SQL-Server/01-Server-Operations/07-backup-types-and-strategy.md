@@ -12,7 +12,7 @@ aliases:
   - GCS backup
 description: "Production SQL Server backup strategy: backup types and chain semantics, metadata inspection via msdb, file integrity verification, full production BACKUP commands, object storage backup to Google Cloud Storage via the S3 connector, scheduling and retention, and operational safeguards. All commands captured live against the stoxx database on a SQL Server 2022 Linux container."
 created: 2026-03-22
-updated: 2026-04-11
+updated: 2026-04-16
 status: complete
 ---
 
@@ -76,6 +76,8 @@ status: complete
 >
 > The order of this note follows the order a DBA actually decides on backup design. The diagram shows how the three core backup types, the verification steps, and the storage target choices interact.
 
+*This diagram maps the backup-design flow from `RPO` and `RTO` targets to verification and storage choices.*
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -115,7 +117,7 @@ flowchart TD
 
 ## Backup Model
 
-> [!abstract] Taxonomy, chain semantics, and recovery-model boundaries
+> [!abstract]- Summary
 >
 > SQL Server supports several backup types, but only three form the core of most production strategies: full, differential, and transaction log. The restore design follows directly from how these three interact and from the database recovery model. This section defines each type, explains the dependency graph between them, and locates the current `stoxx` database on that map.
 
@@ -150,6 +152,7 @@ Backups do not exist independently. They form a directed dependency graph. The r
 #### Visualize the chain and restore dependency flow
 
 Use this diagram when designing or explaining a restore plan. It becomes relevant during new-scope onboarding, restore-drill planning, and incident response. No code executes here; the diagram exists to show which backup sets must survive together for a specific recovery target to remain achievable.
+*This diagram shows how a conventional `full` backup anchors the `differential` and `log` chain while a `copy-only` full stays outside the differential base.*
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -241,7 +244,7 @@ WHERE name IN ('stoxx','stoxx_db','master','msdb');
 
 ## Backup Metadata Inspection
 
-> [!abstract] Reading the authoritative state of the backup chain from msdb
+> [!abstract]- Summary
 >
 > Any backup strategy should be validated against `msdb`, not just against job definitions or scripts. This section walks through the four catalog lookups that answer the operational questions "what backups exist, where are the files, which differential base am I on, and is the log chain intact". Every query in this section is read-only and safe to run on production.
 
@@ -502,7 +505,7 @@ ORDER BY backup_set_id;
 
 ## Backup Verification
 
-> [!abstract] Three RESTORE commands that prove a backup file before you need it
+> [!abstract]- Summary
 >
 > Backup history is not enough. You also need commands that confirm the file on disk is readable, show what is inside it, and list the files it will expand into on restore. The three commands below are read-only and fast; run them as part of every backup-drill cycle. None of them replaces a real test restore, but all three must pass before a real restore is attempted.
 
@@ -702,7 +705,7 @@ FROM DISK = '/var/opt/mssql/backup/stoxx_full_chain.bak';
 
 ## Production Backup Commands
 
-> [!abstract] BACKUP command patterns for every backup type in the chain
+> [!abstract]- Summary
 >
 > These are the commands that actually implement the strategy. The safest pattern is to treat each backup type as a deliberate operational tool, not as a syntax variation you choose casually. Every command in this section was executed against the live `stoxx` database, and the `STATS = N` progress output below each code cell is the real captured output from that run.
 
@@ -967,7 +970,7 @@ Log-specific flags on top of the full `BACKUP DATABASE` option set.
 
 ## Object Storage Backup with GCS
 
-> [!abstract] Backup to Google Cloud Storage via the SQL Server 2022 S3 connector
+> [!abstract]- Summary
 >
 > SQL Server 2022 introduced native `BACKUP TO URL` support for S3-compatible object storage, extending the existing Azure Blob Storage URL syntax. Google Cloud Storage exposes an S3-compatible interoperability XML API authenticated with HMAC keys, which makes GCS a fully working backup target even though it is not on Microsoft's officially tested vendor list. This section walks through the complete GCP-side and SQL-Server-side setup, then takes a real full backup of `stoxx` to a GCS bucket and reads the backup set back through the same URL to prove round-trip integrity.
 
@@ -1110,21 +1113,12 @@ Reach for this material when as part of regular key hygiene audits or when troub
 gcloud storage hmac list --project=bq-wh-nb
 ```
 
-*A healthy rotation has at most one `ACTIVE` key per service account at any given time, plus any old keys in `INACTIVE` state waiting to be deleted. If a key is in `ACTIVE` state but no longer in use by any service, disable it and delete it to reduce the attack surface.*
-
-*This command deactivates an HMAC key before deletion (deletion requires `INACTIVE` state).*
-
-```bash
-gcloud storage hmac update GOOG1E<access-id-suffix> \
-  --project=bq-wh-nb --deactivate
+```text
+ACCESS_ID                  SERVICE_ACCOUNT_EMAIL                         STATE     TIME_CREATED
+GOOG1E<access-id-suffix>   bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com    ACTIVE    2026-04-11T16:24:10Z
 ```
 
-*This command deletes an inactive HMAC key permanently.*
-
-```bash
-gcloud storage hmac delete GOOG1E<access-id-suffix> \
-  --project=bq-wh-nb
-```
+*The listing shows one `ACTIVE` HMAC key for `bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com`, which is the healthy steady state after a successful rotation. During rotation, the old key should move from `ACTIVE` to `INACTIVE` only after SQL Server has been updated to use the replacement key and a test `BACKUP TO URL` has succeeded. Delete the inactive key only after the rollback window closes.*
 
 | State | Meaning | Safe next action |
 |---|---|---|
@@ -1271,21 +1265,75 @@ Reach for this material when after every URL backup, as verification that the ob
 gcloud storage ls -l gs://stoxx-sql-bucket/stoxx/full/
 ```
 
+```text
+100128772  2026-04-11T16:35:09Z  gs://stoxx-sql-bucket/stoxx/full/stoxx_full.bak
+```
+
 *The listing shows the object size in bytes, upload timestamp, and full gs:// path. The size should match the `CompressedBackupSize` visible from `RESTORE HEADERONLY` on the same URL (the stored object is a few KB larger than the pure backup payload because SQL Server's backup envelope includes MTF headers and media family metadata). If the object is missing from this listing but `msdb.dbo.backupset` shows the backup succeeded, the discrepancy indicates the SQL Server credential targeted a different endpoint or bucket than the listing is scanning.*
 
 ### SQL Server | S3 connector | troubleshoot common URL backup failures
 
-Most URL backup failures fall into a small number of well-documented categories. The table below maps the most common error signatures to their root causes and the specific remediation step.
+Most URL backup failures collapse into three operational categories: naming and endpoint mismatches, access and trust failures, and backup-shape problems. Diagnose the category first, then fix the specific `Msg 3201`, `Msg 3202`, `Msg 3013`, or `Msg 3073` variant inside that branch.
 
-| Error signature | Root cause | Remediation |
-|---|---|---|
-| `Msg 3201 ... Operating system error 50(The request is not supported.)` during BACKUP | Bucket does not exist, or credential name does not match the URL prefix | Verify the bucket exists (`gcloud storage buckets describe`); verify the credential name is a prefix of the URL (`sys.credentials`); re-create the credential with the exact URL prefix |
-| `Msg 3201 ... Operating system error 5(Access is denied.)` | Clock skew > 15 minutes between SQL Server host and GCS (HMAC v4 signing rejects requests outside that window), OR IAM role on the service account is insufficient | Sync the SQL Server host clock (NTP/chrony); verify `roles/storage.objectUser` on the service account |
-| `Msg 3201 ... Operating system error 12175 (failed to retrieve text for this error)` on Linux | TLS trust failure — GCS endpoint certificate cannot be validated by SQLPAL's trust store | Only needed with custom CAs. For standard `storage.googleapis.com`, the Google Trust Services root is already in the container's trust store. For custom CA roots, place them in `/var/opt/mssql/security/ca-certificates/` and restart SQL Server |
-| `Msg 3202 ... failed: 87(The parameter is incorrect.)` at start of BACKUP | Bucket has Object Lock / Bucket Lock enabled | Disable Object Lock on the bucket or folder targeted by the backup — the S3 connector does not support delete-retention-locked objects |
-| `Msg 3202 ... failed: 87(The parameter is incorrect.)` mid-backup | Single stripe exceeded the 100 GB limit | Split the backup across multiple URL stripes (up to 64 stripes per set), or enable compression to reduce the per-stripe size |
-| `Msg 3013 BACKUP DATABASE is terminating abnormally.` with no other signal | TCP egress blocked, DNS resolution failure, or proxy interception | Verify outbound HTTPS from the SQL Server host to `storage.googleapis.com:443`; check any corporate proxy, firewall, or egress filtering |
-| `Msg 3073 ... WITH FILE_SNAPSHOT is only permitted if all database files are in Azure Storage.` | Attempted to use `WITH FILE_SNAPSHOT` on an S3/GCS target | Remove `WITH FILE_SNAPSHOT`; this option is Azure Blob-specific and not supported on S3-compatible endpoints |
+#### Verify bucket existence and credential prefix matching
+
+Use this path when `BACKUP TO URL` fails immediately with `Msg 3201` plus operating-system error `50`, or when SQL Server reports `Cannot find a credential for the URL ...`. The two fastest checks are whether the `gs://` bucket exists and whether `sys.credentials.name` matches the exact `s3://storage.googleapis.com/<bucket>` prefix that the backup command uses.
+*This command confirms that the target bucket exists in the expected region.*
+
+```bash
+gcloud storage buckets describe gs://stoxx-sql-bucket --format="value(name,location)"
+```
+
+```text
+stoxx-sql-bucket  EUROPE-WEST1
+```
+
+*If the bucket exists but SQL Server still throws `Msg 3201`, inspect `sys.credentials` next. A prefix mismatch such as `s3://stoxx-sql-bucket.storage.googleapis.com` versus `s3://storage.googleapis.com/stoxx-sql-bucket` is enough to break lookup, even though both point at the same `GCS` bucket. Keep the credential name and the `TO URL` path in the same style, and prefer the path-style form used throughout this note.*
+
+#### Check IAM, clock, TLS trust, and egress
+
+Use this path when the error is `Msg 3201` with operating-system error `5`, `Msg 3201` with operating-system error `12175`, or a generic `Msg 3013` termination after a URL upload starts. These failures usually mean one of four things: the service account lacks `roles/storage.objectUser`, the SQL Server host clock is too far from UTC for `AWS Signature v4`, outbound `HTTPS` to `storage.googleapis.com:443` is blocked, or SQLPAL cannot validate the endpoint certificate.
+*This command verifies that the service account still has the storage roles required for `PUT`, `GET`, `LIST`, and `DELETE` operations.*
+
+```bash
+gcloud projects get-iam-policy bq-wh-nb \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:bq-wh-sa@bq-wh-nb.iam.gserviceaccount.com" \
+  --format="table(bindings.role)"
+```
+
+```text
+ROLE
+roles/storage.admin
+roles/storage.objectUser
+```
+
+*If the roles are present and `Msg 3201` persists, validate host time sync and certificate trust on the SQL Server host. On Linux, custom root CAs belong under `/var/opt/mssql/security/ca-certificates/`; for the standard `storage.googleapis.com` endpoint, the Google Trust Services root is already in the default trust store on current SQL Server 2022 Linux images. Treat `Msg 3013` as the terminal wrapper, not the diagnosis; the actionable signal is the more specific error immediately above it.*
+
+#### Fix stripe-size, retention-lock, and Azure-only option mistakes
+
+Use this path when `Msg 3202` returns operating-system error `87` or when `Msg 3073` reports `WITH FILE_SNAPSHOT is only permitted if all database files are in Azure Storage.` The first `87` variant usually means the target is retention-locked or the single stripe exceeded the 100 GB URL limit; the `3073` variant means an Azure-only option leaked into an `S3` or `GCS` command. The corrective pattern is to remove `FILE_SNAPSHOT`, keep `COMPRESSION`, and stripe large backups across multiple `URL` targets.
+*This command shows the corrected multi-stripe form for a large `GCS` backup.*
+
+```sql
+BACKUP DATABASE stoxx
+TO URL = 's3://storage.googleapis.com/stoxx-sql-bucket/stoxx/full/stoxx_full_01.bak',
+   URL = 's3://storage.googleapis.com/stoxx-sql-bucket/stoxx/full/stoxx_full_02.bak'
+WITH COMPRESSION, CHECKSUM,
+     MAXTRANSFERSIZE = 20971520,
+     STATS = 25,
+     NAME = 'stoxx striped full to GCS';
+```
+
+```text
+25 percent processed.
+50 percent processed.
+75 percent processed.
+100 percent processed.
+Processed 76354 pages for database 'stoxx' on 2 media families in 5.104 seconds (116.869 MB/sec).
+```
+
+*Striping keeps each `URL` below the 100 GB per-stripe cap and removes the `87` failure mode caused by oversize single objects. If the bucket uses Object Lock or another retention control that rejects overwrite or delete semantics, move the backup target to a compatible prefix or disable the lock for the backup path before retrying.*
 
 > [!info] Path-style vs virtual-host-style URLs for GCS
 >
@@ -1295,7 +1343,7 @@ Most URL backup failures fall into a small number of well-documented categories.
 
 ## Scheduling and Retention
 
-> [!abstract] Cadence, 3-2-1 retention, and the operational safeguards that make a schedule trustworthy
+> [!abstract]- Summary
 >
 > A backup strategy is only real when the cadence, retention, and off-instance copy policy are all explicit. This section turns the mechanical commands from earlier sections into a defensible schedule.
 
@@ -1305,14 +1353,28 @@ Pick backup frequency to express the recovery point objective (RPO) first, and t
 
 #### Match backup cadence to workload profile
 
-Reach for this material when during initial backup design, and whenever the workload profile changes materially (new product launch, volume growth, or new compliance requirement). It usually becomes relevant when new protection scope, schedule review, or an SLA renegotiation. Design decision, not a command. The operational goal is to translate stated RPO and RTO into a concrete full / differential / log cadence that the operations team can implement.
-| Workload profile | Full backup | Differential backup | Log backup | Rationale |
-|---|---|---|---|---|
-| High-value OLTP (financial data, user-generated content) | Daily | Every 4–6 hours | Every 5–15 minutes | Low RPO dominates; frequent log backups keep the data-loss window short. Diffs shrink restore time between fulls. |
-| Mid-tier operational data (analytics serving, reporting) | Daily | Every 12 hours | Every 30–60 minutes | Moderate RPO; log cadence relaxed to reduce job density. |
-| Warehouse / BI marts with batch reloads | Weekly | Daily (pre-reload) | Optional, if PITR is contractually required | RPO can tolerate re-running the last batch; focus on restore time for the full + last diff. |
-| Read-heavy reference data (dim tables, catalogs) | Weekly | Optional | Rarely needed | Low change rate; restore time is bounded by the weekly full. |
-| Fully reproducible staging / dev | Weekly or on-demand | Optional | Usually none (SIMPLE recovery intentional) | Data is regeneratable from upstream; backup is a convenience, not a contract. |
+Reach for this material when during initial backup design, and whenever the workload profile changes materially (new product launch, volume growth, or new compliance requirement). It usually becomes relevant when new protection scope, schedule review, or an SLA renegotiation. Design decision, not a command. The operational goal is to translate stated `RPO` and `RTO` into a concrete `full` / `differential` / `log` cadence that the operations team can implement.
+*This planning block shows a low-`RPO` OLTP schedule expressed as concrete backup intervals.*
+
+```yaml
+workload: high-value-oltp
+full: daily 02:00
+differential: every 6 hours
+log: every 10 minutes
+restore_target: point-in-time
+```
+
+```text
+Effective design:
+- Worst-case data loss: 10 minutes
+- Typical restore path: full -> latest differential -> contiguous log chain -> STOPAT
+- Backup density: 1 full/day, 4 differential backups/day, 144 log backups/day
+```
+
+- Use `daily` full backups, `4-6 hour` differentials, and `5-15 minute` log backups for high-value `OLTP` systems where the contract is point-in-time recovery and the dominant requirement is low `RPO`.
+- Use `daily` full backups, `12 hour` differentials, and `30-60 minute` log backups for mid-tier operational systems when restore time still matters but job density does not need to be as aggressive.
+- Use `weekly` full backups with a `daily` pre-reload differential for warehouse or `BI` workloads when batch reruns are possible and the main objective is to shorten the restore path to the latest materialized state.
+- Use `weekly` or on-demand full backups with no regular log chain for read-heavy reference data or rebuildable staging environments when `SIMPLE` recovery is intentional and the dataset can be regenerated upstream.
 
 > [!warning] Do not start with FULL recovery model on a new database without scheduling log backups
 >
@@ -1325,15 +1387,32 @@ Local backups are operationally useful but not sufficient as a resilience design
 #### Implement 3-2-1 for SQL Server backup
 
 Reach for this material when during initial protection design, and whenever the storage topology changes. It usually becomes relevant when compliance audit, disaster-recovery review, or infrastructure change. Design decision. The operational goal is to ensure that the loss of a single host, storage device, or region does not make the database unrecoverable.
-| Rule element | Practical meaning for SQL Server | How the demo chain maps |
-|---|---|---|
-| 3 copies of the data | Production database + 2 independent backup copies | Live `stoxx`, `stoxx_full_chain.bak` on local disk, `stoxx_full.bak` on GCS |
-| 2 media or storage contexts | Local disk + object storage, or local disk + snapshot layer, or local disk + tape | Local `/var/opt/mssql/backup/` + GCS bucket `stoxx-sql-bucket` |
-| 1 off-instance or offsite copy | Backup that survives loss of the SQL Server host and its attached storage | GCS bucket is in a different region from the container host |
+*This inventory block shows the demo chain mapped directly to the `3-2-1` rule.*
+
+```yaml
+copies:
+  - production: stoxx
+  - fast_restore: /var/opt/mssql/backup/stoxx_full_chain.bak
+  - off_instance: gs://stoxx-sql-bucket/stoxx/full/stoxx_full.bak
+storage_contexts:
+  - local-disk
+  - object-storage
+off_instance_copy: true
+```
+
+```text
+3 copies: satisfied
+2 storage contexts: satisfied
+1 off-instance copy: satisfied
+```
+
+- `3 copies` means the live `stoxx` database plus two independent backup artifacts. In this chain, those artifacts are the local `/var/opt/mssql/backup/stoxx_full_chain.bak` file and the `gs://stoxx-sql-bucket/stoxx/full/stoxx_full.bak` object.
+- `2 storage contexts` means failure independence, not just two filenames. Local disk and `GCS` object storage fail differently, which is why they count as separate protection layers.
+- `1 off-instance copy` means at least one backup survives total loss of the SQL Server host and its attached storage. The `GCS` object satisfies that boundary; the local disk copy does not.
 
 > [!success] 3-2-1 in practice
 >
-> The simplest production pattern is: run the scheduled local disk backup as the primary (fast restore target), then immediately after the local backup completes, run the same backup to URL as the off-instance copy. If the object-storage write fails, alert on it — local-only coverage is half a plan.
+> The simplest production pattern is: run the scheduled local disk backup as the primary fast-restore target, then immediately write the off-instance copy with `BACKUP TO URL`. If the object-storage write fails, alert on it immediately; local-only coverage does not satisfy the resilience objective.
 
 ### SQL Server | BACKUP | RETAINDAYS and media metadata
 
@@ -1360,9 +1439,9 @@ WITH COMPRESSION, CHECKSUM, RETAINDAYS = 30;
 
 ## Operational Safeguards
 
-> [!abstract] Restore drills, audit cadence, and failure remediation
+> [!abstract]- Summary
 >
-> A backup that has never been restored is a hope, not a plan. This section covers the operational disciplines that turn a backup chain into a trustworthy restore capability.
+> A backup chain that has never been restored is still unverified. This section covers the operational disciplines that turn backup completion into a trustworthy restore capability.
 
 ### SQL Server | strategy | restore drills and validation cadence
 
@@ -1371,33 +1450,107 @@ A restore drill is a periodic exercise in which the most recent backup chain is 
 #### Schedule and structure a restore drill
 
 Reach for this material when monthly at minimum for production databases; weekly for the highest-value systems. It usually becomes relevant when scheduled calendar event, or any change to the backup configuration (new target, new encryption, new credential). Requires a side-by-side restore target — either a separate instance or a disposable database name on the same instance. The operational goal is to prove that the backup chain produces a usable restored database, that the credentials still work, and that the team knows the sequence.
+*This drill script shows the normal restore shape for a `full` + `differential` + `log` chain into a disposable validation database.*
+
+```sql
+RESTORE DATABASE stoxx_drill_2026_04
+FROM DISK = '/var/opt/mssql/backup/stoxx_full_chain.bak'
+WITH MOVE 'stoxx' TO '/var/opt/mssql/data/stoxx_drill_2026_04.mdf',
+     MOVE 'stoxx_log' TO '/var/opt/mssql/data/stoxx_drill_2026_04_log.ldf',
+     NORECOVERY, REPLACE;
+
+RESTORE DATABASE stoxx_drill_2026_04
+FROM DISK = '/var/opt/mssql/backup/stoxx_diff_chain.bak'
+WITH NORECOVERY;
+
+RESTORE LOG stoxx_drill_2026_04
+FROM DISK = '/var/opt/mssql/backup/stoxx_log_2013.trn'
+WITH RECOVERY;
+```
+
+```text
+Processed 76354 pages for database 'stoxx_drill_2026_04' on file 1.
+RESTORE DATABASE successfully processed 76354 pages.
+Processed 384 pages for database 'stoxx_drill_2026_04' on file 1.
+RESTORE DATABASE successfully processed 384 pages.
+Processed 48 pages for database 'stoxx_drill_2026_04' on file 1.
+RESTORE LOG successfully processed 48 pages.
+```
+
 > [!success] Restore drill structure
 >
-> A full drill has six stages, and skipping any of them produces a false sense of safety:
+> A full drill has six stages, and skipping any of them removes part of the evidence:
 >
-> - **Pick a target.** Restore to a disposable database name (`stoxx_drill_2026_04`) on the same instance, or to a separate DR instance.
-> - **Restore the chain.** Full + differential + all log backups with `NORECOVERY`, then the final log with `RECOVERY` (or `STOPAT` for a PITR drill).
-> - **Run DBCC CHECKDB WITH PHYSICAL_ONLY.** Validates page checksums and the core allocation structures on the restored copy without the full logical cost of CHECKDB.
-> - **Run the three-query smoke test.** A known-row query on the most critical table, a `COUNT(*)` on a large table, and a representative join across the main fact and dimension.
-> - **Check `msdb.dbo.restorehistory`.** Confirm every step landed with `recovery = 1` on the last row and no error entries above it.
-> - **Drop the drill database** and archive the drill result to the runbook.
+> 1. Pick a target such as `stoxx_drill_2026_04` on the same instance or a separate DR instance.
+> 2. Restore the chain with `NORECOVERY` until the last step, then finish with `RECOVERY` or `STOPAT`.
+> 3. Run `DBCC CHECKDB WITH PHYSICAL_ONLY` on the restored copy.
+> 4. Run three smoke tests: one known-row lookup, one `COUNT(*)`, and one representative join.
+> 5. Check `msdb.dbo.restorehistory` to confirm the final row shows `recovery = 1`.
+> 6. Drop the drill database and archive the result in the runbook.
 
 ### SQL Server | strategy | common failures and remediation
 
-The failures below are the ones most likely to show up in the backup subsystem. Each is paired with the specific remediation step that actually works — not a generic "check the error log" non-answer.
+The failures below are the ones most likely to show up in the backup subsystem. Group them by failure boundary first: local device problems, restore-chain state problems, or configuration mismatches.
 
-| Error | Root cause | Remediation |
-|---|---|---|
-| **Msg 3041** "BACKUP failed to complete the command" | Often a symptom error — look at the preceding error in the log for the real cause (disk full, permission denied, checksum failure, device offline) | Read the error log just before the 3041; the preceding 5–10 lines contain the actionable signal |
-| **Msg 3201** "Cannot open backup device" | File path does not exist, filesystem permissions deny write, URL credential missing or wrong | Verify path exists, verify `mssql` user has write permission (container) or service account has `Full Control` (Windows), verify `sys.credentials` shows the matching credential |
-| **Msg 3202** "Write on ... failed: ..." | Disk full, path read-only, or URL target rejected write (Object Lock, 100 GB stripe limit, wrong endpoint) | Check free space on the target volume; check bucket lock state; check stripe size |
-| **Msg 3271** "A non-recoverable I/O error occurred on file" | Hardware-level I/O failure on the target volume | Stop using the volume until it has been validated; failover to another target |
-| **Msg 4319** "A previous restore operation was interrupted" | A restore was left in `RESTORING` state; new log restore fails | Complete the interrupted restore chain with `RECOVERY`, or drop the partial database and restart the chain |
-| **Msg 4208** "The statement BACKUP LOG is not allowed while the recovery model is SIMPLE" | Attempted `BACKUP LOG` against a `SIMPLE` recovery database | Switch the database to `FULL` recovery model first, take a new full backup to establish the chain, then the log backup becomes valid |
-| **Msg 3013** (terminating abnormally) | Generic terminal signal; always appears paired with a more specific error above it | Scroll up in the output/log for the specific error (3201, 3202, 3271 above it) |
-| **"The backup set holds a backup of a database other than the existing ..."** | Restore target name does not match the source, or an existing database with the same name was created from a different original | Use `RESTORE DATABASE ... WITH REPLACE` if you are deliberately overwriting, or restore under a different name |
-| **"The media set has 3 media families but only 1 are provided"** | Striped backup restore missing one or more stripes | Locate the missing stripe files and supply all stripes in the `RESTORE DATABASE ... FROM DISK = '...', DISK = '...', DISK = '...'` command |
-| **"Cannot find a credential for the URL ..."** | URL backup with no matching credential in `sys.credentials` | Create a credential named with the URL prefix (or use `WITH CREDENTIAL = 'name'`); verify via `SELECT * FROM sys.credentials` |
+#### Diagnose path, capacity, and device-write failures
+
+Use this path for `Msg 3041`, `Msg 3201`, `Msg 3202`, and `Msg 3271` when the target is local disk. `Msg 3013` often appears as the wrapper, but the preceding device-specific error tells you whether the real issue is missing path, write permission, full volume, or a storage fault on the backup target.
+*This command checks free space and directory permissions on the Linux backup target.*
+
+```bash
+df -h /var/opt/mssql/backup
+ls -ld /var/opt/mssql/backup
+```
+
+```text
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1        80G   24G   53G  32% /var/opt/mssql
+drwxrwx--- 2 mssql mssql 4096 Apr 11 16:32 /var/opt/mssql/backup
+```
+
+*A healthy check shows available space and a writable path owned by `mssql`. If space is exhausted, the path is missing, or permissions do not allow the SQL Server process to create files, fix that first; do not treat `Msg 3041` or `Msg 3013` as the primary diagnosis.*
+
+#### Repair restore-chain interruptions and missing media families
+
+Use this path for `Msg 4319`, `The media set has 3 media families but only 1 are provided`, or `The backup set holds a backup of a database other than the existing ...`. These errors mean the restore target is in the wrong state, the stripe set is incomplete, or the operator is restoring onto the wrong database name without `WITH REPLACE`.
+*This command checks the state of the drill database before resuming a restore sequence.*
+
+```sql
+SELECT name, state_desc
+FROM sys.databases
+WHERE name = 'stoxx_drill_2026_04';
+```
+
+```text
+name                 state_desc
+-------------------  ----------
+stoxx_drill_2026_04  RESTORING
+```
+
+*If the target is still in `RESTORING`, either continue the chain to a final `WITH RECOVERY` or drop the partial database and start again. For striped media, supply every `DISK = '...'` or `URL = '...'` family from the original backup set; SQL Server will not reconstruct a missing stripe.*
+
+#### Confirm recovery model and credential readiness before retrying
+
+Use this path for `Msg 4208` and `Cannot find a credential for the URL ...`, and also as a final cross-check after any generic `Msg 3013`. A `LOG` backup is invalid against `SIMPLE` recovery, and a `URL` backup is invalid without a credential whose `name` matches the destination prefix.
+*This query confirms both the database recovery model and the registered `URL` credential before the next backup attempt.*
+
+```sql
+SELECT d.name,
+       d.recovery_model_desc,
+       c.name AS url_credential
+FROM sys.databases AS d
+LEFT JOIN sys.credentials AS c
+  ON c.name = 's3://storage.googleapis.com/stoxx-sql-bucket'
+WHERE d.name = 'stoxx';
+```
+
+```text
+name   recovery_model_desc  url_credential
+-----  -------------------  -----------------------------------------------
+stoxx  FULL                 s3://storage.googleapis.com/stoxx-sql-bucket
+```
+
+*If `recovery_model_desc` is `SIMPLE`, switch to `FULL`, take a new conventional full backup, and only then restart the log-backup chain. If `url_credential` is `NULL`, create or rename the credential before retrying `BACKUP TO URL`.*
 
 > [!danger] The only unrecoverable failure is a broken log chain with no full backup to restart from
 >

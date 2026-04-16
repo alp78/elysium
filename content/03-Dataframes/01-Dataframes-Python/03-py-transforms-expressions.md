@@ -11,7 +11,8 @@ status: complete
 
 # Transforms, Expressions & Chaining - Python
 
-> [!quote]
+> [!quote] Attributed Remark
+>
 > "If you torture the data long enough, it will confess to anything."
 >
 > — **Ronald Coase**, attributed remark (c. 1960s)
@@ -29,7 +30,7 @@ status: complete
 > - Build real metrics such as return percentages, Z-scores, percentile ranks, conditional flags, and binned categories on live financial columns
 > - Contrast `np.where` / `np.select` and Pandas boolean logic with Polars `when().then().otherwise()`
 >
-> **Comparison Table — Creating & Transforming Columns**
+> **Column Transform API Lookup**
 > - Compare Pandas and Polars APIs for in-place mutation versus returned DataFrames, conditional transforms, custom-function escape hatches, and column naming behavior
 > - Surface the semantics that matter operationally: mutation safety, readability, and how each library names derived outputs
 >
@@ -218,6 +219,7 @@ status: complete
 
 ---
 
+*Imports — Pandas, Polars, NumPy, polars.selectors.*
 ```python
 # Imports — Pandas, Polars, NumPy, polars.selectors
 import pandas as pd
@@ -246,20 +248,22 @@ scores_pl = pl.read_parquet(DATA / "scores_daily.parquet")
 
 print(f"OHLCV: {ohlcv_pd.shape}, Dim: {dim_pd.shape}, Scores: {scores_pd.shape}")
 ```
-
+```text
 OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
+```
 
 ## Setup & Data Loading
 
 ### Dataset Verification
 
+*Verify loaded datasets — shapes and column names.*
 ```python
 # Verify loaded datasets — shapes and column names
 print("ohlcv  :\n", ohlcv_pd.shape, "\n", list(ohlcv_pd.columns))
 print("\ndim    :\n", dim_pd.shape, "\n", list(dim_pd.columns))
 print("\nscores :\n", scores_pd.shape, "\n", list(scores_pd.columns))
 ```
-
+```text
 ohlcv  :
      (66355, 12)
      ['id', 'symbol', 'date', 'open', 'high', 'low', 'close', 'adj_close', 'volume', 'dividends', 'stock_splits', 'is_filled']
@@ -271,87 +275,35 @@ dim    :
 scores :
      (466, 36)
      ['id', '_index', 'symbol', 'score_date', 'sector', 'pe_zscore', 'pb_zscore', 'ev_ebitda_zscore', 'yield_zscore', 'relative_value_score', 'relative_value_rank', 'relative_strength', 'sma_50_ratio', 'sma_200_ratio', 'dist_from_52w_high', 'momentum_score', 'momentum_rank', 'implied_upside', 'recommendation_mean', 'price_falling_analysts_bullish', 'sentiment_score', 'sentiment_rank', 'composite_score', 'composite_rank', '_scored_at', 'sma_30_close', 'sma_90_close', 'market_cap', 'index_weight', 'short_name', 'country', 'current_price', 'day_change_pct', 'five_day_change_pct', 'ytd_change_pct', 'currency']
+```
 
 ### Data Preview
 
+*Preview Pandas OHLCV DataFrame.*
 ```python
 # Preview Pandas OHLCV DataFrame
 ohlcv_pd.head(3)
 ```
+```text
+id symbol       date  open  high   low  close  adj_close  volume  dividends  stock_splits  is_filled
+0 21160 ABI.BR 2021-01-04 58.15 58.85 56.78  57.21    53.5761 1513937        0.0           0.0      False
+1 21161 ABI.BR 2021-01-05 56.90 57.98 56.75  57.18    53.5480 1382722        0.0           0.0      False
+2 21162 ABI.BR 2021-01-06 57.96 58.94 57.39  58.77    55.0370 1370204        0.0           0.0      False
+```
 
-<table>
-<thead>
-<tr>
-<th></th>
-<th>id</th>
-<th>symbol</th>
-<th>date</th>
-<th>open</th>
-<th>high</th>
-<th>low</th>
-<th>close</th>
-<th>adj_close</th>
-<th>volume</th>
-<th>dividends</th>
-<th>stock_splits</th>
-<th>is_filled</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>21160</td>
-<td>ABI.BR</td>
-<td>2021-01-04</td>
-<td>58.15</td>
-<td>58.85</td>
-<td>56.78</td>
-<td>57.21</td>
-<td>53.5761</td>
-<td>1513937</td>
-<td>0.0</td>
-<td>0.0</td>
-<td>False</td>
-</tr>
-<tr>
-<th>1</th>
-<td>21161</td>
-<td>ABI.BR</td>
-<td>2021-01-05</td>
-<td>56.90</td>
-<td>57.98</td>
-<td>56.75</td>
-<td>57.18</td>
-<td>53.5480</td>
-<td>1382722</td>
-<td>0.0</td>
-<td>0.0</td>
-<td>False</td>
-</tr>
-<tr>
-<th>2</th>
-<td>21162</td>
-<td>ABI.BR</td>
-<td>2021-01-06</td>
-<td>57.96</td>
-<td>58.94</td>
-<td>57.39</td>
-<td>58.77</td>
-<td>55.0370</td>
-<td>1370204</td>
-<td>0.0</td>
-<td>0.0</td>
-<td>False</td>
-</tr>
-</tbody>
-</table>
-
+*Preview Polars OHLCV DataFrame.*
 ```python
 # Preview Polars OHLCV DataFrame
 ohlcv_pl.head(3)
 ```
+```text
+shape: (3, 12)
 
-<div><!-- shape: (3, 12) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td></tr></tbody></table></div>
+ ('id', 'i64') ('symbol', 'str') ('date', 'date')  ('open', 'f64')  ('high', 'f64')  ('low', 'f64')  ('close', 'f64')  ('adj_close', 'f64')  ('volume', 'i64')  ('dividends', 'f64')  ('stock_splits', 'f64')  ('is_filled', 'bool')
+         21160            ABI.BR       2021-01-04            58.15            58.85           56.78             57.21               53.5761            1513937                   0.0                      0.0                  False
+         21161            ABI.BR       2021-01-05            56.90            57.98           56.75             57.18               53.5480            1382722                   0.0                      0.0                  False
+         21162            ABI.BR       2021-01-06            57.96            58.94           57.39             58.77               55.0370            1370204                   0.0                      0.0                  False
+```
 
 ---
 
@@ -369,116 +321,36 @@ ohlcv_pl.head(3)
 >
 > At the start of each pipeline stage, call `df = source_df.copy()` before adding or modifying columns. This prevents silent mutation of the shared source reference across multiple consumers. In Polars, `with_columns` always returns a new DataFrame — no copy needed.
 
+*Runs `df = ohlcv_pd.copy()` and shows the resulting output.*
 ```python
 df = ohlcv_pd.copy()
 df["range"] = df["high"] - df["low"]
 df[["symbol", "date", "high", "low", "range"]].head()
 ```
+```text
+symbol       date  high   low  range
+0 ABI.BR 2021-01-04 58.85 56.78   2.07
+1 ABI.BR 2021-01-05 57.98 56.75   1.23
+2 ABI.BR 2021-01-06 58.94 57.39   1.55
+3 ABI.BR 2021-01-07 58.86 57.88   0.98
+4 ABI.BR 2021-01-08 58.40 57.43   0.97
+```
 
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>date</th>
-<th>high</th>
-<th>low</th>
-<th>range</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>ABI.BR</td>
-<td>2021-01-04</td>
-<td>58.85</td>
-<td>56.78</td>
-<td>2.07</td>
-</tr>
-<tr>
-<th>1</th>
-<td>ABI.BR</td>
-<td>2021-01-05</td>
-<td>57.98</td>
-<td>56.75</td>
-<td>1.23</td>
-</tr>
-<tr>
-<th>2</th>
-<td>ABI.BR</td>
-<td>2021-01-06</td>
-<td>58.94</td>
-<td>57.39</td>
-<td>1.55</td>
-</tr>
-<tr>
-<th>3</th>
-<td>ABI.BR</td>
-<td>2021-01-07</td>
-<td>58.86</td>
-<td>57.88</td>
-<td>0.98</td>
-</tr>
-<tr>
-<th>4</th>
-<td>ABI.BR</td>
-<td>2021-01-08</td>
-<td>58.40</td>
-<td>57.43</td>
-<td>0.97</td>
-</tr>
-</tbody>
-</table>
-
+*Overwrite an existing column.*
 ```python
 # Overwrite an existing column
 df = ohlcv_pd.copy()
 df["volume"] = df["volume"] / 1_000_000  # express in millions
 df[["symbol", "date", "volume"]].head()
 ```
-
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>date</th>
-<th>volume</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>ABI.BR</td>
-<td>2021-01-04</td>
-<td>1.513937</td>
-</tr>
-<tr>
-<th>1</th>
-<td>ABI.BR</td>
-<td>2021-01-05</td>
-<td>1.382722</td>
-</tr>
-<tr>
-<th>2</th>
-<td>ABI.BR</td>
-<td>2021-01-06</td>
-<td>1.370204</td>
-</tr>
-<tr>
-<th>3</th>
-<td>ABI.BR</td>
-<td>2021-01-07</td>
-<td>1.469911</td>
-</tr>
-<tr>
-<th>4</th>
-<td>ABI.BR</td>
-<td>2021-01-08</td>
-<td>1.428681</td>
-</tr>
-</tbody>
-</table>
+```text
+symbol       date   volume
+0 ABI.BR 2021-01-04 1.513937
+1 ABI.BR 2021-01-05 1.382722
+2 ABI.BR 2021-01-06 1.370204
+3 ABI.BR 2021-01-07 1.469911
+4 ABI.BR 2021-01-08 1.428681
+```
 
 ---
 
@@ -488,6 +360,7 @@ df[["symbol", "date", "volume"]].head()
 >
 > `.assign()` returns a **new** DataFrame with added columns — the original is unchanged. Each keyword argument becomes a column name. Use `lambda d: ...` to reference the DataFrame being built, including columns created earlier in the same call (e.g., `range` is used in `pct_range`). This is the Pandas equivalent of Polars `.with_columns()` — enables method chaining.
 
+*Runs `(ohlcv_pd` and shows the resulting output.*
 ```python
 (ohlcv_pd
  .assign(
@@ -499,67 +372,14 @@ df[["symbol", "date", "volume"]].head()
  .head()
 )
 ```
-
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>date</th>
-<th>close</th>
-<th>range</th>
-<th>mid</th>
-<th>pct_range</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>ABI.BR</td>
-<td>2021-01-04</td>
-<td>57.21</td>
-<td>2.07</td>
-<td>57.815</td>
-<td>3.618249</td>
-</tr>
-<tr>
-<th>1</th>
-<td>ABI.BR</td>
-<td>2021-01-05</td>
-<td>57.18</td>
-<td>1.23</td>
-<td>57.365</td>
-<td>2.151102</td>
-</tr>
-<tr>
-<th>2</th>
-<td>ABI.BR</td>
-<td>2021-01-06</td>
-<td>58.77</td>
-<td>1.55</td>
-<td>58.165</td>
-<td>2.637400</td>
-</tr>
-<tr>
-<th>3</th>
-<td>ABI.BR</td>
-<td>2021-01-07</td>
-<td>58.40</td>
-<td>0.98</td>
-<td>58.370</td>
-<td>1.678082</td>
-</tr>
-<tr>
-<th>4</th>
-<td>ABI.BR</td>
-<td>2021-01-08</td>
-<td>57.86</td>
-<td>0.97</td>
-<td>57.915</td>
-<td>1.676460</td>
-</tr>
-</tbody>
-</table>
+```text
+symbol       date  close  range    mid  pct_range
+0 ABI.BR 2021-01-04  57.21   2.07 57.815   3.618249
+1 ABI.BR 2021-01-05  57.18   1.23 57.365   2.151102
+2 ABI.BR 2021-01-06  58.77   1.55 58.165   2.637400
+3 ABI.BR 2021-01-07  58.40   0.98 58.370   1.678082
+4 ABI.BR 2021-01-08  57.86   0.97 57.915   1.676460
+```
 
 ---
 
@@ -569,6 +389,7 @@ df[["symbol", "date", "volume"]].head()
 >
 > `.with_columns()` adds new columns using Polars expressions. `pl.col("name")` references a column; `.alias("new")` names the result. All original columns are kept. Multiple expressions in one call are computed **in parallel** — unlike Pandas `.assign()` which is sequential.
 
+*with_columns context — add new columns, keep all originals.*
 ```python
 # with_columns context — add new columns, keep all originals
 ohlcv_pl.with_columns(
@@ -576,9 +397,18 @@ ohlcv_pl.with_columns(
     ((pl.col("high") + pl.col("low")) / 2).alias("mid"),
 ).select("symbol", "date", "close", "range", "mid").head()
 ```
+```text
+shape: (5, 5)
 
-<div><!-- shape: (5, 5) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>range</th><th>mid</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>2.07</td><td>57.815</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>1.23</td><td>57.365</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1.55</td><td>58.165</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>0.98</td><td>58.37</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>0.97</td><td>57.915</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')  ('range', 'f64')  ('mid', 'f64')
+           ABI.BR       2021-01-04             57.21              2.07          57.815
+           ABI.BR       2021-01-05             57.18              1.23          57.365
+           ABI.BR       2021-01-06             58.77              1.55          58.165
+           ABI.BR       2021-01-07             58.40              0.98          58.370
+           ABI.BR       2021-01-08             57.86              0.97          57.915
+```
 
+*Multiple derived columns in one call.*
 ```python
 # Multiple derived columns in one call
 ohlcv_pl.with_columns(
@@ -588,8 +418,16 @@ ohlcv_pl.with_columns(
     ((pl.col("close") - pl.col("open")) / pl.col("open") * 100).alias("intraday_ret_pct"),
 ).head()
 ```
+```text
+shape: (5, 16)
 
-<div><!-- shape: (5, 16) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>range</th><th>mid</th><th>vol_m</th><th>intraday_ret_pct</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td><td>2.07</td><td>57.815</td><td>1.513937</td><td>-1.616509</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td><td>1.23</td><td>57.365</td><td>1.382722</td><td>0.492091</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td><td>1.55</td><td>58.165</td><td>1.370204</td><td>1.397516</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td><td>0.98</td><td>58.37</td><td>1.469911</td><td>-0.477164</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td><td>0.97</td><td>57.915</td><td>1.428681</td><td>-0.515818</td></tr></tbody></table></div>
+ ('id', 'i64') ('symbol', 'str') ('date', 'date')  ('open', 'f64')  ('high', 'f64')  ('low', 'f64')  ('close', 'f64')  ('adj_close', 'f64')  ('volume', 'i64')  ('dividends', 'f64')  ('stock_splits', 'f64')  ('is_filled', 'bool')  ('range', 'f64')  ('mid', 'f64')  ('vol_m', 'f64')  ('intraday_ret_pct', 'f64')
+         21160            ABI.BR       2021-01-04            58.15            58.85           56.78             57.21               53.5761            1513937                   0.0                      0.0                  False              2.07          57.815          1.513937                    -1.616509
+         21161            ABI.BR       2021-01-05            56.90            57.98           56.75             57.18               53.5480            1382722                   0.0                      0.0                  False              1.23          57.365          1.382722                     0.492091
+         21162            ABI.BR       2021-01-06            57.96            58.94           57.39             58.77               55.0370            1370204                   0.0                      0.0                  False              1.55          58.165          1.370204                     1.397516
+         21163            ABI.BR       2021-01-07            58.68            58.86           57.88             58.40               54.6905            1469911                   0.0                      0.0                  False              0.98          58.370          1.469911                    -0.477164
+         21164            ABI.BR       2021-01-08            58.16            58.40           57.43             57.86               54.1848            1428681                   0.0                      0.0                  False              0.97          57.915          1.428681                    -0.515818
+```
 
 ---
 
@@ -599,6 +437,7 @@ ohlcv_pl.with_columns(
 >
 > `.select()` returns **only** the listed columns — unlike `.with_columns()` which keeps all originals. Use it when you want a lean result with just the columns you need. Combine with `.alias()` to rename computed expressions.
 
+*Continuing expressions — chain methods on pl.col() results.*
 ```python
 # Continuing expressions — chain methods on pl.col() results
 ohlcv_pl.select(
@@ -608,8 +447,16 @@ ohlcv_pl.select(
     (pl.col("high") - pl.col("low")).alias("range"),
 ).head()
 ```
+```text
+shape: (5, 4)
 
-<div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>range</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>2.07</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>1.23</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1.55</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>0.98</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')  ('range', 'f64')
+           ABI.BR       2021-01-04             57.21              2.07
+           ABI.BR       2021-01-05             57.18              1.23
+           ABI.BR       2021-01-06             58.77              1.55
+           ABI.BR       2021-01-07             58.40              0.98
+           ABI.BR       2021-01-08             57.86              0.97
+```
 
 ---
 
@@ -627,42 +474,21 @@ ohlcv_pl.select(
 >
 > For string operations use `.str` accessor (`df["col"].str.split(".").str[0]`). For arithmetic use standard operators or NumPy ufuncs. For conditional logic use `np.where` / `np.select`. Reserve `apply()` only for row-wise calls to external APIs or logic that cannot be expressed with native methods.
 
+*map — element-wise transformation on a Series.*
 ```python
 # map — element-wise transformation on a Series
 ohlcv_pd["symbol"].map(lambda t: t.split(".")[0]).head()
 ```
+```text
+symbol
+0    ABI
+1    ABI
+2    ABI
+3    ABI
+4    ABI
+```
 
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>ABI</td>
-</tr>
-<tr>
-<th>1</th>
-<td>ABI</td>
-</tr>
-<tr>
-<th>2</th>
-<td>ABI</td>
-</tr>
-<tr>
-<th>3</th>
-<td>ABI</td>
-</tr>
-<tr>
-<th>4</th>
-<td>ABI</td>
-</tr>
-</tbody>
-</table>
-
+*apply on a DataFrame — row-wise (axis=1).*
 ```python
 # apply on a DataFrame — row-wise (axis=1)
 def label_row(row):
@@ -674,93 +500,33 @@ def label_row(row):
 
 ohlcv_pd.head(10).apply(label_row, axis=1)
 ```
+```text
+0
+0 down
+1   up
+2   up
+3 down
+4 down
+5 down
+6 down
+7 down
+8   up
+9 flat
+```
 
-<table>
-<thead>
-<tr>
-<th></th>
-<th>0</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>down</td>
-</tr>
-<tr>
-<th>1</th>
-<td>up</td>
-</tr>
-<tr>
-<th>2</th>
-<td>up</td>
-</tr>
-<tr>
-<th>3</th>
-<td>down</td>
-</tr>
-<tr>
-<th>4</th>
-<td>down</td>
-</tr>
-<tr>
-<th>5</th>
-<td>down</td>
-</tr>
-<tr>
-<th>6</th>
-<td>down</td>
-</tr>
-<tr>
-<th>7</th>
-<td>down</td>
-</tr>
-<tr>
-<th>8</th>
-<td>up</td>
-</tr>
-<tr>
-<th>9</th>
-<td>flat</td>
-</tr>
-</tbody>
-</table>
-
+*apply on a Series.*
 ```python
 # apply on a Series
 ohlcv_pd["close"].apply(lambda x: round(x, 0)).head()
 ```
-
-<table>
-<thead>
-<tr>
-<th></th>
-<th>close</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>57.0</td>
-</tr>
-<tr>
-<th>1</th>
-<td>57.0</td>
-</tr>
-<tr>
-<th>2</th>
-<td>59.0</td>
-</tr>
-<tr>
-<th>3</th>
-<td>58.0</td>
-</tr>
-<tr>
-<th>4</th>
-<td>58.0</td>
-</tr>
-</tbody>
-</table>
+```text
+close
+0   57.0
+1   57.0
+2   59.0
+3   58.0
+4   58.0
+```
 
 ---
 
@@ -778,23 +544,41 @@ ohlcv_pd["close"].apply(lambda x: round(x, 0)).head()
 >
 > Replace `map_elements(lambda s: s.split(".")[0])` with `pl.col("symbol").str.split(".").list.first()`. For math operations use Polars arithmetic expressions directly. Native expressions stay in the Lazy query graph and benefit from predicate pushdown and parallel execution.
 
+*map_elements — per-element Python function (slow, use sparingly).*
 ```python
 # map_elements — per-element Python function (slow, use sparingly)
 ohlcv_pl.with_columns(
     pl.col("symbol").map_elements(lambda t: t.split(".")[0], return_dtype=pl.String).alias("short_symbol")
 ).select("symbol", "short_symbol").head()
 ```
+```text
+shape: (5, 2)
 
-<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>short_symbol</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>ABI.BR</td><td>ABI</td></tr><tr><td>ABI.BR</td><td>ABI</td></tr><tr><td>ABI.BR</td><td>ABI</td></tr><tr><td>ABI.BR</td><td>ABI</td></tr><tr><td>ABI.BR</td><td>ABI</td></tr></tbody></table></div>
+('symbol', 'str') ('short_symbol', 'str')
+           ABI.BR                     ABI
+           ABI.BR                     ABI
+           ABI.BR                     ABI
+           ABI.BR                     ABI
+           ABI.BR                     ABI
+```
 
+*map_batches — receives the full Series; great for NumPy UDFs.*
 ```python
 # map_batches — receives the full Series; great for NumPy UDFs
 ohlcv_pl.with_columns(
     pl.col("close").map_batches(lambda s: s.to_numpy() ** 0.5, return_dtype=pl.Float64).alias("sqrt_close")
 ).select("symbol", "date", "close", "sqrt_close").head()
 ```
+```text
+shape: (5, 4)
 
-<div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>sqrt_close</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>7.563729</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>7.561746</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>7.666159</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>7.641989</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>7.606576</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')  ('sqrt_close', 'f64')
+           ABI.BR       2021-01-04             57.21               7.563729
+           ABI.BR       2021-01-05             57.18               7.561746
+           ABI.BR       2021-01-06             58.77               7.666159
+           ABI.BR       2021-01-07             58.40               7.641989
+           ABI.BR       2021-01-08             57.86               7.606576
+```
 
 ---
 
@@ -804,68 +588,23 @@ ohlcv_pl.with_columns(
 >
 > `np.where(condition, true_val, false_val)` creates a column from a binary condition (if/else). For multiple conditions, use `np.select([cond1, cond2, ...], [val1, val2, ...], default=...)` — the Pandas equivalent of SQL `CASE WHEN`.
 
+*np.where — binary condition (if/else).*
 ```python
 # np.where — binary condition (if/else)
 df = ohlcv_pd.copy()
 df["direction"] = np.where(df["close"] > df["open"], "up", "down")
 df[["symbol", "date", "open", "close", "direction"]].head()
 ```
+```text
+symbol       date  open  close direction
+0 ABI.BR 2021-01-04 58.15  57.21      down
+1 ABI.BR 2021-01-05 56.90  57.18        up
+2 ABI.BR 2021-01-06 57.96  58.77        up
+3 ABI.BR 2021-01-07 58.68  58.40      down
+4 ABI.BR 2021-01-08 58.16  57.86      down
+```
 
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>date</th>
-<th>open</th>
-<th>close</th>
-<th>direction</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>ABI.BR</td>
-<td>2021-01-04</td>
-<td>58.15</td>
-<td>57.21</td>
-<td>down</td>
-</tr>
-<tr>
-<th>1</th>
-<td>ABI.BR</td>
-<td>2021-01-05</td>
-<td>56.90</td>
-<td>57.18</td>
-<td>up</td>
-</tr>
-<tr>
-<th>2</th>
-<td>ABI.BR</td>
-<td>2021-01-06</td>
-<td>57.96</td>
-<td>58.77</td>
-<td>up</td>
-</tr>
-<tr>
-<th>3</th>
-<td>ABI.BR</td>
-<td>2021-01-07</td>
-<td>58.68</td>
-<td>58.40</td>
-<td>down</td>
-</tr>
-<tr>
-<th>4</th>
-<td>ABI.BR</td>
-<td>2021-01-08</td>
-<td>58.16</td>
-<td>57.86</td>
-<td>down</td>
-</tr>
-</tbody>
-</table>
-
+*np.select — multiple conditions.*
 ```python
 # np.select — multiple conditions
 conditions = [
@@ -877,101 +616,19 @@ df = ohlcv_pd.copy()
 df["move"] = np.select(conditions, choices, default="flat")
 df[["symbol", "date", "open", "close", "move"]].head(10)
 ```
-
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>date</th>
-<th>open</th>
-<th>close</th>
-<th>move</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>ABI.BR</td>
-<td>2021-01-04</td>
-<td>58.15</td>
-<td>57.21</td>
-<td>flat</td>
-</tr>
-<tr>
-<th>1</th>
-<td>ABI.BR</td>
-<td>2021-01-05</td>
-<td>56.90</td>
-<td>57.18</td>
-<td>flat</td>
-</tr>
-<tr>
-<th>2</th>
-<td>ABI.BR</td>
-<td>2021-01-06</td>
-<td>57.96</td>
-<td>58.77</td>
-<td>flat</td>
-</tr>
-<tr>
-<th>3</th>
-<td>ABI.BR</td>
-<td>2021-01-07</td>
-<td>58.68</td>
-<td>58.40</td>
-<td>flat</td>
-</tr>
-<tr>
-<th>4</th>
-<td>ABI.BR</td>
-<td>2021-01-08</td>
-<td>58.16</td>
-<td>57.86</td>
-<td>flat</td>
-</tr>
-<tr>
-<th>5</th>
-<td>ABI.BR</td>
-<td>2021-01-11</td>
-<td>57.73</td>
-<td>56.61</td>
-<td>flat</td>
-</tr>
-<tr>
-<th>6</th>
-<td>ABI.BR</td>
-<td>2021-01-12</td>
-<td>56.70</td>
-<td>56.51</td>
-<td>flat</td>
-</tr>
-<tr>
-<th>7</th>
-<td>ABI.BR</td>
-<td>2021-01-13</td>
-<td>56.50</td>
-<td>56.48</td>
-<td>flat</td>
-</tr>
-<tr>
-<th>8</th>
-<td>ABI.BR</td>
-<td>2021-01-14</td>
-<td>56.88</td>
-<td>56.96</td>
-<td>flat</td>
-</tr>
-<tr>
-<th>9</th>
-<td>ABI.BR</td>
-<td>2021-01-15</td>
-<td>56.74</td>
-<td>56.74</td>
-<td>flat</td>
-</tr>
-</tbody>
-</table>
+```text
+symbol       date  open  close move
+0 ABI.BR 2021-01-04 58.15  57.21 flat
+1 ABI.BR 2021-01-05 56.90  57.18 flat
+2 ABI.BR 2021-01-06 57.96  58.77 flat
+3 ABI.BR 2021-01-07 58.68  58.40 flat
+4 ABI.BR 2021-01-08 58.16  57.86 flat
+5 ABI.BR 2021-01-11 57.73  56.61 flat
+6 ABI.BR 2021-01-12 56.70  56.51 flat
+7 ABI.BR 2021-01-13 56.50  56.48 flat
+8 ABI.BR 2021-01-14 56.88  56.96 flat
+9 ABI.BR 2021-01-15 56.74  56.74 flat
+```
 
 ---
 
@@ -981,6 +638,7 @@ df[["symbol", "date", "open", "close", "move"]].head(10)
 >
 > `pl.when(cond).then(val).otherwise(val)` is Polars' native `CASE WHEN` — equivalent to `np.where` in Pandas. Chain multiple `.when().then()` for multi-branch logic (like `np.select`). Runs in Rust, fully optimized.
 
+*when/then/otherwise — binary condition (Polars equivalent of np.where).*
 ```python
 # when/then/otherwise — binary condition (Polars equivalent of np.where)
 ohlcv_pl.with_columns(
@@ -990,9 +648,18 @@ ohlcv_pl.with_columns(
       .alias("direction")
 ).select("symbol", "date", "open", "close", "direction").head()
 ```
+```text
+shape: (5, 5)
 
-<div><!-- shape: (5, 5) --><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>close</th><th>direction</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>57.21</td><td>down</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.18</td><td>up</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.77</td><td>up</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.4</td><td>down</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>57.86</td><td>down</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('open', 'f64')  ('close', 'f64') ('direction', 'str')
+           ABI.BR       2021-01-04            58.15             57.21                 down
+           ABI.BR       2021-01-05            56.90             57.18                   up
+           ABI.BR       2021-01-06            57.96             58.77                   up
+           ABI.BR       2021-01-07            58.68             58.40                 down
+           ABI.BR       2021-01-08            58.16             57.86                 down
+```
 
+*Chained when — multiple buckets.*
 ```python
 # Chained when — multiple buckets
 ohlcv_pl.with_columns(
@@ -1004,8 +671,21 @@ ohlcv_pl.with_columns(
       .alias("move")
 ).select("symbol", "date", "open", "close", "move").head(10)
 ```
+```text
+shape: (10, 5)
 
-<div><!-- shape: (10, 5) --><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>close</th><th>move</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>57.21</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.18</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.77</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.4</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>57.86</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>57.73</td><td>56.61</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.7</td><td>56.51</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.5</td><td>56.48</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-14</td><td>56.88</td><td>56.96</td><td>flat</td></tr><tr><td>ABI.BR</td><td>2021-01-15</td><td>56.74</td><td>56.74</td><td>flat</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('open', 'f64')  ('close', 'f64') ('move', 'str')
+           ABI.BR       2021-01-04            58.15             57.21            flat
+           ABI.BR       2021-01-05            56.90             57.18            flat
+           ABI.BR       2021-01-06            57.96             58.77            flat
+           ABI.BR       2021-01-07            58.68             58.40            flat
+           ABI.BR       2021-01-08            58.16             57.86            flat
+           ABI.BR       2021-01-11            57.73             56.61            flat
+           ABI.BR       2021-01-12            56.70             56.51            flat
+           ABI.BR       2021-01-13            56.50             56.48            flat
+           ABI.BR       2021-01-14            56.88             56.96            flat
+           ABI.BR       2021-01-15            56.74             56.74            flat
+```
 
 ---
 
@@ -1019,6 +699,7 @@ ohlcv_pl.with_columns(
 
 _Demonstrates three common dtype casts on the OHLCV dataset: converts `volume` from `int64` to `float64` for division safety, parses `date` strings to `datetime64[ns]` via `pd.to_datetime()`, and re-encodes `symbol` as a memory-efficient `category` dtype — each using `.astype()`._
 
+*astype — cast volume from int to float for division safety.*
 ```python
 # astype — cast volume from int to float for division safety
 df = ohlcv_pd.copy()
@@ -1026,19 +707,23 @@ print("Before:", df["volume"].dtype)
 df["volume"] = df["volume"].astype("float64")
 print("After :", df["volume"].dtype)
 ```
-
+```text
 Before: int64
     After : float64
+```
 
+*Cast date string to datetime (if needed).*
 ```python
 # Cast date string to datetime (if needed)
 df = ohlcv_pd.copy()
 df["date"] = pd.to_datetime(df["date"])
 print(df["date"].dtype)
 ```
-
+```text
 datetime64[ns]
+```
 
+*Category type for low-cardinality strings.*
 ```python
 # Category type for low-cardinality strings
 df = ohlcv_pd.copy()
@@ -1046,9 +731,10 @@ df["symbol"] = df["symbol"].astype("category")
 print(df["symbol"].dtype)
 print(df["symbol"].cat.categories[:5].tolist())
 ```
-
+```text
 category
     ['ABI.BR', 'AD.AS', 'ADS.DE', 'ADYEN.AS', 'AI.PA']
+```
 
 #### Polars cast() — cast column types
 
@@ -1066,22 +752,32 @@ category
 
 _Casts `volume` from `Int64` to `Float64`, then bulk-casts all numeric columns to `Float32` via the `cs.numeric()` selector, and finally re-encodes `symbol` as `Categorical` — printing the full schema after each operation to confirm the dtype changes._
 
+*cast — convert volume from Int64 to Float64.*
 ```python
 # cast — convert volume from Int64 to Float64
 ohlcv_pl.with_columns(
     pl.col("volume").cast(pl.Float64).alias("volume_f64"),
 ).select("volume", "volume_f64").head()
 ```
+```text
+shape: (5, 2)
 
-<div><!-- shape: (5, 2) --><table><thead><tr><th>volume</th><th>volume_f64</th></tr><tr><td>i64</td><td>f64</td></tr></thead><tbody><tr><td>1513937</td><td>1.513937e6</td></tr><tr><td>1382722</td><td>1.382722e6</td></tr><tr><td>1370204</td><td>1.370204e6</td></tr><tr><td>1469911</td><td>1.469911e6</td></tr><tr><td>1428681</td><td>1.428681e6</td></tr></tbody></table></div>
+ ('volume', 'i64')  ('volume_f64', 'f64')
+           1513937              1513937.0
+           1382722              1382722.0
+           1370204              1370204.0
+           1469911              1469911.0
+           1428681              1428681.0
+```
 
+*Cast multiple columns at once.*
 ```python
 # Cast multiple columns at once
 ohlcv_pl.with_columns(
     cs.numeric().cast(pl.Float32)
 ).dtypes
 ```
-
+```text
 [Float32,
      String,
      Date,
@@ -1094,14 +790,16 @@ ohlcv_pl.with_columns(
      Float32,
      Float32,
      Boolean]
+```
 
+*Enum / Categorical.*
 ```python
 # Enum / Categorical
 ohlcv_pl.with_columns(
     pl.col("symbol").cast(pl.Categorical)
 ).schema
 ```
-
+```text
 Schema([('id', Int64),
             ('symbol', Categorical),
             ('date', Date),
@@ -1114,6 +812,7 @@ Schema([('id', Int64),
             ('dividends', Float64),
             ('stock_splits', Float64),
             ('is_filled', Boolean)])
+```
 
 ---
 
@@ -1127,6 +826,7 @@ Schema([('id', Int64),
 
 _Derives three new columns from `symbol`: uppercased text (`symbol_upper`), the ticker stub without exchange suffix (`symbol_short` via `.str.split(".").str[0]`), and a boolean flag for German-listed stocks (`has_de`). A second example strips the `.DE` exchange suffix using `.str.replace()` and `.str.strip()`._
 
+*.str accessor — vectorized string operations on a column.*
 ```python
 # .str accessor — vectorized string operations on a column
 df = ohlcv_pd.copy()
@@ -1135,99 +835,30 @@ df["symbol_short"] = df["symbol"].str.split(".").str[0]
 df["has_de"]       = df["symbol"].str.contains("DE")
 df[["symbol", "symbol_upper", "symbol_short", "has_de"]].head()
 ```
+```text
+symbol symbol_upper symbol_short  has_de
+0 ABI.BR       ABI.BR          ABI   False
+1 ABI.BR       ABI.BR          ABI   False
+2 ABI.BR       ABI.BR          ABI   False
+3 ABI.BR       ABI.BR          ABI   False
+4 ABI.BR       ABI.BR          ABI   False
+```
 
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>symbol_upper</th>
-<th>symbol_short</th>
-<th>has_de</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>ABI.BR</td>
-<td>ABI.BR</td>
-<td>ABI</td>
-<td>False</td>
-</tr>
-<tr>
-<th>1</th>
-<td>ABI.BR</td>
-<td>ABI.BR</td>
-<td>ABI</td>
-<td>False</td>
-</tr>
-<tr>
-<th>2</th>
-<td>ABI.BR</td>
-<td>ABI.BR</td>
-<td>ABI</td>
-<td>False</td>
-</tr>
-<tr>
-<th>3</th>
-<td>ABI.BR</td>
-<td>ABI.BR</td>
-<td>ABI</td>
-<td>False</td>
-</tr>
-<tr>
-<th>4</th>
-<td>ABI.BR</td>
-<td>ABI.BR</td>
-<td>ABI</td>
-<td>False</td>
-</tr>
-</tbody>
-</table>
-
+*Replace and strip.*
 ```python
 # Replace and strip
 df = ohlcv_pd.copy()
 df["clean"] = df["symbol"].str.replace(".DE", "", regex=False).str.strip()
 df[["symbol", "clean"]].drop_duplicates().head()
 ```
-
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>clean</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>ABI.BR</td>
-<td>ABI.BR</td>
-</tr>
-<tr>
-<th>1331</th>
-<td>AD.AS</td>
-<td>AD.AS</td>
-</tr>
-<tr>
-<th>2662</th>
-<td>ADS.DE</td>
-<td>ADS</td>
-</tr>
-<tr>
-<th>3986</th>
-<td>ADYEN.AS</td>
-<td>ADYEN.AS</td>
-</tr>
-<tr>
-<th>5317</th>
-<td>AI.PA</td>
-<td>AI.PA</td>
-</tr>
-</tbody>
-</table>
+```text
+symbol    clean
+   0   ABI.BR   ABI.BR
+1331    AD.AS    AD.AS
+2662   ADS.DE      ADS
+3986 ADYEN.AS ADYEN.AS
+5317    AI.PA    AI.PA
+```
 
 #### Polars .str Accessor — string transforms
 
@@ -1237,6 +868,7 @@ df[["symbol", "clean"]].drop_duplicates().head()
 
 _Replicates the same three string transformations on the Polars `symbol` column: uppercases via `.str.to_uppercase()`, extracts the ticker stub via `.str.split().list.first()`, and flags German listings via `.str.contains("DE")`. A second example strips the `.DE` exchange suffix using `.str.replace()` combined with `.str.strip_chars()`._
 
+*.str accessor — string transforms inside Polars expressions.*
 ```python
 # .str accessor — string transforms inside Polars expressions
 ohlcv_pl.with_columns(
@@ -1245,17 +877,34 @@ ohlcv_pl.with_columns(
     pl.col("symbol").str.contains("DE").alias("has_de"),
 ).select("symbol", "symbol_upper", "symbol_short", "has_de").head()
 ```
+```text
+shape: (5, 4)
 
-<div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>symbol_upper</th><th>symbol_short</th><th>has_de</th></tr><tr><td>str</td><td>str</td><td>str</td><td>bool</td></tr></thead><tbody><tr><td>ABI.BR</td><td>ABI.BR</td><td>ABI</td><td>false</td></tr><tr><td>ABI.BR</td><td>ABI.BR</td><td>ABI</td><td>false</td></tr><tr><td>ABI.BR</td><td>ABI.BR</td><td>ABI</td><td>false</td></tr><tr><td>ABI.BR</td><td>ABI.BR</td><td>ABI</td><td>false</td></tr><tr><td>ABI.BR</td><td>ABI.BR</td><td>ABI</td><td>false</td></tr></tbody></table></div>
+('symbol', 'str') ('symbol_upper', 'str') ('symbol_short', 'str')  ('has_de', 'bool')
+           ABI.BR                  ABI.BR                     ABI               False
+           ABI.BR                  ABI.BR                     ABI               False
+           ABI.BR                  ABI.BR                     ABI               False
+           ABI.BR                  ABI.BR                     ABI               False
+           ABI.BR                  ABI.BR                     ABI               False
+```
 
+*with_columns context — add new columns, keep all originals.*
 ```python
 # with_columns context — add new columns, keep all originals
 ohlcv_pl.with_columns(
     pl.col("symbol").str.replace(".DE", "").str.strip_chars().alias("clean"),
 ).select("symbol", "clean").unique().head()
 ```
+```text
+shape: (5, 2)
 
-<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>clean</th></tr><tr><td>str</td><td>str</td></tr></thead><tbody><tr><td>NDA-FI.HE</td><td>NDA-FI.HE</td></tr><tr><td>INGA.AS</td><td>INGA.AS</td></tr><tr><td>SAP.DE</td><td>SAP</td></tr><tr><td>MBG.DE</td><td>MBG</td></tr><tr><td>PRX.AS</td><td>PRX.AS</td></tr></tbody></table></div>
+('symbol', 'str') ('clean', 'str')
+        NDA-FI.HE        NDA-FI.HE
+          INGA.AS          INGA.AS
+           SAP.DE              SAP
+           MBG.DE              MBG
+           PRX.AS           PRX.AS
+```
 
 ---
 
@@ -1269,6 +918,7 @@ ohlcv_pl.with_columns(
 
 _Converts the `date` column to `datetime64` via `pd.to_datetime()`, then extracts four temporal components — year, month, weekday name, and quarter — into separate columns, demonstrating that `.dt` accessor methods are available only after the column is in a datetime dtype._
 
+*.dt accessor — extract date components from a datetime column.*
 ```python
 # .dt accessor — extract date components from a datetime column
 df = ohlcv_pd.copy()
@@ -1279,61 +929,14 @@ df["weekday"] = df["date"].dt.day_name()
 df["quarter"] = df["date"].dt.quarter
 df[["date", "year", "month", "weekday", "quarter"]].head()
 ```
-
-<table>
-<thead>
-<tr>
-<th></th>
-<th>date</th>
-<th>year</th>
-<th>month</th>
-<th>weekday</th>
-<th>quarter</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>2021-01-04</td>
-<td>2021</td>
-<td>1</td>
-<td>Monday</td>
-<td>1</td>
-</tr>
-<tr>
-<th>1</th>
-<td>2021-01-05</td>
-<td>2021</td>
-<td>1</td>
-<td>Tuesday</td>
-<td>1</td>
-</tr>
-<tr>
-<th>2</th>
-<td>2021-01-06</td>
-<td>2021</td>
-<td>1</td>
-<td>Wednesday</td>
-<td>1</td>
-</tr>
-<tr>
-<th>3</th>
-<td>2021-01-07</td>
-<td>2021</td>
-<td>1</td>
-<td>Thursday</td>
-<td>1</td>
-</tr>
-<tr>
-<th>4</th>
-<td>2021-01-08</td>
-<td>2021</td>
-<td>1</td>
-<td>Friday</td>
-<td>1</td>
-</tr>
-</tbody>
-</table>
+```text
+date  year  month   weekday  quarter
+0 2021-01-04  2021      1    Monday        1
+1 2021-01-05  2021      1   Tuesday        1
+2 2021-01-06  2021      1 Wednesday        1
+3 2021-01-07  2021      1  Thursday        1
+4 2021-01-08  2021      1    Friday        1
+```
 
 #### Polars .dt Accessor — datetime transforms
 
@@ -1343,6 +946,7 @@ df[["date", "year", "month", "weekday", "quarter"]].head()
 
 _Extracts year, month, ISO weekday integer (1=Monday), and quarter from the Polars `date` column using the `.dt` namespace inside a `with_columns` call. A second example demonstrates date arithmetic — shifting each date forward 7 days with `pl.duration(days=7)` and computing the first day of the month via `.dt.month_start()`._
 
+*.dt accessor — extract date components inside Polars expressions.*
 ```python
 # .dt accessor — extract date components inside Polars expressions
 ohlcv_pl.with_columns(
@@ -1352,9 +956,18 @@ ohlcv_pl.with_columns(
     pl.col("date").dt.quarter().alias("quarter"),
 ).select("date", "year", "month", "weekday", "quarter").head()
 ```
+```text
+shape: (5, 5)
 
-<div><!-- shape: (5, 5) --><table><thead><tr><th>date</th><th>year</th><th>month</th><th>weekday</th><th>quarter</th></tr><tr><td>date</td><td>i32</td><td>i8</td><td>i8</td><td>i8</td></tr></thead><tbody><tr><td>2021-01-04</td><td>2021</td><td>1</td><td>1</td><td>1</td></tr><tr><td>2021-01-05</td><td>2021</td><td>1</td><td>2</td><td>1</td></tr><tr><td>2021-01-06</td><td>2021</td><td>1</td><td>3</td><td>1</td></tr><tr><td>2021-01-07</td><td>2021</td><td>1</td><td>4</td><td>1</td></tr><tr><td>2021-01-08</td><td>2021</td><td>1</td><td>5</td><td>1</td></tr></tbody></table></div>
+('date', 'date')  ('year', 'i32')  ('month', 'i8')  ('weekday', 'i8')  ('quarter', 'i8')
+      2021-01-04             2021                1                  1                  1
+      2021-01-05             2021                1                  2                  1
+      2021-01-06             2021                1                  3                  1
+      2021-01-07             2021                1                  4                  1
+      2021-01-08             2021                1                  5                  1
+```
 
+*Date arithmetic — Polars.*
 ```python
 # Date arithmetic — Polars
 ohlcv_pl.with_columns(
@@ -1362,8 +975,16 @@ ohlcv_pl.with_columns(
     pl.col("date").dt.month_start().alias("month_start"),
 ).select("date", "date_plus_7d", "month_start").head()
 ```
+```text
+shape: (5, 3)
 
-<div><!-- shape: (5, 3) --><table><thead><tr><th>date</th><th>date_plus_7d</th><th>month_start</th></tr><tr><td>date</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>2021-01-04</td><td>2021-01-11</td><td>2021-01-01</td></tr><tr><td>2021-01-05</td><td>2021-01-12</td><td>2021-01-01</td></tr><tr><td>2021-01-06</td><td>2021-01-13</td><td>2021-01-01</td></tr><tr><td>2021-01-07</td><td>2021-01-14</td><td>2021-01-01</td></tr><tr><td>2021-01-08</td><td>2021-01-15</td><td>2021-01-01</td></tr></tbody></table></div>
+('date', 'date') ('date_plus_7d', 'date') ('month_start', 'date')
+      2021-01-04               2021-01-11              2021-01-01
+      2021-01-05               2021-01-12              2021-01-01
+      2021-01-06               2021-01-13              2021-01-01
+      2021-01-07               2021-01-14              2021-01-01
+      2021-01-08               2021-01-15              2021-01-01
+```
 
 ---
 
@@ -1373,6 +994,7 @@ ohlcv_pl.with_columns(
 >
 > Both Pandas and Polars support element-wise arithmetic (`+`, `-`, `*`, `/`), NumPy functions (`np.log`, `np.sqrt`), and group-level computations (`.pct_change()`, `.cumsum()`). Pandas uses `.groupby("col")["target"].method()` syntax; Polars uses `.method().over("col")` expressions.
 
+*Pandas — arithmetic, log, pct_change, cumsum grouped by symbol.*
 ```python
 # Pandas — arithmetic, log, pct_change, cumsum grouped by symbol
 df = ohlcv_pd.copy()
@@ -1381,113 +1003,21 @@ df["pct_change"]    = df.groupby("symbol")["close"].pct_change()
 df["cum_volume"]    = df.groupby("symbol")["volume"].cumsum()
 df[["symbol", "date", "close", "log_close", "pct_change", "cum_volume"]].head(10)
 ```
+```text
+symbol       date  close  log_close  pct_change  cum_volume
+0 ABI.BR 2021-01-04  57.21   4.046729         NaN     1513937
+1 ABI.BR 2021-01-05  57.18   4.046204   -0.000524     2896659
+2 ABI.BR 2021-01-06  58.77   4.073632    0.027807     4266863
+3 ABI.BR 2021-01-07  58.40   4.067316   -0.006296     5736774
+4 ABI.BR 2021-01-08  57.86   4.058026   -0.009247     7165455
+5 ABI.BR 2021-01-11  56.61   4.036186   -0.021604     8683534
+6 ABI.BR 2021-01-12  56.51   4.034418   -0.001766    10333525
+7 ABI.BR 2021-01-13  56.48   4.033887   -0.000531    11424331
+8 ABI.BR 2021-01-14  56.96   4.042349    0.008499    12947376
+9 ABI.BR 2021-01-15  56.74   4.038479   -0.003862    14717364
+```
 
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>date</th>
-<th>close</th>
-<th>log_close</th>
-<th>pct_change</th>
-<th>cum_volume</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>ABI.BR</td>
-<td>2021-01-04</td>
-<td>57.21</td>
-<td>4.046729</td>
-<td>NaN</td>
-<td>1513937</td>
-</tr>
-<tr>
-<th>1</th>
-<td>ABI.BR</td>
-<td>2021-01-05</td>
-<td>57.18</td>
-<td>4.046204</td>
-<td>-0.000524</td>
-<td>2896659</td>
-</tr>
-<tr>
-<th>2</th>
-<td>ABI.BR</td>
-<td>2021-01-06</td>
-<td>58.77</td>
-<td>4.073632</td>
-<td>0.027807</td>
-<td>4266863</td>
-</tr>
-<tr>
-<th>3</th>
-<td>ABI.BR</td>
-<td>2021-01-07</td>
-<td>58.40</td>
-<td>4.067316</td>
-<td>-0.006296</td>
-<td>5736774</td>
-</tr>
-<tr>
-<th>4</th>
-<td>ABI.BR</td>
-<td>2021-01-08</td>
-<td>57.86</td>
-<td>4.058026</td>
-<td>-0.009247</td>
-<td>7165455</td>
-</tr>
-<tr>
-<th>5</th>
-<td>ABI.BR</td>
-<td>2021-01-11</td>
-<td>56.61</td>
-<td>4.036186</td>
-<td>-0.021604</td>
-<td>8683534</td>
-</tr>
-<tr>
-<th>6</th>
-<td>ABI.BR</td>
-<td>2021-01-12</td>
-<td>56.51</td>
-<td>4.034418</td>
-<td>-0.001766</td>
-<td>10333525</td>
-</tr>
-<tr>
-<th>7</th>
-<td>ABI.BR</td>
-<td>2021-01-13</td>
-<td>56.48</td>
-<td>4.033887</td>
-<td>-0.000531</td>
-<td>11424331</td>
-</tr>
-<tr>
-<th>8</th>
-<td>ABI.BR</td>
-<td>2021-01-14</td>
-<td>56.96</td>
-<td>4.042349</td>
-<td>0.008499</td>
-<td>12947376</td>
-</tr>
-<tr>
-<th>9</th>
-<td>ABI.BR</td>
-<td>2021-01-15</td>
-<td>56.74</td>
-<td>4.038479</td>
-<td>-0.003862</td>
-<td>14717364</td>
-</tr>
-</tbody>
-</table>
-
+*Polars.*
 ```python
 # Polars
 ohlcv_pl.with_columns(
@@ -1496,9 +1026,23 @@ ohlcv_pl.with_columns(
     pl.col("volume").cum_sum().over("symbol").alias("cum_volume"),
 ).select("symbol", "date", "close", "log_close", "pct_change", "cum_volume").head(10)
 ```
+```text
+shape: (10, 6)
 
-<div><!-- shape: (10, 6) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>log_close</th><th>pct_change</th><th>cum_volume</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>4.046729</td><td>null</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>4.046204</td><td>-0.000524</td><td>2896659</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>4.073632</td><td>0.027807</td><td>4266863</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>4.067316</td><td>-0.006296</td><td>5736774</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>4.058026</td><td>-0.009247</td><td>7165455</td></tr><tr><td>ABI.BR</td><td>2021-01-11</td><td>56.61</td><td>4.036186</td><td>-0.021604</td><td>8683534</td></tr><tr><td>ABI.BR</td><td>2021-01-12</td><td>56.51</td><td>4.034418</td><td>-0.001766</td><td>10333525</td></tr><tr><td>ABI.BR</td><td>2021-01-13</td><td>56.48</td><td>4.033887</td><td>-0.000531</td><td>11424331</td></tr><tr><td>ABI.BR</td><td>2021-01-14</td><td>56.96</td><td>4.042349</td><td>0.008499</td><td>12947376</td></tr><tr><td>ABI.BR</td><td>2021-01-15</td><td>56.74</td><td>4.038479</td><td>-0.003862</td><td>14717364</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')  ('log_close', 'f64')  ('pct_change', 'f64')  ('cum_volume', 'i64')
+           ABI.BR       2021-01-04             57.21              4.046729                    NaN                1513937
+           ABI.BR       2021-01-05             57.18              4.046204              -0.000524                2896659
+           ABI.BR       2021-01-06             58.77              4.073632               0.027807                4266863
+           ABI.BR       2021-01-07             58.40              4.067316              -0.006296                5736774
+           ABI.BR       2021-01-08             57.86              4.058026              -0.009247                7165455
+           ABI.BR       2021-01-11             56.61              4.036186              -0.021604                8683534
+           ABI.BR       2021-01-12             56.51              4.034418              -0.001766               10333525
+           ABI.BR       2021-01-13             56.48              4.033887              -0.000531               11424331
+           ABI.BR       2021-01-14             56.96              4.042349               0.008499               12947376
+           ABI.BR       2021-01-15             56.74              4.038479              -0.003862               14717364
+```
 
+*Polars — clip / round / abs.*
 ```python
 # Polars — clip / round / abs
 ohlcv_pl.with_columns(
@@ -1507,8 +1051,16 @@ ohlcv_pl.with_columns(
     (pl.col("close") - pl.col("open")).abs().alias("abs_change"),
 ).select("symbol", "date", "close", "close_rounded", "close_clipped", "abs_change").head()
 ```
+```text
+shape: (5, 6)
 
-<div><!-- shape: (5, 6) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>close_rounded</th><th>close_clipped</th><th>abs_change</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>57.0</td><td>57.21</td><td>0.94</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>57.0</td><td>57.18</td><td>0.28</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>59.0</td><td>58.77</td><td>0.81</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>58.0</td><td>58.4</td><td>0.28</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>58.0</td><td>57.86</td><td>0.3</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')  ('close_rounded', 'f64')  ('close_clipped', 'f64')  ('abs_change', 'f64')
+           ABI.BR       2021-01-04             57.21                      57.0                     57.21                   0.94
+           ABI.BR       2021-01-05             57.18                      57.0                     57.18                   0.28
+           ABI.BR       2021-01-06             58.77                      59.0                     58.77                   0.81
+           ABI.BR       2021-01-07             58.40                      58.0                     58.40                   0.28
+           ABI.BR       2021-01-08             57.86                      58.0                     57.86                   0.30
+```
 
 ---
 
@@ -1525,6 +1077,7 @@ This makes pipelines **reproducible** and **testable**.
 
 _Defines `tweak_ohlcv_pd()` — a Pandas tweak function that adds `range`, `mid`, `intraday_ret`, `volume_m`, and `symbol_short` columns in a single `.assign()` chain, then lowercases all column names via `.rename(columns=str.lower)`, returning the enriched 17-column OHLCV DataFrame._
 
+*Tweak function — all Pandas transforms in one chainable function.*
 ```python
 # Tweak function — all Pandas transforms in one chainable function
 def tweak_ohlcv_pd(df: pd.DataFrame) -> pd.DataFrame:
@@ -1543,133 +1096,14 @@ def tweak_ohlcv_pd(df: pd.DataFrame) -> pd.DataFrame:
 
 tweak_ohlcv_pd(ohlcv_pd).head()
 ```
-
-<table>
-<thead>
-<tr>
-<th></th>
-<th>id</th>
-<th>symbol</th>
-<th>date</th>
-<th>open</th>
-<th>high</th>
-<th>low</th>
-<th>close</th>
-<th>adj_close</th>
-<th>volume</th>
-<th>dividends</th>
-<th>stock_splits</th>
-<th>is_filled</th>
-<th>range</th>
-<th>mid</th>
-<th>intraday_ret</th>
-<th>volume_m</th>
-<th>symbol_short</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>21160</td>
-<td>ABI.BR</td>
-<td>2021-01-04</td>
-<td>58.15</td>
-<td>58.85</td>
-<td>56.78</td>
-<td>57.21</td>
-<td>53.5761</td>
-<td>1513937</td>
-<td>0.0</td>
-<td>0.0</td>
-<td>False</td>
-<td>2.07</td>
-<td>57.815</td>
-<td>-0.016165</td>
-<td>1.513937</td>
-<td>ABI</td>
-</tr>
-<tr>
-<th>1</th>
-<td>21161</td>
-<td>ABI.BR</td>
-<td>2021-01-05</td>
-<td>56.90</td>
-<td>57.98</td>
-<td>56.75</td>
-<td>57.18</td>
-<td>53.5480</td>
-<td>1382722</td>
-<td>0.0</td>
-<td>0.0</td>
-<td>False</td>
-<td>1.23</td>
-<td>57.365</td>
-<td>0.004921</td>
-<td>1.382722</td>
-<td>ABI</td>
-</tr>
-<tr>
-<th>2</th>
-<td>21162</td>
-<td>ABI.BR</td>
-<td>2021-01-06</td>
-<td>57.96</td>
-<td>58.94</td>
-<td>57.39</td>
-<td>58.77</td>
-<td>55.0370</td>
-<td>1370204</td>
-<td>0.0</td>
-<td>0.0</td>
-<td>False</td>
-<td>1.55</td>
-<td>58.165</td>
-<td>0.013975</td>
-<td>1.370204</td>
-<td>ABI</td>
-</tr>
-<tr>
-<th>3</th>
-<td>21163</td>
-<td>ABI.BR</td>
-<td>2021-01-07</td>
-<td>58.68</td>
-<td>58.86</td>
-<td>57.88</td>
-<td>58.40</td>
-<td>54.6905</td>
-<td>1469911</td>
-<td>0.0</td>
-<td>0.0</td>
-<td>False</td>
-<td>0.98</td>
-<td>58.370</td>
-<td>-0.004772</td>
-<td>1.469911</td>
-<td>ABI</td>
-</tr>
-<tr>
-<th>4</th>
-<td>21164</td>
-<td>ABI.BR</td>
-<td>2021-01-08</td>
-<td>58.16</td>
-<td>58.40</td>
-<td>57.43</td>
-<td>57.86</td>
-<td>54.1848</td>
-<td>1428681</td>
-<td>0.0</td>
-<td>0.0</td>
-<td>False</td>
-<td>0.97</td>
-<td>57.915</td>
-<td>-0.005158</td>
-<td>1.428681</td>
-<td>ABI</td>
-</tr>
-</tbody>
-</table>
+```text
+id symbol       date  open  high   low  close  adj_close  volume  dividends  stock_splits  is_filled  range    mid  intraday_ret  volume_m symbol_short
+0 21160 ABI.BR 2021-01-04 58.15 58.85 56.78  57.21    53.5761 1513937        0.0           0.0      False   2.07 57.815     -0.016165  1.513937          ABI
+1 21161 ABI.BR 2021-01-05 56.90 57.98 56.75  57.18    53.5480 1382722        0.0           0.0      False   1.23 57.365      0.004921  1.382722          ABI
+2 21162 ABI.BR 2021-01-06 57.96 58.94 57.39  58.77    55.0370 1370204        0.0           0.0      False   1.55 58.165      0.013975  1.370204          ABI
+3 21163 ABI.BR 2021-01-07 58.68 58.86 57.88  58.40    54.6905 1469911        0.0           0.0      False   0.98 58.370     -0.004772  1.469911          ABI
+4 21164 ABI.BR 2021-01-08 58.16 58.40 57.43  57.86    54.1848 1428681        0.0           0.0      False   0.97 57.915     -0.005158  1.428681          ABI
+```
 
 #### Polars — Tweak Function Pattern (chainable transform)
 
@@ -1684,6 +1118,7 @@ tweak_ohlcv_pd(ohlcv_pd).head()
 
 _Defines `tweak_ohlcv_pl()` — the Polars equivalent that adds the same five derived columns (`range`, `mid`, `intraday_ret`, `volume_m`, `symbol_short`) in a single `.with_columns()` call, demonstrating that Polars methods chain directly without `.pipe()` or `.copy()`._
 
+*Tweak function — all Polars transforms in one chainable function.*
 ```python
 # Tweak function — all Polars transforms in one chainable function
 def tweak_ohlcv_pl(df: pl.DataFrame) -> pl.DataFrame:
@@ -1700,181 +1135,34 @@ def tweak_ohlcv_pl(df: pl.DataFrame) -> pl.DataFrame:
 
 tweak_ohlcv_pl(ohlcv_pl).head()
 ```
+```text
+shape: (5, 17)
 
-<div><!-- shape: (5, 17) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th><th>dividends</th><th>stock_splits</th><th>is_filled</th><th>range</th><th>mid</th><th>intraday_ret</th><th>volume_m</th><th>symbol_short</th></tr><tr><td>i64</td><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td><td>0.0</td><td>0.0</td><td>false</td><td>2.07</td><td>57.815</td><td>-0.016165</td><td>1.513937</td><td>ABI</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td><td>0.0</td><td>0.0</td><td>false</td><td>1.23</td><td>57.365</td><td>0.004921</td><td>1.382722</td><td>ABI</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td><td>0.0</td><td>0.0</td><td>false</td><td>1.55</td><td>58.165</td><td>0.013975</td><td>1.370204</td><td>ABI</td></tr><tr><td>21163</td><td>ABI.BR</td><td>2021-01-07</td><td>58.68</td><td>58.86</td><td>57.88</td><td>58.4</td><td>54.6905</td><td>1469911</td><td>0.0</td><td>0.0</td><td>false</td><td>0.98</td><td>58.37</td><td>-0.004772</td><td>1.469911</td><td>ABI</td></tr><tr><td>21164</td><td>ABI.BR</td><td>2021-01-08</td><td>58.16</td><td>58.4</td><td>57.43</td><td>57.86</td><td>54.1848</td><td>1428681</td><td>0.0</td><td>0.0</td><td>false</td><td>0.97</td><td>57.915</td><td>-0.005158</td><td>1.428681</td><td>ABI</td></tr></tbody></table></div>
+ ('id', 'i64') ('symbol', 'str') ('date', 'date')  ('open', 'f64')  ('high', 'f64')  ('low', 'f64')  ('close', 'f64')  ('adj_close', 'f64')  ('volume', 'i64')  ('dividends', 'f64')  ('stock_splits', 'f64')  ('is_filled', 'bool')  ('range', 'f64')  ('mid', 'f64')  ('intraday_ret', 'f64')  ('volume_m', 'f64') ('symbol_short', 'str')
+         21160            ABI.BR       2021-01-04            58.15            58.85           56.78             57.21               53.5761            1513937                   0.0                      0.0                  False              2.07          57.815                -0.016165             1.513937                     ABI
+         21161            ABI.BR       2021-01-05            56.90            57.98           56.75             57.18               53.5480            1382722                   0.0                      0.0                  False              1.23          57.365                 0.004921             1.382722                     ABI
+         21162            ABI.BR       2021-01-06            57.96            58.94           57.39             58.77               55.0370            1370204                   0.0                      0.0                  False              1.55          58.165                 0.013975             1.370204                     ABI
+         21163            ABI.BR       2021-01-07            58.68            58.86           57.88             58.40               54.6905            1469911                   0.0                      0.0                  False              0.98          58.370                -0.004772             1.469911                     ABI
+         21164            ABI.BR       2021-01-08            58.16            58.40           57.43             57.86               54.1848            1428681                   0.0                      0.0                  False              0.97          57.915                -0.005158             1.428681                     ABI
+```
 
 ---
 
 ## Practical Transform Examples — scores_daily dataset
 
+*Preview Pandas scores_daily DataFrame.*
 ```python
 # Preview Pandas scores_daily DataFrame
 scores_pd.head(3)
 ```
+```text
+id        _index symbol score_date                 sector  pe_zscore  pb_zscore  ev_ebitda_zscore  yield_zscore  relative_value_score  relative_value_rank  relative_strength  sma_50_ratio  sma_200_ratio  dist_from_52w_high  momentum_score  momentum_rank  implied_upside  recommendation_mean  price_falling_analysts_bullish  sentiment_score  sentiment_rank  composite_score  composite_rank                 _scored_at  sma_30_close  sma_90_close   market_cap  index_weight               short_name country  current_price  day_change_pct  five_day_change_pct  ytd_change_pct currency
+0 163 euro_stoxx_50 BNP.PA 2026-03-04     Financial Services   0.913389   1.261140               NaN      2.388962              1.521163                    1           0.016123      1.009090       1.130264            0.082486        0.477966             16        0.153157              1.84211                           False         0.052711              25         0.683947               1 2026-03-04 22:40:25.489180     92.085000     81.181889  99751215104      0.019525        BNP PARIBAS ACT.A  France         89.320        0.011437            -0.073156        0.105582      EUR
+1 168 euro_stoxx_50 DTE.DE 2026-03-04 Communication Services   0.326587   0.387463          0.379532     -0.127867              0.241429                   24          -0.205598      1.120650       1.112416            0.055524        0.685752              8        0.121212              1.33333                           False         0.617835              10         0.515005               2 2026-03-04 22:40:25.489180     30.838000     28.554556 164294311936      0.032159      DEUTSCHE TELEKOM AG Germany         33.000        0.011649            -0.019608        0.193059      EUR
+2 174 euro_stoxx_50 IFX.DE 2026-03-04             Technology   0.509398   0.637215          0.677068     -0.696662              0.281755                   22           0.000965      1.048244       1.198626            0.088845        0.675764              9        0.126408              1.37500                           False         0.579187              11         0.512235               3 2026-03-04 22:40:25.489180     43.480333     38.855556  57222533120      0.011201 INFINEON TECHNOLOGIES AG Germany         43.945        0.054343            -0.066490        0.164723      EUR
+```
 
-<table>
-<thead>
-<tr>
-<th></th>
-<th>id</th>
-<th>_index</th>
-<th>symbol</th>
-<th>score_date</th>
-<th>sector</th>
-<th>pe_zscore</th>
-<th>pb_zscore</th>
-<th>ev_ebitda_zscore</th>
-<th>yield_zscore</th>
-<th>relative_value_score</th>
-<th>relative_value_rank</th>
-<th>relative_strength</th>
-<th>sma_50_ratio</th>
-<th>sma_200_ratio</th>
-<th>dist_from_52w_high</th>
-<th>momentum_score</th>
-<th>momentum_rank</th>
-<th>implied_upside</th>
-<th>recommendation_mean</th>
-<th>price_falling_analysts_bullish</th>
-<th>sentiment_score</th>
-<th>sentiment_rank</th>
-<th>composite_score</th>
-<th>composite_rank</th>
-<th>_scored_at</th>
-<th>sma_30_close</th>
-<th>sma_90_close</th>
-<th>market_cap</th>
-<th>index_weight</th>
-<th>short_name</th>
-<th>country</th>
-<th>current_price</th>
-<th>day_change_pct</th>
-<th>five_day_change_pct</th>
-<th>ytd_change_pct</th>
-<th>currency</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>163</td>
-<td>euro_stoxx_50</td>
-<td>BNP.PA</td>
-<td>2026-03-04</td>
-<td>Financial Services</td>
-<td>0.913389</td>
-<td>1.261140</td>
-<td>NaN</td>
-<td>2.388962</td>
-<td>1.521163</td>
-<td>1</td>
-<td>0.016123</td>
-<td>1.009090</td>
-<td>1.130264</td>
-<td>0.082486</td>
-<td>0.477966</td>
-<td>16</td>
-<td>0.153157</td>
-<td>1.84211</td>
-<td>False</td>
-<td>0.052711</td>
-<td>25</td>
-<td>0.683947</td>
-<td>1</td>
-<td>2026-03-04 22:40:25.489180</td>
-<td>92.085000</td>
-<td>81.181889</td>
-<td>99751215104</td>
-<td>0.019525</td>
-<td>BNP PARIBAS ACT.A</td>
-<td>France</td>
-<td>89.320</td>
-<td>0.011437</td>
-<td>-0.073156</td>
-<td>0.105582</td>
-<td>EUR</td>
-</tr>
-<tr>
-<th>1</th>
-<td>168</td>
-<td>euro_stoxx_50</td>
-<td>DTE.DE</td>
-<td>2026-03-04</td>
-<td>Communication Services</td>
-<td>0.326587</td>
-<td>0.387463</td>
-<td>0.379532</td>
-<td>-0.127867</td>
-<td>0.241429</td>
-<td>24</td>
-<td>-0.205598</td>
-<td>1.120650</td>
-<td>1.112416</td>
-<td>0.055524</td>
-<td>0.685752</td>
-<td>8</td>
-<td>0.121212</td>
-<td>1.33333</td>
-<td>False</td>
-<td>0.617835</td>
-<td>10</td>
-<td>0.515005</td>
-<td>2</td>
-<td>2026-03-04 22:40:25.489180</td>
-<td>30.838000</td>
-<td>28.554556</td>
-<td>164294311936</td>
-<td>0.032159</td>
-<td>DEUTSCHE TELEKOM AG</td>
-<td>Germany</td>
-<td>33.000</td>
-<td>0.011649</td>
-<td>-0.019608</td>
-<td>0.193059</td>
-<td>EUR</td>
-</tr>
-<tr>
-<th>2</th>
-<td>174</td>
-<td>euro_stoxx_50</td>
-<td>IFX.DE</td>
-<td>2026-03-04</td>
-<td>Technology</td>
-<td>0.509398</td>
-<td>0.637215</td>
-<td>0.677068</td>
-<td>-0.696662</td>
-<td>0.281755</td>
-<td>22</td>
-<td>0.000965</td>
-<td>1.048244</td>
-<td>1.198626</td>
-<td>0.088845</td>
-<td>0.675764</td>
-<td>9</td>
-<td>0.126408</td>
-<td>1.37500</td>
-<td>False</td>
-<td>0.579187</td>
-<td>11</td>
-<td>0.512235</td>
-<td>3</td>
-<td>2026-03-04 22:40:25.489180</td>
-<td>43.480333</td>
-<td>38.855556</td>
-<td>57222533120</td>
-<td>0.011201</td>
-<td>INFINEON TECHNOLOGIES AG</td>
-<td>Germany</td>
-<td>43.945</td>
-<td>0.054343</td>
-<td>-0.066490</td>
-<td>0.164723</td>
-<td>EUR</td>
-</tr>
-</tbody>
-</table>
-
+*Pandas — bin scores.*
 ```python
 # Pandas — bin scores
 df = scores_pd.copy()
@@ -1882,254 +1170,16 @@ df["score_bin"] = pd.cut(df["pe_zscore"], bins=[0, 0.25, 0.5, 0.75, 1.0],
                          labels=["Q1", "Q2", "Q3", "Q4"])
 df.head()
 ```
+```text
+id        _index symbol score_date                 sector  pe_zscore  pb_zscore  ev_ebitda_zscore  yield_zscore  relative_value_score  relative_value_rank  relative_strength  sma_50_ratio  sma_200_ratio  dist_from_52w_high  momentum_score  momentum_rank  implied_upside  recommendation_mean  price_falling_analysts_bullish  sentiment_score  sentiment_rank  composite_score  composite_rank                 _scored_at  sma_30_close  sma_90_close   market_cap  index_weight               short_name country  current_price  day_change_pct  five_day_change_pct  ytd_change_pct currency score_bin
+0 163 euro_stoxx_50 BNP.PA 2026-03-04     Financial Services   0.913389   1.261140               NaN      2.388962              1.521163                    1           0.016123      1.009090       1.130264            0.082486        0.477966             16        0.153157              1.84211                           False         0.052711              25         0.683947               1 2026-03-04 22:40:25.489180     92.085000     81.181889  99751215104      0.019525        BNP PARIBAS ACT.A  France         89.320        0.011437            -0.073156        0.105582      EUR        Q4
+1 168 euro_stoxx_50 DTE.DE 2026-03-04 Communication Services   0.326587   0.387463          0.379532     -0.127867              0.241429                   24          -0.205598      1.120650       1.112416            0.055524        0.685752              8        0.121212              1.33333                           False         0.617835              10         0.515005               2 2026-03-04 22:40:25.489180     30.838000     28.554556 164294311936      0.032159      DEUTSCHE TELEKOM AG Germany         33.000        0.011649            -0.019608        0.193059      EUR        Q2
+2 174 euro_stoxx_50 IFX.DE 2026-03-04             Technology   0.509398   0.637215          0.677068     -0.696662              0.281755                   22           0.000965      1.048244       1.198626            0.088845        0.675764              9        0.126408              1.37500                           False         0.579187              11         0.512235               3 2026-03-04 22:40:25.489180     43.480333     38.855556  57222533120      0.011201 INFINEON TECHNOLOGIES AG Germany         43.945        0.054343            -0.066490        0.164723      EUR        Q3
+3 172 euro_stoxx_50 ENR.DE 2026-03-04            Industrials  -0.902738  -0.743338         -1.693212     -1.326075             -1.166341                   46           1.645455      1.137007       1.474095            0.051850        2.541889              1        0.075269              1.80000                           False        -0.123264              29         0.417428               4 2026-03-04 22:40:25.489180    155.675000    129.122000 139207262208      0.027249        Siemens Energy AG Germany        162.750        0.047297            -0.039256        0.351744      EUR       NaN
+4 149 euro_stoxx_50 ABI.BR 2026-03-04     Consumer Defensive   0.474084   0.844075          0.552739     -0.975005              0.223973                   25          -0.029791      1.058542       1.142783            0.063063        0.651891             10        0.186198              1.69231                           False         0.344755              17         0.406873               5 2026-03-04 22:40:25.489180     64.342000     57.869333 125566156800      0.024579                 AB INBEV Belgium         64.480       -0.017073            -0.040762        0.174499      EUR        Q2
+```
 
-<table>
-<thead>
-<tr>
-<th></th>
-<th>id</th>
-<th>_index</th>
-<th>symbol</th>
-<th>score_date</th>
-<th>sector</th>
-<th>pe_zscore</th>
-<th>pb_zscore</th>
-<th>ev_ebitda_zscore</th>
-<th>yield_zscore</th>
-<th>relative_value_score</th>
-<th>relative_value_rank</th>
-<th>relative_strength</th>
-<th>sma_50_ratio</th>
-<th>sma_200_ratio</th>
-<th>dist_from_52w_high</th>
-<th>momentum_score</th>
-<th>momentum_rank</th>
-<th>implied_upside</th>
-<th>recommendation_mean</th>
-<th>price_falling_analysts_bullish</th>
-<th>sentiment_score</th>
-<th>sentiment_rank</th>
-<th>composite_score</th>
-<th>composite_rank</th>
-<th>_scored_at</th>
-<th>sma_30_close</th>
-<th>sma_90_close</th>
-<th>market_cap</th>
-<th>index_weight</th>
-<th>short_name</th>
-<th>country</th>
-<th>current_price</th>
-<th>day_change_pct</th>
-<th>five_day_change_pct</th>
-<th>ytd_change_pct</th>
-<th>currency</th>
-<th>score_bin</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>0</th>
-<td>163</td>
-<td>euro_stoxx_50</td>
-<td>BNP.PA</td>
-<td>2026-03-04</td>
-<td>Financial Services</td>
-<td>0.913389</td>
-<td>1.261140</td>
-<td>NaN</td>
-<td>2.388962</td>
-<td>1.521163</td>
-<td>1</td>
-<td>0.016123</td>
-<td>1.009090</td>
-<td>1.130264</td>
-<td>0.082486</td>
-<td>0.477966</td>
-<td>16</td>
-<td>0.153157</td>
-<td>1.84211</td>
-<td>False</td>
-<td>0.052711</td>
-<td>25</td>
-<td>0.683947</td>
-<td>1</td>
-<td>2026-03-04 22:40:25.489180</td>
-<td>92.085000</td>
-<td>81.181889</td>
-<td>99751215104</td>
-<td>0.019525</td>
-<td>BNP PARIBAS ACT.A</td>
-<td>France</td>
-<td>89.320</td>
-<td>0.011437</td>
-<td>-0.073156</td>
-<td>0.105582</td>
-<td>EUR</td>
-<td>Q4</td>
-</tr>
-<tr>
-<th>1</th>
-<td>168</td>
-<td>euro_stoxx_50</td>
-<td>DTE.DE</td>
-<td>2026-03-04</td>
-<td>Communication Services</td>
-<td>0.326587</td>
-<td>0.387463</td>
-<td>0.379532</td>
-<td>-0.127867</td>
-<td>0.241429</td>
-<td>24</td>
-<td>-0.205598</td>
-<td>1.120650</td>
-<td>1.112416</td>
-<td>0.055524</td>
-<td>0.685752</td>
-<td>8</td>
-<td>0.121212</td>
-<td>1.33333</td>
-<td>False</td>
-<td>0.617835</td>
-<td>10</td>
-<td>0.515005</td>
-<td>2</td>
-<td>2026-03-04 22:40:25.489180</td>
-<td>30.838000</td>
-<td>28.554556</td>
-<td>164294311936</td>
-<td>0.032159</td>
-<td>DEUTSCHE TELEKOM AG</td>
-<td>Germany</td>
-<td>33.000</td>
-<td>0.011649</td>
-<td>-0.019608</td>
-<td>0.193059</td>
-<td>EUR</td>
-<td>Q2</td>
-</tr>
-<tr>
-<th>2</th>
-<td>174</td>
-<td>euro_stoxx_50</td>
-<td>IFX.DE</td>
-<td>2026-03-04</td>
-<td>Technology</td>
-<td>0.509398</td>
-<td>0.637215</td>
-<td>0.677068</td>
-<td>-0.696662</td>
-<td>0.281755</td>
-<td>22</td>
-<td>0.000965</td>
-<td>1.048244</td>
-<td>1.198626</td>
-<td>0.088845</td>
-<td>0.675764</td>
-<td>9</td>
-<td>0.126408</td>
-<td>1.37500</td>
-<td>False</td>
-<td>0.579187</td>
-<td>11</td>
-<td>0.512235</td>
-<td>3</td>
-<td>2026-03-04 22:40:25.489180</td>
-<td>43.480333</td>
-<td>38.855556</td>
-<td>57222533120</td>
-<td>0.011201</td>
-<td>INFINEON TECHNOLOGIES AG</td>
-<td>Germany</td>
-<td>43.945</td>
-<td>0.054343</td>
-<td>-0.066490</td>
-<td>0.164723</td>
-<td>EUR</td>
-<td>Q3</td>
-</tr>
-<tr>
-<th>3</th>
-<td>172</td>
-<td>euro_stoxx_50</td>
-<td>ENR.DE</td>
-<td>2026-03-04</td>
-<td>Industrials</td>
-<td>-0.902738</td>
-<td>-0.743338</td>
-<td>-1.693212</td>
-<td>-1.326075</td>
-<td>-1.166341</td>
-<td>46</td>
-<td>1.645455</td>
-<td>1.137007</td>
-<td>1.474095</td>
-<td>0.051850</td>
-<td>2.541889</td>
-<td>1</td>
-<td>0.075269</td>
-<td>1.80000</td>
-<td>False</td>
-<td>-0.123264</td>
-<td>29</td>
-<td>0.417428</td>
-<td>4</td>
-<td>2026-03-04 22:40:25.489180</td>
-<td>155.675000</td>
-<td>129.122000</td>
-<td>139207262208</td>
-<td>0.027249</td>
-<td>Siemens Energy AG</td>
-<td>Germany</td>
-<td>162.750</td>
-<td>0.047297</td>
-<td>-0.039256</td>
-<td>0.351744</td>
-<td>EUR</td>
-<td>NaN</td>
-</tr>
-<tr>
-<th>4</th>
-<td>149</td>
-<td>euro_stoxx_50</td>
-<td>ABI.BR</td>
-<td>2026-03-04</td>
-<td>Consumer Defensive</td>
-<td>0.474084</td>
-<td>0.844075</td>
-<td>0.552739</td>
-<td>-0.975005</td>
-<td>0.223973</td>
-<td>25</td>
-<td>-0.029791</td>
-<td>1.058542</td>
-<td>1.142783</td>
-<td>0.063063</td>
-<td>0.651891</td>
-<td>10</td>
-<td>0.186198</td>
-<td>1.69231</td>
-<td>False</td>
-<td>0.344755</td>
-<td>17</td>
-<td>0.406873</td>
-<td>5</td>
-<td>2026-03-04 22:40:25.489180</td>
-<td>64.342000</td>
-<td>57.869333</td>
-<td>125566156800</td>
-<td>0.024579</td>
-<td>AB INBEV</td>
-<td>Belgium</td>
-<td>64.480</td>
-<td>-0.017073</td>
-<td>-0.040762</td>
-<td>0.174499</td>
-<td>EUR</td>
-<td>Q2</td>
-</tr>
-</tbody>
-</table>
-
+*Polars — bin scores with when/then.*
 ```python
 # Polars — bin scores with when/then
 scores_pl.with_columns(
@@ -2140,9 +1190,18 @@ scores_pl.with_columns(
       .alias("score_bin")
 ).head()
 ```
+```text
+shape: (5, 37)
 
-<div><!-- shape: (5, 37) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>score_date</th><th>sector</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>price_falling_analysts_bullish</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>_scored_at</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>short_name</th><th>country</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th><th>currency</th><th>score_bin</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>date</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>i64</td><td>f64</td><td>i64</td><td>datetime[ns]</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td><td>str</td></tr></thead><tbody><tr><td>163</td><td>euro_stoxx_50</td><td>BNP.PA</td><td>2026-03-04</td><td>Financial Services</td><td>0.913389</td><td>1.26114</td><td>null</td><td>2.388962</td><td>1.521163</td><td>1</td><td>0.016123</td><td>1.00909</td><td>1.130264</td><td>0.082486</td><td>0.477966</td><td>16</td><td>0.153157</td><td>1.84211</td><td>false</td><td>0.052711</td><td>25</td><td>0.683947</td><td>1</td><td>2026-03-04 22:40:25.489180</td><td>92.085</td><td>81.181889</td><td>99751215104</td><td>0.019525</td><td>BNP PARIBAS ACT.A</td><td>France</td><td>89.32</td><td>0.011437</td><td>-0.073156</td><td>0.105582</td><td>EUR</td><td>Q4</td></tr><tr><td>168</td><td>euro_stoxx_50</td><td>DTE.DE</td><td>2026-03-04</td><td>Communication Services</td><td>0.326587</td><td>0.387463</td><td>0.379532</td><td>-0.127867</td><td>0.241429</td><td>24</td><td>-0.205598</td><td>1.12065</td><td>1.112416</td><td>0.055524</td><td>0.685752</td><td>8</td><td>0.121212</td><td>1.33333</td><td>false</td><td>0.617835</td><td>10</td><td>0.515005</td><td>2</td><td>2026-03-04 22:40:25.489180</td><td>30.838</td><td>28.554556</td><td>164294311936</td><td>0.032159</td><td>DEUTSCHE TELEKOM AG</td><td>Germany</td><td>33.0</td><td>0.011649</td><td>-0.019608</td><td>0.193059</td><td>EUR</td><td>Q2</td></tr><tr><td>174</td><td>euro_stoxx_50</td><td>IFX.DE</td><td>2026-03-04</td><td>Technology</td><td>0.509398</td><td>0.637215</td><td>0.677068</td><td>-0.696662</td><td>0.281755</td><td>22</td><td>0.000965</td><td>1.048244</td><td>1.198626</td><td>0.088845</td><td>0.675764</td><td>9</td><td>0.126408</td><td>1.375</td><td>false</td><td>0.579187</td><td>11</td><td>0.512235</td><td>3</td><td>2026-03-04 22:40:25.489180</td><td>43.480333</td><td>38.855556</td><td>57222533120</td><td>0.011201</td><td>INFINEON TECHNOLOGIES AG</td><td>Germany</td><td>43.945</td><td>0.054343</td><td>-0.06649</td><td>0.164723</td><td>EUR</td><td>Q3</td></tr><tr><td>172</td><td>euro_stoxx_50</td><td>ENR.DE</td><td>2026-03-04</td><td>Industrials</td><td>-0.902738</td><td>-0.743338</td><td>-1.693212</td><td>-1.326075</td><td>-1.166341</td><td>46</td><td>1.645455</td><td>1.137007</td><td>1.474095</td><td>0.05185</td><td>2.541889</td><td>1</td><td>0.075269</td><td>1.8</td><td>false</td><td>-0.123264</td><td>29</td><td>0.417428</td><td>4</td><td>2026-03-04 22:40:25.489180</td><td>155.675</td><td>129.122</td><td>139207262208</td><td>0.027249</td><td>Siemens Energy AG</td><td>Germany</td><td>162.75</td><td>0.047297</td><td>-0.039256</td><td>0.351744</td><td>EUR</td><td>Q1</td></tr><tr><td>149</td><td>euro_stoxx_50</td><td>ABI.BR</td><td>2026-03-04</td><td>Consumer Defensive</td><td>0.474084</td><td>0.844075</td><td>0.552739</td><td>-0.975005</td><td>0.223973</td><td>25</td><td>-0.029791</td><td>1.058542</td><td>1.142783</td><td>0.063063</td><td>0.651891</td><td>10</td><td>0.186198</td><td>1.69231</td><td>false</td><td>0.344755</td><td>17</td><td>0.406873</td><td>5</td><td>2026-03-04 22:40:25.489180</td><td>64.342</td><td>57.869333</td><td>125566156800</td><td>0.024579</td><td>AB INBEV</td><td>Belgium</td><td>64.48</td><td>-0.017073</td><td>-0.040762</td><td>0.174499</td><td>EUR</td><td>Q2</td></tr></tbody></table></div>
+ ('id', 'i64') ('_index', 'str') ('symbol', 'str') ('score_date', 'date')      ('sector', 'str')  ('pe_zscore', 'f64')  ('pb_zscore', 'f64')  ('ev_ebitda_zscore', 'f64')  ('yield_zscore', 'f64')  ('relative_value_score', 'f64')  ('relative_value_rank', 'i64')  ('relative_strength', 'f64')  ('sma_50_ratio', 'f64')  ('sma_200_ratio', 'f64')  ('dist_from_52w_high', 'f64')  ('momentum_score', 'f64')  ('momentum_rank', 'i64')  ('implied_upside', 'f64')  ('recommendation_mean', 'f64')  ('price_falling_analysts_bullish', 'bool')  ('sentiment_score', 'f64')  ('sentiment_rank', 'i64')  ('composite_score', 'f64')  ('composite_rank', 'i64') ('_scored_at', 'datetime[ns]')  ('sma_30_close', 'f64')  ('sma_90_close', 'f64')  ('market_cap', 'i64')  ('index_weight', 'f64')    ('short_name', 'str') ('country', 'str')  ('current_price', 'f64')  ('day_change_pct', 'f64')  ('five_day_change_pct', 'f64')  ('ytd_change_pct', 'f64') ('currency', 'str') ('score_bin', 'str')
+           163     euro_stoxx_50            BNP.PA             2026-03-04     Financial Services              0.913389              1.261140                          NaN                 2.388962                         1.521163                               1                      0.016123                 1.009090                  1.130264                       0.082486                   0.477966                        16                   0.153157                         1.84211                                       False                    0.052711                         25                    0.683947                          1     2026-03-04 22:40:25.489180                92.085000                81.181889            99751215104                 0.019525        BNP PARIBAS ACT.A             France                    89.320                   0.011437                       -0.073156                   0.105582                 EUR                   Q4
+           168     euro_stoxx_50            DTE.DE             2026-03-04 Communication Services              0.326587              0.387463                     0.379532                -0.127867                         0.241429                              24                     -0.205598                 1.120650                  1.112416                       0.055524                   0.685752                         8                   0.121212                         1.33333                                       False                    0.617835                         10                    0.515005                          2     2026-03-04 22:40:25.489180                30.838000                28.554556           164294311936                 0.032159      DEUTSCHE TELEKOM AG            Germany                    33.000                   0.011649                       -0.019608                   0.193059                 EUR                   Q2
+           174     euro_stoxx_50            IFX.DE             2026-03-04             Technology              0.509398              0.637215                     0.677068                -0.696662                         0.281755                              22                      0.000965                 1.048244                  1.198626                       0.088845                   0.675764                         9                   0.126408                         1.37500                                       False                    0.579187                         11                    0.512235                          3     2026-03-04 22:40:25.489180                43.480333                38.855556            57222533120                 0.011201 INFINEON TECHNOLOGIES AG            Germany                    43.945                   0.054343                       -0.066490                   0.164723                 EUR                   Q3
+           172     euro_stoxx_50            ENR.DE             2026-03-04            Industrials             -0.902738             -0.743338                    -1.693212                -1.326075                        -1.166341                              46                      1.645455                 1.137007                  1.474095                       0.051850                   2.541889                         1                   0.075269                         1.80000                                       False                   -0.123264                         29                    0.417428                          4     2026-03-04 22:40:25.489180               155.675000               129.122000           139207262208                 0.027249        Siemens Energy AG            Germany                   162.750                   0.047297                       -0.039256                   0.351744                 EUR                   Q1
+           149     euro_stoxx_50            ABI.BR             2026-03-04     Consumer Defensive              0.474084              0.844075                     0.552739                -0.975005                         0.223973                              25                     -0.029791                 1.058542                  1.142783                       0.063063                   0.651891                        10                   0.186198                         1.69231                                       False                    0.344755                         17                    0.406873                          5     2026-03-04 22:40:25.489180                64.342000                57.869333           125566156800                 0.024579                 AB INBEV            Belgium                    64.480                  -0.017073                       -0.040762                   0.174499                 EUR                   Q2
+```
 
+*Polars — z-score normalisation per symbol.*
 ```python
 # Polars — z-score normalisation per symbol
 scores_pl.with_columns(
@@ -2150,13 +1209,27 @@ scores_pl.with_columns(
      / pl.col("pe_zscore").std().over("symbol")).alias("score_z")
 ).head(10)
 ```
+```text
+shape: (10, 37)
 
-<div><!-- shape: (10, 37) --><table><thead><tr><th>id</th><th>_index</th><th>symbol</th><th>score_date</th><th>sector</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>price_falling_analysts_bullish</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>_scored_at</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>short_name</th><th>country</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th><th>currency</th><th>score_z</th></tr><tr><td>i64</td><td>str</td><td>str</td><td>date</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>bool</td><td>f64</td><td>i64</td><td>f64</td><td>i64</td><td>datetime[ns]</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>str</td><td>str</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>163</td><td>euro_stoxx_50</td><td>BNP.PA</td><td>2026-03-04</td><td>Financial Services</td><td>0.913389</td><td>1.26114</td><td>null</td><td>2.388962</td><td>1.521163</td><td>1</td><td>0.016123</td><td>1.00909</td><td>1.130264</td><td>0.082486</td><td>0.477966</td><td>16</td><td>0.153157</td><td>1.84211</td><td>false</td><td>0.052711</td><td>25</td><td>0.683947</td><td>1</td><td>2026-03-04 22:40:25.489180</td><td>92.085</td><td>81.181889</td><td>99751215104</td><td>0.019525</td><td>BNP PARIBAS ACT.A</td><td>France</td><td>89.32</td><td>0.011437</td><td>-0.073156</td><td>0.105582</td><td>EUR</td><td>1.151369</td></tr><tr><td>168</td><td>euro_stoxx_50</td><td>DTE.DE</td><td>2026-03-04</td><td>Communication Services</td><td>0.326587</td><td>0.387463</td><td>0.379532</td><td>-0.127867</td><td>0.241429</td><td>24</td><td>-0.205598</td><td>1.12065</td><td>1.112416</td><td>0.055524</td><td>0.685752</td><td>8</td><td>0.121212</td><td>1.33333</td><td>false</td><td>0.617835</td><td>10</td><td>0.515005</td><td>2</td><td>2026-03-04 22:40:25.489180</td><td>30.838</td><td>28.554556</td><td>164294311936</td><td>0.032159</td><td>DEUTSCHE TELEKOM AG</td><td>Germany</td><td>33.0</td><td>0.011649</td><td>-0.019608</td><td>0.193059</td><td>EUR</td><td>1.146083</td></tr><tr><td>174</td><td>euro_stoxx_50</td><td>IFX.DE</td><td>2026-03-04</td><td>Technology</td><td>0.509398</td><td>0.637215</td><td>0.677068</td><td>-0.696662</td><td>0.281755</td><td>22</td><td>0.000965</td><td>1.048244</td><td>1.198626</td><td>0.088845</td><td>0.675764</td><td>9</td><td>0.126408</td><td>1.375</td><td>false</td><td>0.579187</td><td>11</td><td>0.512235</td><td>3</td><td>2026-03-04 22:40:25.489180</td><td>43.480333</td><td>38.855556</td><td>57222533120</td><td>0.011201</td><td>INFINEON TECHNOLOGIES AG</td><td>Germany</td><td>43.945</td><td>0.054343</td><td>-0.06649</td><td>0.164723</td><td>EUR</td><td>1.017897</td></tr><tr><td>172</td><td>euro_stoxx_50</td><td>ENR.DE</td><td>2026-03-04</td><td>Industrials</td><td>-0.902738</td><td>-0.743338</td><td>-1.693212</td><td>-1.326075</td><td>-1.166341</td><td>46</td><td>1.645455</td><td>1.137007</td><td>1.474095</td><td>0.05185</td><td>2.541889</td><td>1</td><td>0.075269</td><td>1.8</td><td>false</td><td>-0.123264</td><td>29</td><td>0.417428</td><td>4</td><td>2026-03-04 22:40:25.489180</td><td>155.675</td><td>129.122</td><td>139207262208</td><td>0.027249</td><td>Siemens Energy AG</td><td>Germany</td><td>162.75</td><td>0.047297</td><td>-0.039256</td><td>0.351744</td><td>EUR</td><td>0.340213</td></tr><tr><td>149</td><td>euro_stoxx_50</td><td>ABI.BR</td><td>2026-03-04</td><td>Consumer Defensive</td><td>0.474084</td><td>0.844075</td><td>0.552739</td><td>-0.975005</td><td>0.223973</td><td>25</td><td>-0.029791</td><td>1.058542</td><td>1.142783</td><td>0.063063</td><td>0.651891</td><td>10</td><td>0.186198</td><td>1.69231</td><td>false</td><td>0.344755</td><td>17</td><td>0.406873</td><td>5</td><td>2026-03-04 22:40:25.489180</td><td>64.342</td><td>57.869333</td><td>125566156800</td><td>0.024579</td><td>AB INBEV</td><td>Belgium</td><td>64.48</td><td>-0.017073</td><td>-0.040762</td><td>0.174499</td><td>EUR</td><td>-1.152299</td></tr><tr><td>196</td><td>euro_stoxx_50</td><td>VOW.DE</td><td>2026-03-04</td><td>Consumer Cyclical</td><td>1.166221</td><td>0.940273</td><td>0.37983</td><td>1.528891</td><td>1.003804</td><td>2</td><td>-0.292748</td><td>0.929392</td><td>0.969628</td><td>0.180805</td><td>-0.411969</td><td>37</td><td>0.297071</td><td>null</td><td>false</td><td>0.555357</td><td>12</td><td>0.382397</td><td>6</td><td>2026-03-04 22:40:25.489180</td><td>102.286667</td><td>101.225556</td><td>47923826688</td><td>0.009381</td><td>VOLKSWAGEN AG</td><td>Germany</td><td>95.6</td><td>0.013786</td><td>-0.048756</td><td>-0.09039</td><td>EUR</td><td>-0.590923</td></tr><tr><td>194</td><td>euro_stoxx_50</td><td>TTE.PA</td><td>2026-03-04</td><td>Energy</td><td>0.691106</td><td>0.609377</td><td>0.44961</td><td>0.731948</td><td>0.62051</td><td>12</td><td>0.0498</td><td>1.109161</td><td>1.212503</td><td>0.08411</td><td>0.919444</td><td>5</td><td>0.041131</td><td>2.04545</td><td>false</td><td>-0.542576</td><td>35</td><td>0.332459</td><td>7</td><td>2026-03-04 22:40:25.489180</td><td>63.603</td><td>58.231667</td><td>142003961856</td><td>0.027796</td><td>TOTALENERGIES</td><td>France</td><td>66.86</td><td>-0.018209</td><td>-0.00757</td><td>0.202734</td><td>EUR</td><td>1.114951</td></tr><tr><td>166</td><td>euro_stoxx_50</td><td>DG.PA</td><td>2026-03-04</td><td>Industrials</td><td>0.778573</td><td>0.850985</td><td>0.928797</td><td>1.146268</td><td>0.926156</td><td>3</td><td>-0.031697</td><td>1.064353</td><td>1.095809</td><td>0.062871</td><td>0.59582</td><td>11</td><td>0.043608</td><td>2.04762</td><td>false</td><td>-0.538059</td><td>34</td><td>0.327972</td><td>8</td><td>2026-03-04 22:40:25.489180</td><td>131.013333</td><td>123.067778</td><td>74446422016</td><td>0.014572</td><td>VINCI</td><td>France</td><td>134.15</td><td>0.006754</td><td>-0.054283</td><td>0.117451</td><td>EUR</td><td>-0.51532</td></tr><tr><td>188</td><td>euro_stoxx_50</td><td>SAN.MC</td><td>2026-03-04</td><td>Financial Services</td><td>0.458599</td><td>0.499398</td><td>null</td><td>-1.10759</td><td>-0.049864</td><td>33</td><td>0.393197</td><td>0.953824</td><td>1.139519</td><td>0.113499</td><td>0.519307</td><td>14</td><td>0.224704</td><td>1.7</td><td>false</td><td>0.448776</td><td>15</td><td>0.306073</td><td>9</td><td>2026-03-04 22:40:25.489180</td><td>10.6049</td><td>9.9195</td><td>145955749888</td><td>0.02857</td><td>BANCO SANTANDER S.A.</td><td>Spain</td><td>9.982</td><td>0.038818</td><td>-0.105876</td><td>-0.008739</td><td>EUR</td><td>-0.927419</td></tr><tr><td>193</td><td>euro_stoxx_50</td><td>SU.PA</td><td>2026-03-04</td><td>Industrials</td><td>-0.175048</td><td>0.278256</td><td>-0.060732</td><td>-0.419549</td><td>-0.094268</td><td>34</td><td>-0.045547</td><td>1.049116</td><td>1.102466</td><td>0.078557</td><td>0.519908</td><td>13</td><td>0.141252</td><td>1.47826</td><td>false</td><td>0.48924</td><td>14</td><td>0.30496</td><td>10</td><td>2026-03-04 22:40:25.489180</td><td>253.745</td><td>241.719444</td><td>145081614336</td><td>0.028399</td><td>SCHNEIDER ELECTRIC SE</td><td>France</td><td>258.05</td><td>0.017748</td><td>-0.026043</td><td>0.098553</td><td>EUR</td><td>0.608136</td></tr></tbody></table></div>
+ ('id', 'i64') ('_index', 'str') ('symbol', 'str') ('score_date', 'date')      ('sector', 'str')  ('pe_zscore', 'f64')  ('pb_zscore', 'f64')  ('ev_ebitda_zscore', 'f64')  ('yield_zscore', 'f64')  ('relative_value_score', 'f64')  ('relative_value_rank', 'i64')  ('relative_strength', 'f64')  ('sma_50_ratio', 'f64')  ('sma_200_ratio', 'f64')  ('dist_from_52w_high', 'f64')  ('momentum_score', 'f64')  ('momentum_rank', 'i64')  ('implied_upside', 'f64')  ('recommendation_mean', 'f64')  ('price_falling_analysts_bullish', 'bool')  ('sentiment_score', 'f64')  ('sentiment_rank', 'i64')  ('composite_score', 'f64')  ('composite_rank', 'i64') ('_scored_at', 'datetime[ns]')  ('sma_30_close', 'f64')  ('sma_90_close', 'f64')  ('market_cap', 'i64')  ('index_weight', 'f64')    ('short_name', 'str') ('country', 'str')  ('current_price', 'f64')  ('day_change_pct', 'f64')  ('five_day_change_pct', 'f64')  ('ytd_change_pct', 'f64') ('currency', 'str')  ('score_z', 'f64')
+           163     euro_stoxx_50            BNP.PA             2026-03-04     Financial Services              0.913389              1.261140                          NaN                 2.388962                         1.521163                               1                      0.016123                 1.009090                  1.130264                       0.082486                   0.477966                        16                   0.153157                         1.84211                                       False                    0.052711                         25                    0.683947                          1     2026-03-04 22:40:25.489180                92.085000                81.181889            99751215104                 0.019525        BNP PARIBAS ACT.A             France                    89.320                   0.011437                       -0.073156                   0.105582                 EUR            1.151369
+           168     euro_stoxx_50            DTE.DE             2026-03-04 Communication Services              0.326587              0.387463                     0.379532                -0.127867                         0.241429                              24                     -0.205598                 1.120650                  1.112416                       0.055524                   0.685752                         8                   0.121212                         1.33333                                       False                    0.617835                         10                    0.515005                          2     2026-03-04 22:40:25.489180                30.838000                28.554556           164294311936                 0.032159      DEUTSCHE TELEKOM AG            Germany                    33.000                   0.011649                       -0.019608                   0.193059                 EUR            1.146083
+           174     euro_stoxx_50            IFX.DE             2026-03-04             Technology              0.509398              0.637215                     0.677068                -0.696662                         0.281755                              22                      0.000965                 1.048244                  1.198626                       0.088845                   0.675764                         9                   0.126408                         1.37500                                       False                    0.579187                         11                    0.512235                          3     2026-03-04 22:40:25.489180                43.480333                38.855556            57222533120                 0.011201 INFINEON TECHNOLOGIES AG            Germany                    43.945                   0.054343                       -0.066490                   0.164723                 EUR            1.017897
+           172     euro_stoxx_50            ENR.DE             2026-03-04            Industrials             -0.902738             -0.743338                    -1.693212                -1.326075                        -1.166341                              46                      1.645455                 1.137007                  1.474095                       0.051850                   2.541889                         1                   0.075269                         1.80000                                       False                   -0.123264                         29                    0.417428                          4     2026-03-04 22:40:25.489180               155.675000               129.122000           139207262208                 0.027249        Siemens Energy AG            Germany                   162.750                   0.047297                       -0.039256                   0.351744                 EUR            0.340213
+           149     euro_stoxx_50            ABI.BR             2026-03-04     Consumer Defensive              0.474084              0.844075                     0.552739                -0.975005                         0.223973                              25                     -0.029791                 1.058542                  1.142783                       0.063063                   0.651891                        10                   0.186198                         1.69231                                       False                    0.344755                         17                    0.406873                          5     2026-03-04 22:40:25.489180                64.342000                57.869333           125566156800                 0.024579                 AB INBEV            Belgium                    64.480                  -0.017073                       -0.040762                   0.174499                 EUR           -1.152299
+           196     euro_stoxx_50            VOW.DE             2026-03-04      Consumer Cyclical              1.166221              0.940273                     0.379830                 1.528891                         1.003804                               2                     -0.292748                 0.929392                  0.969628                       0.180805                  -0.411969                        37                   0.297071                             NaN                                       False                    0.555357                         12                    0.382397                          6     2026-03-04 22:40:25.489180               102.286667               101.225556            47923826688                 0.009381            VOLKSWAGEN AG            Germany                    95.600                   0.013786                       -0.048756                  -0.090390                 EUR           -0.590923
+           194     euro_stoxx_50            TTE.PA             2026-03-04                 Energy              0.691106              0.609377                     0.449610                 0.731948                         0.620510                              12                      0.049800                 1.109161                  1.212503                       0.084110                   0.919444                         5                   0.041131                         2.04545                                       False                   -0.542576                         35                    0.332459                          7     2026-03-04 22:40:25.489180                63.603000                58.231667           142003961856                 0.027796            TOTALENERGIES             France                    66.860                  -0.018209                       -0.007570                   0.202734                 EUR            1.114951
+           166     euro_stoxx_50             DG.PA             2026-03-04            Industrials              0.778573              0.850985                     0.928797                 1.146268                         0.926156                               3                     -0.031697                 1.064353                  1.095809                       0.062871                   0.595820                        11                   0.043608                         2.04762                                       False                   -0.538059                         34                    0.327972                          8     2026-03-04 22:40:25.489180               131.013333               123.067778            74446422016                 0.014572                    VINCI             France                   134.150                   0.006754                       -0.054283                   0.117451                 EUR           -0.515320
+           188     euro_stoxx_50            SAN.MC             2026-03-04     Financial Services              0.458599              0.499398                          NaN                -1.107590                        -0.049864                              33                      0.393197                 0.953824                  1.139519                       0.113499                   0.519307                        14                   0.224704                         1.70000                                       False                    0.448776                         15                    0.306073                          9     2026-03-04 22:40:25.489180                10.604900                 9.919500           145955749888                 0.028570     BANCO SANTANDER S.A.              Spain                     9.982                   0.038818                       -0.105876                  -0.008739                 EUR           -0.927419
+           193     euro_stoxx_50             SU.PA             2026-03-04            Industrials             -0.175048              0.278256                    -0.060732                -0.419549                        -0.094268                              34                     -0.045547                 1.049116                  1.102466                       0.078557                   0.519908                        13                   0.141252                         1.47826                                       False                    0.489240                         14                    0.304960                         10     2026-03-04 22:40:25.489180               253.745000               241.719444           145081614336                 0.028399    SCHNEIDER ELECTRIC SE             France                   258.050                   0.017748                       -0.026043                   0.098553                 EUR            0.608136
+```
 
 ---
 
-## Comparison Table — Creating & Transforming Columns
+## Column Transform API Lookup
 
+*Pandas vs Polars comparison table for column creation methods.*
 ```python
 # Pandas vs Polars comparison table for column creation methods
 comparison = r"""
@@ -2184,6 +1257,9 @@ comparison = r"""
 | Tweak function                | `def tweak(df): return df.assign(…)`              | `def tweak(df): return df.with_columns(…)`        |
 """
 display(Markdown(comparison))
+```
+```text
+(No visible output)
 ```
 
 | Operation                     | Pandas                                          | Polars                                           |
@@ -2219,25 +1295,37 @@ display(Markdown(comparison))
 >
 > A Polars expression is a **lazy computation** — it describes *what* to compute, not *how*. `pl.col("close") * 2` creates an `Expr` object. It does nothing until passed into a context (`.select()`, `.with_columns()`, `.filter()`, `.group_by().agg()`). The optimizer then fuses, reorders, and parallelizes all expressions for maximum performance.
 
+*An expression is a lazy computation — it's not executed until placed in a context.*
 ```python
 # An expression is a lazy computation — it's not executed until placed in a context
 expr = pl.col("close") * 2
 print(f"Type: {type(expr)}")
 print(f"Repr: {expr}")
 ```
-
+```text
 Type: <class 'polars.expr.expr.Expr'>
     Repr: [(col("close")) * (dyn int: 2)]
+```
 
 ### Expression Contexts
 
+*select context — return only named columns (drop the rest).*
 ```python
 # select context — return only named columns (drop the rest)
 ohlcv_pl.select("symbol", "date", "close").head(5)
 ```
+```text
+shape: (5, 3)
 
-<div><!-- shape: (5, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')
+           ABI.BR       2021-01-04             57.21
+           ABI.BR       2021-01-05             57.18
+           ABI.BR       2021-01-06             58.77
+           ABI.BR       2021-01-07             58.40
+           ABI.BR       2021-01-08             57.86
+```
 
+*Continuing expressions — chain methods on pl.col() results.*
 ```python
 # Continuing expressions — chain methods on pl.col() results
 ohlcv_pl.select(
@@ -2246,8 +1334,16 @@ ohlcv_pl.select(
     (pl.col("high") - pl.col("low")).alias("daily_range"),
 ).head(5)
 ```
+```text
+shape: (5, 4)
 
-<div><!-- shape: (5, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close_rounded</th><th>daily_range</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>2.07</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>1.23</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>1.55</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>0.98</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>0.97</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close_rounded', 'f64')  ('daily_range', 'f64')
+           ABI.BR       2021-01-04                     57.21                    2.07
+           ABI.BR       2021-01-05                     57.18                    1.23
+           ABI.BR       2021-01-06                     58.77                    1.55
+           ABI.BR       2021-01-07                     58.40                    0.98
+           ABI.BR       2021-01-08                     57.86                    0.97
+```
 
 #### Polars Expression Context — with_columns
 
@@ -2256,6 +1352,7 @@ ohlcv_pl.select(
 
 _Adds `price_change` (close minus open) and `pct_change` (percentage change from open to close, rounded to 2 dp) as two new columns in a single `with_columns` call, keeping all 12 original OHLCV columns intact._
 
+*with_columns context — add new columns, keep all originals.*
 ```python
 # with_columns context — add new columns, keep all originals
 ohlcv_pl.with_columns(
@@ -2263,8 +1360,16 @@ ohlcv_pl.with_columns(
     ((pl.col("close") - pl.col("open")) / pl.col("open") * 100).round(2).alias("pct_change"),
 ).select("symbol", "date", "close", "open", "price_change", "pct_change").head(5)
 ```
+```text
+shape: (5, 6)
 
-<div><!-- shape: (5, 6) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>open</th><th>price_change</th><th>pct_change</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>58.15</td><td>-0.94</td><td>-1.62</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>56.9</td><td>0.28</td><td>0.49</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>57.96</td><td>0.81</td><td>1.4</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>58.68</td><td>-0.28</td><td>-0.48</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>58.16</td><td>-0.3</td><td>-0.52</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')  ('open', 'f64')  ('price_change', 'f64')  ('pct_change', 'f64')
+           ABI.BR       2021-01-04             57.21            58.15                    -0.94                  -1.62
+           ABI.BR       2021-01-05             57.18            56.90                     0.28                   0.49
+           ABI.BR       2021-01-06             58.77            57.96                     0.81                   1.40
+           ABI.BR       2021-01-07             58.40            58.68                    -0.28                  -0.48
+           ABI.BR       2021-01-08             57.86            58.16                    -0.30                  -0.52
+```
 
 #### Polars Expression Context — filter
 
@@ -2272,14 +1377,23 @@ ohlcv_pl.with_columns(
 
 _Filters the OHLCV dataset to ASML.AS rows where `close > 900` using a compound boolean expression with `&`, returning the first 5 matching dates and prices._
 
+*filter context — keep rows matching a boolean expression.*
 ```python
 # filter context — keep rows matching a boolean expression
 ohlcv_pl.filter(
     (pl.col("symbol") == "ASML.AS") & (pl.col("close") > 900)
 ).select("symbol", "date", "close").head(5)
 ```
+```text
+shape: (5, 3)
 
-<div><!-- shape: (5, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2024-03-04</td><td>913.2</td></tr><tr><td>ASML.AS</td><td>2024-03-06</td><td>912.2</td></tr><tr><td>ASML.AS</td><td>2024-03-07</td><td>949.2</td></tr><tr><td>ASML.AS</td><td>2024-03-08</td><td>923.4</td></tr><tr><td>ASML.AS</td><td>2024-03-21</td><td>923.3</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')
+          ASML.AS       2024-03-04             913.2
+          ASML.AS       2024-03-06             912.2
+          ASML.AS       2024-03-07             949.2
+          ASML.AS       2024-03-08             923.4
+          ASML.AS       2024-03-21             923.3
+```
 
 #### Polars Expression Context — group_by.agg
 
@@ -2287,6 +1401,7 @@ ohlcv_pl.filter(
 
 _Groups the full OHLCV dataset by `symbol` and computes three per-symbol aggregates — average close price, total traded volume, and most recent date — then sorts descending by average close to rank the 50 stocks by price level._
 
+*group_by.agg context — aggregate expressions per group.*
 ```python
 # group_by.agg context — aggregate expressions per group
 ohlcv_pl.group_by("symbol").agg(
@@ -2295,37 +1410,71 @@ ohlcv_pl.group_by("symbol").agg(
     pl.col("date").max().alias("last_date"),
 ).sort("avg_close", descending=True).head(10)
 ```
+```text
+shape: (10, 4)
 
-<div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>avg_close</th><th>total_volume</th><th>last_date</th></tr><tr><td>str</td><td>f64</td><td>i64</td><td>date</td></tr></thead><tbody><tr><td>RMS.PA</td><td>1761.56</td><td>81633862</td><td>2026-03-12</td></tr><tr><td>ADYEN.AS</td><td>1545.98</td><td>110400463</td><td>2026-03-12</td></tr><tr><td>ASML.AS</td><td>671.35</td><td>945070720</td><td>2026-03-12</td></tr><tr><td>MC.PA</td><td>662.4</td><td>557855567</td><td>2026-03-12</td></tr><tr><td>RHM.DE</td><td>544.66</td><td>308359744</td><td>2026-03-12</td></tr><tr><td>ARGX.BR</td><td>413.69</td><td>94592244</td><td>2026-03-12</td></tr><tr><td>OR.PA</td><td>377.54</td><td>484115375</td><td>2026-03-12</td></tr><tr><td>MUV2.DE</td><td>374.66</td><td>398802950</td><td>2026-03-12</td></tr><tr><td>RACE.MI</td><td>289.75</td><td>476686026</td><td>2026-03-12</td></tr><tr><td>ALV.DE</td><td>252.19</td><td>1101960308</td><td>2026-03-12</td></tr></tbody></table></div>
+('symbol', 'str')  ('avg_close', 'f64')  ('total_volume', 'i64') ('last_date', 'date')
+           RMS.PA               1761.56                 81633862            2026-03-12
+         ADYEN.AS               1545.98                110400463            2026-03-12
+          ASML.AS                671.35                945070720            2026-03-12
+            MC.PA                662.40                557855567            2026-03-12
+           RHM.DE                544.66                308359744            2026-03-12
+          ARGX.BR                413.69                 94592244            2026-03-12
+            OR.PA                377.54                484115375            2026-03-12
+          MUV2.DE                374.66                398802950            2026-03-12
+          RACE.MI                289.75                476686026            2026-03-12
+           ALV.DE                252.19               1101960308            2026-03-12
+```
 
 ### Column Expressions
 
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
+*pl.col with multiple names — select columns by name.*
 ```python
 # pl.col with multiple names — select columns by name
 ohlcv_pl.select(pl.col("symbol", "date", "close")).head(3)
 ```
+```text
+shape: (3, 3)
 
-<div><!-- shape: (3, 3) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th></tr><tr><td>str</td><td>date</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')
+           ABI.BR       2021-01-04             57.21
+           ABI.BR       2021-01-05             57.18
+           ABI.BR       2021-01-06             58.77
+```
 
+*Regex.*
 ```python
 # Regex
 ohlcv_pl.select(pl.col("^(open|high|low|close)$")).head(3)
 ```
+```text
+shape: (3, 4)
 
-<div><!-- shape: (3, 4) --><table><thead><tr><th>open</th><th>high</th><th>low</th><th>close</th></tr><tr><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td></tr><tr><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td></tr><tr><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td></tr></tbody></table></div>
+ ('open', 'f64')  ('high', 'f64')  ('low', 'f64')  ('close', 'f64')
+           58.15            58.85           56.78             57.21
+           56.90            57.98           56.75             57.18
+           57.96            58.94           57.39             58.77
+```
 
 #### Polars Column Expressions — pl.all, pl.exclude
 
 _Uses `pl.exclude()` to drop four metadata columns (`id`, `dividends`, `stock_splits`, `is_filled`) and return only the 8 analytically relevant OHLCV columns._
 
+*pl.exclude — select all columns EXCEPT the listed ones.*
 ```python
 # pl.exclude — select all columns EXCEPT the listed ones
 ohlcv_pl.select(pl.exclude("id", "dividends", "stock_splits", "is_filled")).head(3)
 ```
+```text
+shape: (3, 8)
 
-<div><!-- shape: (3, 8) --><table><thead><tr><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('open', 'f64')  ('high', 'f64')  ('low', 'f64')  ('close', 'f64')  ('adj_close', 'f64')  ('volume', 'i64')
+           ABI.BR       2021-01-04            58.15            58.85           56.78             57.21               53.5761            1513937
+           ABI.BR       2021-01-05            56.90            57.98           56.75             57.18               53.5480            1382722
+           ABI.BR       2021-01-06            57.96            58.94           57.39             58.77               55.0370            1370204
+```
 
 #### Polars Column Expressions — pl.lit
 
@@ -2334,12 +1483,19 @@ ohlcv_pl.select(pl.exclude("id", "dividends", "stock_splits", "is_filled")).head
 
 _Injects two constant columns into the OHLCV dataset using `pl.lit()`: a static `"EUR"` currency string and a `1.0` float weight — demonstrating how to attach fixed-value metadata to every row without a source column._
 
+*pl.lit — inject a constant value as a new column.*
 ```python
 # pl.lit — inject a constant value as a new column
 ohlcv_pl.select("symbol", "date", pl.lit("EUR").alias("currency"), pl.lit(1.0).alias("weight")).head(3)
 ```
+```text
+shape: (3, 4)
 
-<div><!-- shape: (3, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>currency</th><th>weight</th></tr><tr><td>str</td><td>date</td><td>str</td><td>f64</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>EUR</td><td>1.0</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>EUR</td><td>1.0</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>EUR</td><td>1.0</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date') ('currency', 'str')  ('weight', 'f64')
+           ABI.BR       2021-01-04                 EUR                1.0
+           ABI.BR       2021-01-05                 EUR                1.0
+           ABI.BR       2021-01-06                 EUR                1.0
+```
 
 #### Polars Column Expressions — pl.first, pl.last
 
@@ -2347,18 +1503,24 @@ ohlcv_pl.select("symbol", "date", pl.lit("EUR").alias("currency"), pl.lit(1.0).a
 
 _Extracts the first symbol in the dataset and the date range boundaries (`first_date` and `last_date`) using `pl.first()` and `pl.last()`, confirming that the OHLCV data spans from 2021-01-04 to 2026-03-12._
 
+*pl.first, pl.last — get the first/last value in the column.*
 ```python
 # pl.first, pl.last — get the first/last value in the column
 ohlcv_pl.select(pl.first("symbol"), pl.first("date").alias("first_date"), pl.last("date").alias("last_date"))
 ```
+```text
+shape: (1, 3)
 
-<div><!-- shape: (1, 3) --><table><thead><tr><th>symbol</th><th>first_date</th><th>last_date</th></tr><tr><td>str</td><td>date</td><td>date</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>2026-03-12</td></tr></tbody></table></div>
+('symbol', 'str') ('first_date', 'date') ('last_date', 'date')
+           ABI.BR             2021-01-04            2026-03-12
+```
 
 ### Continuing Expressions
 
 - **String Ops**: Text manipulation via .str accessor: contains, split, replace, extract.
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 
+*Continuing expressions — chain methods on pl.col() results.*
 ```python
 # Continuing expressions — chain methods on pl.col() results
 ohlcv_pl.select(
@@ -2366,14 +1528,23 @@ ohlcv_pl.select(
     pl.col("symbol").str.to_lowercase().str.replace(".as", "").alias("clean_symbol"),
 ).head(5)
 ```
+```text
+shape: (5, 2)
 
-<div><!-- shape: (5, 2) --><table><thead><tr><th>rounded_close</th><th>clean_symbol</th></tr><tr><td>f64</td><td>str</td></tr></thead><tbody><tr><td>57.21</td><td>abi.br</td></tr><tr><td>57.18</td><td>abi.br</td></tr><tr><td>58.77</td><td>abi.br</td></tr><tr><td>58.4</td><td>abi.br</td></tr><tr><td>57.86</td><td>abi.br</td></tr></tbody></table></div>
+ ('rounded_close', 'f64') ('clean_symbol', 'str')
+                    57.21                  abi.br
+                    57.18                  abi.br
+                    58.77                  abi.br
+                    58.40                  abi.br
+                    57.86                  abi.br
+```
 
 ### Horizontal Expressions
 
 - **Sum Horizontal**: Sum values across columns (row-wise), not down a column.
 - **Alias**: Give an expression result a column name (Polars).
 
+*Horizontal expression — row-level computation across columns.*
 ```python
 # Horizontal expression — row-level computation across columns
 scores_pl.select(
@@ -2381,9 +1552,18 @@ scores_pl.select(
     pl.sum_horizontal("pe_zscore", "pb_zscore").round(4).alias("combined_value"),
 ).head(5)
 ```
+```text
+shape: (5, 2)
 
-<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>combined_value</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>BNP.PA</td><td>2.1745</td></tr><tr><td>DTE.DE</td><td>0.7141</td></tr><tr><td>IFX.DE</td><td>1.1466</td></tr><tr><td>ENR.DE</td><td>-1.6461</td></tr><tr><td>ABI.BR</td><td>1.3182</td></tr></tbody></table></div>
+('symbol', 'str')  ('combined_value', 'f64')
+           BNP.PA                     2.1745
+           DTE.DE                     0.7141
+           IFX.DE                     1.1466
+           ENR.DE                    -1.6461
+           ABI.BR                     1.3182
+```
 
+*Horizontal expression — row-level computation across columns.*
 ```python
 # Horizontal expression — row-level computation across columns
 scores_pl.select(
@@ -2391,17 +1571,34 @@ scores_pl.select(
     pl.mean_horizontal("relative_value_score", "momentum_score", "sentiment_score").round(4).alias("avg_factor"),
 ).head(5)
 ```
+```text
+shape: (5, 2)
 
-<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>avg_factor</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>BNP.PA</td><td>0.6839</td></tr><tr><td>DTE.DE</td><td>0.515</td></tr><tr><td>IFX.DE</td><td>0.5122</td></tr><tr><td>ENR.DE</td><td>0.4174</td></tr><tr><td>ABI.BR</td><td>0.4069</td></tr></tbody></table></div>
+('symbol', 'str')  ('avg_factor', 'f64')
+           BNP.PA                 0.6839
+           DTE.DE                 0.5150
+           IFX.DE                 0.5122
+           ENR.DE                 0.4174
+           ABI.BR                 0.4069
+```
 
+*Horizontal expression — concatenate strings across columns.*
 ```python
 # Horizontal expression — concatenate strings across columns
 dim_pl.select(
     pl.concat_str("short_name", pl.lit(" ("), "country", pl.lit(")")).alias("display_name"),
 ).head(5)
 ```
+```text
+shape: (5, 1)
 
-<div><!-- shape: (5, 1) --><table><thead><tr><th>display_name</th></tr><tr><td>str</td></tr></thead><tbody><tr><td>ASML HOLDING (Netherlands)</td></tr><tr><td>LVMH (France)</td></tr><tr><td>HERMES INTL (France)</td></tr><tr><td>L&#x27;OREAL (France)</td></tr><tr><td>SAP SE (Germany)</td></tr></tbody></table></div>
+   ('display_name', 'str')
+ASML HOLDING (Netherlands)
+             LVMH (France)
+      HERMES INTL (France)
+          L'OREAL (France)
+          SAP SE (Germany)
+```
 
 ### Polars Window Expressions — .over() for group-level computation
 
@@ -2411,6 +1608,7 @@ dim_pl.select(
 >
 > `.over("col")` is the Polars equivalent of SQL `PARTITION BY` — it computes an expression **within each group** without collapsing rows. Equivalent to Pandas `groupby("col").transform()`. Chain any expression before `.over()`: `.mean().over()`, `.rank().over()`, `.cum_sum().over()`, `.shift().over()`.
 
+*.over("symbol") — window expression: rank and mean within each symbol group.*
 ```python
 # .over("symbol") — window expression: rank and mean within each symbol group
 ohlcv_pl.filter(pl.col("symbol").is_in(["ASML.AS", "MC.PA"])).with_columns(
@@ -2418,23 +1616,51 @@ ohlcv_pl.filter(pl.col("symbol").is_in(["ASML.AS", "MC.PA"])).with_columns(
     pl.col("close").mean().over("symbol").round(2).alias("avg_close"),
 ).select("symbol", "date", "close", "price_rank", "avg_close").head(10)
 ```
+```text
+shape: (10, 5)
 
-<div><!-- shape: (10, 5) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>price_rank</th><th>avg_close</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2021-01-04</td><td>406.25</td><td>1326.0</td><td>671.35</td></tr><tr><td>ASML.AS</td><td>2021-01-05</td><td>406.9</td><td>1325.0</td><td>671.35</td></tr><tr><td>ASML.AS</td><td>2021-01-06</td><td>402.85</td><td>1329.0</td><td>671.35</td></tr><tr><td>ASML.AS</td><td>2021-01-07</td><td>403.9</td><td>1327.0</td><td>671.35</td></tr><tr><td>ASML.AS</td><td>2021-01-08</td><td>416.05</td><td>1319.0</td><td>671.35</td></tr><tr><td>ASML.AS</td><td>2021-01-11</td><td>414.9</td><td>1320.5</td><td>671.35</td></tr><tr><td>ASML.AS</td><td>2021-01-12</td><td>418.95</td><td>1318.0</td><td>671.35</td></tr><tr><td>ASML.AS</td><td>2021-01-13</td><td>422.45</td><td>1316.0</td><td>671.35</td></tr><tr><td>ASML.AS</td><td>2021-01-14</td><td>447.35</td><td>1288.0</td><td>671.35</td></tr><tr><td>ASML.AS</td><td>2021-01-15</td><td>435.85</td><td>1307.0</td><td>671.35</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')  ('price_rank', 'f64')  ('avg_close', 'f64')
+          ASML.AS       2021-01-04            406.25                 1326.0                671.35
+          ASML.AS       2021-01-05            406.90                 1325.0                671.35
+          ASML.AS       2021-01-06            402.85                 1329.0                671.35
+          ASML.AS       2021-01-07            403.90                 1327.0                671.35
+          ASML.AS       2021-01-08            416.05                 1319.0                671.35
+          ASML.AS       2021-01-11            414.90                 1320.5                671.35
+          ASML.AS       2021-01-12            418.95                 1318.0                671.35
+          ASML.AS       2021-01-13            422.45                 1316.0                671.35
+          ASML.AS       2021-01-14            447.35                 1288.0                671.35
+          ASML.AS       2021-01-15            435.85                 1307.0                671.35
+```
 
+*filter context — keep rows matching a boolean expression.*
 ```python
 # filter context — keep rows matching a boolean expression
 ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date").with_columns(
     pl.col("volume").cum_sum().over("symbol").alias("cumulative_volume"),
 ).select("symbol", "date", "volume", "cumulative_volume").tail(10)
 ```
+```text
+shape: (10, 4)
 
-<div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>volume</th><th>cumulative_volume</th></tr><tr><td>str</td><td>date</td><td>i64</td><td>i64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-02-27</td><td>1010698</td><td>938726541</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>871267</td><td>939597808</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>941945</td><td>940539753</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>714587</td><td>941254340</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>778081</td><td>942032421</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>857271</td><td>942889692</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>689086</td><td>943578778</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>800815</td><td>944379593</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>562904</td><td>944942497</td></tr><tr><td>ASML.AS</td><td>2026-03-12</td><td>128223</td><td>945070720</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('volume', 'i64')  ('cumulative_volume', 'i64')
+          ASML.AS       2026-02-27            1010698                     938726541
+          ASML.AS       2026-03-02             871267                     939597808
+          ASML.AS       2026-03-03             941945                     940539753
+          ASML.AS       2026-03-04             714587                     941254340
+          ASML.AS       2026-03-05             778081                     942032421
+          ASML.AS       2026-03-06             857271                     942889692
+          ASML.AS       2026-03-09             689086                     943578778
+          ASML.AS       2026-03-10             800815                     944379593
+          ASML.AS       2026-03-11             562904                     944942497
+          ASML.AS       2026-03-12             128223                     945070720
+```
 
 ### Expression Arithmetic
 
 - **pl.col**: Reference a column by name. The foundation of all Polars expressions.
 - **Alias**: Give an expression result a column name (Polars).
 
+*Continuing expressions — chain methods on pl.col() results.*
 ```python
 # Continuing expressions — chain methods on pl.col() results
 ohlcv_pl.select(
@@ -2444,8 +1670,16 @@ ohlcv_pl.select(
     (pl.col("close") > pl.col("open")).alias("green_candle"),
 ).head(5)
 ```
+```text
+shape: (5, 5)
 
-<div><!-- shape: (5, 5) --><table><thead><tr><th>symbol</th><th>date</th><th>mid_price</th><th>range</th><th>green_candle</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>bool</td></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.68</td><td>2.07</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.04</td><td>1.23</td><td>true</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.365</td><td>1.55</td><td>true</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.54</td><td>0.98</td><td>false</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>58.01</td><td>0.97</td><td>false</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('mid_price', 'f64')  ('range', 'f64')  ('green_candle', 'bool')
+           ABI.BR       2021-01-04                57.680              2.07                     False
+           ABI.BR       2021-01-05                57.040              1.23                      True
+           ABI.BR       2021-01-06                58.365              1.55                      True
+           ABI.BR       2021-01-07                58.540              0.98                     False
+           ABI.BR       2021-01-08                58.010              0.97                     False
+```
 
 ### Folds
 
@@ -2453,6 +1687,7 @@ ohlcv_pl.select(
 - **pl.lit**: Create a constant/literal value as an expression.
 - **Fold**: Reduce across columns by applying a function cumulatively.
 
+*Horizontal expression — row-level computation across columns.*
 ```python
 # Horizontal expression — row-level computation across columns
 scores_pl.select(
@@ -2464,8 +1699,16 @@ scores_pl.select(
     ).alias("sum_zscores"),
 ).head(5)
 ```
+```text
+shape: (5, 2)
 
-<div><!-- shape: (5, 2) --><table><thead><tr><th>symbol</th><th>sum_zscores</th></tr><tr><td>str</td><td>f64</td></tr></thead><tbody><tr><td>BNP.PA</td><td>2.174528</td></tr><tr><td>DTE.DE</td><td>0.71405</td></tr><tr><td>IFX.DE</td><td>1.146613</td></tr><tr><td>ENR.DE</td><td>-1.646076</td></tr><tr><td>ABI.BR</td><td>1.318159</td></tr></tbody></table></div>
+('symbol', 'str')  ('sum_zscores', 'f64')
+           BNP.PA                2.174528
+           DTE.DE                0.714050
+           IFX.DE                1.146613
+           ENR.DE               -1.646076
+           ABI.BR                1.318159
+```
 
 ### Polars Selectors (cs module) — select columns by dtype
 
@@ -2473,28 +1716,49 @@ scores_pl.select(
 >
 > `import polars.selectors as cs` — select columns by **dtype** instead of name. `cs.numeric()` selects all numeric columns, `cs.float()` only floats, `cs.string()` only strings. Combine with `|` (union), `&` (intersection), `-` (difference). Use `cs.by_name()` to mix name-based and type-based selection.
 
+*cs.numeric() — select all numeric columns regardless of name.*
 ```python
 # cs.numeric() — select all numeric columns regardless of name
 scores_pl.select(cs.numeric()).head(3)
 ```
+```text
+shape: (3, 27)
 
-<div><!-- shape: (3, 27) --><table><thead><tr><th>id</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_value_rank</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>momentum_rank</th><th>implied_upside</th><th>recommendation_mean</th><th>sentiment_score</th><th>sentiment_rank</th><th>composite_score</th><th>composite_rank</th><th>sma_30_close</th><th>sma_90_close</th><th>market_cap</th><th>index_weight</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th></tr><tr><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>i64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>163</td><td>0.913389</td><td>1.26114</td><td>null</td><td>2.388962</td><td>1.521163</td><td>1</td><td>0.016123</td><td>1.00909</td><td>1.130264</td><td>0.082486</td><td>0.477966</td><td>16</td><td>0.153157</td><td>1.84211</td><td>0.052711</td><td>25</td><td>0.683947</td><td>1</td><td>92.085</td><td>81.181889</td><td>99751215104</td><td>0.019525</td><td>89.32</td><td>0.011437</td><td>-0.073156</td><td>0.105582</td></tr><tr><td>168</td><td>0.326587</td><td>0.387463</td><td>0.379532</td><td>-0.127867</td><td>0.241429</td><td>24</td><td>-0.205598</td><td>1.12065</td><td>1.112416</td><td>0.055524</td><td>0.685752</td><td>8</td><td>0.121212</td><td>1.33333</td><td>0.617835</td><td>10</td><td>0.515005</td><td>2</td><td>30.838</td><td>28.554556</td><td>164294311936</td><td>0.032159</td><td>33.0</td><td>0.011649</td><td>-0.019608</td><td>0.193059</td></tr><tr><td>174</td><td>0.509398</td><td>0.637215</td><td>0.677068</td><td>-0.696662</td><td>0.281755</td><td>22</td><td>0.000965</td><td>1.048244</td><td>1.198626</td><td>0.088845</td><td>0.675764</td><td>9</td><td>0.126408</td><td>1.375</td><td>0.579187</td><td>11</td><td>0.512235</td><td>3</td><td>43.480333</td><td>38.855556</td><td>57222533120</td><td>0.011201</td><td>43.945</td><td>0.054343</td><td>-0.06649</td><td>0.164723</td></tr></tbody></table></div>
+ ('id', 'i64')  ('pe_zscore', 'f64')  ('pb_zscore', 'f64')  ('ev_ebitda_zscore', 'f64')  ('yield_zscore', 'f64')  ('relative_value_score', 'f64')  ('relative_value_rank', 'i64')  ('relative_strength', 'f64')  ('sma_50_ratio', 'f64')  ('sma_200_ratio', 'f64')  ('dist_from_52w_high', 'f64')  ('momentum_score', 'f64')  ('momentum_rank', 'i64')  ('implied_upside', 'f64')  ('recommendation_mean', 'f64')  ('sentiment_score', 'f64')  ('sentiment_rank', 'i64')  ('composite_score', 'f64')  ('composite_rank', 'i64')  ('sma_30_close', 'f64')  ('sma_90_close', 'f64')  ('market_cap', 'i64')  ('index_weight', 'f64')  ('current_price', 'f64')  ('day_change_pct', 'f64')  ('five_day_change_pct', 'f64')  ('ytd_change_pct', 'f64')
+           163              0.913389              1.261140                          NaN                 2.388962                         1.521163                               1                      0.016123                 1.009090                  1.130264                       0.082486                   0.477966                        16                   0.153157                         1.84211                    0.052711                         25                    0.683947                          1                92.085000                81.181889            99751215104                 0.019525                    89.320                   0.011437                       -0.073156                   0.105582
+           168              0.326587              0.387463                     0.379532                -0.127867                         0.241429                              24                     -0.205598                 1.120650                  1.112416                       0.055524                   0.685752                         8                   0.121212                         1.33333                    0.617835                         10                    0.515005                          2                30.838000                28.554556           164294311936                 0.032159                    33.000                   0.011649                       -0.019608                   0.193059
+           174              0.509398              0.637215                     0.677068                -0.696662                         0.281755                              22                      0.000965                 1.048244                  1.198626                       0.088845                   0.675764                         9                   0.126408                         1.37500                    0.579187                         11                    0.512235                          3                43.480333                38.855556            57222533120                 0.011201                    43.945                   0.054343                       -0.066490                   0.164723
+```
 
+*Horizontal expression — row-level computation across columns.*
 ```python
 # Horizontal expression — row-level computation across columns
 scores_pl.select(cs.by_name("symbol", "score_date") | cs.float()).head(3)
 ```
+```text
+shape: (3, 23)
 
-<div><!-- shape: (3, 23) --><table><thead><tr><th>symbol</th><th>score_date</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>relative_strength</th><th>sma_50_ratio</th><th>sma_200_ratio</th><th>dist_from_52w_high</th><th>momentum_score</th><th>implied_upside</th><th>recommendation_mean</th><th>sentiment_score</th><th>composite_score</th><th>sma_30_close</th><th>sma_90_close</th><th>index_weight</th><th>current_price</th><th>day_change_pct</th><th>five_day_change_pct</th><th>ytd_change_pct</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>BNP.PA</td><td>2026-03-04</td><td>0.913389</td><td>1.26114</td><td>null</td><td>2.388962</td><td>1.521163</td><td>0.016123</td><td>1.00909</td><td>1.130264</td><td>0.082486</td><td>0.477966</td><td>0.153157</td><td>1.84211</td><td>0.052711</td><td>0.683947</td><td>92.085</td><td>81.181889</td><td>0.019525</td><td>89.32</td><td>0.011437</td><td>-0.073156</td><td>0.105582</td></tr><tr><td>DTE.DE</td><td>2026-03-04</td><td>0.326587</td><td>0.387463</td><td>0.379532</td><td>-0.127867</td><td>0.241429</td><td>-0.205598</td><td>1.12065</td><td>1.112416</td><td>0.055524</td><td>0.685752</td><td>0.121212</td><td>1.33333</td><td>0.617835</td><td>0.515005</td><td>30.838</td><td>28.554556</td><td>0.032159</td><td>33.0</td><td>0.011649</td><td>-0.019608</td><td>0.193059</td></tr><tr><td>IFX.DE</td><td>2026-03-04</td><td>0.509398</td><td>0.637215</td><td>0.677068</td><td>-0.696662</td><td>0.281755</td><td>0.000965</td><td>1.048244</td><td>1.198626</td><td>0.088845</td><td>0.675764</td><td>0.126408</td><td>1.375</td><td>0.579187</td><td>0.512235</td><td>43.480333</td><td>38.855556</td><td>0.011201</td><td>43.945</td><td>0.054343</td><td>-0.06649</td><td>0.164723</td></tr></tbody></table></div>
+('symbol', 'str') ('score_date', 'date')  ('pe_zscore', 'f64')  ('pb_zscore', 'f64')  ('ev_ebitda_zscore', 'f64')  ('yield_zscore', 'f64')  ('relative_value_score', 'f64')  ('relative_strength', 'f64')  ('sma_50_ratio', 'f64')  ('sma_200_ratio', 'f64')  ('dist_from_52w_high', 'f64')  ('momentum_score', 'f64')  ('implied_upside', 'f64')  ('recommendation_mean', 'f64')  ('sentiment_score', 'f64')  ('composite_score', 'f64')  ('sma_30_close', 'f64')  ('sma_90_close', 'f64')  ('index_weight', 'f64')  ('current_price', 'f64')  ('day_change_pct', 'f64')  ('five_day_change_pct', 'f64')  ('ytd_change_pct', 'f64')
+           BNP.PA             2026-03-04              0.913389              1.261140                          NaN                 2.388962                         1.521163                      0.016123                 1.009090                  1.130264                       0.082486                   0.477966                   0.153157                         1.84211                    0.052711                    0.683947                92.085000                81.181889                 0.019525                    89.320                   0.011437                       -0.073156                   0.105582
+           DTE.DE             2026-03-04              0.326587              0.387463                     0.379532                -0.127867                         0.241429                     -0.205598                 1.120650                  1.112416                       0.055524                   0.685752                   0.121212                         1.33333                    0.617835                    0.515005                30.838000                28.554556                 0.032159                    33.000                   0.011649                       -0.019608                   0.193059
+           IFX.DE             2026-03-04              0.509398              0.637215                     0.677068                -0.696662                         0.281755                      0.000965                 1.048244                  1.198626                       0.088845                   0.675764                   0.126408                         1.37500                    0.579187                    0.512235                43.480333                38.855556                 0.011201                    43.945                   0.054343                       -0.066490                   0.164723
+```
 
+*Horizontal expression — row-level computation across columns.*
 ```python
 # Horizontal expression — row-level computation across columns
 scores_pl.select(cs.contains("score")).head(3)
 ```
+```text
+shape: (3, 10)
 
-<div><!-- shape: (3, 10) --><table><thead><tr><th>score_date</th><th>pe_zscore</th><th>pb_zscore</th><th>ev_ebitda_zscore</th><th>yield_zscore</th><th>relative_value_score</th><th>momentum_score</th><th>sentiment_score</th><th>composite_score</th><th>_scored_at</th></tr><tr><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td><td>datetime[ns]</td></tr></thead><tbody><tr><td>2026-03-04</td><td>0.913389</td><td>1.26114</td><td>null</td><td>2.388962</td><td>1.521163</td><td>0.477966</td><td>0.052711</td><td>0.683947</td><td>2026-03-04 22:40:25.489180</td></tr><tr><td>2026-03-04</td><td>0.326587</td><td>0.387463</td><td>0.379532</td><td>-0.127867</td><td>0.241429</td><td>0.685752</td><td>0.617835</td><td>0.515005</td><td>2026-03-04 22:40:25.489180</td></tr><tr><td>2026-03-04</td><td>0.509398</td><td>0.637215</td><td>0.677068</td><td>-0.696662</td><td>0.281755</td><td>0.675764</td><td>0.579187</td><td>0.512235</td><td>2026-03-04 22:40:25.489180</td></tr></tbody></table></div>
+('score_date', 'date')  ('pe_zscore', 'f64')  ('pb_zscore', 'f64')  ('ev_ebitda_zscore', 'f64')  ('yield_zscore', 'f64')  ('relative_value_score', 'f64')  ('momentum_score', 'f64')  ('sentiment_score', 'f64')  ('composite_score', 'f64') ('_scored_at', 'datetime[ns]')
+            2026-03-04              0.913389              1.261140                          NaN                 2.388962                         1.521163                   0.477966                    0.052711                    0.683947     2026-03-04 22:40:25.489180
+            2026-03-04              0.326587              0.387463                     0.379532                -0.127867                         0.241429                   0.685752                    0.617835                    0.515005     2026-03-04 22:40:25.489180
+            2026-03-04              0.509398              0.637215                     0.677068                -0.696662                         0.281755                   0.675764                    0.579187                    0.512235     2026-03-04 22:40:25.489180
+```
 
-## Summary
+## Polars Expression Lookup
 
 | Concept | Polars | Pandas Equivalent |
 |---|---|---|
@@ -2528,6 +1792,7 @@ Imperative code mutates step by step; chained (declarative) code reads as a pipe
 
 _Filters OHLCV to ASML.AS, computes `daily_return` as a separate in-place assignment, then re-sorts — using the same variable `df` at each step, illustrating how imperative style accumulates stale intermediate state._
 
+*Imperative: each step is a separate statement, intermediate variable "df" is reused.*
 ```python
 # Imperative: each step is a separate statement, intermediate variable "df" is reused
 df = ohlcv_pd[ohlcv_pd["symbol"] == "ASML.AS"].copy()
@@ -2535,90 +1800,19 @@ df["daily_return"] = (df["close"] - df["open"]) / df["open"] * 100
 df = df.sort_values("date", ascending=False)
 display(df[["symbol", "date", "close", "daily_return"]].head(10))
 ```
-
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>date</th>
-<th>close</th>
-<th>daily_return</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>11964</th>
-<td>ASML.AS</td>
-<td>2026-03-12</td>
-<td>1190.8</td>
-<td>-0.334784</td>
-</tr>
-<tr>
-<th>11963</th>
-<td>ASML.AS</td>
-<td>2026-03-11</td>
-<td>1198.8</td>
-<td>0.875126</td>
-</tr>
-<tr>
-<th>11962</th>
-<td>ASML.AS</td>
-<td>2026-03-10</td>
-<td>1200.0</td>
-<td>0.976102</td>
-</tr>
-<tr>
-<th>11961</th>
-<td>ASML.AS</td>
-<td>2026-03-09</td>
-<td>1147.6</td>
-<td>7.052239</td>
-</tr>
-<tr>
-<th>11960</th>
-<td>ASML.AS</td>
-<td>2026-03-06</td>
-<td>1147.0</td>
-<td>-3.288364</td>
-</tr>
-<tr>
-<th>11959</th>
-<td>ASML.AS</td>
-<td>2026-03-05</td>
-<td>1186.0</td>
-<td>-1.051226</td>
-</tr>
-<tr>
-<th>11958</th>
-<td>ASML.AS</td>
-<td>2026-03-04</td>
-<td>1199.8</td>
-<td>2.459436</td>
-</tr>
-<tr>
-<th>11957</th>
-<td>ASML.AS</td>
-<td>2026-03-03</td>
-<td>1161.8</td>
-<td>-2.090005</td>
-</tr>
-<tr>
-<th>11956</th>
-<td>ASML.AS</td>
-<td>2026-03-02</td>
-<td>1210.4</td>
-<td>1.475520</td>
-</tr>
-<tr>
-<th>11955</th>
-<td>ASML.AS</td>
-<td>2026-02-27</td>
-<td>1233.4</td>
-<td>-0.113379</td>
-</tr>
-</tbody>
-</table>
+```text
+symbol       date  close  daily_return
+11964 ASML.AS 2026-03-12 1190.8     -0.334784
+11963 ASML.AS 2026-03-11 1198.8      0.875126
+11962 ASML.AS 2026-03-10 1200.0      0.976102
+11961 ASML.AS 2026-03-09 1147.6      7.052239
+11960 ASML.AS 2026-03-06 1147.0     -3.288364
+11959 ASML.AS 2026-03-05 1186.0     -1.051226
+11958 ASML.AS 2026-03-04 1199.8      2.459436
+11957 ASML.AS 2026-03-03 1161.8     -2.090005
+11956 ASML.AS 2026-03-02 1210.4      1.475520
+11955 ASML.AS 2026-02-27 1233.4     -0.113379
+```
 
 #### Pandas — chained declarative style with .pipe()
 
@@ -2628,6 +1822,7 @@ display(df[["symbol", "date", "close", "daily_return"]].head(10))
 
 _Rewrites the same ASML.AS transformation as a single Pandas method chain: `.query()` → `.assign()` → `.sort_values()` → `.head()` → column selection, producing identical output with no mutable intermediate variables._
 
+*Runs `result_pd = (` and shows the resulting output.*
 ```python
 result_pd = (
     ohlcv_pd
@@ -2638,92 +1833,19 @@ result_pd = (
     [["symbol", "date", "close", "daily_return"]])
 display(result_pd)
 ```
-
-<div>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>date</th>
-<th>close</th>
-<th>daily_return</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>11964</th>
-<td>ASML.AS</td>
-<td>2026-03-12</td>
-<td>1190.8</td>
-<td>-0.33</td>
-</tr>
-<tr>
-<th>11963</th>
-<td>ASML.AS</td>
-<td>2026-03-11</td>
-<td>1198.8</td>
-<td>0.88</td>
-</tr>
-<tr>
-<th>11962</th>
-<td>ASML.AS</td>
-<td>2026-03-10</td>
-<td>1200.0</td>
-<td>0.98</td>
-</tr>
-<tr>
-<th>11961</th>
-<td>ASML.AS</td>
-<td>2026-03-09</td>
-<td>1147.6</td>
-<td>7.05</td>
-</tr>
-<tr>
-<th>11960</th>
-<td>ASML.AS</td>
-<td>2026-03-06</td>
-<td>1147.0</td>
-<td>-3.29</td>
-</tr>
-<tr>
-<th>11959</th>
-<td>ASML.AS</td>
-<td>2026-03-05</td>
-<td>1186.0</td>
-<td>-1.05</td>
-</tr>
-<tr>
-<th>11958</th>
-<td>ASML.AS</td>
-<td>2026-03-04</td>
-<td>1199.8</td>
-<td>2.46</td>
-</tr>
-<tr>
-<th>11957</th>
-<td>ASML.AS</td>
-<td>2026-03-03</td>
-<td>1161.8</td>
-<td>-2.09</td>
-</tr>
-<tr>
-<th>11956</th>
-<td>ASML.AS</td>
-<td>2026-03-02</td>
-<td>1210.4</td>
-<td>1.48</td>
-</tr>
-<tr>
-<th>11955</th>
-<td>ASML.AS</td>
-<td>2026-02-27</td>
-<td>1233.4</td>
-<td>-0.11</td>
-</tr>
-</tbody>
-</table>
-</div>
+```text
+symbol       date  close  daily_return
+11964 ASML.AS 2026-03-12 1190.8         -0.33
+11963 ASML.AS 2026-03-11 1198.8          0.88
+11962 ASML.AS 2026-03-10 1200.0          0.98
+11961 ASML.AS 2026-03-09 1147.6          7.05
+11960 ASML.AS 2026-03-06 1147.0         -3.29
+11959 ASML.AS 2026-03-05 1186.0         -1.05
+11958 ASML.AS 2026-03-04 1199.8          2.46
+11957 ASML.AS 2026-03-03 1161.8         -2.09
+11956 ASML.AS 2026-03-02 1210.4          1.48
+11955 ASML.AS 2026-02-27 1233.4         -0.11
+```
 
 #### Polars — natural chaining with expressions
 
@@ -2733,6 +1855,7 @@ display(result_pd)
 
 _Reproduces the ASML.AS daily return pipeline in Polars as a clean top-to-bottom chain: `.filter()` → `.with_columns()` → `.sort()` → `.head()` → `.select()`, demonstrating that no `.pipe()` or `.copy()` is needed._
 
+*Runs `result_pl = (` and shows the resulting output.*
 ```python
 result_pl = (
     ohlcv_pl
@@ -2746,8 +1869,21 @@ result_pl = (
 )
 display(result_pl)
 ```
+```text
+shape: (10, 4)
 
-<div><!-- shape: (10, 4) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>daily_return</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-03-12</td><td>1190.8</td><td>-0.33</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>1198.8</td><td>0.88</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>1200.0</td><td>0.98</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>1147.6</td><td>7.05</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>1147.0</td><td>-3.29</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>1186.0</td><td>-1.05</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>1199.8</td><td>2.46</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>1161.8</td><td>-2.09</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>1210.4</td><td>1.48</td></tr><tr><td>ASML.AS</td><td>2026-02-27</td><td>1233.4</td><td>-0.11</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')  ('daily_return', 'f64')
+          ASML.AS       2026-03-12            1190.8                    -0.33
+          ASML.AS       2026-03-11            1198.8                     0.88
+          ASML.AS       2026-03-10            1200.0                     0.98
+          ASML.AS       2026-03-09            1147.6                     7.05
+          ASML.AS       2026-03-06            1147.0                    -3.29
+          ASML.AS       2026-03-05            1186.0                    -1.05
+          ASML.AS       2026-03-04            1199.8                     2.46
+          ASML.AS       2026-03-03            1161.8                    -2.09
+          ASML.AS       2026-03-02            1210.4                     1.48
+          ASML.AS       2026-02-27            1233.4                    -0.11
+```
 
 ---
 
@@ -2761,6 +1897,7 @@ display(result_pl)
 
 _Defines two reusable Pandas transform functions — `add_moving_averages()` (7-day and 30-day SMAs via `.rolling().mean()`) and `flag_high_volume()` (boolean flag for volume > 2× average) — and composes them into the ASML.AS pipeline using `.pipe()`._
 
+*Reusable transform functions — each takes a DataFrame and returns a DataFrame.*
 ```python
 # Reusable transform functions — each takes a DataFrame and returns a DataFrame
 def add_moving_averages(df, windows=[7, 30]):
@@ -2783,114 +1920,19 @@ result_pd = (
 )
 display(result_pd)
 ```
-
-<div>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>date</th>
-<th>close</th>
-<th>sma_7</th>
-<th>sma_30</th>
-<th>high_volume</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>11955</th>
-<td>ASML.AS</td>
-<td>2026-02-27</td>
-<td>1233.4</td>
-<td>1251.514286</td>
-<td>1201.400000</td>
-<td>False</td>
-</tr>
-<tr>
-<th>11956</th>
-<td>ASML.AS</td>
-<td>2026-03-02</td>
-<td>1210.4</td>
-<td>1247.542857</td>
-<td>1204.400000</td>
-<td>False</td>
-</tr>
-<tr>
-<th>11957</th>
-<td>ASML.AS</td>
-<td>2026-03-03</td>
-<td>1161.8</td>
-<td>1234.142857</td>
-<td>1205.126667</td>
-<td>False</td>
-</tr>
-<tr>
-<th>11958</th>
-<td>ASML.AS</td>
-<td>2026-03-04</td>
-<td>1199.8</td>
-<td>1227.085714</td>
-<td>1206.626667</td>
-<td>False</td>
-</tr>
-<tr>
-<th>11959</th>
-<td>ASML.AS</td>
-<td>2026-03-05</td>
-<td>1186.0</td>
-<td>1216.028571</td>
-<td>1206.946667</td>
-<td>False</td>
-</tr>
-<tr>
-<th>11960</th>
-<td>ASML.AS</td>
-<td>2026-03-06</td>
-<td>1147.0</td>
-<td>1195.828571</td>
-<td>1205.906667</td>
-<td>False</td>
-</tr>
-<tr>
-<th>11961</th>
-<td>ASML.AS</td>
-<td>2026-03-09</td>
-<td>1147.6</td>
-<td>1183.714286</td>
-<td>1204.893333</td>
-<td>False</td>
-</tr>
-<tr>
-<th>11962</th>
-<td>ASML.AS</td>
-<td>2026-03-10</td>
-<td>1200.0</td>
-<td>1178.942857</td>
-<td>1204.306667</td>
-<td>False</td>
-</tr>
-<tr>
-<th>11963</th>
-<td>ASML.AS</td>
-<td>2026-03-11</td>
-<td>1198.8</td>
-<td>1177.285714</td>
-<td>1204.453333</td>
-<td>False</td>
-</tr>
-<tr>
-<th>11964</th>
-<td>ASML.AS</td>
-<td>2026-03-12</td>
-<td>1190.8</td>
-<td>1181.428571</td>
-<td>1204.413333</td>
-<td>False</td>
-</tr>
-</tbody>
-</table>
-</div>
+```text
+symbol       date  close       sma_7      sma_30  high_volume
+11955 ASML.AS 2026-02-27 1233.4 1251.514286 1201.400000        False
+11956 ASML.AS 2026-03-02 1210.4 1247.542857 1204.400000        False
+11957 ASML.AS 2026-03-03 1161.8 1234.142857 1205.126667        False
+11958 ASML.AS 2026-03-04 1199.8 1227.085714 1206.626667        False
+11959 ASML.AS 2026-03-05 1186.0 1216.028571 1206.946667        False
+11960 ASML.AS 2026-03-06 1147.0 1195.828571 1205.906667        False
+11961 ASML.AS 2026-03-09 1147.6 1183.714286 1204.893333        False
+11962 ASML.AS 2026-03-10 1200.0 1178.942857 1204.306667        False
+11963 ASML.AS 2026-03-11 1198.8 1177.285714 1204.453333        False
+11964 ASML.AS 2026-03-12 1190.8 1181.428571 1204.413333        False
+```
 
 #### Polars — reusable functions with expression variables
 
@@ -2900,6 +1942,7 @@ display(result_pd)
 
 _Stores the daily return, 7-day SMA, and 30-day SMA computations as named Polars expression variables (`daily_return_expr`, `sma_7_expr`, `sma_30_expr`), then applies all three in a single `.with_columns()` call on the ASML.AS pipeline — demonstrating expression reuse without `.pipe()`._
 
+*Reusable expressions — define once, use in any context.*
 ```python
 # Reusable expressions — define once, use in any context
 daily_return_expr = ((pl.col("close") - pl.col("open")) / pl.col("open") * 100).round(2).alias("daily_return")
@@ -2916,11 +1959,25 @@ result_pl = (
 )
 display(result_pl)
 ```
+```text
+shape: (10, 6)
 
-<div><!-- shape: (10, 6) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>daily_return</th><th>sma_7</th><th>sma_30</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-02-27</td><td>1233.4</td><td>-0.11</td><td>1251.514286</td><td>1201.4</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>1210.4</td><td>1.48</td><td>1247.542857</td><td>1204.4</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>1161.8</td><td>-2.09</td><td>1234.142857</td><td>1205.126667</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>1199.8</td><td>2.46</td><td>1227.085714</td><td>1206.626667</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>1186.0</td><td>-1.05</td><td>1216.028571</td><td>1206.946667</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>1147.0</td><td>-3.29</td><td>1195.828571</td><td>1205.906667</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>1147.6</td><td>7.05</td><td>1183.714286</td><td>1204.893333</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>1200.0</td><td>0.98</td><td>1178.942857</td><td>1204.306667</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>1198.8</td><td>0.88</td><td>1177.285714</td><td>1204.453333</td></tr><tr><td>ASML.AS</td><td>2026-03-12</td><td>1190.8</td><td>-0.33</td><td>1181.428571</td><td>1204.413333</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')  ('daily_return', 'f64')  ('sma_7', 'f64')  ('sma_30', 'f64')
+          ASML.AS       2026-02-27            1233.4                    -0.11       1251.514286        1201.400000
+          ASML.AS       2026-03-02            1210.4                     1.48       1247.542857        1204.400000
+          ASML.AS       2026-03-03            1161.8                    -2.09       1234.142857        1205.126667
+          ASML.AS       2026-03-04            1199.8                     2.46       1227.085714        1206.626667
+          ASML.AS       2026-03-05            1186.0                    -1.05       1216.028571        1206.946667
+          ASML.AS       2026-03-06            1147.0                    -3.29       1195.828571        1205.906667
+          ASML.AS       2026-03-09            1147.6                     7.05       1183.714286        1204.893333
+          ASML.AS       2026-03-10            1200.0                     0.98       1178.942857        1204.306667
+          ASML.AS       2026-03-11            1198.8                     0.88       1177.285714        1204.453333
+          ASML.AS       2026-03-12            1190.8                    -0.33       1181.428571        1204.413333
+```
 
 ### Recipe Pipeline: Full Example
 
+*Pandas.*
 ```python
 # Pandas
 result_pd = (
@@ -2938,186 +1995,27 @@ result_pd = (
 )
 display(result_pd)
 ```
+```text
+symbol                      short_name                 sector  avg_return  positive_days  total_days  win_rate
+13  SAP.DE                          SAP SE             Technology    0.089682            702        1324      53.0
+ 8  ENR.DE               Siemens Energy AG            Industrials    0.050090            641        1324      48.4
+14  SIE.DE                      SIEMENS AG            Industrials    0.041032            687        1324      51.9
+ 5  DB1.DE              DEUTSCHE BOERSE AG     Financial Services    0.036636            658        1324      49.7
+12  RHM.DE                  RHEINMETALL AG            Industrials    0.033806            640        1324      48.3
+11 MUV2.DE MUENCHENER RUECKVERS.-GES. AG N     Financial Services    0.029580            670        1324      50.6
+ 7  DTE.DE             DEUTSCHE TELEKOM AG Communication Services    0.026986            683        1324      51.6
+ 6  DHL.DE                DEUTSCHE POST AG            Industrials    0.019929            688        1324      52.0
+10  MBG.DE          Mercedes-Benz Group AG      Consumer Cyclical    0.009697            648        1324      48.9
+ 4  BMW.DE     BAYERISCHE MOTOREN WERKE AG      Consumer Cyclical    0.009107            657        1324      49.6
+ 1  ALV.DE                      Allianz SE     Financial Services    0.007040            661        1324      49.9
+ 2  BAS.DE                         BASF SE        Basic Materials   -0.017599            635        1324      48.0
+ 0  ADS.DE                       adidas AG      Consumer Cyclical   -0.018576            609        1324      46.0
+ 3 BAYN.DE                        Bayer AG             Healthcare   -0.027584            636        1324      48.0
+ 9  IFX.DE        INFINEON TECHNOLOGIES AG             Technology   -0.054771            622        1324      47.0
+15  VOW.DE                   VOLKSWAGEN AG      Consumer Cyclical   -0.063948            599        1324      45.2
+```
 
-<div>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>symbol</th>
-<th>short_name</th>
-<th>sector</th>
-<th>avg_return</th>
-<th>positive_days</th>
-<th>total_days</th>
-<th>win_rate</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th>13</th>
-<td>SAP.DE</td>
-<td>SAP SE</td>
-<td>Technology</td>
-<td>0.089682</td>
-<td>702</td>
-<td>1324</td>
-<td>53.0</td>
-</tr>
-<tr>
-<th>8</th>
-<td>ENR.DE</td>
-<td>Siemens Energy AG</td>
-<td>Industrials</td>
-<td>0.050090</td>
-<td>641</td>
-<td>1324</td>
-<td>48.4</td>
-</tr>
-<tr>
-<th>14</th>
-<td>SIE.DE</td>
-<td>SIEMENS AG</td>
-<td>Industrials</td>
-<td>0.041032</td>
-<td>687</td>
-<td>1324</td>
-<td>51.9</td>
-</tr>
-<tr>
-<th>5</th>
-<td>DB1.DE</td>
-<td>DEUTSCHE BOERSE AG</td>
-<td>Financial Services</td>
-<td>0.036636</td>
-<td>658</td>
-<td>1324</td>
-<td>49.7</td>
-</tr>
-<tr>
-<th>12</th>
-<td>RHM.DE</td>
-<td>RHEINMETALL AG</td>
-<td>Industrials</td>
-<td>0.033806</td>
-<td>640</td>
-<td>1324</td>
-<td>48.3</td>
-</tr>
-<tr>
-<th>11</th>
-<td>MUV2.DE</td>
-<td>MUENCHENER RUECKVERS.-GES. AG N</td>
-<td>Financial Services</td>
-<td>0.029580</td>
-<td>670</td>
-<td>1324</td>
-<td>50.6</td>
-</tr>
-<tr>
-<th>7</th>
-<td>DTE.DE</td>
-<td>DEUTSCHE TELEKOM AG</td>
-<td>Communication Services</td>
-<td>0.026986</td>
-<td>683</td>
-<td>1324</td>
-<td>51.6</td>
-</tr>
-<tr>
-<th>6</th>
-<td>DHL.DE</td>
-<td>DEUTSCHE POST AG</td>
-<td>Industrials</td>
-<td>0.019929</td>
-<td>688</td>
-<td>1324</td>
-<td>52.0</td>
-</tr>
-<tr>
-<th>10</th>
-<td>MBG.DE</td>
-<td>Mercedes-Benz Group AG</td>
-<td>Consumer Cyclical</td>
-<td>0.009697</td>
-<td>648</td>
-<td>1324</td>
-<td>48.9</td>
-</tr>
-<tr>
-<th>4</th>
-<td>BMW.DE</td>
-<td>BAYERISCHE MOTOREN WERKE AG</td>
-<td>Consumer Cyclical</td>
-<td>0.009107</td>
-<td>657</td>
-<td>1324</td>
-<td>49.6</td>
-</tr>
-<tr>
-<th>1</th>
-<td>ALV.DE</td>
-<td>Allianz SE</td>
-<td>Financial Services</td>
-<td>0.007040</td>
-<td>661</td>
-<td>1324</td>
-<td>49.9</td>
-</tr>
-<tr>
-<th>2</th>
-<td>BAS.DE</td>
-<td>BASF SE</td>
-<td>Basic Materials</td>
-<td>-0.017599</td>
-<td>635</td>
-<td>1324</td>
-<td>48.0</td>
-</tr>
-<tr>
-<th>0</th>
-<td>ADS.DE</td>
-<td>adidas AG</td>
-<td>Consumer Cyclical</td>
-<td>-0.018576</td>
-<td>609</td>
-<td>1324</td>
-<td>46.0</td>
-</tr>
-<tr>
-<th>3</th>
-<td>BAYN.DE</td>
-<td>Bayer AG</td>
-<td>Healthcare</td>
-<td>-0.027584</td>
-<td>636</td>
-<td>1324</td>
-<td>48.0</td>
-</tr>
-<tr>
-<th>9</th>
-<td>IFX.DE</td>
-<td>INFINEON TECHNOLOGIES AG</td>
-<td>Technology</td>
-<td>-0.054771</td>
-<td>622</td>
-<td>1324</td>
-<td>47.0</td>
-</tr>
-<tr>
-<th>15</th>
-<td>VOW.DE</td>
-<td>VOLKSWAGEN AG</td>
-<td>Consumer Cyclical</td>
-<td>-0.063948</td>
-<td>599</td>
-<td>1324</td>
-<td>45.2</td>
-</tr>
-</tbody>
-</table>
-</div>
-
+*Polars.*
 ```python
 # Polars
 result_pl = (
@@ -3139,13 +2037,28 @@ result_pl = (
 )
 display(result_pl)
 ```
+```text
+shape: (16, 7)
 
-<div><!-- shape: (16, 7) --><table><thead><tr><th>symbol</th><th>short_name</th><th>sector</th><th>avg_return</th><th>positive_days</th><th>total_days</th><th>win_rate</th></tr><tr><td>str</td><td>str</td><td>str</td><td>f64</td><td>u32</td><td>u32</td><td>f64</td></tr></thead><tbody><tr><td>SAP.DE</td><td>SAP SE</td><td>Technology</td><td>0.0897</td><td>702</td><td>1324</td><td>53.0</td></tr><tr><td>ENR.DE</td><td>Siemens Energy AG</td><td>Industrials</td><td>0.0501</td><td>641</td><td>1324</td><td>48.4</td></tr><tr><td>SIE.DE</td><td>SIEMENS AG</td><td>Industrials</td><td>0.041</td><td>687</td><td>1324</td><td>51.9</td></tr><tr><td>DB1.DE</td><td>DEUTSCHE BOERSE AG</td><td>Financial Services</td><td>0.0366</td><td>658</td><td>1324</td><td>49.7</td></tr><tr><td>RHM.DE</td><td>RHEINMETALL AG</td><td>Industrials</td><td>0.0338</td><td>640</td><td>1324</td><td>48.3</td></tr><tr><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td></tr><tr><td>BAS.DE</td><td>BASF SE</td><td>Basic Materials</td><td>-0.0176</td><td>635</td><td>1324</td><td>48.0</td></tr><tr><td>ADS.DE</td><td>adidas AG</td><td>Consumer Cyclical</td><td>-0.0186</td><td>609</td><td>1324</td><td>46.0</td></tr><tr><td>BAYN.DE</td><td>Bayer AG</td><td>Healthcare</td><td>-0.0276</td><td>636</td><td>1324</td><td>48.0</td></tr><tr><td>IFX.DE</td><td>INFINEON TECHNOLOGIES AG</td><td>Technology</td><td>-0.0548</td><td>622</td><td>1324</td><td>47.0</td></tr><tr><td>VOW.DE</td><td>VOLKSWAGEN AG</td><td>Consumer Cyclical</td><td>-0.0639</td><td>599</td><td>1324</td><td>45.2</td></tr></tbody></table></div>
+('symbol', 'str')    ('short_name', 'str')  ('sector', 'str') ('avg_return', 'f64') ('positive_days', 'u32') ('total_days', 'u32') ('win_rate', 'f64')
+           SAP.DE                   SAP SE         Technology                0.0897                      702                  1324                53.0
+           ENR.DE        Siemens Energy AG        Industrials                0.0501                      641                  1324                48.4
+           SIE.DE               SIEMENS AG        Industrials                 0.041                      687                  1324                51.9
+           DB1.DE       DEUTSCHE BOERSE AG Financial Services                0.0366                      658                  1324                49.7
+           RHM.DE           RHEINMETALL AG        Industrials                0.0338                      640                  1324                48.3
+                …                        …                  …                     …                        …                     …                   …
+           BAS.DE                  BASF SE    Basic Materials               -0.0176                      635                  1324                48.0
+           ADS.DE                adidas AG  Consumer Cyclical               -0.0186                      609                  1324                46.0
+          BAYN.DE                 Bayer AG         Healthcare               -0.0276                      636                  1324                48.0
+           IFX.DE INFINEON TECHNOLOGIES AG         Technology               -0.0548                      622                  1324                47.0
+           VOW.DE            VOLKSWAGEN AG  Consumer Cyclical               -0.0639                      599                  1324                45.2
+```
 
 ### Clean Code: Breaking Long Chains
 
 - **With Columns**: Add new columns or replace existing ones. All original columns are kept.
 
+*Breaking long chains — assign intermediate steps to named variables.*
 ```python
 # Breaking long chains — assign intermediate steps to named variables
 filtered = ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date")
@@ -3156,10 +2069,23 @@ enriched = filtered.with_columns(
 final = enriched.select("symbol", "date", "close", "daily_return", "range").tail(10)
 display(final)
 ```
+```text
+shape: (10, 5)
 
-<div><!-- shape: (10, 5) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>daily_return</th><th>range</th></tr><tr><td>str</td><td>date</td><td>f64</td><td>f64</td><td>f64</td></tr></thead><tbody><tr><td>ASML.AS</td><td>2026-02-27</td><td>1233.4</td><td>-0.11</td><td>38.2</td></tr><tr><td>ASML.AS</td><td>2026-03-02</td><td>1210.4</td><td>1.48</td><td>51.4</td></tr><tr><td>ASML.AS</td><td>2026-03-03</td><td>1161.8</td><td>-2.09</td><td>43.4</td></tr><tr><td>ASML.AS</td><td>2026-03-04</td><td>1199.8</td><td>2.46</td><td>43.2</td></tr><tr><td>ASML.AS</td><td>2026-03-05</td><td>1186.0</td><td>-1.05</td><td>37.0</td></tr><tr><td>ASML.AS</td><td>2026-03-06</td><td>1147.0</td><td>-3.29</td><td>79.8</td></tr><tr><td>ASML.AS</td><td>2026-03-09</td><td>1147.6</td><td>7.05</td><td>87.4</td></tr><tr><td>ASML.AS</td><td>2026-03-10</td><td>1200.0</td><td>0.98</td><td>36.2</td></tr><tr><td>ASML.AS</td><td>2026-03-11</td><td>1198.8</td><td>0.88</td><td>36.8</td></tr><tr><td>ASML.AS</td><td>2026-03-12</td><td>1190.8</td><td>-0.33</td><td>14.4</td></tr></tbody></table></div>
+('symbol', 'str') ('date', 'date')  ('close', 'f64')  ('daily_return', 'f64')  ('range', 'f64')
+          ASML.AS       2026-02-27            1233.4                    -0.11              38.2
+          ASML.AS       2026-03-02            1210.4                     1.48              51.4
+          ASML.AS       2026-03-03            1161.8                    -2.09              43.4
+          ASML.AS       2026-03-04            1199.8                     2.46              43.2
+          ASML.AS       2026-03-05            1186.0                    -1.05              37.0
+          ASML.AS       2026-03-06            1147.0                    -3.29              79.8
+          ASML.AS       2026-03-09            1147.6                     7.05              87.4
+          ASML.AS       2026-03-10            1200.0                     0.98              36.2
+          ASML.AS       2026-03-11            1198.8                     0.88              36.8
+          ASML.AS       2026-03-12            1190.8                    -0.33              14.4
+```
 
-## Summary
+## Method Chaining Lookup
 
 | Feature | Pandas | Polars |
 |---|---|---|
@@ -3171,46 +2097,228 @@ display(final)
 ---
 
 
-## Warnings
+## Risk Reference
 
-> [!warning] `.apply()` and `.map_elements()` are 10–1000x slower than native expressions
-> Both methods invoke a Python function per row. On a 1M-row DataFrame, a vectorized expression takes milliseconds; `.apply()` takes seconds to minutes. Always check whether a built-in expression can replace the lambda.
+#### Prefer expressions before row callbacks
 
-> [!warning] Forgetting `.alias()` in Polars silently overwrites the source column
-> If an expression references `pl.col("close")` and the result is not aliased, the output column is named `"close"` — overwriting the original. Always chain `.alias("new_name")` for derived columns.
+Native transforms such as `.assign()` and `.with_columns()` keep work inside vectorized execution. If `.apply()` or `.map_elements()` produce the same business result as column arithmetic, keep the expression form and treat the callback as the last resort.
 
-> [!warning] `SettingWithCopyWarning` in Pandas signals a real bug, not a cosmetic issue
-> `df[mask]["col"] = value` modifies a temporary copy, not the original DataFrame. Use `df.loc[mask, "col"] = value` or `df.assign()` instead.
+*Compares a row callback with the equivalent vectorized arithmetic on a three-row sample.*
+```python
+scores_pd[["symbol", "current_price"]].head(3).assign(
+    scaled_apply=lambda d: d["current_price"].apply(lambda x: round(x * 1.01, 2)),
+    scaled_vectorized=lambda d: (d["current_price"] * 1.01).round(2),
+)
+```
+```text
+symbol  current_price  scaled_apply  scaled_vectorized
+BNP.PA         89.320         90.21              90.21
+DTE.DE         33.000         33.33              33.33
+IFX.DE         43.945         44.38              44.38
+```
 
-> [!warning] Polars `when/then` without `.otherwise()` fills non-matching rows with `null`
-> If you omit `.otherwise()`, rows that don't match any condition become `null`. This silently introduces missing data that breaks downstream aggregations.
+#### Always close a conditional with `.otherwise()`
 
-> [!warning] Type coercion in arithmetic can silently change semantics
-> Dividing two integer columns produces a float column. Multiplying a float by an integer produces a float. If downstream code expects integer types (e.g., for join keys or indexing), cast explicitly after the operation.
+A `pl.when().then()` chain without `.otherwise()` writes `null` into every non-matching row. That fallback becomes a data-quality decision, not a formatting detail.
 
-> [!warning] Chained transforms can mask intermediate errors
-> In a long chain like `.filter().with_columns().sort().select()`, an error in the middle produces a stack trace pointing to the chain start, not the failing step. Use intermediate variables for debugging.
+*Shows how a missing fallback branch leaves unmatched rows as `null`.*
+```python
+ohlcv_pl.select("symbol", "date", "open", "close").head(5).with_columns(
+    pl.when(pl.col("close") > pl.col("open")).then(pl.lit("up")).alias("move")
+)
+```
+```text
+shape: (5, 5)
+┌────────┬────────────┬───────┬───────┬──────┐
+│ symbol ┆ date       ┆ open  ┆ close ┆ move │
+│ ---    ┆ ---        ┆ ---   ┆ ---   ┆ ---  │
+│ str    ┆ date       ┆ f64   ┆ f64   ┆ str  │
+╞════════╪════════════╪═══════╪═══════╪══════╡
+│ ABI.BR ┆ 2021-01-04 ┆ 58.15 ┆ 57.21 ┆ null │
+│ ABI.BR ┆ 2021-01-05 ┆ 56.9  ┆ 57.18 ┆ up   │
+│ ABI.BR ┆ 2021-01-06 ┆ 57.96 ┆ 58.77 ┆ up   │
+│ ABI.BR ┆ 2021-01-07 ┆ 58.68 ┆ 58.4  ┆ null │
+│ ABI.BR ┆ 2021-01-08 ┆ 58.16 ┆ 57.86 ┆ null │
+└────────┴────────────┴───────┴───────┴──────┘
+```
 
-## Recommendations
+#### Expect arithmetic to promote types
 
-1. **Prefer expressions over `.apply()`** — in Polars, every `.map_elements()` call is a performance red flag. Rewrite as `pl.when/then`, arithmetic, or string/datetime methods.
-2. **Name every derived column explicitly** — use `.alias()` in Polars and named keyword arguments in Pandas `assign()`. Implicit column naming produces maintenance headaches.
-3. **Break chains at 4–5 steps** — assign intermediate results to named variables. This improves readability, makes debugging easier, and costs nothing in Polars (expressions are lazy inside `with_columns`).
-4. **Validate transforms on a small sample first** — run `df.head(100).with_columns(...)` to verify output types and values before applying to the full dataset.
-5. **Watch for silent null propagation** — any arithmetic involving a `null` row produces `null` in the result. Use `fill_null()` before transforms if nulls should be treated as zero or a default.
-6. **Use `pl.struct()` when `.map_elements()` needs multiple columns** — instead of calling `map_elements` on each column separately, pack them into a struct and unpack inside the function.
-7. **Log transform schemas** — after a complex transform chain, assert the output schema (`df.schema` or `df.dtypes`) matches expectations. Schema drift in transforms is a common silent failure in production pipelines.
+Operations such as `/` on rank columns yield floating-point results even when both inputs started as integer-like ranks. If the downstream contract requires an integer dtype, cast back explicitly after the calculation.
 
-## Troubleshooting and failure modes
+*Calculates a ratio from two rank columns to show the float promotion introduced by division.*
+```python
+scores_pd[["symbol", "relative_value_rank", "momentum_rank"]].head(3).assign(
+    rank_ratio=lambda d: d["relative_value_rank"] / d["momentum_rank"]
+)
+```
+```text
+symbol  relative_value_rank  momentum_rank  rank_ratio
+BNP.PA                    1             16    0.062500
+DTE.DE                   24              8    3.000000
+IFX.DE                   22              9    2.444444
+```
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `SettingWithCopyWarning` in Pandas | Chained indexing: `df[mask]["col"] = val` | Use `df.loc[mask, "col"] = val` or `.assign()` |
-| Polars `SchemaError: type mismatch` | Expression output type conflicts with existing column type | Add `.cast()` to match the expected type |
-| `.alias()` name collision | Two expressions produce the same alias | Use unique alias names; check `df.columns` after transform |
-| `ComputeError: cannot cast` in Polars | String-to-numeric cast fails on non-numeric values | Clean the column first with `.str.replace()` or `.str.strip_chars()` |
-| `map_elements` returns wrong type | Python function returns inconsistent types across rows | Set `return_dtype=` explicitly in the `map_elements()` call |
-| Method chain produces empty DataFrame | A filter in the chain is too restrictive | Insert `.shape` checks or intermediate `print()` at each step |
-| `when/then` produces all nulls | No condition matched and `.otherwise()` was omitted | Add `.otherwise(default_value)` at the end of the chain |
-| Unexpected `float64` column after integer arithmetic | Division produces float; nulls promote integers to float | Use `//` for integer division; use nullable integer dtypes |
-| Transform is unexpectedly slow | Using `.apply()` or `.map_elements()` instead of native expressions | Rewrite as vectorized expression; profile with `%%timeit` |
+## Pattern Reference
+
+#### Alias derived outputs explicitly
+
+Name derived columns with `.alias("daily_return")` or a named `assign()` key so the output schema describes intent instead of inheriting a source-column name by accident.
+
+*Derives `daily_return` with an explicit alias on a small `ASML.AS` slice.*
+```python
+ohlcv_pl.filter(pl.col("symbol") == "ASML.AS").sort("date").head(3).with_columns(
+    ((pl.col("close") - pl.col("open")) / pl.col("open") * 100).round(2).alias("daily_return")
+).select("symbol", "date", "close", "daily_return")
+```
+```text
+shape: (3, 4)
+┌─────────┬────────────┬────────┬──────────────┐
+│ symbol  ┆ date       ┆ close  ┆ daily_return │
+│ ---     ┆ ---        ┆ ---    ┆ ---          │
+│ str     ┆ date       ┆ f64    ┆ f64          │
+╞═════════╪════════════╪════════╪══════════════╡
+│ ASML.AS ┆ 2021-01-04 ┆ 406.25 ┆ 0.56         │
+│ ASML.AS ┆ 2021-01-05 ┆ 406.9  ┆ 0.09         │
+│ ASML.AS ┆ 2021-01-06 ┆ 402.85 ┆ -0.97        │
+└─────────┴────────────┴────────┴──────────────┘
+```
+
+#### Validate a small slice before widening the transform
+
+Run `head()` or `limit()` with the exact expression chain you plan to use in production. A short sample catches naming mistakes, null propagation, and obviously wrong values before the full pipeline hides the problem.
+
+*Applies a pricing transform to a three-row sample before scaling it to the full dataset.*
+```python
+scores_pl.head(3).select("symbol", "current_price", "day_change_pct").with_columns(
+    (pl.col("current_price") * (1 + pl.col("day_change_pct"))).round(2).alias("price_after_day_move")
+)
+```
+```text
+shape: (3, 4)
+┌────────┬───────────────┬────────────────┬──────────────────────┐
+│ symbol ┆ current_price ┆ day_change_pct ┆ price_after_day_move │
+│ ---    ┆ ---           ┆ ---            ┆ ---                  │
+│ str    ┆ f64           ┆ f64            ┆ f64                  │
+╞════════╪═══════════════╪════════════════╪══════════════════════╡
+│ BNP.PA ┆ 89.32         ┆ 0.011437       ┆ 90.34                │
+│ DTE.DE ┆ 33.0          ┆ 0.011649       ┆ 33.38                │
+│ IFX.DE ┆ 43.945        ┆ 0.054343       ┆ 46.33                │
+└────────┴───────────────┴────────────────┴──────────────────────┘
+```
+
+#### Use `pl.struct()` for multi-column custom logic
+
+When custom logic genuinely needs more than one source field, `pl.struct([...]).map_elements(..., return_dtype=...)` makes the Python boundary explicit and keeps the input columns grouped as a single record.
+
+*Builds a custom blended factor from two score columns with `pl.struct()` and an explicit `return_dtype=`.*
+```python
+scores_pl.select("symbol", "relative_value_score", "momentum_score").head(3).with_columns(
+    pl.struct(["relative_value_score", "momentum_score"])
+    .map_elements(
+        lambda row: round((row["relative_value_score"] + row["momentum_score"]) / 2, 4),
+        return_dtype=pl.Float64,
+    )
+    .alias("blended_score")
+)
+```
+```text
+shape: (3, 4)
+┌────────┬──────────────────────┬────────────────┬───────────────┐
+│ symbol ┆ relative_value_score ┆ momentum_score ┆ blended_score │
+│ ---    ┆ ---                  ┆ ---            ┆ ---           │
+│ str    ┆ f64                  ┆ f64            ┆ f64           │
+╞════════╪══════════════════════╪════════════════╪═══════════════╡
+│ BNP.PA ┆ 1.521163             ┆ 0.477966       ┆ 0.9996        │
+│ DTE.DE ┆ 0.241429             ┆ 0.685752       ┆ 0.4636        │
+│ IFX.DE ┆ 0.281755             ┆ 0.675764       ┆ 0.4788        │
+└────────┴──────────────────────┴────────────────┴───────────────┘
+```
+
+## Failure Mode Reference
+
+#### Repair chained assignment with `.loc[]` or `.assign()`
+
+If the intent is to write back into a filtered Pandas frame, use `.loc[]` or return a new frame with `.assign()`. That removes the `SettingWithCopyWarning` ambiguity and makes the mutation target explicit.
+
+*Uses `.loc[]` on a copied slice to assign a categorical direction flag safely.*
+```python
+df = scores_pd[["symbol", "day_change_pct"]].head(5).copy()
+df.loc[df["day_change_pct"] > 0, "direction"] = "up"
+df.loc[df["day_change_pct"] <= 0, "direction"] = "down_or_flat"
+df
+```
+```text
+symbol  day_change_pct    direction
+BNP.PA        0.011437           up
+DTE.DE        0.011649           up
+IFX.DE        0.054343           up
+ENR.DE        0.047297           up
+ABI.BR       -0.017073 down_or_flat
+```
+
+#### Clean strings before `.cast()`
+
+Casting raw strings directly with `.cast()` is brittle when whitespace or formatting artifacts are present. Normalize the source first with `.str.strip_chars()` or a related string method, then cast.
+
+*Strips whitespace from rank strings before casting them to `Int64`.*
+```python
+pl.DataFrame({"raw_rank": ["1", " 2 ", "3"]}).with_columns(
+    pl.col("raw_rank").str.strip_chars().cast(pl.Int64).alias("rank_int")
+)
+```
+```text
+shape: (3, 2)
+┌──────────┬──────────┐
+│ raw_rank ┆ rank_int │
+│ ---      ┆ ---      │
+│ str      ┆ i64      │
+╞══════════╪══════════╡
+│ 1        ┆ 1        │
+│  2       ┆ 2        │
+│ 3        ┆ 3        │
+└──────────┴──────────┘
+```
+
+#### Stabilize callback schemas with `return_dtype=`
+
+When `map_elements()` crosses the Python boundary, declare `return_dtype=` so Polars does not have to infer the result schema from mixed values or null branches.
+
+*Maps float values to integers with an explicit `return_dtype=` declaration.*
+```python
+pl.DataFrame({"x": [1.2, 2.7, None]}).with_columns(
+    pl.col("x").map_elements(
+        lambda value: int(value) if value is not None else None,
+        return_dtype=pl.Int64,
+    ).alias("x_int")
+)
+```
+```text
+shape: (3, 2)
+┌──────┬───────┐
+│ x    ┆ x_int │
+│ ---  ┆ ---   │
+│ f64  ┆ i64   │
+╞══════╪═══════╡
+│ 1.2  ┆ 1     │
+│ 2.7  ┆ 2     │
+│ null ┆ null  │
+└──────┴───────┘
+```
+
+#### Check for empty chains early
+
+After a restrictive `query()` or `filter()`, inspect `.shape`, `.is_empty()`, or a short preview before assuming later transforms ran on data. An empty chain is easier to diagnose at the filter boundary than after several downstream steps.
+
+*Checks the shape and preview of an over-filtered Pandas query before continuing the pipeline.*
+```python
+empty = scores_pd.query("country == 'Atlantis'")
+print(empty.shape)
+print(empty[["symbol", "country", "current_price"]].head().to_string(index=False))
+```
+```text
+(0, 36)
+Empty DataFrame
+Columns: [symbol, country, current_price]
+Index: []
+```

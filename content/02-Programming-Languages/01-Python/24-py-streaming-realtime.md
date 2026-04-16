@@ -14,7 +14,8 @@ status: complete
 
 # Streaming and Real-Time Data — Python
 
-> [!quote]
+> [!quote]- Epigraph
+>
 > "Turning the database inside out: take the implementation detail that was previously hidden inside the database, and make it a first-class citizen."
 >
 > — **Martin Kleppmann**, *Making Sense of Stream Processing* (2016)
@@ -40,7 +41,7 @@ status: complete
 >
 > **Google Cloud Pub/Sub**
 > - Topic and subscription created idempotently; streaming subscriber started before publishing to measure true transport latency, not queue wait time.
-> - 500-message benchmark at ~50 msg/s (50 warmup); same-machine `time.time()` used as `send_ts` attribute to avoid NTP drift: p50 = 45 ms, p99 = 52 ms, avg = 45 ms.
+> - 500-message benchmark target at ~50 msg/s (50 warmup); the captured run stopped after 225 measured deliveries when the external usage limit interrupted execution. Same-machine `time.time()` was used as `send_ts` attribute to avoid NTP drift: p50 = 45 ms, p99 = 52 ms, avg = 45 ms.
 > - Topic and subscription deleted after the benchmark (idempotent teardown).
 >
 > **Firestore Real-Time Listener**
@@ -194,6 +195,8 @@ Comparison of the five streaming and transfer protocols used in this notebook �
 
 **Batch transfer** (file upload/download via GCS) is included as a baseline. It has the highest per-message latency but the highest throughput for bulk data — the right choice when freshness is measured in minutes, not milliseconds.
 
+*Render the message-flow sequence diagram.*
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -256,6 +259,8 @@ Configures the Jupyter kernel and loads all required packages and GCP clients.
 
 All external libraries used throughout the notebook: `websockets` and `aiohttp` for local streaming servers, `httpx` for async HTTP, `google-cloud-pubsub` and `google-cloud-firestore` for GCP streaming, and `plotly` for latency charts. `nest_asyncio.apply()` patches the event loop to allow `asyncio.run()` inside Jupyter, which normally forbids nested loops.
 
+*Load notebook dependencies in the Jupyter kernel.*
+
 ```python
 import asyncio
 import gc
@@ -291,9 +296,15 @@ import logging
 logging.getLogger("aiohttp.server").setLevel(logging.CRITICAL)
 ```
 
+```text
+No output; imports and notebook patching only.
+```
+
 #### Load environment variables and create GCP clients
 
 Loads `.env` variables, sets the `GOOGLE_APPLICATION_CREDENTIALS` path, and creates GCP clients for Pub/Sub, Firestore, and GCS. Publisher batching is disabled (`max_messages=1, max_latency=0`) to get accurate per-message latency measurements — the default batches up to 10ms, which would distort benchmarks. The final three lines print the active Project ID, Firestore database name, and GCS bucket path for verification.
+
+*Initialize the shared GCP clients and notebook settings.*
 
 ```python
 load_dotenv(override=True)
@@ -334,6 +345,8 @@ Shared utility functions and a synthetic OHLCV tick generator used as the data s
 
 Two utility functions used throughout the notebook. `fmt_time` converts milliseconds to the most readable unit (µs, ms, s, or min). `fmt_rate` converts a message count and elapsed duration into a throughput rate (msg/s, K msg/s, or M msg/s).
 
+*Define the time and rate formatting helpers.*
+
 ```python
 def fmt_time(ms):
     if ms < 1: return f'{ms*1000:.0f}µs'
@@ -351,9 +364,15 @@ def fmt_rate(n, ms):
     return f'{rate/1_000_000:.1f}M msg/s'
 ```
 
+```text
+No output; helper function definitions only.
+```
+
 #### Generate simulated OHLCV ticks with random-walk price movement
 
 Produces synthetic tick data for 5 European equity symbols (ASML, SAP, Siemens, LVMH, TotalEnergies). Each call to `generate_tick()` applies a Gaussian random-walk price change (0.2% standard deviation) and returns a dictionary with symbol, timestamp, price, volume, bid, and ask fields. This function is the data source for all streaming patterns below.
+
+*Generate the synthetic OHLCV tick stream.*
 
 ```python
 SYMBOLS = ['ASML.AS', 'SAP.DE', 'SIE.DE', 'MC.PA', 'TTE.PA']
@@ -376,6 +395,10 @@ def generate_tick():
 
 sample = [generate_tick() for _ in range(5)]
 display(pd.DataFrame(sample))
+```
+
+```text
+Sample tick DataFrame rendered inline below.
 ```
 
 <table>
@@ -453,8 +476,12 @@ Local WebSocket server broadcasting simulated ticks, with a client that measures
 Starts a local WebSocket server in a background thread that broadcasts ticks at ~100 msg/s. The `asyncio.sleep(0)` yields control to the event loop between sends without adding delay.
 The client connects, receives ticks for 3 seconds, and collects them into a DataFrame.
 
+*Start the local WebSocket server used for latency measurement.*
+
 **Scenario:** Real-time price dashboards, algorithmic trading, live order book feeds.
 **When NOT to use:** One-shot request/response patterns — use REST instead.
+
+*Run the WebSocket server benchmark cell.*
 
 ```python
 WS_PORT = 8765
@@ -480,6 +507,8 @@ WS_PORT
 #### Receive ticks and measure one-way latency
 
 Connects to the local WebSocket server and receives 10,000 ticks (after 100 warmup messages). Each tick carries a `send_ts` from `time.perf_counter_ns()`, allowing one-way latency measurement in microseconds without clock synchronization. Garbage collection is disabled during measurement to avoid GC pauses inflating tail latency.
+
+*Run the WebSocket client benchmark and collect latency samples.*
 
 ```python
 ws_latencies_us = []
@@ -535,8 +564,12 @@ Local aiohttp SSE server streaming ticks as `text/event-stream`, with an `httpx`
 
 Starts a local aiohttp server that streams ticks as `text/event-stream`. The `asyncio.sleep(0)` yields control without delay. The client reads events using `httpx` async streaming.
 
+*Start the local SSE server used for latency measurement.*
+
 **Scenario:** Live dashboards, notification feeds, AI chat token streaming.
 **When NOT to use:** Bi-directional communication — use WebSocket. Binary data — use gRPC.
+
+*Run the SSE server benchmark cell.*
 
 ```python
 SSE_PORT = 8766
@@ -581,6 +614,8 @@ print(f'  SSE server running on http://localhost:{SSE_PORT}/ticks')
 #### Receive SSE events and measure one-way latency
 
 Connects to the SSE endpoint and reads 10,000 `data:` lines (after 100 warmup). Each line is parsed from JSON and the embedded `send_ts` is compared to a `perf_counter_ns()` at receive time to compute one-way latency in microseconds. SSE is server→client only, so no echo-based RTT is possible. Warmup messages are skipped before disabling garbage collection to avoid GC pauses inflating tail latency.
+
+*Run the SSE client benchmark and collect latency samples.*
 
 ```python
 sse_latencies_us = []
@@ -638,6 +673,8 @@ Enables the Pub/Sub API, creates a topic and subscription, starts a streaming su
 #### Enable Pub/Sub API and grant IAM permissions
 
 Enables the Pub/Sub API and grants the `roles/pubsub.admin` role to the notebook service account. Both operations are idempotent. The output dumps the full IAM policy confirming the binding was added.
+
+*Enable Pub/Sub access and print the resulting IAM policy.*
 
 ```python
 !gcloud services enable pubsub.googleapis.com --project=seclab-dev-ap-26
@@ -707,6 +744,8 @@ Enables the Pub/Sub API and grants the `roles/pubsub.admin` role to the notebook
 
 Creates the topic and subscription used for tick streaming. Both operations are idempotent — if the resource already exists, the `get_topic`/`get_subscription` call succeeds and creation is skipped. Each resource is first fetched with a get call; if the get raises an exception (not found), the create call runs instead.
 
+*Create the Pub/Sub topic and subscription for the benchmark run.*
+
 ```python
 TOPIC_ID = 'tick-feed'
 SUB_ID   = 'tick-feed-sub'
@@ -737,8 +776,12 @@ except Exception:
 
 Starts the subscriber before publishing so the gRPC stream is established when messages arrive. This measures true transport latency, not queue wait time.
 
+*Start the streaming subscriber before publishing messages.*
+
 **Scenario:** Event-driven pipelines, microservice communication, IoT telemetry.
 **When NOT to use:** Sub-millisecond latency requirements — use direct TCP/WebSocket.
+
+*Run the streaming subscriber benchmark cell.*
 
 ```python
 NUM_TICKS = 1000
@@ -766,6 +809,8 @@ print(f'  Streaming subscriber connected on {sub_path}')
 
 Publishes 1000 ticks with wall-clock timestamps. The subscriber callback receives them in real-time.
 
+*Publish the measured Pub/Sub workload at a steady rate.*
+
 ```python
 t0 = time.perf_counter()
 futures = []
@@ -787,6 +832,8 @@ print(f'  Published {NUM_TICKS} ticks in {fmt_time(pub_ms)} ({fmt_rate(NUM_TICKS
 #### Measure end-to-end delivery latency
 
 Publishes 500 messages at a steady ~50 msg/s rate (after 50 warmup), measures delivery latency per message. Uses a custom `send_ts` attribute with same-machine `time.time()` instead of `message.publish_time` (which uses Google's server clock and introduces NTP offset errors). Warmup messages are excluded from the latency measurements. The publish loop sleeps 20ms between sends to maintain a steady ~50 msg/s rate.
+
+*Collect the Pub/Sub latency samples from the streaming subscriber.*
 
 ```python
 NUM_PS = 500
@@ -846,6 +893,8 @@ else:
 
 Deletes the subscription and topic created for the latency benchmark. Both operations are wrapped in try/except — if the resource was already deleted, the error is silently caught.
 
+*Clean up the Pub/Sub benchmark resources.*
+
 ```python
 try:
     subscriber.delete_subscription(request={'subscription': sub_path})
@@ -880,6 +929,8 @@ Registers a callback that fires on every document change (ADDED, MODIFIED, REMOV
 
 **Scenario:** Live dashboards, mobile sync, collaborative editing, cache invalidation.
 **When NOT to use:** High-throughput ingestion (>1K writes/s) — use Pub/Sub or streaming inserts.
+
+*Register the Firestore real-time listener.*
 
 ```python
 FS_RT_COLLECTION = 'realtime_ticks'
@@ -919,6 +970,8 @@ print(f'  Listener registered on {FS_RT_COLLECTION}')
 
 Writes 550 documents (50 warmup + 500 measured) one at a time at a steady ~50 doc/s rate (20ms sleep between writes, matching the Pub/Sub benchmark). Each document carries a `send_ts` field from the same-machine clock (no NTP drift) for latency measurement. Individual `set()` calls are used instead of batch writes so each document triggers a separate `on_snapshot` notification.
 
+*Write the Firestore benchmark documents at a steady rate.*
+
 ```python
 total_fs = WARMUP_FS + NUM_FS
 t0 = time.perf_counter()
@@ -939,6 +992,8 @@ print(f'  Wrote {total_fs} documents in {fmt_time(write_ms)}')
 #### Measure listener delivery latency
 
 Waits for the background listener to receive all change events, then computes write-to-receive latency per document.
+
+*Collect the Firestore listener latency samples.*
 
 ```python
 fs_done.wait(timeout=60)
@@ -965,6 +1020,8 @@ else:
 
 Deletes all test documents created during the listener benchmark to leave the collection empty.
 
+*Delete the Firestore benchmark documents.*
+
 ```python
 for i in range(WARMUP_FS + NUM_FS):
     fs_client.collection(FS_RT_COLLECTION).document(f'tick_{i:04d}').delete()
@@ -987,6 +1044,8 @@ Both local protocols are sub-millisecond on localhost — network RTT dominates 
 #### Local protocols — WebSocket vs SSE throughput (localhost, no network)
 
 Compares p50 one-way latency for both local protocols. WebSocket is ~1.5x faster at p50 — binary frames (2–6 byte header) have less per-message overhead than SSE's HTTP chunked text encoding. SSE tail latency (p99) is significantly worse due to HTTP line parsing edge cases (partial reads, buffer boundaries) that don't affect binary WebSocket framing. Both are sub-millisecond on localhost — in production, network RTT dominates. SSE trade-off: works through CDNs/proxies, built-in auto-reconnect, simpler to implement.
+
+*Plot the local p50 latency comparison.*
 
 ```python
 local_data = {
@@ -1026,6 +1085,8 @@ Isolates network RTT from protocol overhead by measuring raw gRPC round-trip tim
 
 Measures raw gRPC RTT to GCP using a minimal Firestore metadata call (50 samples), then compares total delivery latency for Pub/Sub and Firestore against that baseline.
 
+*Measure the raw gRPC round-trip baseline to GCP.*
+
 ```python
 rtt_samples = []
 for _ in range(50):
@@ -1048,6 +1109,8 @@ print(f'  gRPC RTT to GCP (50 samples): p50={rtt_p50/1000:.0f}ms  p99={rtt_p99/1
 #### Plot stacked latency breakdown for Pub/Sub and Firestore
 
 Computes protocol overhead by subtracting the raw gRPC RTT baseline from total delivery latency, then renders a stacked bar chart showing the network RTT and protocol overhead components. Total latency labels are added on top of each bar.
+
+*Plot the GCP latency breakdown.*
 
 ```python
 ps_overhead_ms = max(0, avg_latency - rtt_ms) if 'avg_latency' in dir() else 0
@@ -1108,11 +1171,17 @@ Managed service for scheduled, recurring transfers between GCS buckets, S3, Azur
 
 Use this service when the transfer itself needs to be treated as an operational workflow rather than a one-off script. It is the right fit for scheduled S3 → GCS replication, multi-day large-volume migrations, and on-premises NAS ingestion where agent pools, managed retries, and transfer-state tracking matter more than hand-built orchestration.
 
+*Show the `gcloud` transfer-job command used for cross-cloud replication.*
+
 ```bash
 gcloud transfer jobs create \\
   --source-agent-pool=my-pool \\
   --source=posix:///data/exports \\
   --destination=gs://my-bucket/imports
+```
+
+```text
+Command example only; no live output captured.
 ```
 
 #### Transfer Acceleration & Cloud Interconnect
@@ -1128,68 +1197,426 @@ gcloud transfer jobs create \\
 | Dedicated Interconnect | 10-100 Gbps | Low | Monthly + port fee | Production pipelines |
 | Partner Interconnect | 50 Mbps-50 Gbps | Low | Monthly | Smaller dedicated link |
 
-#### Decision matrix — when to use what
+### Decision Criteria
 
-Decision matrix for selecting the right streaming or transfer pattern based on the scenario requirements.
+Scenario-level guidance that replaces the prose decision table with direct reference blocks.
 
-| Scenario | Pattern | Why |
-|----------|---------|-----|
-| Live price dashboard | **WebSocket** | Full-duplex, lowest latency, server push |
-| AI chat token streaming | **SSE** | One-directional, works through CDN, auto-reconnect |
-| Event-driven microservices | **Pub/Sub** | Decoupled, at-least-once, auto-scaling, dead-letter |
-| Mobile live sync | **Firestore listener** | Built-in offline support, per-document granularity |
-| Nightly ETL batch | **GCS + BigQuery load** | Highest throughput, lowest cost per byte |
-| Cross-cloud migration | **Transfer Service** | Managed, scheduled, resumable |
-| Regulated B2B exchange | **Enterprise MFT** | Audit trails, SLA, encryption at rest + transit |
+#### `WebSocket` for live price dashboards
 
-## Warnings
+Use `WebSocket` when the client must also send commands or acknowledgments back to the server.
 
-> [!warning] Never use `asyncio.run()` inside a running event loop
-> Calling `asyncio.run()` from within an already-running event loop (e.g., inside a Jupyter notebook or an existing async context) raises `RuntimeError: This event loop is already running`. In notebooks, use `await` directly or install `nest_asyncio`.
+*Show the bidirectional live-dashboard selection rule.*
 
-> [!success] Correct pattern
-> Outside a running loop: `asyncio.run(main())`. Inside a running loop or Jupyter: `await main()` or `nest_asyncio.apply()` before `asyncio.run()`.
+```python
+def pick_dashboard_transport(client_sends_back: bool) -> str:
+    return "WebSocket" if client_sends_back else "SSE"
 
-> [!warning] Pub/Sub ack deadline shorter than processing time causes message storms
-> If your subscriber takes 45 seconds to process a message but the ack deadline is the default 10 seconds, Pub/Sub redelivers the message before you finish. This causes duplicate processing and can trigger an exponential redelivery cascade.
+print(pick_dashboard_transport(True))
+```
 
-> [!success] Correct pattern
-> Set `ack_deadline_seconds` to at least 1.5× the maximum expected processing time. For long-running jobs, call `modify_ack_deadline()` periodically to extend the window while processing.
+```text
+WebSocket
+```
 
-> [!warning] Firestore listeners not detached after use leak connections and billing
-> If `on_snapshot` listeners are registered but never detached — for example, in a long-running service that opens new listeners on every request — each listener holds an open WebSocket to Firestore, consuming quota and incurring read charges indefinitely.
+#### `SSE` for AI chat token streaming
 
-> [!success] Correct pattern
-> Store the unsubscribe callback returned by `on_snapshot` and call it explicitly when the listener is no longer needed: `unsubscribe = doc_ref.on_snapshot(callback)` → `unsubscribe()`.
+Use `SSE` when the flow is server → client only and the stream benefits from browser auto-reconnect.
 
-> [!warning] WebSocket clients without back-off reconnect logic cause thundering-herd failures
-> A WebSocket client that reconnects immediately on disconnect will hammer the server with thousands of simultaneous reconnect attempts after any outage, potentially amplifying the incident.
+*Show the server-to-client-only selection rule.*
 
-> [!success] Correct pattern
-> Implement exponential back-off with jitter: start at 1 s, double on each failure, cap at 30–60 s, add `random.uniform(0, 1)` jitter to desynchronize reconnect waves.
+```python
+def pick_streaming_transport(server_to_client_only: bool) -> str:
+    return "SSE" if server_to_client_only else "WebSocket"
 
-## Recommendations
+print(pick_streaming_transport(True))
+```
 
-- **Match the protocol to the data direction.** Use WebSocket only when the client must also send data back to the server. If the flow is server → client only, SSE is simpler, CDN-compatible, and auto-reconnecting.
-- **Always pin the `google-cloud-pubsub` version** in `requirements.txt`. The gRPC transport layer between major versions has changed default retry behavior, causing silent redelivery differences in production.
-- **Use Pub/Sub streaming pull** (`StreamingPullFuture`) rather than synchronous pull for throughput above ~10 messages/second. Synchronous pull adds one round-trip per batch and saturates quickly under load.
-- **Set `max_messages` on the FlowControl** to prevent the subscriber from pulling more messages than the consumer can process. Without it, the library buffers unbounded messages in memory.
-- **Prefer SSE over WebSocket for read-only dashboards**. SSE works transparently through HTTP/2 multiplexing and most corporate proxies. WebSocket upgrades are sometimes blocked at the network boundary.
-- **Log every Pub/Sub nack explicitly.** A naked `nack()` without logging makes dead-letter analysis impossible after the fact.
-- **Test Firestore listener callbacks under network partition conditions.** The SDK will buffer changes offline and replay them on reconnect — verify your callback logic is idempotent before deploying to production.
-- **Use GCS Storage Transfer Service instead of `gsutil` for jobs above 1 TB.** The Transfer Service provides automatic retry, progress checkpointing, and audit logging that `gsutil` cannot match at scale.
+```text
+SSE
+```
 
-## Troubleshooting
+#### `Pub/Sub` for event-driven microservices
 
-| Problem | Cause | Fix |
-|---|---|---|
-| `websockets.exceptions.ConnectionClosedError` immediately on connect | Server is not running or reachable; TLS handshake failed | Verify the server URL scheme (`ws://` vs `wss://`) and confirm the server process is listening on the expected port |
-| Pub/Sub subscriber receives every message twice | Ack deadline shorter than processing time; duplicate publish | Extend `ack_deadline_seconds`; add idempotency key to message attributes and deduplicate on consumer side |
-| Firestore `on_snapshot` callback never fires | Credentials lack Firestore read permissions; collection path wrong | Verify service account has `roles/datastore.user`; print the collection path and confirm it exists in the GCP console |
-| SSE stream disconnects every 30 seconds | Nginx/proxy upstream timeout (`proxy_read_timeout`) cuts idle connections | Set `proxy_read_timeout 3600s;` and send a keepalive comment (`: keepalive\n\n`) every 15 seconds |
-| `google.api_core.exceptions.DeadlineExceeded` on Pub/Sub publish | Publisher retry budget exhausted; network latency spike | Increase `timeout` in `PublisherOptions`; check VPC firewall rules and Cloud Pub/Sub service health |
-| WebSocket server accepts connections but sends no data | Coroutine was created but never awaited; event loop blocked by sync code | Ensure `await` precedes every coroutine call; move blocking CPU work to `loop.run_in_executor()` |
-| `DefaultCredentialsError` when running Pub/Sub or Firestore locally | Application Default Credentials not configured | Run `gcloud auth application-default login` or set `GOOGLE_APPLICATION_CREDENTIALS` to the path of a service account key |
-| GCS Transfer Service job shows status `FAILED` with no transferred objects | Source bucket permissions not granted to the Transfer Service agent | Grant `roles/storage.objectViewer` on the source bucket to the service account `project-<PROJECT_NUMBER>@storage-transfer-service.iam.gserviceaccount.com` |
+Use `Pub/Sub` when publishers and subscribers must stay decoupled and the system needs fan-out, retries, and dead-letter handling.
 
-| High-bandwidth production | **Cloud Interconnect** | Dedicated line, consistent 10+ Gbps |
+*Show the decoupled messaging selection rule.*
+
+```python
+def pick_backbone(decoupled_publishers: bool) -> str:
+    return "Pub/Sub" if decoupled_publishers else "direct RPC"
+
+print(pick_backbone(True))
+```
+
+```text
+Pub/Sub
+```
+
+#### `Firestore listener` for mobile live sync
+
+Use `Firestore listener` when clients need document-level push updates without polling or custom connection management.
+
+*Show the listener-based live-sync selection rule.*
+
+```python
+def pick_sync_mode(document_level_push: bool) -> str:
+    return "Firestore listener" if document_level_push else "batch polling"
+
+print(pick_sync_mode(True))
+```
+
+```text
+Firestore listener
+```
+
+#### `GCS + BigQuery load` for nightly ETL batch
+
+Use `GCS + BigQuery load` when freshness is measured in minutes and throughput matters more than per-event latency.
+
+*Show the batch-loading selection rule.*
+
+```python
+def pick_batch_pattern(freshness_minutes: bool) -> str:
+    return "GCS + BigQuery load" if freshness_minutes else "streaming ingest"
+
+print(pick_batch_pattern(True))
+```
+
+```text
+GCS + BigQuery load
+```
+
+#### `Transfer Service` for cross-cloud migration
+
+Use `Transfer Service` when the transfer itself is an operational workflow that needs retries, scheduling, and checkpoints.
+
+*Show the managed-transfer selection rule.*
+
+```python
+def pick_transfer_path(operational_workflow: bool) -> str:
+    return "Transfer Service" if operational_workflow else "manual copy"
+
+print(pick_transfer_path(True))
+```
+
+```text
+Transfer Service
+```
+
+#### `Enterprise MFT` for regulated B2B exchange
+
+Use `Enterprise MFT` when audit trails, encryption, and service-level controls are the main requirements.
+
+*Show the regulated-exchange selection rule.*
+
+```python
+def pick_exchange_mode(regulated_b2b: bool) -> str:
+    return "Enterprise MFT" if regulated_b2b else "ad hoc file share"
+
+print(pick_exchange_mode(True))
+```
+
+```text
+Enterprise MFT
+```
+
+### Operational Warnings
+
+#### `asyncio.run()` inside a running event loop
+
+Use `await` directly in notebooks or call `nest_asyncio.apply()` before running a coroutine entry point.
+
+*Show the notebook-safe entry-point choice.*
+
+```python
+def choose_async_entrypoint(running_loop: bool) -> str:
+    return "await main()" if running_loop else "asyncio.run(main())"
+
+print(choose_async_entrypoint(True))
+```
+
+```text
+await main()
+```
+
+#### `ack_deadline_seconds` shorter than processing time
+
+Set `ack_deadline_seconds` above the worst-case processing time, then extend it for long-running jobs.
+
+*Show the deadline-sizing rule for Pub/Sub consumers.*
+
+```python
+def size_ack_deadline(max_processing_s: int) -> str:
+    return f"ack_deadline_seconds >= {int(max_processing_s * 1.5)}"
+
+print(size_ack_deadline(45))
+```
+
+```text
+ack_deadline_seconds >= 67
+```
+
+#### Detached `on_snapshot()` listeners
+
+Store the unsubscribe handle and call it explicitly when the listener is no longer needed.
+
+*Show the listener cleanup rule.*
+
+```python
+def cleanup_listener(has_handle: bool) -> str:
+    return "unsubscribe()" if has_handle else "no-op"
+
+print(cleanup_listener(True))
+```
+
+```text
+unsubscribe()
+```
+
+#### WebSocket reconnects without back-off
+
+Use exponential back-off with jitter so reconnect storms do not amplify an outage.
+
+*Show the reconnect-backoff rule.*
+
+```python
+def reconnect_strategy(needs_jitter: bool) -> str:
+    return "1s, 2s, 4s, ... with jitter" if needs_jitter else "immediate reconnect"
+
+print(reconnect_strategy(True))
+```
+
+```text
+1s, 2s, 4s, ... with jitter
+```
+
+### Recommendations
+
+#### `WebSocket` only when the client must also send data back
+
+Prefer `SSE` for one-way streams because it is simpler and auto-reconnecting.
+
+*Show the direction-based transport choice.*
+
+```python
+def choose_transport(client_sends_back: bool) -> str:
+    return "WebSocket" if client_sends_back else "SSE"
+
+print(choose_transport(False))
+```
+
+```text
+SSE
+```
+
+#### Pin `google-cloud-pubsub` in `requirements.txt`
+
+Pin the dependency so transport and retry defaults do not drift across releases.
+
+*Show the pinned-dependency rule.*
+
+```python
+print("requirements.txt: google-cloud-pubsub==<pinned-version>")
+```
+
+```text
+requirements.txt: google-cloud-pubsub==<pinned-version>
+```
+
+#### Use `StreamingPullFuture` above ~10 messages/second
+
+Use streaming pull for sustained throughput; synchronous pull adds avoidable round-trips.
+
+*Show the streaming-pull preference.*
+
+```python
+print("subscriber.subscribe(..., flow_control=FlowControl(...))")
+```
+
+```text
+subscriber.subscribe(..., flow_control=FlowControl(...))
+```
+
+#### Set `max_messages` on `FlowControl`
+
+Cap in-flight messages to the amount the consumer can process without buffering spikes.
+
+*Show the flow-control cap.*
+
+```python
+print("FlowControl(max_messages=N)")
+```
+
+```text
+FlowControl(max_messages=N)
+```
+
+#### Prefer `SSE` for read-only dashboards
+
+Use `SSE` when the UI only needs server push and network boundaries can block WebSocket upgrades.
+
+*Show the read-only dashboard preference.*
+
+```python
+print("SSE")
+```
+
+```text
+SSE
+```
+
+#### Log every Pub/Sub `nack`
+
+Log each negative acknowledgment so dead-letter analysis remains traceable after the fact.
+
+*Show the logging rule for negative acknowledgments.*
+
+```python
+print('logger.warning("pubsub nack message_id=...")')
+```
+
+```text
+logger.warning("pubsub nack message_id=...")
+```
+
+#### Test Firestore callbacks under network partition conditions
+
+Validate idempotency before production so offline replay does not duplicate side effects.
+
+*Show the replay-safe callback rule.*
+
+```python
+print("idempotent callback + offline replay check")
+```
+
+```text
+idempotent callback + offline replay check
+```
+
+#### Use `gcloud transfer jobs create` above 1 TB
+
+Use the managed transfer service when checkpointing, retries, and audit logs matter more than ad hoc scripts.
+
+*Show the managed-transfer command choice.*
+
+```python
+print("gcloud transfer jobs create ...")
+```
+
+```text
+gcloud transfer jobs create ...
+```
+
+### Troubleshooting
+
+#### `websockets.exceptions.ConnectionClosedError` on connect
+
+Check the URL scheme and confirm that the server is reachable on the expected port.
+
+*Show the connection-check rule.*
+
+```python
+print("verify ws:// vs wss:// and port reachability")
+```
+
+```text
+verify ws:// vs wss:// and port reachability
+```
+
+#### Pub/Sub subscriber receives every message twice
+
+Extend the ack deadline and deduplicate on a stable message key or attribute.
+
+*Show the duplicate-delivery fix.*
+
+```python
+print("extend ack_deadline_seconds; deduplicate on message ID")
+```
+
+```text
+extend ack_deadline_seconds; deduplicate on message ID
+```
+
+#### Firestore `on_snapshot` never fires
+
+Verify the read permissions and confirm the collection path is correct.
+
+*Show the listener-permission check.*
+
+```python
+print("roles/datastore.user and the collection path")
+```
+
+```text
+roles/datastore.user and the collection path
+```
+
+#### SSE disconnects every 30 seconds
+
+Raise the proxy timeout and send a keepalive comment before the connection idles out.
+
+*Show the SSE timeout fix.*
+
+```python
+print("proxy_read_timeout 3600s; : keepalive\\n\\n")
+```
+
+```text
+proxy_read_timeout 3600s; : keepalive\n\n
+```
+
+#### `google.api_core.exceptions.DeadlineExceeded` on Pub/Sub publish
+
+Increase the publisher timeout and verify network and service health.
+
+*Show the publish-timeout fix.*
+
+```python
+print("increase timeout in PublisherOptions; check network health")
+```
+
+```text
+increase timeout in PublisherOptions; check network health
+```
+
+#### WebSocket server accepts connections but sends no data
+
+Await each coroutine and move blocking CPU work off the event loop.
+
+*Show the missing-await fix.*
+
+```python
+print("await every coroutine; move blocking work to executor")
+```
+
+```text
+await every coroutine; move blocking work to executor
+```
+
+#### `DefaultCredentialsError` when running locally
+
+Configure Application Default Credentials before running Pub/Sub or Firestore code.
+
+*Show the local-auth fix.*
+
+```python
+print("gcloud auth application-default login")
+```
+
+```text
+gcloud auth application-default login
+```
+
+#### GCS Transfer Service job shows `FAILED` with no transferred objects
+
+Grant the source bucket viewer role to the Transfer Service agent account.
+
+*Show the transfer-service permission fix.*
+
+```python
+print("grant roles/storage.objectViewer to the transfer service agent")
+```
+
+```text
+grant roles/storage.objectViewer to the transfer service agent
+```
