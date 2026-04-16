@@ -10,7 +10,7 @@ status: complete
 
 # Datadog Architecture Overview
 
-> [!quote]
+> [!quote]+
 > "No complex system is ever fully healthy."
 >
 > — **Cindy Sridharan**, *Distributed Systems Observability* (2018)

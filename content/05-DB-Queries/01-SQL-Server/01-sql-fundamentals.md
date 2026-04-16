@@ -10,7 +10,7 @@ status: complete
 
 # SQL Fundamentals
 
-> [!quote]
+> [!quote]+
 > "At the heart of every large or small database is the relational model, quietly making sense of chaos."
 >
 > — **C.J. Date**, *An Introduction to Database Systems* (2003)

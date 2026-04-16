@@ -38,164 +38,86 @@ status: complete
 > **Join**
 > - A relational operation that combines rows from two rowsets based on a matching condition or, in the Cartesian case, on every possible pair.
 > - It matters because the central question in this note is which join form preserves unmatched rows, multiplies rows, or filters them away.
->
-> > [!warning] Join choice changes row count semantics
-> >
-> > Two queries can look similar and still return different row counts because the join type changes which unmatched rows survive. Always reason about retention, not just syntax.
->
-> ---
+> - Two similar-looking queries can return different row counts because join choice changes which unmatched rows survive.
 >
 > **Outer join**
 > - A join family that preserves unmatched rows from one side (`LEFT` or `RIGHT`) or both sides (`FULL`) and fills the missing columns with `NULL`.
 > - It matters because many business queries need to keep the driving table even when related facts or dimensions are missing.
->
-> > [!warning] Post-join filters can undo preservation
-> >
-> > A `LEFT JOIN` only stays outer if right-side filters remain in the `ON` clause or are written with null-aware intent. Moving them to `WHERE` often erases the preserved rows.
->
-> ---
+> - A `LEFT JOIN` only stays outer when right-side filters remain in the `ON` clause or are written with null-aware intent.
 >
 > **Cartesian product**
 > - The all-to-all combination of rows from two sources, produced intentionally by `CROSS JOIN` or accidentally by a missing join predicate.
 > - It matters because accidental Cartesian growth is one of the fastest ways to explode row counts and resource usage.
->
-> > [!danger] Missing predicates scale catastrophically
-> >
-> > A small-looking omission in the `ON` clause can multiply every row by every row on the other side. The result is often both wrong and operationally expensive.
->
-> ---
+> - A missing predicate can multiply every row by every row on the other side and scale operational cost catastrophically.
 >
 > **Self join**
 > - A join where the same base table appears twice under different aliases.
 > - It matters because comparison-to-prior-row, hierarchy, and peer-matching patterns often need two logical roles from one physical table.
->
-> > [!info] Aliases create the logical roles
-> >
-> > A self join works because each alias represents a different role in the comparison. Without clear aliases, the query becomes difficult to reason about correctly.
->
-> ---
+> - Clear aliases are what create the logical roles and make the comparison readable.
 >
 > **Semi-join**
 > - A matching pattern that returns left-side rows when a match exists on the right without returning right-side columns or multiplying rows by match count.
 > - It matters because `EXISTS` is often the clearest and safest way to answer “does a related row exist?”
->
-> > [!info] Presence test, not row merge
-> >
-> > Semi-joins are about existence, not enrichment. If the query only needs to know whether a match exists, `EXISTS` usually expresses that intent directly.
->
-> ---
+> - Semi-joins test for presence rather than row enrichment, which is why `EXISTS` is usually the clearest idiom.
 >
 > **Anti-join**
 > - A matching pattern that returns left-side rows only when no related row exists on the right.
 > - It matters because absence testing is common in data-quality, exception, and synchronization queries.
->
-> > [!warning] Nullable exclusion needs care
-> >
-> > `NOT EXISTS` is generally safer than `NOT IN` for anti-join logic because nullable right-side values can corrupt `NOT IN` semantics.
->
-> ---
+> - `NOT EXISTS` is safer than `NOT IN` for anti-join logic because nullable right-side values can corrupt `NOT IN` semantics.
 >
 > **Correlated subquery**
 > - A subquery that references columns from the outer query and therefore executes conceptually per outer row.
 > - It matters because correlated logic is powerful but can often be replaced by joins, window functions, or `APPLY` when the intent is row-wise derivation.
->
-> > [!warning] Correlation changes cost and shape
-> >
-> > A correlated subquery is not just a nested SELECT. It creates a dependency on the outer row and can be more expensive or less readable than alternative patterns.
->
-> ---
+> - Correlation creates an outer-row dependency that can be more expensive or less readable than a join, window function, or `APPLY`.
 >
 > **Scalar subquery**
 > - A subquery used in an expression position where exactly one value must be returned.
 > - It matters because SQL Server raises an error when the subquery returns more than one row, making row-cardinality guarantees operationally important.
->
-> > [!warning] One value means one row
-> >
-> > If a scalar subquery can return multiple rows, the statement fails at runtime. The safe fix is to constrain it, aggregate it, or redesign the query shape.
->
-> ---
+> - If a scalar subquery can return multiple rows, the statement fails at runtime and must be constrained, aggregated, or redesigned.
 >
 > **`CROSS APPLY`**
 > - The operator that evaluates a right-side table expression for each left-side row and keeps only left rows that produce a result.
 > - It matters because it is the canonical T-SQL tool for per-row top-N, row-wise expansion, and reusable correlated table expressions.
->
-> > [!warning] `CROSS APPLY` can discard left rows
-> >
-> > If the right-side expression returns nothing, the left row disappears. That is often correct, but it surprises readers who expected outer-preserving behavior.
->
-> ---
+> - If the right-side expression returns nothing, the left row disappears.
 >
 > **`OUTER APPLY`**
 > - The outer-preserving form of `APPLY` that keeps left-side rows even when the right-side expression returns no rows.
 > - It matters because it gives row-wise derivation semantics without sacrificing the driving set.
->
-> > [!info] Apply semantics with null extension
-> >
-> > `OUTER APPLY` is the row-wise analogue of a `LEFT JOIN`. It is usually the right choice when the derived right side is optional.
->
-> ---
+> - `OUTER APPLY` is the row-wise analogue of `LEFT JOIN` and is usually the right choice when the derived right side is optional.
 >
 > **Set operator**
 > - A query operator that combines complete result sets branch by branch instead of matching rows side by side.
 > - It matters because `UNION`, `UNION ALL`, `EXCEPT`, and `INTERSECT` solve different deduplication and comparison problems from joins.
->
-> > [!warning] Branches must line up structurally
-> >
-> > Set-operator branches need compatible column counts and types. Structural mismatch fails before the engine ever gets to logical comparison.
->
-> ---
+> - Set-operator branches need compatible column counts and types before logical comparison can even begin.
 >
 > **`UNION` / `UNION ALL`**
 > - Two set operators where `UNION ALL` concatenates branches as-is and `UNION` adds duplicate elimination.
 > - It matters because deduplication is expensive and should only be paid for when it is a real requirement.
->
-> > [!warning] `UNION` does more work
-> >
-> > `UNION` is not a harmless default. It usually adds a sort or hash aggregate and can hide duplicate causes that should be understood explicitly.
->
-> ---
+> - `UNION` is not a harmless default because it usually adds a sort or hash aggregate and can hide duplicate causes.
 >
 > **`EXCEPT` / `INTERSECT`**
 > - Set operators that return rows present in the left branch but not the right (`EXCEPT`), or present in both branches (`INTERSECT`).
 > - It matters because they express set comparison directly and have precedence rules that surprise readers in mixed operator chains.
->
-> > [!warning] `INTERSECT` binds first
-> >
-> > In mixed set-operator expressions, precedence is not always obvious from visual order. Parentheses make the intended comparison chain explicit.
->
-> ---
+> - In mixed set-operator expressions, `INTERSECT` binds first, so parentheses are the readable way to make intent explicit.
 >
 > **`PIVOT`**
 > - A T-SQL operator that turns row values into separate columns using an aggregate over a fixed output column list.
 > - It matters because it can produce report-shaped output, but the required hard-coded column list makes it less flexible than many readers expect.
->
-> > [!warning] Output columns are compile-time choices
-> >
-> > Static `PIVOT` only works when the output headers are known ahead of time. Dynamic variants exist, but they add complexity and dynamic SQL risk.
->
-> ---
+> - Static `PIVOT` only works when the output headers are known ahead of time; dynamic variants add complexity and dynamic SQL risk.
 >
 > **`UNPIVOT`**
 > - A T-SQL operator that turns several source columns into repeated output rows with a label column and a value column.
 > - It matters because it provides built-in column-to-row transposition but imposes type compatibility rules and null-dropping behavior.
->
-> > [!warning] `UNPIVOT` discards null-valued source columns
-> >
-> > Rows are not emitted for source columns whose value is `NULL`. That behavior is documented, but it still surprises many authors and can hide missing data.
->
-> ---
+> - Rows are not emitted for source columns whose value is `NULL`, which can hide missing data.
 >
 > **`CROSS APPLY (VALUES ...)`**
 > - A modern row-constructor pattern that emits labeled row fragments from a source row without the restrictions of `UNPIVOT`.
 > - It matters because it is often the cleaner default for column-to-row reshaping, especially when mixed types or nullable values are involved.
->
-> > [!info] More flexible than `UNPIVOT`
-> >
-> > This pattern preserves `NULL` values, supports arbitrary expressions, and gives the author full control over labels and ordering. That makes it the better default for new code.
+> - It preserves `NULL` values, supports arbitrary expressions, and gives the author full control over labels and ordering.
 
 ## INNER JOIN, LEFT JOIN, RIGHT JOIN, and FULL OUTER JOIN
 
-> [!abstract] Join family overview
+> [!abstract]- Summary
 >
 > The Microsoft [Joins (SQL Server)](https://learn.microsoft.com/en-us/sql/relational-databases/performance/joins) reference defines five logical join types:
 >
@@ -222,6 +144,8 @@ status: complete
 `INNER JOIN` keeps only rows where the `ON` condition evaluates to `TRUE`. Rows where the condition is `FALSE` or `UNKNOWN` (the latter happens when either side is `NULL`) are discarded from both sides. It is the default join type in business queries and the correct choice whenever unmatched rows carry no meaning.
 
 #### Basic INNER JOIN between dimension and fact
+
+This baseline pattern shows the normal enrichment case where both sides are expected to match and unmatched rows have no business meaning.
 
 *Join every symbol in the symbol dimension to its row in the ESG dashboard to enrich it with sector and rating.*
 
@@ -350,6 +274,8 @@ The `OUTER` keyword is optional. `LEFT JOIN` and `LEFT OUTER JOIN` are exact syn
 
 #### Basic LEFT JOIN with every dim_symbol row preserved
 
+Use this pattern when the left-side rowset is mandatory and missing right-side data should surface as `NULL` rather than disappearing.
+
 *Left-join `dim_symbol` to `esg_dash` to enrich every symbol with its ESG score (even symbols with no ESG data would appear with NULL columns).*
 
 ```sql
@@ -465,7 +391,9 @@ A column defined as `NOT NULL` in the base table can appear as `NULL` in the res
 
 #### RIGHT JOIN as a mirror of LEFT JOIN
 
-*Right-join `esg_dash` to `dim_symbol`, preserving the 500 `dim_symbol` rows on the right side.*
+This example keeps the preservation semantics visible while showing why many teams still rewrite the query as `LEFT JOIN`.
+
+*Right-join `esg_dash` to `dim_symbol`, preserving the `dim_symbol` rows on the right side.*
 
 ```sql
 SELECT TOP (5)
@@ -497,6 +425,8 @@ This produces the same rowset as `dbo.dim_symbol LEFT JOIN dbo.esg_dash ON ...` 
 `FULL [ OUTER ] JOIN` preserves rows from **both** sides. Matched rows return both sides' columns; unmatched left-side rows return left columns with `NULL` right columns; unmatched right-side rows return `NULL` left columns with right columns populated. It is the correct join type for **reconciliation** and **diff-style** queries where the result must show what is present on one side but missing from the other.
 
 #### FULL OUTER JOIN with all four match states
+
+This shape is for reconciliation work where the output must retain matched rows plus the rows that exist only on either side.
 
 *Full-outer-join two inline VALUES rowsets that overlap partially.*
 
@@ -556,7 +486,7 @@ The rule of thumb: when mixing inner and outer joins in the same query, use pare
 
 ## CROSS JOIN and Self Joins
 
-> [!abstract] Cartesian products and same-table joins
+> [!abstract]- Summary
 >
 > This section covers two joins that do not fit the standard "left ↔ right with `ON` predicate" shape:
 >
@@ -576,6 +506,8 @@ The rule of thumb: when mixing inner and outer joins in the same query, use pare
 It is **dangerous** when created accidentally: forgetting the `ON` clause on an `INNER JOIN` silently produces a Cartesian product with hundreds of thousands or millions of rows. Modern T-SQL flags an `INNER JOIN` without `ON` as a parse error, but the old comma-join syntax (`FROM t1, t2 WHERE ...`) does not, which is one of several reasons to avoid the comma syntax entirely.
 
 #### Deliberate CROSS JOIN for calendar expansion
+
+Use `CROSS JOIN` deliberately only when the multiplied row count is the point, such as building a dense scaffold before a later `LEFT JOIN`.
 
 *Generate a rowset of every `(date, symbol)` combination for two dates and three symbols.*
 
@@ -604,6 +536,8 @@ ORDER BY c.calendar_date, d.symbol;
 Two dates × three symbols = six total output rows (five shown). The output has one row per `(date, symbol)` combination regardless of whether actual trading data exists for that combination. This pattern is foundational for building gap-filled time series: generate the full `(date, symbol)` grid with `CROSS JOIN`, then `LEFT JOIN` the sparse fact table, then fill the missing fact values with `0` or `NULL` as the business requires.
 
 #### CROSS JOIN row count formula
+
+This count check makes the multiplication rule explicit before the pattern is applied to larger inputs.
 
 *Confirm that `CROSS JOIN` produces exactly `left_rows × right_rows` output rows.*
 
@@ -737,7 +671,7 @@ The `a.symbol < b.symbol` predicate ensures each symbol pair appears only once �
 
 ## Anti-Joins and Semi-Joins
 
-> [!abstract] Filtered joins that do not multiply rows
+> [!abstract]- Summary
 >
 > A **semi-join** returns rows from the left side that have **at least one** matching row on the right side. Unlike `INNER JOIN`, it does not duplicate left-side rows when the right side has multiple matches. The left-side row is returned once if any match exists, zero times otherwise.
 >
@@ -759,6 +693,8 @@ The `a.symbol < b.symbol` predicate ensures each symbol pair appears only once �
 `EXISTS (subquery)` returns `TRUE` if the subquery returns at least one row, regardless of what the subquery's columns contain. This is the canonical way to express a semi-join in T-SQL: the subquery answers "does a matching row exist?" and the outer query keeps the left-side row when the answer is yes.
 
 #### EXISTS basic pattern
+
+This is the canonical semi-join form when the outer query only needs to know whether at least one related row exists.
 
 *Return the dimension rows whose symbol has at least one trade in February 2026.*
 
@@ -823,6 +759,8 @@ The result is identical to the `EXISTS` form above. The cost is not: without `DI
 `NOT EXISTS (subquery)` returns `TRUE` when the subquery returns zero rows. It is the canonical way to express an anti-join in T-SQL and the safest option by default — unlike `NOT IN`, it is immune to the NULL-propagation trap documented in [01-select-and-query-basics](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/01-select-and-query-basics#not-in) and [02-data-types-conversion-and-null-handling](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/02-data-types-conversion-and-null-handling).
 
 #### NOT EXISTS basic pattern
+
+This is the default anti-join shape when the task is to keep candidate rows only if no related row is present on the right side.
 
 *Find the symbols from a candidate list that do not appear in `dbo.dim_symbol`.*
 
@@ -897,7 +835,7 @@ The drawback is that `EXCEPT` requires the two sides to have identical column co
 
 ## Subqueries, EXISTS, and Correlated Subqueries
 
-> [!abstract] Subquery taxonomy
+> [!abstract]- Summary
 >
 > A **subquery** is a `SELECT` statement nested inside another statement. T-SQL supports three flavors based on what the subquery returns:
 >
@@ -914,6 +852,8 @@ The drawback is that `EXCEPT` requires the two sides to have identical column co
 A **scalar subquery** is a subquery that appears where a single scalar value is expected — typically in the `SELECT` list, in a `WHERE` predicate, or in a computed column definition. SQL Server requires the subquery to return **at most one row and one column**. Returning zero rows produces `NULL` (not an error), but returning more than one row raises error 512 and aborts the statement.
 
 #### Scalar subquery in the SELECT list
+
+Use this shape when each outer row needs one derived scalar value and the inner query can guarantee one-row semantics.
 
 *Use a scalar subquery to fetch each symbol's latest trade date from the fact table.*
 
@@ -1021,6 +961,8 @@ Correlated subqueries are the foundation of `EXISTS` and `NOT EXISTS`, which are
 
 #### Correlated subquery to compare a row to its own group average
 
+This example uses correlation both to filter each row against a per-symbol aggregate and to project that same aggregate for comparison.
+
 *Find AAPL trading days where the close was above AAPL's own all-time average.*
 
 > [!info]- Clause-by-clause walkthrough
@@ -1029,6 +971,8 @@ Correlated subqueries are the foundation of `EXISTS` and `NOT EXISTS`, which are
 > 2. `WHERE s.symbol = 'AAPL'` — restrict the outer scan to AAPL only.
 > 3. `WHERE s.close_price > (SELECT AVG(s3.close_price) FROM dbo.stock_prices AS s3 WHERE s3.symbol = s.symbol)` — for each outer row, compute the average close price of rows sharing the same symbol. The correlation is `s3.symbol = s.symbol`. Because we already filter to AAPL in the outer `WHERE`, the inner `AVG` is effectively "AVG of AAPL".
 > 4. The `SELECT` list projects a second correlated scalar subquery so the reader can see the per-row average alongside the close price.
+
+*Correlate the outer AAPL row to two per-symbol `AVG()` subqueries: one in the `SELECT` list and one in the filter predicate.*
 
 ```sql
 SELECT TOP (5)
@@ -1077,7 +1021,7 @@ The short version:
 
 ## CROSS APPLY and OUTER APPLY
 
-> [!abstract] Row-wise derived rowsets with left-side correlation
+> [!abstract]- Summary
 >
 > The `APPLY` operator is SQL Server's equivalent of the ANSI SQL `LATERAL` join. It joins each row of the left-side table source to a right-side derived rowset that **can reference columns from the left side**. This is the distinguishing feature: a plain `INNER JOIN` against a derived table cannot correlate to the outer query, while `APPLY` can.
 >
@@ -1093,9 +1037,11 @@ The short version:
 > - **Unnesting wide columns into rows** — `CROSS APPLY (VALUES (...), (...), (...))` as a modern replacement for `UNPIVOT`.
 > - **Any correlated subquery that returns more than one column** — a scalar subquery can return only one column per outer row; APPLY can return a whole row.
 
-### Why APPLY exists
+### Why `APPLY` solves derived-table scoping
 
 The most important thing to understand about `APPLY` is **why it exists** as a distinct operator from `INNER JOIN` + derived table. Consider the query "for each symbol in `dim_symbol`, return the single most recent row from `stock_prices`". With a plain `INNER JOIN`, the natural attempt is:
+
+*Illustrate the invalid sibling-derived-table pattern where `d.symbol` is out of scope inside the derived table.*
 
 ```sql
 -- THIS DOES NOT WORK
@@ -1159,6 +1105,8 @@ The distinction between `CROSS APPLY` and `OUTER APPLY` is visible only when the
 
 #### CROSS APPLY drops unmatched left rows
 
+This example isolates the inner-preserving behavior: when the correlated subquery returns nothing, the left row disappears.
+
 *Query a hand-crafted list of symbols, one of which (`FAKESYM`) does not exist in `stock_prices`.*
 
 ```sql
@@ -1189,6 +1137,8 @@ ORDER BY s.symbol;
 Only three rows are returned. `FAKESYM` is missing from the output because the `CROSS APPLY` subquery returned zero rows for that symbol (no `stock_prices` rows match), and `CROSS APPLY` drops the outer row when the subquery is empty. This mirrors `INNER JOIN` behavior.
 
 #### OUTER APPLY keeps unmatched left rows with NULL
+
+This companion query keeps the same left-side input so the only change is the null-extending behavior of `OUTER APPLY`.
 
 *Same query with `OUTER APPLY` instead of `CROSS APPLY`.*
 
@@ -1257,7 +1207,7 @@ A single source row (AAPL's 2026-02-12 OHLC) is transposed into four narrow rows
 
 ## UNION, UNION ALL, EXCEPT, and INTERSECT
 
-> [!abstract] Set operators combine rowsets
+> [!abstract]- Summary
 >
 > Set operators take two or more `SELECT` statements and combine their rowsets into a single output:
 >
@@ -1491,6 +1441,8 @@ Step-by-step evaluation:
 
 If the author intended `((1,2,3) UNION (4,5)) INTERSECT (4,6,7)`, the result would be `{4}` instead of `{1, 2, 3, 4}`. Explicit parentheses make the intent unambiguous:
 
+*Parenthesize the mixed set-operator chain so the final result becomes the intersection of the whole union with set `c`.*
+
 ```sql
 (SELECT v FROM (VALUES (1), (2), (3)) AS a(v)
  UNION
@@ -1505,7 +1457,7 @@ SELECT v FROM (VALUES (4), (6), (7)) AS c(v);
 
 ## PIVOT and UNPIVOT
 
-> [!abstract] Transposing rows and columns
+> [!abstract]- Summary
 >
 > `PIVOT` and `UNPIVOT` are two relational operators that transpose data between "tall" (normalized) and "wide" (denormalized) shapes:
 >
@@ -1616,6 +1568,8 @@ This pattern is error-prone (SQL injection if the pivot values come from user in
 
 #### UNPIVOT basic pattern
 
+This native operator example is useful as a baseline before comparing it to the more flexible `CROSS APPLY (VALUES ...)` alternative.
+
 *Unpivot the four OHLC columns from a single AAPL row into four narrow rows.*
 
 ```sql
@@ -1692,9 +1646,9 @@ ORDER BY
 
 The output is the same four rows but the labels are cleaner (`open` instead of `open_price`), the author can impose a custom sort order with `CASE` in `ORDER BY`, and the pattern naturally handles `NULL` source values (they are emitted as `NULL` in the `price_value` column, unlike `UNPIVOT` which drops them). For any new code that needs to transpose columns into rows, prefer `CROSS APPLY (VALUES ...)` over `UNPIVOT`.
 
-## Practical Join Rules
+## Reference Map
 
-A short checklist of habits derived from the traps and rules covered above. Each item cross-references the relevant subsection.
+Use this closing index to jump back to the subsection that matches the query-shape or failure mode you are dealing with.
 
 - **Alias every table and qualify every column reference.** Prevents ambiguous-column error 209 and makes intent explicit. See the `#### Ambiguous column error 209` subsection.
 - **Put right-side filters in the ON clause of a LEFT JOIN, not in WHERE.** Filtering the inner side in `WHERE` silently converts a `LEFT JOIN` into an `INNER JOIN`. See the `#### LEFT JOIN + WHERE on right side silently becomes INNER JOIN` subsection.

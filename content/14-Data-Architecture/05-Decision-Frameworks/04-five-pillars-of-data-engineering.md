@@ -11,7 +11,7 @@ parent: "[[domain-principles-and-decisions]]"
 
 # Five Pillars of Data Engineering
 
-> [!quote]
+> [!quote]+
 > "The undercurrents of data engineering — security, data management, DataOps, data architecture, orchestration, and software engineering — are the foundation everything else rests on."
 >
 > — **Joe Reis & Matt Housley**, *Fundamentals of Data Engineering* (2022)

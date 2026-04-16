@@ -380,10 +380,12 @@ Date watermarks are ideal when the source exposes a reliable event date or inges
 
 #### Demonstrate a `rowversion`-based incremental read boundary
 
-> [!warning]
+> [!warning] Not a CDC replacement
+>
 > `rowversion` is not a replacement for CDC or CT. It does not tell you which columns changed, it does not emit a delete event, and it changes on any update to a row with a `rowversion` column. If deletes matter, you need a separate delete path or a richer feature.
 >
-> [!success]
+> [!success] Use a technical change token
+>
 > Use `rowversion` when the source mutates in place, the current row can be reread cheaply, and the pipeline only needs a technical "changed since token X" boundary. Persist the last consumed token only after the downstream write commits.
 >
 > [!info]-
@@ -908,10 +910,12 @@ Partition switching is a metadata-only reassignment of pages between two aligned
 
 #### Replace a month partition from a validated staging table
 
-> [!warning]
+> [!warning] `SWITCH` has strict prerequisites
+>
 > `ALTER TABLE ... SWITCH` is not a casual reload command. Both tables must be structurally aligned, their indexes must match exactly, the staging table must enforce the same partition boundary with a `CHECK` constraint, and the operation still needs a schema-level lock at switch time.
 >
-> [!success]
+> [!success] Switch only whole partitions
+>
 > Use `SWITCH` only when the table is already partitioned for operational reasons and the replacement unit is naturally a whole partition. If you only need a simple daily reread or a one-day aggregate refresh, a watermark plus overlap window is the safer default.
 >
 > [!info]-
@@ -951,10 +955,12 @@ The current `stoxx` design already follows the safer default: `gold.scores_daily
 
 #### Create an indexed view only for a small, stable aggregate
 
-> [!warning]
+> [!warning] Indexed views tax every write
+>
 > Indexed views add write overhead to every base-table `INSERT`, `UPDATE`, and `DELETE`. They are a poor fit for hot staging or raw landing tables, and they come with strict `SCHEMABINDING`, `SET` option, and aggregation restrictions.
 >
-> [!success]
+> [!success] Prefer refreshable aggregate tables
+>
 > Prefer scheduled aggregation tables for most pipeline workloads. Reach for an indexed view only when the aggregate is simple, queried frequently, and must stay current without a refresh job.
 >
 > [!info]-

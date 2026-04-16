@@ -22,16 +22,16 @@ links:
 
 # Dagster Ops, Jobs, And Graphs
 
-Dagster is asset-first, but not asset-only. Ops, graphs, and jobs exist for the moments when the execution shape matters more than exposing every internal step as a first-class durable contract.
+Dagster's docs describe an op as the foundational unit of computation, a graph as the connected structure of ops, and a job as the executable object that binds the graph and its resources. Those definitions are accurate, but they are easy to misread in an asset-first codebase. The important distinction is that these lower-level primitives shape execution, while assets usually carry the durable business-facing contract.
 
 > [!abstract]- Summary
 >
-> This note covers the lower-level Dagster surface:
+> This note explains where lower-level Dagster primitives still matter:
 >
-> - ops as units of compute rather than public data contracts
-> - graphs as reusable internal execution shapes
-> - jobs as the executable boundary that carries runtime policy
-> - graph-backed assets as the clean bridge between internal step detail and external asset identity
+> - ops capture units of compute, not durable business states
+> - graphs describe internal step structure when execution detail matters
+> - jobs package launchable slices and carry runtime policy
+> - graph-backed assets are the clean bridge when one public dataset needs several internal steps
 
 > [!info] Official References
 >
@@ -43,37 +43,68 @@ Dagster is asset-first, but not asset-only. Ops, graphs, and jobs exist for the 
 >
 > **Op**
 > - A unit of computation in Dagster's lower-level model.
-> - It keeps internal execution steps explicit without promoting all of them to assets.
-> - An op is not automatically a durable business-facing output.
+> - It is the right abstraction when engineers need explicit step boundaries, retries, or logs.
+> - It should not be mistaken for a durable downstream data contract.
 >
 > **Graph**
 > - A composition of ops wired together by dependencies.
-> - It captures reusable execution flow inside one computational boundary.
-> - A graph full of implementation-only detail should not replace the public asset graph.
+> - It explains how internal compute flows.
+> - It should not replace the public asset graph when downstream systems care about named data states.
 >
 > **Job**
 > - The executable boundary Dagster launches.
-> - Jobs carry config, tags, executors, retries, and operational launch policy.
-> - A job is often a wrapper around asset selection rather than the main design surface.
+> - Jobs carry runtime policy such as executor choice, selection, config, and tags.
+> - In asset-first systems, a job often packages a slice of the asset graph rather than defining the business model itself.
 >
 > **Graph-backed asset**
 > - A public asset implemented by a graph of internal ops.
-> - It keeps internal compute visible to engineers without exposing it as public lineage.
-> - If every asset becomes a graph of dozens of ops, the codebase is probably too low level.
+> - It preserves one durable external identity while allowing richer step structure internally.
+> - It is useful when internal phases matter, but only one public dataset should appear in lineage.
 
-## Use Lower-Level Primitives When Execution Detail Matters
+## Most Production Jobs Are Slices Of The Asset Graph
 
-The key decision is not "assets or ops?" It is "does the rest of the platform need a durable asset contract here, or only a reusable execution boundary?"
+Many introductions to Dagster begin with `@op`, `@graph`, and `@job`, which can make the platform feel task-first. In production asset platforms, jobs are often narrower and more pragmatic: they package the exact lineage slice that should be launched under a given operational condition.
 
-### Keep Internal Compute Explicit Without Polluting The Asset Graph
+### The Executable Unit Is Usually Smaller Than The Whole Code Location
 
-Ops and graphs are right when the implementation has multiple phases that matter for retries, logging, or testing, but the rest of the platform only needs the final result.
+A code location may expose dozens of assets, but an operator rarely wants to launch all of them together. The more useful question is which specific slice should run when a source lands, a review is approved, or an export must resume.
 
-#### Compose ops into a graph and execute the job in process
+#### Package a real operational slice with `define_asset_job`
 
-Use this pattern when the runtime steps matter more than exposing each step as a durable asset. The trigger is a multi-step transformation, reconciliation, or repair workflow. The purpose is to preserve explicit execution structure without bloating the asset catalog.
+Use this pattern when the public model is already asset-first and the next requirement is a launchable boundary with its own executor, tags, and scheduling surface. The trigger is a need to run one coherent portion of the graph without promoting jobs to the primary modeling layer. The code runs at composition time and publishes an executable object. Its purpose is to bind operational launch policy to an explicit asset selection.
 
-*Execute an `@op` + `@graph` job and print the normalized output returned by the final op.*
+*Define the `dagflow` security master job as a selection of capture, raw, review, and dbt transform assets.*
+
+```python
+security_master_job = define_asset_job(
+    name="security_master_job",
+    executor_def=in_process_executor,
+    selection=AssetSelection.assets(
+        sec_company_tickers_capture,
+        sec_company_facts_capture,
+        sec_company_tickers_raw,
+        sec_company_facts_raw,
+        security_master_review_snapshot,
+    )
+    | build_dbt_asset_selection([security_master_transform_assets]),
+)
+```
+
+This is more representative of modern Dagster practice than a toy `@job` wrapping two ops. The job is important, but its meaning comes from the asset slice it launches, not from job structure alone.
+
+## Graphs Keep Internal Execution Visible Without Polluting The Asset Catalog
+
+Ops and graphs still matter whenever a single public outcome depends on several internal phases that engineers need to test, log, or retry separately. The discipline is to keep those internals behind the right public boundary.
+
+### Use Ops When The Step Structure Matters More Than Public Lineage
+
+If downstream consumers never need to ask whether an intermediate step exists as a durable state, that step usually belongs in an op graph rather than in the asset catalog.
+
+#### Compose internal steps into a graph and execute the job
+
+Use this pattern when the computation has multiple phases that matter operationally, but the rest of the platform does not need each phase exposed as a first-class asset. The trigger is a multi-step transformation, repair, or normalization routine. The code runs as a normal Dagster job built from ops. Its purpose is to preserve explicit execution structure without polluting public lineage.
+
+*Execute an `@op` plus `@graph` job and print the output returned by the final op.*
 
 ```python
 import contextlib
@@ -109,13 +140,9 @@ True
 ['A', 'B']
 ```
 
-### Keep The Public Contract Asset-First
+#### Keep one public asset even when internal compute has several phases
 
-If downstream consumers care about one durable output, expose one durable asset and keep the internal steps behind that boundary.
-
-#### Implement one durable asset with a graph-backed asset
-
-Use a graph-backed asset when several internal steps produce one public dataset. The trigger is a need for internal execution detail without fragmenting the external lineage surface. The purpose is to preserve a clean asset contract while still making the implementation testable and readable.
+Use a graph-backed asset when the internal step structure matters to engineers, but downstream consumers should still see one durable dataset. The trigger is a computation with several meaningful phases that nevertheless culminates in one named data product. The code runs as asset execution while preserving graph structure internally. Its purpose is to keep the external lineage surface clean without flattening the implementation into one unreadable function.
 
 *Materialize a graph-backed asset and print the recorded asset key from the run result.*
 
@@ -143,7 +170,12 @@ with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
     result = dg.materialize([sales_summary])
 
 print(result.success)
-print([event.materialization.asset_key.to_user_string() for event in result.get_asset_materialization_events()])
+print(
+    [
+        event.materialization.asset_key.to_user_string()
+        for event in result.get_asset_materialization_events()
+    ]
+)
 ```
 
 ```text
@@ -151,9 +183,21 @@ True
 ['sales_summary']
 ```
 
-#### Put runtime throttling on the executable boundary
+> [!question] One boundary question
+>
+> If a downstream team needs to ask whether a state exists, whether it passed checks, or whether it is safe to replay, make that state an asset. If only engineers need step-level logs and retries inside one computation, keep it behind ops or a graph.
 
-Use job and op metadata when the concern is runtime policy rather than data modeling. The trigger is contention against a shared warehouse, API, or cluster. The purpose is to attach the operational rule at the execution boundary instead of burying it inside business logic.
+## Runtime Policy Belongs On The Executable Boundary
+
+Jobs and ops are also where launch policy becomes concrete. Concurrency, executor choice, and retry behavior are execution concerns. They should be visible on the executable object rather than buried inside business code.
+
+### Pools, Executors, And Retries Are Launch Concerns
+
+This is why jobs remain important in asset-first systems. They are the place where an engineer can say how a slice should run, not only what data state it represents.
+
+#### Attach throttling to the compute boundary instead of the business logic
+
+Use this pattern when the operational problem is contention against a shared warehouse, API, or cluster. The trigger is not a data-modeling change but a launch-policy concern such as concurrency control. The code runs at definition time and annotates the executable unit. Its purpose is to move runtime throttling into a visible execution boundary instead of smuggling it into domain code.
 
 *Define an op with a concurrency pool and print the pool name Dagster records on the op definition.*
 
@@ -172,11 +216,3 @@ print(warehouse_mutation.name)
 warehouse
 warehouse_mutation
 ```
-
-## What To Remember
-
-- Ops and graphs are execution abstractions; assets remain the public durable contract.
-- Jobs are where runtime policy becomes concrete: tags, retries, executors, and throttling belong there.
-- Graph-backed assets are the cleanest hybrid pattern when one durable output has several meaningful internal steps.
-- If every public dataset disappears into deep op wiring, the team is recreating a task-first orchestrator inside Dagster.
-- Keep the public graph high signal and let lower-level primitives carry only the internal detail that operators actually need.

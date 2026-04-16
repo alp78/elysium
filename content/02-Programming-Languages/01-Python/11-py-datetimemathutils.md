@@ -10,7 +10,7 @@ status: complete
 
 # DateTime, Math & Utilities - Python
 
-> [!quote]- Skeet On Datetime Handling
+> [!quote]+
 >
 > "There are two hard problems in datetime handling: timezone conversions, daylight saving transitions, and off-by-one errors."
 >

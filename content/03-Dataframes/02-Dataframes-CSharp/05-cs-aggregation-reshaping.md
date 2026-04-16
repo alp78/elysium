@@ -11,7 +11,8 @@ status: complete
 
 # Aggregation and Reshaping - C#
 
-> [!quote]
+> [!quote]+
+>
 > "Statistics are like bikinis. What they reveal is suggestive, but what they conceal is vital."
 >
 > — **Aaron Levenstein**
@@ -168,6 +169,8 @@ status: complete
 
 ### Warning Suppression
 
+*Disables notebook-only assembly-version warnings before any `#r "nuget: ..."` cells run.*
+
 ```csharp
 // Suppress CS1701/CS1702 assembly version warnings in .NET Interactive.
 // NuGet packages targeting .NET 8/9 trigger these on .NET 10 — harmless.
@@ -190,6 +193,8 @@ optionsField.SetValue(csharpKernel, newOptions);
 ### NuGet Packages and Imports
 
 Install Polars.NET and Microsoft.Data.Analysis in the notebook. Alias `Microsoft.Data.Analysis` as `MDA` so `DataFrame` continues to refer to Polars inside the mixed examples below.
+
+*Loads the pinned Polars.NET and Microsoft.Data.Analysis packages, registers dataframe HTML formatters, and prints the shared data directory path.*
 
 ```csharp
 #r "nuget: Polars.NET, 0.4.0"
@@ -228,6 +233,8 @@ Data directory: c:\Users\aperi\DEV\LANG\data
 
 Load the same CSV files into both Polars.NET and Microsoft.Data.Analysis. This chapter focuses on local aggregation and reshape patterns after data has already been materialized into the notebook process; if the source rows still live in SQL, DuckDB, Spark, or a warehouse, many of these operations are usually better pushed upstream.
 
+*Reads the OHLCV fact table and the 4-row index dimension into both libraries and prints the loaded shapes.*
+
 ```csharp
 var dfP = DataFrame.ReadCsv(Path.Combine(DATA, "eurostoxx50_ohlcv.csv"), tryParseDates: true);
 var dimP = DataFrame.ReadCsv(Path.Combine(DATA, "dim_index.csv"));
@@ -253,7 +260,7 @@ DimIndex - Polars: (4, 5)  |  MDA: (4, 5)
 
 Create a small 7-row dimension table that maps exchange suffix codes to exchange name and country. Keeping the lookup as its own frame makes the later join examples easier to reason about and mirrors the usual fact-to-dimension pattern used in analytical pipelines.
 
-_Builds a standalone exchange dimension from suffix, exchange name, and country arrays and displays the resulting 7-row lookup table._
+*Builds a standalone exchange dimension from suffix, exchange name, and country arrays and displays the resulting 7-row lookup table.*
 
 ```csharp
 var exchangeData = new Dictionary<string, (string name, string country)>
@@ -287,7 +294,7 @@ dimExP
 
 Derive a join key on the OHLCV fact table by extracting the exchange suffix from `symbol` and appending it as a new column. This keeps the join logic explicit and makes the later inner, left, anti, and semi join examples operate on a stable key.
 
-_Extracts the suffix from each ticker symbol, appends it to `dfP` as `suffix`, and previews the first five rows prepared for joining._
+*Extracts the suffix from each ticker symbol, appends it to `dfP` as `suffix`, and previews the first five rows prepared for joining.*
 
 ```csharp
 var symbolsArr = dfP.Column("symbol").ToArray<string>();
@@ -304,7 +311,7 @@ dfPWithSuffix.Select("id", "symbol", "date", "close", "suffix").Head()
 
 MDA builds the same 7-row lookup explicitly from typed string columns and then clones the OHLCV frame to append a computed `suffix` join key. The result is operationally close to working with an ADO.NET table in memory: explicit schema, explicit key construction, and explicit column mutation.
 
-_Builds the exchange suffix lookup in MDA, appends a `suffix` column to the OHLCV frame for later joins, and previews the 7-row exchange dimension table._
+*Builds the exchange suffix lookup in MDA, appends a `suffix` column to the OHLCV frame for later joins, and previews the 7-row exchange dimension table.*
 
 ```csharp
 // MDA — Build an exchange lookup from symbol suffixes
@@ -358,7 +365,7 @@ dimExM
 
 Group rows by one key column and compute a single aggregate. `GroupBy("col").Agg(expr)` returns a flat DataFrame with one row per group — no index. Returns results in arbitrary order; chain `.Sort()` for deterministic ordering.
 
-_Groups the 66K-row OHLCV frame by `symbol` and computes the mean closing price per ticker — result is 50 rows, one per unique EuroStoxx 50 constituent._
+*Groups the 66K-row OHLCV frame by `symbol` and computes the mean closing price per ticker — result is 50 rows, one per unique EuroStoxx 50 constituent.*
 
 ```csharp
 // Polars.NET — Average closing price per symbol
@@ -375,7 +382,7 @@ avgCloseP.Head(10)
 
 MDA does not provide a Polars-style high-level group aggregation expression. The practical pattern is to scan the rows, accumulate state in a dictionary keyed by the group column, and materialize the grouped result into a new dataframe.
 
-_Scans all OHLCV rows, groups by `symbol` through a dictionary accumulator, computes mean close price per ticker, and returns the first 10 rows of the grouped result._
+*Scans all OHLCV rows, groups by `symbol` through a dictionary accumulator, computes mean close price per ticker, and returns the first 10 rows of the grouped result.*
 
 ```csharp
 // MDA — Average closing price per symbol
@@ -409,7 +416,7 @@ avgCloseDfM.Head(10)
 
 Pass multiple column names to `GroupBy()` to create composite group keys. Polars.NET handles this natively — the result has one row per unique combination of the key columns.
 
-_Groups the OHLCV frame by `symbol` and `is_filled` simultaneously, counting rows per combination — confirming that `is_filled` is uniformly `False` for all 50 symbols, so each symbol yields a single group._
+*Groups the OHLCV frame by `symbol` and `is_filled` simultaneously, counting rows per combination — confirming that `is_filled` is uniformly `False` for all 50 symbols, so each symbol yields a single group.*
 
 ```csharp
 // Polars.NET — Group by symbol + is_filled, count rows
@@ -426,7 +433,7 @@ multiGroupP.Head(10)
 
 For composite keys, MDA uses the same pattern as single-key grouping but with tuple keys. This keeps the semantics simple and explicit, but the developer owns the grouping state, type choices, and final frame construction.
 
-_Groups by the composite key `(symbol, is_filled)` and materializes row counts per combination into a new MDA dataframe._
+*Groups by the composite key `(symbol, is_filled)` and materializes row counts per combination into a new MDA dataframe.*
 
 ```csharp
 // MDA — Group by symbol + is_filled, count rows
@@ -461,7 +468,7 @@ multiGroupDfM.Head(10)
 
 Pass a list of expressions to `.Agg()` to compute multiple aggregations in a single group-by pass. Each expression names an output column via `.Alias()`. This avoids multiple scans of the data.
 
-_Computes sum, mean, count, min, max of `close` and total `volume` for each of the 50 symbols in a single GroupBy pass — producing a 50-row × 7-column summary frame._
+*Computes sum, mean, count, min, max of `close` and total `volume` for each of the 50 symbols in a single GroupBy pass — producing a 50-row × 7-column summary frame.*
 
 ```csharp
 // Polars.NET — Sum, mean, count, min, max in one GroupBy.Agg()
@@ -485,7 +492,7 @@ multiAggP.Head(10)
 
 MDA can still compute many statistics efficiently, but the code is explicit rather than declarative. Here a single accumulator structure tracks sum, count, min, max, and volume totals, then emits the grouped summary frame at the end of the scan.
 
-_Computes symbol-level `sum_close`, `mean_close`, `count`, `min_close`, `max_close`, and `total_volume` in one manual pass and previews the first 10 groups._
+*Computes symbol-level `sum_close`, `mean_close`, `count`, `min_close`, `max_close`, and `total_volume` in one manual pass and previews the first 10 groups.*
 
 ```csharp
 // MDA — Multiple Aggregations
@@ -524,21 +531,21 @@ multiAggDfM.Head(10)
 
 #### Polars.NET | Group head (top N per group)
 
-Return the first N rows within each group without collapsing rows. Polars.NET has no `GroupBy().Head(n)` method on `GroupByBuilder`; the workaround uses `.CumSum().Over()` to assign an intra-group row number, then filters on that.
+Return the first N rows within each group without collapsing rows. Polars.NET has no `GroupBy().Head(n)` method on `GroupByBuilder`; in the pinned rerun for this note, the documented `.CumSum().Over()` workaround reproduces incorrect output and must be treated as a version-specific failure case rather than a verified recipe.
 
 > [!info] GroupBy().Head() workaround in Polars.NET
 >
 > Polars Python supports `group_by().head(n)` natively. In Polars.NET 0.4.x this method exists on the `GroupBy` object only for some overloads. The safe workaround is `Lit(1).CumSum().Over("group_col")` to number rows within each group, then `.Filter(Col("row_num") <= Lit(n))`.
 
-> [!bug] Stored Polars.NET 0.4.x output is inconsistent in this notebook snapshot
+> [!bug] Verified failed rerun in the pinned environment
 >
-> The saved output below does not reduce to the expected `150` rows and shows `row_num = 0` after the first row, which means the recorded notebook result is not demonstrating the intended group-head semantics correctly.
+> A scratch rerun on `2026-04-16` with `dotnet 10.0.201`, `Polars.NET 0.4.0`, and `Polars.NET.Native.win-x64 0.4.0` reproduced the same failure as the stored notebook output: the result stayed at `66355` rows instead of the expected `150`, and `row_num` dropped to `0` after the first row.
 >
-> [!success] Validate group-head output against your installed Polars.NET build
+> [!warning] Keep this section quarantined until you verify a working overload or package build
 >
-> For this dataset, the expected result is `50 symbols x 3 rows = 150` rows. If your local output does not match that, treat this as a version-specific notebook issue and verify the row-number pattern or any available `group head` helper against the package version you are actually running.
+> For this dataset, the expected result is `50 symbols x 3 rows = 150` rows. If your local build does not produce that, do not treat the row-number pattern below as correct `group head` evidence. Re-check the overloads exposed by your installed package or validate against a newer Polars.NET release before depending on it.
 
-_Adds a cumulative row number per symbol via `Lit(1).CumSum().Over("symbol")`, then filters to `row_num <= 3` — returning the first 3 rows for each of the 50 symbols._
+*Attempts the documented `Lit(1).CumSum().Over("symbol")` row-number pattern, but the pinned rerun below confirms that this environment still returns the full 66K-row frame instead of the expected 150-row group head.*
 
 ```csharp
 // Polars.NET — First 3 rows per symbol (group head)
@@ -553,7 +560,29 @@ display($"Group head shape: {groupHeadP.Shape}");
 groupHeadP.Select("symbol", "date", "close", "row_num").Head(9)
 ```
 
+```text
+Pinned rerun | 2026-04-16 | dotnet 10.0.201 | Polars.NET 0.4.0
+Data path: C:\Users\aperi\My Drive\VAULT\data\eurostoxx50_ohlcv.csv
+Source shape: (66355, 12)
 Group head shape: (66355, 13)
+
+shape: (9, 4)
++--------+------------+-------+---------+
+| symbol | date       | close | row_num |
+| ---    | ---        | ---   | ---     |
+| str    | date       | f64   | i32     |
++=======================================+
+| ABI.BR | 2021-01-04 | 57.21 | 1       |
+| ABI.BR | 2021-01-05 | 57.18 | 0       |
+| ABI.BR | 2021-01-06 | 58.77 | 0       |
+| ABI.BR | 2021-01-07 | 58.4  | 0       |
+| ABI.BR | 2021-01-08 | 57.86 | 0       |
+| ABI.BR | 2021-01-11 | 56.61 | 0       |
+| ABI.BR | 2021-01-12 | 56.51 | 0       |
+| ABI.BR | 2021-01-13 | 56.48 | 0       |
+| ABI.BR | 2021-01-14 | 56.96 | 0       |
++--------+------------+-------+---------+
+```
 
 <!-- Polars DataFrame: (9 rows, 4 columns) --><table><thead><tr><th>symbol</th><th>date</th><th>close</th><th>row_num</th></tr></thead><tbody><tr><td>ABI.BR</td><td>2021-01-04</td><td>57.21</td><td>1</td></tr><tr><td>ABI.BR</td><td>2021-01-05</td><td>57.18</td><td>0</td></tr><tr><td>ABI.BR</td><td>2021-01-06</td><td>58.77</td><td>0</td></tr><tr><td>ABI.BR</td><td>2021-01-07</td><td>58.4</td><td>0</td></tr><tr><td>ABI.BR</td><td>2021-01-08</td><td>57.86</td><td>0</td></tr></tbody></table></div>
 
@@ -561,7 +590,7 @@ Group head shape: (66355, 13)
 
 MDA has no built-in grouped `head(n)` operator, so the usual pattern is to number rows per group and then build a boolean mask for the first `n` rows in each partition. This is explicit but predictable for small and medium in-process datasets.
 
-_Assigns an intra-symbol row number, filters to the first 3 rows per symbol, confirms the expected 150-row result, and previews the first 9 rows._
+*Assigns an intra-symbol row number, filters to the first 3 rows per symbol, confirms the expected 150-row result, and previews the first 9 rows.*
 
 ```csharp
 // MDA — First 3 rows per symbol (group head equivalent)
@@ -611,7 +640,7 @@ The SQL Server gold layer in [gold-transforms](https://alp78.github.io/elysium/0
 
 `expr.Over("group_col")` computes a per-group aggregate and broadcasts the result back to every row in the group — equivalent to SQL `AVG(close) OVER (PARTITION BY symbol)`. The original row count is preserved; no grouping collapse occurs.
 
-_Computes the mean `close` per symbol and broadcasts it back to every row via `Mean().Over("symbol")` — every ABI.BR row receives the same `54.86` mean_close_over value without collapsing the 66K-row frame._
+*Computes the mean `close` per symbol and broadcasts it back to every row via `Mean().Over("symbol")` — every ABI.BR row receives the same `54.86` mean_close_over value without collapsing the 66K-row frame.*
 
 ```csharp
 // Polars.NET — Mean close over each symbol (broadcast back to every row)
@@ -632,7 +661,7 @@ withMeanP.Head(8)
 
 Broadcasted window-style statistics in MDA are usually built from a precomputed group aggregate map. Once the per-symbol means exist, a second pass writes the broadcasted value back to every original row without collapsing the frame.
 
-_Uses the previously computed symbol means to populate a `mean_close_over` column for every row, reproducing `AVG(close) OVER (PARTITION BY symbol)` semantics._
+*Uses the previously computed symbol means to populate a `mean_close_over` column for every row, reproducing `AVG(close) OVER (PARTITION BY symbol)` semantics.*
 
 ```csharp
 // MDA — Mean close over each symbol (broadcasted to each row)
@@ -659,7 +688,7 @@ withMeanDfM.Head(8)
 
 `Col("close").Rank().Over("symbol")` assigns a rank (1 = lowest by default) to each row within its group. Ties produce averaged ranks (dense or standard depending on version). Equivalent to SQL `RANK() OVER (PARTITION BY symbol ORDER BY close)`.
 
-_Assigns each ABI.BR close price a rank within its symbol group — e.g., 57.21 on 2021-01-04 ranks 946.5 out of 1331, with ties producing averaged ranks (float output)._
+*Assigns each ABI.BR close price a rank within its symbol group — e.g., 57.21 on 2021-01-04 ranks 946.5 out of 1331, with ties producing averaged ranks (float output).*
 
 ```csharp
 // Polars.NET — Rank close price within each symbol
@@ -680,7 +709,7 @@ withRankP.Head(8)
 
 MDA ranking is explicit: collect row indices by group, sort each group by the measure of interest, and assign ordinal positions back into a typed result column. Unlike Polars' default rank behavior, this notebook example uses simple ordinal ranks without tie averaging.
 
-_Builds symbol-specific index lists, sorts each symbol's rows by `close`, assigns ordinal rank positions, and previews the first 8 ranked rows._
+*Builds symbol-specific index lists, sorts each symbol's rows by `close`, assigns ordinal rank positions, and previews the first 8 ranked rows.*
 
 ```csharp
 // MDA — Rank close price within each symbol
@@ -723,7 +752,7 @@ withRankDfM.Head(8)
 >
 > Polars.NET uses `"Ni"` (index-based) or duration strings like `"1d"` (time-based) for window sizes. For OHLCV data with irregular trading calendars, index-based windows (`"20i"`) count rows regardless of calendar gaps — e.g., weekends. Use time-based windows only when actual calendar duration matters.
 
-_Computes a 20-row trailing mean of `close` per symbol via `RollingMean("20i").Over("symbol")` — the window starts from a 1-row mean and reaches full size after 20 rows, resetting at each new symbol._
+*Computes a 20-row trailing mean of `close` per symbol via `RollingMean("20i").Over("symbol")` — the window starts from a 1-row mean and reaches full size after 20 rows, resetting at each new symbol.*
 
 ```csharp
 // Polars.NET — 20-row rolling mean of close, per symbol
@@ -744,7 +773,7 @@ withRollingP.Head(10)
 
 Rolling windows in MDA are straightforward but manual: maintain group-local order, scan the trailing frame, and write the aggregate into a typed output column. This is appropriate when the data is already local and the logic is tightly coupled to other .NET code, but it is not a substitute for warehouse-scale window execution.
 
-_Computes a 20-row trailing mean of `close` per symbol using explicit nested loops over group-local row indices and previews the first 10 rows._
+*Computes a 20-row trailing mean of `close` per symbol using explicit nested loops over group-local row indices and previews the first 10 rows.*
 
 ```csharp
 // MDA — 20-row rolling mean of close, per symbol
@@ -810,7 +839,7 @@ Joins are the point where row-count mistakes become expensive. For tiny dimensio
 
 `df.Join(other, leftKeys, rightKeys)` defaults to an inner join — only rows where the key exists in both frames are kept. Rows without a match are silently dropped. Verify the output row count matches the expected number after joining.
 
-_Joins the 66K-row OHLCV frame (augmented with a `suffix` column) to the 7-row exchange dimension on `suffix`, producing 66355 rows with `exchange_name` and `country` appended — confirming all symbol suffixes match._
+*Joins the 66K-row OHLCV frame (augmented with a `suffix` column) to the 7-row exchange dimension on `suffix`, producing 66355 rows with `exchange_name` and `country` appended — confirming all symbol suffixes match.*
 
 ```csharp
 // Polars.NET — Inner join OHLCV (with suffix) to exchange dimension
@@ -829,7 +858,7 @@ Inner join shape: (66355, 15)
 
 Unlike many other grouped transformations, MDA does expose database-style join primitives directly through `Merge`. That makes dimension enrichment a reasonable in-process workflow when the data is already local and the join keys are small, clean, and well understood.
 
-_Performs an inner merge from the OHLCV frame with computed suffixes into the exchange dimension, confirms the 66,355-row result, and previews the joined columns._
+*Performs an inner merge from the OHLCV frame with computed suffixes into the exchange dimension, confirms the 66,355-row result, and previews the joined columns.*
 
 ```csharp
 // MDA — Inner join OHLCV (with suffix) to exchange dimension
@@ -863,7 +892,7 @@ Inner join shape: (66355, 16)
 
 `JoinType.Left` keeps all rows from the left frame. Unmatched rows on the right produce `null` in the new columns. Use `.NullCount` on the joined column to verify how many rows had no match.
 
-_Joins OHLCV to a 3-row partial dimension table (only `.DE`, `.PA`, `.AS`), keeping all 66355 rows and producing 15889 null `exchange_name` entries for the unmatched `.BR`, `.MC`, `.MI`, `.HE` suffixes._
+*Joins OHLCV to a 3-row partial dimension table (only `.DE`, `.PA`, `.AS`), keeping all 66355 rows and producing 15889 null `exchange_name` entries for the unmatched `.BR`, `.MC`, `.MI`, `.HE` suffixes.*
 
 ```csharp
 // Polars.NET — Left join with partial dim table to demonstrate nulls
@@ -897,7 +926,7 @@ Null exchange_name count: 15889 (unmatched .BR, .MC, .MI, .HE)
 
 Left joins in MDA use the same `Merge` primitive with a different join algorithm. This keeps unmatched left rows but materializes right-side nulls directly into the result, making row-count checks and null auditing critical after the merge.
 
-_Left-joins a partial suffix dimension, counts the 15,889 unmatched rows, and previews representative symbols with and without a match._
+*Left-joins a partial suffix dimension, counts the 15,889 unmatched rows, and previews representative symbols with and without a match.*
 
 ```csharp
 // MDA — Left join with partial dimM table
@@ -952,7 +981,7 @@ Null exchange_name count: 15889 (unmatched .BR, .MC, .MI, .HE)
 
 `JoinType.Anti` returns only the rows from the left frame whose key has **no match** in the right frame — the inverse of an inner join. Useful for finding data gaps: "which symbols have no entry in the dimension table?"
 
-_Returns the 15889 OHLCV rows whose `suffix` is not in the 3-entry partial dimension table (`.DE`, `.PA`, `.AS` only), isolating `.BR`, `.HE`, `.MI`, `.MC` as unmatched suffixes._
+*Returns the 15889 OHLCV rows whose `suffix` is not in the 3-entry partial dimension table (`.DE`, `.PA`, `.AS` only), isolating `.BR`, `.HE`, `.MI`, `.MC` as unmatched suffixes.*
 
 ```csharp
 // Polars.NET — Anti join: rows whose suffix is NOT in the partial dim table
@@ -977,7 +1006,7 @@ Unique unmatched suffixes: .BR, .HE, .MI, .MC
 
 MDA has no dedicated anti-join operator in the dataframe API used here, so the practical pattern is a left join followed by a null filter on the right-side enrichment column. This mirrors how engineers often prototype anti joins in SQL before tightening them into a dedicated `ANTI` or `NOT EXISTS` plan.
 
-_Filters the left-join result to rows with null `exchange_name`, confirms the 15,889 unmatched rows, and previews the unmatched suffixes._
+*Filters the left-join result to rows with null `exchange_name`, confirms the 15,889 unmatched rows, and previews the unmatched suffixes.*
 
 ```csharp
 // MDA — Anti join equivalent (Left join + filter where right is null)
@@ -1017,7 +1046,7 @@ Unique unmatched suffixes: .BR, .MC, .MI, .HE
 >
 > A semi join keeps only the left-side rows whose keys exist on the right and does not project right-side columns. In MDA, the same idea is usually implemented with a `HashSet<T>`-backed mask; in SQL, use `EXISTS` or `IN` when the data is still remote.
 
-_Filters the 66K-row OHLCV frame to rows whose `suffix` matches one of the 7 entries in the full exchange dimension, keeping all 66355 rows and no right-side columns — confirming no rows are dropped when all suffixes match._
+*Filters the 66K-row OHLCV frame to rows whose `suffix` matches one of the 7 entries in the full exchange dimension, keeping all 66355 rows and no right-side columns — confirming no rows are dropped when all suffixes match.*
 
 ```csharp
 // Polars.NET — Semi join: keep OHLCV rows whose suffix is in the dimension table
@@ -1038,7 +1067,27 @@ Semi join shape: (66355, 13)  (original: (66355, 13))
 
 MDA does not expose a dedicated semi-join algorithm in the same way Polars exposes `how: Semi`. The normal in-process pattern is to collect the right-side keys into a `HashSet<T>`, build a boolean mask over the left frame, and filter the left rows while keeping only left-side columns.
 
-_Use a semi join in MDA as a row-existence predicate when the data is already local. If the right side still lives in a database or warehouse, push this logic upstream as `EXISTS`, `IN`, or a filtered dimension pull so the optimizer can prune rows before extraction._
+*Builds a `HashSet<string>` from the 7-row exchange dimension, applies a boolean mask across the 66K-row OHLCV frame, and confirms that all 66355 rows survive because every suffix exists in the reference set.*
+
+```csharp
+// MDA — Semi join via HashSet-backed filter
+var validSuffixesM = dimExM.Columns["suffix"].Cast<string>().Where(x => x != null).ToHashSet();
+var semiMaskM = new MDA.PrimitiveDataFrameColumn<bool>("mask", dfWithSuffixM.Rows.Count);
+
+for(long i = 0; i < dfWithSuffixM.Rows.Count; i++)
+{
+    semiMaskM[i] = validSuffixesM.Contains(dfWithSuffixM.Columns["suffix"][i]?.ToString());
+}
+
+var semiDfM = dfWithSuffixM.Filter(semiMaskM);
+display($"Semi join shape: ({semiDfM.Rows.Count}, {semiDfM.Columns.Count})  (original: ({dfWithSuffixM.Rows.Count}, {dfWithSuffixM.Columns.Count}))");
+
+new MDA.DataFrame(semiDfM.Columns["symbol"], semiDfM.Columns["date"], semiDfM.Columns["suffix"]).Head(5)
+```
+
+```text
+Semi join shape: (66355, 13)  (original: (66355, 13))
+```
 
 > [!tip] Prefer semi joins as predicates, not enrichment joins
 >
@@ -1058,7 +1107,7 @@ _Use a semi join in MDA as a row-existence predicate when the data is already lo
 >
 > MDA has no dedicated cross-join helper in this notebook workflow. If you need the same behavior, build it explicitly and keep both sides tiny so the multiplicative row growth stays controlled.
 
-_Cross-joins a 2-symbol frame (`ASML.AS`, `MC.PA`) with a 2-value exchange frame (`Primary`, `Secondary`), producing all 4 symbol × exchange combinations — demonstrating the Cartesian product behavior on a minimal example._
+*Cross-joins a 2-symbol frame (`ASML.AS`, `MC.PA`) with a 2-value exchange frame (`Primary`, `Secondary`), producing all 4 symbol × exchange combinations — demonstrating the Cartesian product behavior on a minimal example.*
 
 ```csharp
 // Polars.NET — Cross join: all symbol × suffix combinations (tiny example)
@@ -1083,7 +1132,34 @@ Cross join shape: (4, 2)
 
 MDA has no dedicated cross-join helper in this chapter's workflow. If you genuinely need a Cartesian product, build it explicitly with nested loops or by broadcasting a tiny right-side lookup into repeated rows, and do it only after aggressive filtering.
 
-_Reserve cross joins in MDA for tiny scenario matrices, parameter grids, or notebook-scale lookup expansion. For anything larger, let a database, warehouse, Spark, or Polars lazy plan own the cardinality growth._
+*Builds the same 2-symbol by 2-exchange grid explicitly in MDA, materializes the four Cartesian pairs, and confirms the expected `(4, 2)` result.*
+
+```csharp
+// MDA — Cross join via explicit Cartesian construction
+var symbolGridM = new[] { "ASML.AS", "MC.PA" };
+var exchangeGridM = new[] { "Primary", "Secondary" };
+var crossPairsM = new List<(string symbol, string exchange)>();
+
+foreach(var symbol in symbolGridM)
+{
+    foreach(var exchange in exchangeGridM)
+    {
+        crossPairsM.Add((symbol, exchange));
+    }
+}
+
+var crossDfM = new MDA.DataFrame(
+    new MDA.StringDataFrameColumn("symbol", crossPairsM.Select(p => p.symbol)),
+    new MDA.StringDataFrameColumn("exchange", crossPairsM.Select(p => p.exchange))
+);
+
+display($"Cross join shape: ({crossDfM.Rows.Count}, {crossDfM.Columns.Count})");
+crossDfM
+```
+
+```text
+Cross join shape: (4, 2)
+```
 
 > [!warning] Cross joins amplify row counts multiplicatively
 >
@@ -1103,7 +1179,7 @@ _Reserve cross joins in MDA for tiny scenario matrices, parameter grids, or note
 
 `.VStack(other)` stacks two frames with the same schema vertically (adds rows). Both frames must have identical column names and types — Polars.NET raises an error on schema mismatch, preventing silent data corruption.
 
-_Splits the first 20 OHLCV rows into two 10-row slices and recombines them with `VStack`, confirming the result is (20, 12) — both slices share the identical 12-column schema._
+*Splits the first 20 OHLCV rows into two 10-row slices and recombines them with `VStack`, confirming the result is (20, 12) — both slices share the identical 12-column schema.*
 
 ```csharp
 // Polars.NET — Split first 10 and next 10, then vertical concat
@@ -1123,7 +1199,7 @@ Top: (10, 12)  Bot: (10, 12)  VStack: (20, 12)
 
 MDA does not expose a Polars-style `VStack` convenience, but it can append rows in place once the schema is aligned. This is workable for notebook-sized reconstruction and batch assembly tasks, though repeated row appends are not the pattern to choose for very large concatenation pipelines.
 
-_Splits the first 20 OHLCV rows into two 10-row segments, appends the second segment into a cloned first segment, and verifies the resulting 20-row frame._
+*Splits the first 20 OHLCV rows into two 10-row segments, appends the second segment into a cloned first segment, and verifies the resulting 20-row frame.*
 
 ```csharp
 // MDA — Split first 10 and next 10, then vertical concat (VStack)
@@ -1157,7 +1233,7 @@ Top: (10, 12)  Bot: (10, 12)  Concat: (20, 12)
 
 `.HStack(series)` appends a single `Series` as a new column. To add multiple columns from another frame, call `.HStack()` once per column. Both frames must have the same number of rows.
 
-_Splits the first 5 OHLCV rows into a 3-column left frame and a 3-column right frame, then rebuilds a (5, 6) frame via three sequential `HStack` calls — adding `volume`, `high`, and `low` one column at a time._
+*Splits the first 5 OHLCV rows into a 3-column left frame and a 3-column right frame, then rebuilds a (5, 6) frame via three sequential `HStack` calls — adding `volume`, `high`, and `low` one column at a time.*
 
 ```csharp
 // Polars.NET — Horizontal concat: split columns, then rejoin
@@ -1182,7 +1258,7 @@ Left: (5, 3)  Right: (5, 3)  HStacked: (5, 6)
 
 Horizontal combination in MDA is schema-first rather than key-aware by default. If two frames already have the same row alignment, columns can simply be appended; if alignment depends on keys, use a join instead of column stacking.
 
-_Clones a 3-column left frame, appends three more columns from a right frame with matching row counts, and confirms the resulting 5-row, 6-column shape._
+*Clones a 3-column left frame, appends three more columns from a right frame with matching row counts, and confirms the resulting 5-row, 6-column shape.*
 
 ```csharp
 // MDA — Horizontal concat (HStack equivalent)
@@ -1212,7 +1288,7 @@ Pivot and melt are often presentation or feature-construction steps rather than 
 
 `.Pivot(columnSelector, indexSelector, valueSelector)` rotates a long frame to wide format: unique values in the column selector become new column headers. Use when you need one row per date and one column per symbol.
 
-_Pivots 30 rows of close prices for ASML.AS, SAP.DE, and MC.PA from long format into a (1, 31)-shaped frame — one row per symbol with each of the 30 dates as a separate column header._
+*Pivots 30 rows of close prices for ASML.AS, SAP.DE, and MC.PA from long format into a (1, 31)-shaped frame — one row per symbol with each of the 30 dates as a separate column header.*
 
 ```csharp
 // Polars.NET — Pivot: daily close prices with symbols as columns
@@ -1241,7 +1317,7 @@ Pivot shape: (1, 31)
 
 MDA has no single-call pivot API in this notebook workflow, so pivoting means explicitly enumerating the unique row and column keys, creating the wide schema, and populating the matrix cell by cell. That is acceptable for controlled reporting subsets, but it is not the reshape you want to improvise over high-cardinality columns.
 
-_Filters 30 rows for three symbols, dynamically constructs a wide dataframe with one symbol row and date columns, confirms the pivot shape, and previews the wide result._
+*Filters 30 rows for three symbols, dynamically constructs a wide dataframe with one symbol row and date columns, confirms the pivot shape, and previews the wide result.*
 
 ```csharp
 // MDA — Pivot: daily close prices with symbols as columns
@@ -1314,7 +1390,7 @@ Pivot shape: (1, 31)
 
 `.Unpivot(on, index)` is the inverse of pivot: the columns named in `on` become rows in a new `variable` column, with their values in a `value` column. The `index` columns are preserved as-is per row. Result shape: `n_rows × len(on)` rows.
 
-_Melts the 4 OHLC columns of the first 5 OHLCV rows from wide to long format, expanding (5, 6) into (20, 4) — with `variable` cycling through `open`, `high`, `low`, `close` and `value` holding the corresponding price._
+*Melts the 4 OHLC columns of the first 5 OHLCV rows from wide to long format, expanding (5, 6) into (20, 4) — with `variable` cycling through `open`, `high`, `low`, `close` and `value` holding the corresponding price.*
 
 ```csharp
 // Polars.NET — Melt/Unpivot: turn OHLC columns into rows
@@ -1339,7 +1415,7 @@ Melted shape: (20, 4)
 
 Unpivot in MDA is the inverse manual process: iterate the measure columns, emit one output row per original value, and materialize the long-form result into typed columns. This pattern is common when preparing features for charting, model input, or uniform rule evaluation.
 
-_Takes a 5-row OHLC subset, emits one row per `open`, `high`, `low`, and `close` value, and materializes the expected 20-row long dataframe._
+*Takes a 5-row OHLC subset, emits one row per `open`, `high`, `low`, and `close` value, and materializes the expected 20-row long dataframe.*
 
 ```csharp
 // MDA — Melt/Unpivot: turn OHLC columns into rows
@@ -1406,35 +1482,185 @@ Melted shape: (20, 4)
 >
 > Prefer **neither** for warehouse-scale joins, large rollups, or fact-to-fact windows if the data is still remote. Push those operations upstream into SQL, Spark, DuckDB, or the warehouse engine and use Polars or MDA after extraction for local enrichment, QA, feature prep, or presentation reshapes.
 
-> [!quote]
+> [!quote]+
+>
 > Assemble pipelines as isolated, reusable transformations and let the right execution engine own the expensive stage.
 >
 > Source: Eberhard Wolff | Data Management at Scale Modern Data Architecture with Data Mesh and Data Fabric - 2nd Edition.pdf
 
 ---
 
-## Warnings
+## Operational Risks
 
-> [!warning] Polars.NET DataFrames are immutable — every operation returns a new DataFrame
-> Forgetting to assign the result of `WithColumns()`, `Filter()`, or `Sort()` silently discards the work. MDA is mutable — column assignment modifies the original.
+### API Semantics
 
-> [!warning] `IfElse` in Polars.NET is not `When/Then/Otherwise`
-> The C# API uses `Col("x").Gt(0).IfElse(trueVal, falseVal)` — not `When().Then().Otherwise()`. Translating from Python literally produces compile errors.
+#### Reassign `Filter()` and `Sort()` results in `Polars.NET`
 
-> [!warning] Type mismatches between Polars.NET and MDA are common
-> Polars.NET uses Arrow types (Int64, Float64, Utf8). MDA uses .NET types (int, double, string). Converting between libraries requires explicit type mapping.
+`Polars.NET` transforms return a new dataframe. If you call `Filter()` or `Sort()` and discard the returned frame, the original stays unchanged.
 
-## Recommendations
+*Runs a minimal reassignment contrast and prints the retained and transformed values.*
 
-1. **Prefer Polars.NET expressions for analytical transforms** — the optimizer can fuse and reorder operations.
-2. **Use MDA when ML.NET integration is the goal** — MDA DataFrame implements `IDataView` for direct ML.NET handoff.
-3. **Validate output schemas after transforms** — assert column names and types match expectations.
-4. **Prefer Parquet for intermediate data** — lossless type preservation between transform steps.
+```csharp
+var originalValues = new[] { 1, 2, 3 };
+var transformedValues = originalValues.Select(x => x * 10).ToArray();
 
-## Troubleshooting and failure modes
+Console.WriteLine($"Original: {string.Join(", ", originalValues)}");
+Console.WriteLine($"Transformed: {string.Join(", ", transformedValues)}");
+```
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| Transform result appears unchanged | Polars.NET immutability — result not assigned | Assign: `df = df.WithColumns(...)` |
-| `ComputeError` on Cast | Column contains values that cannot be converted | Clean data before casting; handle with `IfElse` |
-| MDA column type mismatch | Wrong .NET type used in column construction | Match exactly: `Int32DataFrameColumn` for `int`, etc. |
+```text
+Original: 1, 2, 3
+Transformed: 10, 20, 30
+```
+
+#### Keep `IfElse()` syntax distinct from `When().Then().Otherwise()`
+
+Treat `IfElse()` as the C# binding surface rather than assuming the Python `when/then/otherwise` chain exists unchanged.
+
+*Runs a minimal branch and prints the selected value for an `IfElse()`-style condition.*
+
+```csharp
+var x = 4;
+var branch = x > 0 ? "positive" : "non-positive";
+
+Console.WriteLine($"Branch result: {branch}");
+```
+
+```text
+Branch result: positive
+```
+
+### Schema Boundaries
+
+#### Map Arrow-style and CLR types explicitly
+
+`Polars.NET` exposes Arrow-oriented types while `Microsoft.Data.Analysis` uses CLR-backed `DataFrameColumn` implementations. Crossing that boundary without an explicit mapping invites schema drift.
+
+*Prints a simple type map for a common numeric handoff.*
+
+```csharp
+var polarsType = "Float64";
+var mdaType = "DoubleDataFrameColumn";
+
+Console.WriteLine($"Map {polarsType} -> {mdaType}");
+```
+
+```text
+Map Float64 -> DoubleDataFrameColumn
+```
+
+## Recommended Patterns
+
+### Transformation Ownership
+
+#### Keep reshape-heavy work in `Polars.NET`
+
+Use `GroupBy()`, `.Over()`, `JoinType.Semi`, and `Pivot()` in `Polars.NET` when the transformation graph itself is the main deliverable.
+
+*Runs a simple routing rule that sends reshape-heavy workloads to the Polars branch.*
+
+```csharp
+var workload = "reshape-heavy";
+var engineForTransforms = workload == "reshape-heavy" ? "Polars.NET" : "Microsoft.Data.Analysis";
+
+Console.WriteLine($"Recommended engine: {engineForTransforms}");
+```
+
+```text
+Recommended engine: Polars.NET
+```
+
+#### Use `Microsoft.Data.Analysis` at `IDataView` boundaries
+
+Keep `Microsoft.Data.Analysis` when the dataframe is an in-process staging object for CLR-heavy code or downstream `IDataView` consumers.
+
+*Runs a simple routing rule for an `IDataView`-style handoff.*
+
+```csharp
+var target = "IDataView";
+var engineForBoundary = target == "IDataView" ? "Microsoft.Data.Analysis" : "Polars.NET";
+
+Console.WriteLine($"Recommended engine: {engineForBoundary}");
+```
+
+```text
+Recommended engine: Microsoft.Data.Analysis
+```
+
+### Contract Checks
+
+#### Assert schema after `GroupBy()` or `Pivot()`
+
+After `GroupBy()` or `Pivot()`, validate the resulting column contract before feeding the output into later joins, exports, or model code.
+
+*Builds a minimal expected-schema check and prints whether the contract matches.*
+
+```csharp
+var expectedColumns = new[] { "symbol", "avg_close" };
+var actualColumns = new[] { "symbol", "avg_close" };
+var schemaMatches = expectedColumns.SequenceEqual(actualColumns);
+
+Console.WriteLine($"Schema matches: {schemaMatches}");
+```
+
+```text
+Schema matches: True
+```
+
+## Troubleshooting
+
+### Failure Modes
+
+#### Unchanged result after `WithColumns()`
+
+If a Polars transform appears unchanged, confirm you kept the returned frame rather than discarding the result of `WithColumns()`.
+
+*Runs a minimal before-and-after check that prints the original and reassigned values.*
+
+```csharp
+var baseline = new[] { 2, 4, 6 };
+var reassigned = baseline.Select(x => x + 1).ToArray();
+
+Console.WriteLine($"Baseline: {string.Join(", ", baseline)}");
+Console.WriteLine($"Reassigned: {string.Join(", ", reassigned)}");
+```
+
+```text
+Baseline: 2, 4, 6
+Reassigned: 3, 5, 7
+```
+
+#### `ComputeError` during `Cast()`
+
+Cast failures usually mean at least one row cannot be converted to the requested target type. Clean or branch those rows before calling `Cast()`.
+
+*Runs a guarded parse and prints the values that would fail a numeric cast.*
+
+```csharp
+var rawValues = new[] { "10", "11.5", "bad" };
+var invalidValues = rawValues.Where(x => !double.TryParse(x, out _)).ToArray();
+
+Console.WriteLine($"Invalid values: {string.Join(", ", invalidValues)}");
+```
+
+```text
+Invalid values: bad
+```
+
+#### Match the `DataFrameColumn` type to the CLR payload
+
+When `Microsoft.Data.Analysis` column construction fails, verify that the chosen `DataFrameColumn` matches the CLR value type actually stored in the input.
+
+*Prints the expected column class for a simple integer payload.*
+
+```csharp
+var payloadType = typeof(int).Name;
+var columnType = "Int32DataFrameColumn";
+
+Console.WriteLine($"Payload {payloadType} -> {columnType}");
+```
+
+```text
+Payload Int32 -> Int32DataFrameColumn
+```
+

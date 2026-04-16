@@ -13,7 +13,7 @@ status: complete
 
 # Bash Automation for Data Engineering
 
-> [!quote] Debugging Discipline
+> [!quote]+
 >
 > "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
 >

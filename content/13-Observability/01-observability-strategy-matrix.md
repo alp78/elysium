@@ -10,7 +10,7 @@ status: complete
 
 # Observability Strategy Matrix
 
-> [!quote]
+> [!quote]+
 > "I'll start with observability tools only — if you know which tools look but don't touch, you can diagnose problems without introducing new ones."
 >
 > — **Brendan Gregg**, *Systems Performance* (2013)

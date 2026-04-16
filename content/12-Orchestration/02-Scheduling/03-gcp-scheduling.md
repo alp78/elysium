@@ -10,7 +10,7 @@ status: complete
 
 # GCP Scheduling
 
-> [!quote]
+> [!quote]+
 > "The whole goal is, we want to reduce the amount that a human needs to give to the system in order to make it do what you want it to do."
 >
 > — **Kelsey Hightower**, KubeCon keynote (2017)

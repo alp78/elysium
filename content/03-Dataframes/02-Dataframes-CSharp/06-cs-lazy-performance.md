@@ -11,7 +11,7 @@ status: complete
 
 # Lazy API and Performance - C#
 
-> [!quote]- Epigraph
+> [!quote]+
 >
 > "Premature optimization is the root of all evil."
 >

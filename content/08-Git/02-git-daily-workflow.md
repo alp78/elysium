@@ -8,7 +8,7 @@ tags:
 
 # Git Daily Workflow
 
-> [!quote]
+> [!quote]+
 >
 > "As far as I'm concerned, if the code isn't checked into source control, it doesn't exist."
 >

@@ -10,7 +10,7 @@ status: complete
 
 # Datadog Airflow Observability
 
-> [!quote]
+> [!quote]+
 > "Do you know what's better than debugging at 3 AM with really great tools? Not having to wake up at 3 AM."
 >
 > — **Liz Fong-Jones**

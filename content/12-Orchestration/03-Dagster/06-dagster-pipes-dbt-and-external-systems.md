@@ -22,16 +22,16 @@ links:
 
 # Dagster Pipes, dbt, And External Systems
 
-Serious Dagster platforms do not force every workload into the Dagster process. They keep heavy or specialized compute where it belongs and let Dagster own the orchestration, lineage, metadata, and blast-radius reasoning around that compute.
+Dagster becomes most valuable in mixed-compute systems when it refuses to impersonate the runtime that should actually execute the work. The orchestrator should know what data state was produced, what metadata came back, and which downstream assets now depend on it. That does not mean every warehouse transform, Spark job, or review export needs to run inside the Dagster process itself.
 
 > [!abstract]- Summary
 >
-> This note covers the boundary between Dagster and the rest of the stack:
+> This note covers the main integration boundaries around a Dagster project:
 >
-> - use Dagster Pipes when remote code should stay remote but still stream metadata back into Dagster
-> - treat dbt as a lineage-aware transformation system instead of a black-box shell step
-> - keep remote idempotency in the remote system and orchestration visibility in Dagster
-> - avoid making the control plane impersonate the runtime that should execute the work
+> - Dagster Pipes exists for workloads that should stay in another process or execution environment
+> - dbt should appear in Dagster as a graph of models, sources, and checks, not as one opaque shell command
+> - resources and translators define how another system becomes visible to Dagster
+> - a clean orchestration boundary preserves both observability and ownership of compute semantics
 
 > [!info] Official References
 >
@@ -43,121 +43,178 @@ Serious Dagster platforms do not force every workload into the Dagster process. 
 > [!note]- Glossary
 >
 > **Dagster Pipes**
-> - Dagster's pattern for launching external code while receiving logs and metadata back into the orchestrator.
-> - It preserves observability without forcing heavy compute into the control plane.
-> - Pipes still assumes the remote job is safe to retry.
+> - The Dagster Pipes guide defines it as a way to run a subprocess with a given command and environment while sending structured metadata and logs back to Dagster.
+> - It preserves orchestration visibility without forcing the compute into the control plane process.
+> - Pipes is most useful when the runtime boundary is already real and should remain real.
 >
 > **External runtime**
-> - A process, container, cluster, or managed service outside the Dagster process.
-> - Many data workloads belong there for isolation or dependency reasons.
-> - Remote execution does not excuse weak logging or weak idempotency.
+> - An external runtime is any process, container, cluster, or managed system outside the Dagster process.
+> - It may own dependency isolation, hardware profile, or language/runtime constraints that Dagster should not absorb.
+> - Orchestration still needs visibility into what that runtime produced and whether it is safe to retry.
 >
 > **`DbtCliResource`**
-> - Dagster's resource wrapper around a dbt project and executable.
-> - It lets Dagster treat dbt work as a first-class orchestration boundary.
-> - Dagster still depends on a valid dbt project, profile, and adapter.
+> - `DbtCliResource` is the Dagster resource boundary around a dbt project and executable.
+> - It lets Dagster orchestrate dbt as structured asset work instead of as a shell string with no lineage.
+> - The resource is only trustworthy if the dbt project, manifest, and profile state are themselves valid.
 >
-> **Orchestration boundary**
-> - The line between "Dagster decides and records" and "another system computes."
-> - This is the main design boundary in mixed-compute platforms.
-> - Blurring it makes retries and failures opaque.
+> **Dagster dbt translator**
+> - The translator decides how dbt nodes become Dagster asset keys, groups, metadata, tags, and checks.
+> - This is where a project chooses whether dbt assets should mirror business domains, warehouse layers, or both.
+> - A weak translator gives the platform opaque assets with poor operational meaning.
 
-## Keep Heavy Compute Outside The Control Plane
+## The Orchestrator Should Observe Remote Compute, Not Absorb It
 
-Dagster should usually launch, annotate, and observe heavy remote work rather than host it inline. The orchestrator should know what happened, not become the runtime for everything.
+The Pipes documentation is explicit about the central idea: Dagster can launch external work and still receive structured metadata and logs back into the Dagster UI. That is the right pattern when the work belongs to another execution boundary for real engineering reasons rather than as an accident of history.
 
-### Use Pipes When The Runtime Belongs Somewhere Else
+### Pipes Exists For A Real Runtime Boundary
 
-Pipes is the right answer when the code already belongs in another process, container, cluster, or managed platform.
+If the code should live in another process, container, cluster, or managed platform, the goal is not to collapse that boundary. The goal is to make the boundary observable and controllable from Dagster.
 
-#### Launch a remote process through `PipesSubprocessClient`
+#### Launch a subprocess through Dagster Pipes without hiding the boundary
 
-Use Pipes when the compute boundary is real and should stay real. The trigger is a workload that needs its own environment, dependency stack, or runtime isolation. The purpose is to keep the execution remote while still letting Dagster record the resulting materialization and metadata.
+Use Pipes when the compute environment is intentionally separate from the Dagster process. The trigger is work that needs its own dependency set, system image, or runtime isolation. The asset runs in Dagster, but the real compute happens in another process launched through a Pipes client. Its purpose is to let the external code remain external while still reporting structured metadata and logs back to Dagster.
 
-*Launch a child Python process through Dagster Pipes and print the resulting asset key and metadata keys that Dagster recorded.*
+*Define an asset that delegates work to a child process through `PipesSubprocessClient`.*
 
 ```python
-import contextlib
-import io
+from pathlib import Path
+import sys
 
 import dagster as dg
 from dagster._core.pipes.subprocess import PipesSubprocessClient
 
-PY = r"C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\Scripts\python.exe"
-CHILD = r"C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\pipes_child_quiet.py"
+CHILD = Path("pipes_child.py")
 
 @dg.asset
-def remote_table(context: dg.AssetExecutionContext, pipes_client: PipesSubprocessClient):
-    yield from pipes_client.run(context=context, command=[PY, CHILD]).get_results()
-
-stdout = io.StringIO()
-stderr = io.StringIO()
-with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-    result = dg.materialize([remote_table], resources={"pipes_client": PipesSubprocessClient()})
-
-print(result.success)
-print([event.materialization.asset_key.to_user_string() for event in result.get_asset_materialization_events()])
-print(sorted(result.get_asset_materialization_events()[0].materialization.metadata.keys()))
+def remote_table(
+    context: dg.AssetExecutionContext,
+    pipes_client: PipesSubprocessClient,
+):
+    yield from pipes_client.run(
+        context=context,
+        command=[sys.executable, str(CHILD)],
+    ).get_results()
 ```
 
-```text
-True
-['remote_table']
-['rows']
-```
+This is the right model for a future index-composition or benchmark-build workload that might run in Spark, Databricks, or another specialized runtime while Dagster still needs the resulting asset state, metadata, and lineage. The local `dagflow` repository does not currently use Pipes, which is itself instructive: Pipes should appear only when the compute boundary is genuinely external, not as a default integration reflex.
 
-### Keep dbt As Structured Transformation State
+## dbt Should Appear As Structured Asset Topology
 
-If dbt is part of the platform, it should show up as structured transformation work and lineage, not as one opaque shell command that hides which models actually changed.
+Dagster's dbt integration is valuable because it understands dbt work at the level of individual models, sources, seeds, snapshots, and checks. That is the opposite of orchestrating `dbt build` as one opaque process with no internal lineage or selective recovery surface.
 
-#### Construct a real `DbtCliResource`
+### Treat The dbt Project As Part Of The Asset Graph
 
-Use `DbtCliResource` when the team needs Dagster to point at a real dbt project and a real dbt executable. The trigger is a warehouse transformation surface that Dagster should orchestrate explicitly. The purpose is to keep the project directory, profiles directory, and dbt executable visible and validated in one resource boundary.
+Once dbt is in the platform, the professional question is not merely whether the command runs. It is whether Dagster can reason about the resulting nodes as first-class state in the graph.
 
-*Instantiate `DbtCliResource` against a minimal local dbt project and print the resource type and project directory.*
+#### Construct `DbtCliResource` in the resource layer, not inside asset bodies
+
+Use `DbtCliResource` when the project needs Dagster to orchestrate a real dbt project with an explicit executable, manifest state, and profile location. The trigger is a warehouse transformation surface that should become part of the platform's controlled runtime. The resource is built in shared dependency configuration, not ad hoc inside one asset body. Its purpose is to publish the dbt boundary once and reuse it consistently across dbt-backed assets.
+
+*Build the shared `dbt` resource in `dagflow` alongside the control-plane resource.*
 
 ```python
-from pathlib import Path
+def build_resources() -> dict[str, ConfigurableResource | DbtCliResource]:
+    settings = get_settings()
+    dbt_executable = Path(sys.executable).with_name("dbt")
+    dbt_project = get_dbt_project()
+    return {
+        "control_plane": ControlPlaneResource(
+            direct_database_url=settings.direct_database_url,
+            export_root_dir=settings.export_root_dir,
+            landing_root_dir=str(settings.resolved_landing_root_dir),
+            edgar_identity=settings.edgar_identity,
+        ),
+        "dbt": DbtCliResource(
+            project_dir=dbt_project,
+            dbt_executable=str(dbt_executable),
+        ),
+    }
+```
 
-from dagster_dbt import DbtCliResource
+The important point is not that `DbtCliResource` exists. It is that the dbt project becomes part of the same explicit runtime contract as the rest of the Dagster resources. If the executable path, profiles directory, or project manifest changes, that change happens in one resource boundary instead of being rediscovered by each asset separately.
 
-dbt = DbtCliResource(
-    project_dir=Path(r"C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\dbt-demo"),
-    profiles_dir=Path(r"C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\dbt-demo"),
-    dbt_executable=Path(r"C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\Scripts\dbt.exe"),
+#### Turn dbt models, sources, and tests into Dagster-visible assets and checks
+
+Use a translator when the team needs dbt nodes to land in Dagster with meaningful asset keys, groups, tags, and checks. The trigger is a project where raw dbt defaults do not communicate enough operational meaning about domain, layer, or ownership. The translator runs at definition time and shapes how Dagster sees the dbt project. Its purpose is to make dbt topology legible to Dagster operators rather than leaving it as a flat imported graph.
+
+*Translate dbt nodes into domain-prefixed asset keys and enable dbt tests as Dagster checks.*
+
+```python
+class DagflowDbtTranslator(DagsterDbtTranslator):
+    def __init__(self) -> None:
+        super().__init__(
+            settings=DagsterDbtTranslatorSettings(
+                enable_asset_checks=True,
+                enable_source_tests_as_checks=True,
+            )
+        )
+
+    def get_asset_key(self, dbt_resource_props: Mapping[str, Any]) -> dg.AssetKey:
+        if dbt_resource_props.get("resource_type") == "source":
+            return super().get_asset_key(dbt_resource_props)
+        return dbt_asset_key(
+            pipeline_for_resource(dbt_resource_props), str(dbt_resource_props["name"])
+        )
+```
+
+This is where `dagflow` makes dbt assets operationally meaningful. `dim_security` does not appear as a detached dbt node. It appears inside a pipeline-prefixed asset namespace such as `security_master__dim_security`, alongside checks and metadata that tell the control plane where in the warehouse layer the node belongs.
+
+### Connect dbt To Upstream Dagster State Deliberately
+
+Dagster's dbt documentation emphasizes that dbt sources can be connected to upstream Dagster assets through `meta.dagster.asset_key`. That is the mechanism that turns warehouse sources and review tables into explicit dependencies in the Dagster graph instead of leaving the dependency relationship hidden inside SQL only.
+
+#### Map dbt sources to upstream Dagster asset keys
+
+Use source mapping when dbt models depend on data states that Dagster already models elsewhere, such as raw landing assets or governed review tables. The trigger is a need for lineage that crosses tool boundaries honestly. The mapping lives in dbt project metadata, not in a side spreadsheet or mental model. Its purpose is to let Dagster understand that a dbt source is the same operational state as an upstream Dagster asset.
+
+*Map raw tables and review tables to the Dagster assets that own those states.*
+
+```yaml
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: sec_company_tickers
+        meta:
+          dagster:
+            asset_key: ["security_master__sec_company_tickers_raw"]
+
+  - name: review
+    schema: review
+    tables:
+      - name: security_master_daily
+        meta:
+          dagster:
+            asset_key: ["security_master__review_snapshot"]
+```
+
+That mapping is what lets `dagflow` express an export model as depending on the reviewed state, not only on the most recent warehouse transform. It is also what keeps the asset graph honest across the full governed lifecycle: raw landing, curated transforms, review snapshot, export preview, and final CSV delivery.
+
+## Keep Compute Semantics And Orchestration State In The Right Place
+
+The control plane should decide what to run, record what happened, and expose lineage and checks. The external system should remain the owner of its own compute semantics. Blurring those responsibilities is the integration mistake that turns mixed-compute platforms into opaque debugging exercises.
+
+### A Governed Pipeline Needs Visible Handoffs
+
+The best external-system integrations do not hide the handoff between systems. They make it explicit enough that blast radius, reruns, and state transitions stay explainable.
+
+#### Build export work from reviewed state instead of from raw transform success
+
+Use this pattern when the pipeline includes a governed review boundary between transformation and delivery. The trigger is any workflow where a human-approved or policy-approved state is materially different from the latest machine-computed state. The export asset is still orchestrated by Dagster, but it should depend on the reviewed source of truth. Its purpose is to ensure that delivery reflects the approved dataset, not merely the most recent transform run.
+
+*Select dbt export assets and CSV export assets from the reviewed state boundary in one asset job.*
+
+```python
+security_master_export_job = define_asset_job(
+    name="security_master_export_job",
+    executor_def=in_process_executor,
+    selection=AssetSelection.assets(security_master_csv_export)
+    | build_dbt_asset_selection([security_master_export_assets]),
 )
-
-print(type(dbt).__name__)
-print(dbt.project_dir)
 ```
 
-```text
-DbtCliResource
-C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\dbt-demo
-```
-
-#### Verify the dbt project before Dagster builds against it
-
-Use `dbt parse` or an equivalent validation step before Dagster starts orchestrating a dbt project. The trigger is any change to the dbt graph, profile, or project layout. The purpose is to fail on project invalidity before the Dagster run reaches downstream orchestration logic.
-
-*Run `dbt parse` against the same local project and print the first lines of the command output.*
-
-```bash
-& 'C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\Scripts\dbt.exe' parse `
-  --project-dir 'C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\dbt-demo' `
-  --profiles-dir 'C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\dbt-demo'
-```
-
-```text
-22:33:33  Running with dbt=1.11.8
-22:33:33  Registered adapter: sqlite=1.10.0
-22:33:33  Performance info: C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\dbt-demo\target\perf_info.json
-```
-
-## What To Remember
-
-- Pipes is the right model when remote code should stay remote but Dagster still needs structured metadata back.
-- The remote system owns compute semantics and idempotency; Dagster owns orchestration state and blast-radius reasoning.
-- `DbtCliResource` is the explicit boundary between Dagster and a dbt project.
-- A dbt project should be validated as a dbt project before Dagster treats it as orchestrated work.
-- The main integration failure is blurring control-plane and data-plane responsibilities into one opaque step.
+> [!example] The approved review state is the real delivery contract
+>
+> In `dagflow`, the export models read from review tables that are mapped back to Dagster review-snapshot assets. That means the exported security master or shareholder holdings file is not "whatever dbt most recently computed." It is the reviewer-approved state that survived a governed handoff. That is exactly the kind of cross-system boundary Dagster should make visible rather than flatten into one shell step.

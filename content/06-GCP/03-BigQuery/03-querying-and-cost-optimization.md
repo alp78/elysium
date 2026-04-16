@@ -14,7 +14,7 @@ status: complete
 
 # Querying and Cost Optimization
 
-> [!quote] Werner Vogels on Cost Awareness
+> [!quote]+
 > "Cost awareness is a lost art. We need to regain that art."
 >
 > — **Werner Vogels**, AWS re:Invent keynote (2019)

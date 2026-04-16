@@ -30,7 +30,7 @@ status: complete
 
 # Context and Metadata Architecture
 
-> [!quote]
+> [!quote]+
 > "Metadata is a love note to the future."
 >
 > — **Jason Scott**, Internet Archive

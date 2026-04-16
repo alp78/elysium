@@ -11,7 +11,7 @@ status: complete
 
 # Date and Time Handling
 
-> [!quote] Douglas Adams on time
+> [!quote]+
 >
 > "Time is an illusion. Lunchtime doubly so."
 >

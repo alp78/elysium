@@ -8,7 +8,7 @@ description: "What dbt is, how it compiles, the DAG, materializations, profiles,
 
 # dbt Core Concepts
 
-> [!quote] Analytics engineering mindset
+> [!quote]+
 >
 > "Data engineering is much closer to software engineering than it is to data science."
 >

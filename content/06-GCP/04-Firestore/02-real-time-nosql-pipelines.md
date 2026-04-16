@@ -21,7 +21,7 @@ status: complete
 
 # Real-Time NoSQL Pipelines
 
-> [!quote] Idempotency over wishful thinking
+> [!quote]+
 >
 > In distributed data systems, at-least-once delivery is normal, so the platform has to make reprocessing safe.
 >

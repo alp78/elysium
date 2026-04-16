@@ -10,7 +10,7 @@ status: complete
 
 # SQL Server on Compute Engine
 
-> [!quote] The cloud is just a different datacenter
+> [!quote]+
 >
 > "The same applies to cloud installations when SQL Server is running within VMs. After all, the cloud is just a different datacenter managed by an external provider."
 >

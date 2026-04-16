@@ -8,7 +8,7 @@ description: "SCD Type 2 snapshots with timestamp and check strategies, PIT quer
 
 # dbt: Snapshots and SCD
 
-> [!quote] Historical Visibility
+> [!quote]+
 >
 > "The ability to visualize something as abstract as a set of data in a concrete and tangible way is the secret of understandability."
 >

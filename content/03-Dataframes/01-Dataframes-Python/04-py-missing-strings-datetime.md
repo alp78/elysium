@@ -11,7 +11,7 @@ status: complete
 
 # Missing Data, Strings & DateTime - Python
 
-> [!quote]- Quote
+> [!quote]+
 >
 > "Life is dirty. So is your data. Get used to it."
 >
@@ -2096,31 +2096,55 @@ display(asml_pl_sorted.with_columns(
 ---
 
 
-## Warnings
+## Common Traps and Safe Patterns
 
-> [!warning] Pandas promotes integer columns to float64 when NaN is introduced
+> [!warning] Nulls upcast Pandas integers
 >
-> Inserting a single `NaN` into an `int64` column silently converts the entire column to `float64`. Use nullable integer types (`pd.Int64Dtype()`) to prevent this.
+> Introducing `NaN` into a Pandas `int64` column silently converts the whole column to `float64`. That changes identifier semantics and can turn what looked like integer-safe logic into float-based downstream behavior.
+>
+> [!success] Use nullable integer dtypes
+>
+> Build nullable integer columns with `pd.Int64Dtype()` and `pd.NA`, or load them that way from the start. In Polars, the native null model preserves integer dtypes without any extra workaround.
 
-> [!warning] Forward-fill on unsorted data propagates values in the wrong direction
+> [!warning] Forward fill assumes sorted rows
 >
-> `fill_null(strategy="forward")` and `fillna(method="ffill")` assume rows are sorted by time or a meaningful sequence. On unsorted data, the fill carries arbitrary values forward.
+> `fill_null(strategy="forward")` and `fillna(method="ffill")` copy the previous observed value into the next row. If the data is not sorted in the intended time or business order first, the fill direction is meaningless and can leak the wrong value into the wrong record.
+>
+> [!success] Sort before directional fills
+>
+> Sort by the real sequence column before any forward or backward fill, then apply the fill within the correct grouping context if the data is partitioned by symbol, entity, or other key.
 
-> [!warning] Pandas `.str.contains()` uses regex by default; Polars uses literal matching
+> [!warning] Regex defaults differ across libraries
 >
-> `s.str.contains("foo.bar")` in Pandas matches `"fooXbar"` (regex dot). In Polars, the same call matches only the literal string `"foo.bar"`. Pass `literal=False` in Polars for regex, or `regex=False` in Pandas for literal.
+> Pandas `.str.contains()` treats the pattern as regex by default, while Polars literal string matching is the simpler mental model many users expect. A pattern like `"foo.bar"` therefore means "dot as wildcard" in one library and "dot as dot" in the other unless you state the mode explicitly.
+>
+> [!success] Declare literal vs regex mode explicitly
+>
+> Pass `regex=False` in Pandas for literal substring search, and opt into regex behavior explicitly in Polars when pattern operators are intended. The safe rule is to never rely on the default matching mode when the pattern contains special characters.
 
-> [!warning] Naive and aware datetimes cannot be mixed
+> [!warning] Mixed timezone awareness breaks comparisons
 >
-> Comparing or joining a timezone-naive datetime column with a timezone-aware column raises an error in Polars and produces incorrect results in Pandas. Always localize or convert before combining.
+> Joining or comparing timezone-naive datetimes with timezone-aware datetimes is semantically invalid. Polars raises, while Pandas can leave you with confusing behavior or silent misalignment depending on the operation.
+>
+> [!success] Normalize timestamps before combining
+>
+> Localize naive timestamps once, convert all comparable timestamps to a common timezone such as UTC, and only then join, filter, or compare them. Timezone normalization belongs before combination, not after a failed merge.
 
-> [!warning] `resample()` in Pandas requires a DatetimeIndex
+> [!warning] `resample()` needs a DatetimeIndex
 >
-> Calling `.resample("ME")` on a DataFrame without a DatetimeIndex raises a `TypeError`. Use `.set_index("date")` first, or switch to Polars `group_by_dynamic`.
+> Pandas `resample()` operates on the index, not on an arbitrary date column. Calling it on a DataFrame that still holds dates as a regular column raises `TypeError` and often signals that the time axis was never made explicit.
+>
+> [!success] Make the time axis explicit first
+>
+> Convert the date column to datetime and move it into the index before resampling in Pandas, or use Polars `group_by_dynamic()` when you want time-bucket aggregation without an index abstraction.
 
-> [!warning] Rolling windows return NaN/null for the first n-1 rows
+> [!warning] Rolling windows have warm-up nulls
 >
-> A rolling mean with window size 20 produces 19 null values at the start. This affects downstream calculations, visualizations, and assertions that expect complete data.
+> A rolling window of size `n` cannot produce a full result for the first `n-1` rows because the required history does not exist yet. Those leading `NaN` or `null` values are expected, but they often surprise plots, tests, and downstream arithmetic.
+>
+> [!success] Handle warm-up rows deliberately
+>
+> Decide up front whether to keep the warm-up nulls, lower the threshold with `min_periods`, or drop the incomplete prefix before downstream use. Treat the first `n-1` rows as a defined warm-up zone, not as a data quality bug.
 
 ## Recommendations
 

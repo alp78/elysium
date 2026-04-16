@@ -20,7 +20,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Corporate Finance Advisory
 
-> [!quote]
+> [!quote]+
 > "Every deal is a people deal first, a financial deal second."
 >
 > — **Felix Rohatyn**
@@ -38,7 +38,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Divestitures
 
-> [!quote]
+> [!quote]+
 > "The best acquisitions are often the ones you don't make — sometimes the real value is in what you sell."
 >
 > — **Jack Welch**
@@ -67,7 +67,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Holding Company
 
-> [!quote]
+> [!quote]+
 > "Our favorite holding period is forever."
 >
 > — **Warren Buffett**
@@ -97,7 +97,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Joint Venture
 
-> [!quote]
+> [!quote]+
 > "A joint venture is a marriage of convenience — it works only when both partners bring something the other needs."
 >
 > — **Peter Drucker**
@@ -114,7 +114,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Mergers and Acquisitions (M&A)
 
-> [!quote]
+> [!quote]+
 > "Managers who want to do deals are like teenagers who want to go on dates — it's very hard to be dissuasive."
 >
 > — **Charlie Munger**
@@ -132,7 +132,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Restructuring
 
-> [!quote]
+> [!quote]+
 > "Restructuring is the art of turning a bad situation into a survivable one — and occasionally into a good one."
 >
 > — **Wilbur Ross**
@@ -161,7 +161,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Spin-Off
 
-> [!quote]
+> [!quote]+
 > "The whole is sometimes worth less than the sum of its parts."
 >
 > — **Peter Lynch**, *One Up on Wall Street* (1989)
@@ -179,7 +179,7 @@ Encyclopedia of corporate finance and strategy terms covering the full lifecycle
 
 ## Subsidiaries
 
-> [!quote]
+> [!quote]+
 > "In a well-run corporate group, each subsidiary should be able to stand on its own two feet."
 >
 > — **Jack Welch**

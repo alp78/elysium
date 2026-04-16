@@ -8,7 +8,7 @@ description: "Staging models 1:1 with source, source freshness"
 
 # dbt: Staging Models
 
-> [!quote] Deterministic staging boundary
+> [!quote]+
 >
 > "A pure task should be deterministic and idempotent, meaning that it will produce the same result every time it runs or re-runs."
 >

@@ -10,7 +10,7 @@ status: complete
 
 # Performance and Code Quality - Python
 
-> [!quote] Prioritization principle
+> [!quote]+
 >
 > "Make it correct, make it clear, make it concise, make it fast. In that order."
 >

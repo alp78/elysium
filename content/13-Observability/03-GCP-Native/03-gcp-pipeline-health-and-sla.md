@@ -22,7 +22,7 @@ status: complete
 
 # GCP Pipeline Health and SLA
 
-> [!quote]
+> [!quote]+
 > "SRE is what happens when you ask a software engineer to design an operations function."
 >
 > — **Ben Treynor Sloss**, *Site Reliability Engineering* (2016)

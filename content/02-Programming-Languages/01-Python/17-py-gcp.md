@@ -10,7 +10,7 @@ status: complete
 
 # GCP - Python
 
-> [!quote] Failure-First Design
+> [!quote]+
 >
 > "Everything fails all the time, so plan for failure and nothing fails."
 >

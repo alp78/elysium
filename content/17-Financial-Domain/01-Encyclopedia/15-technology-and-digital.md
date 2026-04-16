@@ -44,7 +44,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## Cloud Computing
 
-> [!quote]
+> [!quote]+
 > "The cloud is really about the democratization of computing."
 >
 > — **Marc Benioff**
@@ -62,7 +62,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## Cybersecurity
 
-> [!quote]
+> [!quote]+
 > "There are only two types of companies: those that have been hacked and those that will be."
 >
 > — **Robert Mueller**
@@ -80,7 +80,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## Digital Transformation
 
-> [!quote]
+> [!quote]+
 > "Every business is a software business now."
 >
 > — **Dean Leffingwell**, *Agile Software Requirements* (2011)
@@ -98,7 +98,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## E-Commerce
 
-> [!quote]
+> [!quote]+
 > "Get big fast — the internet rewards scale in ways that physical retail never could."
 >
 > — **Jeff Bezos**
@@ -115,7 +115,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## Enterprise Resource Planning (ERP)
 
-> [!quote]
+> [!quote]+
 > "ERP is the backbone of a business. Without it, you have islands of information that never connect."
 >
 > — **Hasso Plattner**
@@ -133,7 +133,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## Fintech
 
-> [!quote]
+> [!quote]+
 > "Fintech is not about building better banks — it is about building a world that doesn't need banks."
 >
 > — **Brett King**, *Bank 4.0* (2018)
@@ -151,7 +151,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## Hybrid Cloud
 
-> [!quote]
+> [!quote]+
 > "The future of enterprise computing is hybrid — not everything belongs in the public cloud."
 >
 > — **Arvind Krishna**
@@ -169,7 +169,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## IaaS (Infrastructure as a Service)
 
-> [!quote]
+> [!quote]+
 > "Why buy the cow when you can rent the milk by the hour?"
 >
 > — **Andy Jassy**
@@ -187,7 +187,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## Internet of Things (IoT)
 
-> [!quote]
+> [!quote]+
 > "If you think that the internet has changed your life, think again. The IoT is about to change it all over again."
 >
 > — **Brendan O'Brien**
@@ -205,7 +205,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## Machine Learning / AI
 
-> [!quote]
+> [!quote]+
 > "AI is probably the most important thing humanity has ever worked on."
 >
 > — **Sundar Pichai**
@@ -235,7 +235,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## PaaS (Platform as a Service)
 
-> [!quote]
+> [!quote]+
 > "Developers just want to write code — give them a platform and get out of their way."
 >
 > — **Werner Vogels**
@@ -265,7 +265,7 @@ Encyclopedia of technology and digital terms covering the full technology stack 
 
 ## SaaS (Software as a Service)
 
-> [!quote]
+> [!quote]+
 > "SaaS makes the cost of trying new ideas so low that every company can afford to experiment."
 >
 > — **Aaron Levie**

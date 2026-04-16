@@ -242,6 +242,10 @@ SELECT @rc AS captured_rowcount;
 >
 > `SET ROWCOUNT` is session-scoped and persists until the session ends or the setting is reset to `0`. Leaving it set and running subsequent queries produces truncated, silently incorrect results in unrelated code paths. `TOP (n)` on the specific statement is explicit, local, and survives the deprecation cutoff. See the `### UPDATE TOP (n)` and `### DELETE TOP (n)` subsections of [10-insert-update-delete-patterns](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/10-insert-update-delete-patterns#update-top-n-bounded-update-without-a-predictable-order) for the modern equivalents.
 
+> [!success] Bound only the target statement
+>
+> Apply `TOP (n)` on the `UPDATE`, `DELETE`, or `INSERT` that actually needs the row cap. The limit then lives inside the statement text, does not leak into later work on the same session, and keeps the row budget visible to both the reader and the optimizer.
+
 ### @@ERROR — legacy error code (superseded by TRY/CATCH)
 
 `@@ERROR` returns the error number of the **previous statement**, or `0` if that statement completed without error. Like `@@ROWCOUNT`, it is clobbered by every subsequent statement. Before SQL Server 2005 it was the only way to detect errors in T-SQL, and procedures were littered with `IF @@ERROR <> 0 GOTO error_handler` after every DML statement. Modern code uses `TRY/CATCH` and the `ERROR_NUMBER()` / `ERROR_MESSAGE()` / `ERROR_SEVERITY()` / `ERROR_LINE()` / `ERROR_PROCEDURE()` / `ERROR_STATE()` functions instead.
@@ -410,6 +414,10 @@ SQL Server 2022 Developer Edition (`EngineEdition = 3` matches Enterprise/Develo
 >
 > Without an explicit `CAST`, many client drivers raise `ODBC SQL type -16 is not yet supported` when decoding the column. The `sql_variant` type carries the target type internally, but drivers that only support a subset of SQL types return a parsing error instead of the underlying value. Always wrap `SERVERPROPERTY` calls in `CAST(... AS <target>)` — use `nvarchar(100)` for strings, `int` for boolean/integer properties.
 
+> [!success] Cast metadata at projection time
+>
+> Treat `SERVERPROPERTY`, `DATABASEPROPERTYEX`, and `CONNECTIONPROPERTY` as typed metadata readers, not as display strings. Cast each requested property to the concrete type you expect in the `SELECT` list so client drivers receive stable values and downstream expressions never inherit `sql_variant`.
+
 ### DATABASEPROPERTYEX — database-level metadata
 
 `DATABASEPROPERTYEX('db_name', 'property')` returns a `sql_variant` with a property of the named database. It replaces the older `DATABASEPROPERTY` (which is missing several newer properties). Unlike `SERVERPROPERTY`, it takes an explicit database name as the first argument — so a diagnostic query running in `master` can probe any online database without switching context.
@@ -452,6 +460,10 @@ SELECT
 > [!warning] `IsAutoShrink = 1` is an anti-pattern
 >
 > Auto-shrink schedules a background job that periodically shrinks the database file when free space crosses a threshold. It is one of the most notorious performance anti-patterns in SQL Server — it causes massive index fragmentation, I/O spikes, and performance collapses that are invisible in most monitoring dashboards. Modern hardware has no reason to enable it. If a diagnostic query returns `is_auto_shrink = 1` on any production database, disable it immediately with `ALTER DATABASE <db> SET AUTO_SHRINK OFF`.
+
+> [!success] Disable auto-shrink and size deliberately
+>
+> Keep data and log files sized for expected steady-state growth, configure autogrowth in fixed chunks, and shrink only after exceptional one-time space returns such as archive purges or filegroup moves. The normal production posture is `AUTO_SHRINK OFF` plus deliberate capacity management.
 
 ### CONNECTIONPROPERTY — current connection transport metadata
 
@@ -851,7 +863,7 @@ The 8-byte payload `0xDEADBEEFCAFEBABE` is right-padded with `0x00` bytes to fil
 
 `CONTEXT_INFO` surfaces in `sys.dm_exec_sessions.context_info` — every session's current value is visible to any user with `VIEW SERVER STATE`. This is convenient for live diagnostics ("which session is currently running pipeline run X?") but also means `CONTEXT_INFO` is **not confidential** and should not carry secrets.
 
-> [!warning] `CONTEXT_INFO` is limited to 128 bytes and is structurally awkward
+> [!info] `SESSION_CONTEXT` supersedes `CONTEXT_INFO`
 >
 > `SESSION_CONTEXT` (SQL Server 2016+) provides named keys with arbitrary `sql_variant` values and up to 256 KB total per session. It supersedes `CONTEXT_INFO` for every new use case. The only reason to keep using `CONTEXT_INFO` is if you are maintaining code that already depends on it or you need to interop with a client library that only reads the legacy slot.
 
@@ -1080,7 +1092,11 @@ The result set is empty. This is the **implicit deny** pattern: if the predicate
 
 > [!danger] Implicit deny can masquerade as a bug
 >
-> The empty result set from a forgotten session-context key is easy to misdiagnose as "the table is broken" or "the query has an error". Production applications should set the session context key **immediately** after connection open (before any other SQL runs) and should log every connection open so the "forgot to set the key" failure mode is visible in telemetry. The cleanest pattern is a stored procedure `sp_begin_session_as_tenant @tenant_id` that the application calls as its very first step, which both sets the session context and logs the event.
+> The empty result set from a forgotten session-context key is easy to misdiagnose as "the table is broken" or "the query has an error". Zero rows here are a security success, not proof that the policy failed; the failure is that the caller never initialized its tenant identity.
+>
+> [!success] Initialize tenant context at login
+>
+> Set the tenant key immediately after opening the connection, before any application query runs, and log that initialization in telemetry. A helper such as `sp_begin_session_as_tenant @tenant_id` keeps the pattern explicit, centralizes auditing, and makes the "forgot to set the key" failure mode observable.
 
 For the full Row-Level Security theory — predicate composition, block predicates for INSERT/UPDATE/DELETE, performance tuning, and the security-boundary analysis — see the dedicated RLS coverage in the concurrency chapter (notes 16–18).
 
@@ -1206,9 +1222,13 @@ WHERE s.session_id = @@SPID;
 
 Session `55` belongs to login `sa`, connected from host `ELYSIUM`, identified as `Python` via the client-supplied `APP_NAME`. Login time is `2026-04-11 12:44:03.863` (just now), status is `running`, and zero open transactions. Use this pattern as the first diagnostic step whenever a procedure needs to log "what is my session's current state" — it returns in a single row with no lock, no wait, and no server-scope permission requirement beyond the default `VIEW SERVER STATE`.
 
-> [!warning] `host_name`, `program_name`, and `login_name` are **client-supplied**
+> [!warning] `host_name` and `program_name` are client labels
 >
-> The `host_name` column in `sys.dm_exec_sessions` is whatever the client's TDS driver chose to send at connection time. A Python client can set it to any arbitrary string via the `APP=` or `WSID=` parameters. Similarly, `program_name` is set by `APPLICATIONNAME=` or the client's default. **Neither is authoritative for authorization or auditing** — a misbehaving client can claim any `host_name` and any `program_name`. Use `ORIGINAL_LOGIN()` for identity auditing and `client_net_address` from `CONNECTIONPROPERTY` for the IP-address audit trail.
+> The `host_name` column in `sys.dm_exec_sessions` is whatever the client's TDS driver chose to send at connection time. A Python client can set it to any arbitrary string via the `APP=` or `WSID=` parameters, and `program_name` comes from `APPLICATIONNAME=` or the driver default. Treat both fields as operator hints, not as trustworthy identity evidence. `login_name` is server-authenticated, but for audit trails under impersonation the safer anchor is still `ORIGINAL_LOGIN()`.
+>
+> [!success] Audit from server-side evidence
+>
+> Use `ORIGINAL_LOGIN()` for the authenticated principal and `client_net_address` from `CONNECTIONPROPERTY` or the connection DMVs for the network trace. Those values belong in authorization decisions and durable audit trails; `host_name` and `program_name` belong in troubleshooting notes only.
 
 ### Pattern 3: index list with OBJECTPROPERTY join
 

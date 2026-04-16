@@ -11,7 +11,7 @@ status: complete
 
 # Read File Contents
 
-> [!quote] Debugging with output
+> [!quote]+
 >
 > "The most effective debugging tool is still careful thought, coupled with judiciously placed print statements."
 >

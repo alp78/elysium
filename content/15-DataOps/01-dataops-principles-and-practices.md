@@ -19,7 +19,7 @@ status: complete
 
 # DataOps Principles and Practices
 
-> [!quote]
+> [!quote]+
 > "DataOps is not a destination — it is a discipline of continuously reducing the cycle time from data question to trusted answer."
 >
 > — **Lars Albertsson** (data engineering practitioner)

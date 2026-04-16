@@ -26,7 +26,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## ESG (Environmental, Social, and Governance)
 
-> [!quote]
+> [!quote]+
 > "Climate risk is investment risk."
 >
 > — **Larry Fink**
@@ -44,7 +44,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## Net-Zero
 
-> [!quote]
+> [!quote]+
 > "The transition to net-zero will be the greatest commercial opportunity of our time."
 >
 > — **Mark Carney**
@@ -65,7 +65,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## Sustainable Finance
 
-> [!quote]
+> [!quote]+
 > "Sustainability is not about philanthropy — it is about long-term profitability."
 >
 > — **Al Gore**
@@ -83,7 +83,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## Renewable Energy
 
-> [!quote]
+> [!quote]+
 > "The cheapest kilowatt-hour is the one that is never used — the second cheapest now comes from wind and solar."
 >
 > — **Fatih Birol**, IEA
@@ -103,7 +103,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## Blue Chip
 
-> [!quote]
+> [!quote]+
 > "Buy into a company because you want to own it, not because you want the stock to go up."
 >
 > — **Warren Buffett**
@@ -121,7 +121,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## Dual-Listed
 
-> [!quote]
+> [!quote]+
 > "A company that lists in multiple markets sends a signal that it belongs to the world, not to one country."
 >
 > — **Xavier Rolet**
@@ -139,7 +139,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## Natural Catastrophe
 
-> [!quote]
+> [!quote]+
 > "Catastrophes are not just natural events — they are financial events that test the resilience of our risk systems."
 >
 > — **Swiss Re Institute**
@@ -157,7 +157,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## Photovoltaic
 
-> [!quote]
+> [!quote]+
 > "The sun provides more energy in one hour than the world uses in a year."
 >
 > — **U.S. Department of Energy**
@@ -175,7 +175,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## Property Development
 
-> [!quote]
+> [!quote]+
 > "The three most important things in real estate are location, location, location."
 >
 > — **Harold Samuel**
@@ -193,7 +193,7 @@ Encyclopedia of ESG and sustainability terms covering the three pillars of ESG a
 
 ## Stock Connect
 
-> [!quote]
+> [!quote]+
 > "Stock Connect has opened the door to China's capital markets in a way that no previous mechanism achieved."
 >
 > — **Charles Li**, former CEO of HKEX

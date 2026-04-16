@@ -10,7 +10,7 @@ status: complete
 
 # gcloud CLI Setup
 
-> [!quote] Setup boundary
+> [!quote]+
 >
 > "The Cloud SDK is the single pane of glass between you and every GCP service. If it is misconfigured, nothing downstream works."
 >

@@ -10,7 +10,7 @@ status: complete
 
 # Serialization Formats
 
-> [!quote]
+> [!quote]+
 > "Schema is the contract between writer and reader. Get it wrong and your data lake becomes a data landfill."
 >
 > — **Doug Cutting** (co-creator of Avro and Hadoop)

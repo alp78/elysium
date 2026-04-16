@@ -8,7 +8,7 @@ description: "CLI commands, node selection, flags, output interpretation"
 
 # dbt: CLI Reference
 
-> [!quote] Iterative CLI discipline
+> [!quote]+
 >
 > "Make it work, make it right, make it fast."
 >

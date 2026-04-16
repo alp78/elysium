@@ -10,7 +10,7 @@ status: complete
 
 # SQL Advanced
 
-> [!quote]
+> [!quote]+
 > "Thinking in sets, rather than row by row, is perhaps the most important skill a SQL programmer can develop."
 >
 > — **Joe Celko**, *SQL for Smarties* (1995)

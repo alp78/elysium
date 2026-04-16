@@ -8,7 +8,7 @@ description: "dbt docs generate, exposures, lineage graph, static hosting on GCS
 
 # dbt: Documentation and Lineage
 
-> [!quote] Grain and documentation discipline
+> [!quote]+
 >
 > "The grain declaration becomes a binding contract on the design."
 >

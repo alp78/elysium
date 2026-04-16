@@ -14,7 +14,7 @@ status: complete
 
 # Managing Services
 
-> [!quote] Poettering on systemd
+> [!quote]+
 >
 > "systemd is never finished, never complete, but tracking progress of technology."
 >

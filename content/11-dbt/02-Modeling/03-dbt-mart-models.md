@@ -8,7 +8,7 @@ description: "Consumption-ready facts and dimensions, gold layer"
 
 # dbt: Mart Models
 
-> [!quote] Consumer-facing dimensional design
+> [!quote]+
 >
 > "Dimensions provide the 'who, what, where, when, why, and how' context surrounding a business process event."
 >

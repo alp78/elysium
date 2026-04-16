@@ -10,7 +10,7 @@ status: complete
 
 # Disks and Snapshots
 
-> [!quote]
+> [!quote]+
 > "Backups are not sexy, but neither is data loss."
 >
 > — **W. Curtis Preston**, *Backup & Recovery* (2007)

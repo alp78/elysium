@@ -14,7 +14,7 @@ status: complete
 
 # Compression
 
-> [!quote] Compression tradeoffs
+> [!quote]+
 >
 > "There is no compression algorithm for experience."
 >

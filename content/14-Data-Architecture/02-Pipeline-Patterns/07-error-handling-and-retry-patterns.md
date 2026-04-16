@@ -22,7 +22,7 @@ status: complete
 
 # Error Handling and Retry Patterns
 
-> [!quote]
+> [!quote]+
 > "Failures are a given in distributed systems. The question is never whether something will fail, but whether your system can recover gracefully when it does."
 >
 > — **Martin Kleppmann**, *Designing Data-Intensive Applications* (2017)

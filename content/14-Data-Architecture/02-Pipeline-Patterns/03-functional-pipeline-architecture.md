@@ -21,7 +21,7 @@ status: complete
 
 # Functional Pipeline Architecture
 
-> [!quote]
+> [!quote]+
 > "The fundamental problem of state in data pipelines is not managing it — it is eliminating the need for it."
 >
 > — **Nathan Marz** (creator of Apache Storm)

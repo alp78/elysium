@@ -16,7 +16,7 @@ status: complete
 
 # Data Team Organization
 
-> [!quote]
+> [!quote]+
 > "A fast flow of change requires that teams are loosely coupled — each team should be able to deliver value without waiting on other teams."
 >
 > — **Matthew Skelton & Manuel Pais**, *Team Topologies* (2019)

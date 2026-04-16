@@ -10,7 +10,7 @@ status: complete
 
 # Finding Files
 
-> [!quote] `find` complexity
+> [!quote]+
 >
 > "UNIX has a couple of hundred system calls, and the `find` command is probably the single most complicated command in the whole system."
 >

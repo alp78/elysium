@@ -11,7 +11,7 @@ status: complete
 
 # 06. Object-Oriented Programming - Python
 
-> [!quote] Two views of OOP
+> [!quote]+
 >
 > "I made up the term 'object-oriented', and I can tell you I did not have C++ in mind."
 >

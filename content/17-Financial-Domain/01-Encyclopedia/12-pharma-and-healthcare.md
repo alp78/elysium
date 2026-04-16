@@ -20,7 +20,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Biosimilars
 
-> [!quote]
+> [!quote]+
 > "Biosimilars will do for biologics what generics did for small-molecule drugs."
 >
 > — **Leah Christl**
@@ -38,7 +38,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## CDMO (Contract Development and Manufacturing Organization)
 
-> [!quote]
+> [!quote]+
 > "Not every innovator needs to be a manufacturer — the best ideas can be built by the best builders."
 >
 > — **Chris Chen**
@@ -56,7 +56,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Clinical Trials
 
-> [!quote]
+> [!quote]+
 > "Without clinical trials, there can be no better treatments, no prevention strategies, and no cures."
 >
 > — **Janet Woodcock**
@@ -74,7 +74,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## FDA Approval
 
-> [!quote]
+> [!quote]+
 > "The FDA is the gatekeeper between science and the patient — its approval is the final exam."
 >
 > — **Margaret Hamburg**
@@ -92,7 +92,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Generic Drugs
 
-> [!quote]
+> [!quote]+
 > "Generic drugs are one of the greatest success stories in public health."
 >
 > — **Scott Gottlieb**
@@ -110,7 +110,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## In-Licensing Agreement
 
-> [!quote]
+> [!quote]+
 > "You do not need to invent everything yourself — the smartest companies know when to license from others."
 >
 > — **Henry Chesbrough**, *Open Innovation* (2003)
@@ -128,7 +128,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Intellectual Property (IP)
 
-> [!quote]
+> [!quote]+
 > "Intellectual property is the oil of the 21st century."
 >
 > — **Mark Getty**
@@ -146,7 +146,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Medical Devices
 
-> [!quote]
+> [!quote]+
 > "The best medical device is one the physician forgets is there because it works so well."
 >
 > — **Earl Bakken**, founder of Medtronic
@@ -163,7 +163,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Out-Licensing
 
-> [!quote]
+> [!quote]+
 > "Open innovation means your most valuable ideas may reach patients faster through someone else's hands."
 >
 > — **Henry Chesbrough**, *Open Innovation* (2003)
@@ -181,7 +181,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Patent
 
-> [!quote]
+> [!quote]+
 > "The patent system added the fuel of interest to the fire of genius."
 >
 > — **Abraham Lincoln**
@@ -199,7 +199,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Recombinant Therapies
 
-> [!quote]
+> [!quote]+
 > "Genetic engineering will transform medicine more profoundly than any technology since antibiotics."
 >
 > — **Paul Berg**
@@ -229,7 +229,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Aftermarket
 
-> [!quote]
+> [!quote]+
 > "The sale of the product is just the beginning — the real relationship is built through service."
 >
 > — **Harvey Mackay**
@@ -271,7 +271,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Distributors
 
-> [!quote]
+> [!quote]+
 > "Getting the product to the customer is half the battle — distribution is strategy."
 >
 > — **Jeff Bezos**
@@ -289,7 +289,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Fleet Management
 
-> [!quote]
+> [!quote]+
 > "Data from the fleet tells you more about your operations than any spreadsheet ever could."
 >
 > — **Jim Heppelmann**
@@ -355,7 +355,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Maintenance Repair and Overhaul (MRO)
 
-> [!quote]
+> [!quote]+
 > "Safety is not an option in aviation — maintenance is the price of keeping aircraft in the sky."
 >
 > — **Robert Crandall**
@@ -397,7 +397,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Precious Metals
 
-> [!quote]
+> [!quote]+
 > "Gold is money. Everything else is credit."
 >
 > — **J.P. Morgan**
@@ -415,7 +415,7 @@ Encyclopedia of pharmaceutical and healthcare terms covering the full drug devel
 
 ## Procurement
 
-> [!quote]
+> [!quote]+
 > "Every dollar saved in procurement is a dollar straight to the bottom line."
 >
 > — **Tim Cook**

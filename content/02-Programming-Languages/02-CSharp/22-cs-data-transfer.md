@@ -14,7 +14,7 @@ status: complete
 
 # Data Transfer — C#
 
-> [!quote] Benchmarking Principle
+> [!quote]+
 >
 > "Make it work, make it right, make it fast — in that order. But when moving data at scale, make it parallel."
 >

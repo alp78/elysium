@@ -14,7 +14,7 @@ status: complete
 
 # Firewalls — Controlling Access to Your Data
 
-> [!quote] Schneier and Thompson on trust
+> [!quote]+
 >
 > "Complexity is the worst enemy of security, and our systems are getting more complex all the time."
 >
@@ -664,17 +664,25 @@ The most effective firewall strategy for production databases is layered: no sin
 
 ## Warnings
 
-> [!danger] Enabling `ufw` without allowing SSH locks you out
+> [!danger] Firewall changes can lock you out
 >
-> `ufw enable` with a default-deny policy blocks ALL inbound traffic including SSH. Always run `ufw allow ssh` BEFORE `ufw enable`. If locked out, access via serial console or GCP IAP tunnel.
+> Three operational mistakes regularly turn a routine firewall change into an outage:
+>
+> - **Default-deny before SSH allow.** `ufw enable` with no prior SSH allow rule blocks remote access immediately.
+> - **Treating cloud and host firewalls as one layer.** Allowing port 1433 in `ufw` but not in the GCP VPC firewall, or the reverse, still blocks the connection.
+> - **Using raw `iptables` rules without persistence.** Manual rules disappear on reboot unless they are explicitly saved and restored.
+>
+> If you are working on a remote host, assume every firewall change is a potential self-lockout until both the access path and the rollback path are verified.
 
-> [!warning] VPC firewall and OS firewall are independent layers
+> [!success] Stage firewall changes safely
 >
-> Both must allow traffic for a connection to succeed. Allowing port 1433 in `ufw` but not in the GCP VPC firewall (or vice versa) still blocks traffic.
-
-> [!warning] `iptables` rules are lost on reboot
+> Apply firewall changes in a sequence that preserves recovery:
 >
-> Raw `iptables` rules exist only in memory. Use `iptables-save > /etc/iptables/rules.v4` and install `iptables-persistent` for persistence, or use `ufw` which handles persistence automatically.
+> - **Protect remote access first.** Run `ufw allow ssh` before enabling a default-deny policy, and keep serial console or GCP IAP access available as a fallback.
+> - **Validate both enforcement layers.** Confirm that the cloud firewall and the OS firewall both permit the protocol and source range you intend to use.
+> - **Persist host rules deliberately.** Save raw `iptables` rules with `iptables-save` plus `iptables-persistent`, or use `ufw` so the persistence behavior is handled for you.
+>
+> The safe pattern is to treat firewall policy as layered state that must survive both the immediate change and the next reboot.
 
 ## Recommendations
 

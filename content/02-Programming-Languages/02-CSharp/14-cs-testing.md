@@ -10,7 +10,7 @@ status: complete
 
 # Testing - C#
 
-> [!quote]
+> [!quote]+
 > "Legacy code is simply code without tests."
 >
 > — **Michael Feathers**, *Working Effectively with Legacy Code* (2004)

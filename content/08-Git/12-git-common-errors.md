@@ -7,7 +7,7 @@ tags:
 
 # Git Common Errors & How to Fix Them
 
-> [!quote]
+> [!quote]+
 > "It's one of those things where if things are just instant, some mistake happens, you see the result immediately and you just go on and you fix it."
 >
 > -- **Linus Torvalds**, Git mailing list

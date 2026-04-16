@@ -24,7 +24,7 @@ status: complete
 
 # Firestore Data Model and Operations
 
-> [!quote] Query-driven modeling
+> [!quote]+
 >
 > In document databases, the questions you need to answer should shape the document model and indexes.
 >

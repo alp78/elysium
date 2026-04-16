@@ -11,7 +11,7 @@ status: complete
 
 # Lazy API and Performance - Python
 
-> [!quote]- Epigraph
+> [!quote]+
 >
 > "Premature optimization is the root of all evil."
 >
@@ -314,7 +314,7 @@ Type: <class 'polars.lazyframe.frame.LazyFrame'>
 
 #### Polars | .collect()
 
-> [!danger] Forgetting .collect() is the most
+> [!danger] Lazy chains do nothing until `.collect()`
 >
 > Forgetting `.collect()` is the most common Polars mistake
 > A LazyFrame does nothing until `.collect()` is called. If you assign `lf.filter(...)` to
@@ -452,9 +452,16 @@ Result: (1331, 2)
 
 Streaming mode processes data in chunks instead of loading the full dataset into memory at once. Pass `engine="streaming"` to `.collect()` to activate it. Use streaming for datasets larger than available RAM or when you want bounded memory usage on long-running aggregations.
 
-> [!warning] Streaming engine is experimental in Polars v1
+> [!warning] Streaming support is still incomplete
 >
 > Not all operations support streaming. Unsupported nodes fall back to in-memory execution silently. Check `.explain(streaming=True)` to see which plan nodes will stream. The new Polars streaming engine (introduced in v1) is more capable than the legacy `streaming=True` parameter from v0.x but remains under active development.
+
+> [!success] Confirm streaming in the plan before relying on it
+>
+> Treat `engine="streaming"` as a bounded-memory candidate, not a guarantee. Run
+> `.explain(streaming=True)` first and make sure the critical scan, filter, and
+> aggregation nodes remain on the streaming path before you depend on it in
+> production.
 
 *Scans the OHLCV Parquet with `engine="streaming"`, filters rows where close exceeds 500, groups by symbol to compute average close rounded to 2 decimals, sorts descending, and collects — returning the 7 symbols that consistently traded above 500.*
 ```python
@@ -750,27 +757,76 @@ Thread pool: 16
 ---
 
 
-## Warnings
+## Common Traps and Safe Patterns
 
-> [!warning] Calling `.collect()` inside a loop re-executes the full plan each iteration
->
-> If a loop calls `lf.filter(...).collect()` on each iteration, the entire read + filter pipeline runs from scratch every time. Build one plan with all conditions, then collect once.
+### Collect Once Per Workload
 
-> [!warning] Benchmarks on toy data do not generalize to production scale
+> [!warning] Calling `.collect()` inside a loop re-runs the full plan
 >
-> A 1000-row benchmark may show Pandas and Polars performing identically. At 1M+ rows, Polars' multi-threaded Rust engine and query optimization produce 5–50x speedups. Always benchmark at realistic data sizes.
+> If a loop calls `lf.filter(...).collect()` on each iteration, the entire read
+> and filter pipeline runs from scratch every time. That turns lazy execution
+> into repeated full-query work.
 
-> [!warning] `memory_usage()` without `deep=True` dramatically underreports string memory
+> [!success] Build one lazy plan and collect once
 >
-> Pandas `df.memory_usage()` counts only pointer sizes for object columns (8 bytes per row). With `deep=True`, it traverses each Python object — string columns often consume 10–100x more than the shallow estimate.
+> Combine conditions into a single expression tree, then materialize the final
+> result once. If you need several variants, keep the shared lazy base and branch
+> it deliberately instead of collecting on every loop pass.
 
-> [!warning] `.apply()` negates all DataFrame performance advantages
->
-> A Python lambda applied row-by-row runs at Python speed (~100K rows/sec). Vectorized expressions run at C/Rust speed (~10M+ rows/sec). The difference is 100x at minimum.
+### Benchmark at Production Scale
 
-> [!warning] Streaming mode silently falls back to non-streaming for unsupported operations
+> [!warning] Toy benchmarks hide the real performance gap
 >
-> If a query contains an operation that doesn't support streaming, Polars silently materializes the full dataset. Check the query plan with `.explain(streaming=True)` to verify streaming is actually active.
+> A 1,000-row benchmark may show Pandas and Polars performing identically. At
+> 1M+ rows, Polars' multi-threaded Rust engine and query optimization often
+> change the result completely.
+
+> [!success] Benchmark with realistic row counts and schema width
+>
+> Measure on data sizes, column counts, and value distributions that look like
+> production. That is the only way to judge whether lazy execution, threading,
+> and pushdown are paying off.
+
+### Measure String Columns Deeply
+
+> [!warning] Shallow memory accounting understates object-column cost
+>
+> Pandas `df.memory_usage()` counts only pointer sizes for object columns. For
+> strings, the shallow estimate can miss most of the real Python-object memory.
+
+> [!success] Use `deep=True` when inspecting Pandas memory
+>
+> Call `df.memory_usage(deep=True)` in Pandas and compare it with
+> `df.estimated_size()` in Polars. That gives you a usable memory baseline before
+> deciding whether the pipeline still fits comfortably in RAM.
+
+### Keep Computation Out of Python Row Loops
+
+> [!warning] `.apply()` throws away vectorized execution
+>
+> A Python lambda applied row by row runs at Python speed. Once you move work
+> into `.apply(axis=1)` or similar callbacks, you give up the C/Rust execution
+> path that makes DataFrame code fast.
+
+> [!success] Rewrite row logic as native expressions
+>
+> Replace row-wise lambdas with column arithmetic, conditional expressions, or
+> other native APIs. Treat Python UDFs as a temporary escape hatch, not the
+> steady-state design.
+
+### Verify the Streaming Path
+
+> [!warning] Streaming requests can still materialize the whole dataset
+>
+> If a query contains an unsupported operation, Polars may fall back to a
+> non-streaming plan. Assuming that `engine="streaming"` is always honored is a
+> memory-footgun.
+
+> [!success] Check `explain(streaming=True)` before trusting bounded memory
+>
+> Inspect the plan and confirm the important scan, filter, and aggregation nodes
+> stay on the streaming path. If they do not, reduce the query or accept that it
+> will run as a normal in-memory collect.
 
 ## Recommendations
 

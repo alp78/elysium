@@ -30,7 +30,7 @@ date: 2026-03-28
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="217 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 217</span>
 
-> [!quote]
+> [!quote]+
 > "You cannot manage what you do not measure, and CDP provides the global measurement system for corporate environmental impact."
 >
 > — **Paul Dickinson**, founder of CDP
@@ -115,7 +115,7 @@ The Convention on Cluster Munitions (CCM) is an international treaty adopted in 
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
 
-> [!quote]
+> [!quote]+
 > "The CSRD transforms sustainability reporting from a voluntary exercise into a legal obligation with the same rigour as financial reporting."
 >
 > — **Mairead McGuinness**, EU Commissioner for Financial Services, 2022
@@ -224,7 +224,7 @@ Do No Significant Harm is a principle embedded in the EU Taxonomy Regulation (Re
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
-> [!quote]
+> [!quote]+
 > "Double materiality recognises that a company is not an island. It both shapes and is shaped by the environmental and social systems it operates in."
 >
 > — **Patrick de Cambourg**, former chair of EFRAG Sustainability Reporting Board
@@ -286,7 +286,7 @@ Double materiality is a reporting concept formalized in the EU's CSRD and operat
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="69 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 69</span>
 
-> [!quote]
+> [!quote]+
 > "The Equator Principles established that banks have a responsibility to ensure the projects they finance do not cause undue environmental or social harm."
 >
 > — **International Finance Corporation (IFC)**, on the adoption of EP in 2003
@@ -392,7 +392,7 @@ The European Sustainability Reporting Standards are a set of mandatory disclosur
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="70 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 70</span>
 
-> [!quote]
+> [!quote]+
 > "The EU Taxonomy is a common language for sustainable finance. Without a shared definition of 'green,' every claim is just marketing."
 >
 > — **European Commission**, Technical Expert Group on Sustainable Finance, final report (2020)
@@ -475,7 +475,7 @@ The European ESG Template is a standardized data exchange template developed by 
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
 
-> [!quote]
+> [!quote]+
 > "The GHG Protocol gave the world a common accounting language for greenhouse gas emissions, making it possible to compare corporate carbon footprints across borders and industries."
 >
 > — **World Resources Institute (WRI)**, on the 20th anniversary of the Corporate Standard
@@ -533,7 +533,7 @@ The Greenhouse Gas Protocol is the most widely used international accounting fra
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="48 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 48</span>
 
-> [!quote]
+> [!quote]+
 > "GRI pioneered the idea that companies owe the public an account of their social and environmental performance, not just their financial results."
 >
 > — **Allen White**, co-founder of the Global Reporting Initiative
@@ -828,7 +828,7 @@ The OECD Guidelines for Multinational Enterprises on Responsible Business Conduc
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="145 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 145</span>
 
-> [!quote]
+> [!quote]+
 > "The Paris Agreement is a bridge between today's policies and climate-neutrality before the end of the century."
 >
 > — **Christiana Figueres**, Executive Secretary of the UNFCCC, on the adoption of the Paris Agreement (2015)
@@ -886,7 +886,7 @@ The Paris Agreement is a legally binding international treaty on climate change 
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="98 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 98</span>
 
-> [!quote]
+> [!quote]+
 > "The business case for responsible investment is clear. Markets that operate with integrity, transparency, and respect for human rights will always be more robust."
 >
 > — **Kofi Annan**, UN Secretary-General, at the PRI launch (2006)
@@ -945,7 +945,7 @@ The Principles for Responsible Investment is a UN-supported international networ
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
 
-> [!quote]
+> [!quote]+
 > "SASB standards answer a simple question: for each industry, which sustainability issues are most likely to affect enterprise value?"
 >
 > — **Jean Rogers**, founder of SASB
@@ -1058,7 +1058,7 @@ The Science Based Targets initiative is a partnership between CDP, the UN Global
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="426 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 426</span>
 
-> [!quote]
+> [!quote]+
 > "The Sustainable Development Goals are a to-do list for people and planet, and a blueprint for success."
 >
 > — **Ban Ki-moon**, UN Secretary-General, on the adoption of the 2030 Agenda (2015)
@@ -1162,7 +1162,7 @@ The Shareholder Rights Directive II (Directive 2017/828/EU) is an EU directive t
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
 
-> [!quote]
+> [!quote]+
 > "Stewardship is the responsible allocation, management, and oversight of capital to create long-term value for clients and beneficiaries."
 >
 > — **UK Financial Reporting Council**, UK Stewardship Code 2020
@@ -1221,7 +1221,7 @@ A stewardship code is a set of principles or guidelines issued by a national reg
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="44 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 44</span>
 
-> [!quote]
+> [!quote]+
 > "The financial crisis showed what happens when risks are not properly disclosed. Climate change is the next risk that markets are mispricing."
 >
 > — **Mark Carney**, Governor of the Bank of England, co-chair of the TCFD
@@ -1318,7 +1318,7 @@ The Taskforce on Nature-related Financial Disclosures is a global, market-led in
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="124 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 124</span>
 
-> [!quote]
+> [!quote]+
 > "I propose that you, the business leaders gathered in Davos, and we, the United Nations, initiate a global compact of shared values and principles to give a human face to the global market."
 >
 > — **Kofi Annan**, UN Secretary-General, at the World Economic Forum (1999)
@@ -1375,7 +1375,7 @@ The United Nations Global Compact is a voluntary initiative launched in 2000 in 
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
 
-> [!quote]
+> [!quote]+
 > "The corporate responsibility to respect human rights exists independently of states' abilities or willingness to fulfil their own human rights obligations."
 >
 > — **John Ruggie**, author of the UN Guiding Principles, *Just Business* (2013)

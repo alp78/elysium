@@ -10,7 +10,7 @@ status: complete
 
 # VM SSH and File Transfer
 
-> [!quote]
+> [!quote]+
 > "Amateurs hack systems, professionals hack people."
 >
 > — **Bruce Schneier**, *Secrets and Lies* (2000)

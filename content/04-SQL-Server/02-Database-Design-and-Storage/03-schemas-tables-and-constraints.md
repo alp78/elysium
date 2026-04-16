@@ -1630,6 +1630,8 @@ ALTER TABLE silver.instrument_price
 
 The `FOR created_at_utc` clause is required when adding a default to an existing column — it tells SQL Server which column the default applies to. The constraint name uses the `DF_<table>_<column>` convention so that later deployments can drop it by name:
 
+*Drop the same named default by its stable identifier.*
+
 ```sql
 ALTER TABLE silver.instrument_price
     DROP CONSTRAINT DF_silver_instrument_price_created_at_utc;
@@ -1946,6 +1948,8 @@ A memory-optimized table (SQL Server 2014+) is a table stored entirely in memory
 
 #### Inspect memory-optimized tables in the database
 
+Use this first when `CREATE TABLE ... WITH (MEMORY_OPTIMIZED = ON)` fails or when you need to verify whether the database already has live in-memory objects and which durability mode they use.
+
 *Return every memory-optimized table and its durability setting.*
 
 ```sql
@@ -1964,6 +1968,8 @@ ORDER BY SCHEMA_NAME(t.schema_id), t.name;
 | demo_stc | session_state | True | SCHEMA_AND_DATA |
 
 One memory-optimized table — `demo_stc.session_state` with `SCHEMA_AND_DATA` durability. Provisioning this table required adding a `MEMORY_OPTIMIZED_DATA` filegroup to the `stoxx` database first, because the database did not have one before this refactor. The two commands that were run on this instance:
+
+*Provision the required `MEMORY_OPTIMIZED_DATA` filegroup before creating the first in-memory table.*
 
 ```sql
 ALTER DATABASE [stoxx] ADD FILEGROUP [demo_stc_xtp_fg] CONTAINS MEMORY_OPTIMIZED_DATA;
@@ -2038,6 +2044,8 @@ Two ledger table variants:
 - **Append-only ledger table.** Only `INSERT` is allowed; no updates or deletes. Suitable for immutable audit logs.
 
 #### Inspect ledger tables in the database
+
+Run this inspection query before troubleshooting append-only `LEDGER` errors so you know which tables are ledger-backed and whether the object you are touching is still active or already retained as a dropped ledger artifact.
 
 *Return every ledger table and its ledger type.*
 
@@ -2161,6 +2169,8 @@ A graph table (SQL Server 2017+) is a table declared with `AS NODE` or `AS EDGE`
 Graph tables are useful when the data is genuinely graph-shaped — hierarchies with variable depth (org charts, file systems), supply chains, social networks, recommendation graphs — and the natural query pattern is "find all things N hops away from this starting node".
 
 #### Inspect graph tables in the database
+
+This query is the first diagnostic step when a graph query or graph DDL behaves unexpectedly, because it confirms whether the table is actually declared as `AS NODE` or `AS EDGE` rather than being an ordinary relational table.
 
 *Return every node and edge table in the database.*
 
@@ -2470,75 +2480,516 @@ Seven index rows that expose several specialised patterns unique to SQL Server's
 
 ## Warnings
 
-A single consolidated list of every operational hazard the note raised, in the order they arise when designing, evolving, and inspecting tables.
+These are the design and operational boundaries most likely to create durable SQL Server debt. Each concept ties the warning to a live object or captured result already established earlier in this note.
 
-- **`CREATE SCHEMA` without `AUTHORIZATION dbo`.** The schema ends up owned by the deployment account that happened to run the statement, which is often a rotating service principal. When the principal is dropped the ownership becomes orphaned and environment-specific grants break. Always pin the owner explicitly.
-- **`ALTER SCHEMA ... TRANSFER` is metadata-only but still breaks callers.** The transfer invalidates every cached plan and every stored reference to the old schema-qualified name. Coordinate with callers or add a compatibility view under the old name.
-- **`DROP SCHEMA` on a non-empty schema.** Fails with error 3729 and reports only the first offending object. Enumerate dependents with a catalog query before attempting the drop.
-- **Using `float` for monetary values.** `float(53)` cannot exactly represent `0.1 + 0.2` — the live capture in Phase 2 showed `0.30000000000000004`. Every production finance incident involving "the totals don't match" eventually traces back to a `float` column. Use `decimal(p, s)` for money.
-- **Using `GETDATE()` for audit timestamps.** Returns server-local time, which breaks under server timezone changes and multi-region replication. Use `SYSUTCDATETIME()` for every audit column.
-- **Filtering with `<>`, `NOT IN`, or `<` / `>` over nullable columns.** Silently excludes NULL rows because the predicate evaluates to `UNKNOWN`. The note showed a five-row input shrinking to two rows under `WHERE v <> 2`. Add `OR col IS NULL` or `AND col IS NOT NULL` depending on intent.
-- **System-named PKs and defaults.** Stoxx has 34 of 38 PKs and 38 of 40 defaults system-named — every one of those is a future deployment script failure. Always name constraints explicitly with the `PK_` / `UQ_` / `FK_` / `CK_` / `DF_` / `IX_` / `UX_` / `CIX_` prefix convention.
-- **`ALTER TABLE ... ADD NOT NULL` without a default on a populated table.** Fails immediately with error 4901. The safe pattern is always nullable-then-backfill-then-NOT-NULL in three separate statements.
-- **`ALTER TABLE ... ADD NOT NULL` with a non-constant default.** Metadata-only optimisation does not apply — the statement rewrites every row and locks the table. Either use a constant / runtime function, or do the backfill manually.
-- **`sp_rename` on a column.** References in procedures, views, functions, triggers, and application code all break silently. Schema-bound objects block the rename outright. Use expand / migrate / contract instead.
-- **`ON DELETE CASCADE` on high-cardinality parents.** A single parent delete can lock a million child rows, log a million delete records, and hold the lock until the cascade commits. Use `NO ACTION` plus soft-delete columns for high-cardinality relationships.
-- **FK re-enabled without `WITH CHECK CHECK`.** Leaves the constraint enabled but `is_not_trusted = 1` — the rule is enforced on new writes but the optimiser cannot use it for plan simplification, creating a silent performance regression. Always restore trust after any `NOCHECK` operation.
-- **Heap without a clear reason.** Short-lived staging, bulk-load landings, or deliberately denormalised edge tables (graph edges default to heap) are legitimate; a permanent OLTP table without a clustered index is not. Forwarded rows, lack of range-seek capability, and ghost-record bloat degrade a heap silently under any update-heavy workload.
-- **Columnstore with sustained updates.** Columnstore implements updates as delete-then-insert-into-delta-store. Sustained update workloads cause delta-store bloat and query-time decompression overhead. Columnstore is for append-mostly analytical tables; mixed workloads should stay on rowstore clustered.
-- **Temporal table with `TRUNCATE TABLE`.** Not allowed while system versioning is on. The correct sequence is `SET SYSTEM_VERSIONING = OFF`, truncate, `SET SYSTEM_VERSIONING = ON`.
-- **Ledger table with `UPDATE` or `DELETE` against an append-only variant.** Fails with error 41632. Append-only ledger tables are write-once; use an updatable ledger table if row updates are required and tamper-evidence is still needed.
-- **Memory-optimized table without a MEMORY_OPTIMIZED_DATA filegroup.** `CREATE TABLE ... WITH (MEMORY_OPTIMIZED = ON)` fails until the filegroup is provisioned. The refactor script in this note had to add one to stoxx explicitly (`ALTER DATABASE stoxx ADD FILEGROUP demo_stc_xtp_fg CONTAINS MEMORY_OPTIMIZED_DATA`) before the first memopt table could be created.
-- **Graph table features confused with standard foreign keys.** Graph edges cannot reference standard unique constraints — they use `EDGE CONSTRAINT` clauses (2019+) for referential integrity. Modelling a graph on top of a standard parent-child relationship via `FOREIGN KEY` is a normal relational pattern; modelling it as a `NODE` + `EDGE` pair enables the `MATCH` and `SHORTEST_PATH` syntax but disables standard FK support.
+### Deployment and naming drift
+
+#### Omitting `AUTHORIZATION dbo` changes the schema-ownership contract
+
+Leaving `AUTHORIZATION dbo` off `CREATE SCHEMA` makes the deployment principal the owner of record, which means later `ALTER SCHEMA ... TRANSFER` or `DROP SCHEMA` work starts from an environment-specific ownership baseline instead of a stable one.
+
+*Inspect the current schema owners that the note treats as the deployment baseline.*
+
+```sql
+SELECT
+    s.schema_id,
+    s.name       AS schema_name,
+    dp.name      AS owner_name,
+    dp.type_desc AS owner_type
+FROM sys.schemas AS s
+LEFT JOIN sys.database_principals AS dp
+    ON dp.principal_id = s.principal_id
+WHERE s.name IN ('bronze','silver','gold','demo_jx')
+ORDER BY s.schema_id;
+```
+
+```text
+schema_id  schema_name  owner_name  owner_type
+5          bronze       dbo         SQL_USER
+6          silver       dbo         SQL_USER
+7          gold         dbo         SQL_USER
+8          demo_jx      dbo         SQL_USER
+```
+
+The live database is consistent: every user schema in scope is owned by `dbo`. Creating a new schema without `AUTHORIZATION dbo` breaks that baseline immediately, and a later `DROP SCHEMA` still fails if objects remain under the namespace.
+
+#### System-named `PK__...` and `DF__...` identifiers turn future DDL into lookup work
+
+A system-generated constraint name is not just cosmetic metadata. It makes `DROP CONSTRAINT`, scripted rollback, and post-`sp_rename` cleanup environment-specific because the hash suffix is not stable across deployments.
+
+*Count how many defaults in the current database already use system-generated names.*
+
+```sql
+SELECT
+    SUM(CASE WHEN dc.is_system_named = 1 THEN 1 ELSE 0 END) AS system_named_defaults,
+    SUM(CASE WHEN dc.is_system_named = 0 THEN 1 ELSE 0 END) AS user_named_defaults,
+    COUNT(*)                                                 AS total_defaults
+FROM sys.default_constraints AS dc
+JOIN sys.tables AS t
+    ON t.object_id = dc.parent_object_id
+JOIN sys.schemas AS s
+    ON s.schema_id = t.schema_id
+WHERE s.name IN ('bronze','silver','gold','dbo','demo_jx');
+```
+
+```text
+system_named_defaults  user_named_defaults  total_defaults
+38                     2                    40
+```
+
+With `38` of `40` defaults system-named, this warning is already visible in `stoxx`. Any literal `DF__...` or `PK__...` reference hard-coded into deployment scripts is drift waiting to happen.
+
+### Data contract hazards
+
+#### `float` stores approximation, not financial truth
+
+Using `float` for prices or monetary facts bakes approximation into the schema itself. The risk is structural: `SUM()`, equality checks, and reconciliation logic all inherit the wrong numeric contract.
+
+*Compare the same arithmetic under `float` and `decimal`.*
+
+```sql
+SELECT
+    CAST(0.1 AS float) + CAST(0.2 AS float)                  AS float_01_plus_02,
+    CAST(0.1 AS decimal(19,4)) + CAST(0.2 AS decimal(19,4)) AS decimal_01_plus_02,
+    CAST(1.0/3.0 AS float)                                   AS float_one_third,
+    CAST(1.0/3.0 AS decimal(19,10))                          AS decimal_one_third;
+```
+
+```text
+float_01_plus_02    decimal_01_plus_02  float_one_third  decimal_one_third
+0.30000000000000004 0.3000              0.333333         0.3333330000
+```
+
+The `0.30000000000000004` result is the whole warning. If the column represents money, `float` has already chosen the wrong semantics before a single row is loaded.
+
+#### `GETDATE()` and `WHERE v <> 2` both hide state that the schema should make explicit
+
+`GETDATE()` hides timezone dependence in audit columns, and a predicate like `WHERE v <> 2` hides `NULL` rows behind three-valued logic. Both are risky because the SQL looks plausible while encoding the wrong invariant.
+
+*Show the two-row result produced by an inequality predicate over nullable data.*
+
+```sql
+SELECT v, COUNT(*) AS cnt
+FROM (VALUES (1), (NULL), (2), (NULL), (3)) AS t(v)
+WHERE v <> 2
+GROUP BY v
+ORDER BY v;
+```
+
+```text
+v     cnt
+1     1
+3     1
+```
+
+The missing `NULL` rows are the warning in miniature. The same class of mistake is why this note treats `SYSUTCDATETIME()` and explicit `IS NULL` handling as safer defaults than `GETDATE()` and implicit predicate behavior.
+
+### Change and storage boundaries
+
+#### One-step `ALTER TABLE ... ADD ... NOT NULL` fails on populated tables
+
+Adding a required column without a staged backfill plan is a deployment hazard, not a style preference. SQL Server rejects the change immediately, and the failure arrives in the middle of a schema-modification operation.
+
+*Attempt the unsafe one-step `ALTER TABLE` change.*
+
+```sql
+ALTER TABLE silver.instrument_price
+    ADD tax_lot_id int NOT NULL;
+```
+
+```text
+Msg 4901, Level 16, State 1, Line 2
+ALTER TABLE only allows columns to be added that can contain nulls, or have a DEFAULT definition specified, ...
+```
+
+This is why the safe pattern is always nullable, then backfill, then `ALTER COLUMN ... NOT NULL`. A non-constant default can still force a row rewrite, so the one-step shortcut is unsafe in both directions.
+
+#### `NOCHECK` without `WITH CHECK CHECK` leaves invisible performance debt
+
+A constraint can be enabled and still unusable by the optimizer. That happens when an FK is re-enabled after `NOCHECK` without restoring trust, leaving `is_not_trusted = 1` even though new writes are checked.
+
+*Audit the database for disabled or non-trusted foreign keys.*
+
+```sql
+SELECT
+    OBJECT_SCHEMA_NAME(fk.parent_object_id) AS parent_schema,
+    OBJECT_NAME(fk.parent_object_id)        AS parent_table,
+    fk.name                                 AS fk_name,
+    fk.is_disabled,
+    fk.is_not_trusted
+FROM sys.foreign_keys AS fk
+WHERE fk.is_not_trusted = 1
+   OR fk.is_disabled = 1
+ORDER BY parent_schema, parent_table;
+```
+
+```text
+(0 rows)
+```
+
+The empty result is the healthy state. Any non-empty result here means the relational contract exists on paper but the optimizer is barred from using it for plan simplification.
+
+#### Specialized table features are workload-specific contracts, not neutral defaults
+
+`HEAP`, `COLUMNSTORE`, `MEMORY_OPTIMIZED`, `LEDGER`, temporal history tables, and graph objects all change the operational rules. Treating them like interchangeable table declarations is how teams end up discovering `TRUNCATE TABLE`, `UPDATE`, or `FOREIGN KEY` limitations in production.
+
+*Inspect the feature-specific index shapes created by the note's specialized table examples.*
+
+```sql
+SELECT TOP 10
+    SCHEMA_NAME(t.schema_id) AS schema_name,
+    t.name                   AS table_name,
+    i.name                   AS index_name,
+    i.type_desc              AS index_type,
+    i.is_unique,
+    i.is_primary_key,
+    i.is_unique_constraint,
+    i.has_filter
+FROM sys.indexes AS i
+JOIN sys.tables AS t
+    ON t.object_id = i.object_id
+WHERE SCHEMA_NAME(t.schema_id) = 'demo_stc'
+  AND i.index_id > 0
+ORDER BY t.name, i.index_id;
+```
+
+```text
+schema_name  table_name                index_name                                        index_type         is_unique  is_primary_key  is_unique_constraint  has_filter
+demo_stc     compliance_event          PK_demo_stc_compliance_event                      CLUSTERED          True       True            False                 False
+demo_stc     employee                  PK__employee__C52E0BA8F2AF8EA3                   CLUSTERED          True       True            False                 False
+demo_stc     employee                  GRAPH_UNIQUE_INDEX_43E2B593F31D4A09B43337A085CC7AE1 NONCLUSTERED  True       False           False                 False
+demo_stc     instrument_state          PK_demo_stc_instrument_state                      CLUSTERED          True       True            False                 False
+demo_stc     instrument_state_history  ix_instrument_state_history                       CLUSTERED          False      False           False                 False
+demo_stc     reports_to                GRAPH_UNIQUE_INDEX_CCB22F6042A040F08D2AC3366A4E136F NONCLUSTERED  True       False           False                 False
+demo_stc     session_state             PK_demo_stc_session_state                         NONCLUSTERED HASH  True       True            False                 False
+```
+
+The live surface is enough to prove the point: `NONCLUSTERED HASH` needs memory-optimized prerequisites, `GRAPH_UNIQUE_INDEX` is not a normal `FOREIGN KEY`, the temporal history table uses a non-unique clustered index, and append-only ledger tables are not valid targets for ordinary `UPDATE` or `DELETE` flows.
 
 ## Recommendations
 
-A mirror of the warnings: the affirmative patterns the note recommends for each concern. Read this list as a checklist before deploying any new schema object.
+Read this section as the affirmative deployment checklist. Each concept names the pattern to prefer and ties it to a live result already captured in the note.
 
-- **Use explicit `AUTHORIZATION dbo` on every `CREATE SCHEMA`.** Pin ownership to a principal that is guaranteed to exist in every environment.
-- **Use the medallion schema layout** (`bronze`, `silver`, `gold`) or an equivalent convention that separates tables by lifecycle and stability. Group tables that load, evolve, and retire together into the same schema.
-- **Answer the five design questions before writing DDL:** grain, business key, nullability, types, constraints. Skipping any of them produces tables that drift silently.
-- **Use `decimal(19, 4)` for monetary values.** Reserve `float` and `real` for scientific calculations, ratios, and continuous statistical values.
-- **Use `SYSUTCDATETIME()` for audit timestamps** and `datetime2(3)` (or `datetime2(7)` if microsecond precision is needed) for the stored column.
-- **Default to rowstore clustered tables** unless the table has a specific reason to be a heap (temporary staging) or a columnstore (analytical append-mostly facts).
-- **Always name constraints explicitly:** `CONSTRAINT PK_<schema>_<table> PRIMARY KEY CLUSTERED (...)`, `CONSTRAINT DF_<table>_<column> DEFAULT ... FOR <column>`, and so on. Apply the full prefix convention (`PK_` / `UQ_` / `FK_` / `CK_` / `DF_` / `IX_` / `UX_` / `CIX_`).
-- **Use unique indexes or `UNIQUE` constraints for natural-key uniqueness** even when the PK is a surrogate. `silver.eurostoxx50_ohlcv.IX_silver_eurostoxx50_ohlcv_symbol_date` is the right pattern when the PK is on a surrogate `id` column.
-- **Use filtered unique indexes for sparse uniqueness:** `CREATE UNIQUE NONCLUSTERED INDEX ... WHERE col IS NOT NULL` when the column is truly optional but must be unique when present. The filtered form avoids the classical one-NULL restriction.
-- **Pair `CHECK (ISJSON(payload) = 1)` with `NOT NULL` on the payload column** if the business rule is "the payload must always be present and must be valid JSON". Without the `NOT NULL`, the `CHECK` still passes on NULL payloads.
-- **Disable and re-enable FKs with `NOCHECK` / `WITH CHECK CHECK`** for bulk loads, and verify `is_not_trusted = 0` after every deployment.
-- **Use `ON DELETE NO ACTION` plus soft-delete (`is_deleted bit DEFAULT 0`) for high-cardinality parents.** Reserve `CASCADE` for tightly-coupled pairs with bounded child cardinality.
-- **Apply the expand / migrate / contract pattern** for every non-trivial shape change (column rename, type widening, nullability change, column split or merge). Never use `sp_rename` on production columns.
-- **Promote frequently-queried JSON fields to persisted computed columns** and build covering non-clustered indexes over them. This is 5-10× faster than repeated `json_value()` calls.
-- **Inspect and audit via catalog views every deployment.** The three omnibus queries in Phase 7 (table census, constraint census, index census) are the production-grade audit surface.
-- **Reserve special table variants for the specific need each one answers:**
-    - Temporal — row-level audit history with time-travel queries.
-    - Memory-optimized — extreme-throughput OLTP with contention as the bottleneck.
-    - Ledger — tamper-evident audit trails for regulated compliance.
-    - Graph — multi-hop relational traversal where recursive CTEs would be clumsy.
+### Stable deployment patterns
 
-Don't reach for any of them without a matching requirement.
+#### Keep ownership fixed with `AUTHORIZATION dbo` and keep layer boundaries visible
+
+The safest baseline is explicit schema ownership plus a predictable layer split such as `bronze`, `silver`, and `gold`. If a table's lifecycle, retention, and privilege model differ, its schema should differ too.
+
+*Count the current user objects in the medallion-facing schemas.*
+
+```sql
+SELECT
+    s.name AS schema_name,
+    SUM(CASE WHEN o.type = 'U' THEN 1 ELSE 0 END) AS user_tables,
+    SUM(CASE WHEN o.type = 'V' THEN 1 ELSE 0 END) AS views,
+    SUM(CASE WHEN o.type IN ('P','PC') THEN 1 ELSE 0 END) AS procedures,
+    SUM(CASE WHEN o.type IN ('FN','IF','TF','FS','FT') THEN 1 ELSE 0 END) AS functions
+FROM sys.schemas AS s
+LEFT JOIN sys.objects AS o
+    ON o.schema_id = s.schema_id
+    AND o.is_ms_shipped = 0
+WHERE s.name IN ('dbo','bronze','silver','gold','demo_jx')
+GROUP BY s.name
+ORDER BY s.name;
+```
+
+```text
+schema_name  user_tables  views  procedures  functions
+bronze       12           0      0           0
+dbo          19           0      0           0
+demo_jx      5            0      0           0
+gold         3            0      0           0
+silver       7            0      0           0
+```
+
+That distribution is exactly why new DDL should start with `AUTHORIZATION dbo` and a conscious schema choice. The namespace is already carrying lifecycle meaning, so new objects should preserve it instead of defaulting into `dbo`.
+
+#### Name invariants explicitly with `PK_`, `DF_`, `UQ_`, or `UX_`
+
+Stable names and explicit alternate-key enforcement belong together. If the table grain is `(symbol, date)`, the schema should spell that invariant with a named `UNIQUE` constraint or a named unique index, not rely on a surrogate `id` alone.
+
+*Inspect the live unique indexes that already enforce alternate keys in `gold` and `silver`.*
+
+```sql
+SELECT
+    s.name               AS schema_name,
+    t.name               AS table_name,
+    i.name               AS index_name,
+    i.type_desc          AS index_type,
+    i.is_unique,
+    i.has_filter,
+    i.filter_definition
+FROM sys.indexes AS i
+JOIN sys.tables AS t
+    ON t.object_id = i.object_id
+JOIN sys.schemas AS s
+    ON s.schema_id = t.schema_id
+WHERE i.is_unique = 1
+  AND i.is_primary_key = 0
+  AND i.is_unique_constraint = 0
+  AND s.name IN ('gold','silver')
+ORDER BY s.name, t.name;
+```
+
+```text
+schema_name  table_name          index_name                                  index_type    is_unique  has_filter  filter_definition
+gold         index_performance   UX_gold_index_performance                   NONCLUSTERED  True       False       NULL
+gold         scores_daily        UX_gold_scores_daily                        NONCLUSTERED  True       False       NULL
+gold         scores_quarterly    UX_gold_scores_quarterly                    NONCLUSTERED  True       False       NULL
+silver       eurostoxx50_ohlcv   IX_silver_eurostoxx50_ohlcv_symbol_date    NONCLUSTERED  True       False       NULL
+silver       index_dim           UX_silver_index_dim_current                 NONCLUSTERED  True       True        ([is_current]=(1))
+silver       oil20_ohlcv         IX_silver_oil20_ohlcv_symbol_date           NONCLUSTERED  True       False       NULL
+```
+
+This is the model to copy: explicit `UX_` or `IX_..._symbol_date` names, a visible natural-key invariant, and a filtered unique index when sparsity requires `WHERE col IS NOT NULL` or an SCD-2 current-row rule.
+
+### Durable data contracts
+
+#### Prefer `decimal(19,4)` when the column represents money
+
+Exact numerics should be the default for monetary facts. `float` and `real` are appropriate for ratios, telemetry, and genuinely approximate scientific values, not balances, prices, or P&L.
+
+*Compare the same arithmetic under `float` and `decimal`.*
+
+```sql
+SELECT
+    CAST(0.1 AS float) + CAST(0.2 AS float)                  AS float_01_plus_02,
+    CAST(0.1 AS decimal(19,4)) + CAST(0.2 AS decimal(19,4)) AS decimal_01_plus_02,
+    CAST(1.0/3.0 AS float)                                   AS float_one_third,
+    CAST(1.0/3.0 AS decimal(19,10))                          AS decimal_one_third;
+```
+
+```text
+float_01_plus_02    decimal_01_plus_02  float_one_third  decimal_one_third
+0.30000000000000004 0.3000              0.333333         0.3333330000
+```
+
+For financial columns, the recommendation is direct: use `decimal(19,4)` unless the domain requires a different fixed scale, and keep `float` out of the contract.
+
+#### Prefer `SYSUTCDATETIME()` and `datetime2(3)` for audit columns
+
+Audit fields should store a timezone-independent value with modern precision. `GETDATE()` keeps server-local semantics alive in the schema, while `SYSUTCDATETIME()` makes the contract portable across regions and hosts.
+
+*Compare the current SQL Server time-family functions in one result set.*
+
+```sql
+SELECT
+    SYSUTCDATETIME()                               AS utc_datetime2_default,
+    SYSDATETIME()                                  AS local_datetime2,
+    GETUTCDATE()                                   AS utc_datetime,
+    GETDATE()                                      AS local_datetime,
+    CONVERT(varchar(40), SYSDATETIMEOFFSET(), 121) AS local_datetimeoffset,
+    CAST(SYSUTCDATETIME() AS date)                 AS date_only;
+```
+
+```text
+utc_datetime2_default   local_datetime2         utc_datetime            local_datetime          local_datetimeoffset                 date_only
+2026-04-11 21:29:14.191712 2026-04-11 21:29:14.191712 2026-04-11 21:29:14.2 2026-04-11 21:29:14.2 2026-04-11 21:29:14.1917129 +00:00 2026-04-11
+```
+
+The practical default is `datetime2(3)` plus `DEFAULT SYSUTCDATETIME()`. Use `datetimeoffset` only when the source offset is itself meaningful business data.
+
+#### State `NULL` intent explicitly in both filters and constraints
+
+The safe pattern is to spell `OR col IS NULL`, `AND col IS NOT NULL`, or `NOT NULL` directly rather than relying on readers to infer how `UNKNOWN` should behave. The same rule is why `CHECK (ISJSON(payload) = 1)` needs `NOT NULL` if the payload must always exist.
+
+*Restore the `NULL` rows explicitly in the earlier filter example.*
+
+```sql
+SELECT v, COUNT(*) AS cnt
+FROM (VALUES (1), (NULL), (2), (NULL), (3)) AS t(v)
+WHERE v <> 2 OR v IS NULL
+GROUP BY v
+ORDER BY v;
+```
+
+```text
+v     cnt
+NULL  2
+1     1
+3     1
+```
+
+This is the recommendation in executable form: make the `NULL` rule explicit in the query or the DDL instead of leaving it as an accidental side effect.
+
+### Safe evolution and specialization
+
+#### Stage shape changes and verify trust with `WITH CHECK CHECK`
+
+The operationally safe pattern is `ADD NULL`, backfill, then `ALTER COLUMN ... NOT NULL`, and any FK disabled with `NOCHECK` should be restored with `WITH CHECK CHECK` before the deployment is considered done. The validation query should return no rows.
+
+*Audit the database for disabled or non-trusted foreign keys after deployment.*
+
+```sql
+SELECT
+    OBJECT_SCHEMA_NAME(fk.parent_object_id) AS parent_schema,
+    OBJECT_NAME(fk.parent_object_id)        AS parent_table,
+    fk.name                                 AS fk_name,
+    fk.is_disabled,
+    fk.is_not_trusted
+FROM sys.foreign_keys AS fk
+WHERE fk.is_not_trusted = 1
+   OR fk.is_disabled = 1
+ORDER BY parent_schema, parent_table;
+```
+
+```text
+(0 rows)
+```
+
+Treat that empty result as a deployment gate. The same discipline is why column renames should follow expand, migrate, and contract instead of `sp_rename`.
+
+#### Choose `HEAP`, `COLUMNSTORE`, `MEMORY_OPTIMIZED`, `LEDGER`, or graph features only for a matching requirement
+
+A standard rowstore clustered table is still the default shape. Specialized variants earn their complexity only when the workload needs their exact behavior: append-mostly analytics, in-memory contention relief, tamper-evidence, or graph traversal.
+
+*Inspect the feature-specific index shapes created by the note's specialized table examples.*
+
+```sql
+SELECT TOP 10
+    SCHEMA_NAME(t.schema_id) AS schema_name,
+    t.name                   AS table_name,
+    i.name                   AS index_name,
+    i.type_desc              AS index_type,
+    i.is_unique,
+    i.is_primary_key,
+    i.is_unique_constraint,
+    i.has_filter
+FROM sys.indexes AS i
+JOIN sys.tables AS t
+    ON t.object_id = i.object_id
+WHERE SCHEMA_NAME(t.schema_id) = 'demo_stc'
+  AND i.index_id > 0
+ORDER BY t.name, i.index_id;
+```
+
+```text
+schema_name  table_name                index_name                                        index_type         is_unique  is_primary_key  is_unique_constraint  has_filter
+demo_stc     compliance_event          PK_demo_stc_compliance_event                      CLUSTERED          True       True            False                 False
+demo_stc     employee                  PK__employee__C52E0BA8F2AF8EA3                   CLUSTERED          True       True            False                 False
+demo_stc     employee                  GRAPH_UNIQUE_INDEX_43E2B593F31D4A09B43337A085CC7AE1 NONCLUSTERED  True       False           False                 False
+demo_stc     instrument_state          PK_demo_stc_instrument_state                      CLUSTERED          True       True            False                 False
+demo_stc     instrument_state_history  ix_instrument_state_history                       CLUSTERED          False      False           False                 False
+demo_stc     reports_to                GRAPH_UNIQUE_INDEX_CCB22F6042A040F08D2AC3366A4E136F NONCLUSTERED  True       False           False                 False
+demo_stc     session_state             PK_demo_stc_session_state                         NONCLUSTERED HASH  True       True            False                 False
+```
+
+The recommended default remains a rowstore clustered table. Reach for `COLUMNSTORE` only on append-mostly facts, `HEAP` only on temporary landing shapes, `MEMORY_OPTIMIZED` only when contention is the measured bottleneck, `LEDGER` only when tamper-evidence is a requirement, and graph tables only when multi-hop traversal is the real access pattern.
 
 ## Troubleshooting
 
-Failure modes by symptom — the error, what it usually means, and the fix. Use this section as a lookup table when you hit one of these messages in deployment logs or in a development session.
+Use this section when deployment logs or post-load audits surface a failure. Match the symptom to the nearest concept, run the adjacent reproduction or diagnostic query, and then apply the fix pattern named under it.
 
-| Error / symptom | Likely cause | Fix |
-|---|---|---|
-| **Error 3729:** `Cannot drop schema 'X' because it is being referenced by object 'Y'` | Objects still live in the schema. | Run the dependent-object enumeration query from Phase 1 and remove or transfer every object before retrying the drop. |
-| **Error 4901:** `ALTER TABLE only allows columns to be added that can contain nulls, or have a DEFAULT definition specified` | Adding `NOT NULL` without a default on a populated table. | Add the column as `NULL` first, backfill with `UPDATE`, then `ALTER COLUMN ... NOT NULL`. |
-| **Error 547:** `The INSERT statement conflicted with the CHECK / FOREIGN KEY constraint` | A row violates a declared constraint. | Either fix the data so it conforms, or if the rule has genuinely changed, drop and recreate the constraint with the new definition. |
-| **Error 512:** `Subquery returned more than 1 value` on a `CASE WHEN (subquery) = value` | A constraint or default reliant on a scalar subquery is returning multi-row. | Review the subquery, add `TOP 1` with a deterministic `ORDER BY`, or refactor to a `JOIN`. |
-| **Error 515:** `Cannot insert the value NULL into column ... column does not allow nulls` | Insert that omits a required column without a default, or explicitly sets NULL. | Either supply the value, add a default, or change the column to nullable if the business rule allows. |
-| **Error 15336:** `The object cannot be renamed because it is referenced by ... schema-bound object` | `sp_rename` on a column that participates in a schema-bound view, indexed view, or computed column. | Drop the schema-bound object, rename, recreate the object. Or — better — use expand / migrate / contract. |
-| **Error 1785:** `Introducing FOREIGN KEY constraint ... may cause cycles or multiple cascade paths` | `ON DELETE CASCADE` creates two paths from the parent to the same child. | Drop cascade from one of the paths or redesign the relationship so there is only one cascading chain. |
-| **Error 2714:** `There is already an object named 'X' in the database` | `CREATE TABLE` against an already-existing name, usually because the deployment script was re-run without cleanup. | Either use `CREATE OR ALTER` (views / procedures / functions only — not tables) or make the script idempotent with `IF OBJECT_ID(...) IS NOT NULL DROP ...`. |
-| **Error 41632:** `This operation is not supported on append-only ledger tables` | `UPDATE` or `DELETE` against an append-only ledger table. | If the data genuinely needs to be updatable, declare the table as an *updatable* ledger table, not append-only. If the data should be immutable, the error is operating as designed — the write is not valid and should be rejected at the application layer. |
-| **Error 10794:** `The option 'MEMORY_OPTIMIZED = ON' is not supported ... database does not have a MEMORY_OPTIMIZED_FILEGROUP` | No `MEMORY_OPTIMIZED_DATA` filegroup on the database. | Add one: `ALTER DATABASE ... ADD FILEGROUP X CONTAINS MEMORY_OPTIMIZED_DATA`, then `ALTER DATABASE ... ADD FILE (NAME = ..., FILENAME = ...) TO FILEGROUP X`. |
-| **Unexpectedly few rows from a `WHERE col <> 'X'` filter** | NULL rows silently excluded by three-valued logic. | Add `OR col IS NULL` or `AND col IS NOT NULL` depending on intent, or replace with `WHERE ISNULL(col, '') <> 'X'`. |
-| **Identity values suddenly jumping by thousands after a restart** | Identity cache is not durable across server restarts before SQL Server 2017 (or with `IDENTITY_CACHE = ON`). | Not a bug — identity gaps are expected. If dense numbering is required, use a separate serialised counter table. |
-| **Non-trusted FK after a bulk load** | The FK was re-enabled with `CHECK CONSTRAINT` instead of `WITH CHECK CHECK CONSTRAINT`. | Run `ALTER TABLE ... WITH CHECK CHECK CONSTRAINT <name>` to restore trust. Verify with `SELECT * FROM sys.foreign_keys WHERE is_not_trusted = 1`. |
-| **Forwarded-row count rising on a heap** | Updates are expanding rows past their original slot. | Rebuild the heap (`ALTER TABLE ... REBUILD`) to clear forwards. Consider converting to a clustered table if updates are sustained. |
-| **Ledger digest verification failure** | Indicates either genuine tamper or an out-of-order digest publication. | Investigate via the ledger verification stored procedure (`sp_verify_database_ledger`). If the digest chain is broken, compare to the external digest store — this is exactly the scenario the ledger feature is designed to surface. |
+### DDL blockers
+
+#### `ALTER TABLE ... ADD ... NOT NULL`, `DROP SCHEMA`, and rerun collisions all mean the deployment choreography is incomplete
+
+If you hit error `4901`, `3729`, or `2714`, the usual root cause is not "SQL Server is picky" but "the rollout skipped a staging step." Add required columns in phases, enumerate objects before `DROP SCHEMA`, and make rerunnable DDL explicit with `OBJECT_ID(...)` checks or `CREATE OR ALTER` where SQL Server supports it. The same principle applies to `sp_rename`: if a schema-bound dependency exists, stop and use expand, migrate, and contract instead of retrying the rename.
+
+*Reproduce the classic `4901` failure mode for adding a required column to a populated table.*
+
+```sql
+ALTER TABLE silver.instrument_price
+    ADD tax_lot_id int NOT NULL;
+```
+
+```text
+Msg 4901, Level 16, State 1, Line 2
+ALTER TABLE only allows columns to be added that can contain nulls, or have a DEFAULT definition specified, ...
+```
+
+When the error appears, the fix is to `ADD` the column as nullable, backfill it with `UPDATE`, and only then switch to `NOT NULL`. That same staged mindset prevents the `DROP SCHEMA` and duplicate-object failures the old lookup table listed.
+
+### Query and contract surprises
+
+#### `WHERE col <> 'X'`, multi-row scalar subqueries, and `NULL`-insert failures all mean the data contract is underspecified
+
+Unexpectedly small result sets, error `512`, and error `515` usually trace back to a contract that left `NULL`, uniqueness, or cardinality implicit. If a `CHECK` or `DEFAULT` expression depends on a scalar subquery, make the `TOP (1)` and `ORDER BY` rule explicit. If a column is required, either provide a value or declare a real default instead of assuming the engine will infer one.
+
+*Show how a nullable inequality predicate silently drops rows.*
+
+```sql
+SELECT v, COUNT(*) AS cnt
+FROM (VALUES (1), (NULL), (2), (NULL), (3)) AS t(v)
+WHERE v <> 2
+GROUP BY v
+ORDER BY v;
+```
+
+```text
+v     cnt
+1     1
+3     1
+```
+
+The missing `NULL` rows are the same class of bug as a failing `INSERT` into a required column: the written contract did not match the business rule. Say `OR col IS NULL`, add `NOT NULL`, or add the default explicitly.
+
+### Integrity and storage drift
+
+#### `WITH CHECK CHECK`, `ON DELETE NO ACTION`, and heap repair address most post-load integrity regressions
+
+If a bulk load leaves an FK non-trusted, if a cascade path explodes into error `1785`, or if a heap starts accumulating forwarded rows, the fix is structural. Re-enable constraints with `WITH CHECK CHECK`, prefer `ON DELETE NO ACTION` plus soft-delete markers for high-cardinality parents, and rebuild or recluster heaps that now serve update-heavy workloads. Identity jumps after restart are separate: they are expected cache behavior, not corruption.
+
+*Audit the database for disabled or non-trusted foreign keys after a load or migration.*
+
+```sql
+SELECT
+    OBJECT_SCHEMA_NAME(fk.parent_object_id) AS parent_schema,
+    OBJECT_NAME(fk.parent_object_id)        AS parent_table,
+    fk.name                                 AS fk_name,
+    fk.is_disabled,
+    fk.is_not_trusted
+FROM sys.foreign_keys AS fk
+WHERE fk.is_not_trusted = 1
+   OR fk.is_disabled = 1
+ORDER BY parent_schema, parent_table;
+```
+
+```text
+(0 rows)
+```
+
+The healthy state is an empty result. If rows appear here, restore trust first; if performance is still poor on a heap, inspect forwarded rows and consider `ALTER TABLE ... REBUILD` or a clustered index migration.
+
+### Feature-specific limits
+
+#### `MEMORY_OPTIMIZED`, append-only `LEDGER`, temporal history, and graph tables fail when treated like ordinary rowstore tables
+
+Error `10794`, error `41632`, temporal `TRUNCATE TABLE` failures, and graph/FK confusion all come from choosing a specialized feature and then assuming ordinary table rules still apply. Memory-optimized tables need a `MEMORY_OPTIMIZED_DATA` filegroup, append-only ledger tables reject `UPDATE` and `DELETE`, temporal tables impose versioning choreography, and graph edges use graph semantics rather than standard `FOREIGN KEY` contracts. If a ledger digest verification fails, investigate with `sp_verify_database_ledger` and compare the digest chain to the external store.
+
+*Inspect the specialized index shapes created by the note's temporal, ledger, graph, and memory-optimized examples.*
+
+```sql
+SELECT TOP 10
+    SCHEMA_NAME(t.schema_id) AS schema_name,
+    t.name                   AS table_name,
+    i.name                   AS index_name,
+    i.type_desc              AS index_type,
+    i.is_unique,
+    i.is_primary_key,
+    i.is_unique_constraint,
+    i.has_filter
+FROM sys.indexes AS i
+JOIN sys.tables AS t
+    ON t.object_id = i.object_id
+WHERE SCHEMA_NAME(t.schema_id) = 'demo_stc'
+  AND i.index_id > 0
+ORDER BY t.name, i.index_id;
+```
+
+```text
+schema_name  table_name                index_name                                        index_type         is_unique  is_primary_key  is_unique_constraint  has_filter
+demo_stc     compliance_event          PK_demo_stc_compliance_event                      CLUSTERED          True       True            False                 False
+demo_stc     employee                  PK__employee__C52E0BA8F2AF8EA3                   CLUSTERED          True       True            False                 False
+demo_stc     employee                  GRAPH_UNIQUE_INDEX_43E2B593F31D4A09B43337A085CC7AE1 NONCLUSTERED  True       False           False                 False
+demo_stc     instrument_state          PK_demo_stc_instrument_state                      CLUSTERED          True       True            False                 False
+demo_stc     instrument_state_history  ix_instrument_state_history                       CLUSTERED          False      False           False                 False
+demo_stc     reports_to                GRAPH_UNIQUE_INDEX_CCB22F6042A040F08D2AC3366A4E136F NONCLUSTERED  True       False           False                 False
+demo_stc     session_state             PK_demo_stc_session_state                         NONCLUSTERED HASH  True       True            False                 False
+```
+
+Those shapes are the diagnostic clue. `NONCLUSTERED HASH` means memory-optimized rules apply, `GRAPH_UNIQUE_INDEX` means graph rules apply, the non-unique temporal history index means system-versioned behavior applies, and the ledger-backed table should be troubleshot as an audit artifact rather than as a generic mutable rowstore table.
 
 ## Cross-references
 

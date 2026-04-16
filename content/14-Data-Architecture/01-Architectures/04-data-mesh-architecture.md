@@ -10,7 +10,7 @@ status: complete
 
 # Data Mesh Architecture
 
-> [!quote]
+> [!quote]+
 > "There is accidental complexity: the complexity that we -- engineers, architects, and designers -- create in our solutions. Accidental complexity can and should be reduced."
 >
 > — **Zhamak Dehghani**, *Data Mesh* (2022)

@@ -198,10 +198,12 @@ Stable identifiers such as DAG name, task name, service name, or query label can
 | Airflow `run_id` | No | Task logs, orchestration metadata, or session-scoped metadata | Embedding it in query text creates one unique statement per run. |
 | Exact execution timestamp | No | Logs or external monitoring | High-cardinality tag that destroys plan reuse value. |
 
-> [!warning]
+> [!warning] Volatile text kills plan reuse
+>
 > Do not put a unique `run_id` or timestamp in every production query text unless you have explicitly decided that losing plan reuse is acceptable.
 >
-> [!success]
+> [!success] Keep query text stable
+>
 > Keep the SQL text stable. Put durable identifiers such as DAG or task labels in `OPTION (LABEL = ...)`, and keep volatile run-specific metadata in the orchestration layer or session-scoped metadata.
 >
 
@@ -385,10 +387,12 @@ For SQL Server-side observability, `Application Name` is usually more valuable t
 | ADO.NET | `Server=localhost,1434;Initial Catalog=stoxx;User ID=pipeline_svc;Password=...;Encrypt=True;TrustServerCertificate=True;Application Name=pipeline_loader;Min Pool Size=2;Max Pool Size=20;` |
 | SQLAlchemy / pyodbc | `mssql+pyodbc://pipeline_svc:***@localhost,1434/stoxx?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=yes&Application Name=pipeline_loader` |
 
-> [!warning]
+> [!warning] Generic client names are useless
+>
 > Do not rely on default client names in production. `SQLCMD`, `Microsoft SQL Server Management Studio`, and generic driver names are too coarse for service-level monitoring.
 >
-> [!success]
+> [!success] Set stable application names
+>
 > Set a stable `Application Name` per service or per worker type, not per individual run. That gives you usable `program_name` grouping without fragmenting the connection identity space.
 >
 
@@ -491,10 +495,12 @@ Schema changes should be a release concern, not a normal per-run pipeline behavi
 | DDL application | Release pipeline | Controlled blast radius and auditability |
 | Runtime schema check | DAG startup task | Fast failure when environments drift |
 
-> [!warning]
+> [!warning] Do not run DDL on every DAG
+>
 > Do not apply schema migrations automatically on every Airflow DAG run unless the environment is intentionally small, serialized, and you have accepted DDL-at-runtime as a design choice.
 >
-> [!success]
+> [!success] Separate checks from deployment
+>
 > Use runtime DAGs to verify schema version, not to own production DDL. Keep actual schema changes in a dedicated deployment workflow.
 >
 
@@ -565,10 +571,12 @@ Datadog, OpenTelemetry collectors, or internal database-monitoring agents all be
 
 #### Grant the monitoring login only the read surface it needs
 
-> [!warning]
+> [!warning] Monitoring is not administration
+>
 > Do not make the monitoring login `sysadmin`. Monitoring agents need visibility, not control.
 >
-> [!success]
+> [!success] Grant read visibility only
+>
 > Grant only the server and database read permissions required by the specific DMVs and metadata views you intend to query.
 >
 > [!info]-

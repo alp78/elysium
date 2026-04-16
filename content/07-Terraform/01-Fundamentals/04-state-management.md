@@ -10,7 +10,7 @@ status: complete
 
 # State Management
 
-> [!quote] Kleppmann on source of truth
+> [!quote]+
 >
 > "The source of truth is the single place where the system's current state is definitively recorded."
 >

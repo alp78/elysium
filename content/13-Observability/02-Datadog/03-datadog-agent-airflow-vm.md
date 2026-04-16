@@ -10,7 +10,7 @@ status: complete
 
 # Datadog Agent: Airflow VM
 
-> [!quote]
+> [!quote]+
 > "Monitoring is a verb, not a noun. It is the action of observing and checking the behavior of a system over time."
 >
 > — **Greg Poirier**, Monitorama 2016

@@ -7,7 +7,7 @@ tags:
 
 # Git Problems
 
-> [!quote] Linus Torvalds — Git mailing list
+> [!quote]+
 >
 > "You must never EVER destroy other people's history. You must not rebase commits other people did. If it doesn't have your sign-off on it, it's off limits."
 

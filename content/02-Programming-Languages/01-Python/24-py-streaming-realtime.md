@@ -14,7 +14,7 @@ status: complete
 
 # Streaming and Real-Time Data — Python
 
-> [!quote]- Epigraph
+> [!quote]+
 >
 > "Turning the database inside out: take the implementation detail that was previously hidden inside the database, and make it a first-class citizen."
 >

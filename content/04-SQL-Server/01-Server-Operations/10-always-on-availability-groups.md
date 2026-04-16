@@ -10,7 +10,7 @@ status: complete
 
 # Always On Availability Groups
 
-> [!quote]
+> [!quote]+
 > "High availability is not about preventing failure — it is about recovering from failure faster than your users notice."
 >
 > — **Adrian Cockcroft**, Netflix tech blog

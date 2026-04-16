@@ -11,7 +11,7 @@ status: complete
 
 # Foundations and I/O - C#
 
-> [!quote]- Linus Torvalds on Data Structures
+> [!quote]+
 >
 > "Bad programmers worry about the code. Good programmers worry about data structures and their relationships."
 >

@@ -8,7 +8,7 @@ description: "Schema tests dbt-utils dbt-expectations custom tests"
 
 # dbt: Testing Framework
 
-> [!quote] Tests need operational context
+> [!quote]+
 >
 > "Without observability, it's just chaos. Why do people invest so much in staging testing tooling, when they cannot tell if the system is healthy in the first place?"
 >

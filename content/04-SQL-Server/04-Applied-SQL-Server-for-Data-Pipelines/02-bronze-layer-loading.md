@@ -10,7 +10,7 @@ status: complete
 
 # Bronze Layer Loading
 
-> [!quote]
+> [!quote]+
 > "The bronze layer is sacred ground — it is the only place the data exists exactly as the source sent it. Corrupt the landing zone and you have no way back."
 >
 > — **Zhamak Dehghani**, *Data Mesh*

@@ -10,7 +10,7 @@ status: complete
 
 # Datadog Cost Optimization
 
-> [!quote]
+> [!quote]+
 > "The biggest cost in observability is not the tooling — it is the data you collect that nobody ever looks at."
 >
 > — **Charity Majors**, CTO of Honeycomb

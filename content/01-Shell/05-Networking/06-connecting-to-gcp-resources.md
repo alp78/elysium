@@ -14,7 +14,7 @@ status: complete
 
 # Connecting to GCP Resources
 
-> [!quote] Ellison on cloud
+> [!quote]+
 >
 > "The interesting thing about cloud computing is that we've redefined cloud computing to include everything that we already do."
 >

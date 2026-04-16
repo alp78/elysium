@@ -10,7 +10,7 @@ status: complete
 
 # Datadog APM Traces
 
-> [!quote]
+> [!quote]+
 > "I think of monitoring as TDD for production. And observability as debugging for production — give Future You the power to answer any question."
 >
 > — **Charity Majors**, charity.wtf (2018)

@@ -30,7 +30,7 @@ date: 2026-03-28
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
-> [!quote]
+> [!quote]+
 > "The market is a weighing machine."
 >
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
@@ -295,7 +295,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="152 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 152</span>
 
-> [!quote]
+> [!quote]+
 > "The index fund is a most unlikely hero for the typical investor."
 >
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
@@ -353,7 +353,7 @@ A broadly representative, rules-based index that serves as a standard reference 
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="65 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 65</span>
 
-> [!quote]
+> [!quote]+
 > "Buffer rules are the index world's answer to unnecessary turnover — they keep borderline stocks from churning in and out."
 >
 > — **Antti Petajisto**, *The Index Premium and Its Hidden Cost for Index Funds* (2011)
@@ -410,7 +410,7 @@ A threshold band applied during periodic reviews that allows existing constituen
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="898 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 898</span>
 
-> [!quote]
+> [!quote]+
 > "Diversification is the only free lunch in investing."
 >
 > — **Harry Markowitz**
@@ -719,7 +719,7 @@ An individual security that is a member of an index at a given point in time and
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
 
-> [!quote]
+> [!quote]+
 > "The divisor is what makes an index a continuous time series rather than a disjointed sequence of portfolios."
 >
 > — **David Blitzer**, former Chairman of the S&P Index Committee
@@ -863,7 +863,7 @@ The calendar date on which announced index changes — including additions, dele
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
 
-> [!quote]
+> [!quote]+
 > "The essence of investment management is the management of risks, not the management of returns."
 >
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
@@ -921,7 +921,7 @@ The set of minimum requirements — covering domicile, listing venue, security t
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="27 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 27</span>
 
-> [!quote]
+> [!quote]+
 > "Equal weighting is the simplest diversification strategy — it says every stock deserves the same chance."
 >
 > — **Victor DeMiguel et al.**, *Optimal Versus Naive Diversification* (2009)
@@ -1086,7 +1086,7 @@ A provision that triggers the removal of a constituent from an index between per
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,168 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,168</span>
 
-> [!quote]
+> [!quote]+
 > "Free-float adjustment ensures that index weights reflect tradeable reality, not theoretical ownership."
 >
 > — **MSCI Barra**, *Free Float Adjustment Methodology* (2001)
@@ -1199,7 +1199,7 @@ Rounded to the nearest 0.05.
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="21 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 21</span>
 
-> [!quote]
+> [!quote]+
 > "It is not the return on my money that I am concerned about; it is the return of my money."
 >
 > — **Will Rogers**
@@ -1344,7 +1344,7 @@ A governance body composed of senior professionals within the index provider org
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="72 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 72</span>
 
-> [!quote]
+> [!quote]+
 > "The Laspeyres method holds quantities fixed and lets prices tell the story — the natural choice for a market index."
 >
 > — **Irving Fisher**, *The Making of Index Numbers* (1922)
@@ -1522,7 +1522,7 @@ $$
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="360 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 360</span>
 
-> [!quote]
+> [!quote]+
 > "Wide diversification is only required when investors do not understand what they are doing."
 >
 > — **Warren Buffett**
@@ -1579,7 +1579,7 @@ The broadest set of securities from which an index's constituents may be selecte
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
 
-> [!quote]
+> [!quote]+
 > "Liquidity is a coward — it disappears at the first sign of trouble."
 >
 > — **Nassim Nicholas Taleb**, *The Black Swan* (2007)
@@ -1636,7 +1636,7 @@ The degree to which an index can be practically replicated by a real-world portf
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
-> [!quote]
+> [!quote]+
 > "Don't look for the needle in the haystack — just buy the haystack."
 >
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
@@ -1685,7 +1685,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="64 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 64</span>
 
-> [!quote]
+> [!quote]+
 > "In this world nothing can be said to be certain, except death and taxes."
 >
 > — **Benjamin Franklin**
@@ -1891,7 +1891,7 @@ $$
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="271 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 271</span>
 
-> [!quote]
+> [!quote]+
 > "Rebalancing is a discipline that forces you to sell high and buy low."
 >
 > — **William Bernstein**, *The Four Pillars of Investing* (2002)
@@ -1947,7 +1947,7 @@ The periodic process of realigning constituent weights to their target values as
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
+> [!quote]+
 > "Reconstitution is the moment when an index refreshes itself — new blood in, old blood out — based purely on the rules."
 >
 > — **Antti Petajisto**, *The Index Premium and Its Hidden Cost for Index Funds* (2011)
@@ -2033,7 +2033,7 @@ The cadence at which an index provider conducts periodic reviews, commonly expre
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
+> [!quote]+
 > "A good index is a set of published rules, applied consistently, with no room for discretion to creep in."
 >
 > — **IOSCO**, *Principles for Financial Benchmarks* (2013)
@@ -2064,7 +2064,7 @@ An index constructed and maintained according to a transparent, pre-defined, and
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
-> [!quote]
+> [!quote]+
 > "Diversification is the only free lunch in investing."
 >
 > — **Harry Markowitz**
@@ -2223,7 +2223,7 @@ The ordered ranking of eligible securities — typically sorted by free-float ma
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
 
-> [!quote]
+> [!quote]+
 > "All models are wrong, but some are useful."
 >
 > — **George E.P. Box**, *Empirical Model-Building and Response Surfaces* (1987)
@@ -2313,7 +2313,7 @@ An index constructed using a transparent, rules-based methodology that systemati
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
 
-> [!quote]
+> [!quote]+
 > "The miracle of compounding returns is overwhelmed by the tyranny of compounding costs."
 >
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
@@ -2370,7 +2370,7 @@ A generic term for an index variant that accounts for both price appreciation an
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="501 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 501</span>
 
-> [!quote]
+> [!quote]+
 > "The biggest risk is not volatility but the permanent loss of capital."
 >
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
@@ -2433,7 +2433,7 @@ Where $R_p$ and $R_b$ are daily portfolio and benchmark returns, respectively, a
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="668 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 668</span>
 
-> [!quote]
+> [!quote]+
 > "The real cost of indexing is not the management fee — it is the turnover and the market impact of rebalancing trades."
 >
 > — **John C. Bogle**, *Common Sense on Mutual Funds* (1999)
@@ -2495,7 +2495,7 @@ Where $w_i^{\text{old}}$ and $w_i^{\text{new}}$ are the weights before and after
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="570 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 570</span>
 
-> [!quote]
+> [!quote]+
 > "Capitalization weighting is the only weighting method that is both self-rebalancing and reflects the aggregate opinion of all market participants."
 >
 > — **William F. Sharpe**, *Capital Asset Prices* (1964)

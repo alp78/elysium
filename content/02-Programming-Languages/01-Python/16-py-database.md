@@ -10,7 +10,7 @@ status: complete
 
 # 16. Database - Python
 
-> [!quote]- Database Principle
+> [!quote]+
 >
 > "Future users of large data banks must be protected from having to know how the data is organized in the machine."
 >

@@ -20,7 +20,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Bond Underwriting
 
-> [!quote]
+> [!quote]+
 > "The bond market is the most important market in the world — it finances everything governments and corporations do."
 >
 > — **Bill Gross**
@@ -38,7 +38,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Brokerage
 
-> [!quote]
+> [!quote]+
 > "The broker's job is to serve the client — the moment the broker forgets that, the relationship is over."
 >
 > — **Charles Schwab**
@@ -55,7 +55,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Capital Markets
 
-> [!quote]
+> [!quote]+
 > "Capital markets are the lifeblood of capitalism — they channel savings to their most productive uses."
 >
 > — **Henry Paulson**
@@ -85,7 +85,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Debt Capital Markets
 
-> [!quote]
+> [!quote]+
 > "The credit market is far larger and more consequential than the equity market — yet most investors pay it less attention."
 >
 > — **Howard Marks**, *The Most Important Thing* (2011)
@@ -102,7 +102,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Derivatives
 
-> [!quote]
+> [!quote]+
 > "Derivatives are financial weapons of mass destruction."
 >
 > — **Warren Buffett**
@@ -120,7 +120,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Equities
 
-> [!quote]
+> [!quote]+
 > "In the short run, the market is a voting machine but in the long run, it is a weighing machine."
 >
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
@@ -138,7 +138,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Equity Underwriting
 
-> [!quote]
+> [!quote]+
 > "The underwriter's art is pricing a new issue so that the company raises what it needs and investors feel they got a fair deal."
 >
 > — **Bruce Wasserstein**, *Big Deal* (1998)
@@ -155,7 +155,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Exchange (Stock/Futures)
 
-> [!quote]
+> [!quote]+
 > "An exchange is a marketplace for price discovery — it tells the world what something is worth right now."
 >
 > — **Robert Shiller**, *Irrational Exuberance* (2000)
@@ -172,7 +172,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Fixed Income
 
-> [!quote]
+> [!quote]+
 > "Gentlemen prefer bonds."
 >
 > — **Andrew Mellon**
@@ -190,7 +190,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Futures and Options
 
-> [!quote]
+> [!quote]+
 > "There is no way to make money in futures unless you get in ahead of the move and get out before it's over."
 >
 > — **Jesse Livermore**, *Reminiscences of a Stock Operator* (1923)
@@ -208,7 +208,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Index
 
-> [!quote]
+> [!quote]+
 > "Don't look for the needle in the haystack. Just buy the haystack."
 >
 > — **John Bogle**, *The Little Book of Common Sense Investing* (2007)
@@ -226,7 +226,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Initial Public Offering (IPO)
 
-> [!quote]
+> [!quote]+
 > "IPO stands for 'It's Probably Overpriced.'"
 >
 > — **David Dreman**, *Contrarian Investment Strategies* (1998)
@@ -244,7 +244,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Listing
 
-> [!quote]
+> [!quote]+
 > "Going public is not the end of the journey — it is just the beginning of a whole new set of responsibilities."
 >
 > — **Mary Jo White**
@@ -262,7 +262,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Market-Making
 
-> [!quote]
+> [!quote]+
 > "Liquidity is the oxygen of financial markets — without it, everything seizes up."
 >
 > — **Mohamed El-Erian**
@@ -280,7 +280,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Securities
 
-> [!quote]
+> [!quote]+
 > "A security is nothing more than a claim on future cash flows — everything else is just the packaging."
 >
 > — **Aswath Damodaran**, *The Little Book of Valuation* (2011)
@@ -298,7 +298,7 @@ Encyclopedia of capital markets and trading terms covering the full lifecycle fr
 
 ## Underwriting
 
-> [!quote]
+> [!quote]+
 > "An underwriter who will not decline risks is not an underwriter — he is merely an order taker."
 >
 > — **John S. Doremus**

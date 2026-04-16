@@ -8,7 +8,7 @@ description: "SQL Server adapter installation, auth, T-SQL differences, incremen
 
 # dbt: SQL Server Adapter
 
-> [!quote] Engineering Discipline
+> [!quote]+
 >
 > "Practices that matured over decades in software engineering should be replicated in data — deployment processes, testing, version control."
 >

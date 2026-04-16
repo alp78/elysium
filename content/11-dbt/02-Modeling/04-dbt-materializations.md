@@ -8,7 +8,7 @@ description: "View table incremental ephemeral snapshot deep dive"
 
 # dbt: Materializations
 
-> [!quote] State management tradeoffs
+> [!quote]+
 >
 > "There are only two ways to handle state in computing: recompute it or cache it. Everything else is a variation on that theme."
 >

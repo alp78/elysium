@@ -10,7 +10,7 @@ status: complete
 
 # Migration, Idempotency and Backfills
 
-> [!quote]
+> [!quote]+
 > "Every migration is a negotiation between the system you have and the system you want — the art is making the transition invisible to users."
 >
 > — **Sam Newman**, *Monolith to Microservices* (2019)

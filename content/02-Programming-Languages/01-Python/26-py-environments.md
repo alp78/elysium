@@ -13,7 +13,7 @@ status: complete
 
 # 26. Environments — Python
 
-> [!quote]- Quote
+> [!quote]+
 >
 > "Dependency management is the dark matter of software engineering — invisible but responsible for most of the catastrophic failures."
 >

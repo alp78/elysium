@@ -14,7 +14,7 @@ status: complete
 
 # Socket Inspection
 
-> [!quote] Socket Programming Discipline
+> [!quote]+
 >
 > "The devil is in the details, and everything in socket programming is a detail."
 >

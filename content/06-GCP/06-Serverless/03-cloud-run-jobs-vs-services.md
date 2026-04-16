@@ -10,7 +10,7 @@ status: complete
 
 # Cloud Run Jobs vs Services
 
-> [!quote]
+> [!quote]+
 > "Functions are the verbs of serverless; containers are the nouns. You need both parts of speech to write a complete sentence."
 >
 > — **Ben Kehoe**, iRobot cloud robotics engineer

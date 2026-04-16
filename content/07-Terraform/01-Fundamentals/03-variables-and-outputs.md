@@ -10,7 +10,7 @@ status: complete
 
 # Variables and Outputs
 
-> [!quote] Thomas & Hunt on naming
+> [!quote]+
 >
 > "A good name is the best documentation."
 >

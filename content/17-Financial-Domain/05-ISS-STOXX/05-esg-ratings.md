@@ -30,7 +30,7 @@ date: 2026-03-28
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="57 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 57</span>
 
-> [!quote]
+> [!quote]+
 > "Being an active owner means using your voice and your vote to push companies toward long-term sustainable value creation."
 >
 > — **PRI (Principles for Responsible Investment), Stewardship Framework**
@@ -88,7 +88,7 @@ A responsible investment strategy in which investors use their rights and influe
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
+> [!quote]+
 > "Best-in-class does not mean picking winners from clean industries; it means finding the leaders within every industry, including the dirty ones."
 >
 > — **Matthew Kiernan**, founder of Innovest Strategic Value Advisors
@@ -603,7 +603,7 @@ A relative ranking methodology in which companies or funds are sorted into ten e
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
-> [!quote]
+> [!quote]+
 > "Double materiality asks two questions at once: how does the world affect the company, and how does the company affect the world?"
 >
 > — **European Financial Reporting Advisory Group (EFRAG)**, CSRD conceptual guidance
@@ -662,7 +662,7 @@ A regulatory and analytical concept that requires ESG assessments to consider bo
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8,515 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 8,515</span>
 
-> [!quote]
+> [!quote]+
 > "Climate risk is investment risk. That is why I am asking companies to disclose how they are addressing environmental, social, and governance factors."
 >
 > — **Larry Fink**, CEO of BlackRock, 2020 letter to CEOs
@@ -769,7 +769,7 @@ Synonymous with the ISS ESG Corporate Rating. A comprehensive assessment of a co
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
 
-> [!quote]
+> [!quote]+
 > "What gets measured gets managed, but first it must be disclosed. Without ESG disclosure, investors are flying blind."
 >
 > — **Robert Eccles**, Harvard Business School, co-author of *The Integrated Reporting Movement*
@@ -849,7 +849,7 @@ An assessment of the overall ESG quality of a mutual fund or ETF based on the ag
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="149 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 149</span>
 
-> [!quote]
+> [!quote]+
 > "ESG integration is not about sacrificing returns. It is about recognising that environmental, social, and governance factors are financial factors."
 >
 > — **George Serafeim**, Harvard Business School, researcher on ESG and financial performance
@@ -1137,7 +1137,7 @@ A data-driven governance risk scoring system within the ISS QualityScore suite t
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
-> [!quote]
+> [!quote]+
 > "Greenwashing is the gap between symbolic corporate environmentalism and substantive environmental action."
 >
 > — **Miriam Cherry & Judd Sneirson**, "Beyond Profit: Rethinking Corporate Social Responsibility and Greenwashing After the BP Oil Disaster"
@@ -1195,7 +1195,7 @@ The risk that a company, fund, or financial product overstates or misrepresents 
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
 
-> [!quote]
+> [!quote]+
 > "Impact investments are investments made with the intention to generate positive, measurable social and environmental impact alongside a financial return."
 >
 > — **Global Impact Investing Network (GIIN)**, founding definition
@@ -1393,7 +1393,7 @@ A measure of how effectively a company manages its material ESG risks through po
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="351 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 351</span>
 
-> [!quote]
+> [!quote]+
 > "Materiality is the filter that separates the ESG noise from the ESG signal. Without it, sustainability ratings become meaningless laundry lists."
 >
 > — **Jean Rogers**, founder of SASB (Sustainability Accounting Standards Board)
@@ -1585,7 +1585,7 @@ A governance and sustainability risk scoring system specifically designed for US
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="23 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 23</span>
 
-> [!quote]
+> [!quote]+
 > "Exclusion is the oldest form of responsible investment. It says: there are some things money should not finance."
 >
 > — **Steve Waygood**, Chief Responsible Investment Officer, Aviva Investors
@@ -1791,7 +1791,7 @@ A relative assessment methodology in which a company's ESG performance is evalua
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
-> [!quote]
+> [!quote]+
 > "Positive screening shifts the conversation from what we exclude to what we actively seek: companies whose products and practices move society forward."
 >
 > — **Hiro Mizuno**, former CIO, Japan Government Pension Investment Fund (GPIF)
@@ -1901,7 +1901,7 @@ A regulatory concept introduced by the EU Sustainable Finance Disclosure Regulat
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="612 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 612</span>
 
-> [!quote]
+> [!quote]+
 > "Responsible investment is an approach to managing assets that sees investors include ESG factors in their decisions, to better manage risk and generate sustainable, long-term returns."
 >
 > — **PRI (Principles for Responsible Investment)**, founding statement
@@ -2037,7 +2037,7 @@ The "S" component of the ESG framework, encompassing a company's relationships w
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
-> [!quote]
+> [!quote]+
 > "The purpose of a corporation is to engage all its stakeholders in shared and sustained value creation. In creating such value, a corporation serves not only its shareholders but all its stakeholders."
 >
 > — **Klaus Schwab**, founder of the World Economic Forum, *Davos Manifesto 2020*

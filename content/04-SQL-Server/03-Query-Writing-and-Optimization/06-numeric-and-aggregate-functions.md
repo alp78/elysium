@@ -196,6 +196,8 @@ Every T-SQL aggregate **except `COUNT(*)`** ignores `NULL` values in its input. 
 
 #### Every aggregate except COUNT(*) ignores NULL
 
+Use this tiny rowset to show that null inputs are skipped silently.
+
 *Apply all six core aggregates to a 5-row input containing two `NULL` values.*
 
 ```sql
@@ -226,6 +228,10 @@ Five key observations from this single row:
 > [!warning] Never use AVG to compute "mean including missing-as-zero"
 >
 > Because `AVG` excludes `NULL` values from the denominator as well as the numerator, it reports the mean of the **non-null** subset, not the mean of all rows. If the business meaning of a `NULL` is "zero" (or "no activity"), the correct form is `AVG(COALESCE(col, 0))` or `SUM(col) / COUNT(*)` — either forces every row to participate in the denominator.
+
+> [!success] Choose NULL semantics explicitly
+>
+> Use plain `AVG(col)` only when `NULL` means "missing and should be excluded". If `NULL` means "zero", encode that business rule directly with `AVG(COALESCE(col, 0))` or an explicit `SUM(...) / COUNT(*)` expression so every row participates in the denominator by design.
 
 *Contrast the two interpretations on the same 5-row input.*
 
@@ -334,6 +340,8 @@ T-SQL has four distinct counting functions. Each has a different use case, a dif
 `COUNT(*)` counts rows. `COUNT(column)` counts rows where `column` is not `NULL`. The difference is exactly the count of null values in that column, which makes this pair the idiomatic way to measure missingness without a separate `IS NULL` predicate.
 
 #### Use COUNT(*) − COUNT(col) to measure column missingness
+
+This count pair separates total rows from non-null rows in one pass.
 
 *Count total rows, non-null beta rows, and derive the missing-beta count on `silver.signals_daily`.*
 
@@ -444,6 +452,8 @@ WHERE symbol = 'ASML.AS'
 
 #### Basic SUM with a defensive decimal cast
 
+This cast keeps the arithmetic from inheriting narrow integer precision.
+
 *Compare a raw `SUM(volume)` with a version that casts to `decimal(38,0)` for arithmetic headroom.*
 
 ```sql
@@ -502,6 +512,10 @@ The `bigint` container (max 9.2 × 10¹⁸) holds 398 billion with 19 orders of 
 >
 > `AVG` derives its result type from its input type the same way `SUM` does. `AVG(int)` returns `int`, so the average is computed as `SUM / COUNT` in integer arithmetic and the fractional part is discarded. This is rarely what a business caller wants — most "average" requests expect a fractional result. The fix is to cast the input column to a fractional type before averaging, or multiply by `1.0` to force type promotion.
 
+> [!success] Force fractional averages with an explicit cast or `* 1.0`
+>
+> For any column whose natural average is non-integer, either cast the column inside `AVG` or multiply by a decimal literal. Both patterns are SARGable (they do not defeat indexes) and both produce a deterministic fractional result. Prefer the explicit `CAST(... AS decimal(p, s))` form when you want to pin the result precision; prefer `* 1.0` when the goal is concise and the downstream caller is tolerant of the default type promotion.
+
 *Three `AVG` expressions on `stocks_count` (a `smallint` column) showing integer vs decimal behavior.*
 
 ```sql
@@ -518,10 +532,6 @@ WHERE _index = 'euro_stoxx_50';
 | 48 | 48.868499 | 48.868499 |
 
 The `stocks_count` column on `gold.index_performance` holds the number of constituents with valid data on each perf-date — typically between 45 and 50 for the EuroStoxx 50. The true mean is roughly 48.87. The first column reports `48` because `AVG(smallint)` is computed in integer arithmetic and the fractional `.87` is silently truncated. The second column casts every input row to `decimal(10, 4)` before averaging, which forces `AVG` to return a `decimal`. The third column multiplies by `1.0` — a numeric literal — which triggers the same type promotion through the precedence rules documented in [02-data-types-conversion-and-null-handling](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/02-data-types-conversion-and-null-handling#integer-division-truncates-toward-zero).
-
-> [!success] Force fractional averages with an explicit cast or `* 1.0`
->
-> For any column whose natural average is non-integer, either cast the column inside `AVG` or multiply by a decimal literal. Both patterns are SARGable (they do not defeat indexes) and both produce a deterministic fractional result. Prefer the explicit `CAST(... AS decimal(p, s))` form when you want to pin the result precision; prefer `* 1.0` when the goal is concise and the downstream caller is tolerant of the default type promotion.
 
 ### AVG on close prices with MIN and MAX per symbol
 
@@ -584,6 +594,8 @@ All four return `float`. They ignore `NULL` like every other aggregate. On a sam
 
 #### STDEV/VAR versus STDEVP/VARP on three symbols
 
+Use three symbols so the sample-versus-population split is easy to see.
+
 *Compute mean, sample and population standard deviation, and both variances for three EuroStoxx symbols.*
 
 ```sql
@@ -622,6 +634,10 @@ The choice between `STDEV` and `STDEVP` depends on whether the input is treated 
 >
 > IEEE-754 `float` addition is not associative — `(a + b) + c` can differ from `a + (b + c)` in the last few bits. When SQL Server executes a parallel `SUM` plan, the order in which row groups are combined is not deterministic, so the exact last-bit representation of the sum can vary from one execution to the next. For dashboards and reports this is invisible; for reconciliation to external systems that compare bit-for-bit equality, it is catastrophic.
 
+> [!success] Cast float to decimal before aggregating when determinism matters
+>
+> For any aggregate whose result must be reproducible, reconciled, or compared against an external system, cast the input to a `decimal(p, s)` with enough precision and scale to capture the source range. `decimal` arithmetic is exact and order-independent, so two executions of the same query always return the same bits. See the `### Approximate numeric types: real and float` subsection of [02-data-types-conversion-and-null-handling](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/02-data-types-conversion-and-null-handling#the-ieee-754-approximation-trap) for the full float-vs-decimal discussion.
+
 *Compare a naïve `SUM(float)` with a `SUM` that first casts each row to `decimal(18, 10)`.*
 
 ```sql
@@ -638,10 +654,6 @@ WHERE _index = 'euro_stoxx_50';
 
 Both numbers represent the same underlying quantity — the naïve sum of 1,346 daily-return values for the euro_stoxx_50 index — but they are not bit-equal. The `float` version shows the full IEEE-754 double-precision representation (`0.773228215606107`), while the `decimal(18, 10)` version shows the deterministic fixed-point result (`0.7732282148`) with the final digits diverging at the 9th-decimal. On a single-threaded plan the `float` version is reproducible; on a parallel plan the last-bit ordering depends on how row groups are combined, and the sum can flicker across runs.
 
-> [!success] Cast float to decimal before aggregating when determinism matters
->
-> For any aggregate whose result must be reproducible, reconciled, or compared against an external system, cast the input to a `decimal(p, s)` with enough precision and scale to capture the source range. `decimal` arithmetic is exact and order-independent, so two executions of the same query always return the same bits. See the `### Approximate numeric types: real and float` subsection of [02-data-types-conversion-and-null-handling](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/02-data-types-conversion-and-null-handling#the-ieee-754-approximation-trap) for the full float-vs-decimal discussion.
-
 ## Conditional Aggregation with CASE
 
 `SUM(CASE WHEN ...)` and `COUNT(CASE WHEN ...)` are the single most important analytical pattern in T-SQL. They express "aggregate this column, but only for rows matching a condition" in one pass, without a self-join, without a correlated subquery, and without `PIVOT`. Most "report one column per year" and "count up-days vs down-days" requirements collapse to a conditional-aggregation query over a grouped source. This section documents the three canonical forms and contrasts them with the alternatives.
@@ -651,6 +663,8 @@ Both numbers represent the same underlying quantity — the naïve sum of 1,346 
 The pattern is simple: `SUM(CASE WHEN predicate THEN value ELSE 0 END)`. Rows where the predicate is false contribute zero to the sum, so they effectively disappear from that aggregate column. The trick is that the same query can produce multiple filtered sums in parallel — one per `CASE` expression — all sharing the same `FROM` scan and `GROUP BY` step. This is more efficient than running one aggregate per year with separate queries and joining the results back together.
 
 #### Volume per year per symbol via conditional aggregation
+
+This grouped scan shows how one `CASE` per year replaces separate queries.
 
 *One-pass volume per year for three EuroStoxx symbols, using `SUM(CASE WHEN YEAR(...) = ...)`.*
 
@@ -685,6 +699,8 @@ There are three equivalent ways to count rows matching a predicate inside an agg
 All three are legitimate; the `COUNT(CASE ... THEN 1 END)` form is the most idiomatic and the most readable.
 
 #### The three equivalent counting patterns side by side
+
+This comparison puts three counting idioms on the same filtered input.
 
 *Count "up days" (close > open) for ASML since 2025 using all three forms.*
 
@@ -745,6 +761,8 @@ Division in T-SQL has two separate traps: integer arithmetic silently truncates 
 >
 > T-SQL raises error 8134 "Divide by zero error encountered" whenever the denominator of a `/` expression evaluates to zero. The error is raised at runtime, not parse time, so a query that worked for months can suddenly abort the first time the denominator legitimately becomes zero (e.g., after a data-quality change or a new business condition).
 
+Between January and June 2025, ASML had exactly 52 up-days in the filtered window, so `52 − 52 = 0` and the query fails with error 8134 at runtime.
+
 *Force a divide-by-zero error by computing a ratio whose denominator evaluates to zero.*
 
 ```sql
@@ -756,8 +774,6 @@ WHERE symbol = 'ASML.AS'
   AND [date] BETWEEN '2025-01-01' AND '2025-06-01'
 GROUP BY symbol;
 ```
-
-Between January and June 2025, ASML had exactly 52 up-days in the filtered window, so `52 − 52 = 0` and the query fails with error 8134 at runtime:
 
 ```text
 Msg 8134, Level 16, State 1
@@ -794,6 +810,10 @@ ASML traded ~87.5M shares across the Jan–Jun 2025 window with 52 up-days, aver
 >
 > When both operands of `/` are integer types, T-SQL performs integer division and silently truncates the fractional part toward zero. `5 / 2 = 2`, not `2.5`. The most common place this bites is percentage calculations: `100 * 3 / 8` returns `37`, not `37.5`, because the intermediate `100 * 3 = 300` is still `int`, so `300 / 8` is integer division. The fix is to include at least one decimal literal or explicit cast to force type promotion.
 
+> [!success] Use `100.0 * num / NULLIF(denom, 0)` as the canonical percentage expression
+>
+> The three-part pattern `decimal_literal * numerator / NULLIF(denominator, 0)` solves both traps in one expression. The leading decimal literal forces fractional arithmetic, the `NULLIF` guards against divide-by-zero, and the result type is `decimal` — exact, deterministic, and safe for downstream consumers. Prefer this form for every percentage computation in production code.
+
 *Six ratio expressions showing integer truncation and the decimal-literal fix.*
 
 ```sql
@@ -818,10 +838,6 @@ Six columns, four different numerical types in the results:
 - **`percent_decimal = 37.500000`** — one decimal literal (`100.0`) promotes the whole expression.
 - **`nullif_int = 37`** — `NULLIF` does not help with truncation; it only protects against zero. Integer division still truncates.
 - **`nullif_decimal = 37.500000`** — combining both patterns gives the correct, zero-safe result. This is the idiomatic form.
-
-> [!success] Use `100.0 * num / NULLIF(denom, 0)` as the canonical percentage expression
->
-> The three-part pattern `decimal_literal * numerator / NULLIF(denominator, 0)` solves both traps in one expression. The leading decimal literal forces fractional arithmetic, the `NULLIF` guards against divide-by-zero, and the result type is `decimal` — exact, deterministic, and safe for downstream consumers. Prefer this form for every percentage computation in production code.
 
 ### Percent of total with window aggregation
 
@@ -935,7 +951,7 @@ Two key contrasts:
 
 Use truncation mode (`function = 1`) when you need deterministic down-rounding — for example, when allocating shares to clients in a fund (fractional shares must be dropped, not rounded up) or when computing display values that must never exceed the true value. Use default mode (`function = 0`) when the business rule is "round to the nearest" with symmetric away-from-zero handling.
 
-> [!warning] SQL Server's default ROUND is not banker's rounding
+> [!info] SQL Server rounds half away from zero
 >
 > Many other systems (Python's `round()`, IEEE-754, and some financial-calculation libraries) default to "banker's rounding" — round half to even. T-SQL's `ROUND` uses "half away from zero" by default. `ROUND(0.5, 0) = 1` in T-SQL, but `round(0.5) = 0` in Python 3 (banker's rounding rounds to the nearest even integer on exact halves). If a downstream consumer expects banker's rounding, compute it explicitly with a `CASE` expression or apply the transformation in the application layer instead of relying on `ROUND`.
 
@@ -991,7 +1007,7 @@ Six columns, two interesting observations:
 
 T-SQL includes the full trigonometric catalog: `SIN`, `COS`, `TAN`, their inverses `ASIN`, `ACOS`, `ATAN`, the two-argument `ATN2` (equivalent to `atan2` in most other languages — **note the name**: SQL Server uses `ATN2`, not `ATAN2`), and the angle-conversion helpers `DEGREES` and `RADIANS`. All trigonometric functions expect their inputs in **radians**, not degrees. `PI()` returns the constant `3.14159...` as a `float`.
 
-> [!warning] Trigonometric functions expect radians
+> [!info] Trigonometric functions use radians
 >
 > Calling `SIN(30)` does **not** return `sin(30°) = 0.5`. It returns `sin(30 radians) ≈ -0.988`, because 30 radians is roughly 1,718 degrees. Always wrap degree inputs in `RADIANS(...)` before passing them to `SIN`/`COS`/`TAN`. Conversely, wrap radian outputs of inverse functions in `DEGREES(...)` when you need degree values.
 
@@ -1257,6 +1273,10 @@ Eighteen rows, each with a meaningful label: nine detail rows, two sector subtot
 >
 > If the source column genuinely contains `NULL` values (e.g., a `country` column where some rows have unknown country), the `NULL` output can mean either "real NULL" or "subtotal marker". `GROUPING(column)` is the only way to disambiguate: if `GROUPING(col) = 1`, the row is a subtotal; if `GROUPING(col) = 0` and `col IS NULL`, the row is a real `NULL`. Never rely on `col IS NULL` alone to identify subtotal rows in a `ROLLUP`/`CUBE` result.
 
+> [!success] Label subtotal rows with `GROUPING`
+>
+> Project `GROUPING(col)` or `GROUPING_ID(...)` into the result and use those flags in both the display label and the `ORDER BY`. That makes subtotal rows explicit, keeps real source `NULL`s distinguishable, and prevents report logic from silently misclassifying detail rows as rollups.
+
 ## Aggregating Over External Files (CSV, JSON, XML)
 
 Every aggregate function in this note — `SUM`, `AVG`, `MIN`, `MAX`, `COUNT`, `STDEV`, conditional-`CASE` forms, `ROLLUP`/`CUBE`/`GROUPING SETS`, even window aggregates — applies equally to rowsets that originate in a file rather than a table. `OPENROWSET(BULK ...)` exposes a flat file, a JSON document, or an XML document as a virtual rowset that can be the source of any `SELECT`. This unlocks two concrete workflows: (1) validating an incoming file *before* loading it into a table, and (2) running one-off analytical queries against raw file data that has not yet been ingested into the warehouse.
@@ -1267,7 +1287,7 @@ This section covers the three file formats that T-SQL can read directly from a l
 >
 > `OPENROWSET(BULK ...)` reads the file from the SQL Server service account's filesystem, not the client's. On the `stoxx-db` Docker container used throughout this chapter, files must be placed in `/var/opt/mssql/imports/` (the canonical container-mounted directory). On a Windows-hosted SQL Server the equivalent path is any local directory the service account can read, typically `N'E:\SQLImports\filename.ext'`. The loading principal also needs the `ADMINISTER BULK OPERATIONS` server permission or the `bulkadmin` role — regular logins cannot run `OPENROWSET(BULK ...)`.
 
-> [!abstract] Format coverage at a glance
+> [!info] Format coverage at a glance
 >
 > | Format | Access path | Native SQL Server support | Aggregates supported |
 > |---|---|---|---|

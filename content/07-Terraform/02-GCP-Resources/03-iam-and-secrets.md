@@ -10,7 +10,7 @@ status: complete
 
 # IAM and Secrets
 
-> [!quote] Kelsey Hightower on raw cloud access
+> [!quote]+
 >
 > "Give an agent raw cloud access and you get the same thing you get when you hand a developer raw Terraform — well-intentioned decisions made without context."
 >

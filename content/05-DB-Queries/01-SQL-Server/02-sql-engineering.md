@@ -10,7 +10,7 @@ status: complete
 
 # SQL Engineering
 
-> [!quote]
+> [!quote]+
 > "A database is only as good as the integrity constraints that protect it."
 >
 > — **C.J. Date**, *An Introduction to Database Systems* (2003)

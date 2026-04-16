@@ -8,7 +8,7 @@ description: "Dispatch macros, adapter-conditional SQL, cross-adapter testing st
 
 # dbt: Cross-Adapter Patterns
 
-> [!quote] Production Analytics
+> [!quote]+
 >
 > "The analytical process is fundamentally an engineering process. Not only do you have to answer that question once, but you have to push your analysis into production so that it is constantly going to be live from then on out."
 >

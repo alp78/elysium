@@ -44,7 +44,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ## E-Commerce
 
-> [!quote]
+> [!quote]+
 > "Get big fast — the internet rewards scale in ways that physical retail never could."
 >
 > — **Jeff Bezos**
@@ -61,7 +61,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ## Franchise
 
-> [!quote]
+> [!quote]+
 > "In business, the idea of measuring what you are doing, picking the measurements that count, is one that applies to franchising."
 >
 > — **Ray Kroc**
@@ -91,7 +91,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ## Managed Services
 
-> [!quote]
+> [!quote]+
 > "Do what you do best and outsource the rest."
 >
 > — **Peter Drucker**
@@ -109,7 +109,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ## Marketplace
 
-> [!quote]
+> [!quote]+
 > "A platform is a business model that creates value by facilitating exchanges between two or more interdependent groups."
 >
 > — **Alex Moazed**, *Modern Monopolies* (2016)
@@ -127,7 +127,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ## Membership Warehouse
 
-> [!quote]
+> [!quote]+
 > "We are not in the business of selling things — we are in the business of renewing memberships."
 >
 > — **Jim Sinegal**
@@ -145,7 +145,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ## Omnichannel
 
-> [!quote]
+> [!quote]+
 > "The customer doesn't care about channels — they just want a seamless experience."
 >
 > — **Brendon Witcher**
@@ -175,7 +175,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ## Platform Business Model
 
-> [!quote]
+> [!quote]+
 > "The most scalable businesses are those that can grow without adding marginal cost for each new customer."
 >
 > — **Sangeet Paul Choudary**, *Platform Revolution* (2016)
@@ -193,7 +193,7 @@ Encyclopedia of business model and commerce terms covering how companies structu
 
 ## Subscription Model
 
-> [!quote]
+> [!quote]+
 > "Recurring revenue is the key to building a company that has real, lasting value."
 >
 > — **John Warrillow**, *Built to Sell* (2011)

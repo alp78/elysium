@@ -12,7 +12,7 @@ status: complete
 
 # sed — Stream Editor Reference
 
-> [!quote] Easy and possible
+> [!quote]+
 >
 > "Easy things should be easy, and hard things should be possible."
 >

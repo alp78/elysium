@@ -14,7 +14,7 @@ status: complete
 
 # Brace Expansion and Globbing
 
-> [!quote] Expansion order in Bash
+> [!quote]+
 >
 > "The order of expansions is: brace expansion, tilde expansion, parameter and variable expansion, command substitution, arithmetic expansion, word splitting, and filename expansion."
 >

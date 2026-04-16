@@ -14,7 +14,7 @@ status: complete
 
 # Environment Variables
 
-> [!quote] Design Principle
+> [!quote]+
 >
 > "Explicit is better than implicit."
 >

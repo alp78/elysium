@@ -10,7 +10,7 @@ status: complete
 
 # Medallion Architecture
 
-> [!quote]
+> [!quote]+
 > "The best way to protect private and sensitive data is to avoid ingesting this data in the first place."
 >
 > — **Joe Reis & Matt Housley**, *Fundamentals of Data Engineering* (2022)

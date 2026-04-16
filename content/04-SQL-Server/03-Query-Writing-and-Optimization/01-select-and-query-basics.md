@@ -469,6 +469,10 @@ The following patterns defeat index seeking because the indexed column is wrappe
 > - `ISNULL()`, `COALESCE()` — null substitution
 > - any user-defined scalar function
 
+> [!success] Rewrite as an explicit half-open date range
+>
+> Move the computation off the column by expressing the year as a `trade_date >= '2025-01-01' AND trade_date < '2026-01-01'` range. The result is identical but now the optimizer can seek on the date index.
+
 *Non-SARGable — function wraps the indexed column.*
 
 ```sql
@@ -489,10 +493,6 @@ ORDER BY trade_date;
 | AAPL | 2025-01-06 | 243.67 |
 | AAPL | 2025-01-07 | 240.89 |
 | AAPL | 2025-01-08 | 241.38 |
-
-> [!success] Rewrite as an explicit half-open date range
->
-> Move the computation off the column by expressing the year as a `trade_date >= '2025-01-01' AND trade_date < '2026-01-01'` range. The result is identical but now the optimizer can seek on the date index.
 
 *SARGable rewrite.*
 
@@ -522,6 +522,10 @@ ORDER BY trade_date;
 >
 > A wildcard on the left side of the pattern means every possible prefix must be tested, so no contiguous index range exists. SQL Server falls back to a scan of the entire index (or base table).
 
+> [!success] Use a prefix pattern whenever possible
+>
+> If the requirement allows it, restructure the column (for example store a reversed copy in a persisted computed column with its own index) or rewrite the query to use a prefix match. Prefix `LIKE` is SARGable.
+
 *Non-SARGable — leading wildcard.*
 
 ```sql
@@ -539,10 +543,6 @@ ORDER BY symbol;
 | TPL |
 
 The query correctly returns every symbol whose ticker ends in `PL`, but it had to examine every distinct symbol in the table to do so.
-
-> [!success] Use a prefix pattern whenever possible
->
-> If the requirement allows it, restructure the column (for example store a reversed copy in a persisted computed column with its own index) or rewrite the query to use a prefix match. Prefix `LIKE` is SARGable.
 
 *SARGable prefix form.*
 
@@ -567,6 +567,10 @@ ORDER BY symbol;
 >
 > The same rule that applies to `YEAR()`, `CAST()`, and other scalar functions applies to `ISNULL` and `COALESCE`: once the column is inside a function call, the optimizer can no longer seek on the underlying index.
 
+> [!success] Test NULL explicitly with `OR symbol IS NULL`
+>
+> If the column is nullable and the caller genuinely wants rows where `symbol` is either `'AAPL'` or `NULL`, write `symbol = 'AAPL' OR symbol IS NULL`. Otherwise, drop the `ISNULL` wrapper entirely.
+
 *Non-SARGable — `ISNULL` wraps the indexed column.*
 
 ```sql
@@ -587,10 +591,6 @@ ORDER BY trade_date;
 | AAPL | 2025-01-06 | 243.67 |
 | AAPL | 2025-01-07 | 240.89 |
 | AAPL | 2025-01-08 | 241.38 |
-
-> [!success] Test NULL explicitly with `OR symbol IS NULL`
->
-> If the column is nullable and the caller genuinely wants rows where `symbol` is either `'AAPL'` or `NULL`, write `symbol = 'AAPL' OR symbol IS NULL`. Otherwise, drop the `ISNULL` wrapper entirely.
 
 *SARGable rewrite.*
 
@@ -760,6 +760,10 @@ The `x.notional` column is now a real output of the `CROSS APPLY` subquery and i
 >
 > The only legitimate uses for `SELECT *` are ad-hoc inspection at the SSMS prompt and the specific case of `EXISTS (SELECT * FROM ...)` where the column list is discarded by the optimizer.
 
+> [!success] Enumerate the columns explicitly
+>
+> Replace the `*` with a named column list that returns exactly what the caller needs. See the `#### Project columns with an explicit list` example above.
+
 *Ad-hoc inspection of the full row width — acceptable at the SSMS prompt, not in persistent code.*
 
 ```sql
@@ -775,10 +779,6 @@ ORDER BY symbol, trade_date;
 | A | 2016-02-17 | 32.52 | 35.21 | 32.08 | 34.97 | 5382300 |
 | A | 2016-02-18 | 34.84 | 35.05 | 34.25 | 34.34 | 2231500 |
 | A | 2016-02-19 | 34.14 | 34.72 | 34.02 | 34.57 | 2339400 |
-
-> [!success] Enumerate the columns explicitly
->
-> Replace the `*` with a named column list that returns exactly what the caller needs. See the `#### Project columns with an explicit list` example above.
 
 ### FROM clause and table sources
 
@@ -1080,6 +1080,10 @@ The `CASE` assigns a synthetic sort key to each row: NVDA=1, AAPL=2, MSFT=3. The
 >
 > T-SQL accepts positive integers in the `ORDER BY` list as a shorthand for "the N-th column in the SELECT list". This shorthand is legal but brittle: if the `SELECT` list is ever reordered or a new column is inserted, the ordinal reference silently starts sorting by a different column. Reviewers also have to count columns to understand the intent.
 
+> [!success] Reference columns by name
+>
+> Replace `ORDER BY 2 DESC, 1 ASC` with `ORDER BY trade_date DESC, symbol ASC`. The named form is self-documenting and survives column re-ordering in the `SELECT` list.
+
 *Legal but fragile: sort by the second column descending, then the first ascending.*
 
 ```sql
@@ -1099,10 +1103,6 @@ ORDER BY 2 DESC, 1 ASC;
 | AAPL | 2026-02-10 | 273.68 |
 | AAPL | 2026-02-09 | 274.62 |
 | AAPL | 2026-02-06 | 277.86 |
-
-> [!success] Reference columns by name
->
-> Replace `ORDER BY 2 DESC, 1 ASC` with `ORDER BY trade_date DESC, symbol ASC`. The named form is self-documenting and survives column re-ordering in the `SELECT` list.
 
 ## TOP, WITH TIES, OFFSET, and FETCH
 
@@ -1722,6 +1722,10 @@ Only five S&P 500 symbols had a 2025 average close above $500: NVR, BKNG, AZO, F
 >
 > SQL Server allows `HAVING` to reference any column that is in the `GROUP BY` list, not just aggregates. That means `HAVING symbol = 'AAPL'` is syntactically valid. But because `HAVING` runs after aggregation, this pattern forces the engine to aggregate every symbol in the table and then throw away every group except AAPL. The correct place for a row predicate is `WHERE`, which runs **before** `GROUP BY` and never materializes the unwanted groups in the first place.
 
+> [!success] Push row predicates down into WHERE
+>
+> Rewrite the query as `WHERE symbol = 'AAPL' GROUP BY symbol HAVING COUNT(*) >= 1`. The `WHERE` clause filters `stock_prices` down to the AAPL rows before `GROUP BY` runs, so the engine aggregates only one symbol. The result is identical but the work is dramatically smaller.
+
 *Anti-pattern: symbol filter placed in `HAVING` instead of `WHERE`.*
 
 ```sql
@@ -1739,10 +1743,6 @@ HAVING symbol = 'AAPL'
 | AAPL | 2515 |
 
 The result is correct — only AAPL's group survives — but SQL Server has had to compute `COUNT(*)` for all 500 symbols and then discard 499 of them.
-
-> [!success] Push row predicates down into WHERE
->
-> Rewrite the query as `WHERE symbol = 'AAPL' GROUP BY symbol HAVING COUNT(*) >= 1`. The `WHERE` clause filters `stock_prices` down to the AAPL rows before `GROUP BY` runs, so the engine aggregates only one symbol. The result is identical but the work is dramatically smaller.
 
 ## CASE, Conditional Projection, and Sorting Logic
 

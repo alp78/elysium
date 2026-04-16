@@ -10,7 +10,7 @@ status: complete
 
 # 15. Web & APIs - Python
 
-> [!quote]- Perspective
+> [!quote]+
 >
 > "Web programming is the science of coming up with increasingly complicated ways of concatenating strings."
 >

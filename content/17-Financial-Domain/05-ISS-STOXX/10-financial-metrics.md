@@ -30,7 +30,7 @@ date: 2026-03-28
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="51 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 51</span>
 
-> [!quote]
+> [!quote]+
 > "After costs, the return on the average actively managed dollar will be less than the return on the average passively managed dollar."
 >
 > — **William F. Sharpe**, *The Arithmetic of Active Management* (1991)
@@ -89,7 +89,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="189 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 189</span>
 
-> [!quote]
+> [!quote]+
 > "The evaluation of portfolio performance requires a measure of the excess return earned beyond that expected given the level of risk."
 >
 > — **Michael C. Jensen**, *The Performance of Mutual Funds in the Period 1945-1964* (1968)
@@ -147,7 +147,7 @@ Where $R_f$ is the risk-free rate and $R_m$ is the market return.
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
 
-> [!quote]
+> [!quote]+
 > "Compound interest is the eighth wonder of the world."
 >
 > — **Albert Einstein (attributed)**
@@ -270,7 +270,7 @@ So a move from 2.50% to 3.00% is a change of 50 bp.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="194 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 194</span>
 
-> [!quote]
+> [!quote]+
 > "Beta measures the sensitivity of a stock's return to the return on the market portfolio."
 >
 > — **William F. Sharpe**, *Capital Asset Prices* (1964)
@@ -323,7 +323,7 @@ $$
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
+> [!quote]+
 > "Price is what you pay. Value is what you get."
 >
 > — **Warren Buffett**
@@ -360,7 +360,7 @@ $$
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
 
-> [!quote]
+> [!quote]+
 > "Revenue is vanity, profit is sanity, but cash is king."
 >
 > — **Anonymous**
@@ -416,7 +416,7 @@ $$
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
-> [!quote]
+> [!quote]+
 > "Compound interest is the eighth wonder of the world."
 >
 > — **Albert Einstein**
@@ -480,7 +480,7 @@ Where $V_{\text{begin}}$ and $V_{\text{end}}$ are the starting and ending values
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="305 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 305</span>
 
-> [!quote]
+> [!quote]+
 > "Diversification is protection against ignorance."
 >
 > — **Warren Buffett**
@@ -540,7 +540,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="58 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 58</span>
 
-> [!quote]
+> [!quote]+
 > "The portfolio problem is to find the combination of securities that gives the investor the return he wants with the least variance."
 >
 > — **Harry Markowitz**, *Portfolio Selection* (1952)
@@ -636,7 +636,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="87 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 87</span>
 
-> [!quote]
+> [!quote]+
 > "The one thing I can tell you is that the secret to investing is that there is no secret — except managing debt and costs."
 >
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
@@ -695,7 +695,7 @@ $$
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="755 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 755</span>
 
-> [!quote]
+> [!quote]+
 > "Do you know the only thing that gives me pleasure? It's to see my dividends coming in."
 >
 > — **John D. Rockefeller**
@@ -755,7 +755,7 @@ $$
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="892 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 892</span>
 
-> [!quote]
+> [!quote]+
 > "Duration is the single most important tool for measuring and managing interest rate risk in a bond portfolio."
 >
 > — **Frank J. Fabozzi**, *Bond Markets, Analysis, and Strategies* (1989)
@@ -817,7 +817,7 @@ Where $C_t$ is the cash flow at time $t$ and $y$ is the yield to maturity.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
 
-> [!quote]
+> [!quote]+
 > "The first rule of investment is don't lose, and the second rule is don't forget the first rule."
 >
 > — **Warren Buffett**
@@ -880,7 +880,7 @@ Where $V(t)$ is the value at time $t$ and $V_{\text{peak}}$ is the highest value
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="77 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 77</span>
 
-> [!quote]
+> [!quote]+
 > "Earnings can be as pliable as putty when a charlatan heads the company reporting them."
 >
 > — **Warren Buffett**
@@ -940,7 +940,7 @@ $$
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="31 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 31</span>
 
-> [!quote]
+> [!quote]+
 > "Earnings are the lifeblood of every enterprise."
 >
 > — **Anonymous**
@@ -999,7 +999,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="52 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 52</span>
 
-> [!quote]
+> [!quote]+
 > "EBITDA makes even a lemonade stand look like a Fortune 500 company."
 >
 > — **Charlie Munger (paraphrased)**, *Poor Charlie's Almanack* (2005)
@@ -1062,7 +1062,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="56 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 56</span>
 
-> [!quote]
+> [!quote]+
 > "EVA is the financial performance measure that comes closer than any other to capturing the true economic profit of an enterprise."
 >
 > — **G. Bennett Stewart III**, *The Quest for Value* (1991)
@@ -1176,7 +1176,7 @@ $$
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
+> [!quote]+
 > "The equity premium is the most important number in finance."
 >
 > — **Rajnish Mehra**, *The Equity Premium Puzzle* (1985)
@@ -1216,7 +1216,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
 
-> [!quote]
+> [!quote]+
 > "Enterprise value captures the total claim on a business — equity plus debt minus cash — and is the only honest starting point for valuation."
 >
 > — **Aswath Damodaran**, *The Little Book of Valuation* (2011)
@@ -1275,7 +1275,7 @@ $$
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="292 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 292</span>
 
-> [!quote]
+> [!quote]+
 > "Returns are driven by systematic exposure to compensated risk factors."
 >
 > — **Eugene Fama**
@@ -1338,7 +1338,7 @@ Where $\beta_{ik}$ is the exposure of asset $i$ to factor $k$, and $F_k$ is the 
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
 
-> [!quote]
+> [!quote]+
 > "Differences in expected returns across securities are driven by differences in their exposure to systematic risk factors."
 >
 > — **Eugene Fama & Kenneth French**, *Common Risk Factors in the Returns on Stocks and Bonds* (1993)
@@ -1398,7 +1398,7 @@ $$
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11 mentions across STOXX & ISS pages (low)">▰▰ 11</span>
 
-> [!quote]
+> [!quote]+
 > "Cash flow is a fact; profit is an opinion."
 >
 > — **Alfred Rappaport**, *Creating Shareholder Value* (1986)
@@ -1498,7 +1498,7 @@ $$
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="22 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 22</span>
 
-> [!quote]
+> [!quote]+
 > "Profitability is coming from productivity, efficiency, management, austerity, and the way to manage the business."
 >
 > — **Carlos Slim**
@@ -1558,7 +1558,7 @@ $$
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="687 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 687</span>
 
-> [!quote]
+> [!quote]+
 > "What you keep after taxes and fees matters more than what you earn before them."
 >
 > — **Anonymous**
@@ -1619,7 +1619,7 @@ $$
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
-> [!quote]
+> [!quote]+
 > "The information ratio is the key measure of a portfolio manager's skill."
 >
 > — **Richard Grinold**, *Active Portfolio Management* (1999)
@@ -1715,7 +1715,7 @@ Where $n_i$ is the number of shares of constituent $i$ and $p_{i,t}$ is its pric
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5 mentions across STOXX & ISS pages (ultra-low)">▰ 5</span>
 
-> [!quote]
+> [!quote]+
 > "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1."
 >
 > — **Warren Buffett**
@@ -1774,7 +1774,7 @@ $$
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="687 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 687</span>
 
-> [!quote]
+> [!quote]+
 > "The trend is your friend until the end when it bends."
 >
 > — **Ed Seykota**
@@ -1837,7 +1837,7 @@ Commonly using a 12-month lookback with a 1-month skip.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="447 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 447</span>
 
-> [!quote]
+> [!quote]+
 > "It is not what you earn but what you keep that determines your wealth."
 >
 > — **Anonymous**
@@ -1990,7 +1990,7 @@ $$
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
+> [!quote]+
 > "Growth at a reasonable price is the investor's holy grail."
 >
 > — **Peter Lynch (paraphrased)**, *One Up on Wall Street* (1989)
@@ -2025,7 +2025,7 @@ $$
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
+> [!quote]+
 > "The intelligent investor should recognize that market prices reflect a price-earnings ratio, and the question is whether that ratio is justified by the company's prospects."
 >
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
@@ -2066,7 +2066,7 @@ $$
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="24 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 24</span>
 
-> [!quote]
+> [!quote]+
 > "Volatility is the price of admission for long-term returns."
 >
 > — **Nick Murray**, *Simple Wealth, Inevitable Wealth* (1999)
@@ -2184,7 +2184,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
 
-> [!quote]
+> [!quote]+
 > "A truly great business must have an enduring moat that protects excellent returns on invested capital."
 >
 > — **Warren Buffett**
@@ -2245,7 +2245,7 @@ $$
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,843 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,843</span>
 
-> [!quote]
+> [!quote]+
 > "Nothing happens until someone sells something."
 >
 > — **Peter Drucker (attributed)**, *The Practice of Management* (1954)
@@ -2306,7 +2306,7 @@ $$
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="35 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 35</span>
 
-> [!quote]
+> [!quote]+
 > "The essence of investment management is the management of risks, not the management of returns."
 >
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
@@ -2369,7 +2369,7 @@ This is the general form (Sharpe ratio). Alternative specifications replace $\si
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="27 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 27</span>
 
-> [!quote]
+> [!quote]+
 > "There is no such thing as a risk-free investment, only a risk-free rate of return."
 >
 > — **Anonymous**
@@ -2431,7 +2431,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="60 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 60</span>
 
-> [!quote]
+> [!quote]+
 > "The reward-to-variability ratio provides a single measure combining both risk and return."
 >
 > — **William Sharpe**
@@ -2489,7 +2489,7 @@ $$
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="300 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 300</span>
 
-> [!quote]
+> [!quote]+
 > "Diversification is both observed and sensible; a rule of behavior which does not imply the superiority of diversification must be rejected both as a hypothesis and as a maxim."
 >
 > — **Harry Markowitz**, *Portfolio Selection* (1952)
@@ -2547,7 +2547,7 @@ $$
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="752 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 752</span>
 
-> [!quote]
+> [!quote]+
 > "The spread tells you the market's level of fear."
 >
 > — **Anonymous**
@@ -2610,7 +2610,7 @@ Typically expressed in basis points.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="334 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 334</span>
 
-> [!quote]
+> [!quote]+
 > "Never count just the dividends or just the price. Count everything."
 >
 > — **Anonymous**
@@ -2669,7 +2669,7 @@ Where $P_t$ is the price at time $t$ and $D_t$ is the dividend received.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="501 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 501</span>
 
-> [!quote]
+> [!quote]+
 > "Tracking error is the fundamental measure of active risk — it tells you how far a portfolio dares to stray from its benchmark."
 >
 > — **Richard Grinold & Ronald Kahn**, *Active Portfolio Management* (1999)
@@ -2728,7 +2728,7 @@ $$
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="668 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 668</span>
 
-> [!quote]
+> [!quote]+
 > "Costs eat returns the way termites eat wood: slowly, silently, and from within."
 >
 > — **John C. Bogle (paraphrased)**, *The Little Book of Common Sense Investing* (2007)
@@ -2790,7 +2790,7 @@ $$
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
 
-> [!quote]
+> [!quote]+
 > "The problem with VaR is that it tells you nothing about what happens in the tail."
 >
 > — **Nassim Nicholas Taleb**, *The Black Swan* (2007)
@@ -2858,7 +2858,7 @@ Where $z_{\alpha}$ is the z-score at confidence level $\alpha$.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,756 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,756</span>
 
-> [!quote]
+> [!quote]+
 > "Uncertainty is the only certainty there is."
 >
 > — **John Allen Paulos**, *A Mathematician Plays the Stock Market* (2003)
@@ -2919,7 +2919,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="165 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 165</span>
 
-> [!quote]
+> [!quote]+
 > "Not all things are created equal, nor should they be counted equally."
 >
 > — **Anonymous**
@@ -2982,7 +2982,7 @@ $$
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
-> [!quote]
+> [!quote]+
 > "Interest rates are to asset prices what gravity is to the apple."
 >
 > — **Warren Buffett**

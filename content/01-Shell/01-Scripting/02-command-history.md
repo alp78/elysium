@@ -10,7 +10,7 @@ description: "How to search, replay, retain, and filter command history in Bash 
 
 # Command History and Recall
 
-> [!quote] Operational memory
+> [!quote]+
 >
 > "Those who cannot remember the past are condemned to repeat it."
 >

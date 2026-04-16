@@ -10,7 +10,7 @@ status: complete
 
 # Datadog Agent: SQL VM
 
-> [!quote]
+> [!quote]+
 > "Without monitoring, you are just guessing. With monitoring, you are making informed decisions."
 >
 > — **Tom Wilkie**, co-creator of Grafana Loki

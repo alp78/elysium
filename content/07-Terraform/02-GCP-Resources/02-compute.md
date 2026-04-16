@@ -10,7 +10,7 @@ status: complete
 
 # Compute
 
-> [!quote] Mitchell Hashimoto on infrastructure operations
+> [!quote]+
 >
 > "Cloud providers have tricked us into believing that we're all too dumb to operate our own infrastructure, at any scale."
 >

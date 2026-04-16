@@ -14,7 +14,7 @@ status: complete
 
 # Viewing Processes
 
-> [!quote] Operational discipline
+> [!quote]+
 >
 > "You can have a second computer once you've shown you know how to use the first one."
 >

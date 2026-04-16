@@ -22,7 +22,7 @@ status: complete
 
 # Data Flow Architecture
 
-> [!quote]
+> [!quote]+
 > "As data accumulates, it begins to have gravity — it attracts services, applications, and more data toward it. Moving compute to data is almost always cheaper than moving data to compute."
 >
 > — **Dave McCrory** (coined the term "data gravity")

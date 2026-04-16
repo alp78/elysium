@@ -10,7 +10,7 @@ status: complete
 
 # Streaming Architecture
 
-> [!quote]
+> [!quote]+
 > "A log is perhaps the simplest possible storage abstraction. It is an append-only, totally-ordered sequence of records ordered by time."
 >
 > — **Jay Kreps**, *I Heart Logs* (2014)

@@ -83,7 +83,7 @@ A set of protocols, routines, and tools that allows software applications to com
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
 
-> [!quote]
+> [!quote]+
 > "Back-testing tells you how a strategy would have performed in the past. It cannot tell you how it will perform in the future, but without it you are investing blind."
 >
 > — **David Bailey, Jonathan Borwein, Marcos Lopez de Prado & Qiji Zhu**, "The Probability of Backtest Overfitting", *Journal of Computational Finance* (2014)

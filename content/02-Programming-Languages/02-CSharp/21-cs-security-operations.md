@@ -10,7 +10,7 @@ status: complete
 
 # Security Operations - C#
 
-> [!quote]
+> [!quote]+
 > "The only truly secure system is one that is powered off, cast in a block of concrete, and sealed in a lead-lined room with armed guards — and even then I have my doubts."
 >
 > — **Gene Spafford**, attributed remark (c. 1989)

@@ -22,16 +22,16 @@ links:
 
 # Dagster Deployment And Production Operations
 
-Dagster becomes a platform question at deployment time. The code can be clean and still fail operationally if the team has not decided who owns the control plane, where the instance state lives, how runs are launched, and how shared resources are protected under load.
+Dagster becomes a platform design problem the moment the code location has to survive beyond one engineer's laptop. The graph can be perfectly modeled and still fail operationally if the deployment does not answer four concrete questions: where user code is loaded, which service evaluates automation, where run history and logs persist, and how shared systems are protected when several runs want the same resource at once.
 
 > [!abstract]- Summary
 >
-> This note covers the operational surface around a Dagster deployment:
+> This note explains the operational shape a serious Dagster deployment needs:
 >
-> - distinguish the development command surface from the production control plane
-> - keep instance configuration explicit through `dagster.yaml`
-> - understand the daemon, webserver, and run-launch boundary as separate responsibilities
-> - use queue limits and pools to protect shared systems under backfills and normal traffic
+> - the development command surface is useful, but it is not the same thing as a production topology
+> - the webserver, daemon, and user-code server do different jobs and should be reasoned about separately
+> - every service in one deployment must agree on one Dagster instance and one `dagster.yaml`
+> - deployment-wide concurrency and per-resource pools solve different overload problems
 
 > [!info] Official References
 >
@@ -43,137 +43,209 @@ Dagster becomes a platform question at deployment time. The code can be clean an
 
 > [!note]- Glossary
 >
-> **Dagster OSS**
-> - A self-managed Dagster deployment.
-> - The team controls infrastructure, storage, and launch policy.
-> - The team also owns upgrades, recovery, and operational burden.
+> **Dagster instance**
+> - Dagster's instance configuration defines where run history, event logs, compute logs, and launch policy live for one deployment.
+> - It is deployment state, not project decoration.
+> - If different services read different instance settings, they are not operating the same Dagster deployment.
 >
-> **Dagster+**
-> - Dagster's managed control-plane offering.
-> - It reduces self-managed orchestration overhead.
-> - It changes the ownership boundary, not the need for clean asset design.
+> **User-code server**
+> - The code server hosts the Python definitions that Dagster loads and inspects.
+> - It is where assets, jobs, sensors, and resources are discovered from user code.
+> - A healthy web UI does not prove the user-code server is loading the intended module.
+>
+> **Dagster webserver**
+> - The webserver serves the UI and APIs over the shared instance state.
+> - It lets operators inspect runs, assets, checks, and logs.
+> - It is not the service that evaluates schedules and sensors.
 >
 > **Dagster daemon**
-> - The background service that handles schedules, sensors, and other orchestration work.
-> - If it is unhealthy, automation and coordination degrade immediately.
-> - A working web UI does not prove the daemon is healthy.
->
-> **Run launcher**
-> - The component that starts work in the chosen execution environment.
-> - It defines where code actually executes.
-> - A poor launcher boundary creates scaling and isolation problems.
+> - The daemon handles orchestration work such as schedules, sensors, and other background coordination.
+> - If it is down, automation and queued work degrade even when the UI still loads.
+> - The daemon must share the same instance and code locations as the rest of the deployment.
 >
 > **Concurrency pool**
-> - A named throttle for work that competes for one scarce dependency.
-> - It prevents one class of run from overwhelming a shared warehouse or API.
-> - Pools that are too broad destroy throughput; pools that are too narrow do nothing useful.
+> - A pool protects one shared external dependency across runs.
+> - It is different from limiting total run count across the deployment.
+> - Pools are useful when the warehouse, API, or cluster is the scarce resource, not CPU on one local process.
 
-## Separate The Development Surface From The Production Surface
+## The Development Command Is Not The Production Topology
 
-`dagster dev` is useful, but it is not the production architecture. A real deployment needs explicit ownership of instance state, orchestration services, and execution boundaries.
+Dagster's local development surface is intentionally convenient. The production lesson is not to reject that convenience. It is to understand what gets collapsed together locally and what must be separated when the deployment becomes durable, multi-service, or team-operated.
 
-### Know What Dagster You Are Actually Running
+### A Real Control Plane Is Several Cooperating Services
 
-The first deployment fact is the version and command surface you are operating.
+Production Dagster is not one long-running Python process with a browser attached. It is a set of cooperating services sharing the same instance state and loading the same code locations.
 
-#### Check the Dagster CLI version
+#### Run user code behind a dedicated code server
 
-Use the CLI version when validating a local environment, reproducing a bug, or comparing one deployment to another. The trigger is any ambiguity about which Dagster release the platform is using. The purpose is to anchor debugging and documentation to a real binary rather than assumption.
+Use this pattern when the deployment needs a stable boundary between orchestration services and the Python module that exposes `Definitions`. The trigger is any environment where the webserver and daemon should not directly act as the only hosts of user code. The code runs in infrastructure configuration rather than in business execution. Its purpose is to make code loading explicit and inspectable through a dedicated gRPC server.
 
-*Print the installed Dagster CLI version from the local sandbox.*
+*Expose the `dagflow` code location through a dedicated gRPC user-code server and point the workspace at it.*
 
-```bash
-& 'C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\Scripts\dagster.exe' --version
+```yaml
+services:
+  dagster-user-code:
+    command: >
+      dagster api grpc
+      -h 0.0.0.0
+      -p 4000
+      -m dagflow_dagster.definitions
+
+load_from:
+  - grpc_server:
+      host: dagster-user-code
+      port: 4000
+      location_name: dagflow_user_code
 ```
 
-```text
-dagster, version 1.13.0
+This split is operationally important because it gives the deployment a clean statement of what code location is being served. If the code server cannot load `dagflow_dagster.definitions`, the problem is in the code location boundary. If it can load but runs still fail, the investigation moves to execution evidence instead of discovery.
+
+#### Keep the UI and background orchestration as separate services
+
+Use this pattern when engineers need to distinguish browsing Dagster from running Dagster. The trigger is any deployment where schedules, sensors, or backfills must continue independently of one browser session or one interactive developer process. The configuration runs at service startup and is part of the deployment contract. Its purpose is to make it explicit which service serves the UI and which service evaluates automation.
+
+*Start the webserver and daemon as separate services that share the same workspace and instance state.*
+
+```yaml
+services:
+  dagster-webserver:
+    command: >
+      /bin/sh -c
+      "cp /workspace/apps/dagster/dagster.yaml /opt/dagster/dagster_home/dagster.yaml
+      && dagster-webserver -h 0.0.0.0 -p 3000 -w /workspace/apps/dagster/workspace.yaml"
+
+  dagster-daemon:
+    command: >
+      /bin/sh -c
+      "cp /workspace/apps/dagster/dagster.yaml /opt/dagster/dagster_home/dagster.yaml
+      && dagster-daemon run -w /workspace/apps/dagster/workspace.yaml"
 ```
 
-#### Inspect what `dagster dev` starts locally
+The webserver answers inspection questions. The daemon answers automation questions. That distinction matters in on-call practice. A working UI does not prove schedules are evaluating. A running daemon does not prove the UI or API layer is healthy.
 
-Use `dagster dev --help` when the team needs to confirm what the local command actually boots. The trigger is confusion about whether the local setup includes only the UI or a fuller orchestration surface. The purpose is to distinguish a development deployment from the production services that should be operated separately.
+## Shared Instance State Is Part Of The Deployment Contract
 
-*Print the opening lines of `dagster dev --help`.*
+The Dagster instance documentation is explicit on two points: the instance defines where run history, logs, and launch settings live, and all services in one deployment should share one instance config file named `dagster.yaml`. That is the difference between one coherent control plane and a cluster of processes that happen to have the same repo mounted.
 
-```bash
-& 'C:\Users\aperi\AppData\Local\Temp\dagster-rewrite-20260416\Scripts\dagster.exe' dev --help
+### Every Service Must Agree On One `dagster.yaml`
+
+If the code server, webserver, daemon, and CLI see different `DAGSTER_HOME` directories or different `dagster.yaml` contents, they are operating against different assumptions about history, logs, and launch policy.
+
+#### Share one `DAGSTER_HOME` and one instance file across services
+
+Use this pattern when moving from ephemeral local experimentation to a deployment where run history and automation state must survive one process restart. The trigger is any environment where more than one Dagster service is running. The configuration affects the instance boundary, not the business graph. Its purpose is to guarantee that every service is reading and writing the same deployment state.
+
+*Mount a shared `DAGSTER_HOME` volume and load one `dagster.yaml` from it.*
+
+```yaml
+services:
+  dagster-user-code:
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
+
+  dagster-webserver:
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
+
+  dagster-daemon:
+    environment:
+      DAGSTER_HOME: /opt/dagster/dagster_home
+    volumes:
+      - dagster-home:/opt/dagster/dagster_home
 ```
 
-```text
-Usage: dagster dev [OPTIONS]
+#### Make the instance file describe real operational responsibilities
 
-  Start a local deployment of Dagster, including dagster-webserver running on
-  localhost and the dagster-daemon running in the background
+Use `dagster.yaml` when the deployment needs to state where artifacts live, where raw compute logs land, and which service is responsible for orchestration work such as schedules. The trigger is a deployment that has stopped being disposable. The configuration is shared control-plane state. Its purpose is to make storage and orchestration responsibilities explicit instead of leaving them to implicit defaults.
+
+*Declare local artifact storage, compute-log storage, and the scheduler explicitly in `dagster.yaml`.*
+
+```yaml
+telemetry:
+  enabled: false
+
+local_artifact_storage:
+  module: dagster._core.storage.root
+  class: LocalArtifactStorage
+  config:
+    base_dir: /opt/dagster/dagster_home
+
+compute_logs:
+  module: dagster._core.storage.local_compute_log_manager
+  class: LocalComputeLogManager
+  config:
+    base_dir: /opt/dagster/dagster_home/compute_logs
+
+scheduler:
+  module: dagster._core.scheduler
+  class: DagsterDaemonScheduler
 ```
 
-## Keep Instance State Explicit
+This `dagflow` configuration is still closer to local durable development than to a fully externalized production control plane because it keeps artifact and compute-log storage on a shared local volume. The important lesson is that the deployment has at least made those boundaries explicit. From there, moving to Postgres-backed run history or remote compute-log storage is an infrastructure decision, not a mysterious side effect.
 
-A production deployment needs durable orchestration state and one shared instance configuration that every service agrees on.
+#### Replace ephemeral storage defaults before calling the deployment durable
 
-### Treat `dagster.yaml` As Control-Plane State
+Use this pattern when the Dagster instance must survive node restarts, support several operators, or preserve history for incident review. The trigger is any environment where local filesystem defaults are no longer acceptable for operational recovery. The configuration is deployment state and may require extra instance libraries such as `dagster-postgres`. Its purpose is to externalize run and event-log history into durable shared infrastructure.
 
-`dagster.yaml` is not decorative configuration. It is part of the instance contract.
-
-#### Declare persistent instance storage in `dagster.yaml`
-
-Use `dagster.yaml` when the team is moving from local experimentation to a persistent Dagster OSS deployment. The trigger is any environment where run history, event logs, schedules, or sensors matter after the current machine disappears. The purpose is to make the instance state durable and shared across the webserver, daemon, and CLI.
-
-*Define Postgres-backed run, event-log, and schedule storage in `dagster.yaml`.*
+*Configure the Dagster instance to persist storage in Postgres using environment-backed credentials.*
 
 ```yaml
 storage:
   postgres:
     postgres_db:
-      hostname: dagster-postgres.internal
-      username: dagster
+      username:
+        env: DAGSTER_PG_USERNAME
       password:
-        env: DAGSTER_POSTGRES_PASSWORD
-      db_name: dagster
-
-run_queue:
-  max_concurrent_runs: 8
+        env: DAGSTER_PG_PASSWORD
+      hostname:
+        env: DAGSTER_PG_HOST
+      db_name:
+        env: DAGSTER_PG_DB
+      port: 5432
 ```
 
-```text
-storage backend -> postgres
-run queue cap -> 8 concurrent runs
+## Concurrency Controls Solve Different Failure Classes
+
+The concurrency guide distinguishes between limiting total run pressure and protecting one specific shared system. Conflating those two concerns usually leads to a deployment that is either underutilized or still able to overload the one resource that actually matters.
+
+### Limit Total Traffic Separately From Resource-Specific Contention
+
+Deployment-wide run limits answer "how many runs should the control plane launch at once?" Pools answer "how many assets or ops should be allowed to hit this one constrained dependency across runs?" Those are related but not identical questions.
+
+#### Set deployment-level concurrency to cap total simultaneous pressure
+
+Use deployment-level concurrency when backfills, sensors, and ordinary traffic could together launch more total work than the environment can safely sustain. The trigger is usually infrastructure saturation rather than one specific downstream system failing. The configuration runs at the instance layer. Its purpose is to cap overall pressure before too many runs are in flight at once.
+
+*Configure deployment-level run limits and a default pool limit in the Dagster instance.*
+
+```yaml
+concurrency:
+  runs:
+    max_concurrent_runs: 10
+  pools:
+    default_limit: 3
 ```
 
-## Protect Shared Systems Under Load
+This is the right kind of control when the platform needs to prevent a bulk replay from overwhelming the deployment as a whole. In a governed data platform such as `dagflow`, that matters when ordinary daily ingestion and review-resume exports coexist with historical repair traffic.
 
-Queueing alone is not enough. Production Dagster has to express contention explicitly, especially when live workloads and backfills compete for the same warehouse, API, or cluster.
+#### Put pools on the assets or ops that compete for one scarce system
 
-### Put Throttles On The Execution Boundary
+Use a pool when the scarce resource is specific: one warehouse, one rate-limited vendor API, one export cluster, or one expensive shared service. The trigger is contention that should remain visible on the executable boundary rather than inside retry loops or sleep logic. The code is part of the asset or op definition, but the effect is cross-run coordination. Its purpose is to make Dagster queue work at the same boundary where engineers reason about the contested resource.
 
-Concurrency rules belong where execution is launched, not inside business logic.
-
-#### Attach a concurrency pool to an op
-
-Use a pool when several runs compete for one shared dependency that can be overwhelmed. The trigger is contention against a warehouse, rate-limited API, or constrained cluster. The purpose is to make the throttle visible in Dagster rather than burying it in retry loops or ad hoc sleep logic.
-
-*Define an op with pool-based throttling and print the pool name Dagster records on the op definition.*
+*Attach a pool to one executable boundary that competes for a shared warehouse.*
 
 ```python
 import dagster as dg
 
-@dg.op(pool="warehouse")
-def warehouse_mutation():
-    return "done"
-
-print(warehouse_mutation.pool)
-print(warehouse_mutation.name)
+@dg.asset(pool="warehouse")
+def publish_review_snapshot():
+    ...
 ```
 
-```text
-warehouse
-warehouse_mutation
-```
-
-## What To Remember
-
-- `dagster dev` is a development command surface, not the final production architecture.
-- A production Dagster OSS deployment needs persistent instance state and one shared `dagster.yaml`.
-- The webserver, daemon, and run-launch boundary are separate operational responsibilities.
-- Run queues limit overall traffic; pools protect a specific shared dependency.
-- A good deployment is boring under stress: durable state, explicit throttles, and clear service ownership.
+> [!example] Separate total traffic from shared-resource protection
+>
+> If a review-validation sensor resumes export for several approved runs while a historical backfill is also rebuilding curated assets, one control usually is not enough. A deployment-wide run limit keeps the control plane from launching too much total work. A `warehouse` or `export` pool then prevents the specific downstream system from being flooded even within that bounded set of runs.

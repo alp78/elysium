@@ -15,7 +15,7 @@ status: complete
 
 # DataOps for Indices
 
-> [!quote]
+> [!quote]+
 > "Inspection to improve quality is too late, ineffective, costly. Quality comes not from inspection, but from the improvement of the production process."
 >
 > — **W. Edwards Deming**, *Out of the Crisis* (1986)

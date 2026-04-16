@@ -20,7 +20,7 @@ status: complete
 
 # Data Pipeline Testing Strategy
 
-> [!quote]
+> [!quote]+
 > "Data quality is not a technical problem. It is a trust problem — one bad number erodes months of credibility."
 >
 > — **Chad Sanderson**

@@ -29,7 +29,7 @@ date: 2026-03-28
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="54 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 54</span>
 
-> [!quote]
+> [!quote]+
 > "The blue chips are the aristocracy of the stock market — they set the tone for everything else."
 >
 > — **Peter Lynch**, *One Up on Wall Street* (1989)
@@ -92,7 +92,7 @@ A stock market index composed of shares in the largest, most liquid, and most fi
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,832 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,832</span>
 
-> [!quote]
+> [!quote]+
 > "The DAX is the pulse of German industry — when the DAX moves, it moves with the weight of Europe's largest economy."
 >
 > — **Deutsche Borse**, *DAX 30th Anniversary Publication* (2018)
@@ -156,7 +156,7 @@ The DAX (Deutscher Aktienindex) is the blue-chip index of the 40 largest and mos
 
 
 
-> [!quote]
+> [!quote]+
 > "Sustainability is no longer about doing less harm. It is about doing more good."
 >
 > — **Jochen Zeitz**
@@ -327,7 +327,7 @@ The eb.rexx index family tracks the performance of the most liquid German govern
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,242 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,242</span>
 
-> [!quote]
+> [!quote]+
 > "The EURO STOXX 50 is to the Eurozone what the Dow Jones is to America — the index everyone watches."
 >
 > — **Axel Lomholt**, General Manager, STOXX
@@ -395,7 +395,7 @@ The EURO STOXX 50 is Europe's leading blue-chip index, comprising 50 of the larg
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="68 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 68</span>
 
-> [!quote]
+> [!quote]+
 > "Volatility is the price of admission for long-term returns."
 >
 > — **Nick Murray**, *Simple Wealth, Inevitable Wealth* (1999)
@@ -464,7 +464,7 @@ The EURO STOXX 50 Volatility (VSTOXX) subindex family extends the headline VSTOX
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="34 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 34</span>
 
-> [!quote]
+> [!quote]+
 > "Banking is necessary, banks are not."
 >
 > — **Bill Gates**
@@ -530,7 +530,7 @@ The EURO STOXX Banks index tracks the performance of Eurozone banking-sector sto
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
-> [!quote]
+> [!quote]+
 > "Do you know the only thing that gives me pleasure? It's to see my dividends coming in."
 >
 > — **John D. Rockefeller**
@@ -593,7 +593,7 @@ The EURO STOXX Select Dividend 30 index selects 30 high-dividend-yielding stocks
 
 
 
-> [!quote]
+> [!quote]+
 > "The full faith and credit of a government is only as good as its people."
 >
 > — **Anonymous**
@@ -641,7 +641,7 @@ The EUROGOV index family measures the performance of euro-denominated government
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="40 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 40</span>
 
-> [!quote]
+> [!quote]+
 > "Nature is the next frontier of financial risk — biodiversity loss threatens supply chains, asset values, and long-term returns."
 >
 > — **TNFD**, *Taskforce on Nature-related Financial Disclosures* (2023)
@@ -709,7 +709,7 @@ The ISS STOXX Biodiversity index family integrates biodiversity-related data fro
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="38 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 38</span>
 
-> [!quote]
+> [!quote]+
 > "A Paris-aligned benchmark must self-decarbonise at a rate consistent with limiting warming to 1.5 degrees."
 >
 > — **EU Technical Expert Group on Sustainable Finance**, *EU Climate Benchmarks Regulation* (2020)
@@ -1022,7 +1022,7 @@ The STOXX Asia/Pacific 600 index tracks 600 companies across developed markets i
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
+> [!quote]+
 > "Digital currency is going to be a very powerful thing."
 >
 > — **John Donahoe**
@@ -1062,7 +1062,7 @@ The STOXX Digital Asset index family provides benchmarks for the digital asset a
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="55 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 55</span>
 
-> [!quote]
+> [!quote]+
 > "Emerging markets are where the growth is — ignoring them means ignoring the future of the global economy."
 >
 > — **Antoine van Agtmael**, who coined the term "emerging markets" (1981)
@@ -1128,7 +1128,7 @@ The STOXX Emerging Markets index family provides broad equity coverage of emergi
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="980 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 980</span>
 
-> [!quote]
+> [!quote]+
 > "The STOXX Europe 600 is the de facto broadest representation of the European equity market."
 >
 > — **Stuart Heath**, Director, Equity & Index Product Design, Eurex
@@ -1476,7 +1476,7 @@ The STOXX Global Metaverse index captures companies positioned to benefit from t
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
-> [!quote]
+> [!quote]+
 > "Do you know the only thing that gives me pleasure? It's to see my dividends coming in."
 >
 > — **John D. Rockefeller**
@@ -1587,7 +1587,7 @@ The STOXX ICE Fixed Income Sustainability index family, developed in partnership
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
 
-> [!quote]
+> [!quote]+
 > "The capital asset pricing model has been the backbone of modern portfolio theory."
 >
 > — **William Sharpe**
@@ -1647,7 +1647,7 @@ The STOXX Industry Neutral Ax Factor index family isolates single risk-factor ex
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="174 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 174</span>
 
-> [!quote]
+> [!quote]+
 > "The portfolio with the highest return is not necessarily the most desirable one."
 >
 > — **Harry Markowitz**
@@ -1778,7 +1778,7 @@ The STOXX North America 600 index tracks 600 companies across the United States 
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
 
-> [!quote]
+> [!quote]+
 > "Do you know the only thing that gives me pleasure? It is to see my dividends coming in."
 >
 > — **John D. Rockefeller**
@@ -2020,7 +2020,7 @@ The TecDAX comprises the 30 largest and most liquid technology stocks listed on 
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="890 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 890</span>
 
-> [!quote]
+> [!quote]+
 > "Volatility is not risk — what matters is the permanent impairment of capital."
 >
 > — **Seth Klarman**, *Margin of Safety* (1991)
@@ -2196,7 +2196,7 @@ The STOXX Europe 600 Sector index family breaks the STOXX Europe 600 into its co
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="59 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 59</span>
 
-> [!quote]
+> [!quote]+
 > "Exclusion is the simplest form of responsible investing — remove what you cannot accept, keep the rest."
 >
 > — **Rodolphe Bocquet**, Global Head of Sustainable Investing, Qontigo
@@ -2446,7 +2446,7 @@ The STOXX Maximum Dividend 40 index selects the 40 stocks from the STOXX Global 
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
-> [!quote]
+> [!quote]+
 > "Risk comes from not knowing what you are doing."
 >
 > — **Warren Buffett**
@@ -2493,7 +2493,7 @@ The DAX Risk Control index family applies a volatility-targeting mechanism to th
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="44 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 44</span>
 
-> [!quote]
+> [!quote]+
 > "ESG integration is not about sacrificing returns — it is about understanding the full picture of risk."
 >
 > — **Larry Fink**, BlackRock CEO, Annual Letter to CEOs (2020)

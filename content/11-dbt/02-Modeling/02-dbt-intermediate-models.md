@@ -8,7 +8,7 @@ description: "Business logic transforms, silver layer"
 
 # dbt: Intermediate Models
 
-> [!quote] Reusable business logic
+> [!quote]+
 >
 > "What you realize you're doing over time with data transformation is you're curating the knowledge of the organization that you work for."
 >

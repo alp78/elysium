@@ -10,7 +10,7 @@ status: complete
 
 # Foundation and Networking Blocks
 
-> [!quote] Kelsey Hightower on minimizing code
+> [!quote]+
 >
 > "No code is the best way to write secure and reliable applications. Write nothing; deploy nowhere."
 >

@@ -10,7 +10,7 @@ status: complete
 
 # Silver Transforms
 
-> [!quote]
+> [!quote]+
 > "The most important motivation for the research work that resulted in the relational model was the objective of providing a sharp and clear boundary between the logical and physical aspects of database management."
 >
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)

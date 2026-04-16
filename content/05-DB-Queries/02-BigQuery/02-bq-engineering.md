@@ -10,7 +10,7 @@ status: complete
 
 # BigQuery Engineering
 
-> [!quote]
+> [!quote]+
 > "BigQuery separates storage from compute. That single architectural decision changes everything about how you design tables, partition data, and pay for queries."
 >
 > — **Jordan Tigani**, founding engineer of BigQuery

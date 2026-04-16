@@ -10,7 +10,7 @@ status: complete
 
 # Cloud Run
 
-> [!quote] Tim Wagner on serverless computing
+> [!quote]+
 >
 > "The future of serverless is about running your code without thinking about servers, and that future is already here."
 >

@@ -30,7 +30,7 @@ date: 2026-03-28
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,507 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,507</span>
 
-> [!quote]
+> [!quote]+
 > "A benchmark is not a portfolio; it is the standard against which all portfolios are judged."
 >
 > — **Charles D. Ellis**, *Winning the Loser's Game* (1998)
@@ -88,7 +88,7 @@ A standard index — such as the EURO STOXX 50 or STOXX Europe 600 — against w
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="298 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 298</span>
 
-> [!quote]
+> [!quote]+
 > "Gentlemen prefer bonds."
 >
 > — **Andrew Mellon**
@@ -151,7 +151,7 @@ A bond is a fixed-income debt instrument in which an investor lends capital to a
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="119 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 119</span>
 
-> [!quote]
+> [!quote]+
 > "Derivatives are financial weapons of mass destruction."
 >
 > — **Warren Buffett**
@@ -266,7 +266,7 @@ An index certificate is an unsecured debt instrument issued by a bank that repli
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
 
-> [!quote]
+> [!quote]+
 > "The convertible bond is the Swiss Army knife of fixed income — part bond, part equity option, always interesting."
 >
 > — **John P. Calamos**, *Convertible Securities* (1998)
@@ -323,7 +323,7 @@ A convertible bond is a hybrid fixed-income instrument that gives the bondholder
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="17 mentions across STOXX & ISS pages (low)">▰▰ 17</span>
 
-> [!quote]
+> [!quote]+
 > "A promise made is a debt unpaid."
 >
 > — **Robert W. Service**
@@ -385,7 +385,7 @@ A corporate bond is a debt security issued by a corporation to raise capital, ob
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="8 mentions across STOXX & ISS pages (low)">▰▰ 8</span>
 
-> [!quote]
+> [!quote]+
 > "Selling covered calls is the closest thing to a free lunch in the options world — you trade upside for income."
 >
 > — **Lawrence G. McMillan**, *Options as a Strategic Investment* (1980)
@@ -444,7 +444,7 @@ A covered call strategy on an index involves holding a long position in the inde
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
+> [!quote]+
 > "Insurance is the only product that both the seller and buyer hope is never actually used."
 >
 > — **Anonymous**
@@ -487,7 +487,7 @@ A credit default swap is an OTC derivative contract in which one party (the prot
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9,874 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 9,874</span>
 
-> [!quote]
+> [!quote]+
 > "Stocks have been the best-performing asset class over the long run, beating bonds, bills, gold, and real estate."
 >
 > — **Jeremy Siegel**, *Stocks for the Long Run* (1994)
@@ -547,7 +547,7 @@ Equity, in the context of financial instruments, refers to shares of ownership i
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="765 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 765</span>
 
-> [!quote]
+> [!quote]+
 > "The ETF is the most innovative financial instrument of the last two decades."
 >
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
@@ -608,7 +608,7 @@ An exchange-traded fund is an open-ended investment fund that trades on a stock 
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="642 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 642</span>
 
-> [!quote]
+> [!quote]+
 > "Gold is money. Everything else is credit."
 >
 > — **J.P. Morgan**
@@ -666,7 +666,7 @@ An exchange-traded commodity is a debt security listed on an exchange that provi
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
-> [!quote]
+> [!quote]+
 > "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay."
 >
 > — **Charles Dickens**
@@ -836,7 +836,7 @@ Eurex futures are standardized, exchange-traded derivatives contracts listed on 
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="90 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 90</span>
 
-> [!quote]
+> [!quote]+
 > "Futures markets transfer risk from hedgers to speculators — that is their economic purpose."
 >
 > — **Merton H. Miller**, Nobel Prize lecture (1990)
@@ -896,7 +896,7 @@ An index futures contract is a standardized agreement to exchange, at a predeter
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="28 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 28</span>
 
-> [!quote]
+> [!quote]+
 > "Green bonds channel private capital toward the climate transition — they make the bond market part of the solution."
 >
 > — **Sean Kidney**, CEO of Climate Bonds Initiative
@@ -957,7 +957,7 @@ A green bond is a fixed-income instrument whose proceeds are exclusively allocat
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
+> [!quote]+
 > "There are no bad bonds, only bad prices."
 >
 > — **Michael Milken**, pioneer of the high-yield bond market
@@ -999,7 +999,7 @@ A high-yield bond (also known as a "junk bond") is a fixed-income instrument rat
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
 
-> [!quote]
+> [!quote]+
 > "The index fund is a sensible, serviceable method for obtaining the market's rate of return with absolutely no effort and minimal expense."
 >
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
@@ -1116,7 +1116,7 @@ An index license is the contractual agreement granting a financial institution t
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="101 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 101</span>
 
-> [!quote]
+> [!quote]+
 > "Options are the building blocks of any payoff structure an investor can imagine."
 >
 > — **Robert C. Merton**, *Theory of Rational Option Pricing* (1973)
@@ -1297,7 +1297,7 @@ A municipal bond (muni bond) is a debt security issued by a state, city, county,
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="33 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 33</span>
 
-> [!quote]
+> [!quote]+
 > "By periodically investing in an index fund, the know-nothing investor can actually outperform most investment professionals."
 >
 > — **Warren Buffett**
@@ -1386,7 +1386,7 @@ Portfolio replication is the process by which a fund or product recreates the pe
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="189 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 189</span>
 
-> [!quote]
+> [!quote]+
 > "A put option is portfolio insurance — the premium is the price of sleeping at night."
 >
 > — **Myron Scholes & Fischer Black**, pioneers of options pricing theory (1973)
@@ -1448,7 +1448,7 @@ A put option is a derivatives contract that grants the holder the right, but not
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="163 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 163</span>
 
-> [!quote]
+> [!quote]+
 > "Real estate cannot be lost or stolen, nor can it be carried away."
 >
 > — **Franklin D. Roosevelt**
@@ -1549,7 +1549,7 @@ A social bond is a fixed-income instrument whose proceeds are allocated to proje
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
-> [!quote]
+> [!quote]+
 > "The power to tax is the power to destroy."
 >
 > — **John Marshall**
@@ -1611,7 +1611,7 @@ A sovereign bond is a debt security issued by a national government to finance p
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="414 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 414</span>
 
-> [!quote]
+> [!quote]+
 > "Never invest in anything you cannot understand."
 >
 > — **Warren Buffett**
@@ -1753,7 +1753,7 @@ A sustainability-linked bond (SLB) is a fixed-income instrument whose financial 
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="141 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 141</span>
 
-> [!quote]
+> [!quote]+
 > "Everything in life is a trade-off."
 >
 > — **Thomas Sowell**
@@ -1886,7 +1886,7 @@ A transition bond is a fixed-income instrument designed to fund an issuer's tran
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,875 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,875</span>
 
-> [!quote]
+> [!quote]+
 > "An option is the right, but not the obligation, to make a choice."
 >
 > — **Anonymous**

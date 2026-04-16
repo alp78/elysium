@@ -326,10 +326,12 @@ This is the default pattern for small snapshot landing tables.
 
 #### Replace one `_index` slice atomically
 
-> [!warning]
+> [!warning] Unscoped delete-plus-insert
+>
 > A delete-plus-insert load without an explicit transaction can leave the target empty or partially refreshed if the process fails between steps.
 >
-> [!success]
+> [!success] One transaction, one slice
+>
 > Wrap the delete and insert steps in a single transaction and scope the delete to the precise business slice being refreshed.
 >
 > [!info]-
@@ -397,10 +399,12 @@ Use staged validation when the load must prove basic integrity before the publis
 
 #### Load into stage, validate the batch, then publish it
 
-> [!warning]
+> [!warning] No validation gate
+>
 > Loading directly into the published table removes your validation gate. If the file has missing keys, unexpectedly low row counts, or a broken type conversion, the only recovery path is another write against the same table.
 >
-> [!success]
+> [!success] Stage before publish
+>
 > Load into stage first, validate row count and business keys there, then promote the stage data in one controlled transaction.
 >
 > [!info]-
@@ -495,10 +499,12 @@ The safest production default in SQL Server is usually two explicit steps: updat
 
 #### Update existing keys and insert new keys
 
-> [!warning]
+> [!warning] Blind `MERGE` under concurrency
+>
 > Blind `MERGE` statements are easy to write badly and can introduce race conditions or surprising behavior under concurrency if the join keys and locking strategy are not carefully designed.
 >
-> [!success]
+> [!success] Update, then insert
+>
 > For most ETL workloads, prefer a separate `UPDATE` joined to stage followed by an `INSERT ... WHERE NOT EXISTS` for the unmatched rows. It is easier to reason about and easier to test.
 >
 > [!info]-
@@ -591,10 +597,12 @@ Once the replacement semantics are clear, choose the byte-moving interface. The 
 
 #### Use table-valued parameters for medium-size in-memory batches
 
-> [!warning]
+> [!warning] TVP is not a bulk loader
+>
 > Table-valued parameters are not a general-purpose bulk-load replacement. They are `READONLY`, SQL Server does not maintain statistics on their columns, and plan quality can degrade when the batch is much larger than the routine was designed for.
 >
-> [!success]
+> [!success] Use TVP for routine batches
+>
 > Use a TVP when the caller already has the rows in memory, the load naturally belongs to one stored procedure boundary, and the batch is usually in the low-thousands or smaller. Microsoft documentation explicitly calls out TVPs as a strong fit for inserts under roughly 1,000 rows, while larger file-style loads usually belong on `bcp`, `BULK INSERT`, `OPENROWSET(BULK...)`, or `SqlBulkCopy`.
 >
 > [!info]-
@@ -695,10 +703,12 @@ cursor.executemany(
 
 #### Use `bcp` for large file-based loads
 
-> [!warning]
+> [!warning] Throughput with sharp edges
+>
 > `bcp` is fast, but it is operationally sharp. File encoding, field terminators, error files, and SQL Server service access all matter. It is the wrong tool if you need fine-grained row-by-row business validation before the load.
 >
-> [!success]
+> [!success] Use `bcp` for raw backfills
+>
 > Use `bcp` for large backfills or raw file loads where throughput matters most, and pair it with an error file and pre-load validation of file shape and column widths.
 >
 > [!info]-
@@ -725,10 +735,12 @@ bcp bronze.signals_daily in signals_daily.csv `
 
 #### Use `BULK INSERT` when SQL Server can see the file directly
 
-> [!warning]
+> [!warning] Client visibility does not matter
+>
 > `BULK INSERT` runs inside SQL Server, so file accessibility is determined by the SQL Server service account and server-side path visibility, not by the client running SSMS.
 >
-> [!success]
+> [!success] Use a server-visible file
+>
 > Use `BULK INSERT` when the file is already available to the SQL Server host and you want the load to stay inside a SQL transaction or stored procedure boundary.
 >
 > [!info]-
@@ -756,10 +768,12 @@ WITH
 
 #### Use `OPENROWSET(BULK...)` when the load must stay inside an `INSERT ... SELECT` pipeline
 
-> [!warning]
+> [!warning] Same server-side file constraint
+>
 > `OPENROWSET(BULK...)` has the same server-side file visibility and security constraints as `BULK INSERT`. If SQL Server cannot read the file directly, the load fails even if the client running SSMS can see the path.
 >
-> [!success]
+> [!success] Keep the load in-query
+>
 > Use `OPENROWSET(BULK...)` when the load needs to stay inside a relational `INSERT ... SELECT` pattern, when a format file or external projection logic is part of the design, or when you need bulk-only hints such as `KEEPIDENTITY`, `KEEPDEFAULTS`, `IGNORE_CONSTRAINTS`, or `IGNORE_TRIGGERS`.
 >
 > [!info]-
@@ -872,10 +886,12 @@ The official Microsoft prerequisites are stricter than "switch to `BULK_LOGGED` 
 
 #### Use minimally logged bulk imports only when the recovery plan allows it
 
-> [!warning]
+> [!warning] Minimal logging changes recovery posture
+>
 > Minimal logging is not a free speed flag. Recovery model, target-table state, locking choices, and the exact operation type all influence whether SQL Server can use the fast path. It also changes restore and recovery implications.
 >
-> [!success]
+> [!success] Use an approved bulk-load window
+>
 > Treat minimal logging as an explicit operational decision. Use it for large warehouse-style loads when the recovery model and restore objectives permit it, then return to the normal recovery posture if the database usually runs in full recovery.
 >
 > [!info]-

@@ -11,7 +11,7 @@ status: complete
 
 # 02. Strings - C#
 
-> [!quote]- Yukihiro Matsumoto
+> [!quote]+
 > "In our daily lives as programmers, we process text strings a lot. So I tried to work hard on text processing, namely the string class and regular expressions."
 >
 > — **Yukihiro Matsumoto**, creator of Ruby

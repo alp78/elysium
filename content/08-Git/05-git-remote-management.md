@@ -7,7 +7,7 @@ tags:
 
 # Git Remote Repository Management
 
-> [!quote]
+> [!quote]+
 > "When there is no central 'master' location that contains the source code, you can suddenly host things without the politics that go along with that 'one repo to rule them all' concept."
 >
 > — **Linus Torvalds**, Git mailing list

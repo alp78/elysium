@@ -14,7 +14,7 @@ status: complete
 
 # Connectivity Testing
 
-> [!quote] Werner Vogels, AWS re:Invent 2012
+> [!quote]+
 >
 > "Everything fails, all the time."
 >
@@ -795,17 +795,25 @@ For a broader systematic diagnosis approach that goes beyond network connectivit
 
 ## Warnings
 
-> [!warning] `ping` may be blocked by firewalls
+> [!warning] Generic probes can mislead
 >
-> Many cloud VMs and corporate firewalls block ICMP. A host that does not respond to ping may still be fully reachable on TCP ports (HTTP, SSH, database). Always test the specific port: `nc -zv host port` or `Test-NetConnection -Port`.
+> Three common false signals appear during connectivity testing:
+>
+> - **ICMP reachability is not TCP reachability.** Many cloud VMs and corporate firewalls block ICMP. A host that does not respond to `ping` may still be fully reachable on HTTP, SSH, or database ports.
+> - **`curl` exit code 0 is not HTTP success.** `curl https://api.example.com/data` exits successfully even when the server returns `404` or `500`, unless you opt into failure-on-HTTP-error behavior.
+> - **DNS answers may be cached.** `dig` can show the current authoritative record while your application or workstation still uses an older cached IP until TTL expiry.
+>
+> A green or red result from the wrong probe is not enough to prove the path is healthy or broken.
 
-> [!warning] `curl` returns exit code 0 on HTTP errors
+> [!success] Match the probe to the protocol
 >
-> `curl https://api.example.com/data` returns 0 even if the server responds with 404 or 500. Use `curl -f` to fail on HTTP errors, or capture the status code with `-w '%{http_code}'`.
-
-> [!warning] DNS caching can hide resolution changes
+> Use the check that proves the exact layer you care about:
 >
-> After a DNS change, cached records persist until TTL expires. `dig` shows the current authoritative answer, but your application may still use the cached (old) IP. Flush DNS cache with `systemd-resolve --flush-caches` (Linux) or `Clear-DnsClientCache` (PowerShell).
+> - **TCP reachability.** Test the real port with `nc -zv host port` or `Test-NetConnection -Port`.
+> - **HTTP success.** Use `curl -sf -o /dev/null -w '%{http_code}' https://endpoint/health` so transport success and HTTP success are not conflated.
+> - **DNS changes.** Compare `dig` output with the local resolver view, and flush caches with `systemd-resolve --flush-caches` on Linux or `Clear-DnsClientCache` on PowerShell when validating a recent change.
+>
+> The recommendations table below applies the same rule to the common day-to-day diagnostics.
 
 ## Recommendations
 

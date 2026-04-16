@@ -10,7 +10,7 @@ status: complete
 
 # Datadog Custom Queries
 
-> [!quote]
+> [!quote]+
 > "Not everything that counts can be counted, and not everything that can be counted counts."
 >
 > — **William Bruce Cameron**, *Informal Sociology* (1963)

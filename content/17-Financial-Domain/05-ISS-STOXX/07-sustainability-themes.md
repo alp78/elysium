@@ -110,7 +110,7 @@ A systematic evaluation of how a company's operations, supply chain, or financed
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
 
-> [!quote]
+> [!quote]+
 > "Nature is not a nice-to-have. Biodiversity loss is an existential risk to economies that depend on pollination, clean water, and stable soils."
 >
 > — **Partha Dasgupta**, *The Economics of Biodiversity: The Dasgupta Review* (2021)
@@ -203,7 +203,7 @@ Revenue derived from business activities associated with fossil fuels and other 
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="92 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 92</span>
 
-> [!quote]
+> [!quote]+
 > "The carbon budget tells us exactly how much CO2 humanity can still emit. It is the hard physical constraint that all climate finance must respect."
 >
 > — **Myles Allen**, Oxford climate scientist, lead author of the IPCC 1.5C report
@@ -313,7 +313,7 @@ A tradable certificate or permit representing the right to emit one metric ton o
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
-> [!quote]
+> [!quote]+
 > "If you want less of something, tax it. A carbon price makes pollution expensive and clean alternatives competitive."
 >
 > — **William Nordhaus**, Nobel laureate in Economics (2018), pioneer of carbon pricing models
@@ -351,7 +351,7 @@ $$\text{Carbon Cost} = \text{Unabated Emissions (tCO}_2\text{e)} \times \text{Ca
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="219 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 219</span>
 
-> [!quote]
+> [!quote]+
 > "A portfolio's carbon footprint is the investor's share of the emissions problem. Measure it, and you own it."
 >
 > — **Patrick Bolton & Marcin Kacperczyk**, "Do Investors Care about Carbon Risk?", *Journal of Financial Economics* (2021)
@@ -558,7 +558,7 @@ A forward-looking exercise that models the potential impact of different climate
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14 mentions across STOXX & ISS pages (low)">▰▰ 14</span>
 
-> [!quote]
+> [!quote]+
 > "A circular economy is restorative by design. It aims to keep products, components, and materials at their highest utility and value at all times."
 >
 > — **Ellen MacArthur Foundation**, *Towards the Circular Economy* (2013)
@@ -633,7 +633,7 @@ Legal proceedings brought against companies, governments, or other entities for 
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="459 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 459</span>
 
-> [!quote]
+> [!quote]+
 > "The climate transition is the greatest reallocation of capital in history. Every company, every portfolio, every asset class will be repriced."
 >
 > — **Mark Carney**, UN Special Envoy on Climate Action and Finance
@@ -827,7 +827,7 @@ $$\text{Energy Efficiency} = \frac{\text{Useful Energy Output}}{\text{Total Ener
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="37 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 37</span>
 
-> [!quote]
+> [!quote]+
 > "The energy transition is not a choice between growth and climate. Renewables are now the cheapest source of new electricity generation in most of the world."
 >
 > — **Fatih Birol**, Executive Director of the International Energy Agency (IEA)
@@ -916,7 +916,7 @@ The total environmental impact of an entity — company, product, or portfolio �
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
 
-> [!quote]
+> [!quote]+
 > "For banks, financed emissions dwarf their operational footprint. A bank's real carbon exposure is not its office lights; it is its loan book."
 >
 > — **Partnership for Carbon Accounting Financials (PCAF)**, Global GHG Standard for the Financial Industry
@@ -975,7 +975,7 @@ $$\text{Financed Emissions}_i = \frac{\text{Outstanding Amount}_i}{\text{EVIC}_i
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="34 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 34</span>
 
-> [!quote]
+> [!quote]+
 > "Green bonds channel private capital directly into climate solutions. They are the fixed-income market's answer to the transition finance gap."
 >
 > — **Sean Kidney**, CEO of the Climate Bonds Initiative
@@ -1127,7 +1127,7 @@ $$\text{CO}_2\text{e} = \sum_{g} \text{Emissions}_g \times \text{GWP}_g$$
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="43 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 43</span>
 
-> [!quote]
+> [!quote]+
 > "Greenwashing corrodes trust in sustainable finance. If investors cannot distinguish real ESG commitment from marketing, capital flows to the wrong places."
 >
 > — **ESMA (European Securities and Markets Authority)**, Sustainable Finance Roadmap (2022)
@@ -1303,7 +1303,7 @@ A forward-looking metric that translates a company's or portfolio's projected gr
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
 
-> [!quote]
+> [!quote]+
 > "There is no climate justice without a just transition. We cannot decarbonize by abandoning the workers and communities that built the fossil-fuel economy."
 >
 > — **Sharan Burrow**, General Secretary of the International Trade Union Confederation
@@ -1467,7 +1467,7 @@ Financial risk arising from an organization's dependencies and impacts on nature
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="67 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 67</span>
 
-> [!quote]
+> [!quote]+
 > "Natural capital is not free. Every economy is a wholly owned subsidiary of the environment. Deplete natural capital and the economic dividends stop."
 >
 > — **Robert Costanza**, ecological economist, *Nature* (1997)
@@ -1522,7 +1522,7 @@ The stock of renewable and non-renewable natural resources — including air, wa
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="351 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 351</span>
 
-> [!quote]
+> [!quote]+
 > "Net zero is not a slogan. It is the hard science of the carbon budget, translated into a target that every company and government can be held to."
 >
 > — **IPCC AR6**, Summary for Policymakers (2021)
@@ -1680,7 +1680,7 @@ $$\text{PAB Carbon Intensity}_t \leq \text{PAB Carbon Intensity}_{t-1} \times (1
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="26 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 26</span>
 
-> [!quote]
+> [!quote]+
 > "Physical climate risks are not hypothetical. Floods, droughts, and wildfires are already repricing real estate, insurance, and sovereign debt."
 >
 > — **Network for Greening the Financial System (NGFS)**, *Climate Scenarios for Central Banks* (2020)
@@ -1786,7 +1786,7 @@ A greenhouse gas emissions reduction target adopted by a company that is consist
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
+> [!quote]+
 > "If we burn all proven fossil-fuel reserves, we blow the carbon budget. That means a large fraction of those reserves are stranded assets — unburnable carbon."
 >
 > — **Mark Campanale**, founder of Carbon Tracker Initiative
@@ -1940,7 +1940,7 @@ In the context of sustainability investing, a metal critical to the clean-energy
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="96 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 96</span>
 
-> [!quote]
+> [!quote]+
 > "Transition risk is the financial cost of the world doing the right thing on climate. Policy, technology, and market shifts will reprice every carbon-intensive asset."
 >
 > — **TCFD**, Final Report: Recommendations (2017)

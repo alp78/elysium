@@ -14,7 +14,7 @@ status: complete
 
 # IAP Tunneling
 
-> [!quote] Zero Trust
+> [!quote]+
 >
 > "Trust is a vulnerability. Zero Trust eliminates trust from digital systems because it provides no value to an organisation."
 >

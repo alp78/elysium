@@ -8,7 +8,7 @@ description: "dbt-utils, dbt-expectations, elementary, codegen, audit-helper, an
 
 # dbt: Packages
 
-> [!quote] Shared Foundations
+> [!quote]+
 >
 > "If I have seen further, it is by standing on the shoulders of giants."
 >

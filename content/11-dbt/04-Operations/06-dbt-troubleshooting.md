@@ -8,7 +8,7 @@ description: "Systematic diagnosis of dbt compilation errors, runtime failures, 
 
 # dbt: Troubleshooting
 
-> [!quote] Diagnose reality, not assumptions
+> [!quote]+
 >
 > "If you aren't testing in prod you aren't testing in reality -- just a weak dime store knockoff."
 >

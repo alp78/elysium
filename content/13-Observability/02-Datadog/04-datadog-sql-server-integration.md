@@ -10,7 +10,7 @@ status: complete
 
 # Datadog SQL Server Integration
 
-> [!quote]
+> [!quote]+
 > "Monitoring tells you whether a system is working, observability lets you ask why it isn't working."
 >
 > — **Baron Schwartz**

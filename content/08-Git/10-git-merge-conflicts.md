@@ -7,7 +7,7 @@ tags:
 
 # Git Merge Conflicts
 
-> [!quote]
+> [!quote]+
 > "You can disagree with me as much as you want, but during this talk, by definition, anybody who disagrees is stupid and ugly."
 >
 > — **Linus Torvalds**, Git mailing list

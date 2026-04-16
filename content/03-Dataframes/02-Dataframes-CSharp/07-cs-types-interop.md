@@ -11,7 +11,7 @@ status: complete
 
 # Advanced Types and Interop - C#
 
-> [!quote] Interop framing
+> [!quote]+
 >
 > "The nice thing about standards is that you have so many to choose from."
 >

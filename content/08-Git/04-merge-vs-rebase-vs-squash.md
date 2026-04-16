@@ -7,7 +7,7 @@ tags:
 
 # Merge vs Rebase vs Squash
 
-> [!quote]
+> [!quote]+
 > "I want clean history, but that really means (a) clean and (b) history."
 >
 > — **Linus Torvalds**, Git mailing list

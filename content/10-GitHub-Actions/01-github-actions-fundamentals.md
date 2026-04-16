@@ -7,7 +7,7 @@ tags:
 
 # GitHub Actions Fundamentals
 
-> [!quote]
+> [!quote]+
 > "There should be two tasks for a human being to perform to deploy software into a development, test, or production environment: to pick the version and environment and to press the 'deploy' button."
 >
 > — **David Farley**, *Continuous Delivery* (2010)

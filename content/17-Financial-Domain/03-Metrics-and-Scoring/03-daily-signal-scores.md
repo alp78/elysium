@@ -18,7 +18,7 @@ Daily signal scores are cross-sectional z-scores computed daily across all index
 
 ## Momentum Score
 
-> [!quote]
+> [!quote]+
 > "An object in motion tends to stay in motion. So does a stock price."
 >
 > — **Cliff Asness**

@@ -10,7 +10,7 @@ status: complete
 
 # Datadog Troubleshooting
 
-> [!quote]
+> [!quote]+
 > "You can't fix what you can't see. Observability is about closing the feedback loop between deploying code and understanding its impact."
 >
 > — **Charity Majors**, charity.wtf (2018)

@@ -27,7 +27,7 @@ status: complete
 
 # GCP Cloud Trace and Logging
 
-> [!quote]
+> [!quote]+
 > "The three pillars of traces, metrics, and logs don't really make any sense for observability — those are pillars of telemetry, not observability itself."
 >
 > — **Ben Sigelman**

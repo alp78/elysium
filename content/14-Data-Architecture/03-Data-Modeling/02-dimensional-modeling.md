@@ -30,7 +30,7 @@ status: complete
 
 # Dimensional Modeling
 
-> [!quote]
+> [!quote]+
 > "The grain declaration becomes a binding contract on the design."
 >
 > — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)

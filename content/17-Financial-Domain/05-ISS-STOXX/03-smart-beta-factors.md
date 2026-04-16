@@ -242,7 +242,7 @@ budgets to prevent concentration.
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
+> [!quote]+
 > "The CAPM says there is only one source of risk that is rewarded: market beta. Every factor anomaly discovered since is a challenge to that elegant simplicity."
 >
 > — **William Sharpe**, Nobel laureate, on the legacy of the Capital Asset Pricing Model
@@ -441,7 +441,7 @@ $$
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="16 mentions across STOXX & ISS pages (low)">▰▰ 16</span>
 
-> [!quote]
+> [!quote]+
 > "The efficient frontier is the boundary of possibility. Every rational portfolio sits on it; every portfolio below it is leaving returns on the table for the risk taken."
 >
 > — **Harry Markowitz**, Nobel laureate, *Portfolio Selection* (1952)
@@ -639,7 +639,7 @@ $$
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="5,508 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 5,508</span>
 
-> [!quote]
+> [!quote]+
 > "A factor is a characteristic that explains differences in stock returns. If it is persistent, pervasive, and has an economic rationale, it deserves a place in portfolio construction."
 >
 > — **Andrew Ang**, *Asset Management: A Systematic Approach to Factor Investing* (2014)
@@ -752,7 +752,7 @@ them produces a smoother return profile than any single-factor strategy.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="219 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 219</span>
 
-> [!quote]
+> [!quote]+
 > "Factor investing democratized what quantitative hedge funds had been doing for decades. It put the building blocks of returns into the hands of every investor."
 >
 > — **Antti Ilmanen**, AQR Capital Management, *Expected Returns* (2011)
@@ -810,7 +810,7 @@ desirable factor characteristics and underweight (or exclude) those without.
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
-> [!quote]
+> [!quote]+
 > "Factor premia exist because they compensate investors for bearing risks that others are unwilling to hold, or because behavioural biases create persistent mispricings."
 >
 > — **Eugene Fama & Kenneth French**, "The Cross-Section of Expected Stock Returns", *Journal of Finance* (1992)
@@ -1282,7 +1282,7 @@ $$
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="50 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 50</span>
 
-> [!quote]
+> [!quote]+
 > "The momentum effect is the premier anomaly in finance. Stocks that have gone up tend to keep going up. It works in every market, in every era, and nobody fully agrees on why."
 >
 > — **Cliff Asness**, AQR Capital Management, on the persistence of the momentum factor
@@ -1583,7 +1583,7 @@ $$
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="63 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 63</span>
 
-> [!quote]
+> [!quote]+
 > "Quality is a factor that buys profitable, growing, safe companies and avoids unprofitable, stagnant, risky ones. It is the factor Warren Buffett never named but always exploited."
 >
 > — **Robert Novy-Marx**, "The Other Side of Value: The Gross Profitability Premium", *Journal of Financial Economics* (2013)
@@ -1798,7 +1798,7 @@ in a transparent, rules-based, and cost-efficient manner.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="69 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 69</span>
 
-> [!quote]
+> [!quote]+
 > "Small stocks outperform large stocks, on average, because they are riskier, less liquid, and more exposed to economic downturns. Investors demand compensation for bearing that risk."
 >
 > — **Rolf Banz**, "The Relationship Between Return and Market Value of Common Stocks", *Journal of Financial Economics* (1981)
@@ -1863,7 +1863,7 @@ Negative log ensures that smaller companies receive higher scores.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="84 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 84</span>
 
-> [!quote]
+> [!quote]+
 > "Smart beta is neither smart nor beta. It is systematic factor exposure delivered through transparent, rules-based index construction."
 >
 > — **Cliff Asness**, AQR Capital Management, critiquing the marketing term "smart beta"
@@ -2014,7 +2014,7 @@ where $w^{+}$ and $w^{-}$ are post- and pre-rebalancing weights.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="75 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 75</span>
 
-> [!quote]
+> [!quote]+
 > "Value investing is buying a dollar for fifty cents. The value factor captures this systematically: buy cheap stocks, avoid expensive ones, and let mean reversion do the work."
 >
 > — **Eugene Fama & Kenneth French**, on the value premium in their three-factor model

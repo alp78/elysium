@@ -10,7 +10,7 @@ status: complete
 
 # Providers and Backend
 
-> [!quote] Mitchell Hashimoto on Terraform's origins
+> [!quote]+
 >
 > "We were seventh to market... no one was a clear winner. It was a warring market."
 >

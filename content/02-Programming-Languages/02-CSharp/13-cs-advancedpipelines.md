@@ -10,7 +10,7 @@ status: complete
 
 # 13. Advanced Parallel Pipelines - C#
 
-> [!quote]
+> [!quote]+
 > "The combination of threads, remote-procedure-call interfaces, and heavyweight object-oriented design is especially dangerous. If you are ever invited onto a project that is supposed to feature all three, fleeing in terror might well be an appropriate reaction."
 >
 > — **Eric S. Raymond**, *The Art of Unix Programming* (2003)

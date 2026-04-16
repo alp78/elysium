@@ -158,6 +158,8 @@ Before designing or enabling any change-capture mechanism on the database. It is
 > *This query shows whether `stoxx` currently has CDC, Change Tracking, temporal tables, or row-versioning prerequisites enabled.*
 >
 
+*This query returns the live engine-managed feature state for `stoxx`.*
+
 ```sql
 SELECT d.name AS database_name,
        d.compatibility_level,
@@ -187,6 +189,10 @@ SELECT d.name AS database_name,
        ) AS change_tracking_table_count
 FROM sys.databases AS d
 WHERE d.name = 'stoxx';
+```
+
+```text
+Live result table shows `stoxx` with CDC, Change Tracking, temporal tables, and row-versioning features all off.
 ```
 
 | database_name | compatibility_level | is_cdc_enabled | is_change_tracking_enabled | snapshot_isolation_state_desc | is_read_committed_snapshot_on | temporal_table_count | cdc_schema_present | change_tracking_table_count |
@@ -248,6 +254,8 @@ When validating whether the SCD2 pattern on a dimension table is actively produc
 > *This query measures whether `silver.index_dim` is currently using its SCD2 columns as a real history table or only as a current-state dimension with SCD2-compatible structure.*
 >
 
+*This query returns the live SCD2 state of `silver.index_dim`.*
+
 ```sql
 SELECT total_rows = COUNT(*),
        current_rows = SUM(CASE WHEN is_current = 1 THEN 1 ELSE 0 END),
@@ -256,6 +264,10 @@ SELECT total_rows = COUNT(*),
        max_valid_from = MAX(valid_from),
        open_ended_rows = SUM(CASE WHEN valid_to IS NULL THEN 1 ELSE 0 END)
 FROM silver.index_dim;
+```
+
+```text
+Live result table shows 169 total rows, all 169 current, with no closed history rows and every row open ended.
 ```
 
 | total_rows | current_rows | historical_rows | min_valid_from | max_valid_from | open_ended_rows |
@@ -279,6 +291,8 @@ After the SCD2 state query confirms the table has rows, to inspect the actual co
 > *This query previews the newest live dimension rows in `silver.index_dim` and shows how the current table stores active versions.*
 >
 
+*This query previews the newest live dimension rows in `silver.index_dim`.*
+
 ```sql
 SELECT TOP (8)
        _index,
@@ -289,6 +303,10 @@ SELECT TOP (8)
        is_current
 FROM silver.index_dim
 ORDER BY valid_from DESC, symbol;
+```
+
+```text
+Live result table shows the newest `oil_20` rows, all with `valid_to = NULL` and `is_current = 1`.
 ```
 
 | _index | symbol | sector | valid_from | valid_to | is_current |
@@ -327,6 +345,8 @@ When verifying that an SCD2 table has the critical uniqueness constraint on acti
 > *This query verifies that `silver.index_dim` enforces one active version per business key with a filtered unique index.*
 >
 
+*This query inspects the filtered unique index on `silver.index_dim`.*
+
 ```sql
 SELECT OBJECT_SCHEMA_NAME(i.object_id) AS schema_name,
        OBJECT_NAME(i.object_id) AS table_name,
@@ -336,6 +356,10 @@ SELECT OBJECT_SCHEMA_NAME(i.object_id) AS schema_name,
 FROM sys.indexes AS i
 WHERE i.object_id = OBJECT_ID('silver.index_dim')
 ORDER BY i.index_id;
+```
+
+```text
+Live result table shows the filtered unique index `UX_silver_index_dim_current` with `WHERE is_current = 1`.
 ```
 
 | schema_name | table_name | index_name | is_unique | filter_definition |
@@ -362,54 +386,40 @@ The practical difference between the available methods is not just "history or n
 
 Use the lightest mechanism that still answers the real downstream requirement.
 
-| Method | Captures | History Depth | Typical Latency | Operational Owner | Best Fit |
-|---|---|---|---|---|---|
-| Manual SCD2 | Selected business attributes | Full for the tracked attributes | Batch-oriented | Data engineering | Dimensional history where you choose what counts as a change |
-| Temporal tables | Full row versions | Full row history | Immediate on DML | SQL Server engine | Audit, point-in-time queries, row reconstruction |
-| CDC | Inserts, updates, deletes plus metadata | Full row-level change stream | Near real time to batch | DBA + data engineering | Replication, streaming, downstream event consumers |
-| Change Tracking | Primary keys and operation metadata | No before image, no full row history | Sync-oriented | DBA + application/data engineering | Lightweight pull-based sync |
-| `rowversion` token | Monotonic row stamp on insert or update | No row history and no delete payload | Pull-based / batch | Application or data engineering | Mutable tables where you only need a change token and can reread the current row |
-| dbt snapshots | Selected columns via snapshot strategy | Full for tracked snapshot rows | Batch-oriented | Analytics engineering | Declarative warehouse history outside source SQL Server |
-| Application-level logging | Whatever the app emits | Custom | App-dependent | Application team | When database-level capture is unavailable or undesirable |
+`Manual SCD2` captures selected business attributes, preserves full history for the tracked attributes, usually lands in batch-oriented pipelines, and stays owned by data engineering. Use it when the warehouse decides which attribute changes matter.
+
+`Temporal tables` capture full row versions with immediate history on DML, are owned by the SQL Server engine, and fit audit or point-in-time reconstruction requirements.
+
+`CDC` captures inserts, updates, deletes, and metadata, gives you a full row-level change stream, and fits replication, streaming, or downstream event consumers.
+
+`Change Tracking` captures changed primary keys plus operation metadata, keeps no before image or full row history, and is the lightest fit for pull-based synchronization.
+
+`rowversion` captures a monotonic row stamp on insert or update, keeps no row history and no delete payload, and works only when the consumer can reread the current row image.
+
+`dbt snapshots` capture selected columns through a snapshot strategy, retain full history for the tracked snapshot rows, and fit declarative warehouse history outside source SQL Server.
+
+`Application-level logging` captures whatever the application emits, keeps custom history depth, and is the fallback when database-level capture is unavailable or undesirable.
 
 ### SQL Server | change tracking | method-selection decision path
 
-```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': {
-  'primaryColor': '#292e42',
-  'primaryTextColor': '#c0caf5',
-  'primaryBorderColor': '#565f89',
-  'lineColor': '#565f89',
-  'secondaryColor': '#1a1b26',
-  'tertiaryColor': '#24283b',
-  'noteTextColor': '#c0caf5',
-  'noteBkgColor': '#292e42',
-  'textColor': '#c0caf5',
-  'fontSize': '14px'
-}}}%%
-flowchart TD
-    A[Start<br/>What change information must the consumer get?] --> B{Do you need full row versions<br/>with point-in-time query support?}
-    B --> Y1[YES]
-    B --> N1[NO]
-    Y1 --> C[Use temporal tables]
-    N1 --> D{Do you need a row-level change stream<br/>including deletes?}
-    D --> Y2[YES]
-    D --> N2[NO]
-    Y2 --> E[Use CDC]
-    N2 --> F{Do you only need to know<br/>which keys changed since the last sync?}
-    F --> Y3[YES]
-    F --> N3[NO]
-    Y3 --> G[Use Change Tracking]
-    N3 --> H{Do only selected business attributes<br/>define a meaningful new version?}
-    H --> Y4[YES]
-    H --> N4[NO]
-    Y4 --> I[Use manual SCD2]
-    N4 --> J[Use external snapshots or application logging]
+*This PowerShell snippet prints the same linear recommendation order used in the comparison above.*
 
-    classDef yes fill:#1f3b2d,stroke:#73d13d,color:#c0caf5;
-    classDef no fill:#4a1f24,stroke:#db4b4b,color:#c0caf5;
-    class Y1,Y2,Y3,Y4 yes;
-    class N1,N2,N3,N4 no;
+```powershell
+@(
+  'Need point-in-time row versions? -> temporal tables'
+  'Need row-level change events including deletes? -> CDC'
+  'Need only changed keys since the last sync? -> Change Tracking'
+  'Need selected business attributes to define history? -> manual SCD2'
+  'Need neither engine-managed history nor app-owned capture? -> external snapshots or application logging'
+) | ForEach-Object { $_ }
+```
+
+```text
+Need point-in-time row versions? -> temporal tables
+Need row-level change events including deletes? -> CDC
+Need only changed keys since the last sync? -> Change Tracking
+Need selected business attributes to define history? -> manual SCD2
+Need neither engine-managed history nor app-owned capture? -> external snapshots or application logging
 ```
 
 ---
@@ -455,11 +465,17 @@ When auditing whether any tables in the database already use `rowversion` as a c
 > *This query checks whether `stoxx` currently uses `rowversion` anywhere as a change token.*
 >
 
+*This query counts `rowversion` columns in the live database.*
+
 ```sql
 SELECT COUNT(*) AS rowversion_column_count,
        COUNT(DISTINCT object_id) AS tables_with_rowversion
 FROM sys.columns
 WHERE system_type_id = 189;
+```
+
+```text
+Live result table shows zero `rowversion` columns and zero tables using them.
 ```
 
 | rowversion_column_count | tables_with_rowversion |
@@ -491,6 +507,8 @@ When evaluating whether `rowversion` is suitable as a delta token for a specific
 >
 > *This batch shows how a `rowversion` token changes automatically after one row update and how a consumer can compare the current token to an earlier snapshot.*
 >
+
+*This batch demonstrates how a `rowversion` token changes after one update.*
 
 ```sql
 IF OBJECT_ID('dbo.demo_rowversion_delta', 'U') IS NOT NULL
@@ -537,6 +555,10 @@ JOIN @before AS b
 ORDER BY t.id;
 
 DROP TABLE dbo.demo_rowversion_delta;
+```
+
+```text
+Live result table shows the unchanged row keeping its token while the updated row receives a newer token.
 ```
 
 | id | business_key | payload | rv_before | rv_after | rowversion_status |
@@ -599,6 +621,8 @@ When building or validating a manual SCD2 pattern on a new dimension table. It i
 > *This batch demonstrates a complete manual SCD2 rollover on a disposable table and returns the final history chain.*
 >
 
+*This batch demonstrates a complete manual SCD2 rollover on a disposable table.*
+
 ```sql
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
@@ -639,6 +663,10 @@ FROM dbo.demo_scd2_company
 ORDER BY valid_from;
 
 DROP TABLE dbo.demo_scd2_company;
+```
+
+```text
+Live result table shows the old version closed and the new current row inserted for the same business key.
 ```
 
 | symbol | sector | valid_from | valid_to | is_current |
@@ -711,6 +739,8 @@ When evaluating temporal tables as a history mechanism or demonstrating `FOR SYS
 > *This batch demonstrates a real temporal-table update and returns the combined current-plus-history view through `FOR SYSTEM_TIME ALL`.*
 >
 
+*This batch demonstrates a real temporal-table update on a disposable table.*
+
 ```sql
 IF OBJECT_ID('dbo.demo_temporal_security_history', 'U') IS NOT NULL
     DROP TABLE dbo.demo_temporal_security_history;
@@ -751,6 +781,10 @@ ALTER TABLE dbo.demo_temporal_security
 
 DROP TABLE dbo.demo_temporal_security_history;
 DROP TABLE dbo.demo_temporal_security;
+```
+
+```text
+Live result table shows the historical row and the current row with engine-managed period columns.
 ```
 
 | symbol | sector | valid_from | valid_to |
@@ -799,11 +833,11 @@ The operational caveats from Microsoft documentation span schema constraints, hi
 
 Temporal history is easy to enable and easy to ignore until it becomes large. Microsoft documentation describes three main retention patterns, and they solve different operational problems.
 
-| Retention strategy | Best Fit | What to watch |
-|---|---|---|
-| Built-in retention policy | Moderate history windows with predictable automatic cleanup | Validate edition/version support and monitor whether cleanup keeps pace with write volume |
-| Custom cleanup with `sys.sp_cleanup_temporal_history` | Targeted, explicit cleanup windows | It is an immediate cleanup action, not a gentle background retention policy |
-| Partitioned history with a sliding window | Very large temporal history tables | Requires partition design discipline and ongoing partition maintenance |
+`Built-in retention policy` fits moderate history windows with predictable automatic cleanup. Watch edition and version support, and verify that cleanup keeps pace with write volume.
+
+`sys.sp_cleanup_temporal_history` fits targeted, explicit cleanup windows. It is an immediate cleanup action, not a gentle background retention policy.
+
+`Partitioned history with a sliding window` fits very large temporal history tables. It requires partition design discipline and ongoing partition maintenance.
 
 Production recommendations:
 
@@ -860,6 +894,8 @@ When a downstream consumer requires row-level change events (inserts, updates, d
 > *This batch enables CDC, creates a demo table, enrolls it, and makes changes for capture.*
 >
 
+*This batch is a state-changing CDC enablement example for a disposable demo table.*
+
 ```sql
 EXEC sys.sp_cdc_enable_db;
 GO
@@ -895,6 +931,10 @@ WHERE symbol = 'TTE.PA';
 EXEC sys.sp_cdc_scan;
 ```
 
+```text
+No output captured; this CDC setup batch is state-changing and the useful evidence comes from the readback queries below.
+```
+
 #### Read CDC rows between two LSN boundaries
 
 After CDC is enabled and changes have been committed to the tracked source table. It is typically triggered by scheduled CDC consumer poll, incremental load cycle, or manual inspection of recent changes. Read-only T-SQL query using CDC table-valued functions. Requires membership in the CDC gating role (if one was set) or `db_owner`. Retrieve all captured change images between two LSN boundaries for downstream processing.
@@ -920,6 +960,8 @@ After CDC is enabled and changes have been committed to the tracked source table
 > *This query reads all captured CDC changes for the demo capture instance.*
 >
 
+*This query reads all captured CDC changes for the demo capture instance.*
+
 ```sql
 DECLARE @from_lsn binary(10) = sys.fn_cdc_get_min_lsn('dbo_demo_cdc_instrument');
 DECLARE @to_lsn   binary(10) = sys.fn_cdc_get_max_lsn();
@@ -930,6 +972,10 @@ SELECT ct.__$operation,
        ct.sector
 FROM cdc.fn_cdc_get_all_changes_dbo_demo_cdc_instrument(@from_lsn, @to_lsn, N'all') AS ct
 ORDER BY ct.__$start_lsn, ct.__$seqval;
+```
+
+```text
+Live result table shows the three CDC change images for the demo interval.
 ```
 
 | __$operation | id | symbol | sector |
@@ -951,6 +997,8 @@ When evaluating whether the consumer needs every intermediate change image or on
 > *This query reads net CDC changes for the same LSN interval, showing one row per key.*
 >
 
+*This query reads the net CDC changes for the same LSN interval.*
+
 ```sql
 DECLARE @from_lsn binary(10) = sys.fn_cdc_get_min_lsn('dbo_demo_cdc_instrument');
 DECLARE @to_lsn   binary(10) = sys.fn_cdc_get_max_lsn();
@@ -961,6 +1009,10 @@ SELECT ct.__$operation,
        ct.sector
 FROM cdc.fn_cdc_get_net_changes_dbo_demo_cdc_instrument(@from_lsn, @to_lsn, N'all') AS ct
 ORDER BY ct.id;
+```
+
+```text
+Live result table shows one net CDC row per key for the demo interval.
 ```
 
 | __$operation | id | symbol | sector |
@@ -1048,6 +1100,8 @@ When a consumer needs lightweight key-level sync without the overhead of CDC. It
 > *This batch enables CT, creates a demo table, enrolls it, and makes changes for tracking.*
 >
 
+*This batch is a state-changing CT enablement example for a disposable demo table.*
+
 ```sql
 ALTER DATABASE stoxx
 SET CHANGE_TRACKING = ON
@@ -1085,6 +1139,10 @@ DELETE FROM dbo.demo_ct_instrument
 WHERE symbol = 'TTE.PA';
 ```
 
+```text
+No output captured; this CT setup batch is state-changing and the useful evidence comes from the readback queries below.
+```
+
 #### Read changed keys since the last sync version
 
 During each sync cycle, after validating that the stored sync version is still within the retention window. It is typically triggered by scheduled or event-driven sync poll from the consuming application or ETL process. Read-only T-SQL query using `CHANGETABLE(CHANGES ...)`. Requires `SELECT` on the base table and access to CT metadata. Use `FORCESEEK` hint (available from SQL Server 2016 SP2 CU16, 2017 CU24, 2019 CU11+) when only a small fraction of rows changed to avoid a table scan. Retrieve the set of primary keys that changed since the last sync version, along with operation metadata.
@@ -1107,6 +1165,8 @@ During each sync cycle, after validating that the stored sync version is still w
 > *This query reads CT changed keys since version 0 (baseline).*
 >
 
+*This query reads CT changed keys since version 0.*
+
 ```sql
 DECLARE @last_sync_version bigint = 0;
 
@@ -1115,6 +1175,10 @@ SELECT ct.SYS_CHANGE_VERSION,
        ct.id
 FROM CHANGETABLE(CHANGES dbo.demo_ct_instrument, @last_sync_version) AS ct
 ORDER BY ct.SYS_CHANGE_VERSION, ct.id;
+```
+
+```text
+Live result table shows the three CT change rows for the demo interval.
 ```
 
 | SYS_CHANGE_VERSION | SYS_CHANGE_OPERATION | id |
@@ -1136,6 +1200,8 @@ Immediately after reading `CHANGETABLE(CHANGES ...)`, as part of the sync cycle.
 > *This query joins CT changed keys to the base table to produce the full sync payload.*
 >
 
+*This query joins CT changed keys to the base table for the sync payload.*
+
 ```sql
 DECLARE @last_sync_version bigint = 0;
 
@@ -1148,6 +1214,10 @@ FROM CHANGETABLE(CHANGES dbo.demo_ct_instrument, @last_sync_version) AS ct
 LEFT JOIN dbo.demo_ct_instrument AS t
     ON t.id = ct.id
 ORDER BY ct.SYS_CHANGE_VERSION, ct.id;
+```
+
+```text
+Live result table shows the current row image for inserts and updates and `NULL` values for deletes.
 ```
 
 | SYS_CHANGE_VERSION | SYS_CHANGE_OPERATION | id | symbol | sector |
@@ -1193,12 +1263,18 @@ At the start of every sync cycle, before calling `CHANGETABLE(CHANGES ...)`. It 
 > *This query validates whether a stored CT watermark is still inside the retained change window before the consumer reads `CHANGETABLE` rows.*
 >
 
+*This query validates a stored CT watermark against the retained change window.*
+
 ```sql
 DECLARE @last_sync_version bigint = 0;
 
 SELECT @last_sync_version AS last_sync_version,
        CHANGE_TRACKING_MIN_VALID_VERSION(OBJECT_ID('dbo.demo_ct_instrument')) AS min_valid_version,
        CHANGE_TRACKING_CURRENT_VERSION() AS current_version;
+```
+
+```text
+Live result table shows the stored sync version still inside the retained CT window.
 ```
 
 | last_sync_version | min_valid_version | current_version |
@@ -1257,6 +1333,8 @@ dbt adds four metadata columns to the snapshot table: `dbt_scd_id` (internal uni
 
 **Configuration example:**
 
+*This YAML block is a declarative dbt snapshot example, not a live execution result.*
+
 ```yaml
 {% snapshot instrument_snapshot %}
 {{
@@ -1271,6 +1349,10 @@ SELECT symbol, sector, industry, country, updated_at
 FROM {{ source('silver', 'index_dim') }}
 WHERE is_current = 1
 {% endsnapshot %}
+```
+
+```text
+No runtime output; this YAML snippet configures a dbt snapshot.
 ```
 
 **Operational caveats:**
@@ -1395,25 +1477,34 @@ The current state of `stoxx` supports a clear production recommendation:
 
 Common errors and failure modes across change-capture mechanisms in SQL Server.
 
-| Error / Symptom | Feature | Cause | Resolution |
-|---|---|---|---|
-| Error 200 / 208 — invalid object name in `cdc` schema | CDC | CDC metadata objects were manually modified or dropped. | Disable CDC at database level (`sys.sp_cdc_disable_db`), then re-enable (`sys.sp_cdc_enable_db` + `sys.sp_cdc_enable_table`). |
-| Error 245 / 8114 / 8115 / 8169 — conversion error in CDC change table | CDC | `ALTER COLUMN` changed the data type on a CDC-enabled table without disabling CDC first. | Disable CDC for the table, rerun the DDL, re-enable CDC. |
-| Error 913 — CDC capture job fails on CLR types | CDC | Concurrent DML and DDL on tables with `geometry`, `geography`, or `hierarchyid` columns. | Quiesce DML → run capture → run DDL → run capture → resume DML. |
-| Error 1105 — primary filegroup full | CDC | CDC change tables placed in the default filegroup alongside source data. | Use `@filegroup_name` in `sys.sp_cdc_enable_table` to isolate CDC I/O. |
-| Error 21050 — `cdc` user missing required role | CDC | The `cdc` user was removed from `db_owner` or `sysadmin`. | Restore the `cdc` user's role membership. |
-| Error 22830 — `CREATE OBJECT` trigger interference | CDC | A trigger firing on `CREATE OBJECT` blocks CDC enablement because the `cdc` user lacks master write permission. | Disable the trigger before enabling CDC, re-enable after. |
-| Error 22842 / 22843 — partition switch blocked | CDC | `ALTER TABLE SWITCH` on a CDC-enabled partitioned table without `@allow_partition_switch = 1`. | Set `@allow_partition_switch = 1` at enablement, or disable CDC for the switch. Note: switched partitions are not tracked. |
-| Error 22845 — CDC not available | CDC | CDC is not supported on Express or Web editions. | Use Developer, Standard, or Enterprise edition. |
-| `CHANGETABLE` returns error on old sync version | CT | `last_sync_version < CHANGE_TRACKING_MIN_VALID_VERSION()` — consumer lagged past retention. | Reinitialize from a full load and store a new sync version. |
-| `Lock request time out period exceeded` in `dbo.MSChange_tracking_history` | CT | CT cleanup stalled due to lock conflicts. | Disable/re-enable CT on the affected table, or enable TF 8284 and call `sys.sp_flush_CT_internal_table_on_demand`. |
-| `hardened_cleanup_version` ≠ `cleanup_version` | CT | CT delete statements are slower than insert rate. | Investigate via DAC; consider reducing tracked table count or increasing cleanup frequency. |
-| Partition switch fails | CT | `ALTER TABLE SWITCH` blocked when CT is enabled on either table. | Disable CT on both tables, perform the switch, re-enable CT. |
-| `TRUNCATE TABLE` silently advances `min_valid_version` | CT | `TRUNCATE` is allowed on CT-enabled tables but rows are not tracked. | Avoid `TRUNCATE` on CT-enabled tables; use `DELETE` if changes must be tracked. |
-| Schema change requires `SYSTEM_VERSIONING = OFF` | Temporal | Most DDL on temporal tables requires turning off system versioning first. | Run `ALTER TABLE ... SET (SYSTEM_VERSIONING = OFF)`, apply DDL, then `SET (SYSTEM_VERSIONING = ON)`. |
-| `TRUNCATE TABLE` blocked | Temporal | `TRUNCATE` is not allowed while system versioning is on. | Turn off system versioning, truncate, then re-enable. |
-| History table growth unbounded | Temporal | No retention policy configured and history is never cleaned up. | Configure built-in retention, use `sys.sp_cleanup_temporal_history`, or implement partitioned sliding-window cleanup. |
-| Duplicate active rows in SCD2 table | Manual SCD2 | Missing filtered unique index on the active-row predicate. | Create `UNIQUE INDEX ... WHERE is_current = 1` to prevent the failure mode at the constraint level. |
+### CDC failures
+
+- `Error 200 / 208`: invalid object name in the `cdc` schema. Cause: CDC metadata objects were manually modified or dropped. Resolution: disable CDC at database level (`sys.sp_cdc_disable_db`), then re-enable it (`sys.sp_cdc_enable_db` + `sys.sp_cdc_enable_table`).
+- `Error 245 / 8114 / 8115 / 8169`: conversion error in the CDC change table. Cause: `ALTER COLUMN` changed the data type on a CDC-enabled table without disabling CDC first. Resolution: disable CDC for the table, rerun the DDL, then re-enable CDC.
+- `Error 913`: CDC capture job fails on CLR types. Cause: concurrent DML and DDL on tables with `geometry`, `geography`, or `hierarchyid` columns. Resolution: quiesce DML, run capture, run DDL, run capture, then resume DML.
+- `Error 1105`: primary filegroup full. Cause: CDC change tables were placed in the default filegroup alongside source data. Resolution: use `@filegroup_name` in `sys.sp_cdc_enable_table` to isolate CDC I/O.
+- `Error 21050`: `cdc` user missing required role. Cause: the `cdc` user was removed from `db_owner` or `sysadmin`. Resolution: restore the `cdc` user's role membership.
+- `Error 22830`: `CREATE OBJECT` trigger interference. Cause: a trigger firing on `CREATE OBJECT` blocks CDC enablement because the `cdc` user lacks master write permission. Resolution: disable the trigger before enabling CDC, then re-enable it afterward.
+- `Error 22842 / 22843`: partition switch blocked. Cause: `ALTER TABLE SWITCH` on a CDC-enabled partitioned table without `@allow_partition_switch = 1`. Resolution: set `@allow_partition_switch = 1` at enablement, or disable CDC for the switch; switched partitions are not tracked.
+- `Error 22845`: CDC not available. Cause: CDC is not supported on Express or Web editions. Resolution: use Developer, Standard, or Enterprise edition.
+
+### Change Tracking failures
+
+- `CHANGETABLE` returns an error on an old sync version. Cause: `last_sync_version < CHANGE_TRACKING_MIN_VALID_VERSION()` and the consumer lagged past retention. Resolution: reinitialize from a full load and store a new sync version.
+- `Lock request time out period exceeded` in `dbo.MSChange_tracking_history`. Cause: CT cleanup stalled due to lock conflicts. Resolution: disable and re-enable CT on the affected table, or enable TF 8284 and call `sys.sp_flush_CT_internal_table_on_demand`.
+- `hardened_cleanup_version` does not match `cleanup_version`. Cause: CT delete statements are slower than the insert rate. Resolution: investigate via DAC and consider reducing tracked table count or increasing cleanup frequency.
+- Partition switch fails. Cause: `ALTER TABLE SWITCH` is blocked when CT is enabled on either table. Resolution: disable CT on both tables, perform the switch, then re-enable CT.
+- `TRUNCATE TABLE` silently advances `min_valid_version`. Cause: `TRUNCATE` is allowed on CT-enabled tables but rows are not tracked. Resolution: avoid `TRUNCATE` on CT-enabled tables; use `DELETE` if changes must be tracked.
+
+### Temporal failures
+
+- Schema change requires `SYSTEM_VERSIONING = OFF`. Cause: most DDL on temporal tables requires turning off system versioning first. Resolution: run `ALTER TABLE ... SET (SYSTEM_VERSIONING = OFF)`, apply the DDL, then set `SYSTEM_VERSIONING = ON`.
+- `TRUNCATE TABLE` is blocked. Cause: `TRUNCATE` is not allowed while system versioning is on. Resolution: turn off system versioning, truncate, then re-enable it.
+- History table growth is unbounded. Cause: no retention policy is configured and history is never cleaned up. Resolution: configure built-in retention, use `sys.sp_cleanup_temporal_history`, or implement partitioned sliding-window cleanup.
+
+### Manual SCD2 failures
+
+- Duplicate active rows in an SCD2 table. Cause: the filtered unique index on the active-row predicate is missing. Resolution: create `UNIQUE INDEX ... WHERE is_current = 1` to prevent duplicate current rows at the constraint level.
 
 ---
 

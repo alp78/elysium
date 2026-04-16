@@ -18,7 +18,7 @@ status: complete
 
 # Compute and Storage Blocks
 
-> [!quote] Werner Vogels on invisible infrastructure
+> [!quote]+
 >
 > "The best infrastructure is the infrastructure you don't have to think about."
 >

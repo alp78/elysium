@@ -369,6 +369,10 @@ DROP TABLE #db_list;
 >
 > If procedure A is being called with `INSERT ... EXEC` and procedure A itself tries another `INSERT ... EXEC`, SQL Server raises error 8164: *"An INSERT EXEC statement cannot be nested."* This limitation is the main reason `sp_executesql` and table-valued parameters (TVPs) exist as alternatives for result-set passing between procedures.
 
+> [!success] Use TVPs, temp tables, or `sp_executesql`
+>
+> If one procedure needs to pass a rowset into another, materialize it in a temp table or table variable, pass structured input through a TVP, or keep the dynamic batch inside `sp_executesql` and capture its final result once. Those patterns avoid the nesting limit and make the hand-off explicit.
+
 ### `INSERT ... DEFAULT VALUES` | rely entirely on defaults
 
 `INSERT ... DEFAULT VALUES` inserts a new row where every column takes its default value. For columns without a default but declared `NULL`, the inserted value is `NULL`. For `IDENTITY` columns, the next identity value is produced. The form is mainly useful for append-only header tables where the default constraints define everything the row needs.
@@ -689,6 +693,10 @@ WHERE id = 2000000;
 >
 > Attempting to turn `IDENTITY_INSERT` on for a second table in the same session while it is still on for the first raises error 7705. Always explicitly turn it off before enabling it on another table.
 
+> [!success] Turn `IDENTITY_INSERT` off immediately
+>
+> Bracket the override as tightly as possible: `SET IDENTITY_INSERT ... ON`, perform the one load that requires explicit keys, then `SET IDENTITY_INSERT ... OFF` in the same script block or transaction. That keeps the session from accidentally breaking later loads against a second table.
+
 ### `CREATE SEQUENCE` + `NEXT VALUE FOR` | table-independent counters
 
 A `SEQUENCE` is a standalone database object that produces monotonic integers independent of any table. Unlike `IDENTITY`, a sequence can be read by multiple tables, can be sampled without inserting a row (`NEXT VALUE FOR`), supports bulk allocation via `sp_sequence_get_range`, and can wrap at the maximum value with `CYCLE`. SQL Server caches sequence values per session for performance, which means gaps are possible after a server restart.
@@ -792,6 +800,10 @@ WHERE symbol      = 'SAP.DE'
 > [!danger] `UPDATE` without `WHERE` updates every row
 >
 > Running `UPDATE silver.signals_daily SET upside_potential = 0.25` **without** a `WHERE` clause modifies every row in the table. There is no SQL Server safeguard against this. The only defenses are (1) opening every ad-hoc `UPDATE` in an explicit transaction so an accidental update can be rolled back, (2) writing the `SELECT` form of the predicate first and only converting it to `UPDATE` once the row count is confirmed, and (3) using tooling (SSMS → Tools → Options → Query Execution → SET ROWCOUNT or the IntelliSense `UPDATE` safeguard).
+
+> [!success] Preview, then update inside a transaction
+>
+> Write the `SELECT` version of the predicate first, verify the row count, then convert it to `UPDATE` inside an explicit transaction so an accidental full-table write can be rolled back before commit. That is the minimum safe workflow for ad-hoc production updates.
 
 ### `UPDATE ... FROM ... JOIN` | T-SQL extension for joined updates
 
@@ -1188,21 +1200,17 @@ DROP TABLE #scratch;
 >
 > `TRUNCATE` removes rows by deallocating pages without touching individual rows, so there is no row-level event for trigger binding to observe. Any audit trail or cascade implemented via `AFTER DELETE` or `INSTEAD OF DELETE` triggers will silently miss truncations. If full audit coverage is required, replace `TRUNCATE` with a logged `DELETE` + trigger, or add the `TRUNCATE_TABLE` event to a database-level DDL trigger.
 
-### `DELETE` vs `TRUNCATE TABLE` decision matrix
+> [!success] Use `DELETE` when trigger side effects matter
+>
+> If audit triggers, custom cascades, or row-level delete logic are part of the contract, keep a logged `DELETE` even for whole-table removal. `TRUNCATE` is only the safe choice when page-deallocation semantics are acceptable and no row-level side effect is required.
 
-| Requirement | `DELETE` | `TRUNCATE` |
-|---|---|---|
-| Fires row-level triggers | ✅ | ❌ |
-| Resets `IDENTITY` seed | ❌ | ✅ |
-| Logs one record per row | ✅ | ❌ (only page deallocations) |
-| Works on FK-referenced tables | ✅ | ❌ |
-| Works on indexed views | ✅ | ❌ |
-| Works on system-versioned temporal tables | ✅ | ❌ |
-| Supports `WHERE` to remove a subset | ✅ | ❌ |
-| Can fire database-level DDL trigger | ❌ | ✅ (via `TRUNCATE_TABLE` event) |
-| Rollback-able inside a transaction | ✅ | ✅ |
-| Supports `OUTPUT` clause | ✅ | ❌ |
-| Required permission | `DELETE` on the table | `ALTER` on the table |
+### `DELETE` vs `TRUNCATE TABLE` | choose by semantics
+
+Use `DELETE` when row-level behavior matters: `WHERE` filters, `OUTPUT`, row triggers, indexed views, system-versioned tables, and FK-referenced tables all require it. Use `TRUNCATE TABLE` when you need to empty the whole table and can accept identity reseed, `ALTER` permission, and the inability to target rows selectively.
+
+`DELETE` is the safer default when audit, referential integrity, or partial removal matters. `TRUNCATE TABLE` is the faster whole-table path only when no row-level trigger or `OUTPUT` dependency exists and resetting the identity seed is acceptable.
+
+Keep the logged `DELETE` when the choice is uncertain. It costs more logging, but it preserves the widest set of semantics.
 
 ---
 
@@ -1301,6 +1309,10 @@ ORDER BY audit_id DESC;
 >
 > The destination table of `OUTPUT INTO` cannot have enabled triggers, cannot participate on either side of a foreign key, and cannot have `CHECK` constraints or enabled rules. `dbo.audit_price_changes` was deliberately created without any of these so it can serve as an `OUTPUT INTO` target.
 
+> [!success] Design audit tables for `OUTPUT INTO`
+>
+> Build the sink as a narrow append-only table with defaults and an identity key, but without triggers, foreign keys, or `CHECK` constraints. Enforce richer relationships downstream, not on the immediate `OUTPUT INTO` landing table.
+
 ### `DELETE ... OUTPUT` | capture removed rows before they disappear
 
 `DELETE` with `OUTPUT DELETED.*` returns every row that was just removed. This is the canonical pattern for "destructive read" queue-pop operations, where a consumer claims a message by deleting it from the queue table and immediately processing the returned row. The client sees the deleted row as the result set of the `DELETE` statement and can forward it to a downstream system.
@@ -1379,13 +1391,15 @@ ORDER BY archive_id;
 
 *Two rows were deleted from the source and inserted into the archive in one statement. The `DELETE` and `INSERT` are atomic: either both succeed or both are rolled back. The archive table now holds the historical MC.PA data on the `FG_Archive` filegroup (lower-cost storage), while the `silver.signals_daily` table no longer contains any MC.PA rows. This is the canonical soft-delete / tiering pattern for ETL pipelines.*
 
-> [!warning] Composable DML target has severe restrictions
->
-> The target of the **outer** `INSERT` in a composable DML statement cannot be a view or remote table, cannot have triggers, cannot participate in foreign key relationships, and cannot participate in replication. The **inner** DML statement cannot be nested further (no composable DML inside composable DML), cannot contain a `WITH` clause, cannot target remote tables or partitioned views, and cannot be a cursor-based `UPDATE`/`DELETE`. These restrictions make composable DML strictly a tool for dedicated staging/archive tables.
+Composable DML still has a narrow operating envelope. The target of the **outer** `INSERT` cannot be a view or remote table, cannot have triggers, cannot participate in foreign key relationships, and cannot participate in replication. The **inner** DML statement cannot be nested further (no composable DML inside composable DML), cannot contain a `WITH` clause, cannot target remote tables or partitioned views, and cannot be a cursor-based `UPDATE`/`DELETE`. In practice this keeps composable DML in the dedicated staging/archive-table category.
 
 > [!danger] `OUTPUT` rows are returned even if the statement fails
 >
 > Per Microsoft: *"An UPDATE, INSERT, or DELETE statement that has an OUTPUT clause will return rows to the client even if the statement encounters errors and is rolled back."* A client that reads the `OUTPUT` result set and uses it for business logic can act on rows that were never actually persisted. Always check for errors (or use `XACT_ABORT ON` + `TRY/CATCH`) before trusting `OUTPUT` results, and never treat `OUTPUT` as the sole commit signal.
+
+> [!success] Treat `OUTPUT` rows as provisional until commit
+>
+> Consume `OUTPUT` inside the same transaction, check for errors, and only let downstream logic act after the statement or transaction commits successfully. `XACT_ABORT ON` plus `TRY/CATCH` is the safe envelope for any workflow that depends on `OUTPUT`.
 
 ### `MERGE` and `OUTPUT $action` | pointer
 
@@ -1394,6 +1408,10 @@ ORDER BY archive_id;
 > [!warning] `MERGE` has known concurrency issues
 >
 > Even with `HOLDLOCK` on the target, `MERGE` is susceptible to race conditions under concurrent inserts that can produce primary-key violations or silently skip intended actions. Microsoft KB articles document several well-known bugs in `MERGE` plan choice that were fixed over multiple cumulative updates. A common alternative is to run two separate statements inside one transaction: `UPDATE target SET ... FROM target JOIN staging ON key` to apply the changes to matching rows, then `INSERT INTO target SELECT ... FROM staging WHERE NOT EXISTS (SELECT 1 FROM target t WHERE t.key = staging.key)` to add the new rows. This pattern produces more predictable query plans, avoids the known `MERGE` concurrency bugs, and is easier to read and tune. See [[11-merge-and-upsert]] for the full trade-off analysis.
+
+> [!success] Prefer separate `UPDATE` and `INSERT` steps
+>
+> Run `UPDATE ... FROM` for the matching rows and `INSERT ... WHERE NOT EXISTS` for the missing rows inside one explicit transaction. The plan shape is easier to reason about, the concurrency behavior is more predictable, and the code is usually simpler to tune than `MERGE`.
 
 ---
 
@@ -1510,14 +1528,14 @@ In `FULL` recovery (the default on `stoxx_db`), even `BULK INSERT` with `TABLOCK
 
 ### Batching large DML | split a huge operation into manageable chunks
 
-A single `DELETE` or `UPDATE` that affects millions of rows holds locks for the entire duration, balloons the transaction log, and can escalate to a full table lock. The canonical remediation is to loop with a bounded `TOP (n)` DML statement, commit after each chunk, and stop when `@@ROWCOUNT` reports zero. The batched delete pattern earlier in this note is the template; the same structure applies to batched `UPDATE` and batched `INSERT ... SELECT`.
+A single `DELETE` or `UPDATE` that affects millions of rows holds locks for the entire duration, balloons the transaction log, and can escalate to a full table lock. Size the batch to the workload, not to the maximum row count the engine can tolerate.
 
-| Chunk size | Typical workload fit |
-|---:|---|
-| 100–1 000 | Highly contended OLTP target |
-| 1 000–10 000 | Standard OLTP cleanup, background jobs |
-| 10 000–100 000 | Warehouse staging table, low-contention targets |
-| > 100 000 | Usually unnecessary — diminishing returns and more log volume per batch |
+- `100` to `1 000` rows fits highly contended OLTP targets.
+- `1 000` to `10 000` rows fits standard cleanup jobs and background maintenance.
+- `10 000` to `100 000` rows fits warehouse staging tables and low-contention targets.
+- Above `100 000` rows is usually unnecessary and increases retry cost and log pressure.
+
+The canonical remediation is still the same batched pattern used earlier in this note: loop with a bounded `TOP (n)` DML statement, commit after each chunk, and stop when `@@ROWCOUNT` reports zero. Apply the same structure to batched `UPDATE` and batched `INSERT ... SELECT`.
 
 ### Row-by-row anti-pattern | "RBAR"
 
@@ -1563,31 +1581,39 @@ Cursor-based `FETCH ... DML` loops run the DML statement one row at a time, mult
 
 ## Decision Guide
 
-Use this table to choose the right DML tool for a given scenario.
+Use these grouped rules instead of a lookup table. The note already demonstrates each pattern in the sections above.
 
-| Scenario | Recommended statement |
-|---|---|
-| Insert one row with literal values | `INSERT ... VALUES (...)` |
-| Insert 2–1 000 literal rows | `INSERT ... VALUES (...), (...), ...` (table value constructor) |
-| Insert 1 000+ literal rows | `INSERT ... SELECT ... FROM (VALUES (...)) AS t(...)` |
-| Insert from another table/view in the same DB | `INSERT ... SELECT` |
-| Insert from another table in a different DB / instance | `INSERT ... SELECT` with three-part name, or `INSERT ... EXEC` with a linked server call |
-| Insert from a stored procedure result | `INSERT ... EXEC` |
-| Create a new table from a query (throwaway) | `SELECT ... INTO` |
-| Create a new table from a query (production) | `CREATE TABLE ...` + `INSERT ... SELECT` |
-| Load a CSV file | `BULK INSERT` (simple) or `OPENROWSET(BULK ...)` (with pre-filtering) |
-| Update one row by key | `UPDATE ... WHERE <key>` |
-| Update rows using a lookup | `UPDATE ... FROM ... JOIN` (with CTE for determinism) |
-| Update rows based on an aggregate | `UPDATE` with CTE or correlated subquery in `SET` |
-| Update rows deterministically bounded to `N` | `UPDATE` joined to a derived table with `SELECT TOP (N) ... ORDER BY` |
-| Delete one row by key | `DELETE ... WHERE <key>` |
-| Delete every row (no constraints in the way) | `TRUNCATE TABLE` |
-| Delete every row (triggers / FKs) | `DELETE` without `WHERE` |
-| Delete millions of rows without log blowup | `WHILE 1 = 1 BEGIN DELETE TOP (N) ... END` batched loop |
-| Capture old/new values of an update | `UPDATE ... OUTPUT DELETED.col, INSERTED.col` |
-| Build an audit trail without a trigger | `UPDATE ... OUTPUT ... INTO dbo.audit_*` persistent audit table |
-| Destructive read / queue pop | `DELETE TOP (1) WITH (READPAST) ... OUTPUT DELETED.*` |
-| Move rows between tables atomically | Composable DML: `INSERT ... SELECT ... FROM (DELETE ... OUTPUT DELETED.*) src` |
-| Upsert (insert-or-update) | `MERGE` — see [[11-merge-and-upsert]] |
+### Inserts
+
+- `INSERT ... VALUES (...)` for one literal row.
+- `INSERT ... VALUES (...), (...), ...` for 2 to 1 000 literal rows.
+- `INSERT ... SELECT ... FROM (VALUES (...)) AS t(...)` for larger constant sets.
+- `INSERT ... SELECT` for set-based copies from another table or view.
+- `INSERT ... EXEC` for stored-procedure result sets.
+- `SELECT ... INTO` for throwaway staging only.
+- `CREATE TABLE ...` + `INSERT ... SELECT` for production schema.
+- `BULK INSERT` or `OPENROWSET(BULK ...)` for file loads.
+
+### Updates
+
+- `UPDATE ... WHERE <key>` for one row by key.
+- `UPDATE ... FROM ... JOIN` for lookup-driven changes.
+- `UPDATE` with a CTE or correlated subquery in `SET` for aggregate-driven changes.
+- `UPDATE` joined to `SELECT TOP (N) ... ORDER BY` for deterministic bounded updates.
+
+### Deletes
+
+- `DELETE ... WHERE <key>` for one row by key.
+- `TRUNCATE TABLE` when every row should go and the table is eligible.
+- `DELETE` without `WHERE` when triggers, foreign keys, or other constraints block `TRUNCATE`.
+- Batched `DELETE TOP (N)` loops for very large removals.
+
+### Capture and move rows
+
+- `UPDATE ... OUTPUT DELETED.col, INSERTED.col` to capture before/after values.
+- `UPDATE ... OUTPUT ... INTO dbo.audit_*` to build an audit trail without a trigger.
+- `DELETE TOP (1) WITH (READPAST) ... OUTPUT DELETED.*` for queue-style destructive reads.
+- Composable DML to move rows between tables atomically.
+- `MERGE` only when the upsert tradeoffs are acceptable; see [[11-merge-and-upsert]].
 
 ---

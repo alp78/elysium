@@ -14,7 +14,7 @@ status: complete
 
 # Data Transfer
 
-> [!quote] Physical bandwidth reminder
+> [!quote]+
 >
 > "Never underestimate the bandwidth of a station wagon full of tapes hurtling down the highway."
 >

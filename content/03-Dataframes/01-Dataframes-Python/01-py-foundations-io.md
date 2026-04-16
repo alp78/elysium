@@ -11,7 +11,7 @@ status: complete
 
 # Foundations and I/O - Python
 
-> [!quote]
+> [!quote]+
 > "Bad programmers worry about the code. Good programmers worry about data structures and their relationships."
 >
 > — **Linus Torvalds**, Git mailing list post (2006)
@@ -4652,28 +4652,63 @@ guess wrong on dates, nulls, or mixed-type columns.
 ---
 
 
-## Warnings
+## Common Traps and Safe Patterns
 
-> [!warning] Pandas silently promotes integer columns to float64 when nulls are present
-> Inserting a single `NaN` into an `int64` column silently converts the entire column to `float64`. This changes the semantics of the data (e.g., IDs become floats) and breaks downstream equality checks. Use `pd.Int64Dtype()` (nullable integer) to preserve the integer type.
+> [!warning] Nulls upcast integer columns
+>
+> Inserting a single `NaN` into a Pandas `int64` column silently converts the entire column to `float64`. This changes the semantics of the data: identifiers become floats, equality checks become fragile, and downstream code can start comparing `1.0` to `1`.
+>
+> [!success] Use nullable integer dtypes
+>
+> Create nullable integer columns with `pd.Int64Dtype()` and `pd.NA`, or load them that way at read time. In Polars, Arrow nulls preserve the integer dtype automatically, so the safe pattern is simply to keep the column typed as integer.
 
-> [!warning] CSV readers infer types — and frequently guess wrong
-> Both `pd.read_csv()` and `pl.read_csv()` infer column types from the first rows. Dates may become strings, nullable integers may become floats, and mixed-type columns may become `object`. Always pass explicit `dtype` / `dtypes` / `schema_overrides` for production data.
+> [!warning] CSV inference is unreliable
+>
+> Both `pd.read_csv()` and `pl.read_csv()` infer column types from the observed data. Dates can stay as strings, nullable integers can become floats, and mixed columns can degrade to `object` or a wider inferred type that was never part of the intended schema.
+>
+> [!success] Declare read schemas explicitly
+>
+> Pass `dtype=` or `dtype_backend=` plus explicit date parsing in Pandas, and `schema_overrides=` in Polars. Production reads should enter the pipeline with a declared schema, not a guessed one.
 
-> [!warning] Pandas `object` dtype disables vectorization
-> Any column with `object` dtype falls back to Python-level iteration instead of NumPy/C-level vectorized operations. This can make operations 100–1000x slower. Convert to a specific type (`StringDtype`, `int64`, `category`) as early as possible.
+> [!warning] Object dtype kills vectorization
+>
+> A Pandas `object` column falls back to Python-object semantics instead of native vectorized kernels. That makes operations slower, weakens type guarantees, and often hides mixed values until a later transformation fails.
+>
+> [!success] Normalize dtypes immediately
+>
+> Convert text columns to `string` or `category`, numeric columns to concrete numeric dtypes, and dates to datetime types as soon as the data is loaded. Early normalization keeps the rest of the pipeline on predictable, vectorized paths.
 
-> [!warning] Pandas `.values` returns a view — mutations propagate to the original Series
-> Modifying the NumPy array returned by `.values` silently mutates the underlying Series. Use `.to_numpy()` (explicit copy) or `.to_list()` instead.
+> [!warning] `.values` may share memory
+>
+> Pandas `.values` can expose the underlying array storage instead of an isolated copy. Mutating that array can therefore mutate the originating Series or DataFrame unexpectedly, which is exactly the kind of side effect that spreads silently through notebook workflows.
+>
+> [!success] Copy arrays before mutation
+>
+> If you need an independent NumPy buffer, use `.to_numpy(copy=True)` or call `.copy()` before mutating. Treat `.values` as a low-level escape hatch for inspection, not as the default handoff for mutable downstream work.
 
-> [!warning] Pandas allows duplicate column names
-> Creating a DataFrame with duplicate column names is silently accepted. Selecting by name then returns multiple columns instead of one — a common source of hard-to-debug errors in production. Polars rejects duplicate column names at creation time.
+> [!warning] Duplicate column names are legal
+>
+> Pandas accepts duplicate column names without complaint. Selecting by name can then return multiple columns instead of one, and later merge, assign, or rename steps become ambiguous in ways that are difficult to debug.
+>
+> [!success] Fail fast on duplicate columns
+>
+> Check `df.columns.is_unique` after every load and rename boundary, and either deduplicate immediately or raise an error. Polars already enforces this at creation time; Pandas code should add the same discipline explicitly.
 
-> [!warning] Integer overflow wraps silently in Pandas
-> Adding 1 to `int64` max value wraps to the most negative integer — no error, no warning. This is inherited from NumPy's C-level integer arithmetic. Validate value ranges for columns that approach type boundaries.
+> [!warning] `int64` overflow wraps silently
+>
+> NumPy-backed integer arithmetic in Pandas wraps on overflow instead of raising. Once a value crosses `np.iinfo(np.int64).max`, the result can jump to the most negative `int64` value with no warning at all.
+>
+> [!success] Guard arithmetic near type limits
+>
+> Validate numeric ranges before large accumulations, and promote overflow-prone counters to a wider or non-wrapping representation before the calculation. Do not rely on post hoc inspection to catch wrapped values after the fact.
 
-> [!warning] Schema drift breaks pipelines silently
-> When upstream data sources rename, reorder, or remove columns without notice, downstream DataFrame code that references those columns by name will fail — or worse, silently produce wrong results if a renamed column happens to match another field. Always validate schemas after loading external data.
+> [!warning] Schema drift breaks assumptions
+>
+> Upstream sources can rename, reorder, add, or remove columns without notice. Downstream DataFrame code may then fail loudly, or worse, continue running against the wrong fields because a similarly named replacement happened to exist.
+>
+> [!success] Assert schemas at every boundary
+>
+> After every file read, API ingest, or database query, check both column names and dtypes against the expected contract before continuing. Schema validation belongs at the input boundary, not after a broken transform has already propagated bad state.
 
 ## Recommendations
 

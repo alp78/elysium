@@ -267,7 +267,7 @@ A Climate Transition Benchmark is a benchmark category defined under the amended
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="271 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 271</span>
 
-> [!quote]
+> [!quote]+
 > "Comply or explain gives companies flexibility while giving investors transparency. It is the governance mechanism that respects national diversity without sacrificing accountability."
 >
 > — **Sir Adrian Cadbury**, *Report of the Committee on the Financial Aspects of Corporate Governance* (1992)
@@ -662,7 +662,7 @@ EU Taxonomy Alignment refers to the degree to which a company's economic activit
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="12 mentions across STOXX & ISS pages (low)">▰▰ 12</span>
 
-> [!quote]
+> [!quote]+
 > "Financial materiality is the lens through which sustainability meets the balance sheet. If an ESG issue can move cash flows or cost of capital, it is financially material."
 >
 > — **ISSB (International Sustainability Standards Board)**, IFRS S1 Basis for Conclusions
@@ -973,7 +973,7 @@ The SFDR Regulatory Technical Standards (Delegated Regulation (EU) 2022/1288) de
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="173 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 173</span>
 
-> [!quote]
+> [!quote]+
 > "SFDR is the EU's answer to greenwashing in financial products. It forces fund managers to back up their sustainability claims with standardised, comparable disclosures."
 >
 > — **European Commission**, Sustainable Finance FAQ on SFDR implementation
@@ -1148,7 +1148,7 @@ Under the EU Taxonomy Regulation (EU 2020/852), an economic activity makes a sub
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3 mentions across STOXX & ISS pages (ultra-low)">▰ 3</span>
 
-> [!quote]
+> [!quote]+
 > "To finance sustainable growth, we need to redirect private capital. The Sustainable Finance Action Plan is our roadmap for making Europe's financial system a force for sustainability."
 >
 > — **Valdis Dombrovskis**, European Commission Vice-President, at the launch of the Action Plan (2018)

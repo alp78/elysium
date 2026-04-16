@@ -227,6 +227,8 @@ SQL Server exposes roughly thirty built-in data types grouped into seven familie
 
 #### Integer type ranges at a glance
 
+This example shows the maximum positive value representable by each integer family.
+
 *Return the maximum positive value representable by each integer type.*
 
 ```sql
@@ -404,6 +406,8 @@ SQL Server has two character-type families: non-Unicode (`char`/`varchar`) and U
 
 #### char vs varchar: storage and trailing spaces
 
+This example compares fixed-width padding against variable-width storage for the same short string.
+
 *Compare a `char(10)` and a `varchar(10)` holding the same 5-character string.*
 
 ```sql
@@ -439,6 +443,8 @@ The Unicode family stores characters outside the 256-value limit of a single cod
 - **`nvarchar(max)`** — variable length up to ~2 GB.
 
 #### varchar vs nvarchar: storage difference
+
+This example shows the storage cost of Unicode text when the payload is ASCII-only.
 
 *Compare a `varchar(10)` and an `nvarchar(10)` storing the same 5-character ASCII string.*
 
@@ -503,6 +509,8 @@ For all new schema, prefer `datetime2(n)` over `datetime`. It has wider range, c
 
 #### datetime vs datetime2 precision
 
+This example compares legacy rounding with the modern `datetime2` precision model.
+
 *Compare the same timestamp cast to four different date/time types.*
 
 ```sql
@@ -546,6 +554,8 @@ SELECT
 
 #### date, time, and datetimeoffset
 
+This example isolates date-only, time-only, and offset-aware behavior in separate casts.
+
 *Inspect the date-only, time-only, and offset-aware date/time types.*
 
 ```sql
@@ -559,11 +569,13 @@ SELECT
 
 | date_only | time_only | with_offset_str |
 |---|---|---|
-| 2025-06-15 | 14:30:45.123456 | 2025-06-15 14:30:45.1234567 +02:00 |
+| 2025-06-15 | 14:30:45.1234567 | 2025-06-15 14:30:45.1234567 +02:00 |
 
 `date` discards time-of-day entirely (3 bytes). `time(7)` discards the date entirely (5 bytes, up to 100 ns precision). `datetimeoffset(7)` adds a `±HH:MM` UTC offset to `datetime2(7)` (10 bytes total). Use `datetimeoffset` for global applications where the caller's time zone matters; use `datetime2` for local-only scheduling and logging.
 
 #### Storage sizes at a glance
+
+This example measures the on-disk byte count for the default date and time types.
 
 *Compute `DATALENGTH` for every date/time type at default precision.*
 
@@ -605,6 +617,8 @@ Legacy types that should not be used in new schema:
 
 #### uniqueidentifier (GUID)
 
+This example shows the 16-byte storage footprint of a freshly generated GUID.
+
 *Generate a fresh GUID and measure its storage footprint.*
 
 ```sql
@@ -620,6 +634,8 @@ SELECT
 `uniqueidentifier` is stored in 16 bytes. The text form (36 characters with hyphens) is only a display representation; the on-disk value is binary. GUIDs are useful for distributed ID generation but are a poor choice for clustered index keys because their random distribution causes page-split churn. When a GUID is needed as a clustered key, use `NEWSEQUENTIALID()` instead of `NEWID()` to preserve insertion locality.
 
 #### Inspecting column types of an existing table
+
+This example uses catalog metadata to verify each column's declared type and nullability.
 
 *Use `INFORMATION_SCHEMA.COLUMNS` to enumerate the type of every column in `dbo.stock_prices`.*
 
@@ -651,7 +667,7 @@ ORDER BY ORDINAL_POSITION;
 
 ## CAST, CONVERT, TRY_CAST, and TRY_CONVERT
 
-> [!abstract] Explicit conversion functions
+> [!abstract]- Summary
 >
 > SQL Server exposes six explicit conversion functions. The first four are standard:
 >
@@ -677,6 +693,8 @@ ORDER BY ORDINAL_POSITION;
 `CAST(expression AS target_type)` is the ANSI-standard form. It takes an expression and a target type and returns the expression converted to that type. If the conversion is not possible, SQL Server raises an error and aborts the statement.
 
 #### CAST columns to different target types
+
+This example shows how one source row can project into multiple target types.
 
 *Project four columns of `dbo.stock_prices`, each cast to a different target type.*
 
@@ -750,6 +768,8 @@ Style `121` (ODBC canonical with milliseconds) is the recommended choice for log
 
 #### money style codes
 
+This example compares the default, grouped, and fully precise `money` renderings.
+
 *Format a money value using three style codes.*
 
 ```sql
@@ -771,6 +791,8 @@ Style 0 is the default (no commas, 2 decimals). Style 1 adds thousand separators
 
 #### CAST failure raises an error
 
+This example shows the strict failure path when a string cannot be converted to `int`.
+
 *Cast a non-numeric string to `int` using the strict form.*
 
 ```sql
@@ -789,6 +811,8 @@ The statement aborts at runtime. Error 245 is the generic conversion-failed erro
 > If the input is user-provided, file-parsed, or comes from a staging table with data-quality issues, wrap the cast in `TRY_CAST`. The statement will not abort; invalid values become `NULL` and can be filtered, logged, or fixed downstream.
 
 #### TRY_CAST returns NULL on failure
+
+This example shows which inputs succeed and which ones collapse to `NULL` under tolerant conversion.
 
 *Test `TRY_CAST` against six inputs with mixed validity.*
 
@@ -841,6 +865,8 @@ The first three columns all parse successfully — same target date, three input
 
 #### TRY_PARSE with a culture
 
+This example shows culture-aware parsing for dates and numbers that use different separators.
+
 *Parse a French-language date, an Italian date, and a US/German-formatted number.*
 
 ```sql
@@ -858,6 +884,8 @@ SELECT
 All four inputs are parsed according to their declared culture. The US-format and German-format numbers swap the role of the comma and the period (`1,234.56` in the US is `1.234,56` in Germany — same value, different thousand/decimal separators). `TRY_PARSE` handles both correctly because the culture tells the CLR parser how to interpret the delimiters.
 
 #### FORMAT with a .NET format string
+
+This example shows how `FORMAT` renders the same values differently under multiple cultures.
 
 *Use `FORMAT` to render a date and a number in multiple cultures.*
 
@@ -886,6 +914,8 @@ String concatenation has two very different forms in T-SQL, and the difference m
 
 #### `+`, CONCAT, and CONCAT_WS with a NULL argument
 
+This example contrasts NULL propagation in `+` with the NULL-skipping behavior of `CONCAT` and `CONCAT_WS`.
+
 *Compare the three concatenation forms when one argument is `NULL`.*
 
 ```sql
@@ -907,6 +937,8 @@ The `+` operator form is `NULL` because one operand is `NULL`. `CONCAT` skips th
 
 #### CONCAT auto-coerces non-string arguments
 
+This example shows that `CONCAT` can accept numeric inputs without manual string casting.
+
 *Use `+` with an explicit cast vs `CONCAT` with automatic coercion.*
 
 ```sql
@@ -919,11 +951,11 @@ SELECT
 |---|---|
 | AAPL 150 | AAPL 150 |
 
-`CONCAT` implicitly converts every argument to `nvarchar`, which removes the need for explicit `CAST` calls around non-string arguments. `+` requires that both operands already be strings; mixing a string and a number raises a conversion error because the `int` side has higher type precedence and the engine tries to convert the string to `int`. This trap is covered in the next section.
+`CONCAT` coerces non-string arguments to character strings and returns a string result whose Unicode-ness follows the highest-precedence input. `+` requires that both operands already be strings; mixing a string and a number raises a conversion error because the `int` side has higher type precedence and the engine tries to convert the string to `int`. This trap is covered in the next section.
 
 ## Type Precedence and Implicit Conversions
 
-> [!abstract] How SQL Server chooses the common type
+> [!abstract]- Summary
 >
 > When an operator combines expressions of different data types, SQL Server applies the **data type precedence** rules: the operand with lower precedence is implicitly converted to the higher-precedence type before the operator executes. If the conversion is not possible, the statement fails at runtime.
 >
@@ -1062,7 +1094,7 @@ The result rows are identical, but the two queries are not equivalent at the pla
 
 ## NULL, Three-Valued Logic, and Safe Null Handling
 
-> [!abstract] The three-valued logic model
+> [!abstract]- Summary
 >
 > SQL Server uses **three-valued logic** for all comparisons and Boolean operations. Every logical expression evaluates to one of three values:
 >
@@ -1088,6 +1120,8 @@ The only operators that do not return `UNKNOWN` on `NULL` operands are `IS NULL`
 
 #### Comparing NULL to NULL and to a literal
 
+This example shows how `NULL` behaves under equality and `IS NULL` checks.
+
 *Run four CASE expressions that test how comparison operators behave against `NULL`.*
 
 ```sql
@@ -1105,6 +1139,8 @@ SELECT
 Three of the four comparisons return `UNKNOWN` and the `CASE` falls through to the `ELSE` branch. Only `IS NULL` produces a real `TRUE` — because it is designed to test for the `NULL` state rather than compare values.
 
 #### `WHERE v = NULL` silently returns zero rows
+
+This example shows the classic zero-row bug caused by comparing against `NULL` with `=`.
 
 > [!danger] `WHERE col = NULL` is a classic silent bug
 >
@@ -1291,7 +1327,7 @@ Six rows total. `COUNT(DISTINCT v)` returns 3 — the distinct non-null values `
 
 ## ISNULL, COALESCE, and NULLIF
 
-> [!abstract] Three fallback functions, three different use cases
+> [!abstract]- Summary
 >
 > T-SQL has three functions for replacing or introducing `NULL` values:
 >
@@ -1313,6 +1349,8 @@ Six rows total. `COUNT(DISTINCT v)` returns 3 — the distinct non-null values `
 
 #### ISNULL basic fallback
 
+This example shows the simplest null-replacement cases for `ISNULL`.
+
 *Three calls showing the basic `ISNULL` behavior.*
 
 ```sql
@@ -1329,6 +1367,8 @@ SELECT
 When `check` is `NULL`, `replacement` is returned. When `check` has a value, `replacement` is ignored. The function is short-circuited: `replacement` is evaluated only when needed — a difference from `COALESCE` documented below.
 
 #### ISNULL truncation trap: return type follows the first argument
+
+This example shows how the first argument's length controls the replacement result.
 
 > [!danger] ISNULL truncates the replacement to the length of the first argument
 >
@@ -1358,6 +1398,8 @@ The `@col` variable has declared type `varchar(2)`. `ISNULL` preserves that type
 `COALESCE(a, b, c, ...)` returns the first non-null expression from its argument list. The return type is the highest-precedence type across all arguments, following the same rules as `CASE`. The optimizer rewrites `COALESCE` as a `CASE WHEN ... THEN ... END` expression internally.
 
 #### Cascading fallbacks with COALESCE
+
+This example shows how `COALESCE` walks a priority-ordered list of fallback values.
 
 *Resolve a code column using three fallback columns and a final literal.*
 
@@ -1392,6 +1434,8 @@ Row-by-row walk-through:
 This is the canonical use case for `COALESCE`: express a priority-ordered list of fallbacks in a single readable expression rather than nesting multiple `ISNULL` calls or writing a long `CASE`.
 
 #### COALESCE is a syntactic CASE
+
+This example confirms that `COALESCE` and the equivalent `CASE` expression produce the same output.
 
 *Verify that `COALESCE(a, b, c)` produces the same result as the equivalent `CASE` expression.*
 
@@ -1484,6 +1528,8 @@ For ordinary query writing this rarely matters. For schema design and ETL pipeli
 
 #### NULLIF basic cases
 
+This example shows the equal, unequal, and empty-string cases for `NULLIF`.
+
 *Test four inputs against the `NULLIF` behavior.*
 
 ```sql
@@ -1560,6 +1606,8 @@ The two `-1` rows become `NULL` in the `cleaned` column. Aggregates like `AVG(cl
 
 #### NULLIF is a syntactic CASE
 
+This example confirms that `NULLIF` matches its equivalent `CASE` form.
+
 *Verify that `NULLIF(a, b)` produces the same result as the equivalent `CASE` expression.*
 
 ```sql
@@ -1580,7 +1628,7 @@ The four input pairs test all relevant combinations: equal non-null, unequal non
 
 ## CASE, IIF, and CHOOSE
 
-> [!abstract] Three conditional expression functions
+> [!abstract]- Summary
 >
 > T-SQL exposes three conditional expression functions, listed in order of flexibility:
 >
@@ -1610,6 +1658,8 @@ The return type follows the same data-type precedence rules as `CASE`: the retur
 
 #### IIF basic usage
 
+This example shows the smallest `IIF` cases and the result typing behavior.
+
 *Three `IIF` calls covering a basic boolean, a `NULL` check, and an integer branch.*
 
 ```sql
@@ -1626,6 +1676,8 @@ SELECT
 The three calls show the core behavior: `IIF(TRUE, a, b)` returns `a`, `IIF(FALSE, a, b)` returns `b`. Note that `NULL IS NULL` is a real Boolean expression (it returns `TRUE`), so the second call works correctly.
 
 #### IIF on a real table
+
+This example applies `IIF` to real price data to show a simple two-way classification.
 
 *Classify each trading day as UP or DOWN based on close vs open price.*
 
@@ -1663,6 +1715,8 @@ The return type follows the same data-type precedence rules as `CASE`: the retur
 
 #### CHOOSE basic usage
 
+This example shows the one-based indexing and out-of-range behavior of `CHOOSE`.
+
 *Pick by index, and show the out-of-range behavior.*
 
 ```sql
@@ -1680,6 +1734,8 @@ SELECT
 Valid indexes return the corresponding value. Indexes 0 and 5 (both outside the `[1..3]` range) return `NULL` rather than raising an error.
 
 #### CHOOSE for day-of-week labels
+
+This example uses `CHOOSE` to map weekday numbers to labels.
 
 *Use `CHOOSE` with `DATEPART(weekday, ...)` to render human-readable day names.*
 
@@ -1751,7 +1807,7 @@ The intuition is: "the first `WHEN` matches (0 is ≤ 0), so the second `WHEN` s
 
 ## Collation and Comparison Semantics
 
-> [!abstract] Collation governs all string comparison and sorting
+> [!abstract]- Summary
 >
 > A **collation** is a set of rules that define how SQL Server compares, orders, and stores character data. It controls:
 >
@@ -1772,6 +1828,8 @@ The intuition is: "the first `WHEN` matches (0 is ≤ 0), so the second `WHEN` s
 SQL Server collation lives at four levels. When two values are compared, SQL Server picks a "winning" collation based on a precedence rule described in the Microsoft [Collation precedence](https://learn.microsoft.com/en-us/sql/t-sql/statements/collation-precedence-transact-sql) reference. If the two sides have incompatible explicit collations, the comparison fails with error 468.
 
 #### Server-level and database-level default collation
+
+This example shows the current server and database defaults that feed collation precedence.
 
 *Query the server and current database collation.*
 
@@ -1794,6 +1852,8 @@ The local `Elysium` instance uses `SQL_Latin1_General_CP1_CI_AS`:
 - `AS` — accent-sensitive.
 
 #### Column-level collation
+
+This example shows the stored collation metadata for the character columns in `dbo.stock_prices`.
 
 Each `char`/`varchar`/`nchar`/`nvarchar` column has its own collation. If not specified at column creation time, the column inherits the database default.
 
@@ -1821,6 +1881,8 @@ The most common reason to override collation at the expression level is to switc
 
 #### Case-insensitive default
 
+This example shows the default case-insensitive comparison behavior.
+
 *Compare `'apple'` against a set of case variants using the column's default collation.*
 
 ```sql
@@ -1838,6 +1900,8 @@ WHERE v = 'apple';
 All three `'apple'` variants match because the database default collation is `CI` (case-insensitive). Only the literal `'banana'` is excluded.
 
 #### Explicit case-sensitive comparison
+
+This example shows how an expression-level `COLLATE` override changes the match set.
 
 *Override the comparison with `COLLATE Latin1_General_CS_AS` to force case-sensitive matching.*
 
@@ -1859,6 +1923,8 @@ Accent sensitivity controls whether diacritic marks affect comparison: `'café'`
 
 #### Accent-insensitive comparison
 
+This example shows how accent-insensitive comparison widens the match set.
+
 *Match `'cafe'` against three variants using `CI_AI` (case-insensitive + accent-insensitive).*
 
 ```sql
@@ -1876,6 +1942,8 @@ WHERE v = 'cafe' COLLATE Latin1_General_CI_AI;
 All three rows match because `CI_AI` ignores both case and accents. The `é` and `É` are treated as equal to `e` for comparison purposes.
 
 #### Accent-sensitive comparison
+
+This example shows the narrower match set when accent sensitivity is restored.
 
 *The same data with `CI_AS` (case-insensitive but accent-**sensitive**).*
 
@@ -1917,6 +1985,8 @@ The expression-level `COLLATE` overrides whatever sort rules the column's own co
 When two expressions with different explicit collations are compared, SQL Server raises error 468 ("Cannot resolve collation conflict"). The collation precedence rule only auto-resolves when one side has an **explicit** collation and the other has an **implicit** collation — two explicit collations on either side produce a conflict that must be resolved by the caller.
 
 #### Triggering a collation conflict
+
+This example shows the parse-time error that results from incompatible explicit collations.
 
 > [!failure] Two explicit collations on either side cannot be compared directly
 >

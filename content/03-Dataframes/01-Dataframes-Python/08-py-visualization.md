@@ -11,7 +11,7 @@ status: complete
 
 # Visualization - Python
 
-> [!quote]
+> [!quote]+
 > "The greatest value of a picture is when it forces us to notice what we never expected to see."
 >
 > — **John Tukey**, *Exploratory Data Analysis* (1977)
@@ -1256,6 +1256,12 @@ Polars has no built-in `.plot()` method. Matplotlib and Seaborn both operate on 
 >
 > `.to_pandas()` copies the entire DataFrame into memory as a new Pandas object. For a 5M-row frame, this can double peak memory usage. If you only need to plot a subset, filter and slice in Polars **before** converting: `df.filter(...).head(10_000).to_pandas()`. For `LazyFrame`, call `.collect().to_pandas()` — `.collect()` triggers full evaluation first.
 
+> [!success] Reduce the frame before converting it for plotting
+>
+> Keep filtering, column selection, and downsampling in Polars, then convert only
+> the rows and columns the chart actually needs. That keeps plotting ergonomic
+> without paying a full-frame Pandas copy cost.
+
 ### Conversion Example
 
 #### Polars | Convert to Pandas for plotting
@@ -1731,8 +1737,11 @@ def show_dark(obj, **kwargs):
 show = show_dark
 ```
 
-> [!info]
-> Quartz does not execute the notebook's inline Bokeh cell scripts from markdown, so each output below is exported as a standalone HTML file under `/static/bokeh/df_py_08_XX.html` and embedded with an `iframe`.
+> [!info] Bokeh output is embedded as standalone HTML
+>
+> Quartz does not execute the notebook's inline Bokeh cell scripts from markdown,
+> so each output below is exported as a standalone HTML file under
+> `/static/bokeh/df_py_08_XX.html` and embedded with an `iframe`.
 
 ### Bokeh Data Preparation
 
@@ -4142,16 +4151,48 @@ Matplotlib and Seaborn remain the best fit for static explanatory figures. Bokeh
 ---
 
 
-## Warnings
+## Common Traps and Safe Patterns
 
-> [!warning] Plotly charts embed ~3 MB of JavaScript per plot in HTML output
-> Saving multiple Plotly charts in one HTML file can produce files exceeding 50 MB. Use `include_plotlyjs="cdn"` to reference the library from a CDN instead.
+### Large Interactive HTML Exports
 
-> [!warning] Bokeh and Plotly charts are not renderable in all Quartz/Obsidian contexts
-> Interactive HTML widgets may not display correctly in Obsidian reading mode or Quartz static site builds. Export static PNG/SVG fallbacks for vault publishing.
+> [!warning] Plotly HTML exports can become bloated very quickly
+>
+> Embedding the full Plotly JavaScript bundle in every exported figure adds
+> roughly megabytes per chart. A notebook or dashboard exported as one HTML file
+> can become awkward to store, sync, and review.
 
-> [!warning] Color scales matter for interpretation
-> Using a sequential color scale (e.g., viridis) for data with positive and negative values hides the sign boundary. Use a diverging scale (e.g., RdBu) centered at zero.
+> [!success] Externalize Plotly JS or export a static fallback
+>
+> Use `include_plotlyjs="cdn"` when online delivery is acceptable, or export
+> PNG/SVG for vault publishing and version control. Keep the interactive HTML for
+> cases where zoom, hover, or drill-down is actually needed.
+
+### Vault Publishing Compatibility
+
+> [!warning] Interactive widgets do not render reliably in every vault context
+>
+> Bokeh and Plotly outputs may fail in Obsidian reading mode, Quartz builds, or
+> other markdown-first publishing paths. Relying on the widget alone can leave a
+> published note with missing visuals.
+
+> [!success] Always keep a static publishing path for important charts
+>
+> Export PNG or SVG alongside the interactive artifact. Use the static image as
+> the vault-safe default, and treat the HTML widget as an optional richer view.
+
+### Signed Numeric Data Needs a Signed Color Scale
+
+> [!warning] Sequential color maps hide the zero boundary
+>
+> A one-direction scale like `viridis` implies "more vs less" but not "positive
+> vs negative." On residuals, returns, and correlations, that can conceal the
+> sign change that matters most.
+
+> [!success] Center diverging scales on the semantic midpoint
+>
+> Use a diverging palette such as `RdBu` and anchor it at zero or another
+> meaningful midpoint. That makes positive and negative regions visually distinct
+> instead of blending them into one monotonic ramp.
 
 ## Recommendations
 

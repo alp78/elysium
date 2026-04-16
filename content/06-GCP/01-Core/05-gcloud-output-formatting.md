@@ -67,9 +67,9 @@ status: complete
 >
 > The local supplementary help page that documents projections and transform functions.
 
-## PowerShell / Linux
+## Bash / Linux
 
-The commands in this note are identical on PowerShell, Bash, and other shells because `gcloud` itself parses the `--format` and `--filter` expressions. The only platform-specific differences appear later when shell variables or quoting rules are involved in bigger scripts.
+The commands in this note are written for Bash and other Unix-like shells because `gcloud` itself parses the `--format` and `--filter` expressions. Shell-specific quoting and variable handling only matter when you wrap these examples in larger scripts.
 
 ### gcloud | learn the format and filter language from the built-in topic system
 
@@ -77,7 +77,7 @@ The built-in topic system is the fastest authoritative reference when you forget
 
 #### Read the format reference
 
-Before building a non-trivial `--format` expression or when you need the exact syntax of projections and attributes. It is typically triggered by you remember that `table`, `json`, `csv`, or `value` exists, but not the exact expression grammar. Read-only local help command. No API call is made against the project. Show the formal `--format=NAME[ATTRIBUTES](PROJECTION)` syntax and point to related topic pages.
+Use the local format topic when you need the exact syntax for projections, attributes, or transform functions. The command reads local help only and does not contact the project API. It shows the formal `--format=NAME[ATTRIBUTES](PROJECTION)` syntax and points to the related topic pages.
 
 *Print the opening section of the local output-format reference.*
 
@@ -122,7 +122,7 @@ The important line is the syntax model itself: `NAME[ATTRIBUTES](PROJECTION)`. T
 
 #### Read the projection reference
 
-When you know the resource exists but do not know the exact field path or transform syntax you need. It is typically triggered by A command returns nested arrays, resource URIs, or repeated fields that the default table hides. Read-only local help command. No project resource is changed or queried. Show how projections select keys and how transform functions attach to those keys.
+Use the projection topic when you know the resource exists but need the exact field path or transform syntax. The command reads local help only and does not query or change a project resource. It shows how projections select keys and how transform functions attach to those keys.
 
 *Print the opening section of the projection reference.*
 
@@ -169,7 +169,7 @@ This topic is the authoritative explanation of the two most important concepts i
 
 #### Read the filter reference
 
-Before writing a compound filter expression with Boolean logic, pattern matching, or range comparisons. It is typically triggered by you need to narrow a list command without downloading and parsing the full result set manually. Read-only local help command. It documents the filter language; it does not query a project API. Show the filter expression model and the important warning that filtering behavior depends on the server API.
+Use the filter topic when you need compound expressions with Boolean logic, pattern matching, or range comparisons. The command reads local help only and does not query a project API. It documents the filter language and the note about API-dependent filtering behavior.
 
 *Print the opening section of the filter reference.*
 
@@ -241,7 +241,7 @@ The default table is fine for interactive reading, but it is a weak contract for
 
 #### Use the default table when a human is reading the result
 
-During ad-hoc inspection at the terminal when readability matters more than machine parsing. It is typically triggered by you want a quick inventory check and do not need to pipe the output into another tool. Read-only list command against IAM service accounts in project `dagflow-poc`. Show the built-in human-friendly table that `gcloud` prints when no explicit format is supplied.
+Use the default table for ad hoc terminal inspection when readability matters more than machine parsing. The example is a read-only list command against IAM service accounts in project `dagflow-poc`, using the built-in table that `gcloud` prints when no explicit format is supplied.
 
 *List the service-account inventory using the command's built-in default table.*
 
@@ -260,7 +260,7 @@ This output is easy to read, but it is not ideal for scripts because the header 
 
 #### Build a custom table projection with transform functions
 
-When the default table is close to useful but you need to choose specific columns or clean up resource-name fields. It is typically triggered by you need a human-readable inventory with fewer columns, better labels, or transformed values. Read-only list command with a custom `table(...)` projection. The API response is unchanged; only the client-side rendering differs. Produce a readable table that shows exactly the fields you care about and applies transforms inline.
+Use a custom `table(...)` projection when the default table is close to useful but needs fewer columns, better labels, or transformed resource names. The API response is unchanged; only the client-side rendering differs. The example shows exactly the fields you care about and applies transforms inline.
 
 > [!info] Projection breakdown
 >
@@ -286,7 +286,7 @@ This is the practical form of projections and transforms working together. The A
 
 #### Emit projected JSON for downstream tools
 
-When the next consumer is `jq`, Python, PowerShell JSON parsing, or another programmatic tool. It is typically triggered by you need structured machine-readable output instead of aligned columns or plain strings. Read-only list command. JSON serialization happens client-side after the resource list is returned. Produce a predictable JSON array containing only the requested fields.
+Use projected JSON when the next consumer is `jq`, Python, PowerShell JSON parsing, or another programmatic tool. The example returns structured machine-readable output instead of aligned columns or plain strings, and serialization happens client-side after the resource list is returned.
 
 *Project the service-account list into a reduced JSON payload.*
 
@@ -327,7 +327,7 @@ Projected JSON keeps machine-readability without forcing you to accept the full 
 
 #### Extract scalar values for shell loops and tabular pipelines
 
-When a script needs one or more scalar fields per resource with no headers or formatting decoration. It is typically triggered by you are feeding the output into a loop, `ForEach-Object`, `xargs`, or another CLI stage. Read-only list command with the `value(...)` format. Print a clean row-oriented stream that scripts can consume without stripping headers.
+Use `value(...)` when a script needs one or more scalar fields per resource with no headers or formatting decoration. The example produces a clean row-oriented stream that other CLI stages can consume without stripping headers.
 
 *Emit the service-account email, display name, and disabled flag as a tab-separated value stream.*
 
@@ -345,7 +345,7 @@ terraform-deployer@dagflow-poc.iam.gserviceaccount.com	Terraform Deployer	False
 
 #### Export CSV for spreadsheets and inventory files
 
-When the result needs to move into a spreadsheet, CSV-aware import tool, or flat-file inventory. It is typically triggered by A consumer outside the CLI expects comma-separated rows with a header line. Read-only list command against IAM service accounts. Serialize selected service account metadata as CSV.
+Use CSV when the result needs to move into a spreadsheet, CSV-aware import tool, or flat-file inventory. The example serializes selected service-account metadata as comma-separated rows with a header line.
 
 *Export the service-account inventory as CSV.*
 
@@ -364,7 +364,7 @@ CSV is the simplest bridge into spreadsheets or ingestion utilities, but it is s
 
 #### Render YAML for configuration review
 
-When you want a compact, review-friendly representation of selected resource fields. It is typically triggered by A human needs to compare resource configuration values or copy a concise configuration snapshot into a ticket or note. Read-only describe command against one service account. Serialize selected account fields in a nested text format that remains easy to diff and read.
+Use YAML when you want a compact, review-friendly representation of selected resource fields. The example describes one service account and serializes the chosen fields in a nested text format that remains easy to diff and read.
 
 *Describe selected service-account fields in YAML.*
 
@@ -386,7 +386,7 @@ YAML preserves key names readably while remaining lighter than full JSON for man
 
 #### Print resource URIs directly
 
-When another command or API call needs the canonical resource URI rather than a short display name. It is typically triggered by you are chaining commands or documenting exact resource identities. Read-only list command with the global `--uri` flag. Emit only canonical resource URIs with no extra presentation formatting.
+Use `--uri` when another command or API call needs the canonical resource URI instead of a short display name. The example emits only canonical resource URIs with no extra presentation formatting.
 
 *Print the service-account URIs rather than a table of display fields.*
 
@@ -430,7 +430,7 @@ Nested arrays and nested objects are where most `gcloud` formatting confusion st
 
 #### Flatten nested fields to learn the projection paths
 
-When you do not yet know the exact nested field path you need for `table(...)`, `json(...)`, or `value(...)`. It is typically triggered by A policy or resource contains repeated arrays that the default output hides or condenses. Read-only IAM policy command with the `flattened(...)` format. It changes presentation only. Reveal the concrete dot-path keys that later projections can reference directly.
+Use `flattened(...)` when you do not yet know the nested field path you need for `table(...)`, `json(...)`, or `value(...)`. The example changes presentation only and reveals the concrete dot-path keys that later projections can reference directly.
 
 *Flatten one filtered IAM policy binding to reveal the nested member paths.*
 
@@ -448,7 +448,7 @@ This is the most practical discovery output in the note. It exposes the exact pa
 
 #### Transform nested values after the paths are known
 
-After field discovery, when you need a short printable value rather than the raw array layout. It is typically triggered by the projected value is technically correct but too verbose for terminal output or scripting. Read-only IAM policy command with a `value(...)` projection and an inline transform. Show how discovered nested fields can be shortened into operationally useful scalar output.
+Use an inline transform after field discovery when the projected value is technically correct but too verbose for terminal output or scripting. The example shortens discovered nested fields into an operationally useful scalar output.
 
 *Project the filtered IAM role and collapse its member array into one scalar field.*
 
@@ -492,7 +492,7 @@ Filtering and formatting solve different problems and should be combined deliber
 
 #### Filter the service-account list to deployer identities
 
-When you already know the resource family and want to reduce the result set before inspecting it. It is typically triggered by the unfiltered list would include more resources than the current operational question needs. Read-only IAM service-account list command with a filter expression. Return only the account rows that match the requested pattern.
+Use a filter expression when you already know the resource family and want to reduce the result set before inspecting it. The example returns only the account rows that match the requested pattern.
 
 *Filter the service-account list to identities whose email contains `deployer`.*
 
@@ -510,7 +510,7 @@ The filter kept only the two deployer identities. This is the same inventory com
 
 #### Combine filtering with scalar output for automation
 
-When a script needs only the filtered subset and only a few scalar fields from that subset. It is typically triggered by you are turning the filtered result into a downstream loop, inventory file, or access-review check. Read-only IAM service-account list command combining `--filter` with `value(...)`. Produce the minimum viable machine-readable output for a filtered resource subset.
+Combine `--filter` with `value(...)` when a script needs only a filtered subset and only a few scalar fields from that subset. The example produces the minimum viable machine-readable output for a filtered resource subset.
 
 *Filter the deployer accounts and emit only email and display name.*
 
@@ -527,7 +527,7 @@ This is the stable scripting form of the same query. The resource selection happ
 
 #### Filter enabled services and format the reduced result
 
-When you need a targeted API inventory instead of the full enabled-service list. It is typically triggered by you care about one subset of services, such as the BigQuery surface or storage APIs. Read-only Service Usage list command. The filter expression is applied to the list result before formatting. Narrow the enabled-service inventory to matching APIs and print only the requested metadata columns.
+Use a filtered Service Usage list when you need a targeted API inventory instead of the full enabled-service list. The example narrows the enabled-service inventory to matching APIs and prints only the requested metadata columns.
 
 *Filter the enabled services to the BigQuery family and print only name and title.*
 

@@ -14,7 +14,7 @@ status: complete
 
 # awk — Data Processing
 
-> [!quote] Kernighan on awk
+> [!quote]+
 >
 > "The goal was to see how much of programming we could stuff into one line."
 >

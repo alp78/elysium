@@ -10,7 +10,7 @@ status: complete
 
 # Pub/Sub Topics and Subscriptions
 
-> [!quote]
+> [!quote]+
 > "The key in making great and growable systems is much more to design how its modules communicate rather than what their internal properties and behaviors should be."
 >
 > — **Alan Kay**, *The Early History of Smalltalk* (1993)

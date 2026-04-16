@@ -10,7 +10,7 @@ status: complete
 
 # Leadership and Collaboration
 
-> [!quote]
+> [!quote]+
 > "No pull request should ever be accepted unless the engineer can answer the question, 'How will I know if this breaks?'"
 >
 > — **Charity Majors**, charity.wtf (2019)

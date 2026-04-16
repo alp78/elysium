@@ -14,7 +14,7 @@ status: complete
 
 # I/O Redirection
 
-> [!quote] Composable streams
+> [!quote]+
 >
 > "Expect the output of every program to become the input to another, as yet unknown, program."
 >

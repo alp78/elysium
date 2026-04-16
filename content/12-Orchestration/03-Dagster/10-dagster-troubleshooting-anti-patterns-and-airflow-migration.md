@@ -22,141 +22,207 @@ links:
 
 # Dagster Troubleshooting, Anti-Patterns, And Airflow Migration
 
-Most Dagster incidents become manageable once the team classifies them correctly. The main buckets are code loading, runtime execution, and data trust. Most migration mistakes come from carrying task-first habits into a platform that expects assets, lineage, and explicit recovery scope.
+Dagster incidents are easier to fix than older schedulers only when the system preserves its own boundaries clearly. The important boundaries are definition loading, control-plane orchestration, step execution, and downstream trust. Most expensive Dagster mistakes blur those layers until every problem looks like "the pipeline failed," and most clumsy Airflow migrations do the same by carrying task-first habits into an asset-first platform.
 
 > [!abstract]- Summary
 >
-> This note groups the common operational and migration mistakes:
+> This note treats troubleshooting and migration as boundary discipline:
 >
-> - classify incidents by failure layer before changing code
-> - avoid hidden complexity such as monolithic assets and shadow orchestration in sensors
-> - treat historical repair as targeted replay rather than reflexive full reruns
-> - map Airflow responsibility into Dagster deliberately, especially when using Airlift
+> - classify the failed layer before editing code
+> - keep sensors, jobs, and assets narrow enough that ownership stays visible
+> - use replay as a scoped recovery tool rather than as a panic response
+> - migrate from Airflow by shifting observation and execution responsibilities deliberately, not by renaming DAGs
 
 > [!info] Official References
 >
 > - [Airflow to Dagster migration](https://docs.dagster.io/migration/airflow-to-dagster)
-> - [Dagster and Airlift](https://docs.dagster.io/integrations/libraries/airlift)
+> - [Dagster & Airlift](https://docs.dagster.io/integrations/libraries/airlift)
 > - [Airlift migration guide](https://docs.dagster.io/migration/airflow-to-dagster/airlift-v1)
-> - [Troubleshooting concurrency](https://docs.dagster.io/guides/operate/managing-concurrency/troubleshooting-concurrency)
+> - [Troubleshooting concurrency issues](https://docs.dagster.io/guides/operate/managing-concurrency/troubleshooting-concurrency)
 
 > [!note]- Glossary
 >
 > **Code-location failure**
-> - A failure while Dagster is loading user code and `Definitions`.
-> - It explains missing assets, missing jobs, or a broken UI surface before execution starts.
-> - It is not the same thing as a run failure.
+> - A failure while Dagster is loading user code and reconstructing the `Definitions` surface.
+> - It explains missing assets, missing jobs, or a broken code location before any run begins.
+> - It is a composition incident, not an execution incident.
 >
-> **Runtime failure**
-> - A failure after Dagster successfully launched work.
-> - It tells you the project loaded and the incident moved into execution evidence.
-> - Runtime success still does not guarantee trusted data.
+> **Control-plane failure**
+> - A failure in the orchestration layer after code has loaded but before or around execution progress.
+> - Typical examples are queued runs that never start, a daemon that is down, or sensors that are not evaluating.
+> - It often lives in service wiring and instance configuration rather than in asset logic.
 >
 > **Shadow orchestration**
-> - Workflow logic reimplemented in ad hoc sensors, hooks, or side effects instead of in the asset graph.
-> - It makes the platform hard to reason about under pressure.
-> - It often looks flexible until the first large incident.
+> - Business workflow logic hidden in sensors, hooks, or side effects instead of expressed in assets, jobs, checks, and explicit state boundaries.
+> - It makes incidents harder to classify because the real control flow is no longer visible in the graph.
+> - It usually feels flexible until a replay or audit is needed.
 >
 > **Airlift**
-> - Dagster's toolkit for integrating with and migrating from Airflow.
-> - It enables phased coexistence instead of one all-at-once rewrite.
-> - It depends on Airflow-side access and still requires a clear migration plan.
+> - Dagster's toolkit for integrating with Airflow and migrating incrementally.
+> - It exists to support coexistence, observation, rollback, and staged transfer of execution responsibility.
+> - It still requires Airflow REST API access and a deliberate migration plan.
 
-## Troubleshoot By Failure Layer First
+## The First Triage Decision Is Which Layer Failed
 
-The most expensive debugging mistake is changing topology before you have classified the incident. If the code location did not load, the problem is packaging or composition. If a run exists, the project already loaded and the problem moved into runtime evidence.
+The most expensive debugging habit is changing definitions before the incident has been classified. A load failure, a run stuck in `QUEUED`, a step failure, and an approved dataset that never exported are not variants of the same problem. They leave different evidence and belong to different owners.
 
-### Treat Runtime Failures As Runtime Evidence
+### Loadability, Control Plane, Execution, And Trust Leave Different Evidence
 
-Once Dagster has started a run, the event stream is the source of truth.
+The correct first move is to ask what evidence already exists. If no run exists, the code location may not have loaded. If a run exists but never starts, the daemon and instance configuration come into focus. If the run failed, the event stream becomes primary. If the run succeeded but the export is still wrong, the incident has moved into checks, review state, or downstream contract enforcement.
 
-#### Fail one asset intentionally and inspect the failure events
+#### Treat queued runs as control-plane incidents before rewriting assets
 
-Use this pattern when teaching on-call engineers how Dagster expresses a runtime failure. The trigger is a run that already exists and failed after launch. The purpose is to show that the platform can separate step failure from the overall pipeline failure without confusing the incident with code-location loading.
+Use this check when runs stay in `QUEUED`, sensors appear idle, or automation is visibly behind without an obvious step failure. The trigger is orchestration silence after Dagster has already accepted work. The configuration below is deployment wiring, not business logic. Its purpose is to remind you that webserver, daemon, and user-code loading are separate responsibilities with different failure modes.
 
-*Materialize one broken asset with `raise_on_error=False` and print the success flag plus the failure event types.*
+*Read the `dagflow` Dagster services as three distinct operational owners.*
+
+```yaml
+dagster-user-code:
+  command: >
+    dagster api grpc
+    -h 0.0.0.0
+    -p 4000
+    -m dagflow_dagster.definitions
+
+dagster-webserver:
+  command: >
+    /bin/sh -c
+    "cp /workspace/apps/dagster/dagster.yaml /opt/dagster/dagster_home/dagster.yaml
+    && dagster-webserver -h 0.0.0.0 -p 3000 -w /workspace/apps/dagster/workspace.yaml"
+
+dagster-daemon:
+  command: >
+    /bin/sh -c
+    "cp /workspace/apps/dagster/dagster.yaml /opt/dagster/dagster_home/dagster.yaml
+    && dagster-daemon run -w /workspace/apps/dagster/workspace.yaml"
+```
+
+Dagster's concurrency troubleshooting guide makes the same point operationally: in open-source deployments, queued runs most often come down to the daemon or shared instance configuration. In `dagflow`, the first checks are whether `dagster-daemon` is alive and whether the daemon and webserver are sharing the same `DAGSTER_HOME` and `dagster.yaml`.
+
+#### A successful run and a trustworthy export are different outcomes
+
+Use this framing when a run finished green but downstream consumers still should not receive the output. The trigger is a dataset that was built successfully yet has not crossed the trust boundary required for delivery. The context is operational reasoning rather than a new API. Its purpose is to keep data trust incidents from being misclassified as orchestration success.
+
+> [!example] Review state is part of the incident model
+>
+> In `dagflow`, a curated dataset can materialize successfully and still wait in `security_master_review_snapshot` or `shareholder_holdings_review_snapshot` before export is allowed. That means "the run is green" and "the data may be delivered" are separate claims. An index constituent pipeline with human approval would need the same distinction between machine-generated basket and approved basket.
+
+## The Common Dagster Anti-Patterns All Hide Boundaries
+
+Dagster rarely becomes hard to operate because it lacks features. It becomes hard to operate when engineers hide too much responsibility inside the wrong primitive. The recurring anti-patterns all compress boundaries that should stay explicit.
+
+### Keep Sensors Thin And Assets Honest
+
+Sensors should evaluate readiness and request work. Assets should describe durable states. Jobs should package execution slices. When those roles collapse into each other, the control plane becomes opaque.
+
+#### A sensor should request work, not perform it
+
+Use this rule when a sensor starts accreting database writes, transformation logic, or branching business rules. The trigger is a sensor body that is becoming longer than the state check it was meant to perform. The code below is a healthy sensor shape: it inspects control-plane state and emits run requests. Its purpose is to keep orchestration logic visible and auditable.
+
+*Keep the `dagflow` review-validation sensor focused on readiness detection and run emission.*
 
 ```python
-import contextlib
-import io
+approved_runs = control_plane.export_ready_runs(pipeline_code)
+if not approved_runs:
+    yield SkipReason(f"No validated {pipeline_code} review runs are waiting for export")
+    return
 
-import dagster as dg
-
-@dg.asset
-def broken_asset():
-    raise RuntimeError("warehouse timeout during build")
-
-stdout = io.StringIO()
-stderr = io.StringIO()
-with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-    result = dg.materialize([broken_asset], raise_on_error=False)
-
-print(result.success)
-print([event.event_type_value for event in result.all_events if "FAILURE" in event.event_type_value])
+for approved_run in approved_runs:
+    validated_at = approved_run["validated_at"].isoformat()
+    run_id = str(approved_run["run_id"])
+    business_date = approved_run["business_date"].isoformat()
+    yield RunRequest(
+        run_key=f"{pipeline_code}:{run_id}:validated-export:{validated_at}",
+        tags={
+            "pipeline_code": pipeline_code,
+            "dagflow_run_id": run_id,
+            "dagflow_business_date": business_date,
+            "validated_at": validated_at,
+        },
+    )
 ```
+
+If the sensor were to load files, mutate review state, and write exports directly, Dagster would still "work," but the incident boundary would disappear. On-call engineers would no longer know whether a failure belonged to orchestration, transformation, or delivery.
+
+#### One asset should not impersonate an entire governed workflow
+
+Use this check when a single asset starts mixing extraction, curation, approval state, export, and notification. The trigger is the appeal of a "simpler" one-node graph that hides the real lifecycle of the dataset. The context is graph design. Its purpose is to preserve targeted replay and trustworthy lineage under pressure.
+
+*Read the `dagflow` security master as separate states instead of one monolithic asset.*
 
 ```text
-False
-['STEP_FAILURE', 'PIPELINE_FAILURE']
+sec_company_tickers_capture
+  -> sec_company_tickers_raw
+  -> stg_sec_company_tickers
+  -> int_security_base
+  -> int_security_attributes
+  -> dim_security
+  -> security_master_review_snapshot
+  -> security_master_preview
+  -> security_master_csv_export
 ```
 
-## Avoid Dagster-Specific Design Traps
+That chain is not verbosity for its own sake. It is what allows the platform to distinguish capture failures, transformation defects, review backlog, and export delivery problems. A benchmark composition pipeline would need equally explicit boundaries if review and publication are separate operational acts.
 
-The worst Dagster codebases are not usually missing abstractions. They have the wrong abstractions in the wrong layer: giant assets that hide too much, sensors that recreate dependency logic, and replay policies that are broader than the blast radius they are trying to repair.
+### Replay Scope Should Match The Damaged State
 
-### Keep The Control Plane Thin
+Full reruns are sometimes necessary, but they are often a sign that the graph does not express the real recovery boundary. The larger the replay scope, the more the system is paying for modeling shortcuts taken earlier.
 
-Dagster should know how to request work and record what happened. It should not become a second hidden compute platform or a second hidden scheduler inside Python side effects.
+#### Use scoped jobs instead of reflexive full-platform reruns
 
-The practical anti-patterns to watch for are:
+Use this judgment when a correction affects one slice of lineage rather than the whole estate. The trigger is a replay request following a review fix, a corrected upstream source file, or a single export issue. The code is job definition, not runtime troubleshooting. Its purpose is to keep recovery proportional to the damaged state.
 
-- a single asset that mixes extraction, validation, publication, and notification side effects
-- sensors that duplicate asset-state logic Dagster could already express declaratively
-- backfills launched as full replays because no one modeled the real dependency scope
-- large data movement pushed through the local Dagster process by habit instead of through the system that should own compute
+*Resume only the export slice in `dagflow` after approval rather than replaying capture and transform again.*
 
-## Migrate Airflow By Responsibility, Not By Name
+```python
+security_master_export_job = define_asset_job(
+    name="security_master_export_job",
+    executor_def=in_process_executor,
+    selection=AssetSelection.assets(security_master_csv_export)
+    | build_dbt_asset_selection([security_master_export_assets]),
+)
+```
 
-The goal is not to recreate Airflow concepts with Dagster vocabulary. The goal is to preserve the durable contract and move execution concerns into the Dagster model that matches them best.
+When teams reach for full reruns by habit, the problem is often not the incident. The problem is that the graph never exposed the narrower state boundary that needed repair.
 
-### Use Airlift For Phased Coexistence
+## Airflow Migration Works Best As A Staged Control-Plane Shift
 
-Large Airflow estates rarely benefit from a stop-the-world rewrite. Airlift exists so the migration can be staged.
+Dagster's Airflow migration guidance and Airlift docs are both explicit that coexistence is normal. The goal is not to rewrite everything at once. The goal is to shift observation and execution responsibilities in a sequence that preserves rollback and keeps lineage intelligible.
 
-#### Construct the core Airlift connection objects
+### Observe First, Migrate Second, Decommission Last
 
-Use Airlift when the migration needs observation and coexistence before full decommissioning. The trigger is an estate large enough that Airflow and Dagster will live side by side for some period. The purpose is to make the Airflow control-plane connection explicit inside Dagster instead of treating migration as undocumented glue code.
+This is the part most hurried migrations get wrong. They move code before they have established how Dagster will observe the legacy estate, model the resulting assets, and limit rollback risk.
 
-*Create an Airlift basic-auth backend and an `AirflowInstance`, then print the resulting types and connection values.*
+#### Connect to Airflow explicitly instead of burying migration glue
+
+Use Airlift when the migration must begin with coexistence, observability, and phased handoff rather than with an immediate cutover. The trigger is a live Airflow estate that still owns some execution. The code below establishes the control-plane connection to Airflow. Its purpose is to make observation and migration a first-class integration instead of a pile of one-off scripts.
+
+*Declare the Airflow instance Dagster should observe and migrate incrementally.*
 
 ```python
 from dagster_airlift.core import AirflowBasicAuthBackend, AirflowInstance
 
-auth = AirflowBasicAuthBackend(
-    webserver_url="http://airflow.local:8080",
-    username="svc_dagster",
-    password="***",
+airflow = AirflowInstance(
+    name="legacy_airflow",
+    auth_backend=AirflowBasicAuthBackend(
+        webserver_url="http://airflow.local:8080",
+        username="svc_dagster",
+        password="***",
+    ),
 )
-
-instance = AirflowInstance(name="legacy_airflow", auth_backend=auth)
-
-print(type(auth).__name__)
-print(type(instance).__name__)
-print(instance.name)
-print(auth.get_webserver_url())
 ```
 
-```text
-AirflowBasicAuthBackend
-AirflowInstance
-legacy_airflow
-http://airflow.local:8080
-```
+The connection object is not the migration itself. It is the prerequisite that lets Dagster observe Airflow runs, preserve history, and take over execution deliberately.
 
-## What To Remember
+#### Move responsibility in stages, not in one rename exercise
 
-- Classify incidents first: code loading, runtime execution, or data trust.
-- A run failure proves the project loaded; a code-location failure proves it did not.
-- The main Dagster anti-patterns are hidden side effects, shadow orchestration, and replay scope that is broader than the real blast radius.
-- Airflow migration should translate responsibilities into assets, ops, jobs, and explicit replay boundaries rather than porting task names one to one.
-- Airlift is for phased coexistence and observation, not just for renaming Airflow objects inside Dagster.
+Use this plan when an Airflow DAG already embodies business-critical workflows such as benchmark construction, pricing quality review, or regulated export delivery. The trigger is a migration large enough that rollback risk matters. The guidance below follows the staged model Dagster documents for Airlift. Its purpose is to move control-plane responsibility without forcing a stop-the-world rewrite.
+
+> [!tip] A staged Airlift migration
+>
+> - **Peer first.** Connect Dagster to the live Airflow instance so the existing estate becomes visible before any execution is moved.
+> - **Observe next.** Map the Airflow DAG into Dagster assets so lineage becomes explicit while Airflow still owns execution.
+> - **Migrate selectively.** Move tasks or whole DAG slices into Dagster only where rollback and recovery remain tractable.
+> - **Decommission last.** Remove Airflow execution only after Dagster has proven it can own the workflow, checks, and replay boundaries cleanly.
+>
+> For an index constituent pipeline, that often means observing the legacy Airflow DAG first, then moving the curated constituent build into Dagster, then adding the review and export boundaries, and only then retiring the original DAG.

@@ -20,7 +20,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ## Cash Management
 
-> [!quote]
+> [!quote]+
 > "Cash is a fact, profit is an opinion."
 >
 > — **Alfred Rappaport**, *Creating Shareholder Value* (1986)
@@ -38,7 +38,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ## Export Credit Agency Finance
 
-> [!quote]
+> [!quote]+
 > "Governments back exports because trade creates jobs — export credit is trade policy in financial form."
 >
 > — **Robert Zoellick**
@@ -56,7 +56,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ## Sales Financing
 
-> [!quote]
+> [!quote]+
 > "Make it easy to buy and people will buy more."
 >
 > — **Henry Ford**
@@ -74,7 +74,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ## Trade Finance
 
-> [!quote]
+> [!quote]+
 > "Trade finance is the oil that keeps the wheels of international commerce turning."
 >
 > — **Pascal Lamy**
@@ -104,7 +104,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ## Wholesale Financing
 
-> [!quote]
+> [!quote]+
 > "The dealer's lot is the showroom, but the floor plan is what keeps it stocked."
 >
 > — **Jim Press**
@@ -122,7 +122,7 @@ Encyclopedia of trade finance, cash management, treasury, and working capital te
 
 ## Working Capital
 
-> [!quote]
+> [!quote]+
 > "Revenue is vanity, profit is sanity, but cash is king."
 >
 > — **Alan Miltz**

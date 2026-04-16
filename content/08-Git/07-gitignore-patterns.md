@@ -7,7 +7,7 @@ tags:
 
 # .gitignore Patterns
 
-> [!quote]
+> [!quote]+
 > "Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away."
 >
 > — **Antoine de Saint-Exupéry**, *Terre des hommes* (1939)

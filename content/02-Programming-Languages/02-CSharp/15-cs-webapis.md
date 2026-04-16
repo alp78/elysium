@@ -10,7 +10,7 @@ status: complete
 
 # Web and APIs - C#
 
-> [!quote] Quote
+> [!quote]+
 >
 > "Web programming is the science of coming up with increasingly complicated ways of concatenating strings."
 >

@@ -153,7 +153,7 @@ WHERE c.index_key = 'target_index';
 
 ## Index Reconstitution: The Quarterly Event
 
-> [!quote]
+> [!quote]+
 > "When you buy an index fund, you are also buying all the transaction costs of all those stock trades that an index manager has to make."
 >
 > — **John Bogle**, *The Little Book of Common Sense Investing* (2007)
@@ -357,7 +357,7 @@ ORDER BY weight_pct DESC;
 
 ## Point-in-Time (PIT) Temporal Data: Querying History Without Look-Ahead Bias
 
-> [!quote]
+> [!quote]+
 > "It is easy to see the past as inevitable, because it already happened. The hard part is remembering it was once uncertain."
 >
 > — **Marcos Lopez de Prado**, *Advances in Financial Machine Learning* (2018)

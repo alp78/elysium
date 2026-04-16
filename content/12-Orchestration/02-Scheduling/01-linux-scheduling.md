@@ -10,7 +10,7 @@ status: complete
 
 # Linux Scheduling
 
-> [!quote]
+> [!quote]+
 > "As an industry we've been pushing: Automate. Automate. Automate. We should have been saying: Understand. Understand. Understand."
 >
 > — **Kelsey Hightower**, tweet (2020)

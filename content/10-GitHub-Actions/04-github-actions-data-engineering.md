@@ -7,7 +7,7 @@ tags:
 
 # GitHub Actions for Data Engineering
 
-> [!quote]
+> [!quote]+
 > "Improving daily work is even more important than doing daily work."
 >
 > — **Gene Kim**, *The Phoenix Project* (2013)

@@ -8,7 +8,7 @@ description: "Identifying slow models from run_results.json, BigQuery and SQL Se
 
 # dbt: Performance Tuning
 
-> [!quote] Measure before tuning
+> [!quote]+
 >
 > "Bottlenecks occur in surprising places, so don't try to second guess and put in a speed hack until you have proven that's where the bottleneck is."
 >

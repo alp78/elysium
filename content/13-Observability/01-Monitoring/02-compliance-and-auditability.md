@@ -18,7 +18,7 @@ status: complete
 
 # Compliance and Auditability
 
-> [!quote]
+> [!quote]+
 > "An audit log is not a feature — it is the difference between 'we think this happened' and 'we can prove this happened.'"
 >
 > — **Kelsey Hightower**, tweet (2019)

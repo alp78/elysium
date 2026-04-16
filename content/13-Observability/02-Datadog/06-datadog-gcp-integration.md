@@ -10,7 +10,7 @@ status: complete
 
 # Datadog GCP Integration
 
-> [!quote]
+> [!quote]+
 > "When Netflix instrumented their services, they instrumented service patterns — so when you built a new service, the monitoring would already be there once you got it running."
 >
 > — **Adrian Cockcroft**

@@ -11,7 +11,7 @@ status: complete
 
 # Explore, Select & Filter - C#
 
-> [!quote]
+> [!quote]+
 > "If we have data, let's look at data. If all we have are opinions, let's go with mine."
 >
 > — **Jim Barksdale**

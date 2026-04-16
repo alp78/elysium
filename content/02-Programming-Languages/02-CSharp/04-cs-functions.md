@@ -11,7 +11,7 @@ status: complete
 
 # 04. Functions - C#
 
-> [!quote] Dijkstra on abstraction
+> [!quote]+
 >
 > "The purpose of abstraction is not to be vague, but to create a new semantic level in which one can be absolutely precise."
 >

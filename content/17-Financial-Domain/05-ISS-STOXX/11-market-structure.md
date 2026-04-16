@@ -30,7 +30,7 @@ date: 2026-03-28
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="18 mentions across STOXX & ISS pages (low)">▰▰ 18</span>
 
-> [!quote]
+> [!quote]+
 > "Volume is the fuel that drives the market."
 >
 > — **Joseph Granville**, *New Strategy of Daily Stock Market Timing* (1976)
@@ -89,7 +89,7 @@ screening in STOXX index methodologies.
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="13 mentions across STOXX & ISS pages (low)">▰▰ 13</span>
 
-> [!quote]
+> [!quote]+
 > "Every seller has a price, every buyer has a limit."
 >
 > — **Anonymous**
@@ -148,7 +148,7 @@ order book and, together with the bid price, defines the bid-ask spread.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="61 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 61</span>
 
-> [!quote]
+> [!quote]+
 > "Going once, going twice — the auction is the purest form of price discovery."
 >
 > — **Anonymous**
@@ -209,7 +209,7 @@ closing auctions set the official closing price used by index providers.
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="29 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 29</span>
 
-> [!quote]
+> [!quote]+
 > "The bear market is the time when you find out who's been swimming naked."
 >
 > — **Warren Buffett**
@@ -265,7 +265,7 @@ reviews as falling capitalisation pushes companies below size thresholds.
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
 
-> [!quote]
+> [!quote]+
 > "The real price of everything is the toil and trouble of acquiring it."
 >
 > — **Adam Smith**, *The Wealth of Nations* (1776)
@@ -325,7 +325,7 @@ best available price for a seller executing immediately.
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="7 mentions across STOXX & ISS pages (low)">▰▰ 7</span>
 
-> [!quote]
+> [!quote]+
 > "Transaction costs are the termites of investing."
 >
 > — **John C. Bogle**, *The Little Book of Common Sense Investing* (2007)
@@ -404,7 +404,7 @@ portfolios.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="600 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 600</span>
 
-> [!quote]
+> [!quote]+
 > "Buy into a company because you want to own it, not because you want the stock to go up."
 >
 > — **Warren Buffett**
@@ -460,7 +460,7 @@ EURO STOXX 50 and DAX.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="60 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 60</span>
 
-> [!quote]
+> [!quote]+
 > "Bull markets are born on pessimism, grow on skepticism, mature on optimism, and die on euphoria."
 >
 > — **Sir John Templeton**
@@ -573,7 +573,7 @@ index membership.
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
+> [!quote]+
 > "Circuit breakers were born from the 1987 crash — the market's way of saying 'everyone take a breath.'"
 >
 > — **Nicholas Brady**, *Report of the Presidential Task Force on Market Mechanisms* (1988)
@@ -657,7 +657,7 @@ between trading parties to manage counterparty risk.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="130 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 130</span>
 
-> [!quote]
+> [!quote]+
 > "A correction is a euphemism for losing a lot of money rapidly."
 >
 > — **Nassim Nicholas Taleb**, *The Black Swan* (2007)
@@ -716,7 +716,7 @@ considered normal, periodic resets within longer-term uptrends.
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="10 mentions across STOXX & ISS pages (low)">▰▰ 10</span>
 
-> [!quote]
+> [!quote]+
 > "In a crisis, the weights of losses crush all rational calculations."
 >
 > — **John Kenneth Galbraith**, *The Great Crash 1929* (1955)
@@ -771,7 +771,7 @@ and corporate action handling.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="78 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 78</span>
 
-> [!quote]
+> [!quote]+
 > "In trust is the beginning of all commerce."
 >
 > — **Anonymous**
@@ -918,7 +918,7 @@ construction.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="635 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 635</span>
 
-> [!quote]
+> [!quote]+
 > "A marketplace is more than a place; it is a set of rules."
 >
 > — **Anonymous**
@@ -976,7 +976,7 @@ indices, individual equities, fixed income, and other asset classes.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,974 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,974</span>
 
-> [!quote]
+> [!quote]+
 > "The stock exchange is the one institution that exists to discover prices and allocate capital, and it does so through the mechanism of continuous trading."
 >
 > — **Burton Malkiel**, *A Random Walk Down Wall Street* (1973)
@@ -1030,7 +1030,7 @@ index inclusion.
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9,873 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 9,873</span>
 
-> [!quote]
+> [!quote]+
 > "An equity share is a claim on real assets and future earnings — it is ownership in its purest financial form."
 >
 > — **Benjamin Graham & David Dodd**, *Security Analysis* (1934)
@@ -1088,7 +1088,7 @@ sectors, and size segments.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="206 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 206</span>
 
-> [!quote]
+> [!quote]+
 > "Whoever controls the marketplace controls the economy."
 >
 > — **Anonymous**
@@ -1146,7 +1146,7 @@ Europe by market capitalisation and the home exchange of the DAX index.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,740 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,740</span>
 
-> [!quote]
+> [!quote]+
 > "The measure of a market is how freely its shares can change hands."
 >
 > — **Anonymous**
@@ -1304,7 +1304,7 @@ restricted shares, insider holdings, and other locked-up blocks.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="896 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 896</span>
 
-> [!quote]
+> [!quote]+
 > "To classify is to understand."
 >
 > — **Carl Linnaeus (adapted)**
@@ -1364,7 +1364,7 @@ sector-based analysis and comparison.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2,573 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 2,573</span>
 
-> [!quote]
+> [!quote]+
 > "When you halt trading, you give the market time to digest information rather than react in panic."
 >
 > — **SEC Chairman Arthur Levitt**, *Take On the Street* (2002)
@@ -1473,7 +1473,7 @@ for index construction and sector indices.
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6 mentions across STOXX & ISS pages (low)">▰▰ 6</span>
 
-> [!quote]
+> [!quote]+
 > "Not everything that exists is available, and not everything available is worth buying."
 >
 > — **Anonymous**
@@ -1534,7 +1534,7 @@ eligibility screens.
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="45 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 45</span>
 
-> [!quote]
+> [!quote]+
 > "Large-cap stocks are the bedrock of most portfolios — they offer liquidity, analyst coverage, and institutional ownership that smaller companies cannot match."
 >
 > — **Jeremy Siegel**, *Stocks for the Long Run* (1994)
@@ -1590,7 +1590,7 @@ portion of the investable market.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,048 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,048</span>
 
-> [!quote]
+> [!quote]+
 > "Liquidity is a coward — it disappears at the first sign of trouble."
 >
 > — **Nassim Nicholas Taleb**, *The Black Swan* (2007)
@@ -1779,7 +1779,7 @@ hold long positions in every constituent of the index they replicate.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,883 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,883</span>
 
-> [!quote]
+> [!quote]+
 > "In the short run, the market is a voting machine, but in the long run it is a weighing machine."
 >
 > — **Benjamin Graham**, *The Intelligent Investor* (1949)
@@ -1838,7 +1838,7 @@ free-float shares) is the standard weighting measure.
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="2 mentions across STOXX & ISS pages (ultra-low)">▰ 2</span>
 
-> [!quote]
+> [!quote]+
 > "Small and micro-cap stocks are where the inefficiencies live — less coverage, more mispricing, more opportunity."
 >
 > — **Joel Greenblatt**, *The Little Book That Beats the Market* (2005)
@@ -1873,7 +1873,7 @@ often excluded from standard benchmark indices due to liquidity constraints.
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="118 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 118</span>
 
-> [!quote]
+> [!quote]+
 > "The middle ground is not the safest; it is the least understood."
 >
 > — **Anonymous**
@@ -1929,7 +1929,7 @@ capture this segment of the market.
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="28 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 28</span>
 
-> [!quote]
+> [!quote]+
 > "Markets are never wrong; opinions often are."
 >
 > — **Jesse Livermore**, *Reminiscences of a Stock Operator* (1923)
@@ -2015,7 +2015,7 @@ be filled.
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="40 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 40</span>
 
-> [!quote]
+> [!quote]+
 > "Transparency is the currency of trust."
 >
 > — **Anonymous**
@@ -2074,7 +2074,7 @@ and is the mechanism through which price discovery occurs on modern exchanges.
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="15 mentions across STOXX & ISS pages (low)">▰▰ 15</span>
 
-> [!quote]
+> [!quote]+
 > "The less transparent the market, the more advantage to the professional."
 >
 > — **George Soros**
@@ -2134,7 +2134,7 @@ generally excluded from STOXX indices.
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="9 mentions across STOXX & ISS pages (low)">▰▰ 9</span>
 
-> [!quote]
+> [!quote]+
 > "Home is where the heart is, and where the listing begins."
 >
 > — **Anonymous**
@@ -2191,7 +2191,7 @@ index purposes.
 
 <span style="background:blue; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="13 mentions across STOXX & ISS pages (low)">▰▰ 13</span>
 
-> [!quote]
+> [!quote]+
 > "All creation starts from a first offering."
 >
 > — **Anonymous**
@@ -2357,7 +2357,7 @@ on a regulated market.
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="11,382 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 11,382</span>
 
-> [!quote]
+> [!quote]+
 > "Be fearful when others are greedy, and greedy when others are fearful."
 >
 > — **Warren Buffett**
@@ -2414,7 +2414,7 @@ broad-based (affecting entire indices) or sector-specific.
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="3,190 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 3,190</span>
 
-> [!quote]
+> [!quote]+
 > "Sector rotation is the market's way of telling you where the economy is headed next."
 >
 > — **Sam Stovall**, *Standard & Poor's Guide to Sector Investing* (1996)
@@ -2524,7 +2524,7 @@ ICB sector classification to build its sector index families.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="677 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 677</span>
 
-> [!quote]
+> [!quote]+
 > "A deal is not done until the money has changed hands."
 >
 > — **Proverb**
@@ -2581,7 +2581,7 @@ receives the securities and the seller receives payment. Settlement cycles
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="210 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 210</span>
 
-> [!quote]
+> [!quote]+
 > "Over long periods, small stocks have delivered a premium over large stocks — but the ride is rougher."
 >
 > — **Rolf Banz**, discoverer of the size effect (1981)
@@ -2636,7 +2636,7 @@ STOXX Europe Small 200 is an example of a small-cap index.
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
+> [!quote]+
 > "He who sells what isn't his'n must buy it back or go to prison."
 >
 > — **Daniel Drew**
@@ -2669,7 +2669,7 @@ disclosure requirements and temporary bans during periods of stress.
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="14,544 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 14,544</span>
 
-> [!quote]
+> [!quote]+
 > "Behind every stock is a company — find out what it's doing."
 >
 > — **Peter Lynch**, *One Up on Wall Street* (1989)
@@ -2781,7 +2781,7 @@ and STOXX publishes supersector indices such as EURO STOXX Banks.
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="267 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 267</span>
 
-> [!quote]
+> [!quote]+
 > "Markets speak loudest when they speak in volume."
 >
 > — **Anonymous**

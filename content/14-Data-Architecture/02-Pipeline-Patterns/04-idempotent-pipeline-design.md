@@ -10,7 +10,7 @@ status: complete
 
 # Idempotent Pipeline Design
 
-> [!quote]
+> [!quote]+
 > "An idempotent operation can be applied multiple times without changing the result beyond the initial application — this is the foundation of reliable data processing."
 >
 > — **Tyler Akidau** (Apache Beam tech lead)

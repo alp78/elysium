@@ -10,7 +10,7 @@ status: complete
 
 # 08. Error Handling - C#
 
-> [!quote]- Dijkstra remark
+> [!quote]+
 >
 > "If debugging is the process of removing software bugs, then programming must be the process of putting them in."
 >

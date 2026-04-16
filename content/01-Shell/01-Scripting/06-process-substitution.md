@@ -14,7 +14,7 @@ status: complete
 
 # Process Substitution and Here Documents — Advanced Input/Output
 
-> [!quote] Unix design rule
+> [!quote]+
 > "Expect the output of every program to become the input to another, as yet unknown, program. Don't clutter output with extraneous information. Don't insist on interactive input."
 >
 > — **Doug McIlroy**, *Bell System Technical Journal* (1978)

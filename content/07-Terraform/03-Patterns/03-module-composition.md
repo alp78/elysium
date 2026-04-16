@@ -10,7 +10,7 @@ status: complete
 
 # Module Composition
 
-> [!quote] Mitchell Hashimoto on module design
+> [!quote]+
 >
 > "You can use modules to further split up your configuration as well as parameterize it. The goal is giving you enough options so it isn't overwhelming complexity."
 >

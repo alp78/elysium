@@ -10,7 +10,7 @@ status: complete
 
 # 18. Design Patterns & Architecture - Python
 
-> [!quote] Paul Graham on patterns
+> [!quote]+
 >
 > "When I see patterns in my programs, I consider it a sign of trouble. The shape of a program should reflect only the problem it needs to solve."
 >

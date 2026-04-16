@@ -13,7 +13,7 @@ status: complete
 
 # Firestore for Data Engineering — Python
 
-> [!quote] Michael Stonebraker on document databases
+> [!quote]+
 >
 > "The world is not made up of rows and columns. Sometimes a document is exactly what the data wants to be."
 >

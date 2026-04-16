@@ -11,7 +11,7 @@ status: complete
 
 # Explore, Select & Filter - Python
 
-> [!quote]
+> [!quote]+
 > "If we have data, let's look at data. If all we have are opinions, let's go with mine."
 >
 > — **Jim Barksdale**
@@ -10154,25 +10154,87 @@ display(Markdown(comparison))
 ---
 
 
-## Warnings
+## Common Traps and Safe Patterns
 
-> [!warning] Pandas `filter()` selects columns, not rows
-> In Pandas, `df.filter(items=["col1", "col2"])` selects columns by name. This is the opposite of Polars, where `df.filter(expr)` selects rows. Mixing up the two produces silent wrong results.
+### Pandas `filter()` vs Polars `filter()`
 
-> [!warning] Boolean operators require parentheses and bitwise operators
-> `df[df["a"] > 5 & df["b"] < 10]` is a bug — `&` binds tighter than `>` and `<`. Correct: `df[(df["a"] > 5) & (df["b"] < 10)]`. This applies to both Pandas and Polars.
+> [!warning] The same method name means different things across libraries
+>
+> In Pandas, `df.filter(items=[...])` selects columns by label. In Polars,
+> `df.filter(expr)` selects rows by expression. Reusing the name without checking
+> the API leads to quiet, wrong results.
 
-> [!warning] NaN-keyed rows silently disappear in filters
-> In Pandas, `df[df["col"] == some_value]` never matches NaN rows because `NaN != NaN`. Use `.isna()` to find nulls, not equality.
+> [!success] Use the row-selection API that matches the library
+>
+> In Pandas, filter rows with boolean masks or `.loc[...]`. In Polars, use
+> `.filter(...)` with expressions such as `pl.col("close") > 50`.
 
-> [!warning] `.iloc` and `.loc` have different slice semantics
-> `.loc["a":"c"]` includes both endpoints. `.iloc[0:3]` excludes the right endpoint. Mixing them up produces off-by-one errors.
+### Parenthesize Boolean Conditions
 
-> [!warning] `drop_duplicates` / `unique` with `keep="first"` depends on row order
-> If the DataFrame is not sorted deterministically, "first" is arbitrary. Always sort before deduplicating if you need reproducible results.
+> [!warning] Unparenthesized boolean expressions change operator precedence
+>
+> `df[df["a"] > 5 & df["b"] < 10]` is parsed incorrectly because `&` binds more
+> tightly than the comparison operators. The same precedence trap exists in both
+> Pandas and Polars expression code.
 
-> [!warning] `sample()` without a seed is non-reproducible
-> Random sampling without `random_state=` (Pandas) or `seed=` (Polars) returns different rows each run, breaking reproducibility in notebooks and tests.
+> [!success] Wrap each condition and combine them with bitwise operators
+>
+> Write `(cond1) & (cond2)` and `(cond1) | (cond2)` explicitly. That makes the
+> intent unambiguous and keeps the filter semantics correct in both libraries.
+
+### Nulls Need Null Predicates
+
+> [!warning] Equality filters never match missing values
+>
+> In Pandas, `NaN != NaN`, so `df["col"] == value` cannot recover null rows. The
+> same conceptual rule applies elsewhere: missing values need dedicated null
+> predicates, not equality comparisons.
+
+> [!success] Use `.isna()` or `.is_null()` when the target is missing data
+>
+> Reach for `df["col"].isna()` in Pandas and `pl.col("col").is_null()` in
+> Polars whenever the filtering condition is "missing" rather than "equal to a
+> concrete value".
+
+### Label Slices and Positional Slices Behave Differently
+
+> [!warning] `.loc` and `.iloc` do not share the same endpoint rules
+>
+> `.loc["a":"c"]` includes both labels, while `.iloc[0:3]` excludes the right
+> endpoint. Swapping one for the other without adjusting the slice leads to
+> off-by-one errors.
+
+> [!success] Decide first whether the slice is label-based or position-based
+>
+> Use `.loc` when the boundary values are labels you want included, and `.iloc`
+> when you mean Python-style positional slicing. Treat them as different tools,
+> not as interchangeable spellings.
+
+### Deduplication Depends on Existing Order
+
+> [!warning] `keep=\"first\"` is only meaningful after deterministic sorting
+>
+> `drop_duplicates(..., keep="first")` and similar "first row wins" patterns are
+> order-sensitive. If the incoming frame is unsorted, the surviving row is
+> arbitrary from a business perspective.
+
+> [!success] Sort first when deduplication must be reproducible
+>
+> Establish the winning row explicitly with a sort on timestamp, priority, or
+> another business key before you drop duplicates or keep the first occurrence.
+
+### Sampling Without a Seed Breaks Reproducibility
+
+> [!warning] Unseeded samples change on every run
+>
+> Random sampling without `random_state=` in Pandas or `seed=` in Polars returns
+> different rows every time. That makes notebooks, tests, and benchmarks harder
+> to compare or debug.
+
+> [!success] Set the sampling seed whenever the result must be repeatable
+>
+> Pass `random_state=` in Pandas and `seed=` in Polars for any sample that will
+> be inspected, committed, tested, or compared across runs.
 
 ## Recommendations
 

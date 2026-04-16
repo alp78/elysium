@@ -213,7 +213,7 @@ The test query `WHERE symbol = 'ASML.AS'` returned 13,470 rows. The delta shows 
 
 The `user_seeks` and `user_scans` counters answer the question "did the optimizer pick a seek or a scan?" but they do **not** directly measure rows read or CPU. A seek can be efficient (point lookup returning 1 row) or wasteful (range seek returning 90% of the table with a residual filter). A scan is almost always wasteful on a large table, except when the query legitimately needs most of the rows. For this note, interpret the counters as binary evidence of the optimizer's choice, and pair them with the returned `row_count` to judge whether the choice was appropriate.
 
-> [!warning] A "seek" is not always efficient
+> [!info] Seek counters are not cost metrics
 >
 > Modern SQL Server's `user_seeks` counter increments any time the optimizer chose a Seek operator, including range seeks with residual predicates that end up reading most of the index. The later demo for the `<>` operator (Section 8) shows a seek counter of 1 but returns 658,080 out of 671,550 rows — effectively a full scan dressed as a seek. Use the counter as a decision indicator, not as a cost metric. Pair it with `SET STATISTICS IO ON` and `SET STATISTICS TIME ON` (covered in [[13-execution-plans]]) when you need actual cost numbers.
 
@@ -330,6 +330,10 @@ The reverse case — a predicate on a non-leftmost key with no constraint on the
 >
 > Even though `date` is a key column of `IX_demo_idxmaint_symbol_date`, filtering only on `date` forces a scan. The index is sorted primarily by `symbol`, so the `date = X` rows for different symbols are scattered across the entire index in non-contiguous locations. There is no seek entry point without a `symbol` value.
 
+> [!success] Add a leading-column predicate, or add a separate index starting on date
+>
+> Two fixes exist. Either add a `symbol` (or any leading-key) predicate so the query becomes left-prefix compatible, or create a second nonclustered index starting with `date` as the leftmost key. The second option is the right choice when date-only queries are frequent and the extra index's maintenance cost is justified.
+
 *Filter on date only.*
 
 ```sql
@@ -342,10 +346,6 @@ WHERE [date] >= '2025-01-01' AND [date] < '2026-01-01';
 | 126980 | 0 | 1 | 0 | 0 |
 
 The query returned 126,980 rows (about 19% of the table) via a full scan of the NC index. The date-range predicate was applied as a residual filter after the scan read every row. The returned row count is identical to the seek version with `symbol = 'ASML.AS'` added — the difference is the access method.
-
-> [!success] Add a leading-column predicate, or add a separate index starting on date
->
-> Two fixes exist. Either add a `symbol` (or any leading-key) predicate so the query becomes left-prefix compatible, or create a second nonclustered index starting with `date` as the leftmost key. The second option is the right choice when date-only queries are frequent and the extra index's maintenance cost is justified.
 
 ### batch_no alone cannot seek
 
@@ -389,6 +389,10 @@ SARGability rewrites for string functions are mostly documented in [[07-string-f
 >
 > `LEFT(symbol, 3)` wraps the indexed column in a function. SQL Server cannot map the result back to a key-range on `symbol` without evaluating the expression on every row.
 
+> [!success] Rewrite as a prefix LIKE
+>
+> `col LIKE 'prefix%'` is the canonical SARGable prefix-search form. The optimizer maps it to a key range `['prefix', 'prefiq')` and seeks directly.
+
 *Filter by the first three characters of symbol using `LEFT`.*
 
 ```sql
@@ -400,10 +404,6 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE LEFT(symbol, 3) = 'ASM';
 | 13470 | 0 | 1 | 0 | 0 |
 
 The result is identical to the `symbol = 'ASML.AS'` demo (13,470 rows — only ASML.AS starts with `ASM` in this dataset) but the access path is a full NC index scan instead of a seek.
-
-> [!success] Rewrite as a prefix LIKE
->
-> `col LIKE 'prefix%'` is the canonical SARGable prefix-search form. The optimizer maps it to a key range `['prefix', 'prefiq')` and seeks directly.
 
 *Rewrite with `LIKE 'prefix%'`.*
 
@@ -437,6 +437,10 @@ When `SUBSTRING` starts at position 1, it behaves like `LEFT` — rewrite as `LI
 >
 > `RIGHT(col, n)` extracts the tail of the string. No `LIKE` pattern can express a suffix efficiently because `LIKE '%.AS'` has a leading wildcard, which is always non-SARGable. The only fix is a computed column holding `RIGHT(col, n)` indexed separately.
 
+> [!success] Index the computed suffix separately
+>
+> If suffix matching is a real access pattern, persist the suffix expression in a computed column, or index a reversed-string representation, and seek that derived key instead of scanning the base string column.
+
 *Filter on the last two characters of symbol.*
 
 ```sql
@@ -455,6 +459,10 @@ The query scanned the full NC index and returned 80,820 rows (roughly 12% of the
 >
 > Under a case-insensitive collation (the `stoxx` database default), `WHERE UPPER(col) = 'X'` is functionally **redundant** — `col = 'X'` already matches all casings. Wrapping the column in `UPPER` adds no correctness benefit and removes the seek.
 
+> [!success] Remove the wrapper entirely
+>
+> Rely on the collation's case-insensitivity. The equality comparison matches `Apple`, `APPLE`, `apple`, and `aPpLe` natively under `SQL_Latin1_General_CP1_CI_AS`.
+
 *Redundant UPPER wrapper.*
 
 ```sql
@@ -464,10 +472,6 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE UPPER(symbol) = 'ASML.AS';
 | row_count | nc_seeks | nc_scans | cx_seeks | cx_scans |
 |---|---|---|---|---|
 | 13470 | 0 | 1 | 0 | 0 |
-
-> [!success] Remove the wrapper entirely
->
-> Rely on the collation's case-insensitivity. The equality comparison matches `Apple`, `APPLE`, `apple`, and `aPpLe` natively under `SQL_Latin1_General_CP1_CI_AS`.
 
 *Plain equality, same result, seek.*
 
@@ -484,6 +488,10 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE symbol = 'ASML.AS';
 > [!warning] col + '' is a silent SARGability killer
 >
 > Some codebases append an empty string to defensively coerce a value for display. On the column side of a predicate this is a function wrapper like any other, and it forces a scan.
+
+> [!success] Keep coercions in the projection
+>
+> If the application needs a display-safe string, do the coercion in the `SELECT` list or in the client layer, not in the `WHERE` clause. The predicate must compare the bare indexed column so the optimizer can still seek.
 
 *Concatenate empty string onto symbol in the predicate.*
 
@@ -567,6 +575,10 @@ The SARGability rules for date functions mirror the string rules: wrapping a dat
 >
 > `YEAR(col) = 2025` looks like a constant-time expression, but the optimizer cannot rewrite it into a range predicate automatically — it must evaluate `YEAR()` on every row.
 
+> [!success] Rewrite as a half-open date range anchored on the leftmost key
+>
+> Convert `YEAR(col) = 2025` to `col >= '2025-01-01' AND col < '2026-01-01'`, and add the leftmost-key anchor so the composite index can seek the whole predicate.
+
 *Anti-pattern: wrap the date column in YEAR.*
 
 ```sql
@@ -576,10 +588,6 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE YEAR([date]) = 2025;
 | row_count | nc_seeks | nc_scans | cx_seeks | cx_scans |
 |---|---|---|---|---|
 | 126980 | 0 | 1 | 0 | 0 |
-
-> [!success] Rewrite as a half-open date range anchored on the leftmost key
->
-> Convert `YEAR(col) = 2025` to `col >= '2025-01-01' AND col < '2026-01-01'`, and add the leftmost-key anchor so the composite index can seek the whole predicate.
 
 *SARGable rewrite with symbol anchor.*
 
@@ -614,6 +622,10 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE MONTH([date]) = 1;
 >
 > `DATEDIFF(DAY, col, SYSUTCDATETIME()) <= 30` wraps the column in `DATEDIFF`. Even though the second argument is `SYSUTCDATETIME()` (constant per query), the first argument is the column, which makes the whole expression a function on the column.
 
+> [!success] Move DATEADD to the literal side
+>
+> Rewrite `DATEDIFF(DAY, col, ref) <= n` as `col >= DATEADD(DAY, -n, ref)`. The column becomes bare; the `DATEADD` arithmetic is a constant that the optimizer folds at compile time.
+
 *Anti-pattern: DATEDIFF from column to now.*
 
 ```sql
@@ -624,10 +636,6 @@ WHERE DATEDIFF(DAY, [date], '2026-04-01') <= 30;
 | row_count | nc_seeks | nc_scans | cx_seeks | cx_scans |
 |---|---|---|---|---|
 | 12500 | 0 | 1 | 0 | 0 |
-
-> [!success] Move DATEADD to the literal side
->
-> Rewrite `DATEDIFF(DAY, col, ref) <= n` as `col >= DATEADD(DAY, -n, ref)`. The column becomes bare; the `DATEADD` arithmetic is a constant that the optimizer folds at compile time.
 
 *Rewrite with DATEADD on the literal side, anchored on symbol for a real seek.*
 
@@ -652,6 +660,10 @@ The rewrite seeks — `nc_seeks = 1`. Without the `symbol` anchor the rewritten 
 >
 > A `datetime2` value like `'2025-12-31 14:30:00'` is greater than `'2025-12-31 00:00:00'`, so it falls **outside** the closed range. Any query that uses `BETWEEN` with whole-day boundaries against a sub-day-precision column silently undercounts on the last day.
 
+> [!success] Use half-open range with strict upper bound
+>
+> Write `col >= 'start' AND col < 'end'` where `'end'` is the first moment of the day **after** the period ends. This is correct for `date`, `datetime`, and `datetime2` without any modification and conveys intent unambiguously.
+
 *Closed BETWEEN against a date-only column (the stoxx `date` column has day precision, so this is safe here — but the pattern is dangerous by default).*
 
 ```sql
@@ -662,10 +674,6 @@ WHERE symbol = 'ASML.AS' AND [date] BETWEEN '2025-01-01' AND '2025-12-31';
 | row_count | nc_seeks | nc_scans | cx_seeks | cx_scans |
 |---|---|---|---|---|
 | 2550 | 1 | 0 | 0 | 0 |
-
-> [!success] Use half-open range with strict upper bound
->
-> Write `col >= 'start' AND col < 'end'` where `'end'` is the first moment of the day **after** the period ends. This is correct for `date`, `datetime`, and `datetime2` without any modification and conveys intent unambiguously.
 
 ### Half-open range covers every row correctly
 
@@ -706,6 +714,10 @@ Arithmetic on a column — `col * 1.2`, `col + 0`, `col - offset` — is a funct
 >
 > `close * 1.2 > 100` wraps the column. Even if the expression is algebraically trivial (divide both sides by 1.2), the optimizer does not perform this rewrite automatically.
 
+> [!success] Rewrite algebraically so the column is bare
+>
+> Divide both sides: `close > 100 / 1.2`. The right-hand side is a compile-time constant and the column is the bare left-hand side.
+
 *Anti-pattern: multiply column by a constant.*
 
 ```sql
@@ -715,10 +727,6 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE [close] * 1.2 > 100;
 | row_count | nc_seeks | nc_scans | cx_seeks | cx_scans |
 |---|---|---|---|---|
 | 317340 | 0 | 1 | 0 | 0 |
-
-> [!success] Rewrite algebraically so the column is bare
->
-> Divide both sides: `close > 100 / 1.2`. The right-hand side is a compile-time constant and the column is the bare left-hand side.
 
 *Move the constant to the right side.*
 
@@ -786,6 +794,10 @@ The optimizer rewrites `ISNULL(symbol, '') = 'ASML.AS'` to effectively `symbol =
 >
 > `COALESCE` is an ANSI-standard synonym for `CASE WHEN col IS NOT NULL THEN col ELSE default END`. The `CASE` wrapping prevents the same rewrite path that the simpler `ISNULL` enjoys. Result: identical semantics, different access method.
 
+> [!success] Rewrite as null-safe OR or split with UNION ALL
+>
+> The fully-portable SARGable rewrite is to handle the null-branch explicitly: `WHERE col = value OR (col IS NULL AND default = value)`. The optimizer can push `col = value` through an index seek and evaluate the null-branch separately.
+
 *COALESCE with the same unreachable fallback.*
 
 ```sql
@@ -797,10 +809,6 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE COALESCE(symbol, '') = 'AS
 | 13470 | 0 | 1 | 0 | 0 |
 
 Identical row count, identical semantic meaning — **different access method**. `COALESCE` scans, `ISNULL` seeks. For performance-critical predicates, prefer `ISNULL` when the column is of a single type. For portable ANSI code or when you need more than two arguments, use `COALESCE` but accept the scan and plan an index design that compensates.
-
-> [!success] Rewrite as null-safe OR or split with UNION ALL
->
-> The fully-portable SARGable rewrite is to handle the null-branch explicitly: `WHERE col = value OR (col IS NULL AND default = value)`. The optimizer can push `col = value` through an index seek and evaluate the null-branch separately.
 
 *Null-safe OR rewrite.*
 
@@ -824,6 +832,10 @@ Inequality operators (`<>`, `!=`, `NOT =`) and the negated predicate `NOT col = 
 > [!warning] <> is a "seek" in name only
 >
 > `WHERE col <> X` is converted into two range seeks: `col < X` and `col > X`. The DMV increments `user_seeks = 1` because a seek operator was used, but the combined range covers everything except the single value `X`. On a large table this is as expensive as a full scan.
+
+> [!success] Rewrite as a positive predicate
+>
+> Prefer equality or narrow range predicates on the subset you actually want. If the business rule really is "everything except X", budget for scan-like cost even when the operator name says Seek, or add a filtered/indexed access path for the retained subset when that exclusion pattern is a true hot path.
 
 ### <> inequality on the leftmost key
 
@@ -865,6 +877,10 @@ Full type-precedence rules live in [[02-data-types-conversion-and-null-handling]
 >
 > Every .NET `SqlParameter` with type `string` uses `NVARCHAR` by default. When that parameter is compared against a `varchar` column, SQL Server applies `CONVERT_IMPLICIT(nvarchar, col)` to the column side — converting every row's value at read time — which makes the query non-SARGable. This is the single most common SARGability bug in production systems using Entity Framework or similar.
 
+> [!success] Match the parameter type to the column type
+>
+> Declare the parameter as `varchar(20)` to match the column. No conversion is needed on either side and the seek happens.
+
 ### nvarchar parameter against varchar column scans
 
 *nvarchar parameter against a varchar column — scans.*
@@ -877,10 +893,6 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE symbol = @p;
 | row_count | nc_seeks | nc_scans | cx_seeks | cx_scans |
 |---|---|---|---|---|
 | 13470 | 0 | 1 | 0 | 0 |
-
-> [!success] Match the parameter type to the column type
->
-> Declare the parameter as `varchar(20)` to match the column. No conversion is needed on either side and the seek happens.
 
 ### Matched varchar parameter seeks
 
@@ -903,6 +915,10 @@ Identical row count, different access method. For .NET callers the fix is to exp
 >
 > An explicit `CAST` on the column is the explicit version of the implicit-conversion trap. It wraps the column in a function and forces per-row evaluation. The fix is either to drop the cast if the types are compatible or to move the cast to the parameter side.
 
+> [!success] Move the cast to the literal side
+>
+> `symbol = CAST(N'ASML.AS' AS varchar(20))` leaves the column bare and casts the constant at compile time.
+
 ### Explicit CAST of the column scans
 
 *Explicit CAST of the column.*
@@ -914,10 +930,6 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE CAST(symbol AS nvarchar(20
 | row_count | nc_seeks | nc_scans | cx_seeks | cx_scans |
 |---|---|---|---|---|
 | 13470 | 0 | 1 | 0 | 0 |
-
-> [!success] Move the cast to the literal side
->
-> `symbol = CAST(N'ASML.AS' AS varchar(20))` leaves the column bare and casts the constant at compile time.
 
 ### CAST on the literal side seeks
 
@@ -996,6 +1008,10 @@ When an `OR` predicate references **different** columns, the optimizer cannot me
 >
 > `symbol = 'ASML.AS' OR batch_no = 99` asks the optimizer to combine results from two different index access paths. Unless both columns are indexed and the row overlap is small, the optimizer picks a full scan.
 
+> [!success] Split into two SELECTs unioned with `UNION ALL`
+>
+> The SARGable rewrite is `SELECT ... WHERE symbol = 'ASML.AS' UNION ALL SELECT ... WHERE batch_no = 99 AND symbol <> 'ASML.AS'`. Each branch is a clean SARGable predicate, and `UNION ALL` combines them without deduplication overhead. The second branch's extra `<> 'ASML.AS'` predicate prevents double-counting rows that match both conditions.
+
 ### symbol OR batch_no scans
 
 *OR across two different columns.*
@@ -1009,10 +1025,6 @@ WHERE symbol = 'ASML.AS' OR batch_no = 99;
 |---|---|---|---|---|
 | 13470 | 0 | 1 | 0 | 0 |
 
-> [!success] Split into two SELECTs unioned with UNION ALL
->
-> The SARGable rewrite is `SELECT ... WHERE symbol = 'ASML.AS' UNION ALL SELECT ... WHERE batch_no = 99 AND symbol <> 'ASML.AS'`. Each branch is a clean SARGable predicate, and `UNION ALL` combines them without deduplication overhead. The second branch's extra `<> 'ASML.AS'` predicate prevents double-counting rows that match both conditions.
-
 ### NOT IN correctness trap
 
 `NOT IN` is semantically equivalent to a series of `<>` comparisons chained with `AND`. This has two problems: the `<>` pattern is barely SARGable (Section 7), and `NOT IN` with a subquery that **might** return `NULL` produces **incorrect** results.
@@ -1020,6 +1032,10 @@ WHERE symbol = 'ASML.AS' OR batch_no = 99;
 > [!danger] NOT IN with a NULL in the list returns zero rows
 >
 > Under three-valued logic, `x NOT IN (a, b, NULL)` evaluates to `x <> a AND x <> b AND x <> NULL`. The last comparison returns `UNKNOWN`, which propagates through the `AND` and makes the whole expression `UNKNOWN` — so no row ever matches. A subquery that could return even one `NULL` value turns the entire `NOT IN` into an empty result set.
+
+> [!success] Use NOT EXISTS for subquery exclusion
+>
+> Replace `col NOT IN (SELECT ...)` with `NOT EXISTS (SELECT 1 FROM ... WHERE sub.col = outer.col)`. `NOT EXISTS` is null-safe by design: a `NULL` in the subquery does not poison the outer result. The SARGability is comparable and the correctness is guaranteed.
 
 ### NOT IN with a non-null list
 
@@ -1034,10 +1050,6 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE symbol NOT IN ('ASML.AS', 
 | 644680 | 1 | 0 | 0 | 0 |
 
 The DMV reports a seek (1, 0) but the row count (644,680 out of 671,550 — 96%) reveals that the "seek" walked almost the entire index. Same pattern as `<>`.
-
-> [!success] Use NOT EXISTS for subquery exclusion
->
-> Replace `col NOT IN (SELECT ...)` with `NOT EXISTS (SELECT 1 FROM ... WHERE sub.col = outer.col)`. `NOT EXISTS` is null-safe by design: a `NULL` in the subquery does not poison the outer result. The SARGability is comparable and the correctness is guaranteed.
 
 ### NOT EXISTS is the null-safe rewrite
 
@@ -1062,6 +1074,13 @@ The pattern `WHERE (@p IS NULL OR col = @p)` is the classic "one query, many opt
 >
 > The optimizer cannot produce a seek-based plan for a predicate whose shape depends on a variable's value. It picks a scan as the safe choice, and once the scan plan is cached, every subsequent execution reuses it — even when `@p` is a concrete value that would have seeked in a simple query.
 
+> [!success] Use `OPTION (RECOMPILE)` in stored procedures, or dynamic SQL
+>
+> Two production-grade fixes exist:
+>
+> - **`OPTION (RECOMPILE)`** forces SQL Server to compile a fresh plan for every execution, substituting the actual parameter value into the predicate. With `@p = 'ASML.AS'`, the predicate simplifies at compile time to `('ASML.AS' IS NULL OR symbol = 'ASML.AS')` → `symbol = 'ASML.AS'`, which seeks. With `@p = NULL`, it simplifies to `TRUE`, which scans. Each execution gets the optimal plan for its specific parameter value, at the cost of compilation overhead on every call. Works reliably in stored procedures where `@p` is a true parameter, less reliably with local variables.
+> - **Dynamic SQL** builds the predicate at runtime, `sp_executesql` parameterizes only the branches that are actually present, and the optimizer sees a clean predicate. This is the traditional fix for catch-all patterns with many optional filters.
+
 ### Catch-all with a concrete parameter scans
 
 *Catch-all with a concrete parameter value.*
@@ -1076,13 +1095,6 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE (@p IS NULL OR symbol = @p
 | 13470 | 0 | 1 | 0 | 0 |
 
 The query returned the correct 13,470 rows but via a full NC index scan. This is the canonical catch-all penalty.
-
-> [!success] Use OPTION (RECOMPILE) in stored procedures, or dynamic SQL
->
-> Two production-grade fixes exist:
->
-> - **`OPTION (RECOMPILE)`** forces SQL Server to compile a fresh plan for every execution, substituting the actual parameter value into the predicate. With `@p = 'ASML.AS'`, the predicate simplifies at compile time to `('ASML.AS' IS NULL OR symbol = 'ASML.AS')` → `symbol = 'ASML.AS'`, which seeks. With `@p = NULL`, it simplifies to `TRUE`, which scans. Each execution gets the optimal plan for its specific parameter value, at the cost of compilation overhead on every call. Works reliably in stored procedures where `@p` is a true parameter, less reliably with local variables.
-> - **Dynamic SQL** builds the predicate at runtime, `sp_executesql` parameterizes only the branches that are actually present, and the optimizer sees a clean predicate. This is the traditional fix for catch-all patterns with many optional filters.
 
 ### OPTION (RECOMPILE) with a local variable is not a silver bullet
 
@@ -1210,6 +1222,14 @@ The filtered index is used for a seek that returns 3,210 rows. The `WITH (INDEX(
 >
 > The filter predicate `WHERE symbol = 'ASML.AS'` is a **literal**. When a query uses a parameter `@p = 'ASML.AS'`, the optimizer cannot prove at compile time that `@p` will always equal `'ASML.AS'`, so it refuses to use the filtered index (unless `OPTION (RECOMPILE)` is added). The query falls back to the larger composite index even though the two literal values are identical at runtime.
 
+> [!success] Use literals, OPTION (RECOMPILE), or query-specific wrappers
+>
+> Three ways to make a filtered index usable with parameterized queries:
+>
+> - **Embed the literal** in a wrapper procedure or view that is specialized for one filter value. This is the cleanest solution when the set of possible values is small.
+> - **`OPTION (RECOMPILE)`** lets the optimizer substitute the parameter value at compile time and re-check the filter match. Only viable when compilation cost is acceptable.
+> - **Redesign the filter** to use a column or expression the optimizer can prove at compile time — for example, a computed `is_hot_symbol` bit column indexed separately.
+
 *Same predicate, but the value comes from a parameter instead of a literal.*
 
 ```sql
@@ -1222,14 +1242,6 @@ SELECT COUNT(*) FROM dbo.demo_idxmaint_rowstore WHERE symbol = @p AND [date] >= 
 | 3210 | 0 | 0 |
 
 Same result, but the filtered index was **not used at all** — both `fi_seeks` and `fi_scans` are 0. The optimizer chose the full composite index instead. This is the #1 reason filtered indexes fail in production: queries are parameterized, and the parameterization defeats the filter-match proof.
-
-> [!success] Use literals, OPTION (RECOMPILE), or query-specific wrappers
->
-> Three ways to make a filtered index usable with parameterized queries:
->
-> - **Embed the literal** in a wrapper procedure or view that is specialized for one filter value. This is the cleanest solution when the set of possible values is small.
-> - **`OPTION (RECOMPILE)`** lets the optimizer substitute the parameter value at compile time and re-check the filter match. Only viable when compilation cost is acceptable.
-> - **Redesign the filter** to use a column or expression the optimizer can prove at compile time — for example, a computed `is_hot_symbol` bit column indexed separately.
 
 ### Dropping the filtered index
 

@@ -19,7 +19,7 @@ status: complete
 
 # Data Services Blocks
 
-> [!quote] Werner Vogels on automation
+> [!quote]+
 >
 > "Automate everything that doesn't require high judgment."
 >

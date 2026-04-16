@@ -20,7 +20,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Clearing
 
-> [!quote]
+> [!quote]+
 > "The clearinghouse is the guarantor of last resort — it stands between every buyer and every seller."
 >
 > — **John C. Hull**, *Options, Futures, and Other Derivatives* (1988)
@@ -38,7 +38,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Custodian Services
 
-> [!quote]
+> [!quote]+
 > "The most important thing a custodian does is make sure assets are safe — everything else is secondary."
 >
 > — **Robert Kelly**
@@ -68,7 +68,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Exchange (Stock/Futures)
 
-> [!quote]
+> [!quote]+
 > "The stock exchange is the bazaar of capitalism — it is where ownership changes hands."
 >
 > — **Robert Shiller**, *Irrational Exuberance* (2000)
@@ -86,7 +86,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Listing
 
-> [!quote]
+> [!quote]+
 > "Going public is not the end of the journey — it is just the beginning of a whole new set of responsibilities."
 >
 > — **Mary Jo White**
@@ -103,7 +103,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Market-Making
 
-> [!quote]
+> [!quote]+
 > "Liquidity is the lifeblood of markets — without market makers, orderly trading would cease."
 >
 > — **Fischer Black**
@@ -121,7 +121,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Prime Brokerage
 
-> [!quote]
+> [!quote]+
 > "The prime broker is the plumber of the hedge fund world — nobody notices until the pipes break."
 >
 > — **Sebastian Mallaby**, *More Money Than God* (2010)
@@ -138,7 +138,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Securities Clearing
 
-> [!quote]
+> [!quote]+
 > "Netting is the genius of modern clearing — it turns millions of obligations into a manageable few."
 >
 > — **Darrell Duffie**, *How Big Banks Fail and What to Do About It* (2010)
@@ -156,7 +156,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Settlement
 
-> [!quote]
+> [!quote]+
 > "Settlement is where the rubber meets the road — it is the moment when promises become reality."
 >
 > — **Benoit Coeure**
@@ -174,7 +174,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Stock Connect
 
-> [!quote]
+> [!quote]+
 > "Stock Connect has opened the door to China's capital markets in a way that no previous mechanism achieved."
 >
 > — **Charles Li**, former CEO of HKEX
@@ -191,7 +191,7 @@ Encyclopedia of exchange and market infrastructure terms covering the organized 
 
 ## Stock Transfer Agency
 
-> [!quote]
+> [!quote]+
 > "The humble transfer agent is the keeper of the shareholder register — the definitive record of who owns what."
 >
 > — **Larry Thompson**

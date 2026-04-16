@@ -793,7 +793,7 @@ SQL Server creates VLFs during growth using three tiers: growth increments under
 > 4. **Grow the log back in a single large increment** — `ALTER DATABASE [db] MODIFY FILE (NAME = log_logical_name, SIZE = <target>MB)` where the target is the log's expected working size. Use a single allocation of 1,024–4,096 MB to produce 8–16 uniformly sized VLFs (per the tiered VLF creation rules above).
 > 5. **Verify the new VLF count** — query `sys.dm_db_log_info(DB_ID())` and confirm the count dropped to the expected value (e.g., 8 VLFs for a 1,024 MB allocation, 16 for a 2,048 MB+ allocation).
 
-> [!quote] Korotkevitch
+> [!quote]+
 >
 > Do not auto-shrink transaction log files. They will grow again and affect performance when SQL Server zeroes out the file. It is better to pre-allocate the space and manage log file size manually.
 >

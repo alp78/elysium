@@ -10,7 +10,7 @@ status: complete
 
 # Plan, Apply and Destroy
 
-> [!quote] Eisenhower on planning
+> [!quote]+
 >
 > "Plans are worthless, but planning is everything."
 >

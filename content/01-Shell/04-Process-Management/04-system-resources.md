@@ -10,7 +10,7 @@ description: "Linux and PowerShell commands for monitoring memory, CPU, and disk
 
 # System Resources — Memory, CPU, and Disk I/O
 
-> [!quote] Cray on systems
+> [!quote]+
 >
 > "Anyone can build a fast CPU. The trick is to build a fast system."
 >

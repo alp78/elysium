@@ -16,7 +16,7 @@ updated: 2026-03-23
 
 ### Input Data Requirements (Article 11)
 
-> [!quote]
+> [!quote]+
 > "A benchmark is only as good as the data that goes into it."
 >
 > — **Jean-Paul Servais** (IOSCO Board Chair)

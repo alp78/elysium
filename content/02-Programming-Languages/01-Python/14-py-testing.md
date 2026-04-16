@@ -10,7 +10,7 @@ status: complete
 
 # 14. Testing - Python
 
-> [!quote] Testing Quotes
+> [!quote]+
 >
 > "Legacy code is simply code without tests."
 >

@@ -23,7 +23,7 @@ updated: 2026-03-29
 
 # Data Contracts
 
-> [!quote]
+> [!quote]+
 > "A data contract is the API of data — it sets expectations between producers and consumers so that changes don't break downstream systems silently."
 >
 > — **Andrew Jones** (data contracts advocate)

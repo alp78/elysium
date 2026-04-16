@@ -10,7 +10,7 @@ status: complete
 
 # Golden Rules of Data Engineering
 
-> [!quote]
+> [!quote]+
 > "A data engineer's job is to get data into a state where it can create value, not to build the most sophisticated pipeline possible."
 >
 > — **Joe Reis & Matt Housley**, *Fundamentals of Data Engineering* (2022)

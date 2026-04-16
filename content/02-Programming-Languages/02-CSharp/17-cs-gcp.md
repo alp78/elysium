@@ -12,7 +12,7 @@ status: complete
 
 ![Pipeline Architecture](/static/index_lab.jpg)
 
-> [!quote] Reliability
+> [!quote]+
 >
 > "Everything fails all the time, so plan for failure and nothing fails."
 >

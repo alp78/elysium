@@ -10,7 +10,7 @@ status: complete
 
 # Lakehouse Architecture
 
-> [!quote]
+> [!quote]+
 > "A lakehouse is a data management system based on low-cost storage that also provides traditional analytical DBMS management and performance features."
 >
 > — **Michael Armbrust** (co-creator of Delta Lake)

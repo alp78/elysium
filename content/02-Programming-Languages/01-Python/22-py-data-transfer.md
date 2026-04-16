@@ -10,7 +10,7 @@ status: complete
 
 # Data Transfer — GCS, SQL Server, BigQuery
 
-> [!quote]- Quote
+> [!quote]+
 >
 > "Make it work, make it right, make it fast — in that order. But when moving data at scale, make it parallel."
 >

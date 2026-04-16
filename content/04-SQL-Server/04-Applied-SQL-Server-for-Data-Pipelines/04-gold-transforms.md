@@ -10,7 +10,7 @@ status: complete
 
 # Gold Transforms
 
-> [!quote]- Consumer contract
+> [!quote]+
 >
 > "The gold layer is the contract with your consumers. If the schema changes without warning, every dashboard, API, and downstream pipeline breaks."
 >

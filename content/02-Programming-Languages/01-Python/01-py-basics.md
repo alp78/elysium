@@ -10,7 +10,7 @@ status: complete
 
 # 01. Basics - Python
 
-> [!quote] Kernighan and Ritchie on learning languages
+> [!quote]+
 >
 > "The only way to learn a new programming language is by writing programs in it."
 >

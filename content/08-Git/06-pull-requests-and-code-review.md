@@ -7,7 +7,7 @@ tags:
 
 # Pull Requests and Code Review
 
-> [!quote] Linus's Law
+> [!quote]+
 >
 > "Given enough eyeballs, all bugs are shallow."
 >

@@ -10,7 +10,7 @@ status: complete
 
 # dbt Transformation Layer
 
-> [!quote]
+> [!quote]+
 > "Analytics code should be version-controlled, tested, and modular — the same standards we apply to software should apply to SQL."
 >
 > — **Tristan Handy** (creator of dbt)

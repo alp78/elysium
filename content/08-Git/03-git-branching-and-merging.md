@@ -7,7 +7,7 @@ tags:
 
 # Git Branching and Merging
 
-> [!quote]
+> [!quote]+
 > "In git, we like branches so much that once you realize you have to have a special branch anyway, you might as well have many."
 >
 > — **Linus Torvalds**, Git mailing list

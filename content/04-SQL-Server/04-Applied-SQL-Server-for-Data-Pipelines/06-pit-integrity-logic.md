@@ -378,10 +378,12 @@ _This is what a trustworthy PIT history looks like on a snapshot fact table: the
 
 Snapshot facts answer "what was published on date X?" Valid-time rows answer "what was true for the business date?" Bi-temporal modeling answers the harder audit question: "what did the system know at publication time, before later corrections arrived?"
 
-> [!warning]
+> [!warning] Snapshots lose correction history
+>
 > If a later correction can change a previously published weight, score, or classification, a plain snapshot fact is not enough to reproduce the original decision path.
 >
-> [!success]
+> [!success] Separate valid time from system time
+>
 > Store transaction-time history separately from business-validity dates. In SQL Server, system-versioned temporal tables are the cleanest built-in way to retain the earlier row version automatically.
 >
 
@@ -390,10 +392,12 @@ Snapshot facts answer "what was published on date X?" Valid-time rows answer "wh
 > [!example]
 > The following demo uses a disposable table in `dbo` so the note can show real `FOR SYSTEM_TIME` output without mutating production tables. It demonstrates a correction to one published weight for `ASML.AS`.
 
-> [!warning]
+> [!warning] Demo DDL still mutates the database
+>
 > These commands create and update demo objects in `stoxx`. They are safe for a lab or documentation workflow, but they are still DDL and DML. Do not run them blindly in shared environments without agreeing on naming, retention, and cleanup.
 >
-> [!success]
+> [!success] Keep demos isolated
+>
 > Use a dedicated demo table when teaching temporal behavior. Keep production temporal tables focused on real audited entities, not documentation experiments.
 >
 > [!info]-
@@ -580,10 +584,12 @@ Weight totals are not advisory in index pipelines. They are a publication gate.
 
 The live `gold.scores_daily` table stores `index_weight` as `FLOAT`, which is common in exploratory or scoring-oriented surfaces, but not ideal for final auditable weight control. For validation, cast to `DECIMAL`, compute the deviation explicitly, and gate the output with a tolerance that is strict enough for the business rule.
 
-> [!warning]
+> [!warning] Float equality is not publication proof
+>
 > Never compare `SUM(index_weight) = 1.0` directly on `FLOAT` data and call the result "exact". Binary floating-point is not a publication-grade proof of weight closure.
 >
-> [!success]
+> [!success] Validate weights in fixed-point
+>
 > Cast to `DECIMAL`, compute the deviation from `1.000000000000`, and make the pass or fail decision explicit in the output that the pipeline reviews.
 >
 

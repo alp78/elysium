@@ -10,7 +10,7 @@ status: complete
 
 # Scenario-Based Decision Guide
 
-> [!quote]
+> [!quote]+
 > "Plan to throw one away; you will, anyhow."
 >
 > — **Fred Brooks**, *The Mythical Man-Month* (1975)

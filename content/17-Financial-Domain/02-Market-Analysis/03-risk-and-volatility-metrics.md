@@ -29,7 +29,7 @@ Risk and volatility metrics quantify the uncertainty and potential downside of e
 
 ## Beta
 
-> [!quote]
+> [!quote]+
 > "Beta is a measure of risk only if you define risk as volatility relative to the market — which most practitioners do."
 >
 > — **William Sharpe**
@@ -49,7 +49,7 @@ $$\beta = \frac{\text{Cov}(r_{\text{stock}}, r_{\text{market}})}{\text{Var}(r_{\
 
 ## VIX (CBOE Volatility Index)
 
-> [!quote]
+> [!quote]+
 > "Volatility is the price of admission. The prize inside is superior long-term returns."
 >
 > — **Nick Murray**, *Simple Wealth, Inevitable Wealth* (1999)
@@ -67,7 +67,7 @@ The VIX measures implied volatility from S&P 500 options, often called the "fear
 
 ## Maximum Drawdown
 
-> [!quote]
+> [!quote]+
 > "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1."
 >
 > — **Warren Buffett**
@@ -114,7 +114,7 @@ $$\text{Calmar} = \frac{\text{Annualized Return}}{\text{Maximum Drawdown}}$$
 
 ## Value at Risk (VaR)
 
-> [!quote]
+> [!quote]+
 > "VaR is like an airbag that works all the time, except when you have a car accident."
 >
 > — **David Einhorn**

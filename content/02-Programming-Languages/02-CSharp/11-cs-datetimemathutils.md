@@ -10,7 +10,7 @@ status: complete
 
 # DateTime, Math & Utilities - C#
 
-> [!quote]
+> [!quote]+
 > "There are two hard problems in datetime handling: timezone conversions, daylight saving transitions, and off-by-one errors."
 >
 > — **Jon Skeet**

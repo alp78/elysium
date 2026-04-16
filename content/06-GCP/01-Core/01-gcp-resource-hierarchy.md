@@ -246,7 +246,7 @@ status: complete
 
 Project-level hierarchy commands did not work initially with the service account because the project had BigQuery and Storage roles, but not Cloud Resource Manager access. The exact bootstrap sequence below is what unlocked the rest of this note.
 
-### PowerShell / Linux | bootstrap hierarchy access
+### Linux / Bash | bootstrap hierarchy access
 
 Use this subsection when a service account can access product APIs like BigQuery but fails on `gcloud projects describe`, `gcloud organizations list`, or `gcloud services list`.
 
@@ -371,6 +371,8 @@ At this point the service account becomes the active CLI identity and the rest o
 
 The full Google Cloud hierarchy has four conceptual levels: organization, folder, project, and resource. Projects are where billing, API enablement, and most day-to-day engineering work happen, but the higher levels still matter because IAM bindings and organization policy flow downward. A permission granted too high in the tree becomes visible to every descendant resource unless a more specific control blocks it.
 
+*Visualize the ancestor tree and inheritance direction.*
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {
   'primaryColor': '#292e42',
@@ -436,7 +438,7 @@ At the project layer, three operational facts matter most:
 
 Organizations only exist when the cloud estate is anchored to Google Workspace or Cloud Identity. A standalone project can exist without a visible organization parent, and that is exactly what the live `bq-wh-nb` environment demonstrates.
 
-### PowerShell / Linux | gcloud organizations list
+### Linux / Bash | gcloud organizations list
 
 Use this command to discover which organization resources are visible to the active identity. In the current environment the result is empty, which is operationally meaningful because it explains why folder-level commands below cannot be executed against a real ancestor.
 
@@ -464,7 +466,7 @@ The empty JSON array means the active principal sees no organization resources. 
 | `--sort-by` | `gcloud organizations list --sort-by=displayName` | Sorts the result set client-side. |
 | `--uri` | `gcloud organizations list --uri` | Prints only resource URIs instead of the default fields. |
 
-### PowerShell / Linux | gcloud organizations describe
+### Linux / Bash | gcloud organizations describe
 
 This command is only meaningful when an organization ID or domain exists. Because `gcloud organizations list` returned `[]`, there is no live organization target in the current project.
 
@@ -495,7 +497,7 @@ When this command is valid, the output normally includes the organization resour
 
 Folders are optional. They only exist beneath an organization and are useful when you need an intermediate administrative boundary between the company-wide organization and individual projects. Because `bq-wh-nb` has no visible organization ancestor, folder management in this environment is a command-shape reference rather than a live parent-child walkthrough.
 
-### PowerShell / Linux | gcloud resource-manager folders list
+### Linux / Bash | gcloud resource-manager folders list
 
 Use folder listing when an organization or parent folder exists and you need to enumerate the next layer down.
 
@@ -523,7 +525,7 @@ No live output in this environment: `bq-wh-nb` has no visible organization paren
 | `--sort-by` | `gcloud resource-manager folders list --organization=123456789012 --sort-by=displayName` | Sorts the returned folders. |
 | `--uri` | `gcloud resource-manager folders list --organization=123456789012 --uri` | Prints resource URIs only. |
 
-### PowerShell / Linux | gcloud resource-manager folders describe
+### Linux / Bash | gcloud resource-manager folders describe
 
 Folder description is the next step after listing, when you need the metadata for one specific folder.
 
@@ -548,7 +550,7 @@ No live output in this environment: there is no visible folder ID to describe be
 | `--flatten` | `gcloud resource-manager folders describe 3589215982 --flatten=parent` | Flattens nested fields before formatting. |
 | `--verbosity` | `gcloud resource-manager folders describe 3589215982 --verbosity=debug` | Adds troubleshooting output. |
 
-### PowerShell / Linux | gcloud resource-manager folders create
+### Linux / Bash | gcloud resource-manager folders create
 
 Folder creation is an organization-governance operation, not an everyday application workflow. It should be rare, deliberate, and reviewed because every folder becomes a new inheritance point for IAM and policy.
 
@@ -574,7 +576,7 @@ No live output in this environment: folder creation is not applicable because `b
 | `--async` | `gcloud resource-manager folders create --display-name="Data Platform" --organization=123456789012 --async` | Returns before the create operation completes. |
 | `--tags` | `gcloud resource-manager folders create --display-name="Data Platform" --organization=123456789012 --tags=123/environment=production` | Binds tags during create. |
 
-### PowerShell / Linux | gcloud resource-manager folders move
+### Linux / Bash | gcloud resource-manager folders move
 
 Folder moves are powerful because they reparent an entire subtree, not just one resource.
 
@@ -611,7 +613,7 @@ No live output in this environment: there is no live folder to move because `bq-
 
 Projects are where most engineers live operationally. They are the point where billing attaches, APIs are enabled, service accounts run, and resources like BigQuery datasets, buckets, and Cloud Run services are created. The read-only inspection commands in this section were refreshed live against `bq-wh-nb`, which is currently in `DELETE_REQUESTED`.
 
-### PowerShell / Linux | gcloud projects list
+### Linux / Bash | gcloud projects list
 
 Project listing is the first sanity check before any destructive or environment-specific work. It tells you which projects the active principal can currently see.
 
@@ -645,7 +647,7 @@ The service account can now see `bq-wh-nb` directly through Cloud Resource Manag
 | `--sort-by` | `gcloud projects list --sort-by=name` | Sorts project output by one or more fields. |
 | `--page-size` | `gcloud projects list --page-size=50` | Controls API paging size. |
 
-### PowerShell / Linux | gcloud projects describe
+### Linux / Bash | gcloud projects describe
 
 Project description is the canonical metadata check. It is how you confirm lifecycle state, labels, create time, and parent association before changing the project.
 
@@ -685,7 +687,7 @@ Three details matter here. First, `lifecycleState: DELETE_REQUESTED` means the p
 | `--flatten` | `gcloud projects describe bq-wh-nb --flatten=labels` | Flattens nested fields before formatting. |
 | `--verbosity` | `gcloud projects describe bq-wh-nb --verbosity=debug` | Adds client debug logging. |
 
-### PowerShell / Linux | gcloud projects create
+### Linux / Bash | gcloud projects create
 
 Project creation is a control-plane provisioning step, not a normal application action. It is safe only when you are prepared to consume a new globally unique project ID and, in most cases, attach billing afterward.
 
@@ -713,7 +715,7 @@ No live output in this environment: a throwaway project was intentionally not cr
 | `--set-as-default` | `gcloud projects create example-foo-bar-1 --set-as-default` | Sets the new project as the active `core/project`. |
 | `--no-enable-cloud-apis` | `gcloud projects create example-foo-bar-1 --no-enable-cloud-apis` | Skips default `cloudapis.googleapis.com` enablement. |
 
-### PowerShell / Linux | project lifecycle
+### Linux / Bash | project lifecycle
 
 Project deletion is intentionally slow because Google Cloud gives you a recovery window. That is a safety feature, not a reason to be casual about destructive commands.
 
@@ -758,7 +760,7 @@ Not run live in this refactor pass: `bq-wh-nb` meets the `DELETE_REQUESTED` prec
 | `PROJECT_ID` | `gcloud projects delete my-project` | The project being deleted or undeleted. |
 | `--quiet` | `gcloud projects delete my-project --quiet` | Suppresses the interactive confirmation prompt. |
 
-### PowerShell / Linux | project labels
+### Linux / Bash | project labels
 
 Labels are the lightest-weight governance metadata you can add to a project. They are cheap, script-friendly, and ideal for filtering, but they are not access controls. On April 15, 2026, the installed Google Cloud SDK version `563.0.0` still exposes project label mutation on the `alpha` track in this environment: `gcloud projects update` only renames projects, while `gcloud alpha projects update` is still the path that exposes `--update-labels` and `--remove-labels`.
 
@@ -777,7 +779,7 @@ PROJECT_ID  NAME         PROJECT_NUMBER  ENVIRONMENT
 bq-wh-nb    BQ Database  348557092514
 ```
 
-The update command returns the project summary after mutation. The `ENVIRONMENT` column is empty because the project does not use that specific label key; the important effect is the successful metadata write, which is verified immediately below.
+The update command returns the standard project summary table rather than a label dump. The important effect is the successful metadata write, which is verified immediately below.
 
 #### Verify the label mutation
 
@@ -810,6 +812,8 @@ PROJECT_ID  NAME         PROJECT_NUMBER  ENVIRONMENT
 bq-wh-nb    BQ Database  348557092514
 ```
 
+The remove-labels command returns the same project summary shape. The important effect is that the temporary label is gone, which is verified immediately below.
+
 #### Filter projects by label
 
 During inventory, governance audits, or automation that targets only one class of projects. It is typically triggered by you need to select projects by metadata rather than by manually curated lists. Read-only list command with server-side filtering. Return only the projects whose labels match the filter expression.
@@ -834,7 +838,7 @@ The empty result is expected because `bq-wh-nb` currently has no permanent label
 | `--name` | `gcloud alpha projects update bq-wh-nb --name="BQ Database"` | Renames the project display name. |
 | `--filter` | `gcloud projects list --filter="labels.env=dev"` | Restricts project listing by label criteria. |
 
-### PowerShell / Linux | project liens
+### Linux / Bash | project liens
 
 Liens are deletion-protection controls. They do not manage access, but they stop specific destructive operations until the lien is explicitly removed.
 
@@ -916,7 +920,7 @@ gcloud alpha resource-manager liens list --project=bq-wh-nb --format=json
 
 Cross-hierarchy navigation is where the parent-child model becomes operational. These patterns answer three recurring questions: "What is the parent of this project?", "Which IAM bindings exist here?", and "How would I navigate upward if a folder existed?"
 
-### PowerShell / Linux | find the parent of the current project
+### Linux / Bash | find the parent of the current project
 
 This pattern is the fastest way to learn whether a project is attached to a folder or organization.
 
@@ -940,7 +944,7 @@ The blank output is meaningful: `bq-wh-nb` has no visible parent resource in thi
 |---|---|---|
 | `--format` | `gcloud projects describe bq-wh-nb --format="value(parent.type,parent.id)"` | Extracts only the parent fields instead of the full metadata record. |
 
-### PowerShell / Linux | audit direct project IAM bindings
+### Linux / Bash | audit direct project IAM bindings
 
 This pattern does not compute the full inherited effective policy, but it shows the bindings applied directly on the project itself.
 
@@ -981,7 +985,7 @@ These are direct project bindings, not the full inherited effective policy. The 
 | `--filter` | `gcloud projects get-iam-policy bq-wh-nb --filter="bindings.members:serviceAccount:..."` | Restricts the policy view to a specific member or role. |
 | `--format` | `gcloud projects get-iam-policy bq-wh-nb --format="table(bindings.role)"` | Renders the final policy slice as a table. |
 
-### PowerShell / Linux | list projects under a folder
+### Linux / Bash | list projects under a folder
 
 This is the pattern you would use in an organization-backed environment to inventory all projects under one folder. It is included here because it is one of the most common hierarchy-audit tasks, even though the current environment does not expose a folder ancestor.
 
@@ -1009,6 +1013,8 @@ No live output in this environment: `bq-wh-nb` has no visible folder ancestor, s
 The CLI is useful for discovery and one-off administration, but infrastructure-as-code is the safer long-term pattern when you want the hierarchy and bindings to be reproducible.
 
 > [!example] Terraform resource mapping
+>
+> *Map the hierarchy concepts to Terraform resources.*
 >
 > ```hcl
 > resource "google_project" "warehouse" {

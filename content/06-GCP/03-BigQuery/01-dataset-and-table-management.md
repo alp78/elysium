@@ -12,7 +12,7 @@ status: complete
 
 # Dataset and Table Management
 
-> [!quote] Kurt Bollacker on Data Stewardship
+> [!quote]+
 > "Data that is loved tends to survive."
 >
 > — **Kurt Bollacker**, data scientist and engineer

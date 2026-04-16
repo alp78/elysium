@@ -10,7 +10,7 @@ status: complete
 
 # BigQuery Advanced
 
-> [!quote]
+> [!quote]+
 > "The mindset of SQL is 'what do I want?' not 'how do I get it?' — that is the leap from procedural to declarative thinking."
 >
 > — **Joe Celko**, *SQL for Smarties* (1995)

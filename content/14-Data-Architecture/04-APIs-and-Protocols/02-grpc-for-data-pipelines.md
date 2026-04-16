@@ -31,7 +31,7 @@ status: complete
 
 # gRPC for Data Pipelines
 
-> [!quote]
+> [!quote]+
 > "Protocol Buffers were created to solve the problem of a single evolving interface with many servers, each at a different version."
 >
 > — **Kenton Varda** (original Protobuf author)

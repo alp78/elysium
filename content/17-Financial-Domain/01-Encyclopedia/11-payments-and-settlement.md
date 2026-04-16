@@ -20,7 +20,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Acquiring (Payments)
 
-> [!quote]
+> [!quote]+
 > "Behind every card tap is a complex chain of trust that moves money from buyer to seller in seconds."
 >
 > — **Pieter van der Does**
@@ -38,7 +38,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Authorization
 
-> [!quote]
+> [!quote]+
 > "Every payment starts with a question: can this person pay? The answer must come in milliseconds."
 >
 > — **Dan Schulman**
@@ -56,7 +56,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Clearing
 
-> [!quote]
+> [!quote]+
 > "The clearinghouse stands between buyer and seller so neither has to trust the other."
 >
 > — **Craig Pirrong**
@@ -74,7 +74,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Custodian Services
 
-> [!quote]
+> [!quote]+
 > "The custody business is about trust — the trust that your assets will be there when you need them."
 >
 > — **Tim Keaney**
@@ -92,7 +92,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Electronic Money
 
-> [!quote]
+> [!quote]+
 > "Money is just information, a way we measure what we trade, manage debts, make promises."
 >
 > — **David Graeber**, *Debt: The First 5,000 Years* (2011)
@@ -110,7 +110,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Gateway (Payments)
 
-> [!quote]
+> [!quote]+
 > "The payment gateway is the digital front door of every online business."
 >
 > — **Jack Dorsey**
@@ -128,7 +128,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Issuing (Payments)
 
-> [!quote]
+> [!quote]+
 > "Putting a card in someone's hand is putting your brand in their wallet — and your risk on your balance sheet."
 >
 > — **Al Kelly**
@@ -146,7 +146,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Merchant Services
 
-> [!quote]
+> [!quote]+
 > "If you cannot accept a payment, you cannot make a sale."
 >
 > — **Max Levchin**
@@ -164,7 +164,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Payments Processing
 
-> [!quote]
+> [!quote]+
 > "Payments are to the economy what plumbing is to a building — invisible when working, catastrophic when not."
 >
 > — **Pieter van der Does**
@@ -182,7 +182,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Point-of-Sale
 
-> [!quote]
+> [!quote]+
 > "The checkout experience is where your brand makes its final impression — make it seamless."
 >
 > — **Angela Ahrendts**
@@ -200,7 +200,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Prepaid Cards
 
-> [!quote]
+> [!quote]+
 > "Prepaid cards are the great equalizer — they give everyone access to the electronic payments system."
 >
 > — **Steve Streit**
@@ -218,7 +218,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Securities Clearing
 
-> [!quote]
+> [!quote]+
 > "Netting is the genius of modern clearing — it turns millions of obligations into a manageable few."
 >
 > — **Darrell Duffie**, *How Big Banks Fail and What to Do About It* (2010)
@@ -235,7 +235,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Settlement
 
-> [!quote]
+> [!quote]+
 > "Settlement is where the rubber meets the road — it is the moment when promises become reality."
 >
 > — **Benoît Coeuré**
@@ -253,7 +253,7 @@ Encyclopedia of payments and settlement terms covering the full transaction life
 
 ## Tokenization
 
-> [!quote]
+> [!quote]+
 > "The best security is when the data worth stealing simply isn't there."
 >
 > — **Patrick Gauthier**

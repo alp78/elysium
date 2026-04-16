@@ -11,7 +11,7 @@ status: complete
 
 # Testing and Migration - Python
 
-> [!quote]- Quote
+> [!quote]+
 >
 > "Program testing can be used to show the presence of bugs, but never to show their absence."
 >
@@ -1520,16 +1520,20 @@ ohlcv_pl=pl.read_parquet(DATA/"eurostoxx50_ohlcv.parquet")
 
 > [!warning] Three Pandas habits that don't exist in Polars
 >
-> 1. **Index:** Polars has no index. Use `sort()` + `filter()` instead of `set_index()`
-> 2. **inplace:** Polars never mutates. Every operation returns a new DataFrame
-> 3. **iterrows:** Polars expressions replace row-by-row loops entirely
+> - **Index.** Polars has no index. Use `sort()` and `filter()` instead of
+>   `set_index()`.
+> - **`inplace`.** Polars never mutates. Every operation returns a new DataFrame.
+> - **`iterrows`.** Polars expressions replace row-by-row loops entirely.
 
 > [!success] Adopt the Polars mental model directly
 >
-> 1. **Index → sort/filter:** Replace `df.set_index("date")` with `df.sort("date")` and
->    use `df.filter(pl.col("date") == date)` for row selection.
-> 2. **inplace → reassign:** Always reassign: `df = df.sort("date")`. No mutation needed.
-> 3. **iterrows → expressions:** Replace row loops with `df.with_columns(pl.col("a") - pl.col("b"))`.
+> - **Index to sort/filter.** Replace `df.set_index("date")` with
+>   `df.sort("date")`, then use `df.filter(pl.col("date") == date)` for row
+>   selection.
+> - **`inplace` to reassignment.** Always reassign:
+>   `df = df.sort("date")`. No mutation needed.
+> - **`iterrows` to expressions.** Replace row loops with
+>   `df.with_columns(pl.col("a") - pl.col("b"))`.
 
 ### Index vs Sort/Filter
 
@@ -1702,25 +1706,61 @@ Polars is not a drop-in Pandas replacement. It is a different mental model:
 ---
 
 
-## Warnings
+## Common Traps and Safe Patterns
 
-> [!warning] `assert_frame_equal` fails on floating-point rounding differences
->
-> Two DataFrames that look identical may fail assertion due to floating-point arithmetic (e.g., `0.1 + 0.2 != 0.3`). Use `atol=1e-8` or `rtol=1e-5` for approximate comparison.
+### Floating-Point Test Equality
 
-> [!warning] Schema validation does not catch value-level errors
+> [!warning] Exact frame equality breaks on harmless floating-point drift
 >
-> A DataFrame can have the correct schema (right columns, right types) and still contain wrong values (swapped columns, truncated strings, overflowed integers). Schema validation is necessary but not sufficient.
+> Two DataFrames that look identical can still fail equality assertions because
+> binary floating-point arithmetic is not exact. Migration tests often trip on
+> tiny rounding differences rather than on real logic bugs.
 
-> [!warning] Three Pandas habits that do not exist in Polars
+> [!success] Use numeric tolerances for floating-point assertions
 >
-> 1. **Index-based alignment** — Polars has no index. Operations are positional.
-> 2. **In-place mutation** — Polars DataFrames are immutable. Every operation returns a new DataFrame.
-> 3. **`.apply()` as a general-purpose tool** — in Polars, `.map_elements()` is a last resort, not a default.
+> Set `atol` and `rtol` for columns that contain computed floats, and reserve
+> exact equality for integers, strings, keys, and other deterministic values.
 
-> [!warning] Quarantine tables grow indefinitely if not reviewed
+### Schema Checks Are Structural Only
+
+> [!warning] Schema validation can pass while the data is still wrong
 >
-> A quarantine table that is never emptied accumulates data across pipeline runs, eventually consuming significant storage. Implement retention policies and alerting on quarantine size.
+> A frame can have the right column names and dtypes while still containing
+> swapped fields, truncated strings, invalid ranges, or corrupted values.
+
+> [!success] Pair schema checks with value-level assertions
+>
+> Validate both structure and semantics. Add range checks, null thresholds,
+> uniqueness constraints, referential integrity checks, and targeted sample
+> assertions at the same pipeline boundary.
+
+### Migration Requires a New Mental Model
+
+> [!warning] Literal Pandas-to-Polars translation preserves the wrong habits
+>
+> Index-based alignment, in-place mutation, and generic `.apply()` logic do not
+> map cleanly to Polars. A direct port usually keeps the old mental model and
+> produces slow or awkward code.
+
+> [!success] Rewrite around Polars expressions instead of translating line by line
+>
+> Rebuild the step with `select`, `with_columns`, `filter`, window expressions,
+> and explicit joins. Treat Polars as an expression engine, not as Pandas with
+> different method names.
+
+### Quarantine Storage Needs Operational Ownership
+
+> [!warning] Unreviewed quarantine tables grow without bound
+>
+> A quarantine sink that is never drained or expired accumulates bad rows across
+> every pipeline run. Over time it becomes both a storage problem and an ignored
+> alert surface.
+
+> [!success] Add retention, review, and alerting to the quarantine path
+>
+> Expire or archive old quarantine data, track row counts over time, and require
+> a review workflow so the quarantine output remains a controlled operational
+> mechanism instead of a data graveyard.
 
 ## Recommendations
 

@@ -7,7 +7,7 @@ tags:
 
 # GitHub Actions CI/CD
 
-> [!quote]
+> [!quote]+
 > "If it hurts, do it more frequently, and bring the pain forward."
 >
 > — **Jez Humble**, *Continuous Delivery* (2010)

@@ -8,7 +8,7 @@ description: "BigQuery adapter partitioning, clustering, incremental strategies,
 
 # dbt: BigQuery Adapter
 
-> [!quote] Serverless Scale
+> [!quote]+
 >
 > "Serverless is a simple but powerful concept when it comes to gigabyte- to petabyte-scale data analysis. It's a relatively hard engineering problem."
 >

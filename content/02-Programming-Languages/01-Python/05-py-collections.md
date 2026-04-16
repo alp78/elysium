@@ -11,7 +11,7 @@ status: complete
 
 # 05. Collections - Python
 
-> [!quote]- Collections Perspective
+> [!quote]+
 >
 > "Algorithms + Data Structures = Programs."
 >

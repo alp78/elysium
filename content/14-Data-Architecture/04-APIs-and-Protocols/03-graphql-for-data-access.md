@@ -27,7 +27,7 @@ status: complete
 
 # GraphQL for Data Access
 
-> [!quote]
+> [!quote]+
 > "Think about describing the data, not the view. Model your data as objects in the graph — the API should expose data semantics, not feature-specific payloads."
 >
 > — **Lee Byron** (co-creator of GraphQL)

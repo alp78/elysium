@@ -30,7 +30,7 @@ date: 2026-03-28
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="25 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 25</span>
 
-> [!quote]
+> [!quote]+
 > "Activist investors are the market's immune system. They target companies where management is destroying value and force a reckoning."
 >
 > — **Carl Icahn**, activist investor
@@ -351,7 +351,7 @@ A board structure in which directors are divided into multiple classes (typicall
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="341 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 341</span>
 
-> [!quote]
+> [!quote]+
 > "Diversity is not a favour to underrepresented groups. It is an investment in better decision-making. Homogeneous boards produce homogeneous thinking."
 >
 > — **Nell Minow**, co-founder of The Corporate Library, co-author of *Corporate Governance*
@@ -408,7 +408,7 @@ The representation of varied demographic backgrounds — including gender, race,
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="665 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 665</span>
 
-> [!quote]
+> [!quote]+
 > "The bedrock of good governance is an independent board. Directors who owe their positions to management cannot hold management accountable."
 >
 > — **Robert Monks**, corporate governance pioneer, co-author of *Corporate Governance*
@@ -725,7 +725,7 @@ The strategic process by which a company's board and management decide how to de
 
 <span style="background:teal; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="36 mentions across STOXX & ISS pages (medium-low)">▰▰▰ 36</span>
 
-> [!quote]
+> [!quote]+
 > "Clawback provisions ensure that executives cannot keep bonuses earned on the back of misstated financials. They align long-term incentives with long-term truth."
 >
 > — **Mary Schapiro**, former SEC Chair, on Dodd-Frank clawback rules
@@ -888,7 +888,7 @@ A director election in which one or more dissident candidates are nominated in o
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4 mentions across STOXX & ISS pages (ultra-low)">▰ 4</span>
 
-> [!quote]
+> [!quote]+
 > "The social responsibility of business is to increase its profits — but only within the rules of the game."
 >
 > — **Milton Friedman**, *The New York Times Magazine* (1970), the foundational critique that shaped the CSR debate
@@ -1101,7 +1101,7 @@ The ballot item at a shareholder meeting through which individual director nomin
 
 <span style="background:purple; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1 mentions across STOXX & ISS pages (ultra-low)">▰ 1</span>
 
-> [!quote]
+> [!quote]+
 > "Dual-class stock is the governance equivalent of taxation without representation. Public shareholders supply the capital but have no proportionate voice."
 >
 > — **John C. Coffee Jr.**, Columbia Law School, *The Future as History: The Prospects for Global Convergence in Corporate Governance*
@@ -1270,7 +1270,7 @@ A shareholder-approved program through which a company grants stock-based compen
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,865 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,865</span>
 
-> [!quote]
+> [!quote]+
 > "Executive pay is the acid test of corporate governance. If the board cannot get compensation right, you can be sure they are not getting much else right either."
 >
 > — **Lucian Bebchuk**, Harvard Law School, *Pay Without Performance*
@@ -1384,7 +1384,7 @@ A shareholder meeting convened outside the regular annual meeting cycle to addre
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="100 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 100</span>
 
-> [!quote]
+> [!quote]+
 > "Fiduciary duty is the highest standard of care in equity. A fiduciary must act solely in the interest of the beneficiary, not in his own."
 >
 > — **Tamar Frankel**, Boston University School of Law, *Fiduciary Law* (2011)
@@ -1518,7 +1518,7 @@ A comprehensive ISS dataset capturing vote outcomes from shareholder meetings wo
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="427 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 427</span>
 
-> [!quote]
+> [!quote]+
 > "Golden parachutes reward executives for losing control of their company. They transfer wealth from shareholders to departing management at the worst possible moment."
 >
 > — **Nell Minow**, governance expert, on change-in-control severance
@@ -1674,7 +1674,7 @@ A proprietary ISS scoring system that rates companies on governance practices ac
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,856 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,856</span>
 
-> [!quote]
+> [!quote]+
 > "An independent director's value is the willingness to say 'no' when the CEO says 'yes.' Without that independence, the board is a rubber stamp."
 >
 > — **Michael Jensen**, Harvard Business School, "The Modern Industrial Revolution, Exit, and the Failure of Internal Control Systems"
@@ -1973,7 +1973,7 @@ A compensation program that awards executives and key employees equity-based or 
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="228 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 228</span>
 
-> [!quote]
+> [!quote]+
 > "Majority voting makes director elections real elections. Under plurality voting, a director could be elected with a single vote — that is not accountability."
 >
 > — **ISS**, U.S. Benchmark Voting Policy rationale
@@ -2142,7 +2142,7 @@ A director who serves on an excessive number of public company boards, raising c
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="282 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 282</span>
 
-> [!quote]
+> [!quote]+
 > "Pay without performance is the central problem in executive compensation. When CEOs collect fortunes while shareholders lose money, the system is broken."
 >
 > — **Lucian Bebchuk & Jesse Fried**, *Pay Without Performance: The Unfulfilled Promise of Executive Compensation*
@@ -2199,7 +2199,7 @@ The degree to which executive compensation outcomes correlate with company finan
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="1,078 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 1,078</span>
 
-> [!quote]
+> [!quote]+
 > "The poison pill is the most powerful anti-takeover device ever invented. It single-handedly shifted the balance of power from shareholders to boards."
 >
 > — **Martin Lipton**, Wachtell, Lipton, Rosen & Katz, inventor of the poison pill (1982)
@@ -2280,7 +2280,7 @@ The voluntary or shareholder-requested reporting by a company of its political c
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="482 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 482</span>
 
-> [!quote]
+> [!quote]+
 > "Proxy access gives long-term shareholders a seat at the table without forcing them to wage a full-scale proxy fight. It is democracy at the board level."
 >
 > — **Scott Stringer**, former New York City Comptroller, on the Boardroom Accountability Project
@@ -2335,7 +2335,7 @@ A governance mechanism that allows qualifying shareholders (typically those owni
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="397 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 397</span>
 
-> [!quote]
+> [!quote]+
 > "A proxy contest is corporate democracy in its rawest form: shareholders choose between two visions for the company's future."
 >
 > — **Wachtell, Lipton, Rosen & Katz**, on the mechanics of proxy fights
@@ -2389,7 +2389,7 @@ A situation in which a dissident shareholder or activist investor solicits proxy
 
 <span style="background:red; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="4,813 mentions across STOXX & ISS pages (high)">▰▰▰▰▰▰ 4,813</span>
 
-> [!quote]
+> [!quote]+
 > "The proxy vote is the shareholder's voice. When institutional investors fail to vote thoughtfully, they abdicate the most powerful governance tool they possess."
 >
 > — **Robert Monks**, corporate governance pioneer, *Corpocracy*
@@ -2606,7 +2606,7 @@ A business transaction between a company and an entity with which it has a pre-e
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="847 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 847</span>
 
-> [!quote]
+> [!quote]+
 > "Say-on-pay is the single most important governance reform since Sarbanes-Oxley. It gives shareholders a direct channel to push back on excessive executive compensation."
 >
 > — **Rosanna Landis Weaver**, As You Sow, on the impact of Dodd-Frank say-on-pay provisions
@@ -2713,7 +2713,7 @@ A program under which a company repurchases its own outstanding shares from the 
 
 <span style="background:deeppink; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="6,025 mentions across STOXX & ISS pages (ultra-high)">▰▰▰▰▰▰▰ 6,025</span>
 
-> [!quote]
+> [!quote]+
 > "The shareholder proposal is the great equalizer of corporate governance. A single investor with a small stake can force an entire board to confront issues it would rather ignore."
 >
 > — **John Chevedden**, prolific shareholder proposal filer
@@ -2765,7 +2765,7 @@ A resolution submitted by an eligible shareholder (meeting SEC ownership and pro
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="830 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 830</span>
 
-> [!quote]
+> [!quote]+
 > "Corporate governance is, at its core, about the protection of shareholder rights. Every other mechanism — boards, auditors, regulators — exists to safeguard those rights."
 >
 > — **OECD**, Principles of Corporate Governance (2004)
@@ -2853,7 +2853,7 @@ The right of shareholders (individually or as a group meeting a specified owners
 
 <span style="background:orange; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="616 mentions across STOXX & ISS pages (medium-high)">▰▰▰▰▰ 616</span>
 
-> [!quote]
+> [!quote]+
 > "Stewardship is the missing link between asset ownership and corporate accountability. Without it, institutional shareholders are absentee landlords."
 >
 > — **Paul Myners**, Baron Myners, UK government review of institutional investment (2001)
@@ -3013,7 +3013,7 @@ A public, time-limited offer made by an acquirer (or the company itself, in the 
 
 <span style="background:green; color:white; padding:1px 8px; border-radius:10px; font-size:0.75em; font-weight:bold; letter-spacing:1px;" title="190 mentions across STOXX & ISS pages (medium)">▰▰▰▰ 190</span>
 
-> [!quote]
+> [!quote]+
 > "One share, one vote is the cornerstone of shareholder democracy. Unequal voting rights violate this principle by letting insiders overrule the majority."
 >
 > — **CFA Institute**, position statement on unequal voting structures

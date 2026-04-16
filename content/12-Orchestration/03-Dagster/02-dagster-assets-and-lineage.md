@@ -22,63 +22,62 @@ links:
 
 # Dagster Assets And Lineage
 
-Dagster's asset graph is the reason the platform feels different from task-first schedulers. A good graph models durable contracts that matter to downstream consumers, not temporary implementation steps that only exist because one function happens to call another.
+Dagster's assets API defines an asset as an object in persistent storage and an asset definition as the code description of how that object should exist and be updated. That wording is more consequential than it first appears. It means lineage is not decorative metadata around Python functions. It is the operating picture of which durable states exist, which ones depend on each other, and how far a repair or replay should travel.
 
 > [!abstract]- Summary
 >
-> This note focuses on the asset graph as an operating surface:
+> This note treats the asset graph as a recovery and trust surface:
 >
-> - model durable outputs as assets with explicit dependencies
-> - use selection to rerun only the affected slice of the graph
-> - use multi-assets only when one compute boundary truly emits several durable outputs
-> - keep external or upstream-owned datasets visible without pretending Dagster owns their compute
+> - assets should name durable states the business can recognize under pressure
+> - lineage edges should mean data dependence, not incidental function order
+> - selection is the mechanism that turns lineage into scoped replay
+> - external and human-governed states belong in the graph when downstream trust depends on them
 
 > [!info] Official References
 >
 > - [Dagster assets API](https://docs.dagster.io/api/dagster/assets)
-> - [Dagster asset checks API](https://docs.dagster.io/api/dagster/asset-checks)
-> - [Dagster components guide](https://docs.dagster.io/guides/build/components)
+> - [Dagster overview](https://docs.dagster.io/)
 
 > [!note]- Glossary
 >
 > **Asset key**
-> - The unique identity of an asset in the Dagster graph.
-> - Stable keys keep lineage and history intelligible.
-> - Casual renames create migration churn and broken expectations.
+> - The stable identity Dagster uses to track history, lineage, and checks for one durable state.
+> - Good keys survive refactors because they name the data product, not the current implementation detail.
+> - Casual renames break continuity in the graph rather than merely changing display text.
 >
 > **Asset dependency**
-> - The declared upstream relationship between assets.
-> - It drives impact analysis and targeted reruns.
-> - It should represent data dependence, not mere code reuse.
+> - The declared upstream relationship between two durable states.
+> - Its meaning should be "this dataset depends on that dataset," not "this function happened to call that helper."
+> - Clean dependencies are what make impact analysis and scoped reruns credible.
 >
 > **Asset selection**
-> - A subset of the graph chosen for execution.
-> - This is how operators rerun only the blast radius that matters.
-> - Selection quality depends on clean asset boundaries.
+> - The slice of the graph chosen for execution.
+> - This is where lineage becomes operational: a team can replay only the affected surface instead of relaunching everything.
+> - Selection is only as useful as the asset boundaries beneath it.
 >
 > **Multi-asset**
-> - One compute boundary that materializes multiple assets.
-> - Useful when one job naturally emits several durable outputs together.
-> - Overuse makes retries and checks harder to localize.
+> - One compute boundary that emits several assets.
+> - It is appropriate when the runtime already has one shared retry boundary.
+> - It is a poor fit when it collapses unrelated outputs merely to shorten code.
 >
-> **External asset**
-> - A dataset Dagster tracks without owning the execution that produces it.
-> - It keeps lineage honest across tools and teams.
-> - Visibility is not the same thing as operational control.
+> **Source asset**
+> - A dataset Dagster tracks without claiming responsibility for producing it.
+> - It keeps lineage honest across warehouse, vendor, and cross-team boundaries.
+> - Visibility into a dependency is not the same thing as rerun authority over it.
 
-## Model Dependencies As Data Contracts
+## A Useful Graph Names States Someone Would Actually Ask About
 
-The asset graph should answer a business-facing question: which produced object depends on which upstream object? If a node exists only because a script had an internal step, it usually belongs under ops or a graph-backed asset instead of in the public graph.
+Lineage earns its cost only when the nodes correspond to states an operator, reviewer, or downstream consumer can actually name. If the graph is filled with implementation-only steps, it becomes noisy at exactly the moment it should be helping someone decide what to repair.
 
-### Make The Graph Explicit
+### A Dependency Edge Should Answer A Rebuild Question
 
-The first improvement over task-first orchestration is naming the durable outputs and wiring them together directly.
+The right dependency is one that helps a team answer, "if this state changes, which downstream states are now suspect?" That is a stricter test than simple code reuse, and it keeps the public graph aligned with actual operational reasoning.
 
-#### Declare an upstream chain and inspect the graph keys
+#### Declare the durable states before you talk about reruns
 
-Use this pattern when moving from a task list to a lineage-aware platform. The trigger is a need to explain what downstream objects must be rebuilt after an upstream fix. The purpose is to make the dependency chain visible in Dagster before introducing checks, schedules, or sensors.
+Use this pattern when a workflow is moving from script order to lineage-aware operation. The trigger is usually an upstream correction or a request to explain downstream blast radius clearly. The code runs at composition time and defines topology rather than business execution. Its purpose is to publish the durable states Dagster should track before any schedule, sensor, or check tries to act on them.
 
-*Define a three-asset chain and print the resolved asset keys from `Definitions`.*
+*Define a three-asset chain and print the asset keys Dagster resolves from the code location.*
 
 ```python
 import dagster as dg
@@ -103,48 +102,91 @@ print([spec.key.to_user_string() for spec in defs.resolve_all_asset_specs()])
 ['raw_orders', 'cleaned_orders', 'daily_revenue']
 ```
 
-#### Use `AssetSelection` to target the affected slice
+In a real financial pipeline, the same principle is what keeps the graph readable under pressure. The `dagflow` security master does not stop at "raw data landed" or "dbt finished." It names the reviewed state and the delivered state separately, because those are different operational claims.
 
-Use asset selection when the incident is partial rather than platform-wide. The trigger is an upstream fix, schema correction, or scoped replay. The purpose is to target only the relevant downstream chain instead of replaying unrelated assets.
+#### Turn one corrected state into a scoped execution slice
 
-*Build an upstream selection from `daily_revenue` and print the selection type Dagster creates.*
+Use asset selection when the incident is local and the repair should stay local. The trigger is an upstream fix, a corrected review decision, or a replay that should begin from one known state rather than from the top of the platform. The code is executable topology: it defines which lineage slice a job is allowed to launch. Its purpose is to convert dependency knowledge into a bounded run surface.
+
+*Select only the export slice in `dagflow` instead of rebuilding capture and transform assets again.*
+
+```python
+security_master_export_job = define_asset_job(
+    name="security_master_export_job",
+    executor_def=in_process_executor,
+    selection=AssetSelection.assets(security_master_csv_export)
+    | build_dbt_asset_selection([security_master_export_assets]),
+)
+```
+
+That selection is the practical meaning of lineage. Once review has approved the dataset, `dagflow` can resume from the export boundary instead of replaying source capture, raw loads, and mart construction a second time.
+
+## The Review Queue Is Part Of The Lineage, Not Commentary Around It
+
+Human review often gets documented as a side process outside the orchestrator. In governed data systems that is too weak. Once approval changes whether a downstream consumer may trust a dataset, the review state has become part of the lineage surface and should be modeled that way.
+
+### Human Approval Creates A Real Downstream State
+
+The difference between "calculated" and "approved for publication" is not editorial decoration. It changes which data may flow into export, reporting, or further derivations.
+
+#### Treat the review snapshot as a first-class asset
+
+Use this framing when a pipeline includes human validation, exception handling, or sign-off before release. The trigger is a system where machine-calculated output still needs governed acceptance before delivery. The context is operational modeling rather than API novelty. Its purpose is to make the trust boundary visible in the graph instead of burying it in external process notes.
+
+*Read the review-to-export segment of the `dagflow` security master as lineage, not as workflow commentary.*
+
+```text
+dim_security
+  -> dim_security_snapshot
+  -> security_master_review_snapshot
+  -> security_master_preview
+  -> security_master_csv_export
+```
+
+That pattern generalizes cleanly to index data work. In an index constituent or benchmark composition pipeline, the machine-generated basket and the reviewer-approved basket are different downstream states. Treating them as the same node would erase the very boundary an operator most needs to see.
+
+## External Ownership Should Still Be Visible
+
+A dataset does not stop being important because Dagster did not compute it. Vendor files, upstream warehouse tables, and cross-team reference datasets can still determine downstream freshness, correctness, and replay scope.
+
+### A Source Asset Admits Dependency Without Claiming Rerun Authority
+
+This distinction keeps the graph honest. Dagster can show that a downstream asset depends on an upstream state while remaining explicit that the upstream system is owned elsewhere.
+
+#### Declare the upstream dataset without pretending Dagster can rebuild it
+
+Use this pattern when downstream assets rely on a warehouse table, vendor extract, or externally scheduled feed. The trigger is a dependency that clearly affects downstream trust but is not produced by the current code location. The code is topology-only and does not run any external workload. Its purpose is to preserve truthful lineage while keeping ownership boundaries explicit.
+
+*Declare an external asset and print the Dagster type and key it exposes.*
 
 ```python
 import dagster as dg
 
-@dg.asset
-def raw_orders():
-    return 1
-
-@dg.asset(deps=[raw_orders])
-def cleaned_orders():
-    return 1
-
-@dg.asset(deps=[cleaned_orders])
-def daily_revenue():
-    return 1
-
-selection = dg.AssetSelection.assets(daily_revenue).upstream()
-print(type(selection).__name__)
+crm_snapshot = dg.SourceAsset("crm_snapshot")
+print(type(crm_snapshot).__name__)
+print(crm_snapshot.key.to_user_string())
 ```
 
 ```text
-UpstreamAssetSelection
+SourceAsset
+crm_snapshot
 ```
 
-## Scale The Graph Without Hiding Reality
+For an index pipeline, this is the right model for something like an external corporate actions feed or a benchmark provider file. Dagster should show the dependency, but it should not imply that a rerun inside the current code location can recreate that upstream data.
 
-The graph should stay legible under growth. Factories, external assets, and multi-assets are useful only when they preserve asset identity and retry boundaries.
+## A Multi-Asset Should Mirror One Retry Boundary
 
-### Match The Asset Shape To The Compute Boundary
+Dagster supports multi-assets because some runtimes genuinely emit several durable outputs together. The danger is using that feature as a convenience wrapper for unrelated outputs, which destroys retry clarity and makes checks harder to interpret.
 
-One compute boundary can produce several assets, but that should be a property of the real runtime, not a shortcut for collapsing unrelated work.
+### Shared Compute Is The Only Good Reason To Collapse Outputs
 
-#### Materialize two assets from one shared compute boundary
+If the runtime already has one shared execution boundary, a multi-asset can mirror that truth faithfully. If not, separate assets keep ownership, checks, and replay scope cleaner.
 
-Use a multi-asset when one warehouse statement, Spark job, or external pipeline naturally emits several durable outputs together. The trigger is a shared retry boundary that already exists outside Dagster. The purpose is to mirror that runtime truth without inventing fake intermediate assets.
+#### Materialize several assets only when the runtime emits them together
 
-*Materialize a `@multi_asset` and print the run success flag plus the emitted asset keys.*
+Use a multi-asset when one warehouse statement, Spark job, or external build naturally produces several durable outputs as one unit of work. The trigger is a shared compute boundary that already exists outside Dagster. The code runs as business execution and emits multiple materializations from one function. Its purpose is to mirror a real retry boundary instead of inventing separate orchestration events that do not exist in the underlying runtime.
+
+*Materialize a `@multi_asset` and print the run status plus the emitted asset keys.*
 
 ```python
 import contextlib
@@ -163,37 +205,15 @@ with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
     result = dg.materialize([build_silver])
 
 print(result.success)
-print([event.materialization.asset_key.to_user_string() for event in result.get_asset_materialization_events()])
+print(
+    [
+        event.materialization.asset_key.to_user_string()
+        for event in result.get_asset_materialization_events()
+    ]
+)
 ```
 
 ```text
 True
 ['silver_orders', 'silver_customers']
 ```
-
-#### Keep upstream-owned datasets in the same lineage surface
-
-Use `SourceAsset` when a dependency is operationally important but produced by another tool or team. The trigger is a warehouse table, SaaS landing zone, or external model output that downstream Dagster assets consume. The purpose is to keep blast-radius reasoning honest across system boundaries.
-
-*Declare an external asset and print the Dagster type and key it exposes.*
-
-```python
-import dagster as dg
-
-crm_snapshot = dg.SourceAsset("crm_snapshot")
-print(type(crm_snapshot).__name__)
-print(crm_snapshot.key.to_user_string())
-```
-
-```text
-SourceAsset
-crm_snapshot
-```
-
-## What To Remember
-
-- Assets should represent durable data contracts, not internal implementation trivia.
-- Asset selection is how you convert lineage into safe reruns and scoped recovery.
-- Multi-assets are correct only when the shared compute boundary is real and the retry scope is shared.
-- External assets belong in the graph when downstream consumers depend on them, even if Dagster does not own the compute.
-- A useful graph is one operators can read under pressure and act on without reconstructing the platform from logs.

@@ -14,7 +14,7 @@ status: complete
 
 # Killing Processes — Graceful, Then Forceful
 
-> [!quote] Escalation policy
+> [!quote]+
 >
 > "Terminate by request when you can; terminate by force only when you must."
 >

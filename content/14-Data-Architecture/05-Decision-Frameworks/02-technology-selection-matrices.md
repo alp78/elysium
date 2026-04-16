@@ -10,7 +10,7 @@ status: complete
 
 # Technology Selection Matrices
 
-> [!quote]
+> [!quote]+
 > "Choose boring technology. Every technology choice carries an innovation token cost — spend them wisely."
 >
 > — **Dan McKinley**, "Choose Boring Technology" (2015)

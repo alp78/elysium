@@ -10,7 +10,7 @@ status: complete
 
 # Data Warehouse Architecture
 
-> [!quote]
+> [!quote]+
 > "Dimension tables are the soul of the data warehouse."
 >
 > — **Ralph Kimball**, *The Data Warehouse Toolkit* (2013)

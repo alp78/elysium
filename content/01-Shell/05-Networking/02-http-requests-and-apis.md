@@ -14,7 +14,7 @@ status: complete
 
 # HTTP Requests and APIs
 
-> [!quote]- Daniel Stenberg on curl
+> [!quote]+
 >
 > "I just wanted it to do Internet transfers good, fast and reliably and that's what I worked on making reality."
 >

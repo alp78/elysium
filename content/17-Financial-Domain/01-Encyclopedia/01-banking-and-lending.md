@@ -20,7 +20,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Bancassurance
 
-> [!quote]
+> [!quote]+
 > "Distribution is the key to selling insurance — and banks have the best distribution."
 >
 > — **Henri de Castries**
@@ -50,7 +50,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Commercial Banking
 
-> [!quote]
+> [!quote]+
 > "The banker who is not also a merchant is nothing but a moneylender."
 >
 > — **Walter Bagehot**, *Lombard Street* (1873)
@@ -68,7 +68,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Consumer Finance
 
-> [!quote]
+> [!quote]+
 > "Credit is a system whereby a person who cannot pay gets another person who cannot pay to guarantee that he can pay."
 >
 > — **Charles Dickens**
@@ -86,7 +86,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Credit Cards
 
-> [!quote]
+> [!quote]+
 > "The credit card changed American commerce more profoundly than any financial innovation since the checking account."
 >
 > — **David Evans**, *Paying with Plastic* (2005)
@@ -103,7 +103,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Credit Union
 
-> [!quote]
+> [!quote]+
 > "The credit union movement deserves great praise because it has taught people to save, to borrow wisely, and to manage their own financial affairs."
 >
 > — **John F. Kennedy**
@@ -121,7 +121,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Digital Banking
 
-> [!quote]
+> [!quote]+
 > "Banking is necessary, banks are not."
 >
 > — **Bill Gates**
@@ -151,7 +151,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Leasing
 
-> [!quote]
+> [!quote]+
 > "Why own when you can lease? The value is in the use, not the possession."
 >
 > — **Thomas J. Watson**
@@ -169,7 +169,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Margin Lending
 
-> [!quote]
+> [!quote]+
 > "Do not borrow money to buy stocks — the margin call will come at the worst possible time."
 >
 > — **Jesse Livermore**, *Reminiscences of a Stock Operator* (1923)
@@ -187,7 +187,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Mortgage
 
-> [!quote]
+> [!quote]+
 > "The thirty-year fixed-rate mortgage is the most successful financial product in American history."
 >
 > — **Lewis Ranieri**
@@ -216,7 +216,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Retail Banking
 
-> [!quote]
+> [!quote]+
 > "The branch of the future is in your pocket."
 >
 > — **Brett King**, *Bank 4.0* (2018)
@@ -234,7 +234,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Transaction Banking
 
-> [!quote]
+> [!quote]+
 > "The plumbing of global commerce is transaction banking — it moves the money that moves the world."
 >
 > — **Gottfried Leibbrandt**
@@ -252,7 +252,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Cash Management
 
-> [!quote]
+> [!quote]+
 > "Never take your eyes off your cash flow because it is the lifeblood of business."
 >
 > — **Richard Branson**
@@ -270,7 +270,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Treasury Services
 
-> [!quote]
+> [!quote]+
 > "The corporate treasurer's job is to make sure the company never runs out of cash — everything else is secondary."
 >
 > — **Craig Martin**
@@ -287,7 +287,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Trust Banking
 
-> [!quote]
+> [!quote]+
 > "The trustee's first duty is to the beneficiary — not to the bank, not to the market, not to himself."
 >
 > — **Scott Fitzgibbon**
@@ -304,7 +304,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Wholesale Banking
 
-> [!quote]
+> [!quote]+
 > "Large-scale banking is really nothing more than organized trust."
 >
 > — **Walter Bagehot**, *Lombard Street* (1873)
@@ -334,7 +334,7 @@ Encyclopedia of banking and lending terms covering the full spectrum from retail
 
 ## Working Capital
 
-> [!quote]
+> [!quote]+
 > "Revenue is vanity, profit is sanity, but cash is king."
 >
 > — **Alan Miltz**

@@ -10,7 +10,7 @@ status: complete
 
 # 01. Basics - C#
 
-> [!quote] Quote
+> [!quote]+
 >
 > "The only way to learn a new programming language is by writing programs in it."
 >

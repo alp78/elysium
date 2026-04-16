@@ -10,7 +10,7 @@ status: complete
 
 # 09. File I/O & Serialization - Python
 
-> [!quote]
+> [!quote]+
 > "Tape is dead. Disk is tape. Flash is disk. RAM locality is king."
 >
 > — **Jim Gray**, Turing Award lecture (1998)

@@ -16,7 +16,7 @@ status: complete
 
 # Windows Scheduling
 
-> [!quote]
+> [!quote]+
 > "The first rule of any technology used in a business is that automation applied to an efficient operation will magnify the efficiency. The second is that automation applied to an inefficient operation will magnify the inefficiency."
 >
 > — **Bill Gates**

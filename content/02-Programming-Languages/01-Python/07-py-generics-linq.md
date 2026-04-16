@@ -10,7 +10,7 @@ status: complete
 
 # Generics & Functional Data Processing - Python
 
-> [!quote] Leaky abstractions
+> [!quote]+
 > "All non-trivial abstractions, to some degree, are leaky."
 >
 > — **Joel Spolsky**, *The Law of Leaky Abstractions*, blog post (2002)

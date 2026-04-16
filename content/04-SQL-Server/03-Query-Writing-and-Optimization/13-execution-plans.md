@@ -10,7 +10,7 @@ status: complete
 
 # Execution Plans
 
-> [!quote] The optimizer is the most sophisticated piece of database software
+> [!quote]+
 > "The query optimizer is the most sophisticated piece of software in any database system."
 >
 > — **Michael Stonebraker**, ACM interview

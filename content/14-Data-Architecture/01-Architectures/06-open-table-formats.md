@@ -10,7 +10,7 @@ status: complete
 
 # Open Table Formats
 
-> [!quote]
+> [!quote]+
 > "We didn't have correctness guarantees. We didn't have atomic transactions. The goal of Iceberg is to allow organizations to build true data lakehouses in an open architecture, avoiding vendor lock-in."
 >
 > — **Ryan Blue** (creator of Apache Iceberg)

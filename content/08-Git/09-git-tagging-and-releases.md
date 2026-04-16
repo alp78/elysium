@@ -7,7 +7,7 @@ tags:
 
 # Git Tagging and Releases
 
-> [!quote] Tom Preston-Werner — Creator of Semantic Versioning, Co-Founder of GitHub
+> [!quote]+
 >
 > "I was tired of everyone using version numbers in whatever way they wanted and knew we could do better if everyone agreed on what each part of a version number meant."
 

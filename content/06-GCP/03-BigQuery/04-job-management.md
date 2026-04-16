@@ -12,7 +12,7 @@ status: complete
 
 # Job Management
 
-> [!quote] John Gall on System Complexity
+> [!quote]+
 > "A complex system that works is invariably found to have evolved from a simple system that worked."
 >
 > — **John Gall**, *Systemantics* (1975)

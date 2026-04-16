@@ -10,7 +10,7 @@ status: complete
 
 # Datadog Alerting
 
-> [!quote]
+> [!quote]+
 > "Nines don't matter if users aren't happy."
 >
 > — **Charity Majors**, charity.wtf (2019)

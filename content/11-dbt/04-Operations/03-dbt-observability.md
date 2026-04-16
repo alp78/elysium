@@ -8,7 +8,7 @@ description: "Monitoring dbt runs with Datadog custom metrics, the elementary pa
 
 # dbt: Observability
 
-> [!quote] Production debugging discipline
+> [!quote]+
 >
 > "Monitoring is TDD for production. Observability is debugging for production -- give Future You the power to answer any question."
 >

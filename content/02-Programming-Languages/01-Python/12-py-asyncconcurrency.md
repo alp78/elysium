@@ -10,7 +10,7 @@ status: complete
 
 # 12. Async and Concurrency - Python
 
-> [!quote]
+> [!quote]+
 > "Everybody who learns concurrency thinks they understand it, ends up finding mysterious races they thought weren't possible, and discovers that they didn't actually understand it yet after all."
 >
 > — **Herb Sutter**, *The Free Lunch Is Over*, Dr. Dobb's Journal (2005)

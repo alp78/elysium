@@ -10,7 +10,7 @@ status: complete
 
 # Datadog Dashboards
 
-> [!quote]
+> [!quote]+
 > "The real key to modern infrastructure isn't perfect automation, but correlation — linking downstream effects back to upstream causes."
 >
 > — **Kelsey Hightower**, tweet (2019)

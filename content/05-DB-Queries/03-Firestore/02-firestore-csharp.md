@@ -13,7 +13,7 @@ status: complete
 
 # Firestore for Data Engineering — C#
 
-> [!quote] Edgar F. Codd on database value
+> [!quote]+
 >
 > "The value of a database is in direct proportion to the ease with which data can be stored and retrieved."
 >

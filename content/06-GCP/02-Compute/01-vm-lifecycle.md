@@ -15,7 +15,7 @@ updated: 2026-04-15
 
 # VM Lifecycle
 
-> [!quote]
+> [!quote]+
 > "I remember the days when I built my own gaming PCs. Eventually I sold out and bought an Xbox because I just wanted to play games, not build gaming rigs. Serverless is like that."
 >
 > — **Kelsey Hightower**, Twitter (2018)

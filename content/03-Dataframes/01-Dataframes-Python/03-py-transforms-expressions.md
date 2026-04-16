@@ -11,7 +11,7 @@ status: complete
 
 # Transforms, Expressions & Chaining - Python
 
-> [!quote] Attributed Remark
+> [!quote]+
 >
 > "If you torture the data long enough, it will confess to anything."
 >
@@ -313,11 +313,11 @@ shape: (3, 12)
 >
 > `df["col"] = expression` creates a new column in-place on the DataFrame. Fast for simple arithmetic but mutates the original — use `.copy()` first. Each column is a separate statement; no chaining.
 
-> [!warning] Direct assignment mutates the original
+> [!warning] Direct assignment mutates shared Pandas state
 >
 > Direct assignment mutates the original DataFrame. Always `.copy()` first in pipelines to avoid corrupting shared references.
 
-> [!success] .copy() before any column assignment in pipeline stages
+> [!success] Copy the frame before Pandas writes
 >
 > At the start of each pipeline stage, call `df = source_df.copy()` before adding or modifying columns. This prevents silent mutation of the shared source reference across multiple consumers. In Polars, `with_columns` always returns a new DataFrame — no copy needed.
 
@@ -466,11 +466,11 @@ shape: (5, 4)
 >
 > `.map()` applies a function to each **element** of a Series. `.apply()` applies a function to each **row** (axis=1) or **column** (axis=0) of a DataFrame. Both are Python-level loops under the hood.
 
-> [!danger] apply() performance penalty
+> [!danger] Row-wise `apply()` stays in Python
 >
 > `apply()` is 10-100x slower than vectorized operations. Use it only when no vectorized alternative exists (e.g., calling an external API per row, complex branching logic). For arithmetic, string, or date operations, always use vectorized methods first.
 
-> [!success] Replace apply() with vectorized operations
+> [!success] Prefer vectorized transforms over `apply()`
 >
 > For string operations use `.str` accessor (`df["col"].str.split(".").str[0]`). For arithmetic use standard operators or NumPy ufuncs. For conditional logic use `np.where` / `np.select`. Reserve `apply()` only for row-wise calls to external APIs or logic that cannot be expressed with native methods.
 
@@ -536,11 +536,11 @@ close
 >
 > `map_elements` runs a Python function **per element** — analogous to Pandas `.apply()`. `map_batches` receives the **whole Series** at once — use it for NumPy interop or batch operations.
 
-> [!warning] map_elements breaks Polars' query optimizer
+> [!warning] `map_elements()` exits the optimized Polars path
 >
 > `map_elements` breaks Polars' query optimizer and runs in Python, not Rust. Always prefer native expressions. Use `map_elements` only when no expression equivalent exists.
 
-> [!success] Use native Polars expressions instead of map_elements
+> [!success] Keep the transform inside native Polars expressions
 >
 > Replace `map_elements(lambda s: s.split(".")[0])` with `pl.col("symbol").str.split(".").list.first()`. For math operations use Polars arithmetic expressions directly. Native expressions stay in the Lazy query graph and benefit from predicate pushdown and parallel execution.
 
@@ -742,11 +742,11 @@ category
 >
 > `.cast(pl.Type)` converts a column's dtype within an expression. Use inside `.with_columns()` to cast in place, or `.alias()` to create a new column. Polars types: `pl.Float64`, `pl.Int32`, `pl.Utf8`, `pl.Date`, `pl.Boolean`.
 
-> [!warning] .cast(strict=True) (default) raises an error
+> [!warning] Strict casts fail on bad input
 >
 > `.cast(strict=True)` (default) raises an error on invalid values. Use `strict=False` to get nulls instead of errors — useful for dirty data.
 
-> [!success] Use strict=False when casting dirty or untrusted data
+> [!success] Relax casts when input quality is uncertain
 >
 > For columns sourced from external files or APIs, cast with `pl.col("col").cast(pl.Int64, strict=False)` — invalid values become `null` instead of raising. Follow with a null-count check (`df["col"].null_count()`) to quantify data quality before proceeding.
 
@@ -1782,11 +1782,11 @@ Imperative code mutates step by step; chained (declarative) code reads as a pipe
 
 #### Pandas — unchained imperative style
 
-> [!warning] Imperative style (separate statements per
+> [!warning] Imperative pipelines reuse stale intermediate state
 >
 > Imperative style (separate statements per step) is readable for beginners but creates many intermediate variables, makes it easy to accidentally reuse stale references, and is hard to compose into reusable pipelines. Prefer chained style below.
 
-> [!success] Prefer method chaining to eliminate stale intermediate variables
+> [!success] Chain transforms into one deliberate pipeline
 >
 > Use Pandas method chaining — `(df.query(...).assign(...).sort_values(...))` — or wrap the chain in a `pipe()` call for named steps. In Polars, chain `.filter()`, `.with_columns()`, and `.sort()` directly on the LazyFrame. Both styles produce a single, immutable result with no reused intermediate names.
 

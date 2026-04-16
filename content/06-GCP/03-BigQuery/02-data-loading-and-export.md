@@ -10,7 +10,7 @@ status: complete
 
 # Data Loading and Export
 
-> [!quote] Mitch Kapor on Information Volume
+> [!quote]+
 > "Getting information off the Internet is like taking a drink from a fire hydrant."
 >
 > — **Mitch Kapor**, founder of Lotus Development

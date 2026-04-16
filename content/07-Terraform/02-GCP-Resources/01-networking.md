@@ -10,7 +10,7 @@ status: complete
 
 # Networking
 
-> [!quote] John Gage on networked computing
+> [!quote]+
 >
 > "The network is the computer."
 >

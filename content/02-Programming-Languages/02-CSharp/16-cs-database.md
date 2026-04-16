@@ -10,7 +10,7 @@ status: complete
 
 # 16. Database - C#
 
-> [!quote]
+> [!quote]+
 > "Future users of large data banks must be protected from having to know how the data is organized in the machine."
 >
 > — **Edgar F. Codd**, *A Relational Model of Data for Large Shared Data Banks* (1970)

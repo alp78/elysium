@@ -10,7 +10,7 @@ status: complete
 
 # Data Lake Architecture
 
-> [!quote]
+> [!quote]+
 > "Good data architecture serves business requirements with a common, widely reusable set of building blocks while maintaining flexibility and making appropriate trade-offs."
 >
 > — **Joe Reis & Matt Housley**, *Fundamentals of Data Engineering* (2022)

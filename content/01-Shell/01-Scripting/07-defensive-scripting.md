@@ -23,7 +23,7 @@ status: complete
 
 # Defensive Scripting with Bash Strict Mode and PowerShell Error Handling
 
-> [!quote] Safety requires change
+> [!quote]+
 >
 > "The most dangerous phrase in the language is, 'We've always done it this way.'"
 >

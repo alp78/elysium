@@ -8,7 +8,7 @@ description: "BashOperator, astronomer-cosmos, and CloudRunJobOperator patterns 
 
 # dbt: Airflow Integration
 
-> [!quote] Scheduler and transformer boundaries
+> [!quote]+
 >
 > "It becomes even more important to have something like Airflow that brings everything together in a sane place where every little piece of the puzzle can be orchestrated properly."
 >

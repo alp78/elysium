@@ -19,7 +19,7 @@ status: complete
 
 # IAM, Secrets and Serverless Blocks
 
-> [!quote] Dan Kaminsky on defense in depth
+> [!quote]+
 >
 > "The only way to do great work is to never trust a single layer of defense."
 >

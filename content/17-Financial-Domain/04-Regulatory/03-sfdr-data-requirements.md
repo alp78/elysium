@@ -24,7 +24,7 @@ updated: 2026-03-23
 
 ### Mandatory Indicators (Table 1 of SFDR RTS)
 
-> [!quote]
+> [!quote]+
 > "What gets measured gets managed — and what gets disclosed gets scrutinized."
 >
 > — **Hiro Mizuno** (former CIO, Japan Government Pension Investment Fund)

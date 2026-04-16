@@ -10,7 +10,7 @@ status: complete
 
 # Functional Data Pipeline — Python
 
-> [!quote] Layering And State
+> [!quote]+
 >
 > "The object-oriented version of spaghetti code is, of course, 'lasagna code'. Too many layers."
 >

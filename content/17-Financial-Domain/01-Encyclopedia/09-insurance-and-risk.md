@@ -20,7 +20,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ## Annuity
 
-> [!quote]
+> [!quote]+
 > "The greatest risk in retirement is not dying too soon but living too long without income."
 >
 > — **Moshe Milevsky**, *Are You a Stock or a Bond?* (2008)
@@ -38,7 +38,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ## Endowment Insurance
 
-> [!quote]
+> [!quote]+
 > "Saving and insuring are two sides of the same coin — both protect against an uncertain future."
 >
 > — **Peter Bernstein**, *Against the Gods* (1996)
@@ -56,7 +56,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ## Insurance (Life)
 
-> [!quote]
+> [!quote]+
 > "Life insurance is the only tool that takes pennies and guarantees dollars."
 >
 > — **Ben Feldman**
@@ -74,7 +74,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ## Insurance (Property-Casualty)
 
-> [!quote]
+> [!quote]+
 > "In an uncertain world, insurance is the business of making promises about the future."
 >
 > — **Peter Drucker**
@@ -92,7 +92,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ## Insurance Premium
 
-> [!quote]
+> [!quote]+
 > "Float is money we hold that is not ours but which we get to invest for Berkshire's benefit."
 >
 > — **Warren Buffett**
@@ -110,7 +110,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ## Parametric Insurance
 
-> [!quote]
+> [!quote]+
 > "Speed of payout is everything in a disaster — parametric products deliver cash when it matters most."
 >
 > — **Isaac Anthony**
@@ -128,7 +128,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ## Reinsurance
 
-> [!quote]
+> [!quote]+
 > "Reinsurance is the business of insuring insurance companies — it is the safety net beneath the safety net."
 >
 > — **Henry Kluge**
@@ -146,7 +146,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ## Risk Management
 
-> [!quote]
+> [!quote]+
 > "The essence of risk management lies in maximizing the areas where we have some control over the outcome while minimizing the areas where we have absolutely no control."
 >
 > — **Peter Bernstein**, *Against the Gods* (1996)
@@ -163,7 +163,7 @@ Encyclopedia of insurance and risk management terms covering life insurance, pro
 
 ## Unit-Linked Insurance
 
-> [!quote]
+> [!quote]+
 > "Combining investment with protection gives people permission to grow their wealth while still sleeping at night."
 >
 > — **Mark Tucker**

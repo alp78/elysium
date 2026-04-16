@@ -10,7 +10,7 @@ status: complete
 
 # 23. Data Ingestion — SQL Server, BigQuery, Firestore
 
-> [!quote]- Quote
+> [!quote]+
 >
 > "Data is a precious thing and will last longer than the systems themselves."
 >

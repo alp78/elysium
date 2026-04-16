@@ -10,7 +10,7 @@ status: complete
 
 # Conditional Resources
 
-> [!quote] John Ousterhout on flexibility and complexity
+> [!quote]+
 >
 > "Flexibility in software is a double-edged sword. Every option you add also adds complexity."
 >

@@ -23,7 +23,7 @@ status: complete
 
 # API and Protocol Comparison
 
-> [!quote]
+> [!quote]+
 > "A REST API should spend almost all of its descriptive effort in defining the media type(s) used for representing resources."
 >
 > — **Roy Fielding**, *Architectural Styles and the Design of Network-based Software Architectures* (2000)
@@ -184,7 +184,7 @@ APIs are not interchangeable. The protocol you choose determines latency, throug
 
 Understanding the trade-offs at each layer is what separates a pipeline that works from one that scales.
 
-> [!quote] API Adoption in the Industry
+> [!quote]+
 > REST 86% · Webhooks 36% · GraphQL 29% · SOAP 26% · WebSockets 25% · gRPC 11%
 >
 > — **Postman**, *State of the API Report 2023*

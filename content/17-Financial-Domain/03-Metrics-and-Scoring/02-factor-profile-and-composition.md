@@ -18,7 +18,7 @@ The financial data platform dashboard includes two visualization panels that syn
 
 ## Factor Profile (Radar Chart)
 
-> [!quote]
+> [!quote]+
 > "Your portfolio's returns are overwhelmingly determined by your exposure to a few common risk factors."
 >
 > — **Eugene Fama**

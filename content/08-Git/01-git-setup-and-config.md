@@ -7,7 +7,7 @@ tags:
 
 # Git Setup and Configuration
 
-> [!quote] Linus Torvalds on Git
+> [!quote]+
 >
 > "Git proved I could be more than a one-hit wonder."
 >

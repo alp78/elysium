@@ -10,7 +10,7 @@ status: complete
 
 # Observability Deep Dive
 
-> [!quote]
+> [!quote]+
 > "Observability is a property of a system that has been designed, built, tested, deployed, operated, and evolved in acknowledgment that failure needs to be embraced at every phase."
 >
 > — **Cindy Sridharan**, *Distributed Systems Observability* (2018)

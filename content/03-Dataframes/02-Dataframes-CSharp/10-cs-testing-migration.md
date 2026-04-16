@@ -11,7 +11,7 @@ status: complete
 
 # Testing and Migration - C#
 
-> [!quote]- Quote
+> [!quote]+
 >
 > "Program testing can be used to show the presence of bugs, but never to show their absence."
 >

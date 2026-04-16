@@ -20,7 +20,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ## Compliance
 
-> [!quote]
+> [!quote]+
 > "Culture eats compliance for breakfast — if you have the right culture, compliance follows naturally."
 >
 > — **Gary Gensler**
@@ -38,7 +38,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ## Intellectual Property (IP)
 
-> [!quote]
+> [!quote]+
 > "Intellectual property is the oil of the 21st century."
 >
 > — **Mark Getty**
@@ -56,7 +56,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ## Licensing
 
-> [!quote]
+> [!quote]+
 > "The purpose of licensing is to grant others permission to use what you have created — on your terms."
 >
 > — **Russ Krajec**
@@ -74,7 +74,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ## Patent
 
-> [!quote]
+> [!quote]+
 > "The patent system added the fuel of interest to the fire of genius."
 >
 > — **Abraham Lincoln**
@@ -104,7 +104,7 @@ Encyclopedia of compliance, risk management, regulatory approval, and intellectu
 
 ## Risk Management
 
-> [!quote]
+> [!quote]+
 > "Risk means more things can happen than will happen."
 >
 > — **Elroy Dimson**

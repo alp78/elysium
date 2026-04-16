@@ -11,7 +11,7 @@ status: complete
 
 # Aggregation and Reshaping - Python
 
-> [!quote]- Quote
+> [!quote]+
 >
 > "Statistics are like bikinis. What they reveal is suggestive, but what they conceal is vital."
 >
@@ -280,7 +280,7 @@ OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 
 ## Grouping and Aggregation
 
-> [!warning] as_index=False vs as_index=True
+> [!warning] Pandas group keys fall into the index by default
 >
 > `as_index=False` vs `as_index=True` — fundamentally different output
 > Pandas `groupby()` defaults to `as_index=True`, which puts group keys into the index.
@@ -289,7 +289,7 @@ OHLCV: (66355, 12), Dim: (169, 26), Scores: (466, 36)
 >
 > Polars `group_by()` always returns a flat DataFrame — no index concept exists.
 
-> [!success] Always pass `as_index=False` in pipeline groupby calls
+> [!success] Keep grouped keys as regular columns
 >
 > Use `df.groupby("col", as_index=False).agg(...)` to get a flat DataFrame with group
 > keys as regular columns. This makes the result chainable with `.merge()`, `.sort_values()`,
@@ -1137,12 +1137,18 @@ Rendered tabular output preserved below.
 
 A rolling window aggregation computes a statistic over the last N consecutive rows per row — the classic moving average. Pandas uses `.rolling(n).mean()` / `.rolling(n).max()` on a Series. Polars uses `.rolling_mean(window_size=n)` / `.rolling_max(window_size=n)` as expressions in `.with_columns()`. Both produce `null` / `NaN` for the first `n-1` rows where the window is incomplete.
 
-> [!warning] Polars 1.x deprecated positional window size
+> [!warning] Positional rolling-window arguments no longer survive Polars 1.x
 >
 > In Polars 0.x, `rolling_mean(7)` accepted the window size as a positional argument.
 > **Polars 1.x requires the keyword argument:** `rolling_mean(window_size=7)`.
 > The positional form raises a `DeprecationWarning` in 0.x and a `TypeError` in 1.x.
 > Always use `window_size=` explicitly to future-proof your code.
+
+> [!success] Always pass the rolling window size by keyword
+>
+> Write `rolling_mean(window_size=7)`, `rolling_max(window_size=30)`, and the
+> equivalent keyword form for every rolling expression. That keeps the code
+> explicit and avoids version-sensitive breakage.
 
 ### Moving Average and Rolling Maximum
 
@@ -1497,13 +1503,16 @@ Index performance: pandas=(5281, 15), polars=(5281, 15)
 > preventing silent row explosions. In Polars, use `.join_where()` or assert
 > `result.shape[0] == left.shape[0]` after the join when the relationship should be many-to-one.
 
-> [!warning] Pandas vs Polars merge defaults
+Join safety is only one half of the problem. The other is default join behavior and
+post-join ergonomics, which still deserve an explicit check even when cardinality is valid.
+
+> [!warning] Default join behavior still hides dropped rows and suffix surprises
 >
 > - Pandas `merge()` defaults to `how='inner'` — rows without matches are silently dropped
 > - Polars `join()` defaults to `how='inner'` too, but uses different suffix behavior:
 >   Pandas appends `_x`/`_y`, Polars appends `_right`
 
-> [!success] Always specify `how=` explicitly and verify row counts after joining
+> [!success] Declare the join shape and audit the result immediately
 >
 > Always pass `how='inner'`, `how='left'`, etc. explicitly — never rely on defaults.
 > After any join, assert `len(result) == expected` to catch silent row drops or explosions.
@@ -1599,14 +1608,14 @@ Polars inner: 66355
 
 ### Left Join
 
-> [!warning] Left join with duplicate keys
+> [!warning] Duplicate keys on the right side multiply left-join rows
 >
 > Left join with duplicate keys silently multiplies rows
 > This left join produces more rows than the left DataFrame because `scores_pd` has
 > multiple rows per symbol (one per date). The output has `len(ohlcv) × scores_per_symbol`
 > rows — a classic accidental many-to-many. Always check `len(result)` after a join.
 
-> [!success] Deduplicate the right side before joining, or use `validate=`
+> [!success] Collapse the right side to one row per key before joining
 >
 > Before a left join, deduplicate the right DataFrame to one row per key:
 > `scores_pd.drop_duplicates("symbol")`. Or keep only the latest score with
@@ -1754,11 +1763,17 @@ OHLCV rows with scores: 66355 (of 66355)
 
 A cross join produces the Cartesian product of two DataFrames: every row in the left is paired with every row in the right. Result row count = `len(left) × len(right)`. Use this to generate all (symbol, date) combinations for a universe/calendar scaffold, then left-join actual prices onto it to expose gaps.
 
-> [!warning] Row explosion risk
+> [!warning] Cross joins scale quadratically
 >
 > Joining two tables of 50 and 1331 rows produces 66,550 rows. Joining OHLCV (66K rows)
 > with itself produces 4.4 billion rows. Always apply `.select()` to the smallest possible
 > subset before a cross join.
+
+> [!success] Bound the Cartesian product before you execute it
+>
+> Filter one side first, keep only the columns you actually need, and compute the
+> expected `left_rows * right_rows` output size before running `how="cross"`.
+> If the multiplication is not acceptable on paper, it is not safe in code.
 
 ### Cartesian Product Generation
 

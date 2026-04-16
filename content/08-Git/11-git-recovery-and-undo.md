@@ -7,7 +7,7 @@ tags:
 
 # Git Recovery and Undo
 
-> [!quote]
+> [!quote]+
 > "Nobody actually creates perfect code the first time around, except me. But there's only one of me."
 >
 > — **Linus Torvalds**, Git mailing list

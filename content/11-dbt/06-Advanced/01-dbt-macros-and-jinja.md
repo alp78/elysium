@@ -8,7 +8,7 @@ description: "Jinja2 fundamentals, writing macros, dbt-utils patterns, dispatch,
 
 # dbt: Macros and Jinja
 
-> [!quote] Programs As Thought
+> [!quote]+
 >
 > "A programming language is for thinking of programs, not for expressing programs you've already thought of."
 >

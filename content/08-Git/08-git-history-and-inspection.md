@@ -7,7 +7,7 @@ tags:
 
 # Git History and Inspection
 
-> [!quote]
+> [!quote]+
 > "The past is never dead. It's not even past."
 >
 > --- **William Faulkner**, *Requiem for a Nun* (1951)

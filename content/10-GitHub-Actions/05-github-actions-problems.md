@@ -9,7 +9,7 @@ tags:
 
 # GitHub Actions Problems
 
-> [!quote] Accelerate — Nicole Forsgren (2018)
+> [!quote]+
 >
 > "We found that where code deployments are most painful, you'll find the poorest software delivery performance, organizational performance, and culture."
 

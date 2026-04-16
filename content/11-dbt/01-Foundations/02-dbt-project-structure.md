@@ -8,7 +8,7 @@ description: "Project layout, naming conventions, config inheritance, multi-adap
 
 # dbt: Project Structure
 
-> [!quote] Structured projects scale better
+> [!quote]+
 >
 > "There is no reason to tolerate an unstructured approach."
 >

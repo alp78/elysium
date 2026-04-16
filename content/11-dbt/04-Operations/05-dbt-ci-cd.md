@@ -8,7 +8,7 @@ description: "GitHub Actions CI with slim builds and manifest diffing, Workload 
 
 # dbt: CI/CD
 
-> [!quote] Integrate early, fail cheaply
+> [!quote]+
 >
 > "The longer you wait to integrate, the more it costs and the more unpredictable the cost becomes."
 >

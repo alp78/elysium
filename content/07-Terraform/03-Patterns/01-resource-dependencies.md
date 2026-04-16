@@ -10,7 +10,7 @@ status: complete
 
 # Resource Dependencies
 
-> [!quote] Mitchell Hashimoto on the dependency graph
+> [!quote]+
 >
 > "Terraform allows you to reference the attribute of any resource within any other resource. That's how the dependency graph gets built."
 >

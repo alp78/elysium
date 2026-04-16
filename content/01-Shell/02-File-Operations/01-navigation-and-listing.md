@@ -14,7 +14,7 @@ status: complete
 
 # Navigation and Listing
 
-> [!quote] Unix interface model
+> [!quote]+
 >
 > "I think the major good idea in Unix was its clean and simple interface: open, close, read, and write."
 >

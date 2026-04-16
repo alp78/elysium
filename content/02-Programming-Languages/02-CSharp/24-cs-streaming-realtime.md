@@ -14,7 +14,7 @@ status: complete
 
 # 24. Streaming & Real-Time Data — WebSocket, SSE, Pub/Sub, Firestore
 
-> [!quote] Stream Processing Framing
+> [!quote]+
 >
 > "Turning the database inside out: take the implementation detail that was previously hidden inside the database, and make it a first-class citizen."
 >

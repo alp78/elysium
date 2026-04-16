@@ -11,7 +11,7 @@ status: complete
 
 # 05. Collections - C#
 
-> [!quote]- Quotations
+> [!quote]+
 >
 > "Algorithms + Data Structures = Programs."
 >

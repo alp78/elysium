@@ -14,7 +14,7 @@ status: complete
 
 # File Manipulation
 
-> [!quote] Power and responsibility
+> [!quote]+
 >
 > "Unix was not designed to stop you from doing stupid things, because that would also stop you from doing clever things."
 >

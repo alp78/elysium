@@ -10,7 +10,7 @@ status: complete
 
 # Datadog Log Management
 
-> [!quote]
+> [!quote]+
 > "The goal of an Observability team is not to collect logs, metrics, or traces. It is to build a culture of engineering based on facts and feedback."
 >
 > — **Cindy Sridharan**, *Distributed Systems Observability* (2018)

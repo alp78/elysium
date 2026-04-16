@@ -11,7 +11,7 @@ status: complete
 
 # Database and SQL Interface - Python
 
-> [!quote]
+> [!quote]+
 > "Show me your flowcharts and conceal your tables, and I shall continue to be mystified. Show me your tables, and I won't usually need your flowcharts; they'll be obvious."
 >
 > — **Fred Brooks**, *The Mythical Man-Month* (1975)
@@ -273,9 +273,13 @@ display(ctx.execute("""
 
 The SQL syntax used in Polars SQLContext follows the same patterns as [sql-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals) for SQL Server and [bq-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) for BigQuery. For direct Python database access with pyodbc and SQLAlchemy outside of DataFrames, see [16_py_database](https://alp78.github.io/elysium/02-Programming-Languages/Python/16_py_database).
 
-> [!warning] `ROWS BETWEEN` is not supported in `pl.SQLContext`
+> [!warning] `ROWS BETWEEN` is unsupported
 >
-> Polars SQLContext does not implement the `ROWS BETWEEN N PRECEDING AND CURRENT ROW` frame specification as of Polars 1.x. Use the Polars expression API (`pl.col().rolling_mean(window_size)`) for sliding-window aggregations. DuckDB (see [DuckDB — Embedded Analytical Database](#duckdb--embedded-analytical-database)) supports the full `ROWS BETWEEN` syntax.
+> Polars SQLContext does not implement the `ROWS BETWEEN N PRECEDING AND CURRENT ROW` frame specification as of Polars 1.x. Sliding-window SQL written for DuckDB, PostgreSQL, or SQL Server therefore does not port over directly.
+>
+> [!success] Use rolling expressions or DuckDB
+>
+> For moving averages and other bounded windows, switch to the Polars expression API (`pl.col().rolling_mean(window_size)`). When you specifically need full SQL frame semantics, route the query through DuckDB instead of `pl.SQLContext`.
 
 ### SQL and Expression Window Functions
 
@@ -4231,22 +4235,47 @@ Test tables and procedures cleaned up
 ---
 
 
-## Warnings
+## Common Traps and Safe Patterns
 
-> [!warning] `to_sql()` default mode is row-by-row — extremely slow on large DataFrames
-> Pandas `to_sql()` inserts one row per SQL statement by default. On a 100K-row DataFrame, this can take minutes. Use `method="multi"` or set `fast_executemany=True` on the pyodbc connection for 10–100x speedup.
+> [!warning] `to_sql()` defaults to row-by-row inserts
+>
+> Pandas `to_sql()` issues inserts conservatively by default. On large DataFrames this becomes a throughput bottleneck very quickly, turning what should be a bulk load into minutes of row-by-row network chatter.
+>
+> [!success] Batch writes or use bulk loaders
+>
+> For moderate loads, enable `method="multi"` or `fast_executemany=True`. For genuinely large transfers, export and use `bcp`, `BULK INSERT`, or another database-native bulk path instead of ORM-style inserts.
 
-> [!warning] SQL injection risk with string-formatted queries
-> Building SQL queries with f-strings or `.format()` exposes the application to SQL injection. Use parameterized queries (`?` placeholders in pyodbc, `:param` in SQLAlchemy).
+> [!warning] String-built SQL is injectable
+>
+> Queries assembled with f-strings or `.format()` splice raw values directly into SQL text. As soon as any value is user-controlled, the code becomes vulnerable to SQL injection and loses the plan-caching benefits of parameterization.
+>
+> [!success] Bind every external value
+>
+> Use `?` parameters with pyodbc and named parameters like `:symbol` with SQLAlchemy `text()`. Query text should stay static while values travel separately through the driver parameter channel.
 
-> [!warning] SQLAlchemy 2.0 removed `engine.execute()`
-> Code written for SQLAlchemy 1.x that calls `engine.execute(sql)` raises `AttributeError` in 2.0. Use `with engine.connect() as conn: conn.execute(text(sql))`.
+> [!warning] `engine.execute()` no longer exists
+>
+> SQLAlchemy 2.x removed the old `engine.execute(...)` convenience path. Legacy examples that still call it fail with `AttributeError`, which is easy to misread as a driver or connection problem instead of an API change.
+>
+> [!success] Execute through a connection
+>
+> Open an explicit connection or transaction scope and call `conn.execute(text(sql), params)`. That is the current SQLAlchemy execution model and the one new code should standardize on.
 
-> [!warning] Large result sets from `read_sql()` can exhaust memory
-> `pd.read_sql("SELECT * FROM large_table", engine)` loads the entire result set into memory. Use `chunksize=10000` to stream results in batches, or add a `WHERE` clause to limit rows.
+> [!warning] `read_sql()` can exhaust memory
+>
+> `pd.read_sql("SELECT * FROM large_table", engine)` materializes the full result set into memory. On wide or high-row-count tables, that can consume all available RAM before any downstream filtering has a chance to reduce the data.
+>
+> [!success] Limit or stream result sets
+>
+> Add selective predicates to the query, project only needed columns, and use `chunksize=` for Pandas or batch iteration patterns for Polars when the full result must be processed. Bring the smallest useful result into memory, not the whole table by default.
 
-> [!warning] Connection strings with passwords in plain text are a security risk
-> Never hard-code database passwords in source code. Use environment variables, Azure Key Vault, or credential files.
+> [!warning] Plain-text passwords leak secrets
+>
+> Hardcoding passwords in connection strings leaves credentials in source control, notebooks, logs, stack traces, and shell history. Once a secret lands in code, it tends to spread far beyond the original file.
+>
+> [!success] Load credentials from environment or vault
+>
+> Read database secrets from environment variables, `.env` files kept out of version control, or a proper secret manager such as Azure Key Vault or GCP Secret Manager. Application code should assemble connection strings at runtime from those injected values.
 
 ## Recommendations
 

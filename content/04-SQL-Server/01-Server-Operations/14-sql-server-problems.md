@@ -10,7 +10,7 @@ description: "Catalog of 25 SQL Server production problems ranked by severity, w
 
 # SQL Server Problems
 
-> [!quote] Mike Tyson on operational planning
+> [!quote]+
 >
 > "Everybody has a plan until they get punched in the mouth."
 >

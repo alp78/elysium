@@ -8,7 +8,7 @@ description: "Comprehensive catalog of BigQuery production problems for data eng
 
 # BigQuery Problems
 
-> [!quote] Patrick McKenzie on Learning by Solving
+> [!quote]+
 > "Every great developer you know got there by solving problems they were unqualified to solve until they actually did it."
 >
 > — **Patrick McKenzie**, kalzumeus.com

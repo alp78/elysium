@@ -11,7 +11,7 @@ status: complete
 
 # Object-Oriented Programming - C#
 
-> [!quote]
+> [!quote]+
 > "I made up the term 'object-oriented', and I can tell you I did not have C++ in mind."
 >
 > — **Alan Kay**, email to Stefan Ram (2003)

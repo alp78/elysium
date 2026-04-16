@@ -10,7 +10,7 @@ status: complete
 
 # Registry and CI
 
-> [!quote] Mitchell Hashimoto on earning developer trust
+> [!quote]+
 >
 > "Winning developers means earning their trust over many years through great software."
 >

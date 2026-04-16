@@ -10,7 +10,7 @@ status: complete
 
 # Data Modeling Patterns
 
-> [!quote]
+> [!quote]+
 > "The model is not the territory, but you'd better have a good map if you want to navigate the territory."
 >
 > — **Bill Inmon**, *Building the Data Warehouse* (2005)

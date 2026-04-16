@@ -10,7 +10,7 @@ status: complete
 
 # Datadog SQL Server Logs
 
-> [!quote]
+> [!quote]+
 > "A log is a record of what happened. A good log is a record of what happened that you can actually understand six months later at 3 AM."
 >
 > — **Bryan Cantrill**, CTO of Oxide Computer

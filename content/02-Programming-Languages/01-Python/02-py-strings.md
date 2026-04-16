@@ -11,7 +11,7 @@ status: complete
 
 # 02. Strings - Python
 
-> [!quote] Matsumoto on string processing
+> [!quote]+
 >
 > "In our daily lives as programmers, we process text strings a lot. So I tried to work hard on text processing, namely the string class and regular expressions."
 >

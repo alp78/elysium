@@ -11,7 +11,7 @@ status: complete
 
 # Advanced Types and Interop - Python
 
-> [!quote] Interoperability premise
+> [!quote]+
 >
 > "The nice thing about standards is that you have so many to choose from."
 >
@@ -292,6 +292,12 @@ Pandas 2.x introduced opt-in Arrow-backed dtypes (e.g., `string[pyarrow]`, `int6
 > [!warning] Arrow-backed dtypes are opt-in
 >
 > Arrow-backed dtypes are not the default in Pandas 2.x. You must request them explicitly via `pd.array(..., dtype="string[pyarrow]")` or `dtype_backend="pyarrow"` on read functions. Copy-on-Write (CoW) became the default in Pandas 3.0. Mixing Arrow-backed and NumPy-backed columns in the same DataFrame can cause unexpected behavior.
+
+> [!success] Opt into Arrow dtypes before planning Arrow-native interchange
+>
+> Use `dtype_backend="pyarrow"` on ingest or `convert_dtypes(dtype_backend="pyarrow")`
+> before handing the frame to Polars, Arrow, or another columnar engine. That
+> makes the memory model explicit instead of relying on mixed backend defaults.
 
 *Creates a 2-row DataFrame with `symbol` stored as `string[pyarrow]` via explicit `pd.array(dtype="string[pyarrow]")` — confirming the printed dtype is `string` (Arrow-backed) rather than the default `object`.*
 ```python
@@ -725,6 +731,12 @@ Unnamed: 0
 > [!warning] Polars null vs Pandas NaN in CSV parsing
 >
 > Pandas uses `NaN` (float) for missing values, which coerces integer columns to `float64`. Polars uses typed `null` — integer columns stay `Int64` even with nulls. This difference becomes visible when round-tripping CSV data between the two libraries.
+
+> [!success] Make nullability and target dtypes explicit at the CSV boundary
+>
+> Override the schema you expect, declare null sentinels up front, and inspect the
+> resulting dtypes immediately after read. That prevents silent integer-to-float
+> promotion on the Pandas side and keeps the round-trip contract deliberate.
 
 *Reads the 3-row CSV with a per-column null mapping (`score → "N/A"`), producing a Float64 `score` column where `"N/A"` becomes `null` while `"-999"` remains as a numeric value.*
 ```python
@@ -2009,6 +2021,13 @@ Round-trip metadata: b'1.0'
 > [!warning] Polars is UTF-8 only
 >
 > Polars `read_csv()` only reads UTF-8 encoded files natively. For any other encoding, decode the bytes to a Python string first, then pass a `StringIO` object. See the Polars cell below for the standard pattern.
+
+> [!success] Decode legacy encodings before the text reaches Polars
+>
+> Treat the byte-to-string conversion as a separate ingest step: read bytes,
+> decode with the correct encoding, then pass the resulting Unicode text through
+> `io.StringIO` into `pl.read_csv()`. That keeps encoding repair explicit and
+> repeatable.
 
 *Creates city CSV files in 4 encodings (UTF-8, Latin-1, CP1252, UTF-16) with German and Portuguese city names, reads each with the matching `encoding` parameter, writes a Latin-1 file, and runs `chardet.detect()` on the Latin-1 bytes — reporting Windows-1252 at 9% confidence.*
 ```python

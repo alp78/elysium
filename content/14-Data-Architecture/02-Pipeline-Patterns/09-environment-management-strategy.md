@@ -23,7 +23,7 @@ status: complete
 
 # Environment Management Strategy
 
-> [!quote]
+> [!quote]+
 > "You need to get everything in version control. Not just the code, but everything required to build the environment."
 >
 > — **Gene Kim**, *The DevOps Handbook* (2016)

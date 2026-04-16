@@ -8,7 +8,7 @@ description: "Comprehensive catalog of Terraform production problems — 25 issu
 
 # Terraform Production Problems
 
-> [!quote]
+> [!quote]+
 > "The first step in fixing a broken program is getting it to fail repeatably."
 >
 > — **Tom Duff**, Bell Labs

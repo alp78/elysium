@@ -7,7 +7,7 @@ updated: 2026-03-29
 
 # Data Quality Framework
 
-> [!quote]
+> [!quote]+
 > "Uncontrolled variation is the enemy of quality."
 >
 > — **W. Edwards Deming**, *Out of the Crisis* (1986)
