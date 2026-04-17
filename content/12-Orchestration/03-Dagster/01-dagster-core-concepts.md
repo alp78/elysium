@@ -3,9 +3,9 @@ title: "01 - Dagster Core Concepts"
 tags:
   - orchestration
   - dagster
-description: "Foundational Dagster vocabulary and mental models, including assets, definitions, materializations, observations, runs, and the shift from task-first orchestration to asset-first orchestration."
+description: "Dagster platform overview and foundational concepts, including code locations, assets, materializations, observations, runs, and when asset-first orchestration is the right fit."
 created: 2026-04-15
-updated: 2026-04-16
+updated: 2026-04-17
 status: complete
 parent: "[[domain-dagster]]"
 links:
@@ -22,16 +22,19 @@ links:
 
 # Dagster Core Concepts
 
-Dagster becomes easier to reason about once its vocabulary is read as operating vocabulary rather than decorator vocabulary. The platform asks four concrete questions: what durable data state exists, which downstream states depend on it, whether the code location is even loadable, and what execution evidence Dagster recorded when work ran. Those questions matter because Dagster keeps user code behind a code-location boundary and treats data products, not task shells, as the center of orchestration.
+Dagster is a data orchestrator built around named data assets, explicit execution history, and a control plane that can explain what changed, what depends on it, and what should be recomputed next. In practice, that means Dagster is not only a job launcher. It is a platform for loading user code from code locations, tracking runs and asset events in a shared instance, and using that state to drive jobs, schedules, sensors, checks, and targeted recovery.
+
+This page introduces Dagster itself before the chapter moves into specialized topics. The goal is to establish the platform model, define the core objects, and explain why Dagster is strongest when the real problem is governed data state rather than simple timer-based task execution.
 
 > [!abstract]- Summary
 >
-> This note establishes the core Dagster model that the rest of the chapter assumes:
+> This note establishes the Dagster model that the rest of the chapter assumes:
 >
-> - `Definitions` is the loadable composition root Dagster tools discover and inspect.
-> - assets are durable states in the graph, not just Python functions with decorators.
-> - materializations and runs are execution evidence, but they do not settle whether the data is acceptable.
-> - observations keep externally managed datasets visible without pretending Dagster owns their compute.
+> - Dagster models orchestration around durable data assets and explicit control-plane state.
+> - `Definitions` is the loadable composition root that code servers, tests, and deployment services must agree on.
+> - assets, materializations, and runs answer what work happened, but they do not by themselves answer whether the resulting data is trustworthy.
+> - source assets and observations keep external dependencies visible without pretending Dagster owns their compute.
+> - Dagster is most justified when lineage-aware recovery and trust boundaries matter more than command order alone.
 
 > [!info] Official References
 >
@@ -40,7 +43,7 @@ Dagster becomes easier to reason about once its vocabulary is read as operating 
 > - [Dagster assets API](https://docs.dagster.io/api/dagster/assets)
 > - [Deployment overview](https://docs.dagster.io/deployment)
 
-> [!note]- Glossary
+> [!abstract]- Key Terms
 >
 > **Definitions**
 > - Dagster defines `Definitions` as the set of definitions explicitly available and loadable by Dagster tools.
@@ -67,15 +70,31 @@ Dagster becomes easier to reason about once its vocabulary is read as operating 
 > - It is the main execution record for logs, events, failures, and emitted asset state.
 > - A successful run answers "what launched and finished," not automatically "should downstream consumers trust the result."
 
-## The Code Location Is A Load Boundary
+## Dagster | platform overview
 
-Dagster's own `Definitions` documentation is explicit about the load model: system tools do not simply import arbitrary user code and execute it in-process. They discover a loadable module and expect to find a top-level `Definitions` object they can reconstruct across a serialization boundary. That makes loadability a first-order correctness concern, not a packaging afterthought.
+This section introduces Dagster at the platform level before the note moves into individual objects such as `Definitions`, assets, and source assets. The key point is that Dagster is a control plane for data systems: it loads a declared code location, stores orchestration state in a shared instance, and uses that state to coordinate execution, lineage, checks, and recovery.
 
-### Loadability Comes Before Execution
+### Dagster | orchestrator model | assets, control plane, and execution
 
-The first operational question in a Dagster project is whether the code location resolves cleanly. Only after that boundary holds does it make sense to discuss schedules, sensors, retries, or production incidents.
+Dagster is easiest to understand as three connected layers. The first layer is user code, where engineers define assets, jobs, resources, checks, and automation rules. The second layer is the control plane, which loads those definitions, records runs and events, and decides when work should launch. The third layer is the actual compute, which may run in process, in subprocesses, or in external systems that Dagster observes and coordinates.
 
-#### Compose one explicit `Definitions` object
+#### Dagster | define the platform scope
+
+Dagster is appropriate when the orchestration layer needs to know more than whether a command succeeded. The platform tracks named assets, the dependencies between them, the runs that emitted materializations or observations, and the checks that qualify whether the resulting data should be trusted. That lets engineers ask operational questions such as which assets are stale, which downstream states depend on a corrected source, and which recovery path is narrower than a full rerun.
+
+#### Dagster | compare asset-first and task-first orchestration
+
+A task-first scheduler primarily models execution order: run task A, then task B, then task C. Dagster can represent step order too, but its main modeling surface is the asset graph. In an asset-first system, the important object is the durable state the business cares about, such as a curated mart, a reviewed snapshot, or a delivered export. Execution steps matter because they produce or validate those states, not because task order alone is the system's contract.
+
+## Dagster | code locations and Definitions
+
+Dagster uses a load boundary between the control plane and user code. The code server, webserver, daemon, and tests do not discover assets by scanning arbitrary runtime state. They load a declared code location and expect one coherent `Definitions` surface they can inspect, serialize, and execute against consistently.
+
+### Dagster | code locations | loadability and composition
+
+This is why loadability comes before execution in any real Dagster project. If the code location does not resolve, there is no valid asset graph, no trustworthy UI surface, and no meaningful automation discussion yet. Schedules, sensors, checks, and runs all depend on the composition root loading first.
+
+#### Definitions | compose one explicit object
 
 Use this pattern when a project is moving from loose scripts to a code location that CI, local tests, and the Dagster control plane must all load consistently. The trigger is usually the moment assets, jobs, or resources have multiplied enough that implicit wiring becomes harder to reason about than explicit composition. The code runs in user-code space and is load-time configuration, not business execution. Its purpose is to publish one authoritative inventory of assets and related executable objects.
 
@@ -102,7 +121,7 @@ print([spec.key.to_user_string() for spec in defs.resolve_all_asset_specs()])
 
 In a real production code location, that composition root is where the platform's operational shape becomes explicit. In the local `dagflow` repository, one `Definitions` object exposes two governed pipelines, four asset jobs, review-resume sensors, dbt-backed assets, and shared resources in one loadable module. The important lesson is not the number of objects. It is that every Dagster tool can discover the same operating surface from one agreed entry point.
 
-#### Publish the whole operating surface, not only the assets
+#### Definitions | publish the full operating surface
 
 Use this pattern once the code location has crossed from a teaching example into a platform that must expose launchable slices, automation surfaces, and resource boundaries together. The trigger is a need to explain not only what data states exist, but also which executable selections, sensors, and shared dependencies govern them. The code still runs at composition time rather than as business workload. Its purpose is to make the control plane load the same topology engineers read in code review.
 
@@ -140,15 +159,15 @@ defs = Definitions(
 )
 ```
 
-## Durable State Sits At The Center Of The Model
+## Dagster | assets, runs, and trust
 
-Dagster's asset API exists because the platform wants the graph to describe durable states that engineers and downstream systems can name under pressure. This is the real conceptual move away from task-first orchestration. A task scheduler primarily answers "what should run next?" Dagster asks that question too, but only after it has modeled which data state is stale, rebuilt, observed, or still untrusted.
+Dagster's asset model is the core reason the platform feels different from a task scheduler. A task scheduler mainly answers which command should run next. Dagster still launches work, but it first asks which durable data state exists, which downstream states depend on it, and which state now needs to be rebuilt, checked, or withheld from consumers.
 
-### The Graph Should Name States The Business Would Recognize
+### Dagster | assets and materializations | durable state in the graph
 
-If a downstream team, reviewer, or on-call engineer would ask about a dataset by name, that dataset probably belongs in the asset graph. If no one outside the implementation cares about an intermediate step, it may belong behind the asset boundary instead.
+An asset is a named durable state Dagster can track across lineage, runs, materializations, checks, and retries. Good asset boundaries follow the states operators and downstream consumers actually care about. If a reviewer, analyst, or on-call engineer would ask whether a dataset exists or can be replayed safely, that state belongs in the graph.
 
-#### Inspect the asset events a run actually emitted
+#### Assets | inspect emitted materializations
 
 Use this pattern when the code location already loads and the next question is what durable state Dagster recorded for one execution. The trigger is a need to move from static topology into run evidence. The code runs as a normal in-process materialization and changes runtime state by producing assets. Its purpose is to show that a run is meaningful in Dagster because it emits asset events tied to named data states.
 
@@ -189,11 +208,11 @@ True
 
 That distinction matters in production systems because the most important state change is not always the final file export. In `dagflow`, a review snapshot is itself a first-class asset because downstream approval, editing, and export all depend on that persisted review state. The asset graph therefore names `security_master_review_snapshot` and `shareholder_holdings_review_snapshot` explicitly instead of hiding them as incidental internal steps.
 
-### A Green Run And A Trusted Dataset Are Different Claims
+### Dagster | runs and data trust | execution evidence versus acceptance
 
-Materialization means Dagster observed an asset being produced. It does not mean the dataset satisfies business rules, schema expectations, or consumer contracts. A run can finish successfully while still producing data that should not propagate.
+Runs and materializations answer what Dagster executed and what state it observed being produced. They do not automatically answer whether the output is semantically correct, policy-compliant, or safe for downstream delivery. That trust boundary belongs to checks, review stages, and explicit acceptance logic layered on top of execution evidence.
 
-#### Separate execution success from downstream trust
+#### Runs | separate execution success from data trust
 
 Use this framing when a team is tempted to equate "the run is green" with "the data is ready." The trigger is usually a post-incident conversation in which execution completed, but the produced state later proved wrong, incomplete, or out of contract. The context is operational reasoning rather than a new API surface. Its purpose is to establish that checks, review boundaries, and downstream acceptance belong on top of materialization, not inside the definition of materialization itself.
 
@@ -201,15 +220,15 @@ Use this framing when a team is tempted to equate "the run is green" with "the d
 >
 > In the `dagflow` market-data pipeline, dbt transforms can finish successfully and still leave the dataset in a state that requires governed review before export. The review snapshot is therefore not cosmetic metadata around a run. It is a durable operational state between transformation and delivery. That is exactly the kind of boundary Dagster's asset model is meant to expose.
 
-## Observation Begins Where Ownership Ends
+## Dagster | source assets and observations
 
-Dagster does not require every important upstream system to run inside Dagster. It does require the graph to stay honest about whether Dagster computes a dataset or merely tracks its condition. That is the role of source assets and observations.
+Dagster does not assume every important upstream system runs inside Dagster. It does, however, need the graph to stay honest about ownership. Source assets and observations exist so external warehouse tables, vendor feeds, and partner-owned datasets remain visible in lineage without implying that Dagster can rebuild them itself.
 
-### Visibility Still Matters Across System Boundaries
+### Dagster | external dependencies | visibility without ownership
 
-An upstream warehouse table, vendor feed, or partner-owned dataset can still be critical to blast-radius reasoning even if another system produced it. Excluding it from the graph makes downstream lineage less truthful at the moment it becomes most operationally important.
+External dependencies still matter for blast-radius analysis, freshness reasoning, and downstream trust. If a downstream asset depends on an upstream dataset, the graph should show that dependency even when the authoritative compute happens elsewhere. That visibility is what lets Dagster stay operationally useful across system boundaries.
 
-#### Declare an upstream dataset without claiming rerun authority
+#### Source assets | declare an upstream dependency
 
 Use this pattern when downstream assets depend on data that exists outside Dagster's execution boundary. The trigger is a need to preserve lineage and dependency reasoning without implying that Dagster can rebuild the upstream data on demand. The code is read-only topology definition. Its purpose is to model dependency honestly while keeping ownership boundaries explicit.
 
@@ -231,15 +250,15 @@ upstream_feed
 
 When the upstream system can be actively inspected, Dagster's observable source asset pattern goes further by letting the observation function return metadata about the current external state. That is the right model for a dataset that Dagster does not compute but does need to monitor, freshness-check, or expose to downstream assets as a visible dependency.
 
-## Dagster Earns Its Cost When Recovery Scope Matters
+## Dagster | adoption criteria
 
-The wrong way to evaluate Dagster is to compare it to `cron` on a feature checklist. The right evaluation is to ask whether the system needs lineage-aware recovery, explicit trust signals, and a control plane that can explain which data states changed and why. If those questions do not matter, Dagster is often unnecessary machinery. If they do matter, a task-only scheduler usually forces the team to rebuild those answers elsewhere.
+Dagster is not automatically the right answer for every scheduled workload. The useful evaluation is whether the system needs lineage-aware recovery, explicit trust signals, external-dependency visibility, and a control plane that can explain which named data states changed and why. If those answers are unnecessary, simpler schedulers are often enough. If they are necessary, Dagster's model usually pays for itself.
 
-### The Real Decision Is Governed Data State Versus Timer-Driven Execution
+### Dagster | orchestrator selection | recovery scope and governance
 
-The platform is strongest when engineers need to reason about stale assets, partial rebuilds, external dependencies, review boundaries, checks, and blast radius. It is weakly justified when the only requirement is "run this script every night and alert if it crashes."
+Dagster is strongest when engineers need to reason about stale assets, partial rebuilds, review boundaries, checks, and blast radius across several dependent data states. It is weakly justified when the only requirement is to run one script on a timer and alert if the command exits non-zero. The distinction is governed data state versus timer-driven task execution.
 
-#### Choose Dagster when stale data matters more than command order
+#### Dagster | choose Dagster when stale data matters more than command order
 
 Use this decision boundary when selecting an orchestrator for a new workflow or deciding whether an existing script should graduate into a managed data platform. The trigger is architectural evaluation rather than day-to-day operation. The context is comparative design: what does the system need the orchestrator to explain, recover, and govern? Its purpose is to avoid both over-engineering simple timers and under-engineering governed data systems.
 

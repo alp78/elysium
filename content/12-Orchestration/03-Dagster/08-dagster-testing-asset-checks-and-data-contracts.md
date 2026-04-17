@@ -5,7 +5,7 @@ tags:
   - dagster
 description: "Testing strategies for Dagster projects, including fast in-process execution, asset checks, partition-aware validation, and executable data contracts."
 created: 2026-04-15
-updated: 2026-04-16
+updated: 2026-04-17
 status: complete
 parent: "[[domain-dagster]]"
 links:
@@ -41,7 +41,7 @@ Dagster quality work is not one thing. A serious project needs at least four dis
 > - [Testing partitioned config and jobs](https://docs.dagster.io/guides/test/testing-partitioned-config-and-jobs)
 > - [Data contracts](https://docs.dagster.io/guides/test/data-contracts)
 
-> [!note]- Glossary
+> [!abstract]- Key Terms
 >
 > **Composition test**
 > - A test that proves the code location can be loaded and exposes the expected Dagster objects.
@@ -68,15 +68,15 @@ Dagster quality work is not one thing. A serious project needs at least four dis
 > - Testing it early makes backfills and targeted repair less improvisational.
 > - If the replay boundary is implicit, recovery is usually broader and riskier than the business actually needs.
 
-## Fast Tests Belong Near The Composition Root
+## Dagster | composition and execution tests
 
-The cheapest reliable failures are the ones that happen before the project reaches shared infrastructure. In Dagster, that means composition tests first, then narrow in-process execution. Both sit close to the code location and both protect the control plane from discovering basic breakage only after deployment.
+Dagster quality work starts with the fastest reliable failures. That means composition tests first, then narrow in-process execution. Both stay close to the code location and keep the control plane from discovering basic breakage only after deployment.
 
-### Loadability Is Part Of Correctness
+### Dagster | loadability and in-process execution | fast tests near the composition root
 
-A Dagster project that cannot be discovered and loaded is already broken, even if every individual asset body looks valid in isolation. That is why composition tests belong in the same conversation as unit tests rather than in a separate packaging checklist.
+A Dagster project that cannot be discovered and loaded is already broken, even if every individual asset body looks valid in isolation. Once the project loads, in-process execution becomes the next narrow rehearsal for graph wiring and local business rules before shared infrastructure enters the picture.
 
-#### Assert that the code location exposes the expected asset surface
+#### Tests | assert that the code location exposes the expected asset surface
 
 Use this pattern when the team wants to fail fast on broken topology before debugging UI behavior, daemon behavior, or run behavior. The trigger is any change to the composition root, imported assets, attached checks, or code-location wiring. The code runs in a normal Python test process and is read-only with respect to business data. Its purpose is to prove that the Dagster operating surface exists before the control plane tries to use it.
 
@@ -93,11 +93,7 @@ def test_definitions_load_assets() -> None:
 
 This is the first useful test in the local `dagflow` repository because that project's value depends on the code location exposing dbt-backed assets, review snapshot assets, export assets, and check surfaces together. If that composition breaks, later tests about review approval or CSV export are already downstream of the wrong failure.
 
-### In-Process Execution Is The Narrowest Useful Runtime Rehearsal
-
-Once the project loads, the next question is whether a narrow executable slice behaves correctly without the noise of a full deployment. This is where `execute_in_process` earns its keep: it is cheaper than end-to-end infrastructure tests, but still exercises real Dagster execution semantics.
-
-#### Execute a job in process before infrastructure enters the picture
+#### Jobs | execute a job in process before infrastructure enters the picture
 
 Use `execute_in_process` when the goal is to validate graph wiring, config, or local business rules before warehouses, queues, and external services become relevant. The trigger is a code change that could break the execution path even if the code location still loads. The code runs in-process and changes only local runtime state. Its purpose is to keep the feedback loop narrow enough that one failing behavior can be explained without reconstructing a distributed incident.
 
@@ -137,15 +133,15 @@ True
 4.0
 ```
 
-## Asset Checks Turn Data Trust Into Runtime State
+## Dagster | asset checks
 
-A run can succeed while the produced asset is still unusable. Dagster's asset checks exist to keep that distinction explicit. The official guidance is practical: each asset check should verify one specific asset property so the signal stays comprehensible, reusable, and historically comparable. That design discipline matters because the point of a check is not only to fail. It is to fail in a way operators and downstream owners can interpret quickly.
+Asset checks exist because a run can succeed while the produced asset is still unusable. Dagster turns those data-trust assertions into first-class runtime objects so operators can reason about them historically, select them explicitly, and separate execution success from data acceptance.
 
-### Each Check Should Protect One Explicit Property
+### Dagster | data trust | protect one explicit property per check
 
-Checks become noisy when they collapse many unrelated promises into one binary result. The better pattern is to name the specific claim being made about the asset and let Dagster track that claim as its own runtime object.
+Checks become noisy when they collapse many unrelated promises into one binary result. The stronger pattern is to name one specific claim about the asset and let Dagster track that claim as its own runtime object.
 
-#### Evaluate one asset check and inspect the recorded result
+#### Asset checks | evaluate one asset check and inspect the result
 
 Use an asset check when the validation should be visible in Dagster history and selectable independently of the producing asset. The trigger is a quality rule that operators or consumers need to trust explicitly after a run finishes. The code runs as ordinary Dagster execution and records check state alongside asset state. Its purpose is to promote one concrete quality claim into the orchestrator rather than burying it in ad hoc assertions or log inspection.
 
@@ -192,11 +188,7 @@ True
 2
 ```
 
-### Production Checks Should Sit On Meaningful State Boundaries
-
-In a serious platform, checks should not only guard one transform output in isolation. They should also guard the boundaries that matter operationally: source capture, review publication, export generation, or any other step where a downstream workflow assumes a real state transition has happened.
-
-#### Attach checks to review and export boundaries, not only to transforms
+#### Asset checks | attach checks to review and export boundaries
 
 Use this pattern when the system has governed states that downstream teams or workflows rely on directly. The trigger is a workflow where "rows were loaded," "review rows were published," or "the export file was written" are business-relevant claims in their own right. The code runs inside normal asset definitions and records checks at the same boundary where the state change occurs. Its purpose is to make those operational promises queryable in Dagster instead of leaving them implicit in side effects.
 
@@ -238,15 +230,15 @@ def security_master_csv_export(...):
 
 That pattern is more than cosmetic. In `dagflow`, review publication and CSV export are governed state transitions. A missing review snapshot means the review workflow cannot begin. A missing CSV export means approval did not become delivery. Checks on those boundaries communicate operational truth, not merely developer preference.
 
-## A Data Contract Is An Agreement About Allowed Change
+## Dagster | data contracts
 
-Dagster's data-contract guidance is clear about the problem: consumers break when columns disappear, names change, types shift, or required fields arrive empty. A contract is therefore not an aspirational description of the dataset. It is a declaration of which changes are acceptable and which ones must stop the pipeline or at least surface a visible failure before downstream systems absorb them.
+Data contracts exist because downstream consumers break when columns disappear, names change, types shift, or required fields arrive empty. In a Dagster system, a contract should become executable enough that breaking change is surfaced before downstream systems absorb it silently.
 
-### Contracts Fail When Consumers Can No Longer Rely On Shape Or Semantics
+### Dagster | structural guarantees | enforce allowed change
 
-The fastest way to weaken a contract is to describe it in prose and never execute it. The stronger pattern is to encode non-negotiable structure and quality guarantees as checks close to the asset surface itself.
+The fastest way to weaken a contract is to describe it in prose and never execute it. The stronger pattern is to encode non-negotiable structure and quality guarantees as executable checks close to the asset surface.
 
-#### Express non-negotiable columns as executable warehouse tests
+#### dbt tests | express non-negotiable columns as executable tests
 
 Use this pattern when the asset contract depends on fields that must remain unique, present, or semantically usable across runs. The trigger is any dataset consumed by other models, services, exports, or human review workflows. The code runs in the warehouse test layer and is read-only with respect to production data shape. Its purpose is to turn mandatory structural guarantees into executable assertions.
 
@@ -278,7 +270,7 @@ models:
 
 If `dim_security.security_id` stops being non-null, that is not only a warehouse defect. It is a broken contract for any downstream holdings model, review workflow, or export file that assumes each security is stably addressable.
 
-#### Surface warehouse contract tests as Dagster-visible checks
+#### DagsterDbtTranslator | surface warehouse contract tests as Dagster checks
 
 Use this pattern when the contract is enforced in another system, such as dbt, but the orchestration layer still needs first-class visibility into failures. The trigger is a platform where transformation and orchestration are separate tools, yet operators need one place to read the health of governed assets. The code runs at translator or integration configuration time. Its purpose is to keep warehouse-native tests and Dagster-native operational visibility aligned.
 
@@ -299,15 +291,15 @@ class DagflowDbtTranslator(DagsterDbtTranslator):
 >
 > In `dagflow`, a failed uniqueness or non-null test on `holding_id` or `security_id` is not an abstract data-quality blemish. It means review rows may no longer map cleanly to curated facts, export rows may lose stable identity, and downstream consumers can no longer trust that one row still means one governed holding. That is exactly what a data contract should make visible.
 
-## Historical Repair Is Safer When The Replay Boundary Is Explicit
+## Dagster | replay-boundary testing
 
-Backfills and replays are usually where hidden assumptions become expensive. The boundary might be a calendar partition, a tenant slice, or a business date carried through control-plane metadata. Whatever the unit is, the recovery workflow should already have tests that exercise it before the first incident forces the team to depend on it.
+Historical repair is where hidden assumptions usually become expensive. Whether the recovery unit is a calendar partition, a tenant slice, or a business date carried through control-plane metadata, the workflow should be explicit and testable before the first incident forces the team to depend on it.
 
-### Test The Slice You Expect To Rebuild
+### Dagster | historical slices | test the unit you expect to rebuild
 
-If the system intends to replay by day, test day boundaries. If it intends to replay by tenant, test tenant scope. Recovery goes wrong when the platform's actual replay unit exists only in operator folklore.
+If the system intends to replay by day, test day boundaries. If it intends to replay by tenant, test tenant scope. Recovery usually goes wrong when the platform's real replay unit exists only in operator folklore.
 
-#### Inspect the partition keys the recovery workflow depends on
+#### Partitions | inspect the partition keys the recovery workflow depends on
 
 Use partition-aware validation when an asset's correctness depends on an explicit historical slice such as one day, hour, or region. The trigger is any incremental asset that the team expects to backfill later rather than recomputing globally. The code is read-only metadata inspection. Its purpose is to make the replay boundary visible and testable before the first repair depends on it.
 

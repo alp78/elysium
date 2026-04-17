@@ -5,7 +5,7 @@ tags:
   - dagster
 description: "Daily engineering workflow in Dagster, including `Definitions` smoke tests, local development with `dagster dev`, and the separation between code-loading failures and run failures."
 created: 2026-04-15
-updated: 2026-04-16
+updated: 2026-04-17
 status: complete
 parent: "[[domain-dagster]]"
 links:
@@ -40,7 +40,7 @@ Dagster's webserver documentation describes the UI as the interface for viewing 
 > - [Transitioning from development to production](https://docs.dagster.io/guides/operate/dev-to-prod)
 > - [Dagster definitions API](https://docs.dagster.io/api/dagster/definitions)
 
-> [!note]- Glossary
+> [!abstract]- Key Terms
 >
 > **Code location**
 > - A loadable unit of Dagster user code that the webserver and daemon inspect through a defined boundary.
@@ -67,15 +67,15 @@ Dagster's webserver documentation describes the UI as the interface for viewing 
 > - They are useful only after the run boundary has been crossed.
 > - Missing compute logs usually point to instance or process wiring, not to asset semantics.
 
-## The UI Can Only Show What The Deployment Managed To Load
+## Dagster | UI and loadability
 
-The first debugging question is not "what does the Asset Catalog show?" It is "what definitions did the deployment successfully discover?" The webserver can only render what it could load from a `Definitions` object or from the code locations declared in the workspace.
+The Dagster UI is a read model of what the deployment managed to load. That means the first debugging question is not what the Asset Catalog happens to show. It is what definitions the deployment actually discovered from the configured code locations and workspace.
 
-### Start With Loadability, Not With The Browser
+### Dagster | code locations and workspace wiring | prove what the deployment loaded
 
-If import resolution, resource composition, or repository construction is broken, the browser is only showing the consequences of that earlier failure.
+If import resolution, resource composition, or repository construction is broken, the browser is only showing the consequences of an earlier load failure. This is why loadability checks and workspace wiring come before UI interpretation.
 
-#### Smoke-test the composition root before opening the UI
+#### Tests | smoke-test the composition root before opening the UI
 
 Use a loadability test in local development and CI whenever imports, dependencies, or composition code change. The trigger is any edit that could alter how the code location is reconstructed. The code runs as a plain Python test rather than as a Dagster run. Its purpose is to classify failures at the load boundary before the control plane gets involved.
 
@@ -93,7 +93,7 @@ def test_definitions_load_assets() -> None:
 
 That test is small, but it answers an essential question cheaply: can the code location be imported and resolved at all? If the answer is no, there is no value in debugging the UI yet.
 
-#### Follow the workspace indirection when a code location is missing
+#### Workspace | follow the workspace indirection when a code location is missing
 
 Use this check when the webserver is running but the expected code location, assets, or jobs are absent. The trigger is a partial or empty UI surface rather than a Python import traceback. The code is deployment configuration, not business logic. Its purpose is to show exactly where the webserver expects user code to live.
 
@@ -109,15 +109,15 @@ load_from:
 
 If that mapping is wrong or the gRPC server is unavailable, the webserver can still start while exposing an incomplete or stale project surface. That is a workspace incident, not an asset incident.
 
-## Local Development Is Still A Multi-Process Deployment
+## Dagster | local development topology
 
-Dagster's docs say `dg dev` starts both the webserver and the daemon. That convenience is useful, but it can make teams forget that development still has several distinct responsibilities: loading code, evaluating automation, serving the UI, and storing instance state.
+`dg dev` is convenient because it starts a local Dagster deployment quickly, but it does not erase the underlying service boundaries. Even in local development, Dagster still has distinct responsibilities for loading user code, serving the UI, evaluating automation, and storing shared instance state.
 
-### Know Which Process Owns The Symptom
+### Dagster | local services | read the process boundary behind `dg dev`
 
-A missing code location, a sensor that never fires, and a run with no logs do not have the same owner. The faster you map the symptom to the responsible process, the faster the debugging loop becomes.
+A missing code location, a sensor that never fires, and a run with no logs do not have the same owner. The faster a team maps the symptom to the responsible process, the faster the local debugging loop becomes.
 
-#### Read the service split even when local tooling hides it
+#### Services | read the Dagster service split
 
 Use this framing when local development starts to feel opaque and every failure is blamed on "Dagster." The trigger is confusion about whether the user-code process, webserver, or daemon is responsible for the observed behavior. The code is deployment wiring. Its purpose is to make the service boundaries explicit again.
 
@@ -146,7 +146,7 @@ dagster-daemon:
 
 `dg dev` collapses the startup experience, but not the logic of these boundaries. User code still has to load, the daemon still has to evaluate automation, and the webserver still has to present a coherent view of the same instance.
 
-#### Keep instance state and compute logs on the same shared base
+#### Instance state | keep shared state and compute logs on one base
 
 Use this check when the UI loads but logs are missing, runs behave inconsistently across processes, or automation appears to read a different world than the webserver. The trigger is a disagreement between services rather than a clear code error. The configuration is Dagster instance state, not project logic. Its purpose is to prove that the deployment shares one storage and log boundary.
 
@@ -172,15 +172,15 @@ scheduler:
 
 This is the same class of issue the Dagster concurrency troubleshooting guide warns about: queued runs and missing progress in open-source deployments often come down to the daemon and webserver not sharing the same instance storage and `dagster.yaml`.
 
-## Once A Run Exists, Debug Execution Evidence Instead Of Topology
+## Dagster | runtime debugging
 
-The moment Dagster has created a run, the load boundary has already succeeded. That changes the debugging method. At that point the run event stream, compute logs, and daemon behavior become more informative than reopening composition code at random.
+Once Dagster has created a run, the load boundary has already succeeded. At that point the debugging method changes. Run events, compute logs, and daemon behavior become more informative than reopening topology code without evidence.
 
-### Event Streams, Compute Logs, And Sensors Fail Differently
+### Dagster | event logs, compute logs, and sensors | classify the evidence
 
-A failed step, a silent sensor, and an untrusted dataset are three different incident classes. Treating them as one generic failure wastes time and often leads to the wrong fix.
+A failed step, a silent sensor, and an untrusted dataset are three different incident classes. Treating them as one generic failure wastes time and often leads to edits in the wrong layer of the system.
 
-#### Treat a failed run as runtime evidence, not as a load problem
+#### Runs | treat a failed run as runtime evidence
 
 Use run-level debugging once Dagster has already launched work. The trigger is a failed run, a suspicious event sequence, or a step that emitted logs before failing. The code runs as a normal materialization, but the debugging value comes from the resulting event stream. Its purpose is to show that runtime evidence exists only after the composition boundary has already held.
 
@@ -216,7 +216,7 @@ False
 ['STEP_FAILURE', 'PIPELINE_FAILURE']
 ```
 
-#### Interpret a quiet sensor before rewriting the graph
+#### Sensors | interpret a quiet sensor before rewriting the graph
 
 Use this check when a reviewed dataset is ready but no follow-on run appears. The trigger is automation silence rather than an explicit run failure. The code is sensor logic that consults operational state and emits `RunRequest`s. Its purpose is to show whether the problem is in sensor evaluation, control-plane state, or downstream execution.
 

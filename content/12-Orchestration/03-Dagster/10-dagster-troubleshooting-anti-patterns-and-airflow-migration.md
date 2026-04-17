@@ -5,7 +5,7 @@ tags:
   - dagster
 description: "Operational failure modes, design mistakes, and migration guidance for teams moving from Airflow-style orchestration into Dagster's asset-first model."
 created: 2026-04-15
-updated: 2026-04-16
+updated: 2026-04-17
 status: complete
 parent: "[[domain-dagster]]"
 links:
@@ -40,7 +40,7 @@ Dagster incidents are easier to fix than older schedulers only when the system p
 > - [Airlift migration guide](https://docs.dagster.io/migration/airflow-to-dagster/airlift-v1)
 > - [Troubleshooting concurrency issues](https://docs.dagster.io/guides/operate/managing-concurrency/troubleshooting-concurrency)
 
-> [!note]- Glossary
+> [!abstract]- Key Terms
 >
 > **Code-location failure**
 > - A failure while Dagster is loading user code and reconstructing the `Definitions` surface.
@@ -62,15 +62,15 @@ Dagster incidents are easier to fix than older schedulers only when the system p
 > - It exists to support coexistence, observation, rollback, and staged transfer of execution responsibility.
 > - It still requires Airflow REST API access and a deliberate migration plan.
 
-## The First Triage Decision Is Which Layer Failed
+## Dagster | incident triage
 
-The most expensive debugging habit is changing definitions before the incident has been classified. A load failure, a run stuck in `QUEUED`, a step failure, and an approved dataset that never exported are not variants of the same problem. They leave different evidence and belong to different owners.
+The first troubleshooting decision is which layer failed. A load failure, a run stuck in `QUEUED`, a step failure, and an approved dataset that never exported are not variants of the same problem. They leave different evidence and belong to different owners.
 
-### Loadability, Control Plane, Execution, And Trust Leave Different Evidence
+### Dagster | failure layers | loadability, control plane, execution, and trust
 
 The correct first move is to ask what evidence already exists. If no run exists, the code location may not have loaded. If a run exists but never starts, the daemon and instance configuration come into focus. If the run failed, the event stream becomes primary. If the run succeeded but the export is still wrong, the incident has moved into checks, review state, or downstream contract enforcement.
 
-#### Treat queued runs as control-plane incidents before rewriting assets
+#### Control plane | treat queued runs as orchestration incidents
 
 Use this check when runs stay in `QUEUED`, sensors appear idle, or automation is visibly behind without an obvious step failure. The trigger is orchestration silence after Dagster has already accepted work. The configuration below is deployment wiring, not business logic. Its purpose is to remind you that webserver, daemon, and user-code loading are separate responsibilities with different failure modes.
 
@@ -99,7 +99,7 @@ dagster-daemon:
 
 Dagster's concurrency troubleshooting guide makes the same point operationally: in open-source deployments, queued runs most often come down to the daemon or shared instance configuration. In `dagflow`, the first checks are whether `dagster-daemon` is alive and whether the daemon and webserver are sharing the same `DAGSTER_HOME` and `dagster.yaml`.
 
-#### A successful run and a trustworthy export are different outcomes
+#### Data trust | separate a successful run from a trustworthy export
 
 Use this framing when a run finished green but downstream consumers still should not receive the output. The trigger is a dataset that was built successfully yet has not crossed the trust boundary required for delivery. The context is operational reasoning rather than a new API. Its purpose is to keep data trust incidents from being misclassified as orchestration success.
 
@@ -107,15 +107,15 @@ Use this framing when a run finished green but downstream consumers still should
 >
 > In `dagflow`, a curated dataset can materialize successfully and still wait in `security_master_review_snapshot` or `shareholder_holdings_review_snapshot` before export is allowed. That means "the run is green" and "the data may be delivered" are separate claims. An index constituent pipeline with human approval would need the same distinction between machine-generated basket and approved basket.
 
-## The Common Dagster Anti-Patterns All Hide Boundaries
+## Dagster | anti-patterns
 
 Dagster rarely becomes hard to operate because it lacks features. It becomes hard to operate when engineers hide too much responsibility inside the wrong primitive. The recurring anti-patterns all compress boundaries that should stay explicit.
 
-### Keep Sensors Thin And Assets Honest
+### Dagster | sensors and assets | keep orchestration boundaries visible
 
 Sensors should evaluate readiness and request work. Assets should describe durable states. Jobs should package execution slices. When those roles collapse into each other, the control plane becomes opaque.
 
-#### A sensor should request work, not perform it
+#### Sensors | request work instead of performing it
 
 Use this rule when a sensor starts accreting database writes, transformation logic, or branching business rules. The trigger is a sensor body that is becoming longer than the state check it was meant to perform. The code below is a healthy sensor shape: it inspects control-plane state and emits run requests. Its purpose is to keep orchestration logic visible and auditable.
 
@@ -144,7 +144,7 @@ for approved_run in approved_runs:
 
 If the sensor were to load files, mutate review state, and write exports directly, Dagster would still "work," but the incident boundary would disappear. On-call engineers would no longer know whether a failure belonged to orchestration, transformation, or delivery.
 
-#### One asset should not impersonate an entire governed workflow
+#### Assets | avoid one asset impersonating an entire governed workflow
 
 Use this check when a single asset starts mixing extraction, curation, approval state, export, and notification. The trigger is the appeal of a "simpler" one-node graph that hides the real lifecycle of the dataset. The context is graph design. Its purpose is to preserve targeted replay and trustworthy lineage under pressure.
 
@@ -164,11 +164,13 @@ sec_company_tickers_capture
 
 That chain is not verbosity for its own sake. It is what allows the platform to distinguish capture failures, transformation defects, review backlog, and export delivery problems. A benchmark composition pipeline would need equally explicit boundaries if review and publication are separate operational acts.
 
-### Replay Scope Should Match The Damaged State
+## Dagster | replay strategy
 
-Full reruns are sometimes necessary, but they are often a sign that the graph does not express the real recovery boundary. The larger the replay scope, the more the system is paying for modeling shortcuts taken earlier.
+Replay strategy is where Dagster's modeling decisions either help or hurt operations. Full reruns are sometimes necessary, but they are often a sign that the graph does not express the real recovery boundary. The larger the replay scope, the more the system is paying for modeling shortcuts taken earlier.
 
-#### Use scoped jobs instead of reflexive full-platform reruns
+### Dagster | scoped recovery | match replay scope to the damaged state
+
+#### Jobs | use scoped jobs instead of reflexive full-platform reruns
 
 Use this judgment when a correction affects one slice of lineage rather than the whole estate. The trigger is a replay request following a review fix, a corrected upstream source file, or a single export issue. The code is job definition, not runtime troubleshooting. Its purpose is to keep recovery proportional to the damaged state.
 
@@ -185,15 +187,15 @@ security_master_export_job = define_asset_job(
 
 When teams reach for full reruns by habit, the problem is often not the incident. The problem is that the graph never exposed the narrower state boundary that needed repair.
 
-## Airflow Migration Works Best As A Staged Control-Plane Shift
+## Dagster | Airflow migration
 
-Dagster's Airflow migration guidance and Airlift docs are both explicit that coexistence is normal. The goal is not to rewrite everything at once. The goal is to shift observation and execution responsibilities in a sequence that preserves rollback and keeps lineage intelligible.
+Dagster's Airflow migration guidance and Airlift docs are explicit that coexistence is normal. The goal is not to rewrite everything at once. The goal is to shift observation and execution responsibilities in a sequence that preserves rollback and keeps lineage intelligible.
 
-### Observe First, Migrate Second, Decommission Last
+### Dagster | staged migration with Airlift | observe first, migrate second
 
 This is the part most hurried migrations get wrong. They move code before they have established how Dagster will observe the legacy estate, model the resulting assets, and limit rollback risk.
 
-#### Connect to Airflow explicitly instead of burying migration glue
+#### Airlift | connect to Airflow explicitly
 
 Use Airlift when the migration must begin with coexistence, observability, and phased handoff rather than with an immediate cutover. The trigger is a live Airflow estate that still owns some execution. The code below establishes the control-plane connection to Airflow. Its purpose is to make observation and migration a first-class integration instead of a pile of one-off scripts.
 
@@ -214,7 +216,7 @@ airflow = AirflowInstance(
 
 The connection object is not the migration itself. It is the prerequisite that lets Dagster observe Airflow runs, preserve history, and take over execution deliberately.
 
-#### Move responsibility in stages, not in one rename exercise
+#### Migration plan | move responsibility in stages, not in one rename exercise
 
 Use this plan when an Airflow DAG already embodies business-critical workflows such as benchmark construction, pricing quality review, or regulated export delivery. The trigger is a migration large enough that rollback risk matters. The guidance below follows the staged model Dagster documents for Airlift. Its purpose is to move control-plane responsibility without forcing a stop-the-world rewrite.
 

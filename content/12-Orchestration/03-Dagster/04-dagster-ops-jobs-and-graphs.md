@@ -5,7 +5,7 @@ tags:
   - dagster
 description: "Dagster's lower-level orchestration primitives, including ops, graphs, graph-backed assets, and jobs, with guidance on when they should complement asset-first modeling."
 created: 2026-04-15
-updated: 2026-04-16
+updated: 2026-04-17
 status: complete
 parent: "[[domain-dagster]]"
 links:
@@ -39,7 +39,7 @@ Dagster's docs describe an op as the foundational unit of computation, a graph a
 > - [Dagster jobs API](https://docs.dagster.io/api/dagster/jobs)
 > - [Dagster graphs API](https://docs.dagster.io/api/dagster/graphs)
 
-> [!note]- Glossary
+> [!abstract]- Key Terms
 >
 > **Op**
 > - A unit of computation in Dagster's lower-level model.
@@ -61,15 +61,15 @@ Dagster's docs describe an op as the foundational unit of computation, a graph a
 > - It preserves one durable external identity while allowing richer step structure internally.
 > - It is useful when internal phases matter, but only one public dataset should appear in lineage.
 
-## Most Production Jobs Are Slices Of The Asset Graph
+## Dagster | jobs
 
-Many introductions to Dagster begin with `@op`, `@graph`, and `@job`, which can make the platform feel task-first. In production asset platforms, jobs are often narrower and more pragmatic: they package the exact lineage slice that should be launched under a given operational condition.
+Jobs are Dagster's executable boundary. In an asset-first codebase, they usually do not define the business model by themselves. Instead, they package the exact slice of the asset graph that should launch under a given operational condition.
 
-### The Executable Unit Is Usually Smaller Than The Whole Code Location
+### Dagster | asset jobs | executable slices of the asset graph
 
-A code location may expose dozens of assets, but an operator rarely wants to launch all of them together. The more useful question is which specific slice should run when a source lands, a review is approved, or an export must resume.
+A code location may expose many assets, but operators rarely want to launch the entire location as one unit. The more useful question is which specific slice should run when a source lands, a review is approved, or an export must resume after a governed handoff.
 
-#### Package a real operational slice with `define_asset_job`
+#### Jobs | package an operational slice with `define_asset_job`
 
 Use this pattern when the public model is already asset-first and the next requirement is a launchable boundary with its own executor, tags, and scheduling surface. The trigger is a need to run one coherent portion of the graph without promoting jobs to the primary modeling layer. The code runs at composition time and publishes an executable object. Its purpose is to bind operational launch policy to an explicit asset selection.
 
@@ -92,15 +92,15 @@ security_master_job = define_asset_job(
 
 This is more representative of modern Dagster practice than a toy `@job` wrapping two ops. The job is important, but its meaning comes from the asset slice it launches, not from job structure alone.
 
-## Graphs Keep Internal Execution Visible Without Polluting The Asset Catalog
+## Dagster | ops and graphs
 
-Ops and graphs still matter whenever a single public outcome depends on several internal phases that engineers need to test, log, or retry separately. The discipline is to keep those internals behind the right public boundary.
+Ops and graphs still matter whenever a single public outcome depends on several internal phases that engineers need to test, log, or retry separately. The important design choice is to keep that internal execution detail visible without polluting the public asset catalog with every implementation step.
 
-### Use Ops When The Step Structure Matters More Than Public Lineage
+### Dagster | internal execution structure | step boundaries without public assets
 
-If downstream consumers never need to ask whether an intermediate step exists as a durable state, that step usually belongs in an op graph rather than in the asset catalog.
+If downstream consumers never need to ask whether an intermediate step exists as a durable state, that step usually belongs in an op graph rather than as a first-class asset. Ops and graphs are the right abstractions when engineers need execution structure more than downstream lineage.
 
-#### Compose internal steps into a graph and execute the job
+#### Graphs | compose internal steps into a graph job
 
 Use this pattern when the computation has multiple phases that matter operationally, but the rest of the platform does not need each phase exposed as a first-class asset. The trigger is a multi-step transformation, repair, or normalization routine. The code runs as a normal Dagster job built from ops. Its purpose is to preserve explicit execution structure without polluting public lineage.
 
@@ -140,7 +140,7 @@ True
 ['A', 'B']
 ```
 
-#### Keep one public asset even when internal compute has several phases
+#### Graph-backed assets | keep one public asset with several internal steps
 
 Use a graph-backed asset when the internal step structure matters to engineers, but downstream consumers should still see one durable dataset. The trigger is a computation with several meaningful phases that nevertheless culminates in one named data product. The code runs as asset execution while preserving graph structure internally. Its purpose is to keep the external lineage surface clean without flattening the implementation into one unreadable function.
 
@@ -187,15 +187,15 @@ True
 >
 > If a downstream team needs to ask whether a state exists, whether it passed checks, or whether it is safe to replay, make that state an asset. If only engineers need step-level logs and retries inside one computation, keep it behind ops or a graph.
 
-## Runtime Policy Belongs On The Executable Boundary
+## Dagster | execution policy
 
-Jobs and ops are also where launch policy becomes concrete. Concurrency, executor choice, and retry behavior are execution concerns. They should be visible on the executable object rather than buried inside business code.
+Jobs and ops are also where launch policy becomes concrete. Concurrency, executor choice, and retry behavior are execution concerns, so they should be visible on the executable boundary instead of being buried inside business code or hidden in retry loops.
 
-### Pools, Executors, And Retries Are Launch Concerns
+### Dagster | pools, executors, and retries | launch-time control
 
-This is why jobs remain important in asset-first systems. They are the place where an engineer can say how a slice should run, not only what data state it represents.
+This is why jobs and ops remain important in asset-first systems. They are the surfaces where an engineer can declare how a slice should run, not only what durable state the slice represents.
 
-#### Attach throttling to the compute boundary instead of the business logic
+#### Ops | attach throttling at the compute boundary
 
 Use this pattern when the operational problem is contention against a shared warehouse, API, or cluster. The trigger is not a data-modeling change but a launch-policy concern such as concurrency control. The code runs at definition time and annotates the executable unit. Its purpose is to move runtime throttling into a visible execution boundary instead of smuggling it into domain code.
 

@@ -699,15 +699,49 @@ The `gh auth status` command confirms the active account, protocol, and token sc
 
 SSH authentication uses a cryptographic key pair. The private key stays on your machine; the public key is uploaded to GitHub. Once configured, Git operations over SSH (`git@github.com:...` URLs) authenticate silently.
 
-#### Generate an SSH key pair
+#### Install GitHub CLI
 
-Once per machine, or when rotating keys. It is typically triggered by no SSH key exists yet, or `ssh -T git@github.com` returns "Permission denied.". Runs locally. The private key is stored in `~/.ssh/`. Requires no network access. Create a cryptographic identity for SSH authentication.
+If you want GitHub CLI to handle GitHub authentication and upload the SSH key from the terminal, install `gh` first. This step is typically triggered by a new machine build or by a shell that already has `git` and `ssh` but not GitHub CLI. The PowerShell variant below uses Scoop because it keeps the setup entirely in the terminal; GitHub CLI's official Windows recommendation is WinGet, so treat Scoop as a community-supported alternative.
 
-*Generate an Ed25519 SSH key pair:*
+*Install `gh` from PowerShell with Scoop:*
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+scoop install gh
+```
+
+*Install `gh` on Ubuntu or Debian Linux from the official GitHub CLI apt repository:*
 
 ```bash
-ssh-keygen -t ed25519 -C "alexper.recovery@gmail.com"
+(type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y)) \
+&& sudo mkdir -p -m 755 /etc/apt/keyrings \
+&& out=$(mktemp) && wget -nv -O"$out" https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+&& cat "$out" | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+&& sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+&& sudo mkdir -p -m 755 /etc/apt/sources.list.d \
+&& echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+&& sudo apt update \
+&& sudo apt install gh -y
 ```
+
+#### Generate an SSH key pair
+
+Once per machine, or when rotating keys. It is typically triggered by no SSH key exists yet, or `ssh -T git@github.com` returns "Permission denied.". Runs locally. The private key is stored in `~/.ssh/` on Linux and `$env:USERPROFILE\.ssh\` on PowerShell. Requires no network access. Create a cryptographic identity for SSH authentication.
+
+*Generate an Ed25519 SSH key pair from PowerShell:*
+
+```powershell
+ssh-keygen -t ed25519 -C "YOUR_EMAIL@DOMAIN.COM"
+```
+
+*Generate an Ed25519 SSH key pair on Linux:*
+
+```bash
+ssh-keygen -t ed25519 -C "YOUR_EMAIL@DOMAIN.COM"
+```
+
+If you want to inspect the public key before uploading it, print `id_ed25519.pub` with `Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub` on PowerShell or `cat ~/.ssh/id_ed25519.pub` on Linux.
 
 > [!info]- ssh-keygen flags breakdown
 >
@@ -715,34 +749,43 @@ ssh-keygen -t ed25519 -C "alexper.recovery@gmail.com"
 > - `-C "email"` — a comment embedded in the public key for identification. Convention is to use your email.
 > - The command prompts for a file path (default: `~/.ssh/id_ed25519`) and an optional passphrase. A passphrase adds a second factor — if the private key file is stolen, the passphrase is still required.
 
-#### Add the public key to GitHub
+#### Authenticate GitHub CLI and upload the SSH key
 
-After generating the key pair. It is typically triggered by `ssh -T git@github.com` returns "Permission denied (publickey).". Browser-based operation on GitHub.com, or via `gh ssh-key add`. Register your public key so GitHub recognizes your machine.
+After generating the key pair. It is typically triggered by you want GitHub CLI to manage Git authentication and register the SSH public key without using the browser settings page manually. The `gh auth login --git-protocol ssh` step sets SSH as the Git transport for `github.com`, and `gh auth refresh` expands the token scopes so `gh ssh-key add` can manage account SSH keys.
 
-> [!todo] Add the SSH key to GitHub
+*Authenticate from PowerShell and upload the SSH public key to GitHub:*
+
+```powershell
+gh auth login --git-protocol ssh
+gh auth refresh -h github.com -s admin:public_key
+gh ssh-key add $env:USERPROFILE\.ssh\id_ed25519.pub --title "Alexis Peringer Laptop" --type authentication
+```
+
+*Authenticate from Linux and upload the SSH public key to GitHub:*
+
+```bash
+gh auth login --git-protocol ssh
+gh auth refresh -h github.com -s admin:public_key
+gh ssh-key add ~/.ssh/id_ed25519.pub --title "Alexis Ubuntu Laptop" --type authentication
+```
+
+> [!tip] `gh auth login` can also offer the upload interactively
 >
-> 1. Copy the public key: `cat ~/.ssh/id_ed25519.pub` and copy the entire output.
-> 2. Go to **GitHub → Settings → SSH and GPG keys → New SSH key**.
-> 3. Paste the public key. Set a title that identifies the machine (e.g., `work-laptop-2026`).
-> 4. Click **Add SSH key**.
->
-> Alternatively, use the GitHub CLI:
-> ```bash
-> gh ssh-key add ~/.ssh/id_ed25519.pub --title "work-laptop-2026"
-> ```
+> If you choose `ssh` as the Git transport during `gh auth login`, GitHub CLI can detect an existing SSH key and offer to upload it immediately. The explicit `gh ssh-key add` command is still useful when you want a deterministic, copyable workflow.
 
 #### Start the SSH agent and add your key
 
-In every new terminal session where you need SSH authentication (or configure your shell profile to do it automatically). It is typically triggered by `ssh -T git@github.com` returns "Could not open a connection to your authentication agent.". The SSH agent caches your decrypted private key in memory so you do not have to type the passphrase repeatedly. Make the private key available for SSH operations without repeated passphrase prompts.
+If the private key has a passphrase, loading it into an SSH agent avoids repeated prompts. It is typically triggered by `ssh-add` reporting that no authentication agent is running, or by repeated passphrase prompts during Git operations. On PowerShell, use the Windows OpenSSH agent service. On Linux, start a per-session agent and load the key into it.
 
-*Start the SSH agent and add your key (Linux/macOS):*
+*Start the Windows OpenSSH agent service from PowerShell and load the key:*
 
-```bash
-eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/id_ed25519
+```powershell
+Get-Service ssh-agent | Set-Service -StartupType Automatic
+Start-Service ssh-agent
+ssh-add $env:USERPROFILE\.ssh\id_ed25519
 ```
 
-*Start the SSH agent on Windows (Git Bash):*
+*Start an SSH agent on Linux and load the key:*
 
 ```bash
 eval "$(ssh-agent -s)"
@@ -751,15 +794,14 @@ ssh-add ~/.ssh/id_ed25519
 
 > [!tip] Persist the SSH agent across sessions
 >
-> - **macOS:** add `AddKeysToAgent yes` and `UseKeychain yes` to `~/.ssh/config`. The macOS Keychain stores the passphrase permanently.
-> - **Linux:** add `eval "$(ssh-agent -s)"` and `ssh-add` to `~/.bashrc` or `~/.zshrc`.
-> - **Windows (Git Bash):** add the same lines to `~/.bashrc`. Alternatively, enable the Windows OpenSSH Agent service via `Services.msc` → "OpenSSH Authentication Agent" → set to Automatic.
+> - **Linux:** add `eval "$(ssh-agent -s)"` and `ssh-add ~/.ssh/id_ed25519` to `~/.bashrc` or `~/.zshrc` if you want an agent started automatically in interactive shells.
+> - **Windows PowerShell:** `Set-Service -StartupType Automatic` makes the OpenSSH Authentication Agent persist across reboots, so future sessions only need `ssh-add` after a restart or key rotation.
 
 #### Test SSH connectivity to GitHub
 
 After adding the public key to GitHub and starting the agent. It is typically triggered by first-time SSH setup or troubleshooting authentication failures. Requires network access to github.com on port 22. Some corporate networks block port 22. Verify that SSH authentication works end-to-end.
 
-*Test SSH authentication with GitHub:*
+*Test SSH authentication with GitHub from either PowerShell or Linux:*
 
 ```bash
 ssh -T git@github.com

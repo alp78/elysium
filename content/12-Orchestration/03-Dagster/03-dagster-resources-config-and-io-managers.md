@@ -5,7 +5,7 @@ tags:
   - dagster
 description: "Runtime building blocks for production Dagster projects, including resources, typed config, secret boundaries, and I/O managers that define how data moves between compute and storage."
 created: 2026-04-15
-updated: 2026-04-16
+updated: 2026-04-17
 status: complete
 parent: "[[domain-dagster]]"
 links:
@@ -39,7 +39,7 @@ Dagster's resources and I/O APIs describe two different runtime boundaries. A re
 > - [Dagster I/O managers API](https://docs.dagster.io/api/dagster/io-managers)
 > - [Dagster overview](https://docs.dagster.io/)
 
-> [!note]- Glossary
+> [!abstract]- Key Terms
 >
 > **Resource**
 > - A dependency Dagster injects into assets, ops, sensors, or checks.
@@ -61,15 +61,15 @@ Dagster's resources and I/O APIs describe two different runtime boundaries. A re
 > - Rotating a secret should not require editing asset bodies.
 > - Environment variables are only the transport; the design question is still where credential use is centralized.
 
-## A Resource Is Where Infrastructure Knowledge Belongs
+## Dagster | resources
 
-Dagster's `ConfigurableResource` exists so infrastructure access can be modeled explicitly instead of rediscovered inside every asset. That is not only cleaner code. It also makes load-time composition, testing, and operational review far easier because the code location shows which external capabilities it expects.
+Resources are Dagster's boundary for infrastructure capabilities such as database clients, API credentials, and external runtime handles. The point is not abstraction for its own sake. It is to keep asset bodies focused on the data state they produce while making infrastructure expectations explicit at composition time.
 
-### Ask For A Capability Instead Of Constructing A Client Inside The Asset
+### Dagster | dependency injection | infrastructure knowledge outside assets
 
-An asset should express what it needs to do, not how to bootstrap the world around it. The more connection logic that lives inside asset bodies, the less clearly the codebase explains where secrets, endpoints, and retries are actually controlled.
+An asset should ask for a capability, not bootstrap clients ad hoc inside its own body. The more connection logic, endpoint discovery, and secret handling that live inside assets, the less clearly the codebase explains where infrastructure policy is actually controlled.
 
-#### Inject the runtime capability instead of hard-coding the target
+#### Resources | inject a runtime capability
 
 Use a resource when several assets need the same client, session rule, or secret-backed endpoint. The trigger is repeated infrastructure access across the code location. The code runs as normal asset execution, but the dependency object is composed ahead of time. Its purpose is to keep asset logic focused on the produced dataset rather than on client construction.
 
@@ -109,7 +109,7 @@ True
 analytics.orders_clean
 ```
 
-#### Publish the shared runtime dependencies from one composition root
+#### Resources | publish shared dependencies from the composition root
 
 Use this pattern when the code location has crossed from a tutorial into a platform that must expose its real external dependencies in one place. The trigger is the need for tests, local runs, and deployed services to agree on the same resource inventory. The code runs at composition time, not during business execution. Its purpose is to make the runtime contract inspectable before any asset body runs.
 
@@ -141,15 +141,15 @@ def build_resources() -> dict[str, ConfigurableResource | DbtCliResource]:
 
 In `dagflow`, that one factory makes the system boundary legible. Assets do not open ad hoc database connections or discover the dbt executable on their own. They receive a control-plane capability and a dbt capability from one published composition surface.
 
-## Config Should Change The Run, Not Rewrite The System
+## Dagster | run config
 
-Config is most valuable when it keeps one definition reusable across different run circumstances while still failing fast on malformed input. It is less valuable when it becomes a loose dictionary of implicit modes that only the original author understands.
+Run config is useful when one definition needs validated runtime inputs such as limits, modes, or replay parameters without rewriting the underlying system boundary. The goal is to let a run vary deliberately while still failing fast on malformed or unsupported input.
 
-### Typed Config Makes Runtime Choices Explicit
+### Dagster | typed config | validate runtime choices
 
-The goal is not to make every parameter configurable. The goal is to make the few runtime choices that genuinely vary visible, validated, and reviewable.
+Typed config should make the few runtime choices that genuinely vary visible, validated, and reviewable. It should not become an unstructured mode switch that quietly rewrites business logic through ad hoc dictionaries.
 
-#### Validate the runtime choice before expensive work starts
+#### Config | validate the runtime choice before expensive work
 
 Use Dagster config when one run needs a bounded, typed choice such as a limit, processing mode, or replay parameter. The trigger is a value that should vary between runs but should still fail early if it is invalid. The code runs at execution time and consumes validated config rather than raw dictionaries. Its purpose is to separate stable business logic from run-specific inputs.
 
@@ -187,15 +187,15 @@ True
 
 That distinction matters in production data platforms. In an index or benchmark workflow, "business date to process" is a config-like runtime choice. The database URL, export root, and identity used to reach external systems are not. Those belong in resources or environment-backed settings.
 
-## An I/O Manager Matters Only When Dagster Owns The Handoff
+## Dagster | I/O managers
 
-The Dagster docs define I/O managers as the objects that store outputs and load them as downstream inputs. That is an important mechanism, but it only deserves emphasis when Dagster itself is the thing carrying values across compute boundaries. In warehouse-first systems, the real handoff may already live in explicit tables, files, or external tools.
+I/O managers define how Dagster stores an output and reloads it as a downstream input. They matter when Dagster itself owns the handoff between compute stages. If the real boundary already lives in explicit tables, files, or external tools, a custom I/O manager may add less clarity than explicit domain storage.
 
-### Use One When Dagster Must Carry Values Between Steps
+### Dagster | storage handoffs | when Dagster owns intermediate values
 
-When upstream and downstream compute exchange Python values through Dagster, the I/O manager is the correct place to define that storage rule once.
+When upstream and downstream compute exchange values through Dagster, the I/O manager is the right place to define the storage rule once. When the meaningful handoff is already a warehouse table or exported file, explicit domain storage often communicates more than an extra abstraction layer.
 
-#### Persist the handoff through a custom I/O manager
+#### I/O managers | persist a handoff through a custom manager
 
 Use a custom I/O manager when several assets share the same storage and reload rule inside Dagster's own execution model. The trigger is repeated handoff logic between upstream and downstream compute. The code runs during execution and intercepts how Dagster stores and reloads values. Its purpose is to make the storage boundary explicit rather than leaving it to implicit defaults.
 
@@ -245,7 +245,7 @@ True
 {'staged_orders': ['o-1', 'o-2'], 'order_count': 2}
 ```
 
-#### Notice when no custom I/O manager is the correct design
+#### I/O managers | recognize when no custom manager is the right design
 
 Use this judgment when a system's real persistence boundaries are already explicit in warehouses, landed files, dbt models, review tables, or export artifacts. The trigger is a temptation to add an abstraction simply because Dagster supports it. The context is architectural choice rather than API usage. Its purpose is to avoid hiding storage semantics behind a custom layer that adds indirection without clarifying ownership.
 
