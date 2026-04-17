@@ -33,13 +33,6 @@ Dagster's webserver documentation describes the UI as the interface for viewing 
 > - use the local UI after composition is healthy, not as the first debugging tool
 > - once a run exists, follow event logs, compute logs, and daemon state instead of rewriting topology blindly
 
-> [!info] Official References
->
-> - [Dagster webserver and UI](https://docs.dagster.io/guides/operate/webserver)
-> - [Projects and workspaces](https://docs.dagster.io/guides/build/projects)
-> - [Transitioning from development to production](https://docs.dagster.io/guides/operate/dev-to-prod)
-> - [Dagster definitions API](https://docs.dagster.io/api/dagster/definitions)
-
 > [!abstract]- Key Terms
 >
 > **Code location**
@@ -244,3 +237,12 @@ for approved_run in approved_runs:
 ```
 
 If the review row is approved but no export run appears, the first questions are whether the daemon is evaluating sensors and whether the control plane is returning the expected pending run. Rewriting asset lineage at that point would be debugging the wrong layer.
+
+## Dagster | references
+
+This section collects the official Dagster documentation links most relevant to development, the UI, and debugging.
+
+- [Dagster webserver and UI](https://docs.dagster.io/guides/operate/webserver)
+- [Projects and workspaces](https://docs.dagster.io/guides/build/projects)
+- [Transitioning from development to production](https://docs.dagster.io/guides/operate/dev-to-prod)
+- [Dagster definitions API](https://docs.dagster.io/api/dagster/definitions)

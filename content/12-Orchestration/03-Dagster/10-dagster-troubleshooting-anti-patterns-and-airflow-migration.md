@@ -33,13 +33,6 @@ Dagster incidents are easier to fix than older schedulers only when the system p
 > - use replay as a scoped recovery tool rather than as a panic response
 > - migrate from Airflow by shifting observation and execution responsibilities deliberately, not by renaming DAGs
 
-> [!info] Official References
->
-> - [Airflow to Dagster migration](https://docs.dagster.io/migration/airflow-to-dagster)
-> - [Dagster & Airlift](https://docs.dagster.io/integrations/libraries/airlift)
-> - [Airlift migration guide](https://docs.dagster.io/migration/airflow-to-dagster/airlift-v1)
-> - [Troubleshooting concurrency issues](https://docs.dagster.io/guides/operate/managing-concurrency/troubleshooting-concurrency)
-
 > [!abstract]- Key Terms
 >
 > **Code-location failure**
@@ -228,3 +221,12 @@ Use this plan when an Airflow DAG already embodies business-critical workflows s
 > - **Decommission last.** Remove Airflow execution only after Dagster has proven it can own the workflow, checks, and replay boundaries cleanly.
 >
 > For an index constituent pipeline, that often means observing the legacy Airflow DAG first, then moving the curated constituent build into Dagster, then adding the review and export boundaries, and only then retiring the original DAG.
+
+## Dagster | references
+
+This section collects the official Dagster documentation links most relevant to troubleshooting, anti-patterns, and Airflow migration.
+
+- [Airflow to Dagster migration](https://docs.dagster.io/migration/airflow-to-dagster)
+- [Dagster & Airlift](https://docs.dagster.io/integrations/libraries/airlift)
+- [Airlift migration guide](https://docs.dagster.io/migration/airflow-to-dagster/airlift-v1)
+- [Troubleshooting concurrency issues](https://docs.dagster.io/guides/operate/managing-concurrency/troubleshooting-concurrency)

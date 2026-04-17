@@ -33,12 +33,6 @@ Dagster's resources and I/O APIs describe two different runtime boundaries. A re
 > - I/O managers matter when Dagster itself owns the handoff between compute stages
 > - the main failure mode at this layer is invisible side effects, not missing abstraction
 
-> [!info] Official References
->
-> - [Dagster resources API](https://docs.dagster.io/api/dagster/resources)
-> - [Dagster I/O managers API](https://docs.dagster.io/api/dagster/io-managers)
-> - [Dagster overview](https://docs.dagster.io/)
-
 > [!abstract]- Key Terms
 >
 > **Resource**
@@ -260,3 +254,11 @@ Use this judgment when a system's real persistence boundaries are already explic
 > - validated export files
 >
 > A custom I/O manager would not explain those boundaries better. It would risk obscuring them.
+
+## Dagster | references
+
+This section collects the official Dagster documentation links most relevant to resources, config, and I/O managers.
+
+- [Dagster resources API](https://docs.dagster.io/api/dagster/resources)
+- [Dagster I/O managers API](https://docs.dagster.io/api/dagster/io-managers)
+- [Dagster overview](https://docs.dagster.io/)

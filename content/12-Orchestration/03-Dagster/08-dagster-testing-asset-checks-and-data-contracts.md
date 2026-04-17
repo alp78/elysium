@@ -33,14 +33,6 @@ Dagster quality work is not one thing. A serious project needs at least four dis
 > - asset checks turn data trust into Dagster-visible runtime state
 > - data contracts define which structural and semantic changes downstream consumers are allowed to absorb
 
-> [!info] Official References
->
-> - [Testing assets](https://docs.dagster.io/guides/test)
-> - [Asset checks](https://docs.dagster.io/guides/test/asset-checks)
-> - [Unit testing assets and ops](https://docs.dagster.io/guides/test/unit-testing-assets-and-ops)
-> - [Testing partitioned config and jobs](https://docs.dagster.io/guides/test/testing-partitioned-config-and-jobs)
-> - [Data contracts](https://docs.dagster.io/guides/test/data-contracts)
-
 > [!abstract]- Key Terms
 >
 > **Composition test**
@@ -319,3 +311,13 @@ print(partitions.get_partition_keys(current_time=datetime(2026, 4, 16))[:3])
 ```
 
 Not every incremental Dagster system has to use native partitioned assets. The local `dagflow` project currently scopes replay and export resume by `business_date` and `run_id` flowing through its control plane and sensor tags rather than by `DailyPartitionsDefinition`. The important point is not the specific mechanism. It is that the replay unit is explicit, stable, and testable.
+
+## Dagster | references
+
+This section collects the official Dagster documentation links most relevant to testing, asset checks, data contracts, and replay boundaries.
+
+- [Testing assets](https://docs.dagster.io/guides/test)
+- [Asset checks](https://docs.dagster.io/guides/test/asset-checks)
+- [Unit testing assets and ops](https://docs.dagster.io/guides/test/unit-testing-assets-and-ops)
+- [Testing partitioned config and jobs](https://docs.dagster.io/guides/test/testing-partitioned-config-and-jobs)
+- [Data contracts](https://docs.dagster.io/guides/test/data-contracts)

@@ -33,14 +33,6 @@ Dagster becomes a platform design problem the moment the code location has to su
 > - every service in one deployment must agree on one Dagster instance and one `dagster.yaml`
 > - deployment-wide concurrency and per-resource pools solve different overload problems
 
-> [!info] Official References
->
-> - [Deployment overview](https://docs.dagster.io/deployment)
-> - [About Dagster+](https://docs.dagster.io/deployment/dagster-plus)
-> - [OSS instance configuration](https://docs.dagster.io/deployment/oss/oss-instance-configuration)
-> - [Execution](https://docs.dagster.io/deployment/execution)
-> - [Managing concurrency](https://docs.dagster.io/guides/operate/managing-concurrency)
-
 > [!abstract]- Key Terms
 >
 > **Dagster instance**
@@ -249,3 +241,13 @@ def publish_review_snapshot():
 > [!example] Separate total traffic from shared-resource protection
 >
 > If a review-validation sensor resumes export for several approved runs while a historical backfill is also rebuilding curated assets, one control usually is not enough. A deployment-wide run limit keeps the control plane from launching too much total work. A `warehouse` or `export` pool then prevents the specific downstream system from being flooded even within that bounded set of runs.
+
+## Dagster | references
+
+This section collects the official Dagster documentation links most relevant to deployment and production operations.
+
+- [Deployment overview](https://docs.dagster.io/deployment)
+- [About Dagster+](https://docs.dagster.io/deployment/dagster-plus)
+- [OSS instance configuration](https://docs.dagster.io/deployment/oss/oss-instance-configuration)
+- [Execution](https://docs.dagster.io/deployment/execution)
+- [Managing concurrency](https://docs.dagster.io/guides/operate/managing-concurrency)

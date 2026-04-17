@@ -33,11 +33,6 @@ Dagster's assets API defines an asset as an object in persistent storage and an 
 > - selection is the mechanism that turns lineage into scoped replay
 > - external and human-governed states belong in the graph when downstream trust depends on them
 
-> [!info] Official References
->
-> - [Dagster assets API](https://docs.dagster.io/api/dagster/assets)
-> - [Dagster overview](https://docs.dagster.io/)
-
 > [!abstract]- Key Terms
 >
 > **Asset key**
@@ -217,3 +212,10 @@ print(
 True
 ['silver_orders', 'silver_customers']
 ```
+
+## Dagster | references
+
+This section collects the official Dagster documentation links most relevant to assets and lineage.
+
+- [Dagster assets API](https://docs.dagster.io/api/dagster/assets)
+- [Dagster overview](https://docs.dagster.io/)

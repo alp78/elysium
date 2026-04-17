@@ -33,12 +33,6 @@ Dagster's docs describe an op as the foundational unit of computation, a graph a
 > - jobs package launchable slices and carry runtime policy
 > - graph-backed assets are the clean bridge when one public dataset needs several internal steps
 
-> [!info] Official References
->
-> - [Dagster ops API](https://docs.dagster.io/api/dagster/ops)
-> - [Dagster jobs API](https://docs.dagster.io/api/dagster/jobs)
-> - [Dagster graphs API](https://docs.dagster.io/api/dagster/graphs)
-
 > [!abstract]- Key Terms
 >
 > **Op**
@@ -216,3 +210,11 @@ print(warehouse_mutation.name)
 warehouse
 warehouse_mutation
 ```
+
+## Dagster | references
+
+This section collects the official Dagster documentation links most relevant to ops, jobs, and graphs.
+
+- [Dagster ops API](https://docs.dagster.io/api/dagster/ops)
+- [Dagster jobs API](https://docs.dagster.io/api/dagster/jobs)
+- [Dagster graphs API](https://docs.dagster.io/api/dagster/graphs)

@@ -33,13 +33,6 @@ Dagster becomes most valuable in mixed-compute systems when it refuses to impers
 > - resources and translators define how another system becomes visible to Dagster
 > - a clean orchestration boundary preserves both observability and ownership of compute semantics
 
-> [!info] Official References
->
-> - [Using Dagster Pipes](https://docs.dagster.io/integrations/external-pipelines/using-dagster-pipes)
-> - [Dagster Pipes library](https://docs.dagster.io/integrations/libraries/pipes)
-> - [Dagster and dbt](https://docs.dagster.io/integrations/libraries/dbt)
-> - [Dagster dbt examples](https://docs.dagster.io/examples/full-pipelines/dbt)
-
 > [!abstract]- Key Terms
 >
 > **Dagster Pipes**
@@ -218,3 +211,12 @@ security_master_export_job = define_asset_job(
 > [!example] The approved review state is the real delivery contract
 >
 > In `dagflow`, the export models read from review tables that are mapped back to Dagster review-snapshot assets. That means the exported security master or shareholder holdings file is not "whatever dbt most recently computed." It is the reviewer-approved state that survived a governed handoff. That is exactly the kind of cross-system boundary Dagster should make visible rather than flatten into one shell step.
+
+## Dagster | references
+
+This section collects the official Dagster documentation links most relevant to Pipes, dbt integration, and external-system boundaries.
+
+- [Using Dagster Pipes](https://docs.dagster.io/integrations/external-pipelines/using-dagster-pipes)
+- [Dagster Pipes library](https://docs.dagster.io/integrations/libraries/pipes)
+- [Dagster and dbt](https://docs.dagster.io/integrations/libraries/dbt)
+- [Dagster dbt examples](https://docs.dagster.io/examples/full-pipelines/dbt)

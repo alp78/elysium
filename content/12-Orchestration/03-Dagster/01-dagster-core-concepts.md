@@ -36,13 +36,6 @@ This page introduces Dagster itself before the chapter moves into specialized to
 > - source assets and observations keep external dependencies visible without pretending Dagster owns their compute.
 > - Dagster is most justified when lineage-aware recovery and trust boundaries matter more than command order alone.
 
-> [!info] Official References
->
-> - [Dagster overview](https://docs.dagster.io/)
-> - [Dagster definitions API](https://docs.dagster.io/api/dagster/definitions)
-> - [Dagster assets API](https://docs.dagster.io/api/dagster/assets)
-> - [Deployment overview](https://docs.dagster.io/deployment)
-
 > [!abstract]- Key Terms
 >
 > **Definitions**
@@ -265,3 +258,12 @@ Use this decision boundary when selecting an orchestrator for a new workflow or 
 > [!question] Where Dagster changes the answer
 >
 > A nightly one-step export that only has to finish by 02:00 usually does not justify Dagster. A governed pipeline such as `dagflow`, where raw landing, curated marts, review snapshots, approval, and export are separate named states, is a different problem. There the business needs to know which state is waiting, which state is safe to replay, and which state has already been approved. That is the operational territory where Dagster's model becomes materially better than task ordering alone.
+
+## Dagster | references
+
+This section collects the official Dagster documentation links most relevant to the concepts introduced on this page.
+
+- [Dagster overview](https://docs.dagster.io/)
+- [Dagster definitions API](https://docs.dagster.io/api/dagster/definitions)
+- [Dagster assets API](https://docs.dagster.io/api/dagster/assets)
+- [Deployment overview](https://docs.dagster.io/deployment)

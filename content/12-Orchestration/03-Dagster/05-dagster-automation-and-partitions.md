@@ -33,13 +33,6 @@ Automation is where Dagster stops being only a description of asset dependencies
 > - declarative automation is for asset-native policy Dagster can already evaluate from its own state
 > - partitions and backfills are about recovery scope, not about choosing a trigger
 
-> [!info] Official References
->
-> - [Schedules and sensors API](https://docs.dagster.io/api/dagster/schedules-sensors)
-> - [Partitions API](https://docs.dagster.io/api/dagster/partitions)
-> - [Declarative Automation guide](https://docs.dagster.io/guides/automate/declarative-automation)
-> - [Migrating from sensors to Declarative Automation](https://docs.dagster.io/guides/automate/declarative-automation/migrating-from-sensors)
-
 > [!abstract]- Key Terms
 >
 > **Schedule**
@@ -211,3 +204,12 @@ Use this planning boundary when a dataset may eventually need historical repair 
 > [!question] What happens if approval resumes and replay start at the same time?
 >
 > In a governed pipeline, it is common for ordinary daily work, review-resume sensors, and historical repair to coexist. If a backfill can relaunch a month of slices while validated review runs are simultaneously resuming export, the automation surface is only half the design. The other half is deployment concurrency: which runs can launch together, and which shared systems need pools or global limits before historical traffic becomes a second incident.
+
+## Dagster | references
+
+This section collects the official Dagster documentation links most relevant to automation, partitions, and backfills.
+
+- [Schedules and sensors API](https://docs.dagster.io/api/dagster/schedules-sensors)
+- [Partitions API](https://docs.dagster.io/api/dagster/partitions)
+- [Declarative Automation guide](https://docs.dagster.io/guides/automate/declarative-automation)
+- [Migrating from sensors to Declarative Automation](https://docs.dagster.io/guides/automate/declarative-automation/migrating-from-sensors)
