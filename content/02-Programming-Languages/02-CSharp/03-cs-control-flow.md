@@ -305,18 +305,17 @@ Stopping...
 
 #### Switch expression — compact value-returning form with or pattern and _ wildcard
 
-> [!info] Switch expression syntax
->
-> - `variable switch { pattern => result, _ => default }` — returns a value directly
-> - `or` pattern combines cases
-> - `_` is the discard wildcard
-> - Compiler warns if cases are incomplete
+Switch expressions return a value directly with the form
+`variable switch { pattern => result, _ => default }`. The `or` pattern combines
+multiple alternatives in one arm, and `_` acts as the discard wildcard for any
+remaining unmatched input. The compiler can warn on incomplete coverage, but an
+unmatched runtime value still needs an explicit fallback arm.
 
-> [!warning] Missing `_` default causes `SwitchExpressionException`
+> [!warning] No wildcard arm means runtime failure
 >
 > Missing `_` causes `SwitchExpressionException` at runtime when no arm matches. Keep switch arms pure so unmatched inputs fail clearly.
 
-> [!success] Always add a wildcard arm
+> [!success] Close the expression with `_`
 >
 > Always close a switch expression with `_ => ...` to handle unmatched inputs gracefully. Keep arms side-effect-free and return values rather than mutating state.
 
@@ -553,17 +552,16 @@ Index-based `for` loops give explicit control over the counter, step, and direct
 
 #### for and foreach loops
 
-> [!info] Loop types
->
-> - `for (init; condition; increment)` — runs while condition is true
-> - `foreach (var item in collection)` — iterates any `IEnumerable<T>`
-> - Prefer `foreach` — cleaner, no off-by-one errors
+`for (init; condition; increment)` runs while its condition stays true and gives
+you explicit control over the index, step, and direction. `foreach (var item in
+collection)` iterates any `IEnumerable<T>` without exposing the index directly
+and is usually the clearer default when you are not mutating by position.
 
-> [!warning] Don't modify a collection during foreach
+> [!warning] Modifying a collection during `foreach` invalidates the enumerator
 >
 > Don't modify a collection during `foreach` — throws `InvalidOperationException`. Use `for` loop or `ToList()` first.
 
-> [!success] Safe modification pattern
+> [!success] Snapshot or index the collection before mutating it
 >
 > To remove or add items while iterating, snapshot the collection first with `.ToList()`, then `foreach` over the snapshot while modifying the original. For indexed removal, iterate backwards with a `for` loop.
 

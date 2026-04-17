@@ -191,32 +191,32 @@ The three pillars from [observability-deep-dive > The Three Pillars (Metrics, Lo
 
 Dashboard: **DBA Dashboard** | Config: [datadog-sql-server-integration > Built-in SQL Server Metrics Collected by Datadog](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-sql-server-integration#built-in-sql-server-metrics-collected-by-datadog), [gcp-cloud-monitoring-deep-dive > Ops Agent: SQL Server Configuration](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#ops-agent-sql-server-configuration)
 
-> [!note] Key Metrics
->
-> - **Buffer cache hit ratio** — percentage of pages served from memory vs disk. Below 95% means the buffer pool is too small or queries are scanning too much data
-> - **Page Life Expectancy (PLE)** — seconds a page stays in the buffer pool before eviction. Below 300s indicates memory pressure
-> - **Wait stats** — top wait types (PAGEIOLATCH = disk bottleneck, LCK_M = lock contention, CXPACKET = parallelism overhead)
-> - **Deadlocks/sec** — count of deadlock victims. Any value > 0 needs investigation
-> - **Disk %** — percentage of disk capacity used. SQL Server crashes when full
-> - **CPU %** — sustained high CPU indicates query inefficiency or under-provisioned VM
-> - **Active connections** — connection pool saturation indicator
-> - **Batch requests/sec** — workload throughput baseline
+Key metrics:
 
-> [!abstract] Key Logs
->
-> - **Error log (severity >= 16)** — SQL Server errors that affect user sessions. Severity 16 = user error, 17+ = resource/system issues
-> - **Slow queries (>5s)** — queries exceeding duration threshold, captured via Extended Events or Datadog deep database monitoring
-> - **Deadlock XML** — full deadlock graph from `system_health` session, shows which queries and resources were involved
-> - **Login failures** — failed authentication attempts. Spikes may indicate brute-force attacks or misconfigured connection strings
+- **Buffer cache hit ratio** — percentage of pages served from memory vs disk. Below 95% means the buffer pool is too small or queries are scanning too much data
+- **Page Life Expectancy (PLE)** — seconds a page stays in the buffer pool before eviction. Below 300s indicates memory pressure
+- **Wait stats** — top wait types (PAGEIOLATCH = disk bottleneck, LCK_M = lock contention, CXPACKET = parallelism overhead)
+- **Deadlocks/sec** — count of deadlock victims. Any value > 0 needs investigation
+- **Disk %** — percentage of disk capacity used. SQL Server crashes when full
+- **CPU %** — sustained high CPU indicates query inefficiency or under-provisioned VM
+- **Active connections** — connection pool saturation indicator
+- **Batch requests/sec** — workload throughput baseline
 
-> [!warning] Alert Conditions
+Key logs:
+
+- **Error log (severity >= 16)** — SQL Server errors that affect user sessions. Severity 16 = user error, 17+ = resource/system issues
+- **Slow queries (>5s)** — queries exceeding duration threshold, captured via Extended Events or Datadog deep database monitoring
+- **Deadlock XML** — full deadlock graph from `system_health` session, shows which queries and resources were involved
+- **Login failures** — failed authentication attempts. Spikes may indicate brute-force attacks or misconfigured connection strings
+
+> [!warning] SQL Server distress signals
 >
 > - **PLE < 300s** — P2: memory pressure is evicting pages faster than they're being read. Queries will slow as disk I/O increases
 > - **Disk > 85%** — P1: SQL Server will crash if the disk fills. Transaction log growth, TempDB spills, or backup files are common causes
 > - **Deadlocks > 0/min** — P2: transactions are being killed. Pipeline MERGE operations may fail and need retry logic
 > - **CPU > 90% sustained 5min** — P2: queries are CPU-bound. Check for missing indexes, implicit conversions, or parameter sniffing
 
-> [!success] Response patterns for SQL Server alerts
+> [!success] SQL Server first response
 >
 > - **PLE low**: check buffer pool size and identify large table scans via `sys.dm_exec_query_stats`; add indexes or increase VM memory
 > - **Disk > 85%**: shrink or archive old backup files; verify TempDB auto-growth is not runaway; resize disk online with `resize2fs` if on Linux
@@ -229,29 +229,29 @@ Dashboard: **DBA Dashboard** | Config: [datadog-sql-server-integration > Built-i
 
 Dashboard: **Pipeline Watch** | Config: [datadog-airflow-observability > Key Metrics Reference](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-airflow-observability#key-metrics-reference), [datadog-dashboards > Airflow Orchestration Dashboard](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-dashboards#airflow-orchestration-dashboard)
 
-> [!note] Key Metrics
->
-> - **DAG duration** — end-to-end time per DAG run. Baseline drift indicates data volume growth or infrastructure degradation
-> - **Task failure rate** — percentage of tasks ending in FAILED state after all retries exhausted
-> - **Scheduler heartbeat lag** — seconds since the scheduler last reported alive. Gap = scheduler is down
-> - **DAG parse time** — seconds to parse all DAG files. Above 30s means too many DAGs or expensive module-level imports
-> - **Pool utilization** — percentage of pool slots in use. 100% = tasks are queuing
-> - **Zombie tasks** — tasks marked as running but with no active process. Indicates worker crashes
+Key metrics:
 
-> [!abstract] Key Logs
->
-> - **Task stdout/stderr** — output from each task's execution. First place to look for transform errors, SQL failures, API timeouts
-> - **Scheduler logs** — DAG parsing errors, scheduling decisions, heartbeat status
-> - **Executor logs** — worker allocation, task state transitions, resource exhaustion
+- **DAG duration** — end-to-end time per DAG run. Baseline drift indicates data volume growth or infrastructure degradation
+- **Task failure rate** — percentage of tasks ending in FAILED state after all retries exhausted
+- **Scheduler heartbeat lag** — seconds since the scheduler last reported alive. Gap = scheduler is down
+- **DAG parse time** — seconds to parse all DAG files. Above 30s means too many DAGs or expensive module-level imports
+- **Pool utilization** — percentage of pool slots in use. 100% = tasks are queuing
+- **Zombie tasks** — tasks marked as running but with no active process. Indicates worker crashes
 
-> [!warning] Alert Conditions
+Key logs:
+
+- **Task stdout/stderr** — output from each task's execution. First place to look for transform errors, SQL failures, API timeouts
+- **Scheduler logs** — DAG parsing errors, scheduling decisions, heartbeat status
+- **Executor logs** — worker allocation, task state transitions, resource exhaustion
+
+> [!warning] Airflow orchestration failures
 >
 > - **SLA miss** — P1: pipeline didn't complete within its defined SLA window. Data freshness is at risk
 > - **Task failure after retries** — P2: a task exhausted all retry attempts. Manual investigation needed
 > - **Heartbeat > 60s** — P1: scheduler is down. No new tasks will be scheduled until it recovers
 > - **Parse time > 30s** — P3: slow DAG parsing delays scheduling. Usually caused by expensive imports at module level
 
-> [!success] Response patterns for Airflow alerts
+> [!success] Airflow first response
 >
 > - **SLA miss**: check task logs for the failed or slow task; verify upstream dependencies completed; trigger a manual backfill if data is recoverable
 > - **Task failure after retries**: inspect the final task log for the root exception; fix the root cause before manually clearing the failed task instance
@@ -264,26 +264,26 @@ Dashboard: **Pipeline Watch** | Config: [datadog-airflow-observability > Key Met
 
 Dashboard: **Cost + Performance** | Config: [gcp-cloud-monitoring-deep-dive > BigQuery](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#bigquery), [gcp-cloud-monitoring-deep-dive > INFORMATION_SCHEMA Queries for Job-Level Monitoring](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#informationschema-queries-for-job-level-monitoring)
 
-> [!note] Key Metrics
->
-> - **Bytes scanned/query** — direct cost driver at $6.25/TB. The single most important cost metric
-> - **Slot utilization** — percentage of available slots in use. High utilization = queries queue
-> - **Query count** — total queries per period. Baseline for anomaly detection
-> - **Error rate** — percentage of queries failing. Non-zero needs investigation
-> - **Duration p50/p95/p99** — query latency distribution. p99 drift indicates growing tables or missing partitions
+Key metrics:
 
-> [!abstract] Key Logs
->
-> - **Audit logs (BigQueryAuditMetadata)** — every query executed, who ran it, bytes scanned, cost. The authoritative cost analysis source
-> - **Job failures** — queries that failed with errors. Check for quota exceeded, syntax errors, permission issues
+- **Bytes scanned/query** — direct cost driver at $6.25/TB. The single most important cost metric
+- **Slot utilization** — percentage of available slots in use. High utilization = queries queue
+- **Query count** — total queries per period. Baseline for anomaly detection
+- **Error rate** — percentage of queries failing. Non-zero needs investigation
+- **Duration p50/p95/p99** — query latency distribution. p99 drift indicates growing tables or missing partitions
 
-> [!warning] Alert Conditions
+Key logs:
+
+- **Audit logs (BigQueryAuditMetadata)** — every query executed, who ran it, bytes scanned, cost. The authoritative cost analysis source
+- **Job failures** — queries that failed with errors. Check for quota exceeded, syntax errors, permission issues
+
+> [!warning] BigQuery cost and failure drift
 >
 > - **Bytes scanned > threshold** — P3: a query is scanning more data than expected. Likely a missing partition filter or `SELECT *`
 > - **Failed queries > 0** — P3: investigate immediately. Common causes: DML quota exceeded, table deleted, permission revoked
 > - **Duration p99 > 5min** — P3: slowest queries are degrading. Check for unpartitioned tables or slot starvation
 
-> [!success] Response patterns for BigQuery alerts
+> [!success] BigQuery first response
 >
 > - **Bytes over threshold**: find the offending query in `INFORMATION_SCHEMA.JOBS_BY_PROJECT` ordered by `total_bytes_processed`; add a `WHERE DATE(_PARTITIONTIME) = ...` filter or enable `require_partition_filter` on the table
 > - **Failed queries**: check the `error_result` field in `INFORMATION_SCHEMA.JOBS`; for quota errors, reduce scheduling concurrency; for permission errors, audit IAM role assignments
@@ -295,28 +295,28 @@ Dashboard: **Cost + Performance** | Config: [gcp-cloud-monitoring-deep-dive > Bi
 
 Dashboard: **Service Health** | Config: [gcp-cloud-monitoring-deep-dive > Built-in Metrics for Cloud Run Services](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#built-in-metrics-for-cloud-run-services)
 
-> [!note] Key Metrics
->
-> - **Request count** — total requests per period. Baseline for capacity planning
-> - **Latency p50/p95/p99** — response time distribution. p99 captures cold-start impact
-> - **Error rate (5xx)** — percentage of server errors. Any sustained rate > 1% is a problem
-> - **Cold starts** — count of instances starting from zero. High rate = min-instances too low
-> - **Instance count** — active container instances. Correlate with request count for efficiency
-> - **Memory %** — container memory utilization. Above 90% risks OOM kills
+Key metrics:
 
-> [!abstract] Key Logs
->
-> - **Stdout/stderr from container** — application logs. First place to look for errors
-> - **Crash logs** — container exit with non-zero code. OOM, unhandled exceptions, timeout
+- **Request count** — total requests per period. Baseline for capacity planning
+- **Latency p50/p95/p99** — response time distribution. p99 captures cold-start impact
+- **Error rate (5xx)** — percentage of server errors. Any sustained rate > 1% is a problem
+- **Cold starts** — count of instances starting from zero. High rate = min-instances too low
+- **Instance count** — active container instances. Correlate with request count for efficiency
+- **Memory %** — container memory utilization. Above 90% risks OOM kills
 
-> [!warning] Alert Conditions
+Key logs:
+
+- **Stdout/stderr from container** — application logs. First place to look for errors
+- **Crash logs** — container exit with non-zero code. OOM, unhandled exceptions, timeout
+
+> [!warning] Cloud Run service degradation
 >
 > - **Error rate > 1%** — P2: sustained server errors affecting users or downstream consumers
 > - **Latency p99 > 10s** — P3: slowest requests are unacceptably slow. Check for cold starts or upstream dependency issues
 > - **Memory > 90%** — P2: close to OOM kill. Increase memory allocation or fix memory leaks
 > - **OOM kills > 0** — P1: container is being killed for exceeding memory. Data loss possible if writes are in progress
 
-> [!success] Response patterns for Cloud Run alerts
+> [!success] Cloud Run first response
 >
 > - **Error rate > 1%**: check container stdout/stderr logs via `gcloud logging read`; look for unhandled exceptions or upstream dependency timeouts; redeploy previous revision if a recent deploy is the cause
 > - **Latency p99 high**: check cold start frequency and set `--min-instances=1` for latency-sensitive services; profile the slowest requests with Cloud Trace
@@ -329,25 +329,25 @@ Dashboard: **Service Health** | Config: [gcp-cloud-monitoring-deep-dive > Built-
 
 Dashboard: **Messaging Health** | Config: [gcp-cloud-monitoring-deep-dive > Pub/Sub](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#pubsub)
 
-> [!note] Key Metrics
->
-> - **Unacked message count (backlog)** — messages delivered but not acknowledged. Growing backlog = consumer can't keep up
-> - **Oldest unacked age** — age of the oldest unacknowledged message. Shows how far behind the consumer is
-> - **Publish/pull latency** — time to publish or pull a message. Spikes indicate Pub/Sub service issues
-> - **Dead letter count** — messages moved to DLQ after max delivery attempts. Non-zero = systematic processing failure
+Key metrics:
 
-> [!abstract] Key Logs
->
-> - **DLQ messages** — messages that failed processing repeatedly. Contains the original payload and error context
-> - **Subscription errors** — delivery failures, acknowledgement timeouts, permission issues
+- **Unacked message count (backlog)** — messages delivered but not acknowledged. Growing backlog = consumer can't keep up
+- **Oldest unacked age** — age of the oldest unacknowledged message. Shows how far behind the consumer is
+- **Publish/pull latency** — time to publish or pull a message. Spikes indicate Pub/Sub service issues
+- **Dead letter count** — messages moved to DLQ after max delivery attempts. Non-zero = systematic processing failure
 
-> [!warning] Alert Conditions
+Key logs:
+
+- **DLQ messages** — messages that failed processing repeatedly. Contains the original payload and error context
+- **Subscription errors** — delivery failures, acknowledgement timeouts, permission issues
+
+> [!warning] Pub/Sub backlog and loss risk
 >
 > - **Backlog > threshold** — P2: consumer is falling behind. Common causes: consumer crash, slow processing, insufficient concurrency
 > - **Oldest unacked > 5min** — P2: messages are aging. If retention window is short, data loss is imminent
 > - **DLQ > 0** — P2: messages are failing permanently. Investigate the DLQ for error patterns
 
-> [!success] Response patterns for Pub/Sub alerts
+> [!success] Pub/Sub first response
 >
 > - **Backlog growing**: check the consumer Cloud Run service for crash loops; increase `--max-instances` and `--concurrency` to scale out processing; verify acknowledgement deadlines are long enough for slow messages
 > - **Oldest unacked > 5min**: increase the subscription's message retention duration immediately to prevent expiry; scale up consumers in parallel; if messages have expired, replay from the source if available
@@ -359,23 +359,23 @@ Dashboard: **Messaging Health** | Config: [gcp-cloud-monitoring-deep-dive > Pub/
 
 Dashboard: **Storage Dashboard** | Config: [gcp-cloud-monitoring-deep-dive > Cloud Storage](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#cloud-storage)
 
-> [!note] Key Metrics
->
-> - **Object count** — total objects per bucket. Sudden drops indicate accidental deletion
-> - **Total bytes** — storage volume per bucket. Tracks growth for capacity and cost planning
-> - **Request count by type** — Class A (writes) vs Class B (reads). Unusual write spikes may indicate runaway pipeline
+Key metrics:
 
-> [!abstract] Key Logs
->
-> - **Access logs** — who accessed which objects. Useful for audit and debugging access issues
-> - **Lifecycle actions** — objects transitioned to Nearline/Coldline/Archive or deleted by lifecycle rules
+- **Object count** — total objects per bucket. Sudden drops indicate accidental deletion
+- **Total bytes** — storage volume per bucket. Tracks growth for capacity and cost planning
+- **Request count by type** — Class A (writes) vs Class B (reads). Unusual write spikes may indicate runaway pipeline
 
-> [!warning] Alert Conditions
+Key logs:
+
+- **Access logs** — who accessed which objects. Useful for audit and debugging access issues
+- **Lifecycle actions** — objects transitioned to Nearline/Coldline/Archive or deleted by lifecycle rules
+
+> [!warning] GCS deletion and growth anomalies
 >
 > - **Unexpected deletes** — P2: object count dropped without a known lifecycle rule or pipeline action. Possible accidental deletion
 > - **Object count anomaly** — P3: sudden spike or drop outside normal growth patterns
 
-> [!success] Response patterns for GCS alerts
+> [!success] GCS first response
 >
 > - **Unexpected deletes**: check Cloud Audit Logs for `storage.objects.delete` events in the affected bucket; if accidental, restore from a versioned bucket (enable object versioning on all landing-zone buckets); identify the IAM principal that issued the delete and restrict permissions if necessary
 > - **Object count anomaly**: correlate with pipeline run history; a spike may indicate a runaway write loop — check Cloud Run job execution counts and add a maximum-objects-per-run guard to the pipeline
@@ -386,23 +386,23 @@ Dashboard: **Storage Dashboard** | Config: [gcp-cloud-monitoring-deep-dive > Clo
 
 Dashboard: **Real-Time Store** | Config: [gcp-cloud-monitoring-deep-dive > Firestore](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#firestore)
 
-> [!note] Key Metrics
->
-> - **Read/write ops/sec** — operation throughput. Baseline for cost projection ($0.06/100K reads, $0.18/100K writes)
-> - **Active connections** — concurrent client connections. Spikes indicate consumer issues
-> - **Document count** — total documents. Unexpected growth may indicate a write loop
+Key metrics:
 
-> [!abstract] Key Logs
->
-> - **Security rule denials** — requests blocked by Firestore security rules. May indicate misconfigured rules or unauthorized access
-> - **Quota warnings** — approaching operation or storage quotas
+- **Read/write ops/sec** — operation throughput. Baseline for cost projection ($0.06/100K reads, $0.18/100K writes)
+- **Active connections** — concurrent client connections. Spikes indicate consumer issues
+- **Document count** — total documents. Unexpected growth may indicate a write loop
 
-> [!warning] Alert Conditions
+Key logs:
+
+- **Security rule denials** — requests blocked by Firestore security rules. May indicate misconfigured rules or unauthorized access
+- **Quota warnings** — approaching operation or storage quotas
+
+> [!warning] Firestore hotspotting and denials
 >
 > - **Write rate > 80% quota** — P2: approaching the per-document write limit (1 write/sec). Contention will cause latency spikes
 > - **Security denials > 0** — P3: investigate whether rules are too restrictive or an unauthorized client is probing
 
-> [!success] Response patterns for Firestore alerts
+> [!success] Firestore first response
 >
 > - **Write rate near quota**: batch writes using `WriteBatch` instead of individual document writes; distribute heartbeat state across multiple documents keyed by pipeline name to avoid hotspotting on a single document
 > - **Security denials**: check Cloud Audit Log for the denied request's principal and resource path; update security rules to permit legitimate access or revoke the client's credentials if unauthorized
@@ -413,28 +413,28 @@ Dashboard: **Real-Time Store** | Config: [gcp-cloud-monitoring-deep-dive > Fires
 
 Dashboard: **VM Health** | Config: [datadog-agent-sql-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-sql-vm), [gcp-cloud-monitoring-deep-dive > Compute Engine VMs](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive#compute-engine-vms)
 
-> [!note] Key Metrics
->
-> - **CPU %** — processor utilization. Sustained > 90% indicates under-provisioned VM or runaway process
-> - **Memory %** — RAM utilization. High memory + swap activity = performance degradation
-> - **Disk %** — disk capacity used. SQL Server and Airflow VMs are the highest risk
-> - **IOPS** — disk operations per second. High IOPS + high latency = disk bottleneck
-> - **Network I/O** — bytes in/out. Spikes during pipeline runs are normal; sustained spikes are not
+Key metrics:
 
-> [!abstract] Key Logs
->
-> - **Syslog** — OS-level events: service starts/stops, kernel warnings, SSH logins
-> - **OOM kills** — kernel killed a process for exceeding available memory. Check `dmesg` for the victim
-> - **systemd failures** — services that failed to start or crashed. SQL Server and Airflow run as systemd services
+- **CPU %** — processor utilization. Sustained > 90% indicates under-provisioned VM or runaway process
+- **Memory %** — RAM utilization. High memory + swap activity = performance degradation
+- **Disk %** — disk capacity used. SQL Server and Airflow VMs are the highest risk
+- **IOPS** — disk operations per second. High IOPS + high latency = disk bottleneck
+- **Network I/O** — bytes in/out. Spikes during pipeline runs are normal; sustained spikes are not
 
-> [!warning] Alert Conditions
+Key logs:
+
+- **Syslog** — OS-level events: service starts/stops, kernel warnings, SSH logins
+- **OOM kills** — kernel killed a process for exceeding available memory. Check `dmesg` for the victim
+- **systemd failures** — services that failed to start or crashed. SQL Server and Airflow run as systemd services
+
+> [!warning] VM saturation and service loss
 >
 > - **CPU > 90% sustained 10min** — P2: VM is compute-bound. Right-size or optimize the workload
 > - **Disk > 85%** — P1: disk filling up. SQL Server transaction logs, TempDB, or backup files are common culprits
 > - **OOM detected** — P1: a process was killed for memory. Data corruption possible if SQL Server was the victim
 > - **Service stopped** — P1: SQL Server or Airflow systemd service is down. Pipeline is blocked
 
-> [!success] Response patterns for GCE VM alerts
+> [!success] VM first response
 >
 > - **CPU > 90%**: identify the top process with `top` or `htop`; for SQL Server, run `sys.dm_exec_requests` to find the high-CPU query; right-size the VM machine type if the workload is consistently high
 > - **Disk > 85%**: run `df -h` to identify the full partition; archive or delete old backup files; resize the disk with `gcloud compute disks resize` followed by `resize2fs`
@@ -447,26 +447,26 @@ Dashboard: **VM Health** | Config: [datadog-agent-sql-vm](https://alp78.github.i
 
 Dashboard: **Data Quality** | Config: [gcp-pipeline-health-and-sla > Data Freshness Monitoring](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla#data-freshness-monitoring), [datadog-custom-queries](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-custom-queries)
 
-> [!note] Key Metrics
->
-> - **Data freshness** — time since the last successful pipeline run updated the target tables. The primary SLA metric
-> - **Row count/run** — rows processed per pipeline execution. Baseline for anomaly detection (±20% = investigate)
-> - **Schema drift** — columns added, removed, or type-changed since last run. Catches upstream API changes
-> - **Duplicate rate** — percentage of duplicate rows in target tables. Non-zero after dedup = logic bug
+Key metrics:
 
-> [!abstract] Key Logs
->
-> - **Transform logs** — output from each pipeline stage. Includes row counts, timing, validation results
-> - **Validation gate results** — PASS/FAIL for each quality check. The first place to look when data quality degrades
+- **Data freshness** — time since the last successful pipeline run updated the target tables. The primary SLA metric
+- **Row count/run** — rows processed per pipeline execution. Baseline for anomaly detection (±20% = investigate)
+- **Schema drift** — columns added, removed, or type-changed since last run. Catches upstream API changes
+- **Duplicate rate** — percentage of duplicate rows in target tables. Non-zero after dedup = logic bug
 
-> [!warning] Alert Conditions
+Key logs:
+
+- **Transform logs** — output from each pipeline stage. Includes row counts, timing, validation results
+- **Validation gate results** — PASS/FAIL for each quality check. The first place to look when data quality degrades
+
+> [!warning] Pipeline freshness and integrity drift
 >
 > - **Stale data > SLA** — P1: pipeline hasn't updated within the defined freshness window. Dashboard is showing old data
 > - **Row count anomaly (>20%)** — P2: sudden increase (bad join explosion) or decrease (filter bug, missing source data)
 > - **Schema change detected** — P3: upstream schema changed. Contract tests should have caught this — investigate why they didn't
 > - **Duplicates > 0** — P2: deduplication logic failed. MERGE key mismatch or race condition in concurrent loads
 
-> [!success] Response patterns for data pipeline alerts
+> [!success] Pipeline first response
 >
 > - **Stale data**: check Cloud Run job execution history for the pipeline; if no execution exists, verify the Cloud Scheduler trigger fired; re-trigger manually with `gcloud run jobs execute` after identifying the root cause
 > - **Row count anomaly**: compare today's count against the 7-day average in BigQuery `__TABLES__` or the `pipeline_freshness` table; for spikes, check for duplicate loads; for drops, check for missing source partitions

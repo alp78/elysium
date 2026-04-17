@@ -230,13 +230,13 @@ Defining classes with properties, constructors, methods, and `ToString` override
 
 Classes define types with **auto-properties** (`get`/`set`), constructors for initialization, methods for behavior, and `ToString` for display. Auto-properties eliminate boilerplate backing fields, and constructors enforce required initialization at creation. For simple data carriers without behavior, prefer `record` instead.
 
-> [!warning] Anti-patterns
+> [!warning] Public fields and heavy constructors age badly
 >
 > - **Public fields** instead of properties — loses validation and encapsulation
 > - **Constructors doing heavy work** — use factory methods or init logic
 > - **Not overriding `ToString`** — defaults to type name, which isn't useful
 
-> [!success] Best Practices
+> [!success] Keep class construction focused and explicit
 >
 > - Use **auto-properties** (`{ get; set; }`) to expose state with encapsulation intact
 > - Keep constructors focused on initialization; delegate complex setup to factory methods
@@ -342,31 +342,39 @@ Defining base classes, derived classes, and using `virtual`/`override` for polym
 
 Inheritance lets a class (child/derived) acquire all the fields, properties, and methods of another class (parent/base) and then extend or modify them. The child class is a specialized version of the parent: a `SavingsAccount` inherits everything from `BankAccount` and adds interest calculation. In C#, `virtual` marks a method as overridable, `override` replaces it in the child, and `sealed` prevents further overriding.
 
-> [!warning] Inheritance vs composition
-> Deep inheritance hierarchies (4+ levels) become brittle — a change to the base class ripples unpredictably through all descendants. Prefer composition ("has-a") over inheritance ("is-a") when the relationship isn't genuinely hierarchical. A `Pipeline` doesn't inherit from `Logger`; it HAS a logger.
-
-> [!success] Prefer Shallow Hierarchies and Composition
-> Keep inheritance to 2–3 levels maximum. For HAS-A relationships, inject dependencies as constructor parameters or properties. Compose objects from focused, single-responsibility types rather than stretching an inheritance chain.
-
-> [!info] Inheritance mechanics
+> [!warning] Inheritance should model a real IS-A relationship
 >
-> - `virtual` — marks a method for overriding
-> - `override` — in a child class, provides a new implementation
-> - `base.Method()` — calls the parent version
-> - C# supports **single inheritance** only — one base class per type
-> - Use inheritance for IS-A relationships; prefer composition (fields/properties) for HAS-A
+> Deep inheritance hierarchies (4+ levels) become brittle — a change to the base
+> class ripples unpredictably through all descendants. Prefer composition
+> ("has-a") over inheritance ("is-a") when the relationship isn't genuinely
+> hierarchical. A `Pipeline` doesn't inherit from `Logger`; it has a logger.
 
-> [!warning] Anti-patterns
+> [!success] Keep hierarchies shallow and compose dependencies
 >
-> - **Deep hierarchies** (>3 levels) — prefer composition
-> - **Forgetting `virtual`** — method won't dispatch polymorphically
-> - **`new` keyword hiding** instead of `override` — silently breaks polymorphism
+> Keep inheritance to 2-3 levels maximum. For HAS-A relationships, inject
+> dependencies as constructor parameters or properties. Compose objects from
+> focused, single-responsibility types rather than stretching an inheritance
+> chain.
 
-> [!success] Best Practices
+The core mechanics are simple: `virtual` marks a method for overriding,
+`override` supplies the child implementation, `base.Method()` invokes the parent
+implementation explicitly, and C# allows only single class inheritance. That is
+why inheritance should be reserved for true specialization, not reused as a
+general sharing mechanism.
+
+> [!warning] Method hiding silently breaks polymorphic dispatch
 >
-> - Mark overridable methods explicitly with `virtual`; use `sealed override` to stop further overriding
-> - Always use `override` (not `new`) when replacing a parent method to preserve polymorphic dispatch
-> - Flatten hierarchies early — restructuring deep trees after the fact is expensive
+> - **Deep hierarchies** (>3 levels) make override behavior hard to reason about.
+> - **Forgetting `virtual`** means the method will not dispatch polymorphically.
+> - **Using `new` instead of `override`** silently hides the parent member and
+>   sends base-type callers to the wrong implementation.
+
+> [!success] Make override boundaries explicit
+>
+> - Mark overridable methods explicitly with `virtual`; use `sealed override` to
+>   stop further overriding when needed.
+> - Always use `override` instead of `new` when replacing parent behavior.
+> - Flatten hierarchies early, before dispatch rules become expensive to untangle.
 
 ```csharp
 class Animal
@@ -492,13 +500,13 @@ Abstract classes cannot be instantiated — `abstract` methods must be overridde
 
 An `abstract` class cannot be instantiated — `abstract` methods must be overridden by derived classes, while concrete methods provide shared implementation. Unlike interfaces, abstract classes can have fields, constructors, and state. Use them when derived classes share common state and behavior; for a pure contract with no shared code, use an interface instead.
 
-> [!warning] Anti-patterns
+> [!warning] Abstract classes become the wrong tool without shared behavior
 >
 > - **Abstract class with no shared code** — use an interface instead
 > - **Too many abstract methods** — interface is more appropriate
 > - **Deep abstract hierarchies** — prefer composition over inheritance
 
-> [!success] Best Practices
+> [!success] Use abstract classes only when they own real shared implementation
 >
 > - Use an abstract class only when derived types genuinely share fields, constructors, or concrete methods
 > - If the contract has no shared implementation, define an interface instead — it supports multiple implementation
@@ -659,13 +667,13 @@ Encapsulation hides internal data, exposing only what's necessary. Choose the mo
 
 Properties with `private set` allow read from outside, write only inside. `init`-only properties (`{ get; init; }`) can only be set during construction.
 
-> [!warning] Access modifier pitfalls
+> [!warning] Overexposed members make the API brittle
 >
 > - **Public fields** bypass validation and encapsulation — use properties instead
 > - **Everything public** exposes implementation details and makes the API hard to evolve
 > - **`protected` for non-inheritance scenarios** — use `private` instead
 
-> [!success] Best Practices
+> [!success] Keep the public surface intentionally small
 >
 > - Default to `private` for fields and `public` only for intentional API surface
 > - Use `{ get; private set; }` or `{ get; init; }` to expose read access while protecting writes
@@ -740,21 +748,19 @@ The `Employee` class demonstrates all three static member types: a shared field 
 
 Declares the `Employee` class with a static shared field (`Company`), a private instance counter incremented on each construction, an `Employee.FromString` factory method, and a salary validator. All static members are accessed via `ClassName.Member` syntax without needing an instance.
 
-> [!info] Static members
->
-> - `static` fields/properties — shared by all instances, one copy per type
-> - `static` methods — don't need an instance (called via `ClassName.Method()`)
-> - `static` constructors — run once when the type is first used
-> - `static` class — can only contain static members, cannot be instantiated
-> - Unlike Python's `@classmethod`, C# static methods cannot be overridden in subclasses
+Static members belong to the type rather than to any instance: static
+fields/properties are shared across all instances, static methods are invoked via
+`ClassName.Method()`, static constructors run once when the type is first used,
+and a `static` class can only contain static members. Unlike Python's
+`@classmethod`, C# static methods cannot be overridden in subclasses.
 
-> [!warning] Anti-patterns
+> [!warning] Mutable static state and utility sprawl create hidden coupling
 >
 > - **Mutable static state** shared across threads — race conditions
 > - **Static methods that should be instance methods** — testability suffers
 > - **God classes** with many static methods — violates single responsibility
 
-> [!success] Best Practices
+> [!success] Keep static members narrow, pure, and thread-safe
 >
 > - Keep static state immutable or use thread-safe constructs (`Interlocked`, `lock`) when mutation is unavoidable
 > - Use static methods only for pure utilities and factory methods that don't depend on instance state
@@ -1010,47 +1016,78 @@ True
 | `record struct` | Immutable | Value-based (value type, stack) | Same as record but no GC |
 | `struct` | Mutable | Value type | Legacy — use `record struct` in new code |
 
-## Warnings
+## Common Traps and Safe Patterns
 
-> [!warning] Using `new` keyword hiding instead of `override`
->
-> If a derived class defines a method with the same name as a base method without using `override`, C# inserts an implicit `new` keyword. The method compiles but polymorphism silently breaks — calling through a base-type reference dispatches to the base version, not the derived one.
+### Preserve Virtual Dispatch
 
-> [!success] Correct pattern
+> [!warning] Method hiding disables polymorphism without looking broken
 >
-> Always use `override` to replace a `virtual` method. If the compiler warns about hiding, that's a sign you forgot `virtual` on the base or `override` on the derived.
+> If a derived class defines a method with the same name as a base method without
+> using `override`, C# treats it as hiding. The code still compiles, but a
+> base-type reference dispatches to the base implementation instead of the
+> derived one.
 
-> [!warning] Forgetting to call `base()` in derived constructors
+> [!success] Override virtual members explicitly
 >
-> If the base class has a parameterized constructor and no default constructor, the derived class must explicitly call `: base(...)`. Otherwise the compiler reports an error — or worse, if a parameterless base constructor exists, it runs silently with wrong defaults.
+> Use `override` to replace a `virtual` base member. If the compiler warns about
+> hiding, treat that as a design bug until you confirm that `new` is actually the
+> intended behavior.
 
-> [!success] Correct pattern
->
-> Always chain to the base constructor: `public Dog(string name) : base(name, "Woof") { }`. This ensures parent state is initialized correctly.
+### Initialize Parent State Deliberately
 
-> [!warning] Mutable static state shared across threads
+> [!warning] Derived constructors can leave base state on the wrong path
 >
-> `static int _count` without synchronization causes race conditions in multi-threaded code. Two threads incrementing simultaneously can produce wrong counts.
+> If the base class requires constructor arguments, the derived constructor must
+> chain to `base(...)`. Otherwise construction either fails to compile or
+> silently runs the wrong default path when a parameterless base constructor
+> exists.
 
-> [!success] Correct pattern
+> [!success] Chain to `base(...)` whenever the parent owns required invariants
 >
-> Use `Interlocked.Increment(ref _count)` for atomic updates, or `lock` for more complex critical sections. Better yet, avoid mutable static state entirely.
+> Write constructors such as `public Dog(string name) : base(name, "Woof") { }`
+> so the parent type finishes its own initialization contract before derived
+> logic continues.
 
-> [!warning] Public fields instead of properties
->
-> `public string Name;` (field) bypasses encapsulation — you cannot add validation, logging, or change notification later without breaking all callers.
+### Treat Static Mutation as Shared Concurrency State
 
-> [!success] Correct pattern
+> [!warning] Mutable static counters race under concurrent access
 >
-> Always use auto-properties: `public string Name { get; set; }`. Adding a setter body later is a non-breaking change.
+> `static int _count` updated from multiple threads produces lost updates unless
+> synchronization is explicit. Shared static state is process-wide coupling, not a
+> harmless convenience.
 
-> [!warning] `Dictionary<string, object>` for structured data
+> [!success] Use atomic primitives or remove the shared mutation
 >
-> Dictionaries accept any key (including typos) and any value type — errors only appear at runtime. Records catch these at compile time.
+> Prefer immutable static data. When a shared counter is unavoidable, use
+> `Interlocked.Increment(ref _count)` for simple updates or `lock` for compound
+> state transitions.
 
-> [!success] Correct pattern
+### Expose Intentional API Surface Through Properties
+
+> [!warning] Public fields lock you into a brittle contract
 >
-> Use `record` for any data with a known, fixed structure. Reserve dictionaries for truly dynamic keys determined at runtime.
+> `public string Name;` bypasses validation, logging, and future evolution. Once
+> callers bind directly to the field, adding behavior later becomes a breaking
+> change.
+
+> [!success] Use properties so behavior can evolve safely
+>
+> Prefer auto-properties such as `public string Name { get; set; }`. That keeps
+> the member readable today and leaves room for validation or computed behavior
+> later without changing the public shape.
+
+### Use Records for Known Shapes
+
+> [!warning] `Dictionary<string, object>` hides schema mistakes until runtime
+>
+> Dictionaries accept any key spelling and any value type. Typos and wrong-typed
+> assignments survive compilation and fail only when the code path is exercised.
+
+> [!success] Model fixed data contracts with records
+>
+> Use `record` for DTOs, configs, and other known structures. Reserve
+> dictionaries for genuinely dynamic key spaces that cannot be represented by a
+> compile-time type.
 
 ## Recommendations
 
@@ -1079,4 +1116,3 @@ True
 | Static state race condition | Mutable `static` field modified without synchronization | Use `Interlocked`, `lock`, or redesign to avoid mutable static state |
 | `CS0122: inaccessible due to its protection level` | Trying to access `private` or `protected` member from outside | Change access modifier or expose through a public property/method |
 | Abstract class can't be instantiated | Tried `new Shape()` on an abstract class | Instantiate a concrete subclass: `new Rectangle(5, 3)` |
-
