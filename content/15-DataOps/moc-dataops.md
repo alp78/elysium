@@ -44,5 +44,5 @@ mindmap
 ## Cross-References
 
 - [Data Architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — Architecture principles that DataOps operationalizes
-- [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/moc-github-actions) — CI/CD automation implementing DataOps practices
+- [GitHub Actions](https://alp78.github.io/elysium/10-CICD/moc-github-actions) — CI/CD automation implementing DataOps practices
 - [Observability](https://alp78.github.io/elysium/13-Observability/moc-observability) — Monitoring and SLA tracking as a DataOps pillar

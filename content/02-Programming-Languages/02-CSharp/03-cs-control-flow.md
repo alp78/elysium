@@ -311,13 +311,21 @@ multiple alternatives in one arm, and `_` acts as the discard wildcard for any
 remaining unmatched input. The compiler can warn on incomplete coverage, but an
 unmatched runtime value still needs an explicit fallback arm.
 
-> [!warning] No wildcard arm means runtime failure
+> [!warning] Exhaustiveness is the real switch-expression contract
 >
-> Missing `_` causes `SwitchExpressionException` at runtime when no arm matches. Keep switch arms pure so unmatched inputs fail clearly.
-
-> [!success] Close the expression with `_`
+> A switch expression only stays safe if every runtime input has somewhere to go.
+> The failure mode and the safe pattern are:
 >
-> Always close a switch expression with `_ => ...` to handle unmatched inputs gracefully. Keep arms side-effect-free and return values rather than mutating state.
+> > [!danger] Missing `_` leaves unmatched inputs to fail at runtime
+> >
+> > Missing `_` causes `SwitchExpressionException` when no arm matches. This is
+> > easy to miss when the listed cases look exhaustive during local testing.
+>
+> > [!success] End the expression with `_ => ...`
+> >
+> > Close the switch expression with a wildcard arm so unexpected values still
+> > produce a defined result. Keep arms side-effect-free and return values rather
+> > than mutating state.
 
 *Example: Switch expression — compact value-returning form with or pattern and _ wildcard.*
 ```csharp

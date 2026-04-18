@@ -309,7 +309,7 @@ sla:
 
 > [!info] Automated Contract Enforcement
 >
-> Validates contract YAML syntax and runs dbt contract tests on every push that touches contracts or models. See [github-actions-patterns](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-patterns) for reusable workflow patterns.
+> Validates contract YAML syntax and runs dbt contract tests on every push that touches contracts or models. See [github-actions-patterns](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-patterns) for reusable workflow patterns.
 
 ```yaml
 # .github/workflows/contract-test.yml

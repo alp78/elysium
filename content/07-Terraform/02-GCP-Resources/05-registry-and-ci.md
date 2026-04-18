@@ -492,7 +492,7 @@ steps:
 > - **Repository-scoped** — the `attribute_condition` restricts authentication to a specific GitHub repository
 > - **Audit trail** — each token exchange is logged in Cloud Audit Logs with the originating repository and workflow
 
-For the full GitHub Actions CI/CD workflow setup, see [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd). For Docker image build and push operations, see [image-management](https://alp78.github.io/elysium/09-Docker/image-management).
+For the full GitHub Actions CI/CD workflow setup, see [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd). For Docker image build and push operations, see [image-management](https://alp78.github.io/elysium/09-Docker/image-management).
 
 ## CI/CD Pipeline Architecture
 
@@ -538,7 +538,7 @@ flowchart LR
 
 **CI/CD and Docker:**
 
-- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — GitHub Actions workflows that use the CI service account
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — GitHub Actions workflows that use the CI service account
 - [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Docker tag, push, and build commands for the registry
 
 ## References

@@ -410,7 +410,7 @@ gcloud run jobs delete data-pipeline-pipeline --region=europe-west1
 
 ## Pipeline Architecture
 
-Each pipeline stage runs as an independent Cloud Run Job execution. [Airflow](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) orchestrates the sequence using task dependencies. This architecture allows individual stages to be retried, redeployed, or replaced without affecting the others. For CI/CD automation that builds and deploys these containers via Workload Identity, see [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd).
+Each pipeline stage runs as an independent Cloud Run Job execution. [Airflow](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) orchestrates the sequence using task dependencies. This architecture allows individual stages to be retried, redeployed, or replaced without affecting the others. For CI/CD automation that builds and deploys these containers via Workload Identity, see [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd).
 
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': {

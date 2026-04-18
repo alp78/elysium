@@ -119,5 +119,5 @@ mindmap
 ## Cross-References
 
 - [Terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) — Cloud Run services run Docker images
-- [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/moc-github-actions) — CI/CD builds and pushes images
+- [GitHub Actions](https://alp78.github.io/elysium/10-CICD/moc-github-actions) — CI/CD builds and pushes images
 - [Shell](https://alp78.github.io/elysium/01-Shell/moc-shell) — Docker commands run from shell

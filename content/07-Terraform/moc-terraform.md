@@ -41,5 +41,5 @@ patterns, and a copy-paste block library. Expand any section to browse contents.
 ## Cross-References
 
 - [GCP](https://alp78.github.io/elysium/06-GCP/moc-gcp) — The GCP services these Terraform configs provision
-- [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/moc-github-actions) — CI/CD pipelines that run terraform plan/apply
+- [GitHub Actions](https://alp78.github.io/elysium/10-CICD/moc-github-actions) — CI/CD pipelines that run terraform plan/apply
 - [Data Architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — Architecture decisions that drive infrastructure choices

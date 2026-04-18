@@ -65,5 +65,5 @@ mindmap
 - [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) — running Airflow locally via Docker Compose
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) — serverless targets Airflow triggers
 - [datadog-airflow-observability](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-airflow-observability) — monitoring Airflow with Datadog
-- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — deploying DAGs automatically via CI/CD
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — deploying DAGs automatically via CI/CD
 - [dbt-airflow-integration](https://alp78.github.io/elysium/11-dbt/Operations/dbt-airflow-integration) — running dbt in Airflow DAGs (BashOperator, Cosmos, Cloud Run)

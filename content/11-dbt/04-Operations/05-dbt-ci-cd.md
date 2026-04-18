@@ -526,8 +526,8 @@ This is the preferred pattern for regulated environments: every production run i
 
 ## Related
 
-- [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering)
-- [github-actions-patterns](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-patterns)
+- [github-actions-data-engineering](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-data-engineering)
+- [github-actions-patterns](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-patterns)
 - [dbt-core-concepts](https://alp78.github.io/elysium/11-dbt/Foundations/dbt-core-concepts)
 - [dbt-airflow-integration](https://alp78.github.io/elysium/11-dbt/Operations/dbt-airflow-integration)
 - [dbt-observability](https://alp78.github.io/elysium/11-dbt/Operations/dbt-observability)

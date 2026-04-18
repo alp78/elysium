@@ -566,5 +566,5 @@ The given project `EnvDemo` has no vulnerable packages given the current sources
 - [File I/O](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/09-cs-fileio-serialization) — File I/O patterns in .NET projects
 - [Functional Pipeline](https://alp78.github.io/elysium/02-Programming-Languages/02-CSharp/25-cs-functional-pipeline) — Production pipeline using `.csproj` and NuGet
 - [Docker](https://alp78.github.io/elysium/09-Docker/container-lifecycle) — Container build and runtime lifecycle
-- [CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — Pipeline orchestration and release flow
+- [CI/CD](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — Pipeline orchestration and release flow
 - [Environment Strategy](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/environment-management-strategy) — Cross-cutting environment policy

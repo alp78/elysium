@@ -532,7 +532,7 @@ resource "google_pubsub_topic_iam_member" "pipeline_events_topic" {
 
 ### Workload Identity Federation
 
-Workload Identity Federation lets external workloads (GitHub Actions, GitLab, AWS) authenticate to GCP without storing long-lived service account keys. An OIDC token from the external identity provider is exchanged for a short-lived GCP access token. See [GitHub Actions CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) for the workflow-side configuration.
+Workload Identity Federation lets external workloads (GitHub Actions, GitLab, AWS) authenticate to GCP without storing long-lived service account keys. An OIDC token from the external identity provider is exchanged for a short-lived GCP access token. See [GitHub Actions CI/CD](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) for the workflow-side configuration.
 
 > [!info] WIF eliminates SA key management
 >

@@ -62,5 +62,5 @@ mindmap
 
 ## Cross-References
 
-- [GitHub Actions](https://alp78.github.io/elysium/10-GitHub-Actions/moc-github-actions) — CI/CD workflows triggered by Git events
+- [GitHub Actions](https://alp78.github.io/elysium/10-CICD/moc-github-actions) — CI/CD workflows triggered by Git events
 - [Shell](https://alp78.github.io/elysium/01-Shell/moc-shell) — Git commands run from shell

@@ -585,7 +585,7 @@ flowchart LR
 - [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle) — GCS bucket configuration and lifecycle policies for the state bucket
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — Service account permissions required by the Terraform provider
 - [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) — Application Default Credentials (ADC) used by the provider
-- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines with partial backend configuration
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines with partial backend configuration
 
 ## References
 

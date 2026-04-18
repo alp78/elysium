@@ -261,7 +261,7 @@ terraform {
 
 ### Bootstrap the State Bucket
 
-The state bucket must exist before `terraform init` can configure the backend. Create it once, manually or via a separate bootstrap config. Link CI/CD as the single apply path — see [GitHub Actions workflows](https://alp78.github.io/elysium/10-GitHub-Actions) for pipeline integration.
+The state bucket must exist before `terraform init` can configure the backend. Create it once, manually or via a separate bootstrap config. Link CI/CD as the single apply path — see [GitHub Actions workflows](https://alp78.github.io/elysium/10-CICD/moc-github-actions) for pipeline integration.
 
 #### Create the GCS state bucket
 

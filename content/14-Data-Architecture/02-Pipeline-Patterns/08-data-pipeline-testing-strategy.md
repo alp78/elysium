@@ -262,8 +262,8 @@ Integration tests run the pipeline end-to-end with real connections but test dat
 >
 > Spin up a real database (Docker SQL Server in GitHub Actions), load test fixtures (100-1000 rows of known data), run the full bronze → silver → gold flow, and assert the output shape and values.
 >
-> - GitHub Actions: [github-actions-data-engineering > Full Python Lint + Test Workflow](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering#full-python-lint--test-workflow)
-> - dbt in CI: [github-actions-data-engineering > dbt Build Against Dev Schema](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering#dbt-build-against-dev-schema)
+> - GitHub Actions: [github-actions-data-engineering > Full Python Lint + Test Workflow](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-data-engineering#full-python-lint--test-workflow)
+> - dbt in CI: [github-actions-data-engineering > dbt Build Against Dev Schema](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-data-engineering#dbt-build-against-dev-schema)
 > - When: on merge to main — too slow for every PR, too important to skip
 
 > [!danger] Skip Integration Tests And...
@@ -400,7 +400,7 @@ Test the pipeline end-to-end with real connections but test data.
 
 **GitHub Actions implementation:** Spin up a SQL Server Docker container, load test fixtures, run the pipeline, assert output shape and values.
 
-See [github-actions-data-engineering > Full Python Lint + Test Workflow](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering#full-python-lint--test-workflow) for the CI workflow and [github-actions-data-engineering > dbt Build Against Dev Schema](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering#dbt-build-against-dev-schema) for dbt integration tests in CI.
+See [github-actions-data-engineering > Full Python Lint + Test Workflow](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-data-engineering#full-python-lint--test-workflow) for the CI workflow and [github-actions-data-engineering > dbt Build Against Dev Schema](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-data-engineering#dbt-build-against-dev-schema) for dbt integration tests in CI.
 
 > [!warning] Integration Tests Need Real Infra
 >
@@ -459,7 +459,7 @@ Verify today's output matches yesterday's expected output after a code change.
 
 ## CI/CD Test Automation
 
-The complete testing pipeline on every PR and merge. For GitHub Actions workflow syntax, see [github-actions-data-engineering > End-to-End Pipeline: PR to Lint to Test to Build to Deploy to Verify](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering#end-to-end-pipeline-pr-to-lint-to-test-to-build-to-deploy-to-verify).
+The complete testing pipeline on every PR and merge. For GitHub Actions workflow syntax, see [github-actions-data-engineering > End-to-End Pipeline: PR to Lint to Test to Build to Deploy to Verify](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-data-engineering#end-to-end-pipeline-pr-to-lint-to-test-to-build-to-deploy-to-verify).
 
 ```yaml
 # Conceptual workflow — link to implementation pages for full YAML
@@ -509,7 +509,7 @@ jobs:
 
 Data quality checks are the exception — they span both worlds. Run them in CI (testing) AND after every production load (monitoring).
 
-- Testing side: [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework) + [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering)
+- Testing side: [dbt-testing-framework](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework) + [github-actions-data-engineering](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-data-engineering)
 - Monitoring side: [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) + [data-quality-framework > Quality Gate Airflow Integration](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-quality-framework#quality-gate-airflow-integration)
 
 ---
@@ -542,7 +542,7 @@ Data quality checks are the exception — they span both worlds. Run them in CI 
 - [data-contracts](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-contracts) — Contract specification, breaking vs non-breaking changes, CI validation
 - [dbt-data-contracts-implementation](https://alp78.github.io/elysium/11-dbt/Quality/dbt-data-contracts-implementation) — dbt-native contracts, model versions, access control
 - [gcp-pipeline-health-and-sla](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-pipeline-health-and-sla) — Production monitoring: freshness, row counts, SLA tracking, alerting
-- [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering) — CI/CD workflows for data pipelines, dbt in CI, WIF auth
+- [github-actions-data-engineering](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-data-engineering) — CI/CD workflows for data pipelines, dbt in CI, WIF auth
 - [context-and-metadata-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/context-and-metadata-architecture) — Schema drift detection, schema evolution patterns
 - [10_py_testing_migration](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/10_py_testing_migration) — pytest patterns for Pandas/Polars DataFrame testing
 - [10_cs_testing_migration](https://alp78.github.io/elysium/03-Dataframes/Dataframes-CSharp/10_cs_testing_migration) — xUnit patterns for Deedle/Polars.NET DataFrame testing

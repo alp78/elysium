@@ -1545,7 +1545,7 @@ False
 - [File I/O](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/09-py-fileio-serialization) — File I/O patterns that run inside these environments
 - [Functional Pipeline](https://alp78.github.io/elysium/02-Programming-Languages/01-Python/25-py-functional-pipeline) — Production pipeline using venv + requirements.txt
 - [Docker](https://alp78.github.io/elysium/09-Docker/container-lifecycle) — Docker container management
-- [CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — CI/CD setup with Python environments
+- [CI/CD](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — CI/CD setup with Python environments
 
 ## Warnings
 

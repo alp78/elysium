@@ -337,7 +337,7 @@ Manual processes are the enemy of reliability and speed. Every manual step is a 
 
 | Process | Before Automation | After Automation |
 |---------|------------------|-----------------|
-| Pipeline deployment | Engineer SSHes to server, runs script | Push to main branch → [CI/CD](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) deploys |
+| Pipeline deployment | Engineer SSHes to server, runs script | Push to main branch → [CI/CD](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) deploys |
 | Data quality checks | Analyst notices anomaly in dashboard | Automated test fails pipeline before serving |
 | Schema migration | Manual ALTER TABLE + prayer | Migration scripts in version control, tested in staging |
 | Alerting | On-call checks dashboard daily | Alert fires within minutes of anomaly |

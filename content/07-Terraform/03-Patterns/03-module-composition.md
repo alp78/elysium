@@ -739,7 +739,7 @@ flowchart TD
 
 **CI/CD:**
 
-- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — running `terraform plan` and `apply` in CI pipelines
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — running `terraform plan` and `apply` in CI pipelines
 
 ## References
 

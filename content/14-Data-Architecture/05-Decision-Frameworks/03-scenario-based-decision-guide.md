@@ -612,7 +612,7 @@ graph LR
 
 ### Related Notes
 
-[cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) | [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) | [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) | [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle)
+[cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) | [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) | [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) | [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) | [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) | [gcp-cloud-monitoring-deep-dive](https://alp78.github.io/elysium/13-Observability/GCP-Native/gcp-cloud-monitoring-deep-dive) | [gcs-buckets-and-lifecycle](https://alp78.github.io/elysium/06-GCP/Storage/gcs-buckets-and-lifecycle)
 
 ---
 
@@ -1245,7 +1245,7 @@ graph LR
 | Deploy infrastructure reproducibly | Terraform | State-managed, peer-reviewed | [moc-terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) |
 | Deploy a Cloud Run service | Terraform + Docker | Or `gcloud run deploy` for small teams | [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) |
 | Manage secrets securely | GCP Secret Manager + Terraform | Never commit secrets to Git | [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) |
-| Set up CI/CD for data pipelines | GitHub Actions | Test, lint, deploy on merge | [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) |
+| Set up CI/CD for data pipelines | GitHub Actions | Test, lint, deploy on merge | [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) |
 | Manage Terraform state | GCS backend with locking | Remote state for teams | [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) |
 | Create reusable infra modules | Terraform modules | Composition over inheritance | [module-composition](https://alp78.github.io/elysium/07-Terraform/Patterns/module-composition) |
 

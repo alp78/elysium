@@ -304,9 +304,9 @@ Each environment has its own Airflow Connections (different SQL Server host, dif
 
 GitHub Environments (`dev`, `staging`, `production`) provide per-environment secrets and protection rules (approval gates, branch restrictions).
 
-- Define environments: see [github-actions-patterns > Define Environments in GitHub](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-patterns#define-environments-in-github)
-- Deployment with gate: see [github-actions-patterns > Deployment Workflow with Gate](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-patterns#deployment-workflow-with-gate)
-- Multi-environment deploy: see [github-actions-patterns > Multi-Environment Deployment](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-patterns#multi-environment-deployment)
+- Define environments: see [github-actions-patterns > Define Environments in GitHub](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-patterns#define-environments-in-github)
+- Deployment with gate: see [github-actions-patterns > Deployment Workflow with Gate](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-patterns#deployment-workflow-with-gate)
+- Multi-environment deploy: see [github-actions-patterns > Multi-Environment Deployment](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-patterns#multi-environment-deployment)
 - WIF authentication: see [secrets-management > GitHub Actions — Workload Identity Federation (Keyless)](https://alp78.github.io/elysium/06-GCP/Security/secrets-management#github-actions--workload-identity-federation-keyless)
 
 > [!tip] Production environment protection rules
@@ -482,7 +482,7 @@ What each environment actually costs per month. For full per-service pricing det
 - [gcloud-configurations](https://alp78.github.io/elysium/06-GCP/Core/gcloud-configurations) — named configurations for multi-project safety
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — Secret Manager, Airflow connections, GitHub Actions secrets
 - [airflow-deployment](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-deployment) — Airflow installation and configuration per environment
-- [github-actions-patterns](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-patterns) — CI/CD workflows with environment gates
+- [github-actions-patterns](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-patterns) — CI/CD workflows with environment gates
 - [golden-rules-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/golden-rules-of-data-engineering) — foundational principles including "choose boring technology"
 - [gcp-billing-and-pricing](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-billing-and-pricing) — per-service pricing detail
 - [gcp-total-cost-of-ownership](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-total-cost-of-ownership) — complete architecture cost breakdowns

@@ -239,7 +239,7 @@ gcloud auth activate-service-account --key-file=key.json
 Activated service account credentials for: [my-sa@my-project.iam.gserviceaccount.com]
 ```
 
-For creating and managing the service accounts referenced here, see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam). In GitHub Actions, [Workload Identity Federation](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) eliminates key files entirely for CI/CD authentication.
+For creating and managing the service accounts referenced here, see [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam). In GitHub Actions, [Workload Identity Federation](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) eliminates key files entirely for CI/CD authentication.
 
 ### Service Account Authentication - Flag Reference
 

@@ -2157,7 +2157,7 @@ terraform version  # Confirm: Terraform v1.9.8
 - [compute-and-storage](https://alp78.github.io/elysium/07-Terraform/Block-Library/compute-and-storage) — Compute and storage blocks
 - [iam-secrets-serverless](https://alp78.github.io/elysium/07-Terraform/Block-Library/iam-secrets-serverless) — IAM, secrets, serverless blocks
 - [data-services](https://alp78.github.io/elysium/07-Terraform/Block-Library/data-services) — BigQuery, Firestore, Dataflow blocks
-- [github-actions-data-engineering](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-data-engineering) — CI/CD for Terraform
+- [github-actions-data-engineering](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-data-engineering) — CI/CD for Terraform
 
 ---
 

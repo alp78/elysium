@@ -578,7 +578,7 @@ resource "google_secret_manager_secret_version" "dd_api_key" {
 
 ## CI/CD Service Account
 
-A dedicated service account for GitHub Actions CI/CD pipelines. For the full GitHub Actions workflow that uses this account, see [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd).
+A dedicated service account for GitHub Actions CI/CD pipelines. For the full GitHub Actions workflow that uses this account, see [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd).
 
 > [!warning] SA key export for CI
 >
@@ -764,7 +764,7 @@ gcloud secrets versions access latest --secret=data-pipeline-db-password
 
 **CI/CD integration:**
 
-- [github-actions-ci-cd](https://alp78.github.io/elysium/10-GitHub-Actions/github-actions-ci-cd) — GitHub Actions workflow using the CI service account
+- [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — GitHub Actions workflow using the CI service account
 
 ## References
 
