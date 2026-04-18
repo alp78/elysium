@@ -565,13 +565,21 @@ you explicit control over the index, step, and direction. `foreach (var item in
 collection)` iterates any `IEnumerable<T>` without exposing the index directly
 and is usually the clearer default when you are not mutating by position.
 
-> [!warning] Modifying a collection during `foreach` invalidates the enumerator
+> [!warning] Enumeration and mutation must not share the same collection walk
 >
-> Don't modify a collection during `foreach` — throws `InvalidOperationException`. Use `for` loop or `ToList()` first.
-
-> [!success] Snapshot or index the collection before mutating it
+> `foreach` assumes the underlying collection stays stable for the lifetime of
+> the enumerator. If the shape changes mid-iteration, the walk is no longer valid.
 >
-> To remove or add items while iterating, snapshot the collection first with `.ToList()`, then `foreach` over the snapshot while modifying the original. For indexed removal, iterate backwards with a `for` loop.
+> > [!danger] Modifying a collection during `foreach` invalidates the enumerator
+> >
+> > Do not modify a collection during `foreach` — it throws
+> > `InvalidOperationException`. Use a `for` loop or `ToList()` first.
+>
+> > [!success] Snapshot or index the collection before mutating it
+> >
+> > To remove or add items while iterating, snapshot the collection first with
+> > `.ToList()`, then `foreach` over the snapshot while modifying the original.
+> > For indexed removal, iterate backwards with a `for` loop.
 
 *Example: for and foreach loops.*
 ```csharp
@@ -817,13 +825,21 @@ Iterator methods use `yield return` to produce values lazily — the compiler tr
 
 A method returning `IEnumerable<T>` with `yield return` pauses execution, returns a value, and resumes on the next `MoveNext()`. The compiler transforms it into a state machine. Values are computed lazily — only when requested. Composable with LINQ.
 
-> [!warning] The method body doesn't run
+> [!warning] Iterator methods defer execution farther than most callers expect
 >
-> The method body doesn't run until the first `MoveNext()` — not when the method is called.
-
-> [!success] Validate eagerly, yield lazily
+> Calling the method only creates the iterator object. The body stays dormant
+> until enumeration actually begins.
 >
-> Place argument validation before the first `yield` in a separate non-iterator wrapper method. This ensures validation runs immediately at call time, not deferred to first enumeration.
+> > [!danger] The method body does not run at call time
+> >
+> > The method body does not run until the first `MoveNext()` — not when the
+> > method is called.
+>
+> > [!success] Validate eagerly, yield lazily
+> >
+> > Place argument validation before the first `yield` in a separate non-iterator
+> > wrapper method. This ensures validation runs immediately at call time, not
+> > deferred to first enumeration.
 
 *Example: yield return — lazy iterator method.*
 ```csharp
@@ -1025,13 +1041,22 @@ The foundational LINQ operations: `Select` (map), `Where` (filter), `SelectMany`
 
 `Select` projects each element into a new form — equivalent to `map` in functional languages. All LINQ methods are lazy and return `IEnumerable<T>`.
 
-> [!warning] Don't use foreach with if
+> [!warning] Manual loop-and-append code obscures simple projection pipelines
 >
-> Don't use `foreach` with `if` + add to list — use `.Where().Select()`. Don't enumerate a deferred query multiple times — materialize with `ToList()`.
-
-> [!success] Prefer LINQ pipelines
+> When the real job is filtering and transforming data, imperative collection
+> plumbing hides intent and makes deferred execution easier to misuse.
 >
-> Replace manual `foreach`/`if`/`Add` patterns with `.Where().Select()` chains. Call `.ToList()` once at the end to materialize, then reuse the list freely without re-executing the query.
+> > [!danger] Hand-written foreach-plus-if pipelines age badly
+> >
+> > Do not use `foreach` with `if` plus `Add` when `.Where().Select()` expresses
+> > the same logic directly. Also avoid enumerating a deferred query multiple
+> > times — materialize with `ToList()` when you need reuse.
+>
+> > [!success] Prefer LINQ pipelines
+> >
+> > Replace manual `foreach`/`if`/`Add` patterns with `.Where().Select()` chains.
+> > Call `.ToList()` once at the end to materialize, then reuse the list freely
+> > without re-executing the query.
 
 *Example: Select — transform each element (map).*
 ```csharp
@@ -1253,13 +1278,21 @@ Console.WriteLine(string.Join(", ", result));
 
 `while(true)` with `yield return` produces an infinite sequence. Callers control consumption with `Take()`, `First()`, or `TakeWhile()`.
 
-> [!danger] Infinite sequences cause OOM
+> [!warning] Infinite generators are safe only when the caller sets a hard boundary
 >
-> Never call `ToList()`, `Count()`, or `foreach` without `break` on infinite sequences — hangs or OOM.
-
-> [!success] Always bound infinite sequences
+> An infinite iterator is fine as a source, but catastrophic as a fully
+> materialized collection.
 >
-> Always pair an infinite generator with `Take(n)`, `TakeWhile(...)`, or `First(...)` before materializing. This keeps memory bounded and gives callers explicit control over how many values are consumed.
+> > [!danger] Infinite sequences cause hangs or OOM
+> >
+> > Never call `ToList()`, `Count()`, or `foreach` without `break` on infinite
+> > sequences — the program will hang or run out of memory.
+>
+> > [!success] Always bound infinite sequences
+> >
+> > Always pair an infinite generator with `Take(n)`, `TakeWhile(...)`, or
+> > `First(...)` before materializing. This keeps memory bounded and gives callers
+> > explicit control over how many values are consumed.
 
 *Example: Infinite generator with yield return.*
 ```csharp

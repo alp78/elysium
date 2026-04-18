@@ -209,19 +209,25 @@ Key logs:
 - **Deadlock XML** — full deadlock graph from `system_health` session, shows which queries and resources were involved
 - **Login failures** — failed authentication attempts. Spikes may indicate brute-force attacks or misconfigured connection strings
 
-> [!warning] SQL Server distress signals
+> [!warning] SQL Server alerts are only useful when each distress signal has a first response
 >
-> - **PLE < 300s** — P2: memory pressure is evicting pages faster than they're being read. Queries will slow as disk I/O increases
-> - **Disk > 85%** — P1: SQL Server will crash if the disk fills. Transaction log growth, TempDB spills, or backup files are common causes
-> - **Deadlocks > 0/min** — P2: transactions are being killed. Pipeline MERGE operations may fail and need retry logic
-> - **CPU > 90% sustained 5min** — P2: queries are CPU-bound. Check for missing indexes, implicit conversions, or parameter sniffing
-
-> [!success] SQL Server first response
+> Database incidents escalate quickly because the same bottleneck can look like a
+> query problem, a storage problem, or a concurrency problem. The monitor needs
+> both a trigger and an immediate diagnostic path.
 >
-> - **PLE low**: check buffer pool size and identify large table scans via `sys.dm_exec_query_stats`; add indexes or increase VM memory
-> - **Disk > 85%**: shrink or archive old backup files; verify TempDB auto-growth is not runaway; resize disk online with `resize2fs` if on Linux
-> - **Deadlocks**: capture the deadlock graph from `system_health` XEvent session; add `WITH (NOLOCK)` to read-heavy queries or reorder update sequences in MERGE logic
-> - **CPU high**: run `sys.dm_exec_requests` to find the blocking query; check for implicit type conversions or missing covering indexes
+> > [!danger] SQL Server distress signals
+> >
+> > - **PLE < 300s** — P2: memory pressure is evicting pages faster than they're being read. Queries will slow as disk I/O increases
+> > - **Disk > 85%** — P1: SQL Server will crash if the disk fills. Transaction log growth, TempDB spills, or backup files are common causes
+> > - **Deadlocks > 0/min** — P2: transactions are being killed. Pipeline MERGE operations may fail and need retry logic
+> > - **CPU > 90% sustained 5min** — P2: queries are CPU-bound. Check for missing indexes, implicit conversions, or parameter sniffing
+>
+> > [!success] SQL Server first response
+> >
+> > - **PLE low**: check buffer pool size and identify large table scans via `sys.dm_exec_query_stats`; add indexes or increase VM memory
+> > - **Disk > 85%**: shrink or archive old backup files; verify TempDB auto-growth is not runaway; resize disk online with `resize2fs` if on Linux
+> > - **Deadlocks**: capture the deadlock graph from `system_health` XEvent session; add `WITH (NOLOCK)` to read-heavy queries or reorder update sequences in MERGE logic
+> > - **CPU high**: run `sys.dm_exec_requests` to find the blocking query; check for implicit type conversions or missing covering indexes
 
 ---
 
@@ -244,19 +250,25 @@ Key logs:
 - **Scheduler logs** — DAG parsing errors, scheduling decisions, heartbeat status
 - **Executor logs** — worker allocation, task state transitions, resource exhaustion
 
-> [!warning] Airflow orchestration failures
+> [!warning] Airflow alerts need to distinguish orchestration failure from DAG design drift
 >
-> - **SLA miss** — P1: pipeline didn't complete within its defined SLA window. Data freshness is at risk
-> - **Task failure after retries** — P2: a task exhausted all retry attempts. Manual investigation needed
-> - **Heartbeat > 60s** — P1: scheduler is down. No new tasks will be scheduled until it recovers
-> - **Parse time > 30s** — P3: slow DAG parsing delays scheduling. Usually caused by expensive imports at module level
-
-> [!success] Airflow first response
+> An SLA miss, a dead scheduler, and a slow parser all stop fresh data in
+> different ways. The callout pair should tell the operator whether to inspect a
+> task, a service, or the DAG code itself.
 >
-> - **SLA miss**: check task logs for the failed or slow task; verify upstream dependencies completed; trigger a manual backfill if data is recoverable
-> - **Task failure after retries**: inspect the final task log for the root exception; fix the root cause before manually clearing the failed task instance
-> - **Heartbeat > 60s**: SSH to the Airflow VM and check `systemctl status airflow-scheduler`; restart the scheduler service and monitor for recurrence
-> - **Parse time > 30s**: move expensive imports inside task functions rather than at module level; reduce the number of active DAG files if the DAG folder has grown large
+> > [!danger] Airflow orchestration failures
+> >
+> > - **SLA miss** — P1: pipeline didn't complete within its defined SLA window. Data freshness is at risk
+> > - **Task failure after retries** — P2: a task exhausted all retry attempts. Manual investigation needed
+> > - **Heartbeat > 60s** — P1: scheduler is down. No new tasks will be scheduled until it recovers
+> > - **Parse time > 30s** — P3: slow DAG parsing delays scheduling. Usually caused by expensive imports at module level
+>
+> > [!success] Airflow first response
+> >
+> > - **SLA miss**: check task logs for the failed or slow task; verify upstream dependencies completed; trigger a manual backfill if data is recoverable
+> > - **Task failure after retries**: inspect the final task log for the root exception; fix the root cause before manually clearing the failed task instance
+> > - **Heartbeat > 60s**: SSH to the Airflow VM and check `systemctl status airflow-scheduler`; restart the scheduler service and monitor for recurrence
+> > - **Parse time > 30s**: move expensive imports inside task functions rather than at module level; reduce the number of active DAG files if the DAG folder has grown large
 
 ---
 
@@ -277,17 +289,23 @@ Key logs:
 - **Audit logs (BigQueryAuditMetadata)** — every query executed, who ran it, bytes scanned, cost. The authoritative cost analysis source
 - **Job failures** — queries that failed with errors. Check for quota exceeded, syntax errors, permission issues
 
-> [!warning] BigQuery cost and failure drift
+> [!warning] BigQuery monitoring must separate cost drift from actual job failure
 >
-> - **Bytes scanned > threshold** — P3: a query is scanning more data than expected. Likely a missing partition filter or `SELECT *`
-> - **Failed queries > 0** — P3: investigate immediately. Common causes: DML quota exceeded, table deleted, permission revoked
-> - **Duration p99 > 5min** — P3: slowest queries are degrading. Check for unpartitioned tables or slot starvation
-
-> [!success] BigQuery first response
+> BigQuery can look healthy while quietly overspending, or look slow because the
+> wrong storage design is being scanned. Each alert needs an explicit
+> investigation path back to the offending job.
 >
-> - **Bytes over threshold**: find the offending query in `INFORMATION_SCHEMA.JOBS_BY_PROJECT` ordered by `total_bytes_processed`; add a `WHERE DATE(_PARTITIONTIME) = ...` filter or enable `require_partition_filter` on the table
-> - **Failed queries**: check the `error_result` field in `INFORMATION_SCHEMA.JOBS`; for quota errors, reduce scheduling concurrency; for permission errors, audit IAM role assignments
-> - **p99 duration high**: identify unpartitioned tables being full-scanned; add partition and cluster keys, or purchase additional slot capacity if slot starvation is the cause
+> > [!danger] BigQuery cost and failure drift
+> >
+> > - **Bytes scanned > threshold** — P3: a query is scanning more data than expected. Likely a missing partition filter or `SELECT *`
+> > - **Failed queries > 0** — P3: investigate immediately. Common causes: DML quota exceeded, table deleted, permission revoked
+> > - **Duration p99 > 5min** — P3: slowest queries are degrading. Check for unpartitioned tables or slot starvation
+>
+> > [!success] BigQuery first response
+> >
+> > - **Bytes over threshold**: find the offending query in `INFORMATION_SCHEMA.JOBS_BY_PROJECT` ordered by `total_bytes_processed`; add a `WHERE DATE(_PARTITIONTIME) = ...` filter or enable `require_partition_filter` on the table
+> > - **Failed queries**: check the `error_result` field in `INFORMATION_SCHEMA.JOBS`; for quota errors, reduce scheduling concurrency; for permission errors, audit IAM role assignments
+> > - **p99 duration high**: identify unpartitioned tables being full-scanned; add partition and cluster keys, or purchase additional slot capacity if slot starvation is the cause
 
 ---
 
@@ -309,19 +327,25 @@ Key logs:
 - **Stdout/stderr from container** — application logs. First place to look for errors
 - **Crash logs** — container exit with non-zero code. OOM, unhandled exceptions, timeout
 
-> [!warning] Cloud Run service degradation
+> [!warning] Cloud Run alerts need to distinguish bad revisions from scaling pressure
 >
-> - **Error rate > 1%** — P2: sustained server errors affecting users or downstream consumers
-> - **Latency p99 > 10s** — P3: slowest requests are unacceptably slow. Check for cold starts or upstream dependency issues
-> - **Memory > 90%** — P2: close to OOM kill. Increase memory allocation or fix memory leaks
-> - **OOM kills > 0** — P1: container is being killed for exceeding memory. Data loss possible if writes are in progress
-
-> [!success] Cloud Run first response
+> The same symptom bucket can come from a crashing build, a cold-start problem,
+> or an undersized container. The operator needs the likely failure mode and the
+> first recovery move together.
 >
-> - **Error rate > 1%**: check container stdout/stderr logs via `gcloud logging read`; look for unhandled exceptions or upstream dependency timeouts; redeploy previous revision if a recent deploy is the cause
-> - **Latency p99 high**: check cold start frequency and set `--min-instances=1` for latency-sensitive services; profile the slowest requests with Cloud Trace
-> - **Memory > 90%**: increase `--memory` on the service revision; profile heap allocation if a memory leak is suspected
-> - **OOM kills**: set `--min-instances=1` to reduce churn; increase `--memory`; verify the pipeline checkpoints progress so a restart does not reprocess already-written data
+> > [!danger] Cloud Run service degradation
+> >
+> > - **Error rate > 1%** — P2: sustained server errors affecting users or downstream consumers
+> > - **Latency p99 > 10s** — P3: slowest requests are unacceptably slow. Check for cold starts or upstream dependency issues
+> > - **Memory > 90%** — P2: close to OOM kill. Increase memory allocation or fix memory leaks
+> > - **OOM kills > 0** — P1: container is being killed for exceeding memory. Data loss possible if writes are in progress
+>
+> > [!success] Cloud Run first response
+> >
+> > - **Error rate > 1%**: check container stdout/stderr logs via `gcloud logging read`; look for unhandled exceptions or upstream dependency timeouts; redeploy previous revision if a recent deploy is the cause
+> > - **Latency p99 high**: check cold start frequency and set `--min-instances=1` for latency-sensitive services; profile the slowest requests with Cloud Trace
+> > - **Memory > 90%**: increase `--memory` on the service revision; profile heap allocation if a memory leak is suspected
+> > - **OOM kills**: set `--min-instances=1` to reduce churn; increase `--memory`; verify the pipeline checkpoints progress so a restart does not reprocess already-written data
 
 ---
 
@@ -341,17 +365,22 @@ Key logs:
 - **DLQ messages** — messages that failed processing repeatedly. Contains the original payload and error context
 - **Subscription errors** — delivery failures, acknowledgement timeouts, permission issues
 
-> [!warning] Pub/Sub backlog and loss risk
+> [!warning] Pub/Sub monitoring has to separate lag from irreversible message loss
 >
-> - **Backlog > threshold** — P2: consumer is falling behind. Common causes: consumer crash, slow processing, insufficient concurrency
-> - **Oldest unacked > 5min** — P2: messages are aging. If retention window is short, data loss is imminent
-> - **DLQ > 0** — P2: messages are failing permanently. Investigate the DLQ for error patterns
-
-> [!success] Pub/Sub first response
+> A growing backlog can often be recovered with scale, but an aging subscription
+> or DLQ spike can turn into lost processing if the response is slow.
 >
-> - **Backlog growing**: check the consumer Cloud Run service for crash loops; increase `--max-instances` and `--concurrency` to scale out processing; verify acknowledgement deadlines are long enough for slow messages
-> - **Oldest unacked > 5min**: increase the subscription's message retention duration immediately to prevent expiry; scale up consumers in parallel; if messages have expired, replay from the source if available
-> - **DLQ > 0**: pull a sample from the DLQ to read the original payload and error; fix the consumer bug; republish DLQ messages after the fix is deployed
+> > [!danger] Pub/Sub backlog and loss risk
+> >
+> > - **Backlog > threshold** — P2: consumer is falling behind. Common causes: consumer crash, slow processing, insufficient concurrency
+> > - **Oldest unacked > 5min** — P2: messages are aging. If retention window is short, data loss is imminent
+> > - **DLQ > 0** — P2: messages are failing permanently. Investigate the DLQ for error patterns
+>
+> > [!success] Pub/Sub first response
+> >
+> > - **Backlog growing**: check the consumer Cloud Run service for crash loops; increase `--max-instances` and `--concurrency` to scale out processing; verify acknowledgement deadlines are long enough for slow messages
+> > - **Oldest unacked > 5min**: increase the subscription's message retention duration immediately to prevent expiry; scale up consumers in parallel; if messages have expired, replay from the source if available
+> > - **DLQ > 0**: pull a sample from the DLQ to read the original payload and error; fix the consumer bug; republish DLQ messages after the fix is deployed
 
 ---
 
@@ -370,15 +399,20 @@ Key logs:
 - **Access logs** — who accessed which objects. Useful for audit and debugging access issues
 - **Lifecycle actions** — objects transitioned to Nearline/Coldline/Archive or deleted by lifecycle rules
 
-> [!warning] GCS deletion and growth anomalies
+> [!warning] Storage monitoring must tell accidental deletion apart from growth drift
 >
-> - **Unexpected deletes** — P2: object count dropped without a known lifecycle rule or pipeline action. Possible accidental deletion
-> - **Object count anomaly** — P3: sudden spike or drop outside normal growth patterns
-
-> [!success] GCS first response
+> Buckets usually fail quietly: a lifecycle rule, a runaway writer, or an
+> operator mistake all show up as object-count movement before users notice.
 >
-> - **Unexpected deletes**: check Cloud Audit Logs for `storage.objects.delete` events in the affected bucket; if accidental, restore from a versioned bucket (enable object versioning on all landing-zone buckets); identify the IAM principal that issued the delete and restrict permissions if necessary
-> - **Object count anomaly**: correlate with pipeline run history; a spike may indicate a runaway write loop — check Cloud Run job execution counts and add a maximum-objects-per-run guard to the pipeline
+> > [!danger] GCS deletion and growth anomalies
+> >
+> > - **Unexpected deletes** — P2: object count dropped without a known lifecycle rule or pipeline action. Possible accidental deletion
+> > - **Object count anomaly** — P3: sudden spike or drop outside normal growth patterns
+>
+> > [!success] GCS first response
+> >
+> > - **Unexpected deletes**: check Cloud Audit Logs for `storage.objects.delete` events in the affected bucket; if accidental, restore from a versioned bucket (enable object versioning on all landing-zone buckets); identify the IAM principal that issued the delete and restrict permissions if necessary
+> > - **Object count anomaly**: correlate with pipeline run history; a spike may indicate a runaway write loop — check Cloud Run job execution counts and add a maximum-objects-per-run guard to the pipeline
 
 ---
 
@@ -397,15 +431,20 @@ Key logs:
 - **Security rule denials** — requests blocked by Firestore security rules. May indicate misconfigured rules or unauthorized access
 - **Quota warnings** — approaching operation or storage quotas
 
-> [!warning] Firestore hotspotting and denials
+> [!warning] Firestore alerts need to separate write contention from access-policy problems
 >
-> - **Write rate > 80% quota** — P2: approaching the per-document write limit (1 write/sec). Contention will cause latency spikes
-> - **Security denials > 0** — P3: investigate whether rules are too restrictive or an unauthorized client is probing
-
-> [!success] Firestore first response
+> Hot documents and denied clients both surface as degraded operations, but they
+> require completely different fixes.
 >
-> - **Write rate near quota**: batch writes using `WriteBatch` instead of individual document writes; distribute heartbeat state across multiple documents keyed by pipeline name to avoid hotspotting on a single document
-> - **Security denials**: check Cloud Audit Log for the denied request's principal and resource path; update security rules to permit legitimate access or revoke the client's credentials if unauthorized
+> > [!danger] Firestore hotspotting and denials
+> >
+> > - **Write rate > 80% quota** — P2: approaching the per-document write limit (1 write/sec). Contention will cause latency spikes
+> > - **Security denials > 0** — P3: investigate whether rules are too restrictive or an unauthorized client is probing
+>
+> > [!success] Firestore first response
+> >
+> > - **Write rate near quota**: batch writes using `WriteBatch` instead of individual document writes; distribute heartbeat state across multiple documents keyed by pipeline name to avoid hotspotting on a single document
+> > - **Security denials**: check Cloud Audit Log for the denied request's principal and resource path; update security rules to permit legitimate access or revoke the client's credentials if unauthorized
 
 ---
 
@@ -427,19 +466,25 @@ Key logs:
 - **OOM kills** — kernel killed a process for exceeding available memory. Check `dmesg` for the victim
 - **systemd failures** — services that failed to start or crashed. SQL Server and Airflow run as systemd services
 
-> [!warning] VM saturation and service loss
+> [!warning] VM alerts need to separate host saturation from outright service loss
 >
-> - **CPU > 90% sustained 10min** — P2: VM is compute-bound. Right-size or optimize the workload
-> - **Disk > 85%** — P1: disk filling up. SQL Server transaction logs, TempDB, or backup files are common culprits
-> - **OOM detected** — P1: a process was killed for memory. Data corruption possible if SQL Server was the victim
-> - **Service stopped** — P1: SQL Server or Airflow systemd service is down. Pipeline is blocked
-
-> [!success] VM first response
+> A busy VM can often limp along, but a full disk, OOM kill, or dead systemd
+> unit turns into an outage. The monitoring pair should show both the symptom and
+> the first stabilizing action.
 >
-> - **CPU > 90%**: identify the top process with `top` or `htop`; for SQL Server, run `sys.dm_exec_requests` to find the high-CPU query; right-size the VM machine type if the workload is consistently high
-> - **Disk > 85%**: run `df -h` to identify the full partition; archive or delete old backup files; resize the disk with `gcloud compute disks resize` followed by `resize2fs`
-> - **OOM**: check `dmesg | grep -i "killed process"` for the victim; increase VM memory or fix the memory-leaking process; verify SQL Server data consistency after an OOM kill
-> - **Service stopped**: run `systemctl restart airflow-scheduler` or `systemctl restart mssql-server`; check `journalctl -u <service>` for the failure reason before restarting
+> > [!danger] VM saturation and service loss
+> >
+> > - **CPU > 90% sustained 10min** — P2: VM is compute-bound. Right-size or optimize the workload
+> > - **Disk > 85%** — P1: disk filling up. SQL Server transaction logs, TempDB, or backup files are common culprits
+> > - **OOM detected** — P1: a process was killed for memory. Data corruption possible if SQL Server was the victim
+> > - **Service stopped** — P1: SQL Server or Airflow systemd service is down. Pipeline is blocked
+>
+> > [!success] VM first response
+> >
+> > - **CPU > 90%**: identify the top process with `top` or `htop`; for SQL Server, run `sys.dm_exec_requests` to find the high-CPU query; right-size the VM machine type if the workload is consistently high
+> > - **Disk > 85%**: run `df -h` to identify the full partition; archive or delete old backup files; resize the disk with `gcloud compute disks resize` followed by `resize2fs`
+> > - **OOM**: check `dmesg | grep -i "killed process"` for the victim; increase VM memory or fix the memory-leaking process; verify SQL Server data consistency after an OOM kill
+> > - **Service stopped**: run `systemctl restart airflow-scheduler` or `systemctl restart mssql-server`; check `journalctl -u <service>` for the failure reason before restarting
 
 ---
 
@@ -459,19 +504,24 @@ Key logs:
 - **Transform logs** — output from each pipeline stage. Includes row counts, timing, validation results
 - **Validation gate results** — PASS/FAIL for each quality check. The first place to look when data quality degrades
 
-> [!warning] Pipeline freshness and integrity drift
+> [!warning] Pipeline monitors have to catch freshness, volume, and integrity drift separately
 >
-> - **Stale data > SLA** — P1: pipeline hasn't updated within the defined freshness window. Dashboard is showing old data
-> - **Row count anomaly (>20%)** — P2: sudden increase (bad join explosion) or decrease (filter bug, missing source data)
-> - **Schema change detected** — P3: upstream schema changed. Contract tests should have caught this — investigate why they didn't
-> - **Duplicates > 0** — P2: deduplication logic failed. MERGE key mismatch or race condition in concurrent loads
-
-> [!success] Pipeline first response
+> A stale table, a row-count spike, and duplicate records all mean the pipeline
+> is unhealthy, but they point to different stages in the data flow.
 >
-> - **Stale data**: check Cloud Run job execution history for the pipeline; if no execution exists, verify the Cloud Scheduler trigger fired; re-trigger manually with `gcloud run jobs execute` after identifying the root cause
-> - **Row count anomaly**: compare today's count against the 7-day average in BigQuery `__TABLES__` or the `pipeline_freshness` table; for spikes, check for duplicate loads; for drops, check for missing source partitions
-> - **Schema change**: run `check_schema_drift()` against the current table and the reference schema JSON; if a column was renamed upstream, update the reference schema and pipeline mapping; add a contract test to catch this earlier
-> - **Duplicates**: identify the duplicate key values with the duplicate detection query; re-run the MERGE with the correct natural key; verify the dedup logic covers all load concurrency scenarios
+> > [!danger] Pipeline freshness and integrity drift
+> >
+> > - **Stale data > SLA** — P1: pipeline hasn't updated within the defined freshness window. Dashboard is showing old data
+> > - **Row count anomaly (>20%)** — P2: sudden increase (bad join explosion) or decrease (filter bug, missing source data)
+> > - **Schema change detected** — P3: upstream schema changed. Contract tests should have caught this — investigate why they didn't
+> > - **Duplicates > 0** — P2: deduplication logic failed. MERGE key mismatch or race condition in concurrent loads
+>
+> > [!success] Pipeline first response
+> >
+> > - **Stale data**: check Cloud Run job execution history for the pipeline; if no execution exists, verify the Cloud Scheduler trigger fired; re-trigger manually with `gcloud run jobs execute` after identifying the root cause
+> > - **Row count anomaly**: compare today's count against the 7-day average in BigQuery `__TABLES__` or the `pipeline_freshness` table; for spikes, check for duplicate loads; for drops, check for missing source partitions
+> > - **Schema change**: run `check_schema_drift()` against the current table and the reference schema JSON; if a column was renamed upstream, update the reference schema and pipeline mapping; add a contract test to catch this earlier
+> > - **Duplicates**: identify the duplicate key values with the duplicate detection query; re-run the MERGE with the correct natural key; verify the dedup logic covers all load concurrency scenarios
 
 ## Alert Severity Framework
 
@@ -486,13 +536,25 @@ Key logs:
 | **P3 — Medium** | 4 hours | Slack `#alerts` | Latency degradation (p99 drift), row count anomaly (>20%), slot utilization high |
 | **P4 — Low** | Next business day | Slack `#monitoring-info` | Schema drift detected, cost anomaly, cold start frequency increase, login failures |
 
-> [!warning] Alert Fatigue from Over-Paging
+> [!warning] Severity only works when paging urgency is rationed deliberately
 >
-> Avoid making everything P1. If on-call gets paged for P3 issues, alert fatigue sets in and real P1s get ignored. Review severity assignments quarterly.
-
-> [!success] Enforce the severity framework in your alerting tool
+> If every monitor pages like an outage, operators learn to distrust the signal
+> and real incidents lose attention.
 >
-> Assign PagerDuty phone-call urgency only to P1 monitors. Map P2 to PagerDuty alert (no phone call outside business hours). Map P3 and P4 to Slack only. Schedule a quarterly severity review meeting: pull alert history, count false-positive P1 pages, and downgrade any alert that has never required immediate action. This keeps the on-call rotation sustainable and P1 responses fast.
+> > [!danger] Alert fatigue from over-paging
+> >
+> > Avoid making everything P1. If on-call gets paged for P3 issues, alert
+> > fatigue sets in and real P1s get ignored. Review severity assignments
+> > quarterly.
+>
+> > [!success] Enforce the severity framework in your alerting tool
+> >
+> > Assign PagerDuty phone-call urgency only to P1 monitors. Map P2 to PagerDuty
+> > alert (no phone call outside business hours). Map P3 and P4 to Slack only.
+> > Schedule a quarterly severity review meeting: pull alert history, count
+> > false-positive P1 pages, and downgrade any alert that has never required
+> > immediate action. This keeps the on-call rotation sustainable and P1
+> > responses fast.
 
 ## Dashboard Strategy
 
@@ -527,28 +589,45 @@ Key logs:
 | Cross-service alerting | Yes | Backup only | Datadog composite monitors can correlate metrics across SQL Server, Airflow, and GCP services in a single alert |
 | Audit and compliance logs | No | Yes | Cloud Audit Logs are the system of record; Datadog should not be the only copy |
 
-> [!warning] Single Alert Source per Metric
+> [!warning] Redundant telemetry is useful, but redundant paging is not
 >
-> Running both tools on the same metric is acceptable for redundancy, but alerting should fire from **one** tool only. Duplicate alerts from Datadog and GCP for the same condition cause confusion and double-paging.
-
-> [!success] Designate a primary alerting tool per metric category
+> Collecting the same metric in two systems improves resilience. Letting both
+> systems page on the same threshold creates noise and ownership confusion.
 >
-> Use the decision table above to assign alerting ownership: Datadog owns SQL Server and Airflow alerts; GCP Cloud Monitoring owns Cloud Run, Pub/Sub, GCS, and Firestore alerts. Disable the secondary tool's alerting policies (keep the metric collection active for redundancy). Document the ownership in each alert's description field so on-call engineers know where to look.
+> > [!danger] Single alert source per metric
+> >
+> > Running both tools on the same metric is acceptable for redundancy, but
+> > alerting should fire from **one** tool only. Duplicate alerts from Datadog
+> > and GCP for the same condition cause confusion and double-paging.
+>
+> > [!success] Designate a primary alerting tool per metric category
+> >
+> > Use the decision table above to assign alerting ownership: Datadog owns SQL
+> > Server and Airflow alerts; GCP Cloud Monitoring owns Cloud Run, Pub/Sub, GCS,
+> > and Firestore alerts. Disable the secondary tool's alerting policies (keep
+> > the metric collection active for redundancy). Document the ownership in each
+> > alert's description field so on-call engineers know where to look.
 
 ## Anti-Patterns
 
-> [!danger] Observability Anti-Patterns
+> [!warning] Observability posture erodes through governance gaps long before tooling fails
 >
-> These patterns silently degrade your observability posture. Audit for them quarterly.
+> Most monitoring programs drift because ownership, thresholds, and response
+> discipline decay gradually. Quarterly review is the safe pattern that keeps
+> those silent failures visible.
 >
-> - **Metric without an alert** — collecting data nobody looks at wastes money and creates false confidence
-> - **Alert without a runbook** — an alert that fires with no documented response is just noise that trains the team to ignore pages
-> - **Dashboard without an owner** — unowned dashboards rot; panels break, thresholds drift, and nobody notices
-> - **Logs without structure** — free-text logs that require regex to parse are unsearchable at scale; always use structured JSON logging
-> - **Threshold from a guess** — alert thresholds must come from baseline data, not intuition; run a component for two weeks before setting static thresholds
-> - **Monitoring only the happy path** — if you only track success counts, a silent failure (zero rows, no errors) will never fire an alert; always monitor for the *absence* of expected events
-> - **Single-tool dependency** — if Datadog goes down and you have no GCP-native alerts, you are blind; critical P1 alerts should exist in both systems
-
-> [!success] Quarterly observability posture checklist
+> > [!danger] Observability anti-patterns
+> >
+> > These patterns silently degrade your observability posture. Audit for them quarterly.
+> >
+> > - **Metric without an alert** — collecting data nobody looks at wastes money and creates false confidence
+> > - **Alert without a runbook** — an alert that fires with no documented response is just noise that trains the team to ignore pages
+> > - **Dashboard without an owner** — unowned dashboards rot; panels break, thresholds drift, and nobody notices
+> > - **Logs without structure** — free-text logs that require regex to parse are unsearchable at scale; always use structured JSON logging
+> > - **Threshold from a guess** — alert thresholds must come from baseline data, not intuition; run a component for two weeks before setting static thresholds
+> > - **Monitoring only the happy path** — if you only track success counts, a silent failure (zero rows, no errors) will never fire an alert; always monitor for the *absence* of expected events
+> > - **Single-tool dependency** — if Datadog goes down and you have no GCP-native alerts, you are blind; critical P1 alerts should exist in both systems
 >
-> Run a 30-minute audit against this list each quarter: (1) list all custom metrics and confirm each has a linked alert; (2) list all alerts and confirm each has a runbook URL in the description; (3) list all dashboards and confirm each has a named owner and a "last verified" date; (4) review a sample of pipeline logs and confirm JSON structure is consistent; (5) review alert history and recalibrate thresholds that fired zero or more than 10 times in the quarter; (6) verify at least one P1 alert exists in both Datadog and GCP-native for each critical component.
+> > [!success] Quarterly observability posture checklist
+> >
+> > Run a 30-minute audit against this list each quarter: (1) list all custom metrics and confirm each has a linked alert; (2) list all alerts and confirm each has a runbook URL in the description; (3) list all dashboards and confirm each has a named owner and a "last verified" date; (4) review a sample of pipeline logs and confirm JSON structure is consistent; (5) review alert history and recalibrate thresholds that fired zero or more than 10 times in the quarter; (6) verify at least one P1 alert exists in both Datadog and GCP-native for each critical component.

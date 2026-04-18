@@ -334,7 +334,7 @@ flowchart TB
     end
 
     subgraph Workflow["Workflow (.github/workflows/*.yml)"]
-        direction TB
+        direction LR
         ON["on: trigger filter"]
         PERM["permissions: GITHUB_TOKEN scope"]
         ENV["env: workflow-level variables"]
@@ -342,7 +342,7 @@ flowchart TB
     end
 
     subgraph Jobs["Jobs (parallel by default)"]
-        direction TB
+        direction LR
         J1["Job A: lint<br/>runs-on: ubuntu-latest"]
         J2["Job B: test<br/>needs: lint"]
         J3["Job C: deploy<br/>environment: production"]

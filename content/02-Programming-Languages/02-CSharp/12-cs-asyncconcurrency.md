@@ -289,26 +289,49 @@ methods directly, batch independent I/O with `Task.WhenAll` instead of awaiting
 inside a loop, and reserve `Task.Run` or `Parallel` for CPU-bound work rather
 than for waiting on external systems.
 
-> [!danger] .Result and .Wait() cause deadlocks
+> [!warning] Blocking and awaiting do not mix safely on context-bound threads
 >
-> `.Result` and `.Wait()` cause deadlocks in synchronization contexts
-> Calling `.Result` or `.Wait()` on a `Task` from a thread with a `SynchronizationContext` (ASP.NET, WinForms, WPF) blocks the thread that the `await` continuation needs to resume on, causing a permanent deadlock. Always use `await` instead. In rare cases where sync-over-async is unavoidable, use `Task.Run(() => AsyncMethod()).Result` to escape the context.
-
-> [!success] Use await instead
+> Async code assumes the continuation will get a thread back later. If the caller
+> blocks that same context, the continuation has nowhere to run and the task
+> never completes.
 >
-> Replace `.Result`/`.Wait()` with `await`. If you must call async code from a sync context (e.g., legacy code), wrap in `Task.Run(() => MyMethodAsync()).GetAwaiter().GetResult()` to avoid capturing the synchronization context.
+> > [!danger] .Result and .Wait() cause deadlocks
+> >
+> > `.Result` and `.Wait()` cause deadlocks in synchronization contexts.
+> > Calling `.Result` or `.Wait()` on a `Task` from a thread with a
+> > `SynchronizationContext` (ASP.NET, WinForms, WPF) blocks the thread that the
+> > `await` continuation needs to resume on, causing a permanent deadlock. Always
+> > use `await` instead. In rare cases where sync-over-async is unavoidable, use
+> > `Task.Run(() => AsyncMethod()).Result` to escape the context.
+>
+> > [!success] Use await instead
+> >
+> > Replace `.Result`/`.Wait()` with `await`. If you must call async code from a
+> > sync context (e.g., legacy code), wrap in
+> > `Task.Run(() => MyMethodAsync()).GetAwaiter().GetResult()` to avoid capturing
+> > the synchronization context.
 
 The other high-impact mistake is returning `void` from asynchronous work, which
 removes the normal error and completion contract from the caller.
 
-> [!danger] `async void` drops failures outside the caller's control
+> [!warning] Async methods need an observable completion contract
 >
-> `async void` — exceptions are unobservable and crash the process
-> Exceptions in `async void` methods propagate to the `SynchronizationContext` and terminate the process. The caller has no `Task` to `await` or catch. Always use `async Task`. The only valid use of `async void` is UI event handlers (`async void Button_Click`).
-
-> [!success] Return `Task` from asynchronous work
+> Callers must be able to await work, compose it with other tasks, and observe
+> its exceptions. Returning `void` removes that control surface entirely.
 >
-> Declare all async methods as `async Task` or `async Task<T>`. This makes exceptions observable and awaitable. Reserve `async void` exclusively for UI event handlers where the framework requires it.
+> > [!danger] `async void` drops failures outside the caller's control
+> >
+> > `async void` means exceptions are unobservable and can crash the process.
+> > Exceptions in `async void` methods propagate to the `SynchronizationContext`
+> > and terminate the process. The caller has no `Task` to `await` or catch.
+> > Always use `async Task`. The only valid use of `async void` is UI event
+> > handlers (`async void Button_Click`).
+>
+> > [!success] Return `Task` from asynchronous work
+> >
+> > Declare all async methods as `async Task` or `async Task<T>`. This makes
+> > exceptions observable and awaitable. Reserve `async void` exclusively for UI
+> > event handlers where the framework requires it.
 
 In library code rather than in UI or ASP.NET controller code, add
 `.ConfigureAwait(false)` after awaited operations when you do not need to resume
@@ -451,12 +474,24 @@ replica-eu: 300 rows
 
 A CancellationToken is a cooperative cancellation mechanism — you pass it to async methods, and they periodically check `token.IsCancellationRequested` or call `token.ThrowIfCancellationRequested()` to stop early. The caller creates a `CancellationTokenSource`, which controls when cancellation is triggered (timeout, user action, or programmatic). Cancellation is cooperative: the called code must actively check the token — it's not forcefully killed.
 
-> [!warning] Cancellation is not instant
-> Passing a CancellationToken doesn't kill the operation immediately. The code must CHECK the token at regular intervals. A long-running SQL query or HTTP call won't stop until it returns — only then does the next token check abort. For true preemption, the underlying API must support cancellation natively (e.g., `HttpClient` does, raw socket reads may not).
-
-> [!success] Design for cooperative cancellation
+> [!warning] Cancellation only works when the operation cooperates
 >
-> Call `ct.ThrowIfCancellationRequested()` at logical checkpoints within loops and between pipeline stages. Pass the token to all awaited calls (e.g., `Task.Delay(ms, ct)`, `HttpClient.GetAsync(url, ct)`) so they short-circuit immediately when cancelled.
+> A token is a request, not a kill switch. The work has to observe that request
+> and the underlying API has to honor cancellation for it to stop promptly.
+>
+> > [!danger] Cancellation is not instant
+> >
+> > Passing a `CancellationToken` does not kill the operation immediately. The
+> > code must check the token at regular intervals. A long-running SQL query or
+> > HTTP call will not stop until it returns unless the underlying API supports
+> > cancellation natively.
+>
+> > [!success] Design for cooperative cancellation
+> >
+> > Call `ct.ThrowIfCancellationRequested()` at logical checkpoints within loops
+> > and between pipeline stages. Pass the token to all awaited calls
+> > (`Task.Delay(ms, ct)`, `HttpClient.GetAsync(url, ct)`) so they short-circuit
+> > immediately when cancelled.
 
 ```csharp
 async Task<string> LongRunningExportAsync(string table, CancellationToken ct)
@@ -778,13 +813,25 @@ Fetching page 2...
 
 `ValueTask<T>` is a `readonly struct` that wraps either a `Task<T>` or a raw `TResult` value. When a method frequently completes synchronously (cache hit, buffered read), `ValueTask<T>` avoids the heap allocation that `Task<T>` requires on every call. Use it only when **both** conditions hold: the method is likely to complete synchronously **and** it is called so frequently that the allocation cost is measurable in profiling. `Task<T>` is the correct default for all other cases.
 
-> [!danger] ValueTask can only be consumed once
+> [!warning] ValueTask is a specialized performance tool, not the default async return type
 >
-> A `ValueTask<T>` must be awaited exactly once. Awaiting it a second time, calling `.AsTask()` more than once, or reading `.Result` before completion are all undefined behavior. If you need to await the same result multiple times, call `.AsTask()` once and work with the returned `Task<T>` from that point.
-
-> [!success] Default to Task, switch to ValueTask only after profiling
+> It saves allocations only in narrow hot-path cases, but it also imposes stricter
+> consumption rules than `Task<T>`.
 >
-> Use `Task<T>` by default. Only switch to `ValueTask<T>` when profiling shows measurable allocation pressure on a hot path. For synchronous completion with no result, return `Task.CompletedTask` or `ValueTask.CompletedTask` instead of allocating a new task.
+> > [!danger] ValueTask can only be consumed once
+> >
+> > A `ValueTask<T>` must be awaited exactly once. Awaiting it a second time,
+> > calling `.AsTask()` more than once, or reading `.Result` before completion
+> > are all undefined behavior. If you need to await the same result multiple
+> > times, call `.AsTask()` once and work with the returned `Task<T>` from that
+> > point.
+>
+> > [!success] Default to Task, switch to ValueTask only after profiling
+> >
+> > Use `Task<T>` by default. Only switch to `ValueTask<T>` when profiling shows
+> > measurable allocation pressure on a hot path. For synchronous completion with
+> > no result, return `Task.CompletedTask` or `ValueTask.CompletedTask` instead
+> > of allocating a new task.
 
 The cell defines `GetConfigAsync`, which checks a local `_cache` dictionary first and returns a `new ValueTask<string>(cached)` — no heap allocation — on a hit. On a miss it falls through to `LoadFromDbAsync`, wrapping the resulting `Task<string>` in a `ValueTask<string>`. Calling the method with a cached key (`"config_a"`) and an uncached key (`"config_c"`) shows the allocation-free synchronous path versus the deferred async path, with the result added to the cache for future hits.
 
@@ -877,15 +924,24 @@ until completion, while `Parallel.ForEachAsync()` is the async counterpart for
 bounded concurrent work. Because C# has no GIL, these APIs can execute truly in
 parallel on multiple cores.
 
-> [!warning] CPU tools are the wrong fix for I/O waits
+> [!warning] Concurrency primitives only help when they match the workload
 >
-> - `Task.Run` for I/O-bound work — use `async`/`await` instead (no thread needed)
-> - Too many `Task.Run` calls — thread pool exhaustion
-> - Shared mutable state without locking — race conditions
-
-> [!success] Choose the concurrency primitive by workload type
+> Async I/O, CPU parallelism, and shared-state coordination solve different
+> problems. Mixing them casually wastes threads and introduces races instead of
+> improving throughput.
 >
-> Use `async`/`await` for I/O-bound operations (no thread consumed while waiting). Use `Task.Run` or `Parallel.ForEach` for CPU-bound work. Protect shared state with `lock`, `Interlocked`, or `ConcurrentDictionary` — never share plain mutable fields across threads.
+> > [!danger] CPU tools are the wrong fix for I/O waits
+> >
+> > - `Task.Run` for I/O-bound work — use `async`/`await` instead (no thread needed)
+> > - Too many `Task.Run` calls — thread pool exhaustion
+> > - Shared mutable state without locking — race conditions
+>
+> > [!success] Choose the concurrency primitive by workload type
+> >
+> > Use `async`/`await` for I/O-bound operations (no thread consumed while
+> > waiting). Use `Task.Run` or `Parallel.ForEach` for CPU-bound work. Protect
+> > shared state with `lock`, `Interlocked`, or `ConcurrentDictionary` — never
+> > share plain mutable fields across threads.
 
 ### Task.Run — thread pool offloading
 
@@ -1046,15 +1102,23 @@ lock, and `IsBackground = true` creates a daemon-like thread that does not keep
 the process alive. In modern C#, `Task` and `async` are still the default choice
 unless you need explicit thread control.
 
-> [!warning] Manual threads are costly for short-lived work
+> [!warning] Raw threads are a control tool, not a general-purpose work queue
 >
-> - Creating threads for short work — use `Task.Run` (thread pool) instead
-> - Not joining threads — orphaned threads may prevent shutdown
-> - Shared mutable state without synchronization — race conditions
-
-> [!success] Prefer the thread pool unless you need thread-specific control
+> An OS thread is expensive to create and easy to mismanage. Most short-lived work
+> should run on the managed thread pool instead of creating bespoke threads.
 >
-> Use `Task.Run` for short CPU-bound work — it draws from the managed thread pool, avoiding OS thread creation overhead. Always `Join` or `await` threads you start. Mark background threads with `IsBackground = true` so they don't prevent process shutdown.
+> > [!danger] Manual threads are costly for short-lived work
+> >
+> > - Creating threads for short work — use `Task.Run` (thread pool) instead
+> > - Not joining threads — orphaned threads may prevent shutdown
+> > - Shared mutable state without synchronization — race conditions
+>
+> > [!success] Prefer the thread pool unless you need thread-specific control
+> >
+> > Use `Task.Run` for short CPU-bound work — it draws from the managed thread
+> > pool, avoiding OS thread creation overhead. Always `Join` or `await` threads
+> > you start. Mark background threads with `IsBackground = true` so they do not
+> > prevent process shutdown.
 
 ### Thread class — OS threads
 
@@ -1102,14 +1166,24 @@ Console.WriteLine($"  Results: [{string.Join(", ", threadResults)}]");
 [fetch_events done, fetch_users done, fetch_products done]
 ```
 
-> [!danger] ++ and += are not atomic
+> [!warning] Shared mutation must be synchronized explicitly
 >
-> `++` and `+=` are not atomic — they cause race conditions without synchronization
-> `counter++` in C# compiles to read-increment-write which can interleave across threads. Use `lock`, `Interlocked.Increment`, or `ConcurrentDictionary` for thread-safe mutation. Unlike Python's GIL, C# has true parallelism, making races more frequent and harder to reproduce.
-
-> [!success] Use Interlocked or lock for shared counters
+> C# executes threads in real parallelism, so even tiny read-modify-write
+> statements can interleave and lose updates under load.
 >
-> Replace `counter++` with `Interlocked.Increment(ref counter)` for simple integer counters — it's lock-free and faster than `lock`. For compound operations or non-integer types, use `lock(obj) { ... }`. For aggregation over keys, use `ConcurrentDictionary.AddOrUpdate`.
+> > [!danger] ++ and += are not atomic
+> >
+> > `++` and `+=` are not atomic — they cause race conditions without
+> > synchronization. `counter++` in C# compiles to read-increment-write which can
+> > interleave across threads. Use `lock`, `Interlocked.Increment`, or
+> > `ConcurrentDictionary` for thread-safe mutation.
+>
+> > [!success] Use Interlocked or lock for shared counters
+> >
+> > Replace `counter++` with `Interlocked.Increment(ref counter)` for simple
+> > integer counters — it is lock-free and faster than `lock`. For compound
+> > operations or non-integer types, use `lock(obj) { ... }`. For aggregation
+> > over keys, use `ConcurrentDictionary.AddOrUpdate`.
 
 ### Race conditions and synchronization
 
@@ -1215,12 +1289,23 @@ Got:      400'000  (correct — atomic operation)
 
 `ConcurrentDictionary` is a dictionary that multiple threads can read and write simultaneously without explicit locking. It uses fine-grained locking internally (lock striping), so concurrent writes to different keys don't block each other. Use `AddOrUpdate` and `GetOrAdd` for atomic read-modify-write operations.
 
-> [!danger] AddOrUpdate is not atomic end-to-end
-> The update delegate in `AddOrUpdate` may be called multiple times if there's contention — it's optimistic, not locked. Don't put side effects (database writes, API calls) inside the delegate. Only use it for pure computations.
-
-> [!success] Keep delegates pure
+> [!warning] ConcurrentDictionary helpers are safe only for pure in-memory updates
 >
-> Ensure the `AddOrUpdate` factory and update delegates are pure functions — no I/O, no side effects, no external calls. For operations that must be atomic with side effects, use `lock` or a dedicated synchronization primitive instead.
+> The collection protects its internal state, but it does not turn arbitrary
+> delegate bodies into one-and-done critical sections.
+>
+> > [!danger] AddOrUpdate is not atomic end-to-end
+> >
+> > The update delegate in `AddOrUpdate` may be called multiple times if there is
+> > contention — it is optimistic, not locked. Do not put side effects (database
+> > writes, API calls) inside the delegate. Only use it for pure computations.
+>
+> > [!success] Keep delegates pure
+> >
+> > Ensure the `AddOrUpdate` factory and update delegates are pure functions — no
+> > I/O, no side effects, no external calls. For operations that must be atomic
+> > with side effects, use `lock` or a dedicated synchronization primitive
+> > instead.
 
 The cell simulates 100,000 events cycling through four event types and tallies them using `ConcurrentDictionary.AddOrUpdate` — inserting with a seed value of `1` on first encounter, then incrementing `oldVal + 1` on each subsequent hit. `Parallel.For` drives the concurrent writes, and the final counts for all four keys should sum to exactly 100,000, confirming that no increments were lost despite concurrent access.
 
@@ -1308,13 +1393,23 @@ Processed 20 events in 0.63s
 
 A synchronization primitive optimized for read-heavy workloads. `EnterReadLock()` allows multiple threads to hold read locks simultaneously, while `EnterWriteLock()` grants exclusive access — blocking all readers and other writers. The "Slim" variant is lighter than `ReaderWriterLock` (no OS kernel object). Use for in-memory caches, lookup tables, and shared dictionaries where reads vastly outnumber writes (>90% reads). For write-heavy workloads, a plain `lock` is better.
 
-> [!warning] ReaderWriterLockSlim is not async-safe
+> [!warning] ReaderWriterLockSlim only fits synchronous read-heavy sections
 >
-> `ReaderWriterLockSlim` is thread-affine — you cannot hold the lock across an `await` because the continuation may run on a different thread. Use `SemaphoreSlim` for async-safe mutual exclusion, or restructure to hold the lock only during synchronous sections.
-
-> [!success] Use SemaphoreSlim(1,1) for async reader-writer patterns
+> It works well for short synchronous cache access, but it is still a thread-bound
+> lock with normal lock-lifetime hazards.
 >
-> When you need mutual exclusion in async code, use `SemaphoreSlim(1, 1)` as an async-compatible lock. For more sophisticated async reader-writer patterns, consider `System.Threading.Channels` or an immutable snapshot pattern.
+> > [!danger] ReaderWriterLockSlim is not async-safe
+> >
+> > `ReaderWriterLockSlim` is thread-affine — you cannot hold the lock across an
+> > `await` because the continuation may run on a different thread. Use
+> > `SemaphoreSlim` for async-safe mutual exclusion, or restructure to hold the
+> > lock only during synchronous sections.
+>
+> > [!success] Use SemaphoreSlim(1,1) for async reader-writer patterns
+> >
+> > When you need mutual exclusion in async code, use `SemaphoreSlim(1, 1)` as an
+> > async-compatible lock. For more sophisticated async reader-writer patterns,
+> > consider `System.Threading.Channels` or an immutable snapshot pattern.
 
 `ReaderWriterLockSlim` allows multiple concurrent readers, gives writers
 exclusive access through `EnterWriteLock`, and supports
@@ -1322,14 +1417,22 @@ exclusive access through `EnterWriteLock`, and supports
 for read-heavy synchronous caches, but it still obeys normal lock-lifetime
 rules.
 
-> [!warning] Lock release must survive exceptions
+> [!warning] Lock lifetime has to survive every exception path
 >
-> Forgetting to exit a read or write lock on an exception path leaves every other
-> waiter blocked behind a lock that will never be released.
-
-> [!success] Pair every Enter with Exit in `finally`
+> A lock is only safe if its release is guaranteed. One forgotten exit path can
+> stall every other reader and writer behind it.
 >
-> Always pair `EnterReadLock`/`EnterWriteLock` with `ExitReadLock`/`ExitWriteLock` inside a `try/finally` block. This guarantees the lock is released even if an exception is thrown, preventing permanent deadlock for all waiting threads.
+> > [!danger] Lock release must survive exceptions
+> >
+> > Forgetting to exit a read or write lock on an exception path leaves every
+> > other waiter blocked behind a lock that will never be released.
+>
+> > [!success] Pair every Enter with Exit in `finally`
+> >
+> > Always pair `EnterReadLock`/`EnterWriteLock` with
+> > `ExitReadLock`/`ExitWriteLock` inside a `try/finally` block. This guarantees
+> > the lock is released even if an exception is thrown, preventing permanent
+> > deadlock for all waiting threads.
 
 The cell builds a shared `Dictionary<string, string>` representing an ETL status cache. Five reader tasks call `EnterReadLock` concurrently to read `"ETL_001"` — all five can hold the read lock simultaneously. A single writer task calls `EnterWriteLock` to update `"ETL_002"` to `"completed"`, which blocks until all readers exit. The final print shows the dictionary state after the concurrent mix of reads and the exclusive write completes.
 
@@ -1565,43 +1668,58 @@ flowchart TD
 
 ### Keep Async Methods Observable
 
-> [!warning] `async void` removes the caller's control surface
+> [!warning] Async work should always expose an awaitable contract
 >
-> `async void` methods expose no `Task` to observe. The caller cannot await them,
-> aggregate them, or reliably catch their failures.
-
-> [!success] Return `Task` from async work unless the framework forbids it
+> The summary rule is simple: if callers cannot await it, they cannot coordinate
+> it safely.
 >
-> Use `async Task` or `async Task<T>` for all ordinary async methods. Reserve
-> `async void` exclusively for event handlers that are forced to use that
-> signature.
+> > [!danger] `async void` removes the caller's control surface
+> >
+> > `async void` methods expose no `Task` to observe. The caller cannot await
+> > them, aggregate them, or reliably catch their failures.
+>
+> > [!success] Return `Task` from async work unless the framework forbids it
+> >
+> > Use `async Task` or `async Task<T>` for all ordinary async methods. Reserve
+> > `async void` exclusively for event handlers that are forced to use that
+> > signature.
 
 ### Do Not Block a Context That Needs to Resume Async Work
 
-> [!warning] Sync-over-async deadlocks the thread that the continuation needs
+> [!warning] Context-bound threads must not block on async continuations
 >
-> Blocking on `.Result` or `.Wait()` from a synchronization context prevents the
-> awaited continuation from getting back onto that same context.
-
-> [!success] Stay async all the way to the boundary
+> Deadlocks appear when the thread that should resume the async work is the same
+> thread being blocked while it waits.
 >
-> Prefer `await` end to end. If a synchronous boundary is unavoidable, isolate it
-> deliberately with `GetAwaiter().GetResult()` only after escaping the captured
-> context.
+> > [!danger] Sync-over-async deadlocks the thread that the continuation needs
+> >
+> > Blocking on `.Result` or `.Wait()` from a synchronization context prevents
+> > the awaited continuation from getting back onto that same context.
+>
+> > [!success] Stay async all the way to the boundary
+> >
+> > Prefer `await` end to end. If a synchronous boundary is unavoidable, isolate
+> > it deliberately with `GetAwaiter().GetResult()` only after escaping the
+> > captured context.
 
 ### Synchronize Shared Mutation Explicitly
 
-> [!warning] Plain increments and check-then-act logic race under parallel load
+> [!warning] Any multi-step shared update needs an explicit safety boundary
 >
-> `counter++`, `+=`, and multi-step dictionary updates are not atomic. They can
-> interleave and lose work even when each individual line looks harmless in
-> isolation.
-
-> [!success] Use atomic APIs for simple cases and locks for compound state
+> Parallel code is only correct when the read, decision, and write steps stay
+> together under an atomic primitive or a lock.
 >
-> Reach for `Interlocked` for counters and flags, `ConcurrentDictionary` for
-> common keyed concurrency patterns, and `lock` when a full critical section must
-> stay consistent across multiple operations.
+> > [!danger] Plain increments and check-then-act logic race under parallel load
+> >
+> > `counter++`, `+=`, and multi-step dictionary updates are not atomic. They can
+> > interleave and lose work even when each individual line looks harmless in
+> > isolation.
+>
+> > [!success] Use atomic APIs for simple cases and locks for compound state
+> >
+> > Reach for `Interlocked` for counters and flags, `ConcurrentDictionary` for
+> > common keyed concurrency patterns, and `lock` when a full critical section
+> > must stay consistent across multiple operations.
 
 ## Recommendations
 
