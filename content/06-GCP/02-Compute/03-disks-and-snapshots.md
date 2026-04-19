@@ -257,20 +257,29 @@ status: complete
 }}}%%
 flowchart LR
     subgraph VM["stoxx-vm (e2-medium)"]
-        direction TB
+        VPAD[" "]
         BOOT["stoxx-boot<br>pd-balanced · 50 GB<br>/ (boot disk)<br>OS + SQL Server binaries"]
         DATA["stoxx-data<br>pd-ssd · 100 GB<br>/mnt/sqldata<br>MDF + NDF data files"]
         LOG["stoxx-log<br>pd-ssd · 20 GB<br>/mnt/sqllog<br>LDF transaction log"]
         TEMP["stoxx-tempdb<br>pd-ssd · 20 GB<br>/mnt/sqltempdb<br>TempDB data + log"]
+        VPAD ~~~ BOOT
+        VPAD ~~~ DATA
+        VPAD ~~~ LOG
+        VPAD ~~~ TEMP
     end
 
     subgraph SNAP["Snapshot Storage (Cloud Storage)"]
+        SPAD[" "]
         S1["stoxx-data snapshots<br>(daily, 7-day retention)"]
         S2["stoxx-log snapshots<br>(daily, 7-day retention)"]
+        SPAD ~~~ S1
+        SPAD ~~~ S2
     end
 
     DATA --> S1
     LOG --> S2
+    style VPAD fill:transparent,stroke:transparent,color:transparent
+    style SPAD fill:transparent,stroke:transparent,color:transparent
 ```
 
 > [!info] Why pd-ssd for Data, Log, and TempDB

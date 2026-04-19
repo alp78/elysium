@@ -707,7 +707,7 @@ Get-History | Measure-Object | Select-Object -ExpandProperty Count
 0
 ```
 
-## Cross-references
+## Command History Cross-References
 
 These related pages cover adjacent shell practices that affect recall safety, parameter reuse, and defensive command construction.
 
@@ -715,7 +715,7 @@ These related pages cover adjacent shell practices that affect recall safety, pa
 - [command-chaining](https://alp78.github.io/elysium/01-Shell/01-Scripting/04-command-chaining) - Building repeatable one-liners instead of reconstructing them from memory
 - [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) - Turning fragile interactive sequences into auditable scripts
 
-## References
+## Command History References
 
 - [GNU Bash Manual - Bash History Facilities](https://www.gnu.org/software/bash/manual/html_node/Bash-History-Facilities.html)
 - [GNU Bash Manual - Bash Builtins (`history`, `bind`)](https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html)

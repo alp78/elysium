@@ -204,13 +204,13 @@ graph TD
 
 | Flow | Source | Destination | Tool | Format | Frequency | Vault Reference |
 |---|---|---|---|---|---|---|
-| API ingestion | External APIs | SQL Server bronze | Python (pyodbc) | JSON → SQL INSERT | Daily (Airflow) | [bronze-layer-loading > Strategy 1: Truncate & Reload (Most Loaders)](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading#strategy-1-truncate--reload-most-loaders) |
-| OHLCV merge | External APIs | SQL Server bronze | Python (pyodbc) | JSON → SQL MERGE | Daily (Airflow) | [bronze-layer-loading > Strategy 2: Merge (OHLCV Only)](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading#strategy-2-merge-ohlcv-only) |
+| API ingestion | External APIs | SQL Server bronze | Python (pyodbc) | JSON → SQL INSERT | Daily (Airflow) | [bronze-layer-loading > Strategy 1: Truncate & Reload (Most Loaders)](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading#strategy-1-truncate--reload-most-loaders) |
+| OHLCV merge | External APIs | SQL Server bronze | Python (pyodbc) | JSON → SQL MERGE | Daily (Airflow) | [bronze-layer-loading > Strategy 2: Merge (OHLCV Only)](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading#strategy-2-merge-ohlcv-only) |
 | Bronze → Silver | SQL Server bronze | SQL Server silver | Python transforms | In-database | Daily (Airflow) | [medallion-architecture > Silver (Cleaned)](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#silver-cleaned) |
 | Silver → Gold | SQL Server silver | SQL Server gold | Python transforms | In-database | Daily (Airflow) | [medallion-architecture > Gold (Analytics)](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture#gold-analytics) |
 | SQL → BigQuery | SQL Server gold | BigQuery | bcp → GCS → bq load | CSV/Parquet | Daily | See cross-database join below |
-| CDC streaming | SQL Server | Pub/Sub → BigQuery | CDC + Python | JSON events | Near-real-time | [sql-server-change-tracking > CDC → Pub/Sub — streaming changes to GCP](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/sql-server-change-tracking#cdc--pubsub--streaming-changes-to-gcp) |
-| CDC to Firestore | SQL Server | Firestore | CDC + Python | JSON docs | Event-driven | [sql-server-change-tracking > CDC → Firestore — push dimension changes to real-time store](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/sql-server-change-tracking#cdc--firestore--push-dimension-changes-to-real-time-store) |
+| CDC streaming | SQL Server | Pub/Sub → BigQuery | CDC + Python | JSON events | Near-real-time | [sql-server-change-tracking > CDC → Pub/Sub — streaming changes to GCP](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/sql-server-change-tracking#cdc--pubsub--streaming-changes-to-gcp) |
+| CDC to Firestore | SQL Server | Firestore | CDC + Python | JSON docs | Event-driven | [sql-server-change-tracking > CDC → Firestore — push dimension changes to real-time store](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/sql-server-change-tracking#cdc--firestore--push-dimension-changes-to-real-time-store) |
 | GCS → BigQuery | Cloud Storage | BigQuery | bq load | Parquet/CSV | On-demand | [data-loading-and-export > bq load --source_format=PARQUET — load Parquet from GCS (recommended)](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export#bq-load---sourceformatparquet--load-parquet-from-gcs-recommended) |
 | File transfer | Local | GCE VM | gcloud scp / rsync | Any | Ad-hoc | [data-transfer > gcloud compute scp — push and pull files to/from GCE VMs](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer#gcloud-compute-scp--push-and-pull-files-tofrom-gce-vms) |
 | File upload | Local | GCS | gcloud storage cp | Any | Ad-hoc | [data-transfer > gcloud storage — modern replacement for gsutil (20-94% faster)](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer#gcloud-storage--modern-replacement-for-gsutil-20-94-faster) |
@@ -229,8 +229,8 @@ graph TD
 | Local file | GCS | Any | `gcloud storage cp` | Parallel composite upload, resumable | [data-transfer > gcloud storage — modern replacement for gsutil (20-94% faster)](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer#gcloud-storage--modern-replacement-for-gsutil-20-94-faster) |
 | GCS | BigQuery | Any | `bq load` | Native, no intermediate step | [data-loading-and-export > bq load --source_format=PARQUET — load Parquet from GCS (recommended)](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export#bq-load---sourceformatparquet--load-parquet-from-gcs-recommended) |
 | BigQuery | GCS | Any | `bq extract` | Native export with compression | [data-loading-and-export > Exporting BigQuery Data to GCS](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export#exporting-bigquery-data-to-gcs) |
-| JSON/CSV | SQL Server | < 100K rows | pyodbc `fast_executemany` | Transactional, Python-native | [sql-server-loading-patterns > cursor.fast_executemany = True — batch mode activation](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#cursorfastexecutemany--true--batch-mode-activation) |
-| JSON/CSV | SQL Server | > 1M rows | `bcp` bulk load | Fastest path, minimal logging | [sql-server-loading-patterns > bcp BULK LOAD — command-line syntax](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#bcp-bulk-load--command-line-syntax) |
+| JSON/CSV | SQL Server | < 100K rows | pyodbc `fast_executemany` | Transactional, Python-native | [sql-server-loading-patterns > cursor.fast_executemany = True — batch mode activation](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#cursorfastexecutemany--true--batch-mode-activation) |
+| JSON/CSV | SQL Server | > 1M rows | `bcp` bulk load | Fastest path, minimal logging | [sql-server-loading-patterns > bcp BULK LOAD — command-line syntax](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#bcp-bulk-load--command-line-syntax) |
 | SQL Server | CSV file | Any | `bcp queryout` | Maximum throughput | [data-transfer > bcp queryout — export a query result to CSV](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer#bcp-queryout--export-a-query-result-to-csv) |
 | GCS ↔ GCS | Same region | Any | `gsutil cp gs:// gs://` | Server-side, zero egress | [data-transfer > gsutil cp gs:// gs:// — server-side copy between GCS buckets](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer#gsutil-cp-gs-gs--server-side-copy-between-gcs-buckets) |
 | Directory sync | Local ↔ GCS | Ongoing | `gsutil rsync` / `gcloud storage rsync` | Delta sync, delete support | [data-transfer > gsutil rsync — delta sync to Cloud Storage](https://alp78.github.io/elysium/01-Shell/File-Operations/data-transfer#gsutil-rsync--delta-sync-to-cloud-storage) |
@@ -377,7 +377,7 @@ Best for < 1M rows. Use when SQL Server has the complex logic and BigQuery has a
 
 - `bq extract` to GCS as CSV: [data-loading-and-export > Exporting BigQuery Data to GCS](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export#exporting-bigquery-data-to-gcs)
 - `gsutil cp` / `gcloud storage cp` to VM: [gcs-object-operations > Copying Files with gcloud storage cp](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations#copying-files-with-gcloud-storage-cp)
-- `bcp in` to SQL Server: [sql-server-loading-patterns > bcp BULK LOAD — command-line syntax](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#bcp-bulk-load--command-line-syntax)
+- `bcp in` to SQL Server: [sql-server-loading-patterns > bcp BULK LOAD — command-line syntax](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#bcp-bulk-load--command-line-syntax)
 
 ### Option B: Export SQL Server → load into BigQuery (analytical queries)
 
@@ -412,7 +412,7 @@ graph LR
 
 Best for ad-hoc analysis and small-to-medium joins. Use when both datasets fit in memory.
 
-- SQL Server via pyodbc: [sql-server-loading-patterns > cursor.fast_executemany = True — batch mode activation](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#cursorfastexecutemany--true--batch-mode-activation)
+- SQL Server via pyodbc: [sql-server-loading-patterns > cursor.fast_executemany = True — batch mode activation](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#cursorfastexecutemany--true--batch-mode-activation)
 - BigQuery via Python client: [bq-advanced](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-advanced)
 
 > [!tip] Cross-Database Join Decision
@@ -436,7 +436,7 @@ Best for ad-hoc analysis and small-to-medium joins. Use when both datasets fit i
 > | **No intermediate storage** | If destination fails, restart from source | Stage in GCS first — replay without re-fetching |
 > | **Mixed push and pull for same flow** | CDC to Pub/Sub AND a batch pull = duplicates | Choose one: event-driven OR batch, not both |
 > | **No source-destination validation** | Row count mismatches go unnoticed | Compare `COUNT(*)` after every load — see [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) |
-> | **Loading directly to production** | No validation, no rollback | Always load to staging first — see [sql-server-loading-patterns > Loading Directly to Production — no staging, no validation](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#loading-directly-to-production--no-staging-no-validation) |
+> | **Loading directly to production** | No validation, no rollback | Always load to staging first — see [sql-server-loading-patterns > Loading Directly to Production — no staging, no validation](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#loading-directly-to-production--no-staging-no-validation) |
 
 > [!success] Safe Data Flow Patterns
 >
@@ -452,7 +452,7 @@ Best for ad-hoc analysis and small-to-medium joins. Use when both datasets fit i
 - [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — Bronze → Silver → Gold layer design
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Load patterns that are safe to re-run
 - [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture) — Full streaming theory (Lambda, Kappa, CDC, windowing)
-- [sql-server-loading-patterns](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns) — SQL Server bulk load methods and benchmarks
+- [sql-server-loading-patterns](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns) — SQL Server bulk load methods and benchmarks
 - [data-loading-and-export](https://alp78.github.io/elysium/06-GCP/BigQuery/data-loading-and-export) — BigQuery load and export operations
 - [gcs-object-operations](https://alp78.github.io/elysium/06-GCP/Storage/gcs-object-operations) — GCS file operations and transfer optimization
 - [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — Orchestration patterns for all flows above

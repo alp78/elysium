@@ -58,6 +58,6 @@ mindmap
 
 ## Cross-References
 
-- [SQL Server](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server) — Administration, performance, and pipeline patterns beyond queries
+- [SQL Server](https://alp78.github.io/elysium/04-Databases/moc-sql-server) — Administration, performance, and pipeline patterns beyond queries
 - [GCP](https://alp78.github.io/elysium/06-GCP/moc-gcp) — BigQuery service configuration and data loading
 - [Programming Languages](https://alp78.github.io/elysium/02-Programming-Languages/moc-programming-languages) — Python and C# database access notebooks

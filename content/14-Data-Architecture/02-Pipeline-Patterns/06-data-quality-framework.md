@@ -201,7 +201,7 @@ Validity means values fall within acceptable domains and pass business logic rul
 - Python row-level validation: [25_py_functional_pipeline > Pydantic — validate Bronze rows with BaseModel() row-level check](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#pydantic--validate-bronze-rows-with-basemodel-row-level-check)
 - dbt expression assertions: [dbt-testing-framework > dbt-utils test — expression_is_true](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--expressionistrue)
 - dbt range checks: [dbt-testing-framework > dbt-utils test — accepted_range](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt-utils-test--acceptedrange)
-- Weight sum validation: [pit-integrity-logic > Validation: Weight Sum Check](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic#validation-weight-sum-check)
+- Weight sum validation: [pit-integrity-logic > Validation: Weight Sum Check](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic#validation-weight-sum-check)
 - Data contracts: [dbt-data-contracts-implementation](https://alp78.github.io/elysium/11-dbt/Quality/dbt-data-contracts-implementation)
 
 ### Timeliness — data arrives within SLA
@@ -259,8 +259,8 @@ Consistency means the same logical entity has the same value in every system tha
 **How to detect:** Reconciliation queries comparing row counts, checksums, and key aggregates across systems. Hash-based comparison of entire datasets.
 
 - Python deterministic hash: [25_py_functional_pipeline > hashlib — compute deterministic DataFrame hash with sha256()](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline#hashlib--compute-deterministic-dataframe-hash-with-sha256)
-- SCD Type 2 consistency: [silver-transforms > silver.index_dim — SCD Type 2 Dimension](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms#silverindexdim--scd-type-2-dimension)
-- Upsert consistency: [sql-server-loading-patterns > Upsert (INSERT + UPDATE)](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#upsert-insert--update)
+- SCD Type 2 consistency: [silver-transforms > silver.index_dim — SCD Type 2 Dimension](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms#silverindexdim--scd-type-2-dimension)
+- Upsert consistency: [sql-server-loading-patterns > Upsert (INSERT + UPDATE)](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns#upsert-insert--update)
 
 ## Quality Gates by Medallion Layer
 
@@ -374,7 +374,7 @@ Gold ([medallion-architecture > Gold (Analytics)](https://alp78.github.io/elysiu
 > - Constituent weight below minimum threshold
 > - Publication timestamp later than typical
 
-- Weight validation: [pit-integrity-logic > Validation: Weight Sum Check](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic#validation-weight-sum-check)
+- Weight validation: [pit-integrity-logic > Validation: Weight Sum Check](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic#validation-weight-sum-check)
 - Circuit breaker incident: esg circuit breaker fired
 - Store test failures for audit: [dbt-testing-framework > dbt --store-failures](https://alp78.github.io/elysium/11-dbt/Quality/dbt-testing-framework#dbt---store-failures)
 

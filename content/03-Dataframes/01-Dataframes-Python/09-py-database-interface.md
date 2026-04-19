@@ -3546,7 +3546,7 @@ First batch: (50, 12)
 >
 > This destroys indexes, constraints, permissions, and foreign keys. Use
 > `if_exists="append"` with a preceding `DELETE` for controlled replacement, or use
-> `MERGE`/upsert patterns from [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert).
+> `MERGE`/upsert patterns from [merge-and-upsert](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert).
 
 > [!success] Use if_exists="append" with a preceding DELETE
 >

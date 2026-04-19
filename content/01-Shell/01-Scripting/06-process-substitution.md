@@ -509,15 +509,15 @@ Keep the table as a compact syntax check; the examples above show when each form
 
 
 
-## Operational constraints
+## Process Substitution and Here-Document Constraints
 
 - `<()`, `>()`, and `<<<` require Bash. If a script starts with `#!/bin/sh` on a system where `/bin/sh` is `dash`, process substitution and here-strings fail with a syntax error.
 - `<<EOF` expands variables and command substitutions, while `<<'EOF'` passes the body literally. Pick the delimiter style deliberately before embedding SQL, templates, or config text.
 - PowerShell here-string closing delimiters must start at column 0. Any leading whitespace turns the closing line into a parser error instead of a terminator.
 
-## Recommendations
+## Process Substitution and Here-Document Recommendations
 
-### Bash/Linux | recommendations
+### Bash/Linux | process substitution recommendations | here-docs and tee fan-out
 
 #### Compare generated outputs with `diff <()`
 
@@ -605,7 +605,7 @@ printf '%s=%s\n' "$symbol" "$price"
 AAPL=145.32
 ```
 
-### PowerShell | recommendations
+### PowerShell | process substitution recommendations | temp-file workarounds
 
 #### Write transient content to a temp file when a command needs a path
 
@@ -623,9 +623,9 @@ alpha
 beta
 ```
 
-## Troubleshooting
+## Process Substitution and Here-Document Troubleshooting
 
-### Bash/Linux | troubleshooting
+### Bash/Linux | process substitution troubleshooting | shell and delimiter errors
 
 #### Syntax error near unexpected token `(`
 
@@ -683,7 +683,7 @@ echo "exit=$status"
 exit=0
 ```
 
-### PowerShell | troubleshooting
+### PowerShell | here-string troubleshooting | terminator indentation
 
 #### White space is not allowed before the string terminator
 
@@ -705,14 +705,14 @@ At line:3 char:3
 White space is not allowed before the string terminator.
 ```
 
-## Cross-references
+## Process Substitution and Here-Document Cross-References
 
 - [io-redirection](https://alp78.github.io/elysium/01-Shell/01-Scripting/03-io-redirection) — Basic redirection operators
 - [command-chaining](https://alp78.github.io/elysium/01-Shell/01-Scripting/04-command-chaining) — Connecting commands with pipes
 - [brace-expansion-and-globbing](https://alp78.github.io/elysium/01-Shell/01-Scripting/05-brace-expansion-and-globbing) — Another argument generation technique
 - [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) — Using these patterns in production scripts
 
-## References
+## Process Substitution and Here-Document References
 
 - [GNU Bash Reference — Process Substitution](https://www.gnu.org/software/bash/manual/html_node/Process-Substitution.html)
 - [GNU Bash Reference — Here Documents](https://www.gnu.org/software/bash/manual/html_node/Redirections.html#Here-Documents)

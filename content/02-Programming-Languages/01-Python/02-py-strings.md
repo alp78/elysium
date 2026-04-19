@@ -383,13 +383,20 @@ The diagram below shows what happens in memory. The variable `s` is reassigned t
 }}}%%
 flowchart LR
     subgraph Before["Before: s = 'hello'"]
+        BPAD[" "]
         s1["s"] -->|points to| obj1["'hello'<br/>(heap)"]
+        BPAD ~~~ s1
     end
     subgraph After["After: s = 'H' + s[1:]"]
+        APAD[" "]
         s2["s"] -->|points to| obj2["'Hello'<br/>(new object)"]
         obj3["'hello'<br/>(unreachable → GC)"]
+        APAD ~~~ s2
+        APAD ~~~ obj3
     end
     Before --> After
+    style BPAD fill:transparent,stroke:transparent,color:transparent
+    style APAD fill:transparent,stroke:transparent,color:transparent
 ```
 
 ## Indexing & Slicing

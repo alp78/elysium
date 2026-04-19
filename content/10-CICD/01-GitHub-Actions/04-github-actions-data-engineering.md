@@ -374,7 +374,7 @@ tags:
 > > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
 
 
-## Data-Engineering Workflow Taxonomy
+## How data-engineering workflow types map to risk and trigger
 
 Data-engineering CI/CD workflows fall into distinct categories based on what they validate, when they run, and what blast radius they control. The taxonomy below maps every pattern in this page to its category and trigger context.
 
@@ -391,29 +391,47 @@ Data-engineering CI/CD workflows fall into distinct categories based on what the
 }}}%%
 flowchart TB
     subgraph CI["CI — Validate on every push/PR"]
+        CIPAD[" "]
         SQL["SQL Validation"]
         DBT["dbt Parse & Lint"]
         DAG["Airflow DAG Import"]
         SPARK["PySpark Tests"]
         NB["Notebook Hygiene"]
         SCHEMA["Schema Contracts"]
+        CIPAD ~~~ SQL
+        CIPAD ~~~ DBT
+        CIPAD ~~~ DAG
+        CIPAD ~~~ SPARK
+        CIPAD ~~~ NB
+        CIPAD ~~~ SCHEMA
     end
 
     subgraph CD["CD — Deploy on merge/release"]
+        CDPAD[" "]
         TF["Terraform Apply"]
         IMG["Pipeline Image Build"]
         DEPLOY["Pipeline Deploy"]
+        CDPAD ~~~ TF
+        CDPAD ~~~ IMG
+        CDPAD ~~~ DEPLOY
     end
 
     subgraph OPS["Operational — Manual or Scheduled"]
+        OPSPAD[" "]
         BACKFILL["Backfill Workflows"]
         COST["Cost Monitoring"]
         DQ["Data Quality Audits"]
+        OPSPAD ~~~ BACKFILL
+        OPSPAD ~~~ COST
+        OPSPAD ~~~ DQ
     end
 
     SQL --> DQ
     DBT --> DEPLOY
     TF --> DEPLOY
+    style CIPAD fill:transparent,stroke:transparent,color:transparent
+    style CDPAD fill:transparent,stroke:transparent,color:transparent
+    style OPSPAD fill:transparent,stroke:transparent,color:transparent
     IMG --> DEPLOY
     BACKFILL --> DQ
 
@@ -446,11 +464,11 @@ flowchart TB
 >
 > Use `environment: production` with required reviewers for any job that modifies production data. Reserve `pull_request` triggers for read-only validation (dry-run, parse, lint). Only `push` to `main` (post-merge) or `workflow_dispatch` should trigger write operations.
 
-## SQL Validation
+## SQL validation before code reaches the main branch
 
 SQL validation catches syntax errors, missing columns, and type mismatches before code reaches `main`. The validation cost is zero or near-zero: BigQuery dry-run processes no data (no billing), and SQL Server PARSEONLY checks syntax without compilation. Every SQL file in the repository should be validated on every push.
 
-### GitHub Actions | SQL validation | BigQuery dry-run
+### SQL validation | BigQuery dry-run
 
 BigQuery dry-run validates SQL syntax and resolves table references, column names, and types against the live catalog. It returns the estimated bytes that would be processed if the query ran, without actually scanning any data. This makes it free to run in CI.
 
@@ -552,7 +570,7 @@ BigQuery Dry-Run — Dry-run all SQL files:
 >
 > The byte estimate from `--dry_run` maps directly to on-demand query pricing: $6.25 per TB processed. A 410 KB estimate means the query would cost approximately $0.0000025 — effectively free. Use this to flag expensive queries in CI before they reach production.
 
-### GitHub Actions | SQL validation | SQL Server PARSEONLY
+### SQL validation | SQL Server PARSEONLY
 
 SQL Server's `SET PARSEONLY ON` checks SQL syntax without compiling or executing the statement. Combined with a service container running SQL Server in the workflow, this validates T-SQL migrations without needing a production database connection.
 
@@ -615,7 +633,7 @@ On every push that modifies migration files. It is typically triggered by `push`
           exit $exit_code
 ```
 
-### GitHub Actions | SQL validation | warehouse comparison
+### SQL validation | warehouse comparison
 
 Different warehouse engines require different validation approaches. The table below compares the validation mechanisms available for each major data warehouse.
 
@@ -636,11 +654,11 @@ Different warehouse engines require different validation approaches. The table b
 >
 > Create a dedicated CI service user with `SELECT` permissions only on relevant schemas. For Snowflake, use a role like `CI_READER` with `USAGE` on the warehouse and `SELECT` on schemas. For Redshift, use a read-only group. Never reuse production service account credentials for CI validation.
 
-## dbt CI
+## dbt validation from parse-only checks to full test runs
 
 dbt CI workflows validate SQL models, enforce style rules, and optionally run tests against an ephemeral schema. The minimal CI setup — parse and lint — requires no warehouse connection and catches most errors. The full CI setup — build and test — requires a service account with write access to an ephemeral dataset, providing complete validation at higher cost.
 
-### GitHub Actions | dbt CI | parse and lint
+### dbt CI | parse and lint
 
 The lightest dbt CI workflow: parse the project to verify model compilation and lint SQL files with SQLFluff. This runs without a warehouse connection and catches syntax errors, undefined references, and style violations.
 
@@ -742,7 +760,7 @@ dbt Parse & Lint — SQLFluff lint dbt models:
 | **Build + test** | Ephemeral schema | Above + actual query execution, data tests | Warehouse compute | Merge to main or nightly |
 | **Slim CI** | Ephemeral schema | Only modified models (`state:modified+`) | Reduced compute | Every PR (large projects) |
 
-### GitHub Actions | dbt CI | ephemeral schema isolation
+### dbt CI | ephemeral schema isolation
 
 For full dbt CI (build + test), create an ephemeral schema per CI run to isolate test data from production. The schema is created at job start and destroyed at job end, even on failure.
 
@@ -775,7 +793,7 @@ env:
   run: bq rm -r -f "$GCP_PROJECT:$DBT_CI_SCHEMA"
 ```
 
-### GitHub Actions | dbt CI | cost control and slim CI
+### dbt CI | cost control and slim CI
 
 Large dbt projects can have hundreds of models. Running all of them on every PR is expensive and slow. Slim CI uses dbt's state comparison to run only modified models and their downstream dependents.
 
@@ -809,11 +827,11 @@ Large dbt projects can have hundreds of models. Running all of them on every PR 
 | `--exclude tag:nightly` | Exclude models tagged as nightly-only from CI runs |
 | `--target ci` | Use the CI-specific profile target (ephemeral schema, reduced compute) |
 
-## Pipeline and Orchestrator Validation
+## Pipeline and orchestrator validation before deployment
 
 Orchestrator validation catches broken DAG definitions, missing dependencies, and import errors before deployment. These checks run locally without connecting to production schedulers.
 
-### GitHub Actions | orchestrator CI | Airflow DAG import
+### orchestrator CI | Airflow DAG import
 
 The Airflow DAG import check loads every Python file in the `dags/` directory into an Airflow environment and verifies it produces valid DAG objects. This catches import errors, missing Python packages, circular dependencies, and invalid scheduling expressions.
 
@@ -912,7 +930,7 @@ Validate Airflow DAGs — DAG import check:
   ✓ daily_ingest.py - daily_ohlcv_ingest (1 tasks, schedule=0 18 * * 1-5)
 ```
 
-### GitHub Actions | orchestrator CI | Dagster and Prefect
+### orchestrator CI | Dagster and Prefect
 
 Dagster and Prefect both support CI validation without connecting to production infrastructure. Dagster's `dagster asset list` and Prefect's `prefect flow validate` verify that asset/flow definitions compile and resolve dependencies.
 
@@ -953,7 +971,7 @@ Dagster and Prefect both support CI validation without connecting to production 
 | **Prefect** | Python import + introspection | Flow definitions, task dependencies, retries | No |
 | **dbt** | `dbt parse` | Model compilation, source references, macros | No |
 
-### GitHub Actions | orchestrator CI | PySpark tests
+### orchestrator CI | PySpark tests
 
 PySpark tests run with a local `SparkSession` on the GitHub runner — no cluster required. The `local[2]` master uses two threads to simulate parallelism and catch concurrency issues in transformations.
 
@@ -1035,11 +1053,11 @@ PySpark Tests (Python 3.12) — Run PySpark tests:
   ============================== 3 passed in 6.88s ===============================
 ```
 
-## Infrastructure Automation
+## Infrastructure changes with plan-first approval gates
 
 Terraform workflows enforce infrastructure-as-code discipline for data platforms. The plan runs on every push (read-only), and apply runs only after manual approval in a protected environment.
 
-### GitHub Actions | Terraform | plan on PR
+### Terraform | plan on PR
 
 The Terraform plan workflow runs `terraform init`, `validate`, and `plan` on every push to the `infra/` directory. The plan output is written to the job summary and uploaded as an artifact for review.
 
@@ -1133,7 +1151,7 @@ Terraform Plan — Terraform plan:
   Plan: 2 to add, 0 to change, 0 to destroy.
 ```
 
-### GitHub Actions | Terraform | apply with environment gate
+### Terraform | apply with environment gate
 
 Terraform apply runs only via manual dispatch with explicit confirmation and a production environment approval gate. The `inputs.confirm` must equal `'apply'` to proceed.
 
@@ -1197,7 +1215,7 @@ jobs:
 > 2. **Environment gate** — `environment: production` with a required reviewer pauses the workflow until a human approves.
 > Both must pass for the apply to proceed.
 
-### GitHub Actions | Terraform | blast radius control
+### Terraform | blast radius control
 
 | Control | Implementation | What It Prevents |
 |---------|---------------|------------------|
@@ -1209,11 +1227,11 @@ jobs:
 | **Targeted apply** | `terraform apply -target=resource` | Limiting blast radius to specific resources |
 | **Sentinel/OPA policies** | Policy-as-code validation before apply | Enforcing organizational constraints |
 
-## Data Quality Gates
+## Data quality checks that run against live warehouse state
 
 Data quality workflows run assertions against live warehouse data and produce human-readable reports as artifacts. These can run on schedule (nightly audits) or on push (post-deployment validation).
 
-### GitHub Actions | data quality | assertion checks
+### data quality | assertion checks
 
 Data quality assertions are boolean checks on data properties: row counts, null percentages, value ranges, uniqueness constraints. Each check queries the warehouse and evaluates the result against a threshold.
 
@@ -1345,7 +1363,7 @@ ARTIFACTS
 >
 > For larger projects, replace inline assertions with Great Expectations checkpoints. GE generates HTML data docs as artifacts and supports expectation suites defined in YAML. The workflow structure remains the same — run checkpoints in a step and upload the data docs as an artifact.
 
-### GitHub Actions | data quality | schema and contract validation
+### data quality | schema and contract validation
 
 Event schemas define the contract between producers and consumers in streaming pipelines. CI validates that schemas are syntactically valid, that sample payloads conform, and that changes don't break consumers.
 
@@ -1441,11 +1459,11 @@ Validate Event Schemas — Check for breaking changes:
 | Narrow a type | Yes | Requires validation | Changing `price: number` to `price: integer` |
 | Widen a type | No | Safe | Changing `price: integer` to `price: number` |
 
-## Notebook and Artifact Hygiene
+## Notebook and artifact rules that keep repositories clean
 
 Jupyter notebooks committed with outputs create three problems: large binary diffs in version control, accidental data exposure in cell outputs, and non-reproducible analysis. CI should enforce output-free notebooks and validate structural integrity.
 
-### GitHub Actions | notebooks | output stripping and validation
+### notebooks | output stripping and validation
 
 The notebook hygiene workflow inspects every `.ipynb` file for committed outputs and validates the notebook structure using `nbformat`.
 
@@ -1550,7 +1568,7 @@ Notebook Hygiene Check — Validate notebook structure:
 > ```
 > This makes output-free commits the default. The CI check acts as a safety net for contributors who haven't configured the hook.
 
-### GitHub Actions | artifacts | manifests, reports, and sensitive data
+### artifacts | manifests, reports, and sensitive data
 
 | Artifact Type | Upload Pattern | Retention | Security Notes |
 |--------------|---------------|-----------|---------------|
@@ -1569,11 +1587,11 @@ Notebook Hygiene Check — Validate notebook structure:
 >
 > Print only row counts, pass/fail status, and aggregate metrics to logs. Upload structured reports (JSON/CSV) with predefined columns. Never upload raw `SELECT *` results.
 
-## Backfill and Manual Operations
+## Controlled backfills and other operator-triggered workflows
 
 Data pipelines often require controlled manual operations: backfilling historical data, repairing corrupted partitions, or re-running failed transformations. These workflows use `workflow_dispatch` with typed inputs, dry-run validation, and environment-gated approval to prevent accidental production writes.
 
-### GitHub Actions | backfill | dispatch with typed parameters
+### backfill | dispatch with typed parameters
 
 The backfill workflow uses `workflow_dispatch` inputs to accept date ranges, target tables, dry-run mode, and an audit reason. Input validation runs before any data operations.
 
@@ -1725,7 +1743,7 @@ Execute Backfill:
 | `dry_run` | `boolean` | Validate without writing (default: true) | `true` |
 | `reason` | `string` | Audit trail for the backfill | `Missing data for Jan 2026` |
 
-### GitHub Actions | backfill | idempotency and rerun safety
+### backfill | idempotency and rerun safety
 
 > [!danger] Non-idempotent backfills cause data duplication
 >
@@ -1750,11 +1768,11 @@ INSERT INTO `project.dataset.table`
 SELECT * FROM source_pipeline(@start_date, @end_date);
 ```
 
-## Pipeline Image and Package Publishing
+## Pipeline images and packages published with traceable tags
 
 Pipeline Docker images are built and pushed to GHCR on every push to source or dependency files. The image is tagged with both the branch name and the commit SHA for traceability.
 
-### GitHub Actions | packaging | pipeline Docker images
+### packaging | pipeline Docker images
 
 #### Build and push a pipeline image to GHCR
 
@@ -1843,11 +1861,11 @@ ARTIFACTS
   Docker build metadata
 ```
 
-## Cost, Scale, and Environment Control
+## Controls for cost, scale, and environment safety
 
 Data-engineering CI workflows can incur significant costs if warehouse queries run uncontrolled. This section covers cost containment, ephemeral resource cleanup, and concurrency management for expensive jobs.
 
-### GitHub Actions | cost control | warehouse query limits
+### cost control | warehouse query limits
 
 | Control | Implementation | Scope |
 |---------|---------------|-------|
@@ -1867,7 +1885,7 @@ Data-engineering CI workflows can incur significant costs if warehouse queries r
 >
 > Add `--maximum_bytes_billed` to all `bq query` calls in CI. Use dry-run to estimate costs before execution. For Snowflake, use a dedicated `CI_XS` warehouse with auto-suspend.
 
-### GitHub Actions | cost control | billing monitoring
+### cost control | billing monitoring
 
 The cost monitor workflow queries BigQuery dataset sizes and recent query volumes on a schedule, producing a summary report for review.
 
@@ -1892,11 +1910,11 @@ BigQuery Cost Report — Check recent query costs:
 >
 > The `INFORMATION_SCHEMA.JOBS_BY_PROJECT` view requires the `bigquery.jobs.list` permission. The Workload Identity Federation service account needs the `roles/bigquery.resourceViewer` role to access job metadata for cost reporting.
 
-## Workload Identity Federation
+## Workload Identity Federation for keyless GCP access
 
 All GCP-interacting workflows in this page use Workload Identity Federation (OIDC) for authentication. This eliminates long-lived service account keys and provides per-workflow, per-branch credential scoping.
 
-### GitHub Actions | WIF | GCP OIDC setup
+### WIF | GCP OIDC setup
 
 The OIDC authentication pattern requires three components: a WIF pool and provider in GCP, a service account with appropriate roles, and GitHub secrets pointing to these resources.
 
@@ -1923,7 +1941,7 @@ steps:
 | `GCP_SERVICE_ACCOUNT` | `sa-name@project.iam.gserviceaccount.com` | Service account email for token exchange |
 | `GCP_PROJECT_ID` | `bq-wh-nb` | Default GCP project |
 
-### GitHub Actions | WIF | restricting by branch
+### WIF | restricting by branch
 
 WIF providers can restrict which branches or repositories are allowed to authenticate. This prevents feature branches from accessing production resources.
 
@@ -1944,7 +1962,7 @@ gcloud iam workload-identity-pools providers update-oidc github \
 >
 > Create separate service accounts for CI (read-only), CD (write to staging), and production (write to production). Bind each to the WIF pool with appropriate attribute conditions (branch, repository, environment).
 
-## Quick Reference
+## Key workflow patterns and commands at a glance
 
 | Workflow | Trigger | Key Action | Credentials | Run Time |
 |----------|---------|-----------|-------------|----------|
@@ -1963,7 +1981,7 @@ gcloud iam workload-identity-pools providers update-oidc github \
 | **Backfill** | `workflow_dispatch` | Typed inputs + dry-run | OIDC write | ~31s |
 | **Cost Monitor** | `schedule`, `dispatch` | BQ billing queries | OIDC read-only | ~30s |
 
-## Troubleshooting
+## Common data-engineering workflow failures and fixes
 
 | Failure | Cause | Fix |
 |---------|-------|-----|
@@ -1983,7 +2001,7 @@ gcloud iam workload-identity-pools providers update-oidc github \
 | WIF auth `Unable to generate token` | Attribute condition mismatch | Check branch name matches the WIF provider condition |
 | Cost monitor returns empty results | SA lacks table listing permissions | Grant `roles/bigquery.dataViewer` on the dataset |
 
-## Operating Guidance
+## Operating rules for safe data-engineering automation
 
 1. **Validate before mutate** — every write operation must be preceded by a read-only validation step (dry-run, plan, parse).
 2. **Ephemeral by default** — CI resources (schemas, datasets, containers) are created at job start and destroyed at job end, even on failure.

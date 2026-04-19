@@ -894,7 +894,7 @@ Use this table as a quick reference for the cmdlet parameters after the runnable
 | `-Depth` | Limit recursion depth | Available in Windows PowerShell 5+ and PowerShell 7+ |
 | `-Name` | Return names instead of full objects | Useful for quick verification |
 
-## Recommended patterns
+## Brace Expansion and Globbing Recommended Patterns
 
 The original recommendation matrix is more useful as executable platform-specific guidance. The Linux items that are already demonstrated above stay in their feature sections; the entries here cover the defaults and distinctions that benefit from explicit verification.
 
@@ -1002,7 +1002,7 @@ What if: Performing the operation "Remove File" on target "C:\Users\aperi\AppDat
 What if: Performing the operation "Remove File" on target "C:\Users\aperi\AppData\Local\Temp\brace-glob-ps-02fe4964-c038-4f67-a6dd-f028a7f9e750\delete-demo\notes.md".
 ```
 
-## Troubleshooting
+## Brace Expansion and Globbing Troubleshooting
 
 Each troubleshooting item below replaces the old matrix with a concrete symptom, a runnable proof, and the correction.
 
@@ -1102,7 +1102,7 @@ Get-ChildItem -Path .\* -Include *.py | Select-Object -ExpandProperty Name
 app.py
 ```
 
-## Cross-references
+## Brace Expansion and Globbing Cross-References
 
 - [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) - `set -euo pipefail` pairs with `failglob` for safer Bash scripts
 - [file-manipulation](https://alp78.github.io/elysium/01-Shell/02-File-Operations/02-file-manipulation) - `mkdir -p` and copy patterns that pair well with brace expansion

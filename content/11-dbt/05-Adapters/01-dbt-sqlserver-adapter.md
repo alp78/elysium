@@ -446,7 +446,7 @@ SELECT value FROM STRING_SPLIT(tag_list, ',')
 
 ### SQL Server Post-Hook Indexes
 
-SQL Server does not auto-create indexes on dbt-managed tables. For guidance on choosing between clustered, non-clustered, and columnstore indexes, see [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy). For incremental models queried by date range or ISIN, add non-clustered indexes via `post_hook`.
+SQL Server does not auto-create indexes on dbt-managed tables. For guidance on choosing between clustered, non-clustered, and columnstore indexes, see [index-types-and-strategy](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy). For incremental models queried by date range or ISIN, add non-clustered indexes via `post_hook`.
 
 ```sql
 -- models/mart/mart_esg_scores.sql
@@ -572,7 +572,7 @@ connect_timeout: 60
 
 ## Related
 
-- [moc-sql-server](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server)
+- [moc-sql-server](https://alp78.github.io/elysium/04-Databases/moc-sql-server)
 - [dbt-performance-tuning](https://alp78.github.io/elysium/11-dbt/Operations/dbt-performance-tuning)
-- [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sqlcmd-connection-and-usage)
+- [sqlcmd-connection-and-usage](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/01-Server-Operations/sqlcmd-connection-and-usage)
 - [dbt-cross-adapter-patterns](https://alp78.github.io/elysium/11-dbt/Adapters/dbt-cross-adapter-patterns)

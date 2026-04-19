@@ -320,7 +320,7 @@ Use when: rows can be corrected/restated and you want clean replacement without 
 
 #### merge (default for most adapters)
 
-Issues a SQL [MERGE](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) statement matching on `unique_key`. Rows that match are updated; rows that do not match are inserted.
+Issues a SQL [MERGE](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) statement matching on `unique_key`. Rows that match are updated; rows that do not match are inserted.
 
 *This merge configuration is the common choice when corrected rows and late-arriving facts need to upsert into an existing published table.*
 

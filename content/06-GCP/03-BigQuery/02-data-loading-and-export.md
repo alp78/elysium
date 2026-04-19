@@ -628,7 +628,7 @@ The snapshot is a read-only copy of all 50 rows as they exist at the moment of c
 
 > [!tip] Related Patterns
 >
-> - The `bq load` workflow mirrors the [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store.
+> - The `bq load` workflow mirrors the [bronze-layer-loading](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) pattern used for SQL Server ingestion — both follow the same stage-then-validate approach for landing raw data into an analytical store.
 > - Once data is loaded, [bq-engineering](https://alp78.github.io/elysium/05-DB-Queries/02-BigQuery/bq-engineering) covers the advanced query patterns that transform and consume it.
 
 ## Data Format Comparison

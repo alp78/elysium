@@ -243,4 +243,4 @@ Enable in: **Integrations > Google Cloud Platform > Edit > GCE Automuting = ON**
 - [datadog-custom-queries](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-custom-queries) — `sqlserver.deadlocks.total` metric source
 - [datadog-agent-airflow-vm](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-agent-airflow-vm) — StatsD source for Airflow scheduler metrics
 - [datadog-gcp-integration](https://alp78.github.io/elysium/13-Observability/Datadog/datadog-gcp-integration) — GCE Automuting for VM stop/start
-- [essential-dba-queries](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/essential-dba-queries) — Manual queries to investigate after a deadlock alert
+- [essential-dba-queries](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/01-Server-Operations/essential-dba-queries) — Manual queries to investigate after a deadlock alert

@@ -388,21 +388,27 @@ Before running any commands, understand how the pieces fit together. The diagram
 }}}%%
 flowchart LR
   subgraph LOCAL["Local Machine"]
-    direction TB
+    LPAD[" "]
     WT["Working Tree<br/>files you edit"]
     IDX["Staging Area / Index<br/>git add"]
     OBJ[".git/ Object Store<br/>commits, trees, blobs"]
     CFG["Config Files<br/>system → global → local"]
     HK["Hooks Layer<br/>.git/hooks/"]
+    LPAD ~~~ WT
   end
   subgraph REMOTE["Remote (GitHub)"]
+    RPAD[" "]
     RR["Remote Repository<br/>origin"]
     AUTH["Auth Layer<br/>HTTPS PAT / SSH key"]
+    RPAD ~~~ RR
+    RPAD ~~~ AUTH
   end
   WT -->|"git add"| IDX
   IDX -->|"git commit"| OBJ
   OBJ -->|"git push"| RR
   RR -->|"git pull / fetch"| OBJ
+  style LPAD fill:transparent,stroke:transparent,color:transparent
+  style RPAD fill:transparent,stroke:transparent,color:transparent
   AUTH -.->|"authenticates"| RR
   HK -.->|"runs before commit/push"| IDX
   CFG -.->|"configures behavior"| OBJ

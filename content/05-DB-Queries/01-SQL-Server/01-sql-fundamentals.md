@@ -471,7 +471,7 @@ The results reveal extreme single-day events: Infineon (IFX.DE) dropped 13.78% o
 
 ## Aggregation (GROUP BY)
 
-`GROUP BY` collapses rows sharing common values into summary rows, evaluated after `WHERE` filtering. SQL Server chooses between two physical operators — **stream aggregate** (efficient when input is pre-sorted by the grouping key via an index) and **hash match aggregate** (builds a hash table in memory, spills to tempdb if it exceeds the memory grant). Pairing `GROUP BY` with a covering index on the grouping columns avoids a separate sort step. See [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) for index design guidance.
+`GROUP BY` collapses rows sharing common values into summary rows, evaluated after `WHERE` filtering. SQL Server chooses between two physical operators — **stream aggregate** (efficient when input is pre-sorted by the grouping key via an index) and **hash match aggregate** (builds a hash table in memory, spills to tempdb if it exceeds the memory grant). Pairing `GROUP BY` with a covering index on the grouping columns avoids a separate sort step. See [index-types-and-strategy](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) for index design guidance.
 
 ### Aggregation GROUP BY | Aggregate by Stock
 
@@ -525,7 +525,7 @@ Group by `YEAR(date), MONTH(date)` to build time-series summaries. Shows monthly
 
 > [!warning] Functions on columns kill SARGability
 >
-> `WHERE YEAR(date) = 2025` cannot use an index on `date` — the engine evaluates `YEAR()` on every row. Rewrite as `WHERE date >= '2025-01-01' AND date < '2026-01-01'`. Functions in `GROUP BY` are fine (no index needed). Functions in `WHERE` are the problem. See [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries).
+> `WHERE YEAR(date) = 2025` cannot use an index on `date` — the engine evaluates `YEAR()` on every row. Rewrite as `WHERE date >= '2025-01-01' AND date < '2026-01-01'`. Functions in `GROUP BY` are fine (no index needed). Functions in `WHERE` are the problem. See [sargable-queries](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries).
 
 > [!success] Safe Pattern
 >
@@ -1044,7 +1044,7 @@ The medallion architecture (bronze → silver → gold) is a progressive refinem
 
 > [!tip] Related pattern
 >
-> The SQL that creates and populates the bronze tables queried here is covered in [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading), which walks through the ingestion pipeline that feeds this medallion architecture.
+> The SQL that creates and populates the bronze tables queried here is covered in [bronze-layer-loading](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading), which walks through the ingestion pipeline that feeds this medallion architecture.
 
 ### Bronze → Silver → Gold Transforms | Daily Returns
 
@@ -1174,11 +1174,11 @@ Symptoms you will encounter when a query misbehaves, mapped to the most likely c
 
 Related notes that extend or depend on the patterns covered here.
 
-- [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) — full index internals, columnstore, fragmentation maintenance
-- [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries) — deep dive on SARGable vs non-SARGable predicates
-- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) — the ingestion pipeline that feeds the medallion architecture queried here
-- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — production versions of the LAG-based daily return and gap-fill transforms
-- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — production z-score normalization and composite ranking logic
+- [index-types-and-strategy](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) — full index internals, columnstore, fragmentation maintenance
+- [sargable-queries](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries) — deep dive on SARGable vs non-SARGable predicates
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) — the ingestion pipeline that feeds the medallion architecture queried here
+- [silver-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — production versions of the LAG-based daily return and gap-fill transforms
+- [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — production z-score normalization and composite ranking logic
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — production credential management (GCP Secret Manager)
 - [01-bq-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — BigQuery equivalent of every query pattern in this note
 - [01-firestore-python](https://alp78.github.io/elysium/05-DB-Queries/Firestore/firestore-python) — Firestore NoSQL approach to the same data

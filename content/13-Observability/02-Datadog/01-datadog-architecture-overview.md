@@ -120,18 +120,29 @@ status: complete
 ```mermaid
 flowchart TD
     subgraph VM1["GCE VM: data-pipeline-airflow (e2-medium, COS)"]
+        VM1PAD[" "]
         subgraph NET["Docker network: airflow-net"]
+            NETPAD[" "]
             PG["airflow-postgres<br/>postgres:16-alpine"]
             WEB["airflow-webserver<br/>airflow:2.10.5 · port 8080"]
             SCHED["airflow-scheduler<br/>airflow:2.10.5 · LocalExecutor"]
             TRIG["airflow-triggerer<br/>airflow:2.10.5"]
             DD1["dd-agent<br/>gcr.io/datadoghq/agent:7"]
+            NETPAD ~~~ PG
+            NETPAD ~~~ WEB
+            NETPAD ~~~ SCHED
+            NETPAD ~~~ TRIG
+            NETPAD ~~~ DD1
         end
+        VM1PAD ~~~ PG
     end
 
     subgraph VM2["GCE VM: data-pipeline-sql (e2-small, Ubuntu 22.04)"]
+        VM2PAD[" "]
         SQL["SQL Server 2022 Developer<br/>systemd"]
         DD2["datadog-agent<br/>systemd package"]
+        VM2PAD ~~~ SQL
+        VM2PAD ~~~ DD2
     end
 
     subgraph CR["Cloud Run Job: data-pipeline-pipeline"]
@@ -139,10 +150,15 @@ flowchart TD
     end
 
     subgraph DDEU["Datadog EU (datadoghq.eu)"]
+        EUPAD[" "]
         INFRA["Infrastructure<br/>VM CPU, RAM, disk"]
         LOGS["Logs<br/>Airflow containers + SQL errorlog"]
         APM["APM<br/>Pipeline traces + SQL queries"]
         GCP["GCP Integration<br/>Cloud Run job metrics"]
+        EUPAD ~~~ INFRA
+        EUPAD ~~~ LOGS
+        EUPAD ~~~ APM
+        EUPAD ~~~ GCP
     end
 
     DD1 -->|"Docker socket: logs + metrics"| NET
@@ -162,6 +178,10 @@ flowchart TD
     style DD1 fill:#1a1a2e,stroke:#e0af68,color:#fff
     style DD2 fill:#1a1a2e,stroke:#e0af68,color:#fff
     style TRACE fill:#1a1a2e,stroke:#bb9af7,color:#fff
+    style VM1PAD fill:transparent,stroke:transparent,color:transparent
+    style NETPAD fill:transparent,stroke:transparent,color:transparent
+    style VM2PAD fill:transparent,stroke:transparent,color:transparent
+    style EUPAD fill:transparent,stroke:transparent,color:transparent
 ```
 
 ---

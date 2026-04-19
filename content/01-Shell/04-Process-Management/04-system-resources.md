@@ -228,7 +228,7 @@ max_server_memory_mb
 2147483647
 ```
 
-`2147483647` is the default uncapped value, which means SQL Server can keep taking memory until the operating system pushes back. On production hosts, leave explicit OS headroom before increasing the ceiling: at least 4 GB on 16-64 GB systems and at least 10% above that range. See [max server memory configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration) for the change procedure and [memory-and-buffer-pool](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/memory-and-buffer-pool) for buffer-pool internals.
+`2147483647` is the default uncapped value, which means SQL Server can keep taking memory until the operating system pushes back. On production hosts, leave explicit OS headroom before increasing the ceiling: at least 4 GB on 16-64 GB systems and at least 10% above that range. See [max server memory configuration](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/01-Server-Operations/server-configuration) for the change procedure and [memory-and-buffer-pool](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/01-Server-Operations/memory-and-buffer-pool) for buffer-pool internals.
 
 ## Linux CPU tools
 

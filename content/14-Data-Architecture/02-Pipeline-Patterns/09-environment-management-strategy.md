@@ -320,7 +320,7 @@ GitHub Environments (`dev`, `staging`, `production`) provide per-environment sec
 
 - **Dev:** Local Docker container (`docker run -e SA_PASSWORD=... mcr.microsoft.com/mssql/server`) or a small GCE e2-small VM
 - **Prod:** Production GCE VM with proper sizing, backups, and Datadog monitoring
-- Configuration: see [server-configuration](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/server-configuration) for memory, recovery model, and RCSI settings
+- Configuration: see [server-configuration](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/01-Server-Operations/server-configuration) for memory, recovery model, and RCSI settings
 
 > [!danger] Separate SQL Server Instances
 >

@@ -825,20 +825,27 @@ Bi-temporal tables track two independent time axes:
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#1a1b26", "primaryTextColor": "#c0caf5", "primaryBorderColor": "#7aa2f7", "lineColor": "#7aa2f7", "secondaryColor": "#16161e", "tertiaryColor": "#24283b", "edgeLabelBackground": "#1a1b26", "clusterBkg": "#24283b", "clusterBorder": "#565f89"}}}%%
 flowchart TD
     subgraph BT["Business Time Axis — when was it true in the world?"]
+        BPAD[" "]
         V1["Version 1<br/>valid_from: 2025-01-01<br/>valid_to: 2026-03-01<br/>sector: Technology"]:::highlight
         V2["Version 2<br/>valid_from: 2026-03-01<br/>valid_to: 9999-12-31<br/>sector: Software"]
+        BPAD ~~~ V1
         V1 -->|"sector changed"| V2
     end
     subgraph ST["System Time Axis — when did the system learn about each version?"]
+        SPAD[" "]
         R1["Recorded: 2025-01-01<br/>first known version"]:::highlight
         R2["Recorded: 2026-03-01<br/>new version discovered"]
         RC["Recorded: 2026-03-05<br/>retroactive correction to V1<br/>supersedes original R1"]
+        SPAD ~~~ R1
+        SPAD ~~~ R2
         R1 --> RC
         R2
     end
     V1 --- R1
     V2 --- R2
 
+    style BPAD fill:transparent,stroke:transparent,color:transparent
+    style SPAD fill:transparent,stroke:transparent,color:transparent
     classDef highlight fill:#24283b,stroke:#7aa2f7
 ```
 

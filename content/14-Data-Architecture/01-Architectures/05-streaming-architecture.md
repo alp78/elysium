@@ -285,25 +285,40 @@ Event-driven architecture (EDA) is a broader pattern — not just for data pipel
 ```mermaid
 flowchart LR
     subgraph Producers
+        PPAD[" "]
         p1["Payments API"]
         p2["Orders svc"]
         p3["Inventory svc"]
+        PPAD ~~~ p1
+        PPAD ~~~ p2
+        PPAD ~~~ p3
     end
 
     subgraph Broker["MESSAGE BROKER<br/>Kafka / Pub/Sub / Kinesis"]
+        BPAD[" "]
         t1["payments.events"]
         t2["orders.completed"]
         t3["inventory.changes"]
+        BPAD ~~~ t1
+        BPAD ~~~ t2
+        BPAD ~~~ t3
     end
 
     subgraph Consumers
+        CPAD[" "]
         c1["Risk scoring job"]
         c2["Finance analytics"]
         c3["Audit logger"]
+        CPAD ~~~ c1
+        CPAD ~~~ c2
+        CPAD ~~~ c3
     end
 
     p1 --> t1 --> c1
     p2 --> t2 --> c2
+    style PPAD fill:transparent,stroke:transparent,color:transparent
+    style BPAD fill:transparent,stroke:transparent,color:transparent
+    style CPAD fill:transparent,stroke:transparent,color:transparent
     p3 --> t3 --> c3
 
     style p1 fill:#1a1a2e,stroke:#9ece6a,color:#fff
@@ -721,27 +736,45 @@ This is the canonical GCP real-time pipeline architecture:
 ```mermaid
 flowchart LR
     subgraph Sources["Data Sources"]
+        SPAD[" "]
         s1["Application events"]
         s2["Database CDC"]
         s3["IoT devices"]
         s4["Files on GCS"]
+        SPAD ~~~ s1
+        SPAD ~~~ s2
+        SPAD ~~~ s3
+        SPAD ~~~ s4
     end
 
     subgraph GCP["GCP Services"]
+        GPAD[" "]
         pubsub["Cloud Pub/Sub"]
         ds["Datastream"]
         iot["IoT Core"]
         df["Dataflow<br/>(Beam)"]
+        GPAD ~~~ pubsub
+        GPAD ~~~ ds
+        GPAD ~~~ iot
+        GPAD ~~~ df
     end
 
     subgraph Destinations
+        DPAD[" "]
         bq["BigQuery"]
         gcs["Cloud Storage"]
         bt["Bigtable"]
         fs["Firestore"]
+        DPAD ~~~ bq
+        DPAD ~~~ gcs
+        DPAD ~~~ bt
+        DPAD ~~~ fs
     end
 
     s1 --> pubsub --> df
+    style SPAD fill:transparent,stroke:transparent,color:transparent
+    style GPAD fill:transparent,stroke:transparent,color:transparent
+    style DPAD fill:transparent,stroke:transparent,color:transparent
     s2 --> ds --> df
     s3 --> iot --> df
     s4 --> df

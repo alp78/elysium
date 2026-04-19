@@ -151,7 +151,7 @@ Understanding why a data warehouse exists requires understanding what it is *not
 | **Freshness** | Real-time / near-real-time | Batch (hourly, daily) or near-real-time |
 
 > [!info] SQL Server Can Do Both
-> SQL Server is primarily an OLTP system but supports OLAP workloads through columnstore indexes, read replicas (Always On Availability Groups readable secondaries), and In-Memory OLTP. See [always-on-availability-groups](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/always-on-availability-groups) and [index-types-and-strategy](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) for the mechanics. BigQuery and Snowflake are purpose-built OLAP engines — they do not support row-level transactions or real-time writes at OLTP scale.
+> SQL Server is primarily an OLTP system but supports OLAP workloads through columnstore indexes, read replicas (Always On Availability Groups readable secondaries), and In-Memory OLTP. See [always-on-availability-groups](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/01-Server-Operations/always-on-availability-groups) and [index-types-and-strategy](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/index-types-and-strategy) for the mechanics. BigQuery and Snowflake are purpose-built OLAP engines — they do not support row-level transactions or real-time writes at OLTP scale.
 
 The core architectural implication: **OLTP → normalize to reduce write amplification. OLAP → denormalize to reduce join overhead at query time.**
 
@@ -269,7 +269,7 @@ CREATE TABLE fact_trades (
 | **Non-additive** | No | No | Ratios, percentages, averages |
 
 > [!warning] Semi-Additive Measure Trap
-> Never SUM a balance or inventory count across time periods — you get the sum of every snapshot, not the current total. Use LAST_VALUE or MAX with appropriate window framing instead. See [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) for practical patterns.
+> Never SUM a balance or inventory count across time periods — you get the sum of every snapshot, not the current total. Use LAST_VALUE or MAX with appropriate window framing instead. See [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) for practical patterns.
 
 > [!success] Safe Pattern: Window Function for Period-End Balance
 > Use `LAST_VALUE(closing_balance) OVER (PARTITION BY account_sk ORDER BY snapshot_date_sk ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)` to retrieve the end-of-period balance, or `MAX(closing_balance)` when a single-period snapshot is required. Document each semi-additive measure with an explicit note on valid aggregation axes.
@@ -300,7 +300,7 @@ CREATE TABLE fact_account_daily (
 - Rows are populated even when nothing changes (fill-forward logic required for missing periods)
 - All rows for the same snapshot date are loaded in a single batch
 - Enables easy period-over-period queries: join to itself on `date_sk - 1`
-- See [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) for fill-forward implementation patterns
+- See [silver-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) for fill-forward implementation patterns
 
 ### Accumulating Snapshot Fact Table
 
@@ -395,7 +395,7 @@ fact_trade.trade_flag_sk       INT REFERENCES dim_trade_flags
 Slowly Changing Dimensions (SCD), also called historical dimension tracking, handle the problem of dimension attributes that change over time. A customer moves city, a product changes category, an analyst changes desk. How you preserve (or discard) that history depends on the SCD type.
 
 > [!info] SCD in dbt
-> dbt's `snapshot` feature implements SCD Type 2 natively using a check strategy or a timestamp strategy. See [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for implementation details and [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) for the underlying MERGE statement mechanics.
+> dbt's `snapshot` feature implements SCD Type 2 natively using a check strategy or a timestamp strategy. See [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) for implementation details and [merge-and-upsert](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) for the underlying MERGE statement mechanics.
 
 ### SCD Type 1 — Overwrite (No History)
 
@@ -744,7 +744,7 @@ CREATE TABLE gold.monthly_pnl_summary (
 );
 ```
 
-Load this table as part of the [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) pipeline step on a daily cadence.
+Load this table as part of the [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) pipeline step on a daily cadence.
 
 ### Pre-Computed Rollups Pattern
 
@@ -780,7 +780,7 @@ Cloud warehouses do not require traditional capacity planning, but understanding
 | **Streaming inserts** | Rows inserted via streaming API | Use batch loads where latency allows |
 | **Slot reservations** | Fixed monthly commitment | Use when predictable high volume |
 
-**Rule of thumb:** Tables over 1 TB should be partitioned. Tables over 10 TB should be both partitioned and clustered. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for mechanics. For SQL Server warehouse tables, [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/partitioning-strategies) covers partition functions, schemes, and sliding window maintenance.
+**Rule of thumb:** Tables over 1 TB should be partitioned. Tables over 10 TB should be both partitioned and clustered. See [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) for mechanics. For SQL Server warehouse tables, [partitioning-strategies](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/partitioning-strategies) covers partition functions, schemes, and sliding window maintenance.
 
 ### Snowflake Cost Model
 
@@ -820,9 +820,9 @@ Before declaring a warehouse schema production-ready, verify:
 - [dbt-transformation-layer](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/dbt-transformation-layer) — The standard tool for implementing ELT transforms in a warehouse
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — How to safely load and reload warehouse data
 - [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization) — BigQuery-specific cost optimization mechanics
-- [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) — MERGE statement for SCD Type 2 implementation in SQL Server
-- [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/partitioning-strategies) — SQL Server partitioning (compare to BigQuery partition pruning)
+- [merge-and-upsert](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) — MERGE statement for SCD Type 2 implementation in SQL Server
+- [partitioning-strategies](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/partitioning-strategies) — SQL Server partitioning (compare to BigQuery partition pruning)
 - [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Parquet and columnar storage formats underpinning cloud DWH storage
-- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — Silver-layer cleaning patterns that feed warehouse staging
-- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — Gold-layer aggregation patterns for analytical consumption
+- [silver-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — Silver-layer cleaning patterns that feed warehouse staging
+- [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — Gold-layer aggregation patterns for analytical consumption
 - [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — Architectural principles every DWH design should satisfy

@@ -82,7 +82,7 @@ mindmap
 ## Cross-References
 
 - [Data Architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — dbt transformation layer theory and medallion architecture
-- [SQL Server](https://alp78.github.io/elysium/04-SQL-Server/moc-sql-server) — SQL Server pipeline patterns that dbt automates
+- [SQL Server](https://alp78.github.io/elysium/04-Databases/moc-sql-server) — SQL Server pipeline patterns that dbt automates
 - [DB Queries](https://alp78.github.io/elysium/05-DB-Queries/moc-db-queries) — BigQuery and SQL Server query patterns used in dbt models
 - [GitHub Actions](https://alp78.github.io/elysium/10-CICD/moc-github-actions) — CI/CD pipelines running dbt test and build
 - [Observability](https://alp78.github.io/elysium/13-Observability/moc-observability) — dbt observability in the broader monitoring stack

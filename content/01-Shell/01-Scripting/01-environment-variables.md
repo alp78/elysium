@@ -1276,7 +1276,7 @@ MYAPP_DB_HOST:10.132.0.2
 Path-present:True
 ```
 
-## Troubleshooting
+## Environment Variable Troubleshooting
 
 Use troubleshooting data to determine whether the failure is about inheritance, persistence, parsing, or execution context. Start by identifying which process is expected to hold the value, then verify whether that process actually received it.
 
@@ -1507,7 +1507,7 @@ child:missing
 child:10.132.0.2
 ```
 
-## Cross-References
+## Environment Variable Cross-References
 
 - [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) - Using `set -u` to fail fast on missing variables
 - [command-history](https://alp78.github.io/elysium/01-Shell/01-Scripting/02-command-history) - Preventing credentials from being stored in interactive history
@@ -1516,7 +1516,7 @@ child:10.132.0.2
 - [variables-and-outputs](https://alp78.github.io/elysium/07-Terraform/Fundamentals/variables-and-outputs) - Managing declarative variables in Terraform
 - [container-lifecycle](https://alp78.github.io/elysium/09-Docker/container-lifecycle) - Injecting configuration and secrets into containers
 
-## References
+## Environment Variable References
 
 - [GNU Bash Reference Manual - Bourne Shell Builtins](https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html)
 - [GNU Bash Reference Manual - Bash Startup Files](https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html)

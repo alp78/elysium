@@ -498,7 +498,7 @@ Connection to 10.132.0.2 1433 port [tcp/ms-sql-s] succeeded!
 
 #### Step 4 — authenticate at the application layer
 
-If the TCP connection succeeds but the application rejects the connection, the problem is in credentials, database existence, or server capacity. `-l 10` sets a 10-second login timeout. See [sql-server-authentication](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/sql-server-authentication) for login types and troubleshooting.
+If the TCP connection succeeds but the application rejects the connection, the problem is in credentials, database existence, or server capacity. `-l 10` sets a 10-second login timeout. See [sql-server-authentication](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/01-Server-Operations/sql-server-authentication) for login types and troubleshooting.
 
 ```bash
 sqlcmd -S 10.132.0.2 -U sa -P "$SA_PASSWORD" -d data-pipeline -Q "SELECT 1" -l 10
@@ -789,7 +789,7 @@ LocalPort Protocol
 1433      TCP
 ```
 
-For a broader systematic diagnosis approach that goes beyond network connectivity into application and query-level troubleshooting, see [troubleshooting-flowcharts](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/troubleshooting-flowcharts).
+For a broader systematic diagnosis approach that goes beyond network connectivity into application and query-level troubleshooting, see [troubleshooting-flowcharts](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/01-Server-Operations/troubleshooting-flowcharts).
 
 
 

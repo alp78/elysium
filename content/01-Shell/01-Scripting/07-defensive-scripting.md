@@ -629,11 +629,11 @@ Remove-Item -LiteralPath $ScriptPath
 [LOG] Cleanup complete
 ```
 
-## Troubleshooting
+## Defensive Scripting Troubleshooting
 
 The symptoms below are the most common reasons strict scripts feel "too aggressive" at first. In each case, the fix is to keep the safety mechanism and make the expected edge case explicit.
 
-### Linux | troubleshooting
+### Linux | defensive scripting troubleshooting | expected non-zero exits and trap timing
 
 #### A command that is allowed to return 1 now stops the script
 
@@ -716,7 +716,7 @@ cleanup
 script_exit=1
 ```
 
-### PowerShell | troubleshooting
+### PowerShell | defensive scripting troubleshooting | non-terminating and native-tool failures
 
 #### `catch` never runs because the error is still non-terminating
 
@@ -800,7 +800,7 @@ after_native_tool
 native_exit=7
 ```
 
-## Cross-references
+## Defensive Scripting Cross-References
 
 - [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Cross-cutting error classification, retry strategies, and failure propagation theory
 - [command-chaining](https://alp78.github.io/elysium/01-Shell/01-Scripting/04-command-chaining) — How `&&`, `||`, and `;` use exit codes
@@ -808,7 +808,7 @@ native_exit=7
 - [environment-variables](https://alp78.github.io/elysium/01-Shell/01-Scripting/01-environment-variables) — Handling required vs optional configuration
 - [process-substitution](https://alp78.github.io/elysium/01-Shell/01-Scripting/06-process-substitution) — Advanced I/O patterns for scripts
 
-## References
+## Defensive Scripting References
 
 - [GNU Bash Reference — The Set Builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html)
 - [Unofficial Bash Strict Mode](http://redsymbol.net/articles/unofficial-bash-strict-mode/)

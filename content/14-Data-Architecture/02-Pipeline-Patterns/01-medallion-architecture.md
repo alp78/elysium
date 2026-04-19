@@ -139,7 +139,7 @@ status: complete
 ### Medallion Technology Stack
 
 - SQL Server (ODBC Driver 18)
-- Python + [pyodbc](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) (parameterized queries, `?` placeholders)
+- Python + [pyodbc](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) (parameterized queries, `?` placeholders)
 - Pandas + NumPy for gold-layer analytics
 - Dapper (C#) for dashboard reads
 
@@ -204,22 +204,22 @@ CREATE SCHEMA ref;   -- reference data (static lookups)
 - 1:1 mapping with source data
 - No transformations -- data lands exactly as received
 - Enables reprocessing from source if transforms change
-- See [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading)
+- See [bronze-layer-loading](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading)
 
 "1:1 with source" means column names match the API response or file schema exactly. There is no casting `string` to `decimal`, no renaming `adj_close` to `adjusted_close`, no deduplication of rows that arrived twice. What does NOT happen in bronze: no gap-filling for missing trading days, no null imputation, no calculated fields like returns or z-scores. Bronze is a faithful snapshot of what the source system sent. It is ephemeral by design — once silver is validated, bronze can be truncated or archived to cold storage because its only purpose is reprocessability.
 
 ### Silver (Cleaned)
 - Deduplication, gap-filling, type casting
-- [SCD Type 2](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) for slowly changing dimensions
+- [SCD Type 2](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) for slowly changing dimensions
 - Business key validation
-- See [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms)
+- See [silver-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms)
 
 Silver is where real data engineering happens. Type casting converts strings to their proper types (`DECIMAL(18,6)` for prices, `DATE` for trade dates). Deduplication removes rows that arrived more than once due to retries or overlapping API windows. SCD2 tracks slowly changing dimensions by closing old rows and opening new ones rather than overwriting history. Gap-filling inserts placeholder rows for missing trading days so downstream queries do not silently skip dates. Computed columns like daily returns or moving averages are added here. Silver is the PERMANENT layer — it is the system of record. While bronze is ephemeral and gold is derived, silver must be preserved indefinitely because it represents the cleaned, validated truth that every downstream consumer depends on.
 
 ### Gold (Analytics)
 - Pre-computed scores, rankings, aggregations
 - Dashboard-ready format -- no further computation needed
-- See [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms)
+- See [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms)
 
 Gold tables are pre-computed for specific consumers — a dashboard, a comparison view, an API endpoint. The shape of a gold table is dictated by the CONSUMER, not by the data model. If a dashboard needs a sector-level ESG comparison with 30-day trailing averages, gold contains exactly that — pre-joined, pre-aggregated, ready to SELECT without further transformation. Gold tables are fully derived and disposable; they can be rebuilt from silver at any time. Multiple gold tables can serve different consumers from the same silver source, each shaped differently for its use case.
 
@@ -261,7 +261,7 @@ For streaming-first alternatives, see [streaming-architecture](https://alp78.git
 > [!info] Reference Implementations
 >
 > Two complete medallion implementations exist in the vault:
-> - The SQL Server medallion project: [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) → [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) → [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms)
+> - The SQL Server medallion project: [bronze-layer-loading](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) → [silver-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) → [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms)
 > - The functional pipeline notebooks: [25_py_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/Python/25_py_functional_pipeline) (Python) and [25_cs_functional_pipeline](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/25_cs_functional_pipeline) (C#)
 >
 > The functional pipeline adds five architectural principles ON TOP of medallion:
@@ -271,15 +271,15 @@ For streaming-first alternatives, see [streaming-architecture](https://alp78.git
 ## Related
 
 **General SQL Server patterns:**
-- [sql-server-schema-layering](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/sql-server-schema-layering) — Schema organization for multi-layer architectures
-- [sql-server-loading-patterns](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns) — Loading methods, benchmarks, minimal logging
-- [sql-server-change-tracking](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/sql-server-change-tracking) — SCD2, temporal tables, CDC — decision matrix
-- [sql-server-incremental-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-incremental-transforms) — Watermark loading, gap-fill, pre-computed aggregations
+- [sql-server-schema-layering](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/sql-server-schema-layering) — Schema organization for multi-layer architectures
+- [sql-server-loading-patterns](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-loading-patterns) — Loading methods, benchmarks, minimal logging
+- [sql-server-change-tracking](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/sql-server-change-tracking) — SCD2, temporal tables, CDC — decision matrix
+- [sql-server-incremental-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/sql-server-incremental-transforms) — Watermark loading, gap-fill, pre-computed aggregations
 
 **Worked implementation (financial index pipeline):**
-- [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) — How data enters the bronze layer
-- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — Cleaning and deduplication patterns
-- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — Analytics and scoring patterns
+- [bronze-layer-loading](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) — How data enters the bronze layer
+- [silver-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — Cleaning and deduplication patterns
+- [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — Analytics and scoring patterns
 
 **Theory:**
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — Safe re-run patterns

@@ -801,14 +801,21 @@ asyncio.Event:
 }}}%%
 flowchart TD
     subgraph Threads["ThreadPoolExecutor — shared GIL"]
+        TPAD[" "]
         T1["Thread 1<br/>CPU work"] -.->|"GIL blocks"| T2["Thread 2<br/>waits"]
         T1 -->|"I/O release"| T2b["Thread 2<br/>runs during I/O"]
+        TPAD ~~~ T1
     end
     subgraph Processes["ProcessPoolExecutor — separate GILs"]
+        PPAD[" "]
         P1["Process 1<br/>own GIL"] --> R1["True parallel"]
         P2["Process 2<br/>own GIL"] --> R1
+        PPAD ~~~ P1
+        PPAD ~~~ P2
     end
     Threads ~~~ Processes
+    style TPAD fill:transparent,stroke:transparent,color:transparent
+    style PPAD fill:transparent,stroke:transparent,color:transparent
 ```
 
 > [!warning] Concurrency pitfalls

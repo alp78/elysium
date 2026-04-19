@@ -250,15 +250,22 @@ status: complete
 }}}%%
 flowchart TD
     subgraph GCE["GCE: europe-west1-b / bq-wh-nb"]
+        GPAD[" "]
         VM["stoxx-vm<br/>e2-medium | Ubuntu 22.04<br/>10.132.0.8 (private)"]
         SS["SQL Server 2022<br/>RTM-CU24 / 16.0.4245.2<br/>port 1433"]
+        GPAD ~~~ VM
         VM --> SS
 
         subgraph DISKS["Persistent Disks"]
+            DPAD[" "]
             D1["stoxx-data (sdd)<br/>100 GB pd-ssd<br/>/mnt/sqldata<br/>PRIMARY + FG_Current<br/>+ FG_Archive + backups"]
             D2["stoxx-log (sdb)<br/>20 GB pd-ssd<br/>/mnt/sqllog<br/>LDF transaction log"]
             D3["stoxx-tempdb (sdc)<br/>20 GB pd-ssd<br/>/mnt/sqltempdb<br/>TempDB (8 ROWS + 1 LOG)"]
             D4["stoxx-boot (sda)<br/>50 GB pd-balanced<br/>/ (boot)"]
+            DPAD ~~~ D1
+            DPAD ~~~ D2
+            DPAD ~~~ D3
+            DPAD ~~~ D4
         end
 
         SS --> D1
@@ -268,19 +275,29 @@ flowchart TD
     end
 
     subgraph NET["Network"]
+        NPAD[" "]
         FW1["allow-sql-server-iap<br/>tcp:1433 ← 35.235.240.0/20<br/>tag: sql-server"]
         FW2["allow-sql-internal<br/>tcp:1433 ← 10.128.0.0/9<br/>tag: stoxx-db"]
         NAT["Cloud NAT: stoxx-nat<br/>stoxx-router<br/>Outbound internet"]
+        NPAD ~~~ FW1
+        NPAD ~~~ FW2
+        NPAD ~~~ NAT
     end
 
     subgraph LOCAL["Local Workstation"]
+        LPAD[" "]
         PS["PowerShell<br/>Start-Process powershell.exe<br/>gcloud start-iap-tunnel"]
         SQLCMD["sqlcmd.exe<br/>tcp:127.0.0.1,1435<br/>-l 60 -C"]
+        LPAD ~~~ PS
         PS -->|"localhost:1435 →<br/>IAP WebSocket →<br/>VM:1433"| SQLCMD
     end
 
     FW1 --> GCE
     LOCAL --> FW1
+    style GPAD fill:transparent,stroke:transparent,color:transparent
+    style DPAD fill:transparent,stroke:transparent,color:transparent
+    style NPAD fill:transparent,stroke:transparent,color:transparent
+    style LPAD fill:transparent,stroke:transparent,color:transparent
     NAT --> GCE
 ```
 
@@ -2061,8 +2078,8 @@ Monthly cost breakdown for the `stoxx-vm` SQL Server deployment in `europe-west1
 - [01 — VM Lifecycle](https://alp78.github.io/elysium/Elysium/06-GCP/02-Compute/01-vm-lifecycle) — VM creation, machine type selection, scheduled start/stop
 - [02 — VM SSH and File Transfer](https://alp78.github.io/elysium/Elysium/06-GCP/02-Compute/02-vm-ssh-and-file-transfer) — IAP SSH access, SCP, OS Login configuration
 - [03 — Disks and Snapshots](https://alp78.github.io/elysium/Elysium/06-GCP/02-Compute/03-disks-and-snapshots) — disk creation, formatting, mounting, snapshot policies
-- [04-SQL-Server / 01 — Database Creation and File Layout](https://alp78.github.io/elysium/Elysium/04-SQL-Server/02-Database-Design/01-database-creation-and-file-layout) — the Docker-based `stoxx_db` reference layout this page replicates
-- [04-SQL-Server / 01 — Server Configuration](https://alp78.github.io/elysium/Elysium/04-SQL-Server/01-Server-Operations/01-server-configuration) — SQL Server configuration reference (sp_configure, mssql-conf options)
+- [04-Databases/01-SQL-Server / 01 — Database Creation and File Layout](https://alp78.github.io/elysium/Elysium/04-Databases/01-SQL-Server/02-Database-Design/01-database-creation-and-file-layout) — the Docker-based `stoxx_db` reference layout this page replicates
+- [04-Databases/01-SQL-Server / 01 — Server Configuration](https://alp78.github.io/elysium/Elysium/04-Databases/01-SQL-Server/01-Server-Operations/01-server-configuration) — SQL Server configuration reference (sp_configure, mssql-conf options)
 
 ## References
 

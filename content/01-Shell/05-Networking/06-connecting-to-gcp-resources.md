@@ -166,22 +166,33 @@ flowchart LR
     Dev["Developer<br>Workstation"]
 
     subgraph IAP["IAP-Protected (Private VMs)"]
+        IPAD[" "]
         SSH["GCE VM<br>SSH port 22"]
         SQL["SQL Server<br>TDS port 1433"]
         Airflow["Airflow<br>HTTP port 8080"]
         DD["Datadog Agent<br>localhost only"]
+        IPAD ~~~ SSH
+        IPAD ~~~ SQL
+        IPAD ~~~ Airflow
+        IPAD ~~~ DD
     end
 
     subgraph API["Google-Managed APIs (HTTPS/443)"]
+        APAD[" "]
         BQ["BigQuery<br>bigquery.googleapis.com"]
         CR["Cloud Run<br>*.run.app"]
         GCS["Cloud Storage<br>storage.googleapis.com"]
+        APAD ~~~ BQ
+        APAD ~~~ CR
+        APAD ~~~ GCS
     end
 
     Dev -->|"gcloud compute ssh<br>(IAP automatic)"| SSH
     Dev -->|"gcloud start-iap-tunnel<br>then sqlcmd / SSMS"| SQL
     Dev -->|"gcloud start-iap-tunnel<br>then browser"| Airflow
     SSH -->|"SSH then<br>datadog-agent status"| DD
+    style IPAD fill:transparent,stroke:transparent,color:transparent
+    style APAD fill:transparent,stroke:transparent,color:transparent
     Dev -->|"bq / Python client<br>(IAM only)"| BQ
     Dev -->|"curl / Invoke-RestMethod<br>(identity token)"| CR
     Dev -->|"gsutil / Python client<br>(IAM only)"| GCS

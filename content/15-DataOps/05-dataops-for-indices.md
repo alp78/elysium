@@ -1265,7 +1265,7 @@ gcloud scheduler jobs resume index-publication-job \
 > File the post-mortem document in the incident record and link it from the GitHub issue. Tag it with the incident date and severity. Review corrective actions at the next DataOps team retrospective.
 
 > [!note] See also
-> [pit-integrity-logic](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic) for the point-in-time correctness principles that govern how restatements are recorded without corrupting the historical record visible to downstream consumers.
+> [pit-integrity-logic](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/pit-integrity-logic) for the point-in-time correctness principles that govern how restatements are recorded without corrupting the historical record visible to downstream consumers.
 
 ---
 

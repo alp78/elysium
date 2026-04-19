@@ -115,8 +115,8 @@ mindmap
 > [!abstract]- Environments and Dependencies
 >
 > - Creating virtual environments — [[26-py-environments#venv — create and activate virtual environments|py]] · [[26-cs-environments#dotnet new — create projects and solution files|cs]]
-> - Installing packages — [[26-py-environments#pip — install and manage packages|py]] · [[26-cs-environments#dotnet add package — install NuGet packages|cs]]
-> - Pinning and freezing — [[26-py-environments#pip freeze — pin dependencies for reproducibility|py]] · [[26-cs-environments#Pinning and Locking Dependencies|cs]]
-> - Docker patterns — [[26-py-environments#Docker — Python environments in containers|py]] · [[26-cs-environments#Docker — multi-stage builds for .NET|cs]]
-> - CI/CD setup — [[26-py-environments#GitHub Actions — Python in CI|py]] · [[26-cs-environments#GitHub Actions — .NET in CI|cs]]
-> - Anti-patterns — [[26-py-environments#Anti-Patterns and Common Mistakes|py]] · [[26-cs-environments#Anti-Patterns and Common Mistakes|cs]]
+> - Installing packages — [[26-py-environments#pip — install packages into the virtual environment|py]] · [[26-cs-environments#dotnet add package — install NuGet packages|cs]]
+> - Pinning and freezing — [[26-py-environments#pip freeze — pin and freeze dependencies|py]] · [[26-cs-environments#Pinning and Locking Dependencies|cs]]
+> - Docker patterns — [[26-py-environments#docker — Python environments in containers|py]] · [[26-cs-environments#Docker — multi-stage builds for .NET|cs]]
+> - CI/CD setup — [[26-py-environments#github-actions — Python environments in CI/CD|py]] · [[26-cs-environments#GitHub Actions — .NET in CI|cs]]
+> - Anti-patterns — [[26-py-environments#Python environment anti-patterns and common mistakes|py]] · [[26-cs-environments#Anti-Patterns and Common Mistakes|cs]]

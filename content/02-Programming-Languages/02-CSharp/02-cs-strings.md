@@ -348,13 +348,21 @@ The single most important property of `System.String` — every operation that a
 
 Once a `string` is created, its character sequence cannot change. Indexing into a string with assignment (`s[0] = 'H'`) is a compile error. Any transformation — `ToUpper()`, `Replace()`, `Substring()`, or concatenation — allocates a new `string` on the heap. The original is unchanged and becomes eligible for garbage collection if no other reference points to it.
 
-> [!warning] Anti-pattern — concatenation in loops
+> [!warning] Immutable strings punish repeated incremental concatenation
 >
-> Each `+=` in a loop creates a new string object, copying all previous characters. For *n* iterations this is O(n²) in both time and allocations.
-
-> [!success] Correct pattern
+> Every apparent mutation creates a brand-new string, so loop-based `+=` grows
+> both copying cost and allocation pressure with each iteration.
 >
-> Use `StringBuilder` for loop-based construction, `string.Join` for collections, and `+` or `$""` only for small, fixed concatenations (2–5 parts).
+> > [!danger] Concatenation in loops turns string building into O(n^2) work
+> >
+> > Each `+=` in a loop creates a new string object and copies all previous
+> > characters. For *n* iterations this becomes O(n^2) in both time and
+> > allocations.
+>
+> > [!success] Use the construction strategy that matches the workload
+> >
+> > Use `StringBuilder` for loop-based construction, `string.Join` for
+> > collections, and `+` or `$""` only for small fixed concatenations.
 
 *This example shows that string methods return new values instead of modifying the original string instance.*
 
@@ -385,13 +393,20 @@ The diagram below shows what happens in memory. The variable `s` is reassigned t
 }}}%%
 flowchart LR
     subgraph Before["Before: s = #quot;hello#quot;"]
+        BPAD[" "]
         s1["s"] -->|points to| obj1["#quot;hello#quot;<br/>(heap)"]
+        BPAD ~~~ s1
     end
     subgraph After["After: s = 'H' + s.Substring(1)"]
+        APAD[" "]
         s2["s"] -->|points to| obj2["#quot;Hello#quot;<br/>(new object)"]
         obj3["#quot;hello#quot;<br/>(unreachable → GC)"]
+        APAD ~~~ s2
+        APAD ~~~ obj3
     end
     Before --> After
+    style BPAD fill:transparent,stroke:transparent,color:transparent
+    style APAD fill:transparent,stroke:transparent,color:transparent
 ```
 
 ## Indexing & Slicing
@@ -472,16 +487,23 @@ Console.WriteLine($"'{new string(arr)}'");
 
 Accessing a character beyond the string length throws `IndexOutOfRangeException`. Using a Range that exceeds bounds throws `ArgumentOutOfRangeException`. Neither returns `null` or a default — C# fails fast on invalid access.
 
-> [!danger] No silent failure
+> [!warning] String indexing is fail-fast, not forgiving
 >
-> Unlike some languages that return empty strings or `None` for out-of-range access, C# throws immediately. Always validate indices against `s.Length` when working with dynamic positions.
-
-> [!success] Safe access pattern
+> Dynamic positions have to be validated explicitly because C# throws as soon as
+> an index or range exceeds the string bounds.
 >
-> Check bounds before indexing, or use `TryGetValue`-style patterns with ranges:
-> ```csharp
-> string safe = index < s.Length ? s[index].ToString() : "(out of range)";
-> ```
+> > [!danger] Out-of-range access does not fail silently
+> >
+> > Unlike languages that may return an empty string or `None`, C# throws
+> > immediately on invalid access. Always validate indices against `s.Length`
+> > when positions come from data.
+>
+> > [!success] Guard access before indexing
+> >
+> > Check bounds before indexing, or use a guarded access pattern such as:
+> > ```csharp
+> > string safe = index < s.Length ? s[index].ToString() : "(out of range)";
+> > ```
 
 ```text
 s[100]    → IndexOutOfRangeException
@@ -570,13 +592,20 @@ Methods for changing letter case. C# provides `ToUpper()`, `ToLower()`, and `ToT
 > - No built-in `swapcase` or `casefold`
 > - Culture-aware: `ToUpper(CultureInfo)` handles locale-specific rules (e.g., Turkish `i` → `İ`)
 
-> [!warning] Anti-pattern
+> [!warning] Case-insensitive comparison should not be implemented by normalizing both sides manually
 >
-> Don't use `ToUpper()` for case-insensitive comparison — use `StringComparison.OrdinalIgnoreCase` instead.
-
-> [!success] Correct pattern
+> Converting strings to uppercase or lowercase first creates unnecessary
+> allocations and can still produce locale-sensitive bugs.
 >
-> Use `StringComparison.OrdinalIgnoreCase` directly in `string.Equals`, `IndexOf`, `StartsWith`, or `Contains` — no intermediate uppercase string is created and locale edge cases (e.g., Turkish `I`) are avoided:
+> > [!danger] `ToUpper()` or `ToLower()` is the wrong comparison primitive
+> >
+> > Do not use `ToUpper()` for case-insensitive comparison. It allocates a new
+> > string and can behave incorrectly for locale edge cases such as Turkish `I`.
+>
+> > [!success] Use `StringComparison.OrdinalIgnoreCase` directly
+> >
+> > Pass `StringComparison.OrdinalIgnoreCase` to `string.Equals`, `IndexOf`,
+> > `StartsWith`, or `Contains` so no intermediate uppercase string is created:
 > ```csharp
 > // Anti-pattern
 > if (s.ToUpper() == "HELLO") { }
@@ -1176,14 +1205,20 @@ Finding patterns in text and extracting matched groups.
 > - `Groups[0]` is the full match; `Groups[1..n]` are capture groups
 > - For simple `Contains`/`StartsWith` checks, string methods are faster
 
-> [!warning] Anti-patterns
+> [!warning] Regex code usually fails through silent assumptions or repeated setup cost
 >
-> - **Not checking `.Success`** before reading `.Value` — empty match is not null
-> - **Recompiling the same pattern in a loop** — cache with `new Regex()`
-
-> [!success] Correct patterns
+> The two most common issues are reading match data that never succeeded and
+> recompiling the same pattern over and over in hot paths.
 >
-> Always check `.Success` before accessing match data, and cache compiled `Regex` instances outside loops:
+> > [!danger] Missing success checks and repeated regex construction hide bugs and waste CPU
+> >
+> > - **Not checking `.Success`** before reading `.Value` — empty match is not null
+> > - **Recompiling the same pattern in a loop** — cache with `new Regex()`
+>
+> > [!success] Validate matches and reuse compiled patterns
+> >
+> > Always check `.Success` before accessing match data, and cache compiled
+> > `Regex` instances outside loops:
 > ```csharp
 > // Anti-pattern: no Success check
 > string val = Regex.Match(text, @"\d+").Value;  // returns "" if no match — silent bug
@@ -1521,39 +1556,78 @@ Console.WriteLine(match.Value);
 > > - **No built-in `translate()` equivalent** — C# lacks Python's `str.maketrans`/`str.translate` for single-pass multi-character substitution. Use `Regex.Replace` or manual `StringBuilder` loops.
 > > - **UTF-16 surrogate pair complexity** — C# strings are UTF-16 internally. Characters outside the Basic Multilingual Plane (emoji, rare scripts) are stored as surrogate pairs, making `string[i]` return half a character. Use `StringInfo.GetTextElementEnumerator()` for correct grapheme iteration.
 
-## Warnings
+## Common Traps and Safe Patterns
 
-> [!warning] String concatenation in loops is O(n²)
->
-> Each `+=` allocates a new string and copies all previous content. For 50,000 iterations, `StringBuilder` is 100x+ faster.
+### Build Large Strings with the Right Tool
 
-> [!success] Correct pattern
+> [!warning] Large string assembly needs an explicit buffering strategy
 >
-> Use `new StringBuilder(estimatedCapacity)` for loops. Use `string.Join()` for collections. Reserve `+` for 2–5 fixed parts (the compiler optimizes these via `string.Concat`).
+> Repeated concatenation looks harmless in small examples but scales badly under
+> real workloads.
+>
+> > [!danger] String concatenation in loops is O(n^2)
+> >
+> > Each `+=` allocates a new string and copies all previous content. For large
+> > iteration counts, `StringBuilder` is dramatically faster.
+>
+> > [!success] Use a builder or join strategy
+> >
+> > Use `new StringBuilder(estimatedCapacity)` for loops. Use `string.Join()` for
+> > collections. Reserve `+` for a few fixed parts that the compiler can fold
+> > into `string.Concat`.
 
-> [!warning] String interpolation in SQL and shell commands
->
-> `$"SELECT * FROM users WHERE id = {userId}"` is vulnerable to SQL injection.
+### Treat Interpolated Commands as Injection Risks
 
-> [!success] Correct pattern
+> [!warning] String interpolation becomes dangerous the moment text crosses into a command language
 >
-> SQL: `command.Parameters.AddWithValue("@id", userId)`. Shell: pass arguments as arrays to `Process.Start()`.
+> SQL, shells, and similar interpreters do not distinguish trusted values from
+> concatenated text unless you give them structured parameters.
+>
+> > [!danger] Interpolated SQL and shell commands are injection-prone
+> >
+> > `$"SELECT * FROM users WHERE id = {userId}"` is vulnerable to SQL injection,
+> > and the same pattern is unsafe for shell command construction.
+>
+> > [!success] Pass structured parameters instead of interpolated text
+> >
+> > SQL: `command.Parameters.AddWithValue("@id", userId)`. Shell: pass arguments
+> > as arrays or structured argument objects to `Process.Start()`.
 
-> [!warning] `==` with `StringComparison` not specified
->
-> `==` is always ordinal case-sensitive. Comparing user input or file paths without specifying `OrdinalIgnoreCase` causes false negatives.
+### Specify Comparison Semantics Explicitly
 
-> [!success] Correct pattern
+> [!warning] String equality has to state whether case and culture matter
 >
-> Use `string.Equals(a, b, StringComparison.OrdinalIgnoreCase)` for case-insensitive comparison. For culture-aware sorting, use `StringComparison.CurrentCulture`.
+> Relying on `==` bakes in ordinal case-sensitive semantics whether or not that
+> matches the domain.
+>
+> > [!danger] `==` hides the comparison policy
+> >
+> > `==` is always ordinal case-sensitive. Comparing user input or file paths
+> > without specifying `OrdinalIgnoreCase` causes false negatives.
+>
+> > [!success] Call comparison APIs with an explicit `StringComparison`
+> >
+> > Use `string.Equals(a, b, StringComparison.OrdinalIgnoreCase)` for
+> > case-insensitive matching. For culture-aware sorting or display comparisons,
+> > use the relevant `CurrentCulture` option instead.
 
-> [!warning] Regex without Compiled or GeneratedRegex
->
-> `new Regex(pattern)` interprets the pattern on every call. For repeated use, this is significantly slower than compiled variants.
+### Reuse Regex Compilation on Repeated Paths
 
-> [!success] Correct pattern
+> [!warning] Repeated regex use should not pay the parse cost on every call
 >
-> Use `[GeneratedRegex]` (.NET 7+) for compile-time patterns. Use `new Regex(pattern, RegexOptions.Compiled)` for dynamic patterns used repeatedly.
+> If the same pattern runs in a loop or hot path, startup cost becomes part of
+> the steady-state cost.
+>
+> > [!danger] Default regex construction reparses the pattern repeatedly
+> >
+> > `new Regex(pattern)` interprets the pattern on every call. For repeated use,
+> > this is slower than generated or compiled variants.
+>
+> > [!success] Use generated or compiled regex for repeated patterns
+> >
+> > Use `[GeneratedRegex]` on .NET 7+ for compile-time-known patterns. Use
+> > `new Regex(pattern, RegexOptions.Compiled)` for dynamic patterns that are
+> > still reused.
 
 ## Recommendations
 

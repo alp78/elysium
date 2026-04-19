@@ -206,22 +206,39 @@ The eleven protocols covered in this note fall into three communication models. 
 }}}%%
 flowchart LR
     subgraph RR["① Request-Response"]
+        RPAD[" "]
         REST["REST"]
         gRPC_n["gRPC"]
         GQL["GraphQL"]
+        RPAD ~~~ REST
+        RPAD ~~~ gRPC_n
+        RPAD ~~~ GQL
     end
     subgraph ST["② Streaming / Queue"]
+        SPAD[" "]
         WS["WebSocket"]
         SSE_n["SSE"]
         MQ["MQTT"]
         AM["AMQP"]
+        SPAD ~~~ WS
+        SPAD ~~~ SSE_n
+        SPAD ~~~ MQ
+        SPAD ~~~ AM
     end
     subgraph PF["③ Push / File Transfer"]
+        PPAD[" "]
         WH["Webhook"]
         SF["SFTP"]
         FX["FIX"]
         PS["Pub/Sub"]
+        PPAD ~~~ WH
+        PPAD ~~~ SF
+        PPAD ~~~ FX
+        PPAD ~~~ PS
     end
+    style RPAD fill:transparent,stroke:transparent,color:transparent
+    style SPAD fill:transparent,stroke:transparent,color:transparent
+    style PPAD fill:transparent,stroke:transparent,color:transparent
 ```
 
 ---

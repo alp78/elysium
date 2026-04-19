@@ -151,7 +151,7 @@ With idempotency, you can re-run any step at any time with confidence.
 
 ### DELETE-INSERT (Partition Swap)
 
-Delete all data for the target partition, then insert fresh data. The partition key (usually a date) scopes the delete. The [bronze-layer-loading](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) module uses this exact pattern to reload daily partitions safely.
+Delete all data for the target partition, then insert fresh data. The partition key (usually a date) scopes the delete. The [bronze-layer-loading](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading) module uses this exact pattern to reload daily partitions safely.
 
 ```sql
 -- Idempotent daily load: delete today's data, then re-insert
@@ -181,7 +181,7 @@ COMMIT;
 
 ### MERGE (Upsert)
 
-Match on a business key. Update if exists, insert if new. See [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) for the full T-SQL MERGE pattern. In dbt, the [incremental materialization](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations) generates a MERGE statement under the hood, providing idempotency declaratively.
+Match on a business key. Update if exists, insert if new. See [merge-and-upsert](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) for the full T-SQL MERGE pattern. In dbt, the [incremental materialization](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations) generates a MERGE statement under the hood, providing idempotency declaratively.
 
 ```sql
 MERGE INTO silver.index_dim AS target
@@ -242,12 +242,12 @@ This isolates the slow I/O (bulk load) from the fast atomic swap.
 | Appending timestamps without dedup | Same data with different load timestamps | Deduplicate on business key before insert |
 
 > [!tip] Related pattern
-> Without idempotency, concurrent pipeline runs can trigger [race-conditions](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/race-conditions) — two instances inserting the same partition simultaneously, producing duplicates or deadlocks. Idempotent designs eliminate this class of failure by making the outcome independent of execution order.
+> Without idempotency, concurrent pipeline runs can trigger [race-conditions](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/race-conditions) — two instances inserting the same partition simultaneously, producing duplicates or deadlocks. Idempotent designs eliminate this class of failure by making the outcome independent of execution order.
 
 ## Related
 
 - [error-handling-and-retry-patterns](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/error-handling-and-retry-patterns) — Idempotency is a prerequisite for safe retries — the error handling framework depends on it
 - [medallion-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/medallion-architecture) — The bronze/silver/gold pattern relies on idempotent transforms at each layer
-- [merge-and-upsert](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) — T-SQL MERGE statement for upsert operations
-- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — Silver layer cleaning and deduplication patterns
+- [merge-and-upsert](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/merge-and-upsert) — T-SQL MERGE statement for upsert operations
+- [silver-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — Silver layer cleaning and deduplication patterns
 - [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — Idempotency is the foundation of Pillar 1 (Reliability)

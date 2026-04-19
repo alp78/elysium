@@ -88,17 +88,21 @@ IAP sits between `gcloud` on your workstation and the target VM. `gcloud` authen
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#292e42','primaryTextColor': '#c0caf5','primaryBorderColor': '#565f89','lineColor': '#565f89','secondaryColor': '#1a1b26','tertiaryColor': '#24283b','noteTextColor': '#c0caf5','noteBkgColor': '#292e42','textColor': '#c0caf5','fontSize': '14px'}}}%%
 flowchart TD
     subgraph WS["Your Workstation (Windows)"]
+        WSPAD[" "]
         SSMS["SSMS"]
         LOCAL["127.0.0.1:1435<br>local listener"]
         GCLOUD["gcloud<br>IAP tunnel process"]
+        WSPAD ~~~ SSMS
         SSMS --> LOCAL --> GCLOUD
     end
 
     subgraph GOOGLE["Google Cloud"]
+        GCPPAD[" "]
         IAP["Google IAP Proxy<br>authenticates via OAuth/gcloud"]
         subgraph VPC["Internal GCP Network"]
             VM["Your VM (10.0.0.3)<br>port 1433 · SQL Server<br>No public IP"]
         end
+        GCPPAD ~~~ IAP
         IAP -->|"Internal GCP network"| VM
     end
 
@@ -106,6 +110,8 @@ flowchart TD
 
     style WS fill:#1a1a2e,stroke:#7aa2f7,color:#fff
     style GOOGLE fill:#1a1a2e,stroke:#22d3ee,color:#fff
+    style WSPAD fill:transparent,stroke:transparent,color:transparent
+    style GCPPAD fill:transparent,stroke:transparent,color:transparent
     style VPC fill:#1a1a2e,stroke:#9ece6a,color:#fff
     style IAP fill:#1a1a2e,stroke:#bb9af7,color:#fff
     style VM fill:#1a1a2e,stroke:#9ece6a,color:#fff

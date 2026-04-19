@@ -188,7 +188,7 @@ One `terraform apply` + one image rebuild cleans up everything.
 > The 14-day trial gives full access to all Datadog features. Use the trial period to build dashboards, monitors, and verify the full observability stack. After the trial, evaluate which features are worth the cost (Infrastructure + APM at ~$50-80/host/month is the typical entry point for production monitoring). For a broader view of cost management across the GCP stack, see [gcp-billing-and-pricing](https://alp78.github.io/elysium/06-GCP/Cost-Management/gcp-billing-and-pricing).
 
 > [!tip] Related pattern
-> The cost optimization mindset here parallels the [SQL Server FinOps](https://alp78.github.io/elysium/04-SQL-Server/01-Server-Operations/finops-cost-optimization) approach: right-size resources first, then decide which premium capabilities (APM traces, log indexing) deliver enough value to justify their cost.
+> The cost optimization mindset here parallels the [SQL Server FinOps](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/01-Server-Operations/finops-cost-optimization) approach: right-size resources first, then decide which premium capabilities (APM traces, log indexing) deliver enough value to justify their cost.
 
 ---
 

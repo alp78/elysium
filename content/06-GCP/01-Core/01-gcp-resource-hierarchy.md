@@ -392,25 +392,38 @@ flowchart TD
     end
 
     subgraph FOLDERS["Folders"]
+        FPAD[" "]
         F1["folders/2100<br>Data Platform"]
         F2["folders/2200<br>Production"]
+        FPAD ~~~ F1
+        FPAD ~~~ F2
     end
 
     subgraph PROJECTS["Projects"]
+        PPAD[" "]
         P1["projectId: bq-wh-nb<br>projectNumber: 348557092514"]
         P2["projectId: analytics-dev"]
+        PPAD ~~~ P1
+        PPAD ~~~ P2
     end
 
     subgraph RESOURCES["Resources"]
+        RPAD[" "]
         R1["BigQuery datasets"]
         R2["Cloud Storage buckets"]
         R3["Cloud Run services"]
+        RPAD ~~~ R1
+        RPAD ~~~ R2
+        RPAD ~~~ R3
     end
 
     O --> F1
     F1 --> F2
     F2 --> P1
     F1 --> P2
+    style FPAD fill:transparent,stroke:transparent,color:transparent
+    style PPAD fill:transparent,stroke:transparent,color:transparent
+    style RPAD fill:transparent,stroke:transparent,color:transparent
     P1 --> R1
     P1 --> R2
     P1 --> R3

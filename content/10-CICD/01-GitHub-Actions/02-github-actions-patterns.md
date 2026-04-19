@@ -439,7 +439,7 @@ tags:
 > > GitHub Actions resolves different values at different times and scopes. Confusing workflow-processing state with shell runtime state is a common source of broken YAML and misleading conditions.
 
 
-## Conceptual Model
+## How the main pattern categories fit together
 
 GitHub Actions patterns fall into four categories. Each category builds on the previous one: composition patterns define what runs, data flow patterns move information between those units, control flow patterns decide when and whether they run, and architecture patterns combine all three into production-grade designs.
 
@@ -501,11 +501,11 @@ flowchart TB
 
 *Pattern categories form a layered architecture: composition defines the units of work, data flow connects them, control flow governs execution order, and architecture patterns combine all three for real-world systems. Each category in this page has a dedicated H2 section.*
 
-## Composition Patterns
+## Ways to compose and reuse workflow logic
 
 Composition patterns define how work is structured and reused across workflows. The four mechanisms differ in scope: matrix fans out a single job, reusable workflows share entire jobs, composite actions share step sequences, and workflow chaining coordinates independent workflows.
 
-### GitHub Actions | composition | matrix strategy
+### composition | matrix strategy
 
 The matrix strategy creates multiple parallel instances of a job by computing the cross-product of variable lists. Each combination runs as an independent job with its own runner.
 
@@ -621,7 +621,7 @@ Experimental: true
 | `include` | list of maps | none | Add variables to matching combinations or create new ones |
 | `exclude` | list of maps | none | Remove matching combinations from the cross-product |
 
-### GitHub Actions | composition | reusable workflows
+### composition | reusable workflows
 
 A reusable workflow is a complete workflow file with `on: workflow_call` that another workflow can invoke as a job. The caller passes inputs and secrets; the callee returns outputs. This enables standardized CI/CD patterns across repositories.
 
@@ -794,7 +794,7 @@ Outputs flow back through needs.<job>.outputs.<name>.
 | `jobs.<id>.secrets` | caller | map or `inherit` | Secret values or blanket inheritance |
 | `needs.<job>.outputs.<name>` | caller | string | Read callee's returned outputs |
 
-### GitHub Actions | composition | composite actions
+### composition | composite actions
 
 A composite action bundles multiple steps into a single reusable step defined in an `action.yml` file. Unlike reusable workflows, composite actions run on the caller's runner and share the caller's workspace.
 
@@ -965,7 +965,7 @@ Successfully set up CPython (3.11.15)
 | `runs.using` | action.yml | Runtime: `"composite"`, `"node20"`, or `"docker"` |
 | `runs.steps[].shell` | composite only | Required on every `run:` step — composite actions do not inherit `defaults.run.shell` |
 
-### GitHub Actions | composition | workflow chaining
+### composition | workflow chaining
 
 Workflow chaining coordinates independent workflows by triggering one workflow after another completes. The `workflow_run` event fires when a named workflow finishes, and `workflow_dispatch` enables manual or API-driven triggering with typed inputs.
 
@@ -1056,11 +1056,11 @@ Triggering actor: alp78
 > - **Dependent jobs** (`needs:`): jobs within the same workflow share the trigger, run, and code version. Best for build → test → deploy within a single pipeline.
 > - Use chaining when the second workflow should run different code (from main) than the first (from a PR branch).
 
-## Data Flow Patterns
+## Ways to move data across steps, jobs, and workflows
 
 Data flow patterns move information between steps, jobs, and workflows. Each mechanism has different scope, persistence, and size limits.
 
-### GitHub Actions | data flow | outputs and environment variables
+### data flow | outputs and environment variables
 
 Steps within a job communicate through `$GITHUB_OUTPUT` (step outputs) and `$GITHUB_ENV` (dynamic environment variables). Cross-job communication uses job-level `outputs` read via the `needs` context.
 
@@ -1186,7 +1186,7 @@ to GITHUB_OUTPUT are available via needs.<id>.outputs.
 | `vars.*` | repo/env/org | GitHub Settings | `${{ vars.NAME }}` | Yes (static) |
 | `secrets.*` | repo/env/org | GitHub Settings | `${{ secrets.NAME }}` | Yes (static) |
 
-### GitHub Actions | data flow | artifacts
+### data flow | artifacts
 
 Artifacts are files uploaded during a workflow run that persist beyond the job's lifetime. They enable cross-job data passing and post-run inspection of build outputs, test reports, and manifests.
 
@@ -1327,7 +1327,7 @@ Artifact test-reports has been successfully uploaded! Final size is 316 bytes.
 | `name` | download | all | Download a specific artifact or all if omitted |
 | `path` | download | `.` | Directory to extract to — each artifact gets a subdirectory |
 
-### GitHub Actions | data flow | caching
+### data flow | caching
 
 Caching persists dependencies and build outputs across workflow runs to avoid redundant downloads. The cache is keyed by an exact string and scoped to the branch where it was created plus the default branch.
 
@@ -1429,7 +1429,7 @@ JOBS
 | `lookup-only` | `false` | Check if a cache exists without downloading it |
 | `save-always` | `false` | Save the cache even if the job fails |
 
-### GitHub Actions | data flow | job summaries and annotations
+### data flow | job summaries and annotations
 
 Job summaries write GitHub-flavored markdown to the workflow run page. Annotations attach notices, warnings, or errors to specific files and lines, visible in the PR diff.
 
@@ -1524,11 +1524,11 @@ Annotations attach messages to specific files and lines, appearing inline in the
 | `::error file=F,line=L::msg` | error | Red badge on the run, inline annotation in PR diff |
 | `::group::title` / `::endgroup::` | grouping | Collapsible section in the log output |
 
-## Control Flow Patterns
+## Ways to control execution, timing, and conditions
 
 Control flow patterns determine when and whether jobs and steps execute. They cover conditional logic, concurrency management, timeouts, error handling, and path filtering.
 
-### GitHub Actions | control flow | conditional expressions
+### control flow | conditional expressions
 
 The `if:` key on jobs and steps accepts expressions that evaluate to a boolean. Expressions can test context values, use status check functions, and perform string operations.
 
@@ -1589,7 +1589,7 @@ Expressions can test any context value to conditionally run steps or jobs based 
 > - Test `fromJSON()` results for `null` before using them: `if: fromJSON(steps.data.outputs.config) != null`
 > - Use `== true` or `== 'true'` explicitly instead of relying on truthy evaluation
 
-### GitHub Actions | control flow | concurrency
+### control flow | concurrency
 
 The `concurrency:` key serializes or cancels workflow runs sharing the same group identifier. It prevents conflicting deployments and reduces waste from redundant runs.
 
@@ -1674,7 +1674,7 @@ JOBS
 | Per-PR | `pr-${{ github.event.pull_request.number }}` | `true` | Cancel stale PR checks |
 | Global deploy | `deploy-production` | `false` | One production deploy at a time |
 
-### GitHub Actions | control flow | timeouts and error handling
+### control flow | timeouts and error handling
 
 Timeouts prevent runaway jobs from consuming runner hours. The `continue-on-error` flag controls whether a failed step or job blocks downstream execution.
 
@@ -1848,7 +1848,7 @@ conclusion = after continue-on-error applied: success
 > - Use `if: steps.<id>.outcome == 'failure'` for targeted cleanup or notification
 > - Keep job-level `continue-on-error` for optional matrix combinations marked with `experimental: true`
 
-### GitHub Actions | control flow | path filtering
+### control flow | path filtering
 
 Path filters limit workflow triggers to changes in specific files or directories. This is essential for monorepos where unrelated changes should not trigger unrelated workflows.
 
@@ -1943,11 +1943,11 @@ jobs:
 >
 > - Make `api-status` the required check instead of `test-api`
 
-## Architecture Patterns
+## Architecture patterns for larger workflow systems
 
 Architecture patterns combine composition, data flow, and control flow into production-grade designs for specific organizational needs.
 
-### GitHub Actions | architecture | monorepo workflows
+### architecture | monorepo workflows
 
 Monorepo workflows use path filtering and change detection to run only the CI/CD that is relevant to the changed code. The key challenge is making required status checks work with conditionally skipped jobs.
 
@@ -1958,7 +1958,7 @@ The path filtering and `dorny/paths-filter` patterns in the Control Flow section
 - Branch protection rules with the `api-status` workaround pattern for required checks
 - CODEOWNERS to route PR reviews to the team owning each service directory
 
-### GitHub Actions | architecture | release automation
+### architecture | release automation
 
 Release automation patterns standardize how versions are bumped, changelogs are generated, tags are created, and packages are published.
 
@@ -2012,7 +2012,7 @@ jobs:
 > - Configure the trusted publisher on pypi.org under your project settings
 > - Requires `permissions: id-token: write` and an `environment: pypi` with protection rules
 
-### GitHub Actions | architecture | self-hosted runner routing
+### architecture | self-hosted runner routing
 
 Self-hosted runners provide custom hardware, pre-installed tools, network access to internal resources, and cost control. Label-based routing directs jobs to the appropriate runner.
 
@@ -2053,7 +2053,7 @@ jobs:
 | Ephemeral/JIT | `--ephemeral` flag on registration | One-shot runners for security isolation |
 | Larger runners | `ubuntu-latest-8-cores` | Compute-intensive builds on GitHub's infra |
 
-### GitHub Actions | architecture | security patterns
+### architecture | security patterns
 
 Security patterns protect the CI/CD pipeline from supply-chain attacks, credential leaks, and over-privileged workflows.
 
@@ -2155,7 +2155,7 @@ JOBS
 | `statuses` | read commit statuses | create commit statuses | Custom status checks |
 | `attestations` | — | create attestations | Supply-chain provenance |
 
-### GitHub Actions | architecture | notifications and status
+### architecture | notifications and status
 
 Notification patterns inform teams about workflow outcomes through external channels (Slack, email, PR comments) or GitHub-native mechanisms (commit statuses, check runs).
 
@@ -2206,7 +2206,7 @@ Notification patterns inform teams about workflow outcomes through external chan
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
 ```
 
-### GitHub Actions | architecture | cost optimization
+### architecture | cost optimization
 
 Cost optimization patterns reduce runner minutes, cache usage, and API calls without sacrificing CI quality.
 
@@ -2228,7 +2228,7 @@ Cost optimization patterns reduce runner minutes, cache usage, and API calls wit
 > - Use path filtering to skip pipeline CI when only docs or dashboards change
 > - Run expensive warehouse tests (full table scans, backfill validation) only on PRs to main, not on every push
 
-## Data-Engineering Scenarios
+## Pattern choices for common data-engineering workflows
 
 This table maps patterns from this page to common data-engineering CI/CD needs. Each scenario references the pattern category and specific section.
 
@@ -2249,7 +2249,7 @@ This table maps patterns from this page to common data-engineering CI/CD needs. 
 | SHA-pin all third-party actions | Security | Architecture: security |
 | Limit BigQuery job timeouts | Cost optimization | Architecture: cost |
 
-## Troubleshooting
+## Common pattern failures and how to fix them
 
 | Problem | Symptom | Fix |
 |---------|---------|-----|
@@ -2269,7 +2269,7 @@ This table maps patterns from this page to common data-engineering CI/CD needs. 
 | Self-hosted runner persists state | Test pollution between runs | Enable `--ephemeral` mode or clean workspace in pre-job hook |
 | Summary exceeds limit | Summary truncated or missing | Each step: 1 MiB max. Split content across steps or use artifacts |
 
-## Operating Guidance
+## Operating rules for production-ready workflow patterns
 
 1. **Pin all third-party actions by SHA** — use Dependabot or Renovate to keep them updated.
 2. **Set explicit `permissions:` on every workflow** — never rely on repository defaults.
@@ -2282,7 +2282,7 @@ This table maps patterns from this page to common data-engineering CI/CD needs. 
 9. **Write job summaries instead of downloading artifacts for human-readable output** — summaries render inline.
 10. **Test with `workflow_dispatch` before relying on push triggers** — manual dispatch lets you iterate without pushing commits.
 
-## Quick Reference
+## Key pattern primitives at a glance
 
 | Pattern | Key | Where | Purpose |
 |---------|-----|-------|---------|
@@ -2318,7 +2318,7 @@ This table maps patterns from this page to common data-engineering CI/CD needs. 
 | Release Please | `googleapis/release-please-action` | step | Automated version + changelog |
 | Slack notify | `slackapi/slack-github-action` | step | Channel notifications |
 
-## References
+## Reference links for deeper documentation
 
 - [GitHub Actions documentation](https://docs.github.com/en/actions)
 - [Workflow syntax reference](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)

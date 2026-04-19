@@ -235,17 +235,22 @@ C# methods are statically typed, requiring explicit return types and parameter t
 
 Methods declare a return type, accept typed parameters, and support overloading (same name, different parameter lists). Local functions nest inside other methods for encapsulated helpers. Expression-bodied syntax (`=>`) provides a concise form for one-liners, and tuples enable multiple return values without a dedicated class.
 
-> [!warning] Function anti-patterns
+> [!warning] Function signatures become contracts long before the implementation settles
 >
-> - Returning `null` instead of a meaningful empty value or `Optional`
-> - Very long parameter lists — use a config object or builder
-> - Methods doing too much — single responsibility principle
-
-> [!success] Follow these instead
+> Small design shortcuts in return types or parameter shape spread into every call
+> site and become hard to unwind later.
 >
-> - Return a typed result or throw a specific exception rather than `null`
-> - Use a config/options object or builder pattern when you need more than 3–4 parameters
-> - Keep each method focused on one responsibility — extract helpers freely
+> > [!danger] Function anti-patterns
+> >
+> > - Returning `null` instead of a meaningful empty value or `Optional`
+> > - Very long parameter lists — use a config object or builder
+> > - Methods doing too much — single responsibility principle
+>
+> > [!success] Follow these instead
+> >
+> > - Return a typed result or throw a specific exception rather than `null`
+> > - Use a config/options object or builder pattern when you need more than 3–4 parameters
+> > - Keep each method focused on one responsibility — extract helpers freely
 
 #### Method with return value
 
@@ -508,13 +513,21 @@ Accept `Func<DateTime> getNow` with default `DateTime.UtcNow`. Production uses t
 >
 > If a function calls `DateTime.UtcNow` directly, you can't test what happens at midnight, on weekends, or at year boundaries without waiting. Injecting time as a `Func<DateTime>` parameter makes every time-dependent scenario testable in milliseconds.
 
-> [!warning] Don't use DateTime.Now directly
+> [!warning] Time access should be injectable anywhere behavior depends on the clock
 >
-> Don't use `DateTime.Now` directly — untestable and non-deterministic.
-
-> [!success] Inject time as a dependency
+> Direct clock reads bake nondeterminism into otherwise testable code and make
+> time-boundary bugs hard to reproduce.
 >
-> Accept `Func<DateTime>? getNow = null` with `getNow ??= () => DateTime.UtcNow` as default. Production uses real time; tests inject a fixed `DateTime` — fully deterministic.
+> > [!danger] Do not read `DateTime.Now` directly in business logic
+> >
+> > Direct use of `DateTime.Now` or `DateTime.UtcNow` inside the method makes the
+> > result untestable and nondeterministic.
+>
+> > [!success] Inject time as a dependency
+> >
+> > Accept `Func<DateTime>? getNow = null` with
+> > `getNow ??= () => DateTime.UtcNow` as default. Production uses real time;
+> > tests inject a fixed `DateTime` so the behavior stays deterministic.
 
 *Runnable example showing injected time for production and test paths.*
 ```csharp
@@ -578,13 +591,20 @@ LINQ's `OrderBy` accepts a `Func<T, TKey>` that extracts the sort key from each 
 > - `GroupBy` + `Select` — aggregation over groups
 > - Declarative and composable
 
-> [!warning] OrderBy replaces previous sort
+> [!warning] Multi-column ordering only works when the primary sort is preserved
 >
-> `OrderBy` then another `OrderBy` **replaces** the first — use `ThenBy` for secondary sort.
-
-> [!success] Chain ThenBy for multi-column sort
+> A second `OrderBy` starts a new sort instead of refining the first one, which
+> quietly discards your intended grouping.
 >
-> Use `.OrderBy(e => e.Dept).ThenBy(e => e.Salary)` to apply a stable secondary sort without discarding the primary one.
+> > [!danger] A second `OrderBy` replaces the previous sort
+> >
+> > `OrderBy(...).OrderBy(...)` discards the first ordering entirely. It does not
+> > act like SQL `ORDER BY col1, col2`.
+>
+> > [!success] Chain `ThenBy` for multi-column sort
+> >
+> > Use `.OrderBy(e => e.Dept).ThenBy(e => e.Salary)` to apply a stable secondary
+> > sort without discarding the primary one.
 
 *Runnable example showing a key selector used with `OrderByDescending`.*
 ```csharp
@@ -798,13 +818,22 @@ A lambda expression uses `=>` to separate parameters from the body. Single-expre
 > - Assign to `Func<T, TResult>` (returns value) or `Action<T>` (void)
 > - Lambdas capture enclosing scope variables automatically
 
-> [!warning] Keep lambdas short (≤3 lines).
+> [!warning] Lambdas work best as small inline adapters, not hidden mini-methods
 >
-> Keep lambdas short (≤3 lines). Extract complex logic to named methods. Don't use lambdas with side effects in LINQ — use `foreach`.
-
-> [!success] Named methods for complex logic
+> Once a lambda starts branching, mutating state, or stretching over multiple
+> lines, the call site stops being readable.
 >
-> Extract anything beyond 3 lines into a named method. Side-effecting operations belong in `foreach` loops, not LINQ chains — keeps each part readable and independently testable.
+> > [!danger] Long or side-effecting lambdas hide too much logic inline
+> >
+> > Keep lambdas short (about 3 lines or fewer). Extract complex logic to named
+> > methods. Do not use side-effecting lambdas inside LINQ — use `foreach`
+> > instead.
+>
+> > [!success] Use named methods for complex logic
+> >
+> > Extract anything beyond 3 lines into a named method. Side-effecting
+> > operations belong in `foreach` loops, not LINQ chains, which keeps each part
+> > readable and independently testable.
 
 *Runnable example showing simple lambda expressions.*
 ```csharp
@@ -980,13 +1009,21 @@ Console.WriteLine(statement(5));
 4
 ```
 
-> [!warning] Lambda vs method choice
+> [!warning] Inline functions should be chosen by complexity and reuse, not habit
 >
-> Don't write complex lambdas that should be methods. Don't create named methods for trivial one-liners used once.
-
-> [!success] Right tool for the right job
+> Overusing either style hurts readability: giant lambdas hide behavior inline,
+> while one-off named methods scatter trivial logic across the file.
 >
-> Inline lambda for short, single-use LINQ predicates and callbacks; named method for anything reusable, > 3 lines, or that needs a doc comment.
+> > [!danger] Choosing lambdas and named methods by habit leads to the wrong shape
+> >
+> > Do not write complex lambdas that should be methods. Do not create named
+> > methods for trivial one-liners used once.
+>
+> > [!success] Use the right tool for the job
+> >
+> > Use an inline lambda for short, single-use LINQ predicates and callbacks.
+> > Prefer a named method for anything reusable, longer than a few lines, or
+> > requiring a doc comment.
 
 ## Closures & Scope
 
@@ -1109,13 +1146,22 @@ The most common closure bug in C# involves lambdas created inside a `for` loop �
 
 Lambdas created in a `for` loop capture the loop variable `i` itself — not its value at each iteration. After the loop, `i` has its final value, so all lambdas return the same result. The fix is to copy the loop variable into a new local inside the loop body. Note: `foreach` in C# 5+ captures per-iteration automatically.
 
-> [!danger] Lambdas in a for loop
+> [!warning] Closures over `for` loops capture the variable, not the current value
 >
-> Lambdas in a `for` loop capture the variable itself — after the loop, all see the final value. Fix: `int captured = i` inside the loop body. Note: `foreach` in C# 5+ captures per-iteration automatically.
-
-> [!success] Copy the loop variable before capturing
+> This is one of the most common closure bugs in C#: every lambda points at the
+> same loop slot unless you create a fresh local.
 >
-> Declare `int captured = i;` at the top of the loop body and close over `captured` instead of `i`. Each iteration creates a new variable, so each lambda holds an independent snapshot.
+> > [!danger] Lambdas in a `for` loop all see the final counter value
+> >
+> > Lambdas in a `for` loop capture the variable itself, so after the loop they
+> > all see the final value. `foreach` in C# 5+ captures per iteration
+> > automatically, but `for` does not.
+>
+> > [!success] Copy the loop variable before capturing
+> >
+> > Declare `int captured = i;` at the top of the loop body and close over
+> > `captured` instead of `i`. Each iteration creates a new variable, so each
+> > lambda holds an independent snapshot.
 
 *Runnable example showing the loop capture fix.*
 ```csharp
@@ -1177,13 +1223,20 @@ Custom delegates define a named function signature: `delegate int MathOp(int a, 
 
 Delegates declare a function signature as a type — type-safe function pointers. Built-in: `Func<T, TResult>` (returns value), `Action<T>` (void), `Predicate<T>` (returns bool). Custom: `delegate int Op(int a, int b)`. Delegates can chain multiple methods via `+=` (multicast). Events are restricted delegates that only the owner can invoke.
 
-> [!warning] Multicast delegate return values
+> [!warning] Multicast delegates are for notifications, not meaningful return values
 >
-> With multicast delegates, only the **last** handler's return value is kept. Use `Func`/`Action` for simple cases — custom delegate types add unnecessary ceremony.
-
-> [!success] Use Action for fire-and-forget multicasting
+> Once multiple handlers are chained, the invocation list behaves like a fan-out
+> side-effect mechanism rather than a reliable function result.
 >
-> When all subscribers perform side effects (logging, UI updates, pipeline steps), use `Action<T>` — return values are irrelevant and the multicast discard issue never arises.
+> > [!danger] Multicast delegates discard every return value except the last one
+> >
+> > With multicast delegates, only the **last** handler's return value is kept.
+> > That makes them a poor fit for computations where each result matters.
+>
+> > [!success] Use `Action` for fire-and-forget multicasting
+> >
+> > When all subscribers perform side effects (logging, UI updates, pipeline
+> > steps), use `Action<T>` so the multicast discard issue never matters.
 
 *Runnable example showing delegate declaration and invocation.*
 ```csharp
@@ -1287,13 +1340,23 @@ The `event` keyword wraps a delegate with access restrictions: external code can
 
 Declare events with `event EventHandler<TEventArgs>` where `TEventArgs` carries the event data. The standard pattern uses a protected `OnEventName` method to raise the event safely via `?.Invoke`. Subscribers attach with `+=` and detach with `-=`. Always unsubscribe when done to prevent memory leaks — the event holds a reference to the subscriber.
 
-> [!warning] Memory leaks from unsubscribed events
+> [!warning] Event subscriptions create object-lifetime coupling
 >
-> Event handlers keep subscribers alive via strong references. If a short-lived object subscribes to a long-lived publisher's event and never unsubscribes, the subscriber can't be garbage collected.
-
-> [!success] Always unsubscribe
+> The publisher holds a strong reference to each subscriber through the handler
+> list. If the publisher outlives the subscriber, forgetting to detach becomes a
+> memory leak.
 >
-> Implement `IDisposable` on subscriber classes and unsubscribe in `Dispose()`. For UI components, unsubscribe in teardown/close handlers. Consider weak event patterns for long-lived publishers.
+> > [!danger] Unsubscribed events keep short-lived subscribers alive
+> >
+> > Event handlers keep subscribers alive via strong references. If a short-lived
+> > object subscribes to a long-lived publisher's event and never unsubscribes,
+> > the subscriber cannot be garbage collected.
+>
+> > [!success] Always unsubscribe
+> >
+> > Implement `IDisposable` on subscriber classes and unsubscribe in `Dispose()`.
+> > For UI components, unsubscribe in teardown or close handlers. Consider weak
+> > event patterns for long-lived publishers.
 
 *Runnable example showing `EventHandler<TEventArgs>` with safe invocation.*
 ```csharp
@@ -1335,17 +1398,22 @@ Notifier: Email sent for order 101
 
 Method overloading lets multiple methods share a name with different parameter types or counts — the compiler resolves the correct one. Extension methods add methods to existing types without modifying source code, enabling fluent APIs like LINQ.
 
-> [!warning] Overloading pitfalls
+> [!warning] Overloads should widen one concept, not hide multiple APIs behind one name
 >
-> - Overloads that do fundamentally different things — confusing API
-> - Too many overloads — use optional/named parameters or generics instead
-> - Ambiguous overloads cause compiler errors when it can't decide
-
-> [!success] Clean overloading guidelines
+> Overloading stays readable only when every variant feels like the same operation
+> with a different input shape.
 >
-> - All overloads should do the same logical operation on different input types
-> - Prefer optional/named parameters when the logic is identical; use generics when one method can handle all types
-> - If the compiler reports ambiguity, add an explicit cast at the call site or consolidate overloads
+> > [!danger] Overloading pitfalls
+> >
+> > - Overloads that do fundamentally different things — confusing API
+> > - Too many overloads — use optional or named parameters or generics instead
+> > - Ambiguous overloads cause compiler errors when it cannot decide
+>
+> > [!success] Clean overloading guidelines
+> >
+> > - All overloads should do the same logical operation on different input types
+> > - Prefer optional or named parameters when the logic is identical; use generics when one method can handle all types
+> > - If the compiler reports ambiguity, add an explicit cast at the call site or consolidate overloads
 
 ### Method overloading
 
@@ -1415,31 +1483,55 @@ Console.WriteLine(string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10)))
 > > - **Extension methods on `object`** — pollutes IntelliSense for every type. Extend the most specific type possible.
 > > - **`ref`/`out` in public APIs** — complicates the calling convention and breaks async compatibility. Prefer return tuples or result objects.
 
-## Warnings
+## Common Traps and Safe Patterns
 
-> [!warning] Captured loop variable in closures
->
-> `for (int i = 0; i < 5; i++) { actions.Add(() => Console.Write(i)); }` — all actions print `5` because they capture the same variable `i`.
+### Capture a Fresh Local in `for` Closures
 
-> [!success] Correct pattern
+> [!warning] Loop-created closures need a per-iteration value to capture safely
 >
-> Copy to a local: `for (int i = 0; ...) { int local = i; actions.Add(() => Console.Write(local)); }`. `foreach` is fixed since C# 5.
+> Without a fresh local, each lambda points at the same mutable loop variable.
+>
+> > [!danger] Captured loop variable in closures
+> >
+> > `for (int i = 0; i < 5; i++) { actions.Add(() => Console.Write(i)); }` makes
+> > all actions print `5` because they capture the same variable `i`.
+>
+> > [!success] Copy to a local before closing over it
+> >
+> > Use `for (int i = 0; ...) { int local = i; actions.Add(() => Console.Write(local)); }`.
+> > `foreach` is fixed since C# 5.
 
-> [!warning] Invoking a null event
->
-> `MyEvent(sender, args)` throws `NullReferenceException` if no subscribers are attached.
+### Raise Events Only Through a Null-Safe Invocation Path
 
-> [!success] Correct pattern
+> [!warning] Events are optional subscriptions, so invocation must tolerate zero listeners
 >
-> Use null-conditional invocation: `MyEvent?.Invoke(sender, args)`.
+> An event is often unset, especially during startup, shutdown, or tests.
+>
+> > [!danger] Invoking a null event throws immediately
+> >
+> > `MyEvent(sender, args)` throws `NullReferenceException` if no subscribers are
+> > attached.
+>
+> > [!success] Use null-conditional event invocation
+> >
+> > Raise the event with `MyEvent?.Invoke(sender, args)`.
 
-> [!warning] Mutable struct with `in` parameter
->
-> `in` creates a defensive copy of mutable structs to preserve readonly semantics — this silently kills the performance benefit.
+### Reserve `in` for Readonly Value Types
 
-> [!success] Correct pattern
+> [!warning] `in` only improves performance when the passed struct can stay truly readonly
 >
-> Only use `in` with `readonly struct` types. For mutable structs, use `ref` if you need pass-by-reference.
+> If the callee touches a mutable struct through `in`, the compiler may create a
+> defensive copy and erase the intended benefit.
+>
+> > [!danger] Mutable structs with `in` trigger defensive copies
+> >
+> > `in` creates a defensive copy of mutable structs to preserve readonly
+> > semantics, which silently kills the performance benefit.
+>
+> > [!success] Use `in` only with `readonly struct`
+> >
+> > Only use `in` with `readonly struct` types. For mutable structs, use `ref` if
+> > you need pass-by-reference.
 
 ## Recommendations
 

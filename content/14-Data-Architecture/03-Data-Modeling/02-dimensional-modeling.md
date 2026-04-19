@@ -401,7 +401,7 @@ erDiagram
     }
 ```
 
-In practice, the [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) layer is where dimensional models are physically built — fact and dimension tables are materialized as gold-layer outputs ready for dashboard consumption.
+In practice, the [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) layer is where dimensional models are physically built — fact and dimension tables are materialized as gold-layer outputs ready for dashboard consumption.
 
 ### Why Star Schemas Outperform Normalized Models for Analytics
 

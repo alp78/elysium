@@ -334,7 +334,7 @@ tags:
 > > This changes execution shape, state reuse, or deployment behavior. Misconfiguring it tends to create expensive failures that are visible only after the workflow starts.
 
 
-## CI/CD Lifecycle Model
+## How the delivery lifecycle moves from validation to rollout
 
 The CI/CD lifecycle is a linear pipeline from source change to production deployment. Each stage has a single responsibility: validate, build, promote, deploy, verify. Failures at any stage halt the pipeline and prevent downstream stages from executing.
 
@@ -378,7 +378,7 @@ flowchart TD
 
 *The CI/CD lifecycle as a linear pipeline. A source change enters CI validation (lint, test). If CI passes, the build stage produces an artifact tagged with the commit SHA — an immutable identifier. The same artifact deploys to staging automatically, where a smoke test verifies it. An approval gate (environment protection rule) separates staging from production. After approval, the identical artifact deploys to production. A post-deploy health check confirms the deployment. If verification fails, a rollback redeploys the last known-good artifact.*
 
-### GitHub Actions | CI/CD | CI vs CD vs continuous deployment
+### CI/CD | CI vs CD vs continuous deployment
 
 | Property | Continuous Integration | Continuous Delivery | Continuous Deployment |
 |---|---|---|---|
@@ -389,7 +389,7 @@ flowchart TD
 | **Prerequisite maturity** | Basic test suite | CI + environment protection + smoke tests | CD + comprehensive automated verification |
 | **Typical for** | All teams | Most production services | High-velocity SaaS with strong test coverage |
 
-### GitHub Actions | CI/CD | build once, deploy many
+### CI/CD | build once, deploy many
 
 The **build once, deploy many** principle eliminates the risk of environment-specific build differences. A single build job produces one artifact — tagged with the commit SHA, not a branch name or `latest`. That exact artifact is deployed unchanged to staging, verified, and then promoted to production. Environment-specific configuration (database URLs, API keys, feature flags) is injected at deploy time via environment secrets and variables, never baked into the artifact.
 
@@ -401,7 +401,7 @@ The **build once, deploy many** principle eliminates the risk of environment-spe
 >
 > Tag every build artifact with the commit SHA (`${{ github.sha }}` or its short form). This creates an immutable link between the source code, the artifact, and every environment it was deployed to. Use `actions/upload-artifact` to pass the artifact between jobs within a workflow, and artifact registries (Artifact Registry, ECR, GHCR) for cross-workflow and cross-environment promotion.
 
-### GitHub Actions | CI/CD | environments and approvals in the promotion flow
+### CI/CD | environments and approvals in the promotion flow
 
 GitHub environments map directly to the promotion model. Each environment (`staging`, `production`) can have:
 
@@ -411,11 +411,11 @@ GitHub environments map directly to the promotion model. Each environment (`stag
 
 A job that declares `environment: production` does not start until all protection rules pass. GitHub pauses the workflow run, sends a notification to the required reviewers, and waits for approval. The workflow run does not consume billable minutes while waiting.
 
-## Continuous Integration
+## Continuous integration checks for every code change
 
 CI validates every code change before it reaches the main branch. The CI pipeline runs on `push` and `pull_request` events, executing lint checks and tests in parallel. Path filters prevent unnecessary runs when only unrelated files change.
 
-### GitHub Actions | CI | lint and test pipeline
+### CI | lint and test pipeline
 
 #### Run lint and tests on every push and PR
 
@@ -523,7 +523,7 @@ JOBS
 
 The lint job and both matrix test jobs ran in parallel. All three completed successfully. The `fail-fast: false` setting ensured both Python versions ran to completion regardless of the other's result.
 
-### GitHub Actions | CI | matrix testing
+### CI | matrix testing
 
 A matrix strategy runs the same job multiple times with different variable combinations. GitHub expands the matrix into parallel job instances — one per combination. This is the primary mechanism for testing across Python versions, operating systems, or dependency sets.
 
@@ -539,7 +539,7 @@ A matrix strategy runs the same job multiple times with different variable combi
 >
 > Each matrix job is billed independently. A 3×2 matrix (3 Python versions × 2 OS) creates 6 parallel jobs. Each job start bills a minimum of 1 full minute. OS multipliers apply: Linux 1×, Windows 2×, macOS 10×. Included free minutes per month (Linux-equivalent): Free 2,000, Pro/Team 3,000, Enterprise 50,000. Use `paths:` filters to skip matrix builds when only documentation changes. Set `timeout-minutes` on each job — the default hang limit is 6 hours.
 
-### GitHub Actions | CI | caching strategies
+### CI | caching strategies
 
 GitHub-hosted runners start with a clean environment on every job. Without caching, dependencies are re-downloaded each run. Caching stores and restores dependency directories between runs.
 
@@ -564,11 +564,11 @@ Cache key design:
 >
 > Base cache keys on `hashFiles()` of your dependency lock file (`requirements.txt`, `poetry.lock`, `package-lock.json`). This ensures exact cache hits when dependencies haven't changed and automatic invalidation when they have.
 
-## Building and Packaging
+## Build once and package an immutable deployment artifact
 
 The build stage produces an immutable artifact — a Docker image, compiled binary, or static site bundle — tagged with the commit SHA. This artifact is the unit of deployment through all subsequent environments.
 
-### GitHub Actions | building | Docker image with SHA tagging
+### building | Docker image with SHA tagging
 
 #### Build and tag a Docker image with the commit SHA
 
@@ -674,7 +674,7 @@ The image is tagged `03c544c` (the short commit SHA), not `latest`. The digest `
 >
 > Tag images with the commit SHA: `image:03c544c`. This creates a one-to-one mapping between source code and deployed artifact. Rollback becomes `gcloud run deploy --image=image:abc1234` — deterministic and auditable. Use `${{ github.sha }}` in workflow expressions.
 
-### GitHub Actions | building | artifact passing between jobs
+### building | artifact passing between jobs
 
 Jobs within a workflow run on separate runners. To pass build outputs from a `build` job to a `deploy` job, use `actions/upload-artifact` and `actions/download-artifact`. The artifact is stored in GitHub's infrastructure and available to any job in the same workflow run.
 
@@ -702,11 +702,11 @@ Jobs within a workflow run on separate runners. To pass build outputs from a `bu
 | `compression-level` | Zlib compression (0–9). 0 = no compression (faster), 9 = maximum. | `6` |
 | `overwrite` | Replace an existing artifact with the same name. | `false` |
 
-## Deployment Strategies
+## Deployment strategies and when to use them
 
 Different deployment strategies trade off between speed, safety, and complexity. The right choice depends on the team's maturity, the service's risk profile, and the available infrastructure.
 
-### GitHub Actions | deployment strategies | comparison
+### deployment strategies | comparison
 
 | Strategy | When to Use | Prerequisites | Rollback Method | Risk |
 |---|---|---|---|---|
@@ -719,7 +719,7 @@ Different deployment strategies trade off between speed, safety, and complexity.
 | **Canary** | High-traffic services | Traffic splitting infrastructure | Shift traffic back to 0% | Very low — gradual exposure |
 | **Rolling** | Stateless services, Kubernetes | Orchestrator (K8s, Cloud Run) | Reverse rolling update | Medium — partial state during rollout |
 
-### GitHub Actions | deployment strategies | multi-stage promotion
+### deployment strategies | multi-stage promotion
 
 #### Deploy through staging and production with an approval gate
 
@@ -870,7 +870,7 @@ Deploy to PRODUCTION:
 
 The pipeline built the artifact once (tag `03c544c`), deployed it to staging automatically, then paused at the production deployment pending reviewer approval. After `alp78` approved, the production job downloaded and deployed the identical artifact — no rebuild.
 
-### GitHub Actions | deployment strategies | tag and release-based deployment
+### deployment strategies | tag and release-based deployment
 
 #### Deploy on release publication
 
@@ -945,7 +945,7 @@ JOBS
 
 The release `v2.0.0` was created with `gh release create v2.0.0 --title "v2.0.0 CI/CD Demo Release" --target main`, which triggered the workflow. The production environment required reviewer approval before the deploy job executed.
 
-### GitHub Actions | deployment strategies | manual rollback via workflow_dispatch
+### deployment strategies | manual rollback via workflow_dispatch
 
 #### Trigger a rollback to a known-good commit SHA
 
@@ -1060,7 +1060,7 @@ Commit 03c544c exists in repository
 
 The rollback first validated that commit `03c544c` exists in the repository, extracted its author and message for the audit log, then deployed it to the staging environment. For production rollbacks, the `production` environment's required reviewer gate would trigger approval before execution.
 
-### GitHub Actions | deployment strategies | PR preview environments
+### deployment strategies | PR preview environments
 
 #### Deploy a preview environment for each pull request
 
@@ -1119,7 +1119,7 @@ The workflow triggered automatically when PR #11 was created from branch `featur
 >
 > Add a second workflow triggered by `pull_request: types: [closed]` that tears down the preview namespace. Without cleanup, preview environments accumulate indefinitely, consuming cloud resources.
 
-### GitHub Actions | deployment strategies | blue/green, canary, and rolling
+### deployment strategies | blue/green, canary, and rolling
 
 These deployment strategies are orchestrated by the deployment platform (Kubernetes, Cloud Run, load balancer), not by GitHub Actions directly. GitHub Actions triggers the deployment and monitors the result — the platform handles the traffic management.
 
@@ -1136,9 +1136,9 @@ These deployment strategies are orchestrated by the deployment platform (Kuberne
 > - **Rolling**: when you have a stateless service managed by an orchestrator. Simpler than canary but no traffic control during rollout.
 > - **Single deploy**: when the service is internal, low-traffic, or the team is small. Fastest to implement, highest risk on failure.
 
-## Deployment Safety and Governance
+## Safety controls that govern production deployments
 
-### GitHub Actions | safety | environment protection rules
+### safety | environment protection rules
 
 GitHub environments add approval gates and deployment controls to workflows. A job that declares `environment: production` must pass all protection rules before executing.
 
@@ -1157,7 +1157,7 @@ GitHub environments add approval gates and deployment controls to workflows. A j
 >
 > Use branch protection rules (require status checks, require review) plus `workflow_dispatch` as a manual approval mechanism. The deployer must explicitly trigger the production workflow after verifying staging.
 
-### GitHub Actions | safety | deployment concurrency groups
+### safety | deployment concurrency groups
 
 Concurrency groups prevent parallel deployments from racing. Without a concurrency group, two pushes to `main` in quick succession create two simultaneous deployments — the older one may overwrite the newer one.
 
@@ -1242,7 +1242,7 @@ Both runs completed successfully. The second run (`deploy-beta`) waited for `dep
 >
 > Use `${{ github.workflow }}-${{ github.ref }}` for CI groups (per-workflow, per-branch). Use `deploy-production` or `deploy-staging` for deployment groups (per-environment, cross-workflow).
 
-### GitHub Actions | safety | merge queue and merge_group trigger
+### safety | merge queue and merge_group trigger
 
 When a repository enables the merge queue, PRs are merged through temporary merge branches that combine the PR with the latest `main`. CI checks must run against these temporary branches — not just the PR branch. The `merge_group` event fires when a PR enters the merge queue.
 
@@ -1260,7 +1260,7 @@ When a repository enables the merge queue, PRs are merged through temporary merg
 >   merge_group:
 > ```
 
-### GitHub Actions | safety | least-privilege permissions
+### safety | least-privilege permissions
 
 Always declare explicit `permissions:` at the workflow level with the minimum required scopes. The default `GITHUB_TOKEN` has broad permissions — a compromised action step could push code, create releases, or modify issues.
 
@@ -1285,9 +1285,9 @@ Always declare explicit `permissions:` at the workflow level with the minimum re
 >
 > Declare `permissions: {}` at the workflow level (no permissions), then add only what each job needs. For a CI pipeline: `permissions: contents: read`. For a deploy pipeline: `permissions: contents: read` and `id-token: write`. For a supply chain workflow: add `attestations: write`.
 
-## Rollback and Recovery
+## Rollback and recovery when a deployment fails
 
-### GitHub Actions | rollback | when to rollback vs roll-forward
+### rollback | when to rollback vs roll-forward
 
 | Situation | Action | Rationale |
 |---|---|---|
@@ -1297,7 +1297,7 @@ Always declare explicit `permissions:` at the workflow level with the minimum re
 | Wrong environment variable deployed | **Rollback** — redeploy with correct config | The artifact is fine; the configuration is wrong |
 | Third-party dependency broke at runtime | **Rollback** — to last version without the dependency | Until the dependency is fixed or replaced |
 
-### GitHub Actions | rollback | post-deploy verification
+### rollback | post-deploy verification
 
 #### Run a smoke test after deployment
 
@@ -1368,7 +1368,7 @@ JOBS
 >
 > Include health check, version verification, and critical path tests (auth, database, cache) as the final step of every deployment pipeline. If any test fails, trigger the rollback workflow automatically or alert the deployer.
 
-### GitHub Actions | rollback | failed migration handling
+### rollback | failed migration handling
 
 Data migrations that fail mid-run present a unique challenge: rolling back the code without rolling back the migration may leave the database in an inconsistent state.
 
@@ -1383,9 +1383,9 @@ Data migrations that fail mid-run present a unique challenge: rolling back the c
 > - If a migration fails, do not proceed to code deployment. Fix the migration and re-run.
 > - For irreversible migrations, prepare a rollback migration script before deploying.
 
-## Supply-Chain Integrity
+## Supply-chain controls for trusted workflow execution
 
-### GitHub Actions | supply chain | SHA pinning
+### supply chain | SHA pinning
 
 #### Pin all actions to commit SHAs
 
@@ -1401,7 +1401,7 @@ Pinning actions to version tags (`@v4`) trusts the maintainer not to push malici
 >
 > Use Dependabot or Renovate to automatically propose PRs when new action versions are released. The PR updates the SHA pin, allowing review before adoption. Add a comment with the version equivalent: `actions/checkout@11bd719... # v4.2.2`.
 
-### GitHub Actions | supply chain | artifact attestation and provenance
+### supply chain | artifact attestation and provenance
 
 #### Build with provenance tracking
 
@@ -1488,9 +1488,9 @@ Build provenance (SLSA Level 2 equivalent):
 
 The provenance record traces the artifact back to its source commit (`03c544c`), builder (GitHub Actions), and trigger (`push`). The artifact digest (`sha256:8867e087...`) provides a content-addressable identifier that can be verified independently.
 
-## Secrets and Identity
+## Secret scoping and identity patterns for deployments
 
-### GitHub Actions | secrets | management and scoping
+### secrets | management and scoping
 
 GitHub Actions secrets are encrypted values stored at three levels. When the same secret name exists at multiple levels, the narrowest scope wins.
 
@@ -1524,7 +1524,7 @@ gh secret delete OLD_SECRET
 >
 > Run `gh secret list` to confirm the secret exists. If missing, set it with `gh secret set`. For environment secrets, verify the job declares the correct `environment:` key.
 
-### GitHub Actions | secrets | OIDC authentication to GCP
+### secrets | OIDC authentication to GCP
 
 #### Authenticate to GCP via OIDC and run BigQuery validation
 
@@ -1624,9 +1624,9 @@ The OIDC authentication exchanged a GitHub JWT for a short-lived GCP access toke
 >
 > OIDC tokens are short-lived (default 1 hour), scoped to the specific workflow run, and automatically expire. There is no key to rotate, leak, or revoke. The WIF binding restricts which repositories and branches can assume the service account. Fall back to SA keys only when OIDC is not supported by the target service.
 
-## Data-Engineering CI/CD Scenarios
+## CI/CD patterns for data-engineering releases
 
-### GitHub Actions | data engineering | scenario index
+### data engineering | scenario index
 
 | Scenario | Deployment Pattern | Key Concern | Concurrency |
 |---|---|---|---|
@@ -1639,7 +1639,7 @@ The OIDC authentication exchanged a GitHub JWT for a short-lived GCP access toke
 | Notebook validation | PR check | Output stripping, reproducibility | Parallel |
 | Container image promotion | Build once, tag per env | Same image across staging/prod | Serial per env |
 
-### GitHub Actions | data engineering | coordinated migrations
+### data engineering | coordinated migrations
 
 When a code deploy requires a database migration, the migration must run before the new code deploys — but the migration must be backward-compatible with the old code that is still running during the transition.
 
@@ -1657,7 +1657,7 @@ When a code deploy requires a database migration, the migration must run before 
 >
 > Set `concurrency: { group: deploy-pipeline, cancel-in-progress: false }` on any workflow that deploys data pipeline services. This serializes deployments and prevents migration ordering conflicts.
 
-### GitHub Actions | data engineering | scheduled versus event-driven
+### data engineering | scheduled versus event-driven
 
 | Trigger | Use Case | Overlap Risk | Example |
 |---|---|---|---|
@@ -1674,9 +1674,9 @@ When a code deploy requires a database migration, the migration must run before 
 >
 > Use `concurrency: { group: daily-etl, cancel-in-progress: false }` to serialize scheduled runs. If a run is already in progress when the next cron fires, the new run queues rather than starting in parallel.
 
-## Monitoring and Diagnostics
+## Monitoring runs and diagnosing failed executions
 
-### GitHub Actions | monitoring | workflow monitoring commands
+### monitoring | workflow monitoring commands
 
 The GitHub CLI (`gh`) provides commands to list, inspect, re-trigger, and debug workflow runs from the terminal.
 
@@ -1693,7 +1693,7 @@ The GitHub CLI (`gh`) provides commands to list, inspect, re-trigger, and debug 
 | `gh workflow list` | List all workflows in the repository |
 | `gh workflow view <name>` | Show workflow details and recent runs |
 
-### GitHub Actions | monitoring | debugging failed workflows
+### monitoring | debugging failed workflows
 
 | Step | Command | Purpose |
 |---|---|---|
@@ -1704,7 +1704,7 @@ The GitHub CLI (`gh`) provides commands to list, inspect, re-trigger, and debug 
 | 5. Enable debug logging | Re-run with "Enable debug logging" checkbox, or set `ACTIONS_STEP_DEBUG=true` secret | Get verbose step output |
 | 6. Re-run failed jobs | `gh run rerun <id> --failed` | Retry without rebuilding successful jobs |
 
-## Troubleshooting
+## Common CI/CD failures and how to resolve them
 
 | Symptom | Cause | Resolution |
 |---|---|---|
@@ -1724,7 +1724,7 @@ The GitHub CLI (`gh`) provides commands to list, inspect, re-trigger, and debug 
 | Concurrency group cancels deploy | `cancel-in-progress: true` on deploy workflow | Set `cancel-in-progress: false` for deployments |
 | Slow CI on documentation-only PRs | No path filters on CI triggers | Add `paths:` filters to exclude docs, configs |
 
-## Operating Guidance
+## Operating rules for reliable CI/CD workflows
 
 1. **Tag artifacts with commit SHA, never `latest`.** The SHA creates a one-to-one mapping between source, artifact, and deployment. `latest` is ambiguous and unsafe for production.
 2. **Build once, deploy the same artifact to every environment.** Environment-specific configuration belongs in secrets and variables, not in the build.
@@ -1737,7 +1737,7 @@ The GitHub CLI (`gh`) provides commands to list, inspect, re-trigger, and debug 
 9. **Add `merge_group` to CI triggers when merge queue is enabled.** Without it, required checks never run against queued branches, blocking all merges.
 10. **Keep rollback workflows tested and ready.** A rollback procedure that has never been tested is not a rollback procedure.
 
-## Quick Reference
+## Key CI/CD syntax and commands at a glance
 
 | Concept / Command | Description |
 |---|---|
@@ -1773,7 +1773,7 @@ The GitHub CLI (`gh`) provides commands to list, inspect, re-trigger, and debug 
 | `gh secret set NAME` | Set a repository secret |
 | `gh release create v1.0.0` | Create release (triggers release event) |
 
-## Related
+## Related notes and supporting systems
 
 **GCP (Chapter 06):**
 
@@ -1798,7 +1798,7 @@ The GitHub CLI (`gh`) provides commands to list, inspect, re-trigger, and debug 
 
 - [dbt-ci-cd](https://alp78.github.io/elysium/11-dbt/Operations/dbt-ci-cd) — dbt-specific CI checks in GitHub Actions
 
-## References
+## Reference links for deeper documentation
 
 - [GitHub Actions documentation](https://docs.github.com/en/actions)
 - [Workflow syntax for GitHub Actions](https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions)

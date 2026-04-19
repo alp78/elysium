@@ -447,7 +447,7 @@ Use the lookup table below when you only need the `tee` flags.
 | `-a` | `cmd \| tee -a file` | Append to file, pass through to stdout |
 | `-i` | `cmd \| tee -i file` | Ignore SIGINT (keep writing even if Ctrl-C is pressed) |
 
-### Linux | recommendations
+### Linux | redirection recommendations | logging and safety patterns
 
 The operator sections above explain mechanics. The recommendations below turn those mechanics into repeatable Bash patterns for production scripts and terminal workflows.
 
@@ -524,7 +524,7 @@ EOF
 SELECT '$ticker' AS literal_symbol;
 ```
 
-### Linux | troubleshooting
+### Linux | redirection troubleshooting | truncation and stderr problems
 
 These are the failure signatures that show up most often in shell scripts. Each example is intentionally small so the broken behavior is obvious before the fix is explained.
 
@@ -907,7 +907,7 @@ Use the lookup table below when choosing the PowerShell here-string form.
 | Expandable | `@"..."@` | Yes | Strings with dynamic values |
 | Literal | `@'...'@` | No | SQL, JSON, regex, raw templates |
 
-### PowerShell | recommendations
+### PowerShell | redirection recommendations | logging and encoding patterns
 
 These patterns build on the core operators above and focus on the cases that most often matter in scripts shared across Windows and Unix environments.
 
@@ -979,7 +979,7 @@ $path = Join-Path $tmp 'utf8.txt'
 6F-6C-C3-A1-0D-0A
 ```
 
-### PowerShell | troubleshooting
+### PowerShell | redirection troubleshooting | encoding and stream capture problems
 
 Most PowerShell redirect bugs come from the extra streams or from encoding defaults that differ across hosts. These examples isolate those two cases.
 
@@ -1026,7 +1026,7 @@ pipe saw: pay attention
 pipe saw: data row
 ```
 
-## Warnings
+## I/O Redirection Warnings and Failure Patterns
 
 - **Redirect-before-write is silent.** `sort file.txt > file.txt` empties the file before `sort` reads it.
 - **`2>&1` is evaluated left to right.** Put it after the stdout redirect when both streams must land in the same place.
@@ -1034,13 +1034,13 @@ pipe saw: data row
 - **Pipes do not collect every stream by default.** Bash pipes stdout unless you merge stderr first; PowerShell pipes stream 1 unless you merge additional streams.
 - **PowerShell encoding is host-sensitive.** If a file leaves PowerShell, declare the encoding instead of relying on defaults.
 
-## Cross-references
+## I/O Redirection Cross-References
 
 - [command-chaining](https://alp78.github.io/elysium/01-Shell/01-Scripting/04-command-chaining) - Using pipes and operators to connect commands
 - [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) - The `set` flags that prevent scripting disasters
 - [process-substitution](https://alp78.github.io/elysium/01-Shell/01-Scripting/06-process-substitution) - Using `<()` and `>()` to treat output as files
 
-## References
+## I/O Redirection References
 
 - [GNU Bash Reference - Redirections](https://www.gnu.org/software/bash/manual/html_node/Redirections.html)
 - [PowerShell - About Redirection](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_redirection)

@@ -319,7 +319,7 @@ GROUP BY 1, 2
 
 ### Post-Hook Indexes
 
-dbt materialises tables without indexes by default. The [partitioning-strategies](https://alp78.github.io/elysium/04-SQL-Server/02-Database-Design-and-Storage/partitioning-strategies) note covers SQL Server partitioning in depth; for dbt-managed tables, add indexes in `post-hook`:
+dbt materialises tables without indexes by default. The [partitioning-strategies](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/partitioning-strategies) note covers SQL Server partitioning in depth; for dbt-managed tables, add indexes in `post-hook`:
 
 ```sql
 -- dbt_project.yml
@@ -586,7 +586,7 @@ bq query --use_legacy_sql=false < target/compiled/.../audit_fct_index_weights.sq
 
 ## Related
 
-- [query-store-regressions-and-plan-forcing](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/query-store-regressions-and-plan-forcing)
+- [query-store-regressions-and-plan-forcing](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/query-store-regressions-and-plan-forcing)
 - [querying-and-cost-optimization](https://alp78.github.io/elysium/06-GCP/BigQuery/querying-and-cost-optimization)
 - [dbt-materializations](https://alp78.github.io/elysium/11-dbt/Modeling/dbt-materializations)
 - [dbt-troubleshooting](https://alp78.github.io/elysium/11-dbt/Operations/dbt-troubleshooting)

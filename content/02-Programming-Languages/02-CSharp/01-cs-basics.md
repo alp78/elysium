@@ -729,13 +729,20 @@ System.Boolean
 System.Int32
 ```
 
-> [!warning] Variables Cannot Change Type
+> [!warning] Type inference does not make C# dynamically typed
 >
-> C# is statically typed. `x = "string"` after declaring `int x` is a compile error. Unlike Python, types are fixed at declaration.
-
-> [!success] Use var for type inference without sacrificing type safety
+> New C# users often read `var` as if it were Python-style rebinding, but the
+> compiler still locks the variable to one concrete type at declaration time.
 >
-> `var x = 42;` infers `int` at compile time — the variable is still statically typed, you just don't have to write the type explicitly. `x = "string"` would still be a compile error.
+> > [!danger] Variables cannot change type after declaration
+> >
+> > C# is statically typed. `x = "string"` after declaring `int x` is a compile
+> > error. Unlike Python, the type is fixed when the variable is declared.
+>
+> > [!success] Use `var` for inference without losing type safety
+> >
+> > `var x = 42;` infers `int` at compile time — the variable is still statically
+> > typed, you just do not have to write the type explicitly.
 
 #### Define compile-time and runtime constants with const and readonly
 
@@ -860,13 +867,22 @@ flowchart TD
     Q3 -->|No| DBL["double (15-17 digits)<br/>Default, science, ML"]
 ```
 
-> [!danger] Financial math
+> [!warning] Numeric type choice matters most when precision errors become business bugs
 >
-> Never use `float`/`double` for currency — always use `decimal`. Never compare floats with `==` — use `Math.Abs(a-b) < epsilon`.
-
-> [!success] Use decimal for money, epsilon comparison for floats
+> Binary floating-point is fine for many scientific and approximate calculations,
+> but it becomes dangerous when you expect exact decimal behavior or exact
+> equality.
 >
-> Declare monetary amounts as `decimal amount = 9.99m;`. For float equality checks, use `Math.Abs(a - b) < 1e-9` where `1e-9` is your tolerance (epsilon), chosen based on the precision your computation requires.
+> > [!danger] Financial math and exact float equality are the wrong fit for binary floating point
+> >
+> > Never use `float` or `double` for currency — use `decimal`. Never compare
+> > floats with `==` for computed values — use `Math.Abs(a - b) < epsilon`.
+>
+> > [!success] Use `decimal` for money and epsilon comparisons for floating point
+> >
+> > Declare monetary amounts as `decimal amount = 9.99m;`. For floating-point
+> > equality checks, use `Math.Abs(a - b) < 1e-9` or another tolerance chosen for
+> > the precision your computation requires.
 
 *This example demonstrates floating-point types — float, double, decimal precision tiers.*
 
@@ -910,13 +926,20 @@ System.Decimal
 
 When you use `var`, the compiler determines the type entirely from the right-hand side. `var a = 3.14` infers `double`, `var b = 3.14f` infers `float` (`System.Single`), and `var e = 3.14m` infers `decimal`. This makes suffix choice critical with `var` — omitting `m` on a monetary value silently gives you `double` with binary rounding.
 
-> [!warning] Float Requires f Suffix
+> [!warning] Literal suffixes decide the numeric type before `var` ever enters the picture
 >
-> Numeric literals are `double` by default. `float x = 3.14;` is a compile error. Use `3.14f` for float, `3.14m` for decimal.
-
-> [!success] Use the correct suffix for each floating-point type
+> The compiler treats unsuffixed decimal literals as `double`, which makes money
+> examples and `float` declarations easy to get wrong by accident.
 >
-> `float f = 3.14f;` — `f` suffix. `decimal d = 9.99m;` — `m` suffix. `double` needs no suffix: `double x = 3.14;` is the default.
+> > [!danger] Unsuffixed decimal literals default to `double`
+> >
+> > `float x = 3.14;` is a compile error because `3.14` is a `double` literal by
+> > default. `decimal` also requires its own suffix.
+>
+> > [!success] Use the correct suffix for each floating-point type
+> >
+> > Write `float f = 3.14f;`, `decimal d = 9.99m;`, and `double x = 3.14;`. The
+> > suffix is part of the type declaration at the literal itself.
 
 *This example shows how to observe how var infers floating-point type from literal suffix.*
 
@@ -1046,13 +1069,21 @@ café
 
 `null` represents the absence of an object reference, or the absence of a value in `Nullable<T>`. Attempting to access a member on a `null` reference throws `NullReferenceException`. Non-nullable value types such as `int`, `bool`, and ordinary `struct` values do not include a `null` state by default. Use the `?` suffix (`int?`, `double?`) to create a nullable value type backed by `Nullable<T>`, which adds a `HasValue` flag alongside the value.
 
-> [!warning] Value Types Cannot Be Null
+> [!warning] Value types need an explicit nullable wrapper before they can represent absence
 >
-> `int x = null` is a compile error. Use `int? x = null` (nullable value type) when null is needed.
-
-> [!success] Use nullable value types (T?) when null is a valid state
+> Unlike reference types, ordinary value types do not carry a built-in null
+> state. The extra state has to be requested explicitly.
 >
-> `int? x = null;` declares a nullable int. Check with `x.HasValue` or `x == null`. Unwrap with `x.Value` (throws if null) or `x.GetValueOrDefault(0)` (returns 0 if null). In C# 8+, enable `#nullable enable` for compile-time null safety on reference types too.
+> > [!danger] Plain value types cannot hold `null`
+> >
+> > `int x = null` is a compile error. A value type such as `int`, `bool`, or
+> > `DateTime` needs `T?` before null becomes valid.
+>
+> > [!success] Use nullable value types when null is a real state
+> >
+> > `int? x = null;` declares a nullable int. Check with `x.HasValue` or
+> > `x == null`. Unwrap with `x.Value` or `x.GetValueOrDefault(0)`. In C# 8+,
+> > enable `#nullable enable` for compile-time null safety on reference types too.
 
 *This example shows how to understand null references and nullable value types.*
 
@@ -1122,17 +1153,19 @@ C# has a strict **value type vs reference type** distinction, but storage locati
 }}}%%
 flowchart LR
     subgraph STACK["Stack (fast, scoped)"]
-        direction TB
+        STACKPAD[" "]
         A["int x = 42"]
         B["bool b = true"]
         C["listA (reference)"]
         D["listB (reference)"]
+        STACKPAD ~~~ A
     end
     subgraph HEAP["Heap (GC-managed)"]
         E["List: [1, 2, 3]"]
     end
     C -->|reference| E
     D -->|reference| E
+    style STACKPAD fill:transparent,stroke:transparent,color:transparent
 ```
 
 *This diagram summarizes the built-in type families rooted at `object` and `ValueType`.*
@@ -2024,15 +2057,24 @@ Demonstrates how to implement custom operators, equality, comparison, iteration,
 
 Operators are `static` methods that enable natural syntax (`v1 + v2` instead of `Vector.Add(v1, v2)`). Implement `IEnumerable<T>` for LINQ, `IComparable<T>` for sorting, and override `Equals`+`GetHashCode` together for consistent equality. Use for mathematical types (vectors, matrices, money) where operators have clear, intuitive meaning.
 
-> [!warning] Anti-patterns
+> [!warning] Operator overloading only works when equality and semantics stay intuitive
 >
-> - **Overloading `==` without `Equals`/`GetHashCode`** — inconsistent equality
-> - **Non-intuitive operator semantics** — `+` should mean addition, not something else
-> - **Mutable classes with `GetHashCode`** — hash changes after dictionary insertion
-
-> [!success] Override Equals and GetHashCode together, keep overloaded types immutable
+> Overloaded syntax looks built-in to callers, so any surprise in behavior or
+> equality semantics becomes especially hard to diagnose.
 >
-> Always override `Equals` and `GetHashCode` when overloading `==`. Make classes that implement `GetHashCode` immutable — their hash value must remain constant for the lifetime of any dictionary entry. For value-like types, consider using a `record` or `struct` which handles these automatically.
+> > [!danger] Misaligned equality and mutable hash inputs break value-like types
+> >
+> > - **Overloading `==` without `Equals`/`GetHashCode`** — inconsistent equality
+> > - **Non-intuitive operator semantics** — `+` should mean addition, not something else
+> > - **Mutable classes with `GetHashCode`** — hash changes after dictionary insertion
+>
+> > [!success] Override equality together and keep overloaded types immutable
+> >
+> > Always override `Equals` and `GetHashCode` when overloading `==`. Make
+> > classes that implement `GetHashCode` immutable so their hash value remains
+> > constant for the lifetime of any dictionary entry. For value-like types,
+> > consider using a `record` or `struct`, which handles much of this
+> > automatically.
 
 *This example defines an immutable `Vector` type with overloaded operators, indexing, iteration, and deconstruction.*
 

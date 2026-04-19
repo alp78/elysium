@@ -390,9 +390,9 @@ warning
 info
 ```
 
-## Recommended patterns
+## Command Chaining Recommended Patterns
 
-### Linux | recommended patterns
+### Linux | command chaining recommended patterns | fail-fast and cleanup
 
 These Bash patterns cover the scenarios that show up most often in scripts: safe defaults, dependent steps, cleanup, and long pipelines.
 
@@ -501,7 +501,7 @@ printf 'pipeline=%s\n' "$?"
 pipeline=1
 ```
 
-### PowerShell | recommended patterns
+### PowerShell | command chaining recommended patterns | version-aware control flow
 
 PowerShell recommendations depend on the version you are targeting. PowerShell 7 can use Bash-like chain operators; Windows PowerShell 5.1 needs explicit control flow.
 
@@ -547,9 +547,9 @@ step failed
 cleanup-ran
 ```
 
-## Troubleshooting
+## Command Chaining Troubleshooting
 
-### Linux | troubleshooting
+### Linux | command chaining troubleshooting | semicolons and pipeline failures
 
 These Bash failure modes are common because they look harmless in code review while changing runtime behavior in important ways.
 
@@ -598,7 +598,7 @@ fallback-ran
 exit=0
 ```
 
-### PowerShell | troubleshooting
+### PowerShell | command chaining troubleshooting | version and exit-code pitfalls
 
 PowerShell adds a second axis of complexity: version support and the difference between cmdlet failures and native exit codes.
 
@@ -638,13 +638,13 @@ success=False
 lastnative=0
 ```
 
-## Cross-references
+## Command Chaining Cross-References
 
 - [io-redirection](https://alp78.github.io/elysium/01-Shell/01-Scripting/03-io-redirection) — Controlling where command output goes
 - [defensive-scripting](https://alp78.github.io/elysium/01-Shell/01-Scripting/07-defensive-scripting) — Using `set -euo pipefail` to make scripts safe
 - [process-substitution](https://alp78.github.io/elysium/01-Shell/01-Scripting/06-process-substitution) — Treating command output as files
 
-## References
+## Command Chaining References
 
 - [GNU Bash Reference — Pipelines](https://www.gnu.org/software/bash/manual/html_node/Pipelines.html)
 - [GNU Bash Reference — Lists of Commands](https://www.gnu.org/software/bash/manual/html_node/Lists.html)

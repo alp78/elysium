@@ -335,11 +335,11 @@ tags:
 > > This term affects trust, identity, or supply-chain integrity. Scope it deliberately and avoid broad defaults that let untrusted workflow code inherit high privilege.
 
 
-## Trigger and Event Mistakes
+## Trigger choices that create security and correctness failures
 
 Trigger misconfiguration is the most common entry point for both security failures and silent operational breakage. The root cause is that GitHub's trigger model has non-obvious trust semantics: different event types run in different contexts, with different secret access and different `GITHUB_TOKEN` scopes.
 
-### GitHub Actions | triggers | pull_request_target misuse
+### triggers | pull_request_target misuse
 
 **What happens:** An attacker opens a PR from a fork. If the workflow uses `pull_request_target` and checks out the PR's code (`actions/checkout` with `ref: ${{ github.event.pull_request.head.sha }}`), the untrusted code runs in the base branch's context — with full access to repository secrets and a write-scoped `GITHUB_TOKEN`. This is not theoretical: a real-world worm infected 20,000+ repositories and 1,700 npm packages via this exact pattern. The attacker exfiltrates secrets, pushes malicious commits, and moves laterally to other org repos.
 
@@ -455,7 +455,7 @@ grep -A 20 "pull_request_target" .github/workflows/<file>.yml | grep "ref:"
 - Configure Dependabot weekly for `github-actions` package ecosystem to surface SHA drift
 - Conduct a quarterly workflow security review; publish findings to the platform team
 
-### GitHub Actions | triggers | missing merge_group causes queue deadlock
+### triggers | missing merge_group causes queue deadlock
 
 **What happens:** A repo enables the merge queue feature (Settings → Branches → Require merge queue). The required status check `required-check` is listed in the branch protection rules. The workflow that runs `required-check` only has `on: pull_request`. When a PR enters the merge queue, GitHub fires the `merge_group` event — not `pull_request`. The workflow never runs, the check never reports a result, and the merge queue waits indefinitely. The queue appears frozen; PRs accumulate without merging.
 
@@ -551,7 +551,7 @@ All required checks passed for event: push
 
 **Long-term remediation:** Document the merge queue setup in the repo's contributing guide. Include `merge_group` in the CI template that teams copy when adding a new required check.
 
-### GitHub Actions | triggers | workflow_run trust boundary widening
+### triggers | workflow_run trust boundary widening
 
 **What happens:** A workflow uses `on: workflow_run` to trigger after a PR CI workflow completes. The `workflow_run` trigger executes in the base branch context — with access to repository secrets — regardless of whether the triggering workflow ran on a fork PR. An engineer configures the `workflow_run` workflow to perform a cloud deployment or label operation, accidentally giving fork-PR-triggered code an indirect path to privileged operations.
 
@@ -602,11 +602,11 @@ All required checks passed for event: push
 2. Never process artifact content from a `workflow_run` triggered by `pull_request` — the artifact may contain attacker-supplied code
 3. Run `zizmor` — it detects `workflow_run` trust widening patterns
 
-## Permissions and Trust-Boundary Failures
+## Permission mistakes that widen the blast radius
 
 Permissions failures compound other vulnerabilities: an injection attack that would otherwise have limited impact becomes catastrophic when the workflow runs with `write-all` permissions.
 
-### GitHub Actions | permissions | broad GITHUB_TOKEN permissions
+### permissions | broad GITHUB_TOKEN permissions
 
 **What happens:** A workflow fails with `403 Resource not accessible by integration`. The developer adds `permissions: write-all` to resolve the error without investigating which specific permission was needed. The token now has maximum privileges for the entire workflow. If any step in that workflow is later exploited (injection, compromised action), the attacker has full write access to the repo, packages, deployments, and issues.
 
@@ -672,7 +672,7 @@ Permissions failures compound other vulnerabilities: an injection attack that wo
 
 **Long-term remediation:** Add `actionlint` as a required check configured to flag missing `permissions:` blocks. Audit all existing workflows: `grep -rL "permissions:" .github/workflows/`.
 
-### GitHub Actions | permissions | OIDC subject claim misconfiguration
+### permissions | OIDC subject claim misconfiguration
 
 **What happens:** A team sets up Workload Identity Federation so GitHub Actions can authenticate to GCP without storing service account keys. The WIF pool's attribute condition is configured with an overly broad subject claim: `attribute.repository == 'org/repo'`. This allows any workflow in that repository — any branch, any trigger, any job name — to assume the service account. An attacker who can push a branch or open a fork PR gains cloud access if they can trigger any workflow.
 
@@ -727,7 +727,7 @@ Permissions failures compound other vulnerabilities: an injection attack that wo
 
 **Immediate response:** Update the WIF attribute condition to restrict the subject claim. Rotate any cloud credentials that may have been accessed from unauthorized workflows.
 
-### GitHub Actions | permissions | environment protection confusion
+### permissions | environment protection confusion
 
 **What happens:** A team adds required reviewers to the `production` environment, believing this gates all deployments. An engineer discovers that `workflow_dispatch` with the `environment:` key not set in the job, or a job that uses the environment name only in a secret reference, bypasses the protection rule entirely. Alternatively, a reviewer clicks "Approve" without understanding what they are approving — treating the button as a bureaucratic checkbox rather than a substantive gate.
 
@@ -777,11 +777,11 @@ Permissions failures compound other vulnerabilities: an injection attack that wo
 
 **Immediate response:** Add `environment:` to any job that should be gated, push the fix. Review recent deploys to confirm they went through the expected approval flow.
 
-## Shell Injection and Expression Misuse
+## Unsafe interpolation patterns that lead to shell injection
 
 The GitHub expression engine (`${{ }}`) performs raw string substitution before the shell parses the command. This is fundamentally different from environment variable expansion. Every user-controlled value interpolated directly into a `run:` block is a command injection vulnerability.
 
-### GitHub Actions | injection | command injection from expression interpolation
+### injection | command injection from expression interpolation
 
 **What happens:** An attacker crafts a PR title, branch name, or commit message containing shell metacharacters. If the workflow interpolates that value directly into a `run:` step using `${{ github.event.pull_request.title }}`, the shell interprets the injected payload. The attacker can exfiltrate secrets, modify files, or call arbitrary endpoints — all within the runner's execution context.
 
@@ -917,7 +917,7 @@ The input `Add feature X; echo INJECTED` — which contains the shell command se
 3. Review git history for unauthorized changes: `git log --all --oneline --since="<date>"`
 4. Patch the workflow, add `actionlint` to block regression
 
-### GitHub Actions | injection | secret exposure in logs
+### injection | secret exposure in logs
 
 **What happens:** Secrets are printed to logs via `echo`, interpolated into URLs, error messages, or curl commands. GitHub masks known secret values in logs — but only exact string matches. Concatenation, encoding, substring extraction, or base64 wrapping bypasses the masking. The result: a secret appears in plain text in a log that anyone with read access to the repo can view.
 
@@ -968,9 +968,9 @@ The input `Add feature X; echo INJECTED` — which contains the shell command se
 2. Delete the specific log run: `gh api -X DELETE /repos/{owner}/{repo}/actions/runs/{run_id}/logs`
 3. Audit who accessed the repo within the log retention window
 
-## Artifact, Cache, and Data-Flow Failures
+## Stale artifacts, poisoned caches, and broken data flow
 
-### GitHub Actions | artifacts | stale artifact downloads on rerun
+### artifacts | stale artifact downloads on rerun
 
 **What happens:** A deploy workflow uploads a build artifact, then a separate deployment job downloads and deploys it. A developer re-runs only the deploy job (not the full workflow). The job downloads the artifact from a previous run — silently deploying an older version of the code. The developer believes they deployed the latest commit.
 
@@ -1029,7 +1029,7 @@ The input `Add feature X; echo INJECTED` — which contains the shell command se
 
 **Long-term remediation:** For critical deploy workflows, add a pre-deploy step that validates the artifact SHA matches `github.sha` before proceeding.
 
-### GitHub Actions | cache | cache poisoning and stale state in privileged workflows
+### cache | cache poisoning and stale state in privileged workflows
 
 **What happens:** A developer pushes a branch that installs a maliciously modified `requirements.txt` (pointing to a compromised package) and runs the workflow. The workflow caches the installed packages. A subsequent privileged workflow (e.g., a `workflow_run` triggered after merge) restores the poisoned cache and uses the compromised packages — with full secrets access.
 
@@ -1077,7 +1077,7 @@ A simpler variant: stale dependencies from a feature branch cache persist when t
 3. Pin the cache key to include the target branch: `key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}-${{ github.ref_name }}`
 4. Periodically flush caches for privileged workflows: Settings → Actions → Caches
 
-### GitHub Actions | artifacts | attestation and provenance not enforced
+### artifacts | attestation and provenance not enforced
 
 **What happens:** A team builds and publishes container images and Python packages. No provenance records are generated. A downstream consumer cannot verify whether an image they pulled was built from the expected source commit, by the expected workflow, or whether the image was tampered with after the build. In a supply-chain compromise scenario, a malicious actor replaces the legitimate artifact with a backdoored one and there is no mechanism to detect the substitution.
 
@@ -1116,9 +1116,9 @@ A simpler variant: stale dependencies from a feature branch cache persist when t
 3. Set `attestations: write` permission on build jobs — it is not granted by default
 4. For PyPI packages, use OIDC-based Trusted Publisher (no API token needed) with provenance generation via `pypa/gh-action-pypi-publish`
 
-## Deployment Concurrency and Rollout Failures
+## Concurrency mistakes that break deploy ordering
 
-### GitHub Actions | concurrency | duplicate deploys from race condition
+### concurrency | duplicate deploys from race condition
 
 **What happens:** Multiple PRs are merged in quick succession. Five concurrent deploy workflows run simultaneously — one for each merge. They all target the same environment and step on each other: conflicting database migrations, deployments out of sequence, or exceeded cloud API rate limits. Alternatively, `cancel-in-progress: true` is set on a deploy workflow, and a partial deploy is cancelled mid-execution, leaving the environment in an inconsistent state.
 
@@ -1169,7 +1169,7 @@ A simpler variant: stale dependencies from a feature branch cache persist when t
 
 **Immediate response:** If a partial deploy occurred due to cancellation, manually complete or roll back the affected operation. Check the environment's health before re-running.
 
-### GitHub Actions | workflow edits | broken production deploys from direct edits
+### workflow edits | broken production deploys from direct edits
 
 **What happens:** A developer modifies a deploy workflow directly on main without a PR. The change contains a bug. The next merge to main triggers the broken workflow, the deploy fails, and production is blocked until the file is fixed. Because the workflow IS the gating mechanism, a broken workflow means no deployments can complete.
 
@@ -1180,7 +1180,7 @@ A simpler variant: stale dependencies from a feature branch cache persist when t
 3. Add `actionlint` as a required check on PRs touching `.github/workflows/`
 4. Keep a `workflow_dispatch` emergency trigger as a fallback even if push-triggered deploys are broken
 
-### GitHub Actions | reusable workflows | version drift breaking consumers
+### reusable workflows | version drift breaking consumers
 
 **What happens:** An org standardizes on reusable workflows stored in a central repo. The central repo updates the called workflow in a breaking way — changing required inputs, removing outputs, or altering behavior. Every caller repo breaks silently at the next CI run. There is no semantic versioning, no deprecation notice, and no consumer registry.
 
@@ -1223,11 +1223,11 @@ A simpler variant: stale dependencies from a feature branch cache persist when t
 3. For `secrets: inherit` vs explicit secrets, prefer `inherit` to reduce caller maintenance burden
 4. Maintain a registry of callers so breaking changes can be announced proactively
 
-## Self-Hosted Runner Failures
+## Self-hosted runner risks from persistence and shared trust
 
 Self-hosted runners require the same hardening discipline as production servers. Unlike GitHub-hosted runners — which are ephemeral, clean, and managed — self-hosted runners carry persistent state, shared network access, and org-level trust that makes failures significantly more dangerous.
 
-### GitHub Actions | self-hosted | runner state persistence and secret leakage
+### self-hosted | runner state persistence and secret leakage
 
 **What happens:** A long-lived self-hosted runner processes job A (which writes a secret to a temp file for convenience). Job B — from a different repository — runs on the same runner and finds the temp file on disk, or inherits environment variables set by the previous job's post-steps. The secret is now accessible to an unrelated team's workflow.
 
@@ -1284,7 +1284,7 @@ Self-hosted runners require the same hardening discipline as production servers.
 3. Separate runner pools by trust level: production workflows use a dedicated runner group inaccessible to dev/fork workflows
 4. Enable runner group access control: Settings → Actions → Runner groups — restrict to specific repositories
 
-### GitHub Actions | self-hosted | cross-repo contamination via runner group misconfiguration
+### self-hosted | cross-repo contamination via runner group misconfiguration
 
 **What happens:** A runner group is created with "Allow public repositories" or "Allow all repositories in the organization" enabled. A low-trust repo (a developer's experimental fork, a contractor's project) schedules a workflow on the shared runner group. That workflow reads the runner's filesystem, network configuration, or environment for artifacts left by higher-trust workflows.
 
@@ -1297,7 +1297,7 @@ Self-hosted runners require the same hardening discipline as production servers.
 3. Disable "Allow public repositories" on all self-hosted runner groups
 4. Audit runner group permissions quarterly: `gh api /orgs/{org}/actions/runner-groups`
 
-### GitHub Actions | self-hosted | network egress too broad
+### self-hosted | network egress too broad
 
 **What happens:** A self-hosted runner is deployed on an internal network with direct access to production databases, data warehouses, and internal APIs — because that is the most convenient way to run integration tests. A compromised workflow (injection attack, malicious action) can then directly query production systems, exfiltrate data, or trigger destructive operations.
 
@@ -1307,7 +1307,7 @@ Self-hosted runners require the same hardening discipline as production servers.
 2. Use a jump host or service mesh with mutual TLS for any workflow that needs internal system access — do not colocate the runner on the internal production network
 3. For data engineering: test workflows against a read-only replica or sandbox environment, not production
 
-### GitHub Actions | self-hosted | ephemeral vs long-lived runner comparison
+### self-hosted | ephemeral vs long-lived runner comparison
 
 | Property | GitHub-hosted (ephemeral) | Self-hosted ephemeral (JIT) | Self-hosted persistent |
 |---|---|---|---|
@@ -1319,9 +1319,9 @@ Self-hosted runners require the same hardening discipline as production servers.
 | Recommended for | Most workflows | Sensitive workflows needing custom env | Only with strict cleanup policies |
 | Runner image drift | Controlled by GitHub | Operator-controlled | Operator-controlled |
 
-## Supply-Chain and Third-Party Action Risks
+## Third-party action risks and update fatigue
 
-### GitHub Actions | supply chain | SHA pinning fatigue and policy drift
+### supply chain | SHA pinning fatigue and policy drift
 
 **What happens:** The security team mandates pinning all actions to commit SHAs. Every reference looks like `uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683`. Dependabot opens 40 PRs per month updating these SHAs. Engineers stop reviewing them — the SHA is opaque. Dependabot PRs accumulate. The team disables Dependabot to reduce noise, defeating the purpose of pinning. A new action with `uses: google-github-actions/auth@v2` (mutable tag) slips in during a feature PR because no one checks.
 
@@ -1370,9 +1370,9 @@ Self-hosted runners require the same hardening discipline as production servers.
 
 **Immediate response:** If mutable tags are in use, run `pin-github-action` and merge the result. Then enable Dependabot with the grouped schedule before closing the task.
 
-## Governance, Ownership, and Review Failures
+## Governance gaps that leave workflows unowned and fragile
 
-### GitHub Actions | governance | no workflow ownership / CODEOWNERS
+### governance | no workflow ownership / CODEOWNERS
 
 **What happens:** A deploy workflow has been failing intermittently for three months. No one knows who owns it. `git blame .github/workflows/deploy.yml` shows 15 different contributors, each adding one line. There is no workflow owner defined anywhere. The platform team is paged when it breaks, but the workflow was originally written by the data team. Fixes are slow because responsibilities are unclear.
 
@@ -1390,7 +1390,7 @@ Self-hosted runners require the same hardening discipline as production servers.
 3. Create a workflow registry in the repo wiki with owner, oncall, SLA, and description per workflow
 4. Quarterly audit: `git log --follow .github/workflows/` for orphaned or unmaintained files
 
-### GitHub Actions | governance | alert fatigue and missing escalation paths
+### governance | alert fatigue and missing escalation paths
 
 **What happens:** Workflow failure notifications go to a shared Slack channel monitored by no one in particular. A critical deploy failure at 02:00 is not noticed until 08:00. In a financial data org, this means a missed index calculation window or a delayed regulatory data delivery.
 
@@ -1401,7 +1401,7 @@ Self-hosted runners require the same hardening discipline as production servers.
 3. Set notification policies: `notify on failure` for CI, `notify on failure AND success` for production deploys (the success notification confirms the deploy completed)
 4. Define and document escalation paths: "If deploy fails and is not acknowledged in 15 minutes, page the on-call lead"
 
-### GitHub Actions | governance | YAML untestability and long feedback loops
+### governance | YAML untestability and long feedback loops
 
 **What happens:** YAML is a data format, not a programming language with a test framework. Workflows encode business logic — deployment gates, notification rules, conditional steps — with no unit tests, no type system, and no debugger. Logic errors in conditionals (`if:`) are discovered only when the specific branch is hit in production. A developer iterates through 10-14 push/wait cycles to debug a workflow change.
 
@@ -1439,11 +1439,11 @@ if: github.event.inputs.debug == 'true'  # CORRECT
 3. Use `act` for local syntax validation: `act pull_request --dry-run`
 4. Add `ACTIONS_STEP_DEBUG=true` to repo secrets when debugging expression evaluation — produces verbose expression traces
 
-## Data-Engineering Cost and Blast-Radius Failures
+## Data-engineering failures with high cost or high blast radius
 
 Data engineering workflows interact with expensive, stateful external systems — data warehouses, streaming platforms, orchestration engines, and infrastructure provisioning tools. Misconfiguration does not just slow down CI; it corrupts data, triggers costly queries, or deploys infrastructure changes without review.
 
-### GitHub Actions | data engineering | expensive warehouse queries on every PR
+### data engineering | expensive warehouse queries on every PR
 
 **What happens:** A CI workflow runs a full dbt build or a BigQuery validation query on every push to any branch. The query scans 500 GB per run. With 10 engineers pushing 5 times each per day, that is 25 TB scanned daily — approximately $125/day in BigQuery on-demand pricing. The cost accumulates silently until the monthly bill arrives.
 
@@ -1500,7 +1500,7 @@ Data engineering workflows interact with expensive, stateful external systems �
 4. Run full scans only on merge to main, not on every PR push
 5. Set BigQuery cost controls: `maximum_bytes_billed` in query config
 
-### GitHub Actions | data engineering | backfill triggered with wrong date range
+### data engineering | backfill triggered with wrong date range
 
 **What happens:** An engineer manually triggers a backfill workflow via `workflow_dispatch`. The date range input defaults to today's date. In a hurry, the engineer triggers without reviewing the inputs. The backfill overwrites 3 months of clean production data with reprocessed values, some of which contain a known data quality issue in the source for that period.
 
@@ -1554,7 +1554,7 @@ Data engineering workflows interact with expensive, stateful external systems �
 >           CONFIRM: ${{ github.event.inputs.confirm }}
 > ```
 
-### GitHub Actions | data engineering | Terraform apply without approval gate
+### data engineering | Terraform apply without approval gate
 
 **What happens:** A Terraform workflow automatically applies infrastructure changes on merge to main, without an approval gate. A developer merges a PR that inadvertently deletes a BigQuery dataset (a `terraform destroy` for a resource that was renamed). The apply runs before anyone notices. The dataset — including 6 months of trading signals — is deleted.
 
@@ -1599,7 +1599,7 @@ Data engineering workflows interact with expensive, stateful external systems �
 >       - run: terraform apply tfplan    # applies the reviewed plan only
 > ```
 
-### GitHub Actions | data engineering | dbt CI writing to shared schema
+### data engineering | dbt CI writing to shared schema
 
 **What happens:** A dbt CI workflow creates test models in the shared `stoxx_staging` schema. Two engineers' PRs run CI simultaneously, each creating models with the same names. One run overwrites the other's test models mid-execution. Both CI runs fail with unexplained schema errors, and neither engineer can reproduce the failure locally.
 
@@ -1609,7 +1609,7 @@ Data engineering workflows interact with expensive, stateful external systems �
 2. Add a cleanup job that runs `if: always()` to drop the PR schema after CI completes
 3. Use `concurrency: cancel-in-progress: true` on dbt CI to prevent simultaneous PR runs
 
-### GitHub Actions | data engineering | notebook and report data leakage into artifacts
+### data engineering | notebook and report data leakage into artifacts
 
 **What happens:** A CI workflow validates Jupyter notebooks by executing them and uploading the output as artifacts. One notebook queries a financial data table and renders the full result in its output cells. The artifact is stored for 90 days and is visible to all repo contributors — including contractors with read access but no database access.
 
@@ -1620,7 +1620,7 @@ Data engineering workflows interact with expensive, stateful external systems �
 3. Set artifact retention to the minimum needed (7–14 days for CI outputs)
 4. Add `.nbstripout` as a pre-commit hook to prevent output cells from entering the repo
 
-### GitHub Actions | data engineering | pipeline deploy race condition
+### data engineering | pipeline deploy race condition
 
 **What happens:** A migration workflow and a deploy workflow are triggered simultaneously by the same merge to main. The deploy runs first with the old application code, then the migration runs and changes the schema. For 15 seconds, the new schema is live with the old application — which does not handle the new column structure, causing runtime errors in production.
 
@@ -1630,11 +1630,11 @@ Data engineering workflows interact with expensive, stateful external systems �
 2. Configure `concurrency:` with `cancel-in-progress: false` to serialize deploy sequences
 3. Design migrations to be backward-compatible (additive changes only, no column removals in the same deploy as code that drops the column reference)
 
-## Operational Diagnostics
+## A systematic path for diagnosing workflow failures
 
 Effective incident response depends on knowing exactly which tools to reach for, in which order, when a workflow fails. This section covers the systematic methodology for diagnosing GitHub Actions failures.
 
-### GitHub Actions | diagnostics | systematic failure investigation
+### diagnostics | systematic failure investigation
 
 **What happens (when things break):** A workflow fails and the immediate cause is not obvious from the job summary. The following methodology isolates the failure systematically using available GitHub tooling.
 
@@ -1735,7 +1735,7 @@ Runner environment:
   Node:         v20.20.2
 ```
 
-### GitHub Actions | diagnostics | gh CLI diagnostic commands
+### diagnostics | gh CLI diagnostic commands
 
 Immediately when a workflow fails in CI and the job summary does not provide sufficient detail. It is typically triggered by A required check fails; a deployment goes missing; a workflow appears to hang or never start. Local shell with `gh` authenticated (`gh auth status`), read access to the repository. Extract structured failure information without opening the GitHub web UI.
 
@@ -1794,7 +1794,7 @@ gh api /repos/{owner}/{repo}/check-runs?head_sha=<sha> | jq '.check_runs[].outpu
 | `cancel <id>` | Cancel a running workflow |
 | `download <id>` | Download all artifacts from a run |
 
-### GitHub Actions | diagnostics | re-run semantics and their implications
+### diagnostics | re-run semantics and their implications
 
 Review re-run semantics before restarting a failed workflow, especially for production deploys or data-processing pipelines. This applies to any re-run operation. The goal is to understand exactly what GitHub preserves, rebuilds, and reuses so a re-run is not mistaken for a fresh trigger.
 
@@ -1817,7 +1817,7 @@ Re-run semantics differ significantly from a fresh workflow trigger:
 >
 > Use `gh run rerun <id>` (all jobs) rather than `gh run rerun <id> --failed-only` when: the code may have changed since the original run, the failure could be artifact-related, or the workflow is a data processing pipeline where idempotency is not guaranteed.
 
-### GitHub Actions | diagnostics | runner image and tool version drift
+### diagnostics | runner image and tool version drift
 
 Investigate runner image drift when CI starts failing despite no code changes or when `ubuntu-latest` behavior shifts unexpectedly. The goal is to determine whether the breakage is environmental rather than application-related.
 
@@ -1847,14 +1847,14 @@ gh api /repos/actions/runner-images/releases --limit=5 | jq '.[].tag_name'
 3. When upgrading runner versions, do it in a dedicated PR and require the full test suite to pass before merging to the default branch
 4. Audit runner version references: `grep -rn "runs-on:.*latest" .github/workflows/`
 
-## Related
+## Related notes and supporting topics
 
 **GCP (Chapter 06):**
 
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — secret rotation and GCP Secret Manager
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — Workload Identity Federation (keyless auth)
 
-## References
+## Reference links and further reading
 
 - **GitHub Actions Is Slowly Killing Your Engineering Team** — iankduncan.com. Covers feedback loop costs, YAML testability gaps, and the human cost of long CI cycles.
 - **Lessons Learned from Enterprise Usage of GitHub Actions** — InfoQ. Enterprise adoption patterns, reusable workflow limitations, and permission model confusion at scale.

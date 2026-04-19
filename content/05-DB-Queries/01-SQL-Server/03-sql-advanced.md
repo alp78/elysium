@@ -194,7 +194,7 @@ Connecting to 'mssql+pyodbc://sa:***@localhost:1434/stoxx?MARS_Connection=yes&Tr
 
 ## Advanced Window Functions
 
-The window functions in this section are used extensively in the [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) and [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) layers of the medallion pipeline to produce cleaned and analytical datasets. For the foundational `RANK`, `DENSE_RANK`, `LAG`, `LEAD`, and `SUM() OVER` patterns, see [sql-fundamentals > Window Functions](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals#window-functions).
+The window functions in this section are used extensively in the [silver-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) and [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) layers of the medallion pipeline to produce cleaned and analytical datasets. For the foundational `RANK`, `DENSE_RANK`, `LAG`, `LEAD`, and `SUM() OVER` patterns, see [sql-fundamentals > Window Functions](https://alp78.github.io/elysium/05-DB-Queries/SQL-Server/sql-fundamentals#window-functions).
 
 ### Window Functions — ROW_NUMBER for Deduplication
 
@@ -1826,9 +1826,9 @@ Symptoms you will encounter when one of these advanced patterns misbehaves, mapp
 
 Related notes that extend or depend on the patterns covered here.
 
-- [sargable-queries](https://alp78.github.io/elysium/04-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries) — SARGable predicate patterns for index usage
-- [silver-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — production versions of LAG, gap-fill, and daily return patterns
-- [gold-transforms](https://alp78.github.io/elysium/04-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — production z-score, ranking, and MERGE patterns
+- [sargable-queries](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/03-Query-Writing-and-Optimization/sargable-queries) — SARGable predicate patterns for index usage
+- [silver-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms) — production versions of LAG, gap-fill, and daily return patterns
+- [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — production z-score, ranking, and MERGE patterns
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — how MERGE fits into re-runnable pipeline strategies
 - [03-bq-advanced](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-advanced) — BigQuery equivalents of every pattern in this note
 - [05_py_aggregation_reshaping](https://alp78.github.io/elysium/03-Dataframes/Dataframes-Python/05_py_aggregation_reshaping) — DataFrame equivalents of PIVOT, window functions, and aggregation
