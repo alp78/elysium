@@ -627,7 +627,7 @@ gcloud compute routers nats list --router=data-pipeline-router --region=europe-w
 
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — automated `terraform plan` and `apply` in GitHub Actions
 
-## References
+## Terraform Networking References
 
 - [google_compute_network — Terraform Registry](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network)
 - [google_compute_subnetwork — Terraform Registry](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork)

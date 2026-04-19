@@ -775,7 +775,7 @@ This is the cleanest proof that access is working for the intended reason.
 - [[03-cloud-run-jobs-vs-services]] - Runtime-attached service accounts and secret delivery into serverless workloads.
 - [[01-cloud-logging]] - Audit log queries and access evidence once Secret Manager events are visible in logging.
 
-## References
+## GCP Secrets Management References
 
 - https://cloud.google.com/secret-manager/docs/overview
 - https://cloud.google.com/secret-manager/docs/best-practices

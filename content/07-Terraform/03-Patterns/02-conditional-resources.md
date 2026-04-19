@@ -565,7 +565,7 @@ flowchart TD
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — the GCP service accounts created conditionally in the Datadog examples
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — Secret Manager secrets and versions used with conditional `count`
 
-## References
+## Terraform Conditional Resources References
 
 - [Terraform count meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/count)
 - [Terraform for_each meta-argument](https://developer.hashicorp.com/terraform/language/meta-arguments/for_each)

@@ -1690,7 +1690,7 @@ Common failure modes during the PR lifecycle and how to recover from each.
 - [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — stash and reflog for recovery
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — the CI/CD that runs on PRs
 
-## References
+## Git Pull Requests and Code Review References
 
 - [GitHub CLI pr commands](https://cli.github.com/manual/gh_pr)
 - [About pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests)

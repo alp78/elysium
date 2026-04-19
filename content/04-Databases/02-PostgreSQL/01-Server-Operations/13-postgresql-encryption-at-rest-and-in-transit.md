@@ -366,7 +366,7 @@ That row is the whole at-rest story in one glance: PostgreSQL relations ultimate
 
 ---
 
-## Recommendations
+## PostgreSQL Encryption At Rest And In Transit Recommendations
 
 > [!abstract]- Summary
 >

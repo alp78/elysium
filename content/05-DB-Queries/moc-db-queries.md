@@ -56,7 +56,7 @@ mindmap
 >
 > NoSQL document database queries in Python and C# — CRUD, filtering, subcollections, batch operations, and collection group queries.
 
-## Cross-References
+## Database Queries Cross-References
 
 - [SQL Server](https://alp78.github.io/elysium/04-Databases/moc-sql-server) — Administration, performance, and pipeline patterns beyond queries
 - [GCP](https://alp78.github.io/elysium/06-GCP/moc-gcp) — BigQuery service configuration and data loading

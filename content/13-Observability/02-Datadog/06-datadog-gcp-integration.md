@@ -184,7 +184,7 @@ sum:gcp.run.job.completed_execution_count{job_name:data-pipeline-pipeline}.as_co
 
 ---
 
-## Troubleshooting
+## Datadog GCP Integration Troubleshooting
 
 #### Cloud Run metrics not showing
 

@@ -1516,7 +1516,7 @@ print("Demo objects cleaned up")
 Demo objects cleaned up
 
 
-## Warnings
+## BigQuery Engineering Warnings
 
 The table below lists the highest-impact BigQuery pitfalls associated with the database objects and patterns covered in this note. Each entry corresponds to a warning or danger callout earlier in the page.
 
@@ -1529,7 +1529,7 @@ The table below lists the highest-impact BigQuery pitfalls associated with the d
 | **SCD Type 1 destroys history** | In financial pipelines, overwriting dimension attributes retroactively alters historical portfolio returns with no audit trail. |
 | **`EXTRACT()` on partition column** | Prevents partition pruning. Rewrite as a range predicate on the raw date column. |
 
-## Recommendations
+## BigQuery Engineering Recommendations
 
 Standing guidance for designing, writing, and operating BigQuery database objects. Apply these as defaults unless a specific workload has a documented reason to deviate.
 
@@ -1542,7 +1542,7 @@ Standing guidance for designing, writing, and operating BigQuery database object
 | **Dry-run before execution** | Use `bq query --dry_run` or `job_config.dry_run = True` to preview bytes scanned before running unfamiliar queries. |
 | **Audit columns** | Every table should have `_ingested_at` (bronze), `_scored_at` (gold), `is_filled`, and `is_current` for lineage tracking. |
 
-## Troubleshooting
+## BigQuery Engineering Troubleshooting
 
 Symptoms you will encounter when a BigQuery object or query misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
 
@@ -1554,7 +1554,7 @@ Symptoms you will encounter when a BigQuery object or query misbehaves, mapped t
 | `Undeclared variable` error in notebook | jupysql sends each cell as a standalone query — DECLARE in one cell is invisible to the next | This is a notebook limitation, not a BigQuery bug. Use BigQuery Console or `bq query` for multi-statement scripts. |
 | Table function returns stale data | The underlying table was updated but the function re-reads current data on each call (no caching) | This is expected behavior — table functions are always fresh. If data appears stale, check the source table timestamps. |
 
-## Cross-references
+## BigQuery Engineering Cross-References
 
 Related notes that extend or depend on the patterns covered here.
 

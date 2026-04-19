@@ -144,7 +144,7 @@ status: complete
 >
 > ---
 
-## Setup
+## C# Database and SQL Interface Setup
 
 This notebook uses Polars.NET for in-memory DataFrame operations, DuckDB.NET for in-process SQL analytics, and Microsoft.Data.SqlClient for SQL Server connectivity. The suppress cell below silences assembly version warnings that .NET Interactive emits for NuGet packages targeting .NET 8/9 — run it once before any other cell.
 
@@ -1048,7 +1048,7 @@ Quick-reference matrix across the three tools used in this notebook. "Result →
 
 ---
 
-## Warnings
+## C# Database and SQL Interface Warnings
 
 > [!warning] Polars.NET DataFrames are immutable — every operation returns a new DataFrame
 > Forgetting to assign the result of `WithColumns()`, `Filter()`, or `Sort()` silently discards the work. MDA is mutable — column assignment modifies the original.
@@ -1059,7 +1059,7 @@ Quick-reference matrix across the three tools used in this notebook. "Result →
 > [!warning] Type mismatches between Polars.NET and MDA are common
 > Polars.NET uses Arrow types (Int64, Float64, Utf8). MDA uses .NET types (int, double, string). Converting between libraries requires explicit type mapping.
 
-## Recommendations
+## C# Database and SQL Interface Recommendations
 
 1. **Prefer Polars.NET expressions for analytical transforms** — the optimizer can fuse and reorder operations.
 2. **Use MDA when ML.NET integration is the goal** — MDA DataFrame implements `IDataView` for direct ML.NET handoff.

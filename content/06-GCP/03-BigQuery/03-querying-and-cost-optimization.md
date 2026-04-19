@@ -739,7 +739,7 @@ Long-term storage discount is automatic — tables unmodified for 90 consecutive
 - [BigQuery query patterns](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — SQL query patterns against BigQuery
 - [BigQuery Terraform blocks](https://alp78.github.io/elysium/07-Terraform/Block-Library/data-services) — IaC for partitioned and clustered table definitions
 
-## References
+## GCP Querying and Cost Optimization References
 
 - [BigQuery pricing overview](https://cloud.google.com/bigquery/pricing) — on-demand, Editions, storage, and API pricing
 - [BigQuery Editions overview](https://cloud.google.com/bigquery/docs/editions-intro) — Standard, Enterprise, Enterprise Plus comparison

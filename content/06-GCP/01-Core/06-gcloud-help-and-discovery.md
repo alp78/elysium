@@ -1176,7 +1176,7 @@ The cheat sheet is intentionally curated rather than exhaustive. It is most usef
 - [gcloud-configurations](https://alp78.github.io/elysium/06-GCP/01-Core/04-gcloud-configurations) — Inspect and switch the local configuration context that help examples will inherit
 - [gcloud-output-formatting](https://alp78.github.io/elysium/06-GCP/01-Core/05-gcloud-output-formatting) — Use `--format`, `--filter`, and projections once discovery has identified the right command
 
-## References
+## gcloud Help and Discovery References
 
 - [gcloud help reference](https://cloud.google.com/sdk/gcloud/reference/help)
 - [gcloud topic reference](https://cloud.google.com/sdk/gcloud/reference/topic)

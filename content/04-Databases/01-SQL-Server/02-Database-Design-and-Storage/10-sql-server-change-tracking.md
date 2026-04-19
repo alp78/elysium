@@ -1473,7 +1473,7 @@ The current state of `stoxx` supports a clear production recommendation:
 
 ---
 
-## Troubleshooting
+## SQL Server Change Tracking Troubleshooting
 
 Common errors and failure modes across change-capture mechanisms in SQL Server.
 
@@ -1508,7 +1508,7 @@ Common errors and failure modes across change-capture mechanisms in SQL Server.
 
 ---
 
-## References
+## SQL Server Change Tracking References
 
 - Microsoft Learn: [Temporal tables](https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-tables)
 - Microsoft Learn: [Temporal table considerations and limitations](https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-table-considerations-and-limitations)

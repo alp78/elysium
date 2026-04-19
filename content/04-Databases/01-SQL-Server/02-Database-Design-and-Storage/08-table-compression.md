@@ -932,7 +932,7 @@ Success-ratio guidance:
 4. Watch for CPU increases on the compressed tables during peak workload
 5. Document the compression setting in the table's maintenance runbook so future rebuilds preserve it
 
-## Troubleshooting
+## SQL Server Table Compression Troubleshooting
 
 Failure modes by symptom:
 
@@ -984,7 +984,7 @@ The procedure takes an IS lock on the source table and builds a `tempdb` copy. L
 
 Run it off-peak and make sure `tempdb` has enough free space for the sample copy.
 
-## References
+## SQL Server Table Compression References
 
 - [Data Compression](https://learn.microsoft.com/en-us/sql/relational-databases/data-compression/data-compression) — overview of row, page, Unicode, and columnstore compression with considerations and edition availability
 - [Row Compression Implementation](https://learn.microsoft.com/en-us/sql/relational-databases/data-compression/row-compression-implementation) — how row compression changes the on-page record format per data type

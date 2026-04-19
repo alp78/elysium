@@ -42,7 +42,7 @@ Expand any section below to browse page contents.
 >
 > Cloud Logging and Monitoring through billing fundamentals, budget alerts, and total cost of ownership analysis for data pipelines.
 
-## Cross-References
+## GCP Cross-References
 
 - [Terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) — Infrastructure-as-code for provisioning GCP resources
 - [Programming Languages](https://alp78.github.io/elysium/02-Programming-Languages/moc-programming-languages) — Python and C# GCP integration notebooks (topics 17-24)

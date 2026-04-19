@@ -606,7 +606,7 @@ The lakehouse is primarily a batch analytics architecture, but it increasingly h
 - [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Parquet, ORC, Avro — the file formats underneath the table formats
 - [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — reliability, observability, efficiency, security, operability
 
-## References
+## Data Architecture Lakehouse Architecture References
 
 - [Delta Lake Documentation](https://docs.delta.io/)
 - [Apache Iceberg Documentation](https://iceberg.apache.org/docs/latest/)

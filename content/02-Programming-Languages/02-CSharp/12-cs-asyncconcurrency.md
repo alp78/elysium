@@ -1721,7 +1721,7 @@ flowchart TD
 > > common keyed concurrency patterns, and `lock` when a full critical section
 > > must stay consistent across multiple operations.
 
-## Recommendations
+## C# Async and Concurrency Recommendations
 
 - **Use `async`/`await` for all I/O** — HTTP, database, file I/O. Never block with `.Result` or `.Wait()`.
 - **Use `CancellationToken` in all async methods** — enables graceful shutdown, timeouts, and user cancellation.
@@ -1731,7 +1731,7 @@ flowchart TD
 - **Use `Interlocked` for simple counters and flags** — lock-free, high performance.
 - **Use `ConcurrentDictionary` for shared state** — thread-safe without explicit locking for most operations.
 
-## Troubleshooting
+## C# Async and Concurrency Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

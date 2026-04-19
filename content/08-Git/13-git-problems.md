@@ -1828,7 +1828,7 @@ Scenarios throughout this page are tagged by asset type. Use this index to find 
 
 ---
 
-## Troubleshooting
+## Git Problems Troubleshooting
 
 | Symptom | Likely Cause | Fix |
 |---|---|---|

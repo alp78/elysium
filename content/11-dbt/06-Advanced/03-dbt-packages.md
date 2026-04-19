@@ -516,7 +516,7 @@ For numeric columns, shows a frequency distribution of differences — useful fo
 
 Elementary adds data observability — anomaly detection, schema change tracking, and a data observability UI — on top of dbt's test framework.
 
-### Setup
+### Elementary Setup
 
 ```yaml
 # packages.yml

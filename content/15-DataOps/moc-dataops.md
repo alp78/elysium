@@ -41,7 +41,7 @@ mindmap
 >
 > Team topology, role definitions, career progression, and leadership practices for data engineering organizations.
 
-## Cross-References
+## DataOps Cross-References
 
 - [Data Architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — Architecture principles that DataOps operationalizes
 - [GitHub Actions](https://alp78.github.io/elysium/10-CICD/moc-github-actions) — CI/CD automation implementing DataOps practices

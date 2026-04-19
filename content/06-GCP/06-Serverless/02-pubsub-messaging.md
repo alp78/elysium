@@ -453,7 +453,7 @@ flowchart TD
 - [gcp-scheduling](https://alp78.github.io/elysium/12-Orchestration/Scheduling/gcp-scheduling) — Cloud Scheduler can publish to Pub/Sub topics on a cron schedule
 - [Terraform Pub/Sub](https://alp78.github.io/elysium/07-Terraform) — Provision topics, subscriptions, and schemas as infrastructure-as-code
 
-## References
+## Pub/Sub Messaging References
 
 - [Publishing messages](https://cloud.google.com/pubsub/docs/publisher)
 - [Subscribing to messages](https://cloud.google.com/pubsub/docs/subscriber)

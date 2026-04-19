@@ -41,7 +41,7 @@ A fourth track collects the applied pipeline patterns built on top of those foun
 >
 > Loading patterns, incremental transforms, medallion implementation, pipeline anti-patterns, point-in-time integrity, and pipeline operability guidance.
 
-## Cross-References
+## SQL Server Cross-References
 
 - [DB Queries](https://alp78.github.io/elysium/05-DB-Queries/moc-db-queries) — SQL Server query notebooks with executable examples
 - [GCP](https://alp78.github.io/elysium/06-GCP/moc-gcp) — SQL Server VMs on Compute Engine

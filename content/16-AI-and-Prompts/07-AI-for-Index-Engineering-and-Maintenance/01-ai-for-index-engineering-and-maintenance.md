@@ -305,7 +305,7 @@ Evaluate index AI support on:
 - [[01-ai-governance-and-security]]
 - [[01-ai-evaluation-and-quality-assurance]]
 
-## References
+## AI for Index Engineering and Maintenance References
 
 - ChromaDB enrichment: `Financial Data Engineering.epub`
 - IOSCO | [Principles for Financial Benchmarks](https://www.iosco.org/library/pubdocs/pdf/IOSCOPD415.pdf)

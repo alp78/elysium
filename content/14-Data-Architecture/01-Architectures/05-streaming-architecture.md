@@ -934,7 +934,7 @@ For [data mesh](https://alp78.github.io/elysium/14-Data-Architecture/Architectur
 - [cloud-monitoring-metrics](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) — pipeline lag, backlog, and throughput metrics
 - [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — reliability and observability for streaming systems
 
-## References
+## Data Architecture Streaming Architecture References
 
 - [Apache Flink Documentation](https://flink.apache.org/docs/stable/)
 - [Apache Beam Documentation](https://beam.apache.org/documentation/)

@@ -320,7 +320,7 @@ If a prompt architecture change improves prose quality but increases validation 
 - [[02-rag-retrieval-and-tool-use]]
 - [[01-ai-evaluation-and-quality-assurance]]
 
-## References
+## Prompt Architecture References
 
 - ChromaDB enrichment: `Designing Large Language Model Applications.epub`
 - ChromaDB enrichment: `Learning LangChain Building AI and LLM Applications with LangChain and LangGraph.epub`

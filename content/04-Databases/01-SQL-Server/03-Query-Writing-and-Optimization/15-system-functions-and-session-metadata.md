@@ -1273,7 +1273,7 @@ A condensed checklist of habits derived from the rules and traps covered above.
 - **Trust `@@SPID` for session identity**, `CONNECTIONPROPERTY('client_net_address')` for the source IP, and `ORIGINAL_LOGIN()` for the real login. Never trust `host_name` or `program_name` — both are client-supplied and spoofable.
 - **Use `PARSENAME`** to split four-part object names defensively in dynamic SQL. The `QUOTENAME(PARSENAME(...))` chain is the safest way to rebuild qualified names from caller input.
 
-## Cross-references
+## SQL Server System Functions and Session Metadata Cross-References
 
 - [10-insert-update-delete-patterns](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/10-insert-update-delete-patterns) — `SCOPE_IDENTITY`, `@@IDENTITY`, `IDENT_CURRENT`, `OUTPUT INTO` audit trails with `ORIGINAL_LOGIN()`.
 - [11-merge-and-upsert](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/11-merge-and-upsert) — `@@TRANCOUNT` semantics under explicit transactions; `OUTPUT $action` routed to audit sinks.

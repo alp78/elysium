@@ -2907,7 +2907,7 @@ hidden
 invalid
 ```
 
-## Troubleshooting
+## Python Basics Troubleshooting
 
 Maps common runtime and language errors to their immediate cause and first corrective action.
 

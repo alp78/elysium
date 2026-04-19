@@ -894,7 +894,7 @@ Bearer
 os.environ
 ```
 
-## Troubleshooting
+## Python Web and APIs Troubleshooting
 
 The common failures are boundary mistakes, not deep framework bugs. Each case below shows the literal error surface so the fix maps back to something observable.
 

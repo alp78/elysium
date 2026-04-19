@@ -549,7 +549,7 @@ CREATE TABLE data_catalog.pii_registry (
 - [observability-deep-dive](https://alp78.github.io/elysium/13-Observability/Monitoring/observability-deep-dive) — lineage and data quality for lakehouse pipelines
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — incremental load patterns for bronze/silver/gold layers
 
-## References
+## Data Architecture Open Table Formats References
 - [Apache Iceberg documentation](https://iceberg.apache.org/docs/latest/)
 - [Delta Lake documentation](https://docs.delta.io/)
 - [Apache Hudi documentation](https://hudi.apache.org/docs/overview/)

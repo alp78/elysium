@@ -1014,7 +1014,7 @@ A simple and readable naming rule is: one environment, one platform domain, one 
 - [[01-service-accounts-and-iam]] - Bucket and object roles, impersonation, and least-privilege patterns.
 - [[01-gcp-billing-and-pricing]] - Storage economics, retrieval trade-offs, and billing interpretation.
 
-## References
+## GCS Buckets and Lifecycle References
 
 - https://cloud.google.com/storage/docs/storage-classes
 - https://cloud.google.com/storage/docs/lifecycle

@@ -1001,7 +1001,7 @@ Processing Time: ─────────────────────
 - [ai-augmented-data-engineering](https://alp78.github.io/elysium/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) — LLM pipelines that complement these data architecture patterns
 - [leadership-and-collaboration](https://alp78.github.io/elysium/15-DataOps/leadership-and-collaboration) — Data contracts, ADRs, technical debt management, and incident response
 
-## References
+## Data Architecture Migration, Idempotency and Backfills References
 
 - Apache Beam documentation: https://beam.apache.org/documentation/
 - Confluent Schema Registry: https://docs.confluent.io/platform/current/schema-registry/index.html

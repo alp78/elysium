@@ -461,7 +461,7 @@ The file naming pattern is explicit: the active named configuration `default` ma
 - [gcloud-output-formatting](https://alp78.github.io/elysium/06-GCP/01-Core/05-gcloud-output-formatting) — Format configuration and diagnostic output for scripts and automation
 - [gcloud-help-and-discovery](https://alp78.github.io/elysium/06-GCP/01-Core/06-gcloud-help-and-discovery) — Use the help system, topics, and release tracks to discover commands safely
 
-## References
+## gcloud Configurations References
 
 - [Google Cloud SDK configurations guide](https://cloud.google.com/sdk/docs/configurations)
 - [gcloud config configurations reference](https://cloud.google.com/sdk/gcloud/reference/config/configurations)

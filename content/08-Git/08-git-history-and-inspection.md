@@ -1724,7 +1724,7 @@ When working with repositories that have been shallow-cloned (`--depth`), partia
 
 ---
 
-## Troubleshooting
+## Git History and Inspection Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -1801,7 +1801,7 @@ When working with repositories that have been shallow-cloned (`--depth`), partia
 | `git log --oneline -- path/` | Scope history to a specific directory |
 | `git fetch --unshallow` | Convert shallow clone to full history |
 
-## References
+## Git History and Inspection References
 
 - [git log](https://git-scm.com/docs/git-log)
 - [git diff](https://git-scm.com/docs/git-diff)

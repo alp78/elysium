@@ -1616,7 +1616,7 @@ SELECT 'Demo objects cleaned up' AS status
 </table>
 
 
-## Warnings
+## SQL Server SQL Engineering Warnings
 
 The table below lists the highest-impact production pitfalls associated with the database objects and patterns covered in this note. Each entry corresponds to a warning or danger callout earlier in the page.
 
@@ -1630,7 +1630,7 @@ The table below lists the highest-impact production pitfalls associated with the
 | **CTE re-execution** | A CTE referenced 3 times runs 3 times. Check the execution plan for repeated subtrees — switch to `#temp` if cost is significant. |
 | **Over-indexing** | Each index slows INSERT/UPDATE/DELETE. Monitor index usage with `sys.dm_db_index_usage_stats` and drop unused indexes. |
 
-## Recommendations
+## SQL Server SQL Engineering Recommendations
 
 Standing guidance for designing, writing, and operating the database objects covered above. Apply these as defaults unless a specific workload has a documented reason to deviate.
 
@@ -1644,7 +1644,7 @@ Standing guidance for designing, writing, and operating the database objects cov
 | **Demo schema pattern** | Always create experimental objects in a dedicated schema (`demo`). Include a cleanup block at the end to ensure idempotent re-runs. |
 | **Audit columns** | Every pipeline table should have `_ingested_at` (bronze), `_scored_at` (gold), and `is_filled` / `is_current` flags for lineage tracking. |
 
-## Troubleshooting
+## SQL Server SQL Engineering Troubleshooting
 
 Symptoms you will encounter when a database object or query misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
 
@@ -1657,7 +1657,7 @@ Symptoms you will encounter when a database object or query misbehaves, mapped t
 | Scalar UDF causes query timeout | UDF is non-inlineable — forces row-by-row execution | Rewrite as an iTVF or inline the logic directly into the query. Check `sys.sql_modules.is_inlineable`. |
 | Partition elimination not working | WHERE clause uses a function on the partition column, or the filter column doesn't match the partition function | Rewrite as a range predicate on the raw partition column. Verify with execution plan's "Actual Partition Count". |
 
-## Cross-references
+## SQL Server SQL Engineering Cross-References
 
 Related notes that extend or depend on the patterns covered here.
 

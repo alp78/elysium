@@ -628,7 +628,7 @@ public static async Task<T> ExecuteWithDeadlockRetryAsync<T>(
 }
 ```
 
-## Recommendations
+## SQL Server Deadlock Detection and Prevention Recommendations
 
 - Treat the deadlock graph as the source of truth. Do not guess from waits alone when a graph already exists.
 - Fix access order first when the graph spans multiple tables or indexes.

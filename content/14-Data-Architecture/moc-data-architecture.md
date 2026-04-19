@@ -106,7 +106,7 @@ mindmap
 >
 > Foundational principles and decision frameworks for every technology and architecture choice — golden rules, selection matrices, and scenario-based guides.
 
-## Cross-References
+## Data Architecture Cross-References
 
 - [bronze-layer-loading](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/bronze-layer-loading), [silver-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/silver-transforms), [gold-transforms](https://alp78.github.io/elysium/04-Databases/01-SQL-Server/04-Applied-SQL-Server-for-Data-Pipelines/gold-transforms) — SQL Server implementations of medallion layers
 - [airflow-dag-patterns](https://alp78.github.io/elysium/12-Orchestration/Airflow/airflow-dag-patterns) — pipeline scheduling patterns for Airflow

@@ -712,7 +712,7 @@ Result: Alex feels defensive.              Result: The team discusses how to
 - [migration-idempotency-backfills](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/migration-idempotency-backfills) — Technical patterns (idempotency, data contracts, schema evolution) that feed into the code review checklist
 - [ai-augmented-data-engineering](https://alp78.github.io/elysium/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) — AI-assisted code review and documentation patterns
 
-## References
+## DataOps Leadership and Collaboration References
 
 - Google SRE Book — Incident Management: https://sre.google/sre-book/managing-incidents/
 - Accelerate (Nicole Forsgren et al.): https://itrevolution.com/product/accelerate/

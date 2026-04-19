@@ -4522,7 +4522,7 @@ Console.WriteLine($"\nContract says: '{volMeta.GetProperty("description").GetStr
 
 <table style='border-collapse:collapse;background:transparent;color:inherit;'><tr><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>symbol</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>daily_vol</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>annual_vol_%</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>unit</th><th style='text-align:left;padding:4px 12px;border-bottom:1px solid #555;'>formula</th></tr><tr><td style='text-align:left;padding:4px 12px;'>ALV.DE</td><td style='text-align:left;padding:4px 12px;'>0.0118</td><td style='text-align:left;padding:4px 12px;'>18.8</td><td style='text-align:left;padding:4px 12px;'>decimal_ratio</td><td style='text-align:left;padding:4px 12px;'>std(daily_return) per symbol</td></tr><tr><td style='text-align:left;padding:4px 12px;'>BAS.DE</td><td style='text-align:left;padding:4px 12px;'>0.0175</td><td style='text-align:left;padding:4px 12px;'>27.8</td><td style='text-align:left;padding:4px 12px;'>decimal_ratio</td><td style='text-align:left;padding:4px 12px;'>std(daily_return) per symbol</td></tr><tr><td style='text-align:left;padding:4px 12px;'>DTE.DE</td><td style='text-align:left;padding:4px 12px;'>0.0132</td><td style='text-align:left;padding:4px 12px;'>21</td><td style='text-align:left;padding:4px 12px;'>decimal_ratio</td><td style='text-align:left;padding:4px 12px;'>std(daily_return) per symbol</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SAP.DE</td><td style='text-align:left;padding:4px 12px;'>0.0189</td><td style='text-align:left;padding:4px 12px;'>30</td><td style='text-align:left;padding:4px 12px;'>decimal_ratio</td><td style='text-align:left;padding:4px 12px;'>std(daily_return) per symbol</td></tr><tr><td style='text-align:left;padding:4px 12px;'>SIE.DE</td><td style='text-align:left;padding:4px 12px;'>0.0192</td><td style='text-align:left;padding:4px 12px;'>30.5</td><td style='text-align:left;padding:4px 12px;'>decimal_ratio</td><td style='text-align:left;padding:4px 12px;'>std(daily_return) per symbol</td></tr></table>
 
-## Warnings
+## C# Functional Pipeline Warnings
 
 > [!warning] Mutable `class` DTOs passed through pipeline stages allow silent state mutation
 > If a Bronze DTO is a `class` with public setters, any method in the transform chain can modify it. A Silver enrichment step that accidentally writes back a corrected value to the Bronze object corrupts the immutable source record.
@@ -4548,7 +4548,7 @@ Console.WriteLine($"\nContract says: '{volMeta.GetProperty("description").GetStr
 > [!success] Correct pattern
 > Standardize on one Polly version per project. For new code, use Polly v8 with `ResiliencePipelineBuilder<T>`. Migrate old v7 policies incrementally by wrapping them as `ResiliencePipeline` delegates.
 
-## Recommendations
+## C# Functional Pipeline Recommendations
 
 - **Enforce immutability with `record` types for all DTOs.** The compiler generates `Equals`, `GetHashCode`, and `with` for free, and the `init`-only setters prevent post-construction mutation without explicit copying.
 - **Run FluentValidation rules before any I/O.** Validate in memory first; only write to SQL Server after the validator returns no failures. A failed database write with a partial row is harder to clean up than a rejected in-memory object.
@@ -4559,7 +4559,7 @@ Console.WriteLine($"\nContract says: '{volMeta.GetProperty("description").GetStr
 - **Version FluentValidation rules alongside schema migrations.** If a Silver validator's rules change, Bronze rows that were valid under the previous rule set may fail under the new one — keep a changelog in the configuration constants section.
 - **Monitor the lineage table for missing run IDs.** A Dapper query like `SELECT expected_date FROM schedule WHERE run_id IS NULL` is the authoritative check that a pipeline executed — do not rely on log file presence alone.
 
-## Troubleshooting
+## C# Functional Pipeline Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

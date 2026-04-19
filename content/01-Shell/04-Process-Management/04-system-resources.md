@@ -588,7 +588,7 @@ Use these counter paths as a compact reference for the Windows disk metrics disc
 | `\PhysicalDisk(*)\Disk Read Bytes/sec` | Read throughput in bytes per second |
 | `\PhysicalDisk(*)\Disk Write Bytes/sec` | Write throughput in bytes per second |
 
-## Recommendations
+## System Resource Monitoring Recommendations
 
 These scenario-first checks map the earlier tool sections to the first question you are trying to answer.
 
@@ -668,7 +668,7 @@ Begin with the `Win32_OperatingSystem` snapshot and follow it with `\Memory\Page
 
 Start with `\Processor(_Total)\% Processor Time` and the aggregate `\PhysicalDisk(*)` counters. If those totals stay elevated, move to the per-core, queue-depth, or per-process views rather than collecting every counter path up front.
 
-## Troubleshooting
+## System Resource Monitoring Troubleshooting
 
 These symptom-driven paths keep the follow-up commands out of table cells and tie them to specific evidence.
 
@@ -784,7 +784,7 @@ WSMan Quota Statistics
 
 The successful enumeration above confirms that the counter catalog was present in this session. If the specific SQL Server or storage set you need is missing, troubleshoot that counter set rather than restarting services blindly.
 
-## Cross-references
+## System Resource Monitoring Cross-References
 
 - [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — identify which processes are consuming the resources
 - [killing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes) — terminate runaway processes consuming excess resources

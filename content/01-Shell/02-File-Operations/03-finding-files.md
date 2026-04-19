@@ -790,7 +790,7 @@ Use `locate` when you need immediate path discovery and can tolerate the fact th
 
 Use `Get-ChildItem -Recurse -Filter` for single-pattern enumeration, then add `Where-Object` or `Select-String` for metadata and content filters that the provider cannot handle directly.
 
-## Troubleshooting
+## File-Finding Troubleshooting
 
 ### Linux
 
@@ -814,7 +814,7 @@ The command you launched under `-exec` is prompting. Add the command's non-inter
 
 On Debian and Ubuntu the package name is `fd-find`, and the binary is often installed as `fdfind`. Install the package and add an alias if you want the shorter `fd` command name.
 
-## Cross-references
+## File-Finding Cross-References
 - [navigation-and-listing](https://alp78.github.io/elysium/01-Shell/02-File-Operations/01-navigation-and-listing) — listing directories before searching
 - [reading-file-contents](https://alp78.github.io/elysium/01-Shell/03-Text-Processing/01-reading-file-contents) — reading the files you find
 - [file-manipulation](https://alp78.github.io/elysium/01-Shell/02-File-Operations/02-file-manipulation) — deleting or moving files found by `find`

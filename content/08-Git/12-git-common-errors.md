@@ -1645,7 +1645,7 @@ Proactive configuration prevents most of the errors documented above. These sett
 | Autocrlf for your OS | Line ending warnings | `git config --global core.autocrlf true` (Windows) |
 | Never checkout a SHA without a branch | Detached HEAD orphaned commits | Use `git switch -c <branch> <sha>` instead of `git checkout <sha>` |
 
-## Troubleshooting
+## Git Common Errors and How to Fix Them Troubleshooting
 
 | Failure Mode | Cause | Fix |
 |---|---|---|

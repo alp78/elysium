@@ -541,7 +541,7 @@ flowchart LR
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — GitHub Actions workflows that use the CI service account
 - [image-management](https://alp78.github.io/elysium/09-Docker/image-management) — Docker tag, push, and build commands for the registry
 
-## References
+## Terraform Registry and CI References
 
 - [google_artifact_registry_repository](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository)
 - [Artifact Registry cleanup policies](https://cloud.google.com/artifact-registry/docs/repositories/cleanup-policy)

@@ -1125,7 +1125,7 @@ ORDER BY [rank]
 | ABI.BR | 0.3852 | 1.16 | 5 |
 
 
-## Warnings
+## SQL Server SQL Fundamentals Warnings
 
 The table below lists the most common query anti-patterns that produce silent wrong results, degraded performance, or surprising behavior. Each entry corresponds to a pattern covered earlier in this note.
 
@@ -1141,7 +1141,7 @@ The table below lists the most common query anti-patterns that produce silent wr
 | **Gap-filled rows in aggregates** | Rows with `is_filled = 1` have synthetic (forward-filled) prices and zero real volume. Including them in volume sums or return calculations produces incorrect results. |
 | **CTE re-execution** | A CTE referenced multiple times in the same query may be executed multiple times. Materialize into a `#temp` table if performance matters. |
 
-## Recommendations
+## SQL Server SQL Fundamentals Recommendations
 
 Standing guidance for writing reliable SQL Server queries in this medallion pipeline. Apply these as defaults unless a specific query has a documented reason to deviate.
 
@@ -1156,7 +1156,7 @@ Standing guidance for writing reliable SQL Server queries in this medallion pipe
 | **Isolation level** | Use `SNAPSHOT` isolation for analytical reads to avoid blocking writers. Default `READ COMMITTED` blocks readers when concurrent writes hold row locks. |
 | **HAVING vs WHERE** | Place filters in `WHERE` (pre-aggregation) whenever possible. Use `HAVING` only for conditions on aggregate results — it evaluates after the full aggregation completes. |
 
-## Troubleshooting
+## SQL Server SQL Fundamentals Troubleshooting
 
 Symptoms you will encounter when a query misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
 
@@ -1170,7 +1170,7 @@ Symptoms you will encounter when a query misbehaves, mapped to the most likely c
 | UNION ALL quality check shows `days_since_update > 1` | Pipeline did not run, or ran but failed before loading data | Check pipeline logs. Verify bronze `_ingested_at` timestamps. Re-run the ingestion job if the source data is available. |
 | `NTILE(4)` assigns unequal group sizes | NTILE distributes rows as evenly as possible — with 50 rows, quartiles get 13, 13, 12, 12 rows | This is correct behavior. If you need equal-sized groups, use `PERCENT_RANK` ranges instead. |
 
-## Cross-references
+## SQL Server SQL Fundamentals Cross-References
 
 Related notes that extend or depend on the patterns covered here.
 

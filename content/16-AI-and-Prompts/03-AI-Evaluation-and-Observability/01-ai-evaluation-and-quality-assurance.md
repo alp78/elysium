@@ -321,7 +321,7 @@ That governance is part of QA, not a separate concern.
 - [[01-ai-for-esg-analytics]]
 - [[01-ai-for-index-engineering-and-maintenance]]
 
-## References
+## AI Evaluation and Quality Assurance References
 
 - ChromaDB enrichment: `LLM Prompt Engineering For Developers The Art and Science of Unlocking LLMs True Potential.pdf`
 - ChromaDB enrichment: `Prompt Engineering for LLMs The Art and Science of Building Large Language Model-Based Applications.epub`

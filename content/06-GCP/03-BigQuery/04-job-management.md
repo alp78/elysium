@@ -699,7 +699,7 @@ The 2026-04-12 spike (9 jobs, 6.58 slot-seconds) corresponds to the current sess
 - [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — BigQuery jobs emit audit logs visible in Cloud Logging
 - [cloud-monitoring-metrics](https://alp78.github.io/elysium/06-GCP/Logging/cloud-monitoring-metrics) — `bigquery.googleapis.com/query/count` and slot usage metrics
 
-## References
+## GCP Job Management References
 
 - [BigQuery job management](https://cloud.google.com/bigquery/docs/managing-jobs)
 - [INFORMATION_SCHEMA.JOBS](https://cloud.google.com/bigquery/docs/information-schema-jobs)

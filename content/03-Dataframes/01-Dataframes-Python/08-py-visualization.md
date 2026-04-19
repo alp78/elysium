@@ -4194,7 +4194,7 @@ Matplotlib and Seaborn remain the best fit for static explanatory figures. Bokeh
 > meaningful midpoint. That makes positive and negative regions visually distinct
 > instead of blending them into one monotonic ramp.
 
-## Recommendations
+## Python Visualization Recommendations
 
 1. **Use Matplotlib + Tokyo Night theme for vault-published charts** — static, reproducible, and renders correctly in Quartz.
 2. **Use Plotly Express for quick EDA** — one-liner charts with hover, zoom, and Polars-native input.

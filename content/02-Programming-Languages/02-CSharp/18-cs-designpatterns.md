@@ -1129,7 +1129,7 @@ flowchart TD
 >
 > **Python equivalents:** `interface` → `ABC`+`abstractmethod` | constructor injection → `__init__(dep)` | `AddSingleton<T>()` → module-level instance | `event Action<T>` → callback list | DataAnnotations → Pydantic `Field()` | `System.Reflection` → `type()`, `dir()`, `inspect`
 
-## Warnings
+## C# Design Patterns Warnings
 
 > [!warning] Registering a `Scoped` service as `Singleton` causes captive dependency bugs
 >
@@ -1163,7 +1163,7 @@ flowchart TD
 >
 > Repository methods return `IReadOnlyList<T>` or `IEnumerable<T>` — the query is fully executed inside the repository. The caller is isolated from the ORM and can be tested with an in-memory `MockRepository`.
 
-## Recommendations
+## C# Design Patterns Recommendations
 
 - Register services in `IServiceCollection` with the narrowest correct lifetime: `AddTransient` for stateless helpers, `AddScoped` for per-request resources (EF Core `DbContext`), `AddSingleton` for truly shared state.
 - Prefer `Lazy<T>` over manual double-checked locking for Singleton initialisation — it is thread-safe, idiomatic, and eliminates boilerplate.
@@ -1174,7 +1174,7 @@ flowchart TD
 - Validate DTOs and request models with DataAnnotations at the boundary layer (controllers, API endpoints); do not scatter `if (x == null)` checks across domain logic.
 - Benchmark reflection-heavy code paths with BenchmarkDotNet before shipping; cache `Type`, `PropertyInfo`, and `MethodInfo` references in static fields if they are accessed frequently.
 
-## Troubleshooting
+## C# Design Patterns Troubleshooting
 
 #### `InvalidOperationException`: resolving a scoped service from the root provider
 

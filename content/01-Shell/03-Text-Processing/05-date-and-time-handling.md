@@ -1258,7 +1258,7 @@ If future reconversion, legal-time display, or exchange schedule logic matters, 
 DST regressions usually hide until one or two weekends per year.
 Include those weekends in automated tests, especially for daily windowing, end-of-day jobs, and multi-market comparisons.
 
-## Recommendations
+## Date and Time Handling Recommendations
 
 The platform sections above show the mechanics.
 Use the following operational defaults when you need a quick design answer.
@@ -1299,7 +1299,7 @@ Use them when the source system or contract requires offset fidelity.
 Named zones carry the actual rule set.
 That is the only safe way to survive DST transitions and cross-market comparisons.
 
-## Troubleshooting
+## Date and Time Handling Troubleshooting
 
 Treat these as diagnosis patterns rather than generic tips.
 Each symptom maps back to a concrete failure mode already demonstrated above.
@@ -1346,13 +1346,13 @@ Store the offset or normalize to UTC before deduplicating.
 The code assumed a fixed offset between two non-UTC zones.
 Convert both zones through UTC and compare named timezone conversions instead of hard-coding the relationship.
 
-## Cross-references
+## Date and Time Handling Cross-References
 
 - [text processing tools](https://alp78.github.io/elysium/01-Shell/Text-Processing/grep-and-pattern-matching) - JSON and CSV parsing in Bash, jq, Python, and PowerShell
 - [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) - format tradeoffs for JSON, CSV, Parquet, Avro, and other interchange layers
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) - pipeline design patterns that survive date boundaries and replays
 
-## References
+## Date and Time Handling References
 
 - [ISO 8601 Standard](https://www.iso.org/iso-8601-date-and-time-format.html)
 - [Python `zoneinfo` docs](https://docs.python.org/3/library/zoneinfo.html)

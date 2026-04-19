@@ -949,7 +949,7 @@ print(f"  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?
 >
 > **C# equivalents:** `google-cloud-storage` → `Google.Cloud.Storage.V1` | `google-cloud-bigquery` → `Google.Cloud.BigQuery.V2` | `google-cloud-pubsub` → `Google.Cloud.PubSub.V1` | `google-cloud-firestore` → `Google.Cloud.Firestore` | `google-cloud-secret-mgr` → `Google.Cloud.SecretManager.V1`
 
-## Warnings
+## Python GCP Warnings
 
 > [!warning] BigQuery charges by bytes scanned, not query time
 >
@@ -975,7 +975,7 @@ print(f"  Metrics: https://console.cloud.google.com/monitoring/metrics-explorer?
 >
 > Use GCP Secret Manager in production. Use `.env` files locally with `.gitignore`. Never bake secrets into container images.
 
-## Recommendations
+## Python GCP Recommendations
 
 ### Authentication and access
 
@@ -1091,7 +1091,7 @@ for name, value in controls.items():
   pubsub_dedup_key: message_id
 ```
 
-## Troubleshooting
+## Python GCP Troubleshooting
 
 ### Authentication and authorization
 

@@ -2681,7 +2681,7 @@ Console.WriteLine(description);
 int 42
 ```
 
-## Troubleshooting
+## C# Basics Troubleshooting
 
 ### Replace exception-driven flow with checked alternatives
 

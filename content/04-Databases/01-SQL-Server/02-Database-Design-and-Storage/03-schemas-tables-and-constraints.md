@@ -2478,7 +2478,7 @@ Seven index rows that expose several specialised patterns unique to SQL Server's
 | `sys.dm_db_column_store_row_group_physical_stats` | Columnstore rowgroup state, size, deleted rows | `object_id` |
 | `sys.database_ledger_transactions` | Ledger transaction history, commit time, principal | via hidden ledger columns on ledger tables |
 
-## Warnings
+## SQL Server Schemas, Tables, and Constraints Warnings
 
 These are the design and operational boundaries most likely to create durable SQL Server debt. Each concept ties the warning to a live object or captured result already established earlier in this note.
 
@@ -2666,7 +2666,7 @@ demo_stc     session_state             PK_demo_stc_session_state                
 
 The live surface is enough to prove the point: `NONCLUSTERED HASH` needs memory-optimized prerequisites, `GRAPH_UNIQUE_INDEX` is not a normal `FOREIGN KEY`, the temporal history table uses a non-unique clustered index, and append-only ledger tables are not valid targets for ordinary `UPDATE` or `DELETE` flows.
 
-## Recommendations
+## SQL Server Schemas, Tables, and Constraints Recommendations
 
 Read this section as the affirmative deployment checklist. Each concept names the pattern to prefer and ties it to a live result already captured in the note.
 
@@ -2877,7 +2877,7 @@ demo_stc     session_state             PK_demo_stc_session_state                
 
 The recommended default remains a rowstore clustered table. Reach for `COLUMNSTORE` only on append-mostly facts, `HEAP` only on temporary landing shapes, `MEMORY_OPTIMIZED` only when contention is the measured bottleneck, `LEDGER` only when tamper-evidence is a requirement, and graph tables only when multi-hop traversal is the real access pattern.
 
-## Troubleshooting
+## SQL Server Schemas, Tables, and Constraints Troubleshooting
 
 Use this section when deployment logs or post-load audits surface a failure. Match the symptom to the nearest concept, run the adjacent reproduction or diagnostic query, and then apply the fix pattern named under it.
 
@@ -2991,7 +2991,7 @@ demo_stc     session_state             PK_demo_stc_session_state                
 
 Those shapes are the diagnostic clue. `NONCLUSTERED HASH` means memory-optimized rules apply, `GRAPH_UNIQUE_INDEX` means graph rules apply, the non-unique temporal history index means system-versioned behavior applies, and the ledger-backed table should be troubleshot as an audit artifact rather than as a generic mutable rowstore table.
 
-## Cross-references
+## SQL Server Schemas, Tables, and Constraints Cross-References
 
 This note is one of ten in the [02-Database-Design-and-Storage](Elysium/04-Databases/01-SQL-Server/02-Database-Design-and-Storage/) chapter. The sibling notes that extend specific topics covered here:
 

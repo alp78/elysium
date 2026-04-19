@@ -443,7 +443,7 @@ The PostgreSQL lesson is the same one the SQL Server AG note reaches through dif
 
 ---
 
-## Recommendations
+## PostgreSQL High Availability Overview Recommendations
 
 For most PostgreSQL production systems, the practical baseline is a physical primary plus at least one standby, with the choice between synchronous and asynchronous replication driven by whether `RPO = 0` is actually required. Automatic failover should be introduced only with a control plane that can fence the old primary and reroute traffic safely. Logical replication remains valuable, but as a distribution and migration tool, not as the first answer to HA.
 

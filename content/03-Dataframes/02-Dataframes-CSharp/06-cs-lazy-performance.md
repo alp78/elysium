@@ -158,7 +158,7 @@ status: complete
 > >
 > > Deedle is useful in this note as a conceptual foil. It is not trying to solve the exact same optimization problem in the same way as Polars.
 
-## Setup
+## C# Lazy API and Performance Setup
 
 ### Setup | Suppress compiler warnings
 
@@ -738,7 +738,7 @@ If your workflow fits in memory and you only need basic operations, Deedle works
 
 ---
 
-## Warnings
+## C# Lazy API and Performance Warnings
 
 > [!warning] Polars.NET DataFrames are immutable — every operation returns a new DataFrame
 >
@@ -752,7 +752,7 @@ If your workflow fits in memory and you only need basic operations, Deedle works
 >
 > Polars.NET uses Arrow types (Int64, Float64, Utf8). MDA uses .NET types (int, double, string). Converting between libraries requires explicit type mapping.
 
-## Recommendations
+## C# Lazy API and Performance Recommendations
 
 1. **Prefer Polars.NET expressions for analytical transforms** — the optimizer can fuse and reorder operations.
 2. **Use MDA when ML.NET integration is the goal** — MDA DataFrame implements `IDataView` for direct ML.NET handoff.

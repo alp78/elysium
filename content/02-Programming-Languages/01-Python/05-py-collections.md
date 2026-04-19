@@ -1351,7 +1351,7 @@ print(heapq.nsmallest(2, scores))
 [30, 50]
 ```
 
-## Troubleshooting
+## Python Collections Troubleshooting
 
 These checks cover the most common failure modes when a collection is technically valid but semantically wrong for the job.
 

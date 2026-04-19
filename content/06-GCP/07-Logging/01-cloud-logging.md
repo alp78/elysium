@@ -908,7 +908,7 @@ These notes extend the same observability workflow into metrics, service-specifi
 - [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) - BigQuery as a sink or analytics destination
 - [cloud-run-jobs-vs-services](https://alp78.github.io/elysium/06-GCP/Serverless/cloud-run-jobs-vs-services) - Typical producer of operational pipeline logs
 
-## References
+## Cloud Logging References
 
 These official references were used to verify retention behavior, audit log structure, metrics bridging, and cost guidance.
 

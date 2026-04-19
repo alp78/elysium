@@ -1346,7 +1346,7 @@ A short checklist for choosing the right upsert pattern.
 | SCD Type 2 (effective-dated history) | Two-step `UPDATE` + `INSERT` pattern | `### SCD Type 2: the two-step pattern` |
 | Bulk warehouse load from a staging table | `BULK INSERT` → `ROW_NUMBER()` dedupe → `MERGE` → `TRUNCATE` staging | `## Staging Table Upsert Pattern` |
 
-## Cross-references
+## SQL Server MERGE and Upsert Cross-References
 
 - [10-insert-update-delete-patterns](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/10-insert-update-delete-patterns) — the sibling note that owns basic `INSERT`, `UPDATE`, `DELETE`, the `OUTPUT` clause, composable DML, identity/SEQUENCE, transactions, `TRY/CATCH`, and Halloween protection.
 - [03-joins-subqueries-and-apply](https://alp78.github.io/elysium/04-sql-server/03-query-writing-and-optimization/03-joins-subqueries-and-apply#anti-joins-and-semi-joins) — `EXISTS` and `NOT EXISTS` semantics used in the `WHERE NOT EXISTS` upsert pattern.

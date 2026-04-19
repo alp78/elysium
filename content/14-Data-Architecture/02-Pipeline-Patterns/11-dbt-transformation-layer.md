@@ -608,7 +608,7 @@ jobs:
 - [observability-deep-dive](https://alp78.github.io/elysium/13-Observability/Monitoring/observability-deep-dive) — monitoring dbt runs with DataDog
 - [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) — Iceberg/Delta Lake as storage backends in a lakehouse architecture
 
-## References
+## dbt Transformation Layer References
 - [dbt Core documentation](https://docs.getdbt.com/)
 - [dbt-utils package](https://hub.getdbt.com/dbt-labs/dbt_utils/latest/)
 - [astronomer-cosmos (dbt + Airflow)](https://astronomer.github.io/astronomer-cosmos/)

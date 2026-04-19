@@ -1077,7 +1077,7 @@ Pipeline timing report:
 
 ---
 
-## Warnings
+## C# Testing and Migration Warnings
 
 > [!warning] Polars.NET DataFrames are immutable — every operation returns a new DataFrame
 >
@@ -1091,7 +1091,7 @@ Pipeline timing report:
 >
 > Polars.NET uses Arrow types (Int64, Float64, Utf8). MDA uses .NET types (int, double, string). Converting between libraries requires explicit type mapping.
 
-## Recommendations
+## C# Testing and Migration Recommendations
 
 1. **Prefer Polars.NET expressions for analytical transforms** — the optimizer can fuse and reorder operations.
 2. **Use MDA when ML.NET integration is the goal** — MDA DataFrame implements `IDataView` for direct ML.NET handoff.

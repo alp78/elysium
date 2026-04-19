@@ -686,7 +686,7 @@ flowchart LR
 - [Terraform BigQuery provisioning](https://alp78.github.io/elysium/07-Terraform/01-Fundamentals/01-terraform-overview) — IaC for creating BigQuery datasets, tables, and scheduled queries
 - [serialization-formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) — Detailed format comparison (Parquet vs Avro vs CSV vs JSON)
 
-## References
+## GCP Data Loading and Export References
 
 - [Loading data into BigQuery](https://cloud.google.com/bigquery/docs/loading-data) — GCS load job configuration, format support, quotas
 - [LOAD DATA SQL statement reference](https://cloud.google.com/bigquery/docs/reference/standard-sql/load-statements) — SQL-based loading syntax, hive partitioning, schema specification

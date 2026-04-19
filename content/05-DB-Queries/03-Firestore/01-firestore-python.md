@@ -2184,7 +2184,7 @@ for k, v in config.items():
 ```
 
 
-## Warnings
+## Firestore for Data Engineering - Python Warnings
 
 The table below lists the highest-impact Firestore pitfalls associated with the patterns covered in this note. Each entry corresponds to a warning or danger callout earlier in the page.
 
@@ -2199,7 +2199,7 @@ The table below lists the highest-impact Firestore pitfalls associated with the 
 | **Ordering requires indexes** | `order_by("field")` on a field used in a range filter (`<`, `>`, `>=`, `<=`) requires a composite index. |
 | **Subcollection isolation** | A query on `stocks/ASML.AS/prices` only searches ASML's prices. To search all stocks' prices, use `db.collection_group("prices")` — but this requires a collection group index. |
 
-## Recommendations
+## Firestore for Data Engineering - Python Recommendations
 
 Standing guidance for designing Firestore data models and query patterns. Apply these as defaults unless a specific workload has a documented reason to deviate.
 
@@ -2214,7 +2214,7 @@ Standing guidance for designing Firestore data models and query patterns. Apply 
 | **Listener lifecycle** | Always store the unsubscribe handle and call it when the listener is no longer needed. Use `time.sleep()` + `unsubscribe()` pattern in scripts. |
 | **Collection group indexes** | Create collection group indexes for any subcollection you need to query across parents. Deploy via `firestore.indexes.json`. |
 
-## Troubleshooting
+## Firestore for Data Engineering - Python Troubleshooting
 
 Symptoms you will encounter when a Firestore query or write misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
 
@@ -2228,7 +2228,7 @@ Symptoms you will encounter when a Firestore query or write misbehaves, mapped t
 | `array_contains_any` only returns partial results | Firestore limits `array_contains_any` to 30 values per query | Split into multiple queries with ≤30 values each, then merge results client-side. |
 | High read costs on collection scans | Scanning large collections charges per document | Export to BigQuery for analytical queries. Use Firestore only for targeted lookups and real-time sync. |
 
-## Cross-references
+## Firestore for Data Engineering - Python Cross-References
 
 Related notes that extend or depend on the patterns covered here.
 

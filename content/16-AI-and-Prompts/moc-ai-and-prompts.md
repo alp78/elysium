@@ -78,7 +78,7 @@ mindmap
 >
 > ESG document intelligence, issuer-level enrichment, methodology interpretation, index maintenance support, and governance boundaries for regulated operations.
 
-## Cross-References
+## AI and Prompts Cross-References
 
 - [[moc-data-architecture]] for idempotent pipelines, data contracts, retries, and validation patterns that AI layers must inherit rather than bypass.
 - [[moc-observability]] for tracing, incident response, auditability, and alerting patterns extended here to AI-specific telemetry.

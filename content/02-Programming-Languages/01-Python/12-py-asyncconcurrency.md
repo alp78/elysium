@@ -1395,7 +1395,7 @@ Worker 2: load done
 >
 > Python has no built-in async periodic timer like .NET 6's `PeriodicTimer`. Use an `asyncio` loop with `await asyncio.sleep(interval)` for async polling, or `threading.Timer` (one-shot, must re-register) for thread-based scheduling. For production scheduled tasks, use orchestrators like Airflow or Celery rather than in-process timers.
 
-## Warnings
+## Python Async and Concurrency Warnings
 
 > [!warning] The GIL prevents CPU parallelism with threads
 >
@@ -1421,7 +1421,7 @@ Worker 2: load done
 >
 > Use `threading.Lock()` around all shared mutable state. Or use `queue.Queue` for thread-safe message passing.
 
-## Recommendations
+## Python Async and Concurrency Recommendations
 
 - **Use `asyncio` for I/O-bound concurrency** — HTTP, database, file I/O. Single-threaded, no GIL issues, clean `await` syntax.
 - **Use `ProcessPoolExecutor` for CPU-bound parallelism** — bypasses the GIL by using separate processes.
@@ -1430,7 +1430,7 @@ Worker 2: load done
 - **Use `asyncio.Queue` for async producer-consumer** — built-in backpressure via `maxsize`.
 - **Avoid mixing `asyncio` and `threading`** — use `asyncio.to_thread()` to bridge sync code into async contexts.
 
-## Troubleshooting
+## Python Async and Concurrency Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

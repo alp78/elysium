@@ -1487,7 +1487,7 @@ _The capture shows `sql_memory_model = 1` and `sql_memory_model_desc = CONVENTIO
 >
 > The correct Windows sequence is (1) set an explicit `max server memory (MB)` that leaves at least 1–2 GB for the OS and other in-process components, (2) grant `Lock pages in memory` to the SQL Server service account, (3) restart the service, (4) run the `sys.dm_os_sys_info` query to verify `LOCK_PAGES`.
 
-## Recommendations
+## SQL Server Memory and the Buffer Pool Recommendations
 
 Twenty-four concrete actions grouped by category. Every recommendation below is either validated by the live captures in this note or is a Microsoft Learn / vendor-recommended baseline for the Linux + Docker + SQL Server 2022 Developer Edition configuration on `stoxx`.
 
@@ -1534,7 +1534,7 @@ Twenty-four concrete actions grouped by category. Every recommendation below is 
 - **Alert on `RESOURCE_SEMAPHORE` wait type** and `RESOURCE_SEMAPHORE_SMALL_QUERY` separately. The small-query wait indicates different pressure (many small queries) than the regular wait (large grants queueing).
 - **Pair every memory intervention with a before/after capture.** Re-run the baseline queries (`sys.dm_os_sys_info`, `sys.dm_os_memory_clerks`, `sys.dm_exec_cached_plans` composition) before and after any `sp_configure` or `DBCC FREEPROCCACHE` action so the effect is recorded.
 
-## References
+## SQL Server Memory and the Buffer Pool References
 
 - Microsoft Learn: [Memory management architecture guide](https://learn.microsoft.com/en-us/sql/relational-databases/memory-management-architecture-guide?view=sql-server-ver17)
 - Microsoft Learn: [Server memory server configuration options](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/server-memory-server-configuration-options?view=sql-server-ver17)

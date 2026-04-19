@@ -508,7 +508,7 @@ The [dbt transformation layer](https://alp78.github.io/elysium/14-Data-Architect
 - [five-pillars-of-data-engineering](https://alp78.github.io/elysium/14-Data-Architecture/Decision-Frameworks/five-pillars-of-data-engineering) — reliability, observability, efficiency, security, operability
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — GCP IAM as the enforcement layer for data product access control
 
-## References
+## Data Mesh Architecture References
 
 - Dehghani, Z. (2022). *Data Mesh: Delivering Data-Driven Value at Scale.* O'Reilly.
 - [Data Mesh Architecture — datamesh-architecture.com](https://www.datamesh-architecture.com/)

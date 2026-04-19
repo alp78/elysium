@@ -1793,7 +1793,7 @@ The rules below are the operational summary of every previous section. They are 
 | Heaps are deliberate, not the default | Heaps are valid for bulk-insert + truncate staging. They are pathological for tables that take updates because of forwarding records | Disposable staging tables only | `sys.indexes` heap detection + `forwarded_record_count` from `sys.dm_db_index_physical_stats(... 'DETAILED')` |
 | Schedule maintenance on telemetry, not on a calendar | Rebuild only when fragmentation passes 30 %; reorganize between 5 % and 30 %; ignore below 5 % | Every weekly maintenance window | `sys.dm_db_index_physical_stats` |
 
-## References
+## SQL Server Index Types and Strategy References
 
 - [`CREATE INDEX (Transact-SQL)`](https://learn.microsoft.com/en-us/sql/t-sql/statements/create-index-transact-sql) — full design surface for rowstore B-tree indexes including INCLUDE, filtered, `OPTIMIZE_FOR_SEQUENTIAL_KEY`, `DROP_EXISTING`, online rebuild, and resumable operations
 - [`CREATE COLUMNSTORE INDEX (Transact-SQL)`](https://learn.microsoft.com/en-us/sql/t-sql/statements/create-columnstore-index-transact-sql) — clustered columnstore (CCI) and nonclustered columnstore (NCCI) syntax and options

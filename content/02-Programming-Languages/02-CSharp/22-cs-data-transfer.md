@@ -137,7 +137,7 @@ status: complete
 > >
 > > Set `UploadObjectOptions.Hash` to include a `CRC32C` value computed client-side before upload. GCS validates on ingest and rejects mismatched objects, catching corruption before the object is ever committed.
 
-## Setup
+## C# Data Transfer Setup
 
 Installs NuGet packages, loads environment variables, and defines shared helper functions used across all benchmark sections in this notebook.
 
@@ -3087,7 +3087,7 @@ Console.WriteLine("  Cleanup done");
   Cleanup done
 ```
 
-## Warnings
+## C# Data Transfer Warnings
 
 > [!warning] Reusing a default `UploadObjectOptions` with 256 KB chunks causes excessive HTTP round-trips
 >
@@ -3105,7 +3105,7 @@ Console.WriteLine("  Cleanup done");
 >
 > Always redirect and read both `StandardOutput` and `StandardError` (`RedirectStandardOutput = true`, `RedirectStandardError = true`). Assert `ExitCode == 0` **and** that `stderr` is empty (or parse it for known-harmless warning patterns) before treating the transfer as complete.
 
-## Recommendations
+## C# Data Transfer Recommendations
 
 - Instantiate `StorageClient` once per pipeline run and pass it as a dependency — construction is expensive (TLS handshake, credential exchange) and adds avoidable per-file overhead.
 - Use `Google.Cloud.Storage.V1.UrlSigner` to generate signed URLs for time-limited cross-account transfers instead of sharing service-account keys — signed URLs expire automatically and do not require the recipient to have GCP credentials.
@@ -3115,7 +3115,7 @@ Console.WriteLine("  Cleanup done");
 - For production pipelines, wrap each pipeline stage in a structured log entry (timestamp, stage name, bytes processed, elapsed ms) — the benchmarks in this note demonstrate how to capture these metrics as a `DataTable` for interactive chart rendering.
 - Always run the cleanup cell after a pipeline benchmark to delete GCS prefix objects and the local `pipeline/` directory; abandoned chunks accumulate storage charges and can cause key collisions on the next run.
 
-## Troubleshooting
+## C# Data Transfer Troubleshooting
 
 Check these first when the transfer benchmarks diverge from the numbers in this note:
 

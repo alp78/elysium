@@ -256,7 +256,7 @@ The safe pattern is the same one that survives on every serious database platfor
 
 Column renames and type rewrites are especially risky because PostgreSQL may need table rewrites or application coordination even when the DDL looks small.
 
-## Recommendations
+## PostgreSQL Schemas, Tables, and Constraints Recommendations
 
 ### PostgreSQL | design rules | keep contracts explicit and storage assumptions correct
 

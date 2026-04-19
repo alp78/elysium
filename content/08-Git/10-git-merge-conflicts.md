@@ -1158,7 +1158,7 @@ Prevention is cheaper than resolution. These practices reduce conflict frequency
 > ```
 > This ensures the lockfile is internally consistent with the merged `pyproject.toml`.
 
-## Troubleshooting
+## Git Merge Conflicts Troubleshooting
 
 | Problem | Cause | Fix |
 |---------|-------|-----|

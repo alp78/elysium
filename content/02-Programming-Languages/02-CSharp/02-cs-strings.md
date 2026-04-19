@@ -1629,7 +1629,7 @@ Console.WriteLine(match.Value);
 > > `new Regex(pattern, RegexOptions.Compiled)` for dynamic patterns that are
 > > still reused.
 
-## Recommendations
+## C# Strings Recommendations
 
 - **Use `StringBuilder`** for any string construction involving loops or more than ~5 concatenations.
 - **Use `Span<char>` / `ReadOnlySpan<char>`** for hot-path parsing — avoids `Substring()` allocations.
@@ -1640,7 +1640,7 @@ Console.WriteLine(match.Value);
 - **Use `string.Create()`** (.NET 5+) for advanced zero-allocation string construction with a `SpanAction<char>` callback.
 - **Avoid `string.Format()`** in new code — prefer `$""` interpolation. Use `string.Format()` only when the template is a runtime variable.
 
-### Troubleshooting
+### C# Strings Troubleshooting
 
 #### `NullReferenceException` on `string` methods
 `string` instance methods such as `.Length`, `.Trim()`, and `.Replace()` throw on `null`. Guard with `string.IsNullOrEmpty()` or a null-conditional fallback before you call the method.
@@ -1815,6 +1815,6 @@ Console.WriteLine(string.Format("{0} + {1} = {2}", 2, 3, 5));
 2 + 3 = 5
 ```
 
-## Cross-References
+## C# Strings Cross-References
 
 - **Data Architecture: Serialization** — [Serialization Formats](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/serialization-formats) for when string encoding choices matter in pipelines

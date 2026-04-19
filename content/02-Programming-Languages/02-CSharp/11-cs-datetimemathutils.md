@@ -1315,7 +1315,7 @@ Console.WriteLine(tmpDir);  // Cleaned up
     
     C:\Users\aperi\AppData\Local\Temp\config_demo_1c1e72c6
 
-## Warnings
+## C# DateTime, Math and Utilities Warnings
 
 > [!warning] `DateTime.Now` is timezone-dependent
 >
@@ -1341,7 +1341,7 @@ Console.WriteLine(tmpDir);  // Cleaned up
 >
 > Use `Random.Shared` (.NET 6+) — a thread-safe shared instance with a good seed. For older frameworks, create one `Random` and reuse it.
 
-## Recommendations
+## C# DateTime, Math and Utilities Recommendations
 
 - **Store all timestamps in UTC** — use `DateTime.UtcNow` or `DateTimeOffset.UtcNow`. Convert to local only for display.
 - **Use `DateOnly`/`TimeOnly` (.NET 6+)** for dates and times that don't need the other half — cleaner API, better intent.
@@ -1351,7 +1351,7 @@ Console.WriteLine(tmpDir);  // Cleaned up
 - **Use `IConfiguration` with layered sources** — `appsettings.json` + environment variables + command line. Env vars override JSON.
 - **Use `Random.Shared`** (.NET 6+) — thread-safe, properly seeded, no need to manage instances.
 
-## Troubleshooting
+## C# DateTime, Math and Utilities Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

@@ -1639,7 +1639,7 @@ Every race-condition fix that produces a **controlled error** (unique violation,
 
 ---
 
-## Recommendations
+## SQL Server Race Conditions Recommendations
 
 - **Enable RCSI on every OLTP database.** `ALTER DATABASE [db] SET READ_COMMITTED_SNAPSHOT ON` is the single biggest concurrency improvement available. It does not change anomaly protection vs locking `READ COMMITTED`, but it eliminates reader/writer blocking — which is what most `NOLOCK` hints are papering over.
 - **Enable `ALLOW_SNAPSHOT_ISOLATION` for long-running reads and controlled-conflict writes.** Use `SNAPSHOT` for reports and ETL readers, and accept error 3960 as a retryable signal for writes that cannot be expressed atomically.

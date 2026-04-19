@@ -316,7 +316,7 @@ Applied prompts should be measured against task-specific criteria:
 - [[01-ai-for-esg-analytics]]
 - [[01-ai-for-index-engineering-and-maintenance]]
 
-## References
+## AI Applied Prompting References
 
 - ChromaDB enrichment: `Hands-On AI Trading with Python, QuantConnect, and AWS.epub`
 - ChromaDB enrichment: `Financial Data Engineering.epub`

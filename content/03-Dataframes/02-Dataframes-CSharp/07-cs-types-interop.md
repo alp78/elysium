@@ -153,7 +153,7 @@ status: complete
 >
 > ---
 
-## Setup
+## C# Advanced Types and Interop Setup
 
 ### Setup | Suppress assembly version warnings
 
@@ -1235,7 +1235,7 @@ Console.WriteLine($"JSON methods exposed: {string.Join(", ", jsonMethods)}");
 JSON methods exposed: ReadJson, WriteJson
 ```
 
-## Recommendations
+## C# Advanced Types and Interop Recommendations
 
 1. Prefer `Parquet` when the interchange boundary must preserve `date`, `bool`, numeric width, and columnar compression.
 2. Treat `ToArray<T>()`, `Series.From(...)`, and `FrameBuilder` as copy boundaries and re-check dtype semantics after the bridge.

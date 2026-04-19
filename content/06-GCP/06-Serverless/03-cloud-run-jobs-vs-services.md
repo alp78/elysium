@@ -514,7 +514,7 @@ The secret value is injected as an environment variable at runtime. The containe
 - [bq-fundamentals](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — BigQuery query patterns for downstream tables written by Cloud Run Jobs
 - [cloud-run](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/cloud-run) — Terraform resource definitions for Cloud Run Jobs and Services
 
-## References
+## Cloud Run Jobs vs Services References
 
 - [Cloud Run Jobs overview](https://cloud.google.com/run/docs/create-jobs)
 - [Executing jobs](https://cloud.google.com/run/docs/execute/jobs)

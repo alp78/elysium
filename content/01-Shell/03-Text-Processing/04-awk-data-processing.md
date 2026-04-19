@@ -1168,7 +1168,7 @@ printf '"Smith, John",42\n' | awk -F',' '{print $1 "|" $2}'
 
 For real CSV, use a CSV-aware parser such as `mlr`, Python's `csv` module, or PowerShell's CSV cmdlets.
 
-## Recommendations
+## awk Data Processing Recommendations
 
 These are the safest default patterns for common awk tasks. The H4 titles mirror the original table entries so the decision logic stays visible.
 
@@ -1284,11 +1284,11 @@ id,name,amount
 2,55
 ```
 
-## Troubleshooting
+## awk Data Processing Troubleshooting
 
 These are the failure modes that show up most often when awk scripts are moved from toy data to production-like input.
 
-### Linux | troubleshooting | parsing and field boundaries
+### Linux | awk troubleshooting | parsing and field boundaries
 
 Start by proving what awk thinks the fields are. Most failures in this category come from an incorrect parse model.
 
@@ -1348,7 +1348,7 @@ printf '9\n10\n' | awk '{print $1, ($1+0 > 9 ? "number-gt-9" : "number-not-gt-9"
 10 number-gt-9
 ```
 
-### Linux | troubleshooting | output and control-flow surprises
+### Linux | awk troubleshooting | output and control-flow surprises
 
 Once parsing is correct, the next failures are usually formatting and empty-input edge cases.
 
@@ -1714,7 +1714,7 @@ alpha
 beta
 ```
 
-## Cross-references
+## awk Data Processing Cross-References
 
 - [reading-file-contents](https://alp78.github.io/elysium/01-Shell/Text-Processing/reading-file-contents) — Reading files in shell with `cat`, `head`, `tail`, and `less`
 - [moc-shell](https://alp78.github.io/elysium/01-Shell/moc-shell) — Shell scripting section index

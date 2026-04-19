@@ -1287,7 +1287,7 @@ Selecting the right machine type family is the primary lever for balancing cost 
 - [Terraform GCP Compute](https://alp78.github.io/elysium/07-Terraform/GCP/) — Provisioning Compute Engine VMs and resource policies via IaC
 - [sql-server-on-compute-engine](https://alp78.github.io/elysium/06-GCP/02-Compute/04-sql-server-on-compute-engine) — Installing and configuring SQL Server on `stoxx-vm`
 
-## References
+## GCP VM Lifecycle References
 
 - [Compute Engine machine families](https://cloud.google.com/compute/docs/machine-resource)
 - [VM instance lifecycle](https://cloud.google.com/compute/docs/instances/instance-life-cycle)

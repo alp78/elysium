@@ -69,7 +69,7 @@ mindmap
 >
 > Google Cloud Platform client libraries, security, data transfer, ingestion, and streaming in Python and C#.
 
-## Cross-References
+## Programming Languages Cross-References
 
 - [DataFrames](https://alp78.github.io/elysium/03-Dataframes/moc-dataframes) — Pandas and Polars operations using Python and C# foundations
 - [Shell](https://alp78.github.io/elysium/01-Shell/moc-shell) — Scripts often orchestrated from shell

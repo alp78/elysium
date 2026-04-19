@@ -1018,7 +1018,7 @@ pandera.DataFrameSchema
 patch.dict(os.environ, {'FINNHUB_API_KEY': 'test-key'}, clear=True)
 ```
 
-## Troubleshooting
+## Python Testing Troubleshooting
 
 ### Imports and collection
 

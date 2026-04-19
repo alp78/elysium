@@ -644,7 +644,7 @@ terraform -chdir=infra output -json
 - [iam-and-secrets](https://alp78.github.io/elysium/07-Terraform/GCP-Resources/iam-and-secrets) — how `db_password` flows into Secret Manager via Terraform
 - [secrets-management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — GCP Secret Manager for managing sensitive values outside of Terraform state
 
-## References
+## Terraform Variables and Outputs References
 
 - [Terraform Input Variables](https://developer.hashicorp.com/terraform/language/values/variables)
 - [Terraform Output Values](https://developer.hashicorp.com/terraform/language/values/outputs)

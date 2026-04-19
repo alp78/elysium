@@ -493,7 +493,7 @@ flowchart TD
 - [24_py_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/Python/24_py_streaming_realtime) — Python `google-cloud-pubsub` client library for publishing and consuming
 - [24_cs_streaming_realtime](https://alp78.github.io/elysium/02-Programming-Languages/CSharp/24_cs_streaming_realtime) — C# `Google.Cloud.PubSub.V1` client library for publishing and consuming
 
-## References
+## Pub/Sub Topics and Subscriptions References
 
 - [Pub/Sub overview](https://cloud.google.com/pubsub/docs/overview)
 - [Dead letter topics](https://cloud.google.com/pubsub/docs/dead-letter-topics)

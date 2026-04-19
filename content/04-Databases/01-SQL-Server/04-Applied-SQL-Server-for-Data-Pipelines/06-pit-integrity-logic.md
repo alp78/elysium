@@ -914,7 +914,7 @@ _On the dates shared by both gold-layer surfaces, constituent counts reconcile e
 | Cast float weights to decimal before validation. | The current live weight surface uses `FLOAT`, so the audit gate must normalize the arithmetic surface first. |
 | Gate publication on explicit reconciliation outputs. | A pass/fail query is operational; a vague expectation is not. |
 
-## References
+## SQL Server Point-in-Time Data Integrity References
 
 - [Temporal tables](https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-tables?view=sql-server-ver17)
 - [Query data in a system-versioned temporal table](https://learn.microsoft.com/en-us/sql/relational-databases/tables/querying-data-in-a-system-versioned-temporal-table?view=sql-server-ver17)

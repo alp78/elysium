@@ -1533,7 +1533,7 @@ Console.WriteLine(string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10)))
 > > Only use `in` with `readonly struct` types. For mutable structs, use `ref` if
 > > you need pass-by-reference.
 
-## Recommendations
+## C# Functions Recommendations
 
 - **Prefer `Func<T>`/`Action<T>`** over custom delegate types — less boilerplate, wider ecosystem compatibility.
 - **Use `static` local functions** when the helper doesn't need enclosing variables — avoids closure allocation.
@@ -1544,7 +1544,7 @@ Console.WriteLine(string.Join(", ", nums.Where(x => x > 2).Select(x => x * 10)))
 - **Prefer `out var`** inline declaration — `if (int.TryParse(s, out var n))` is more concise than pre-declaring the variable.
 - **Avoid overloading with both `params` and optional parameters** — creates ambiguous call sites.
 
-## Troubleshooting
+## C# Functions Troubleshooting
 
 #### `CS0161` and `out` assignments
 

@@ -1667,7 +1667,7 @@ Console.WriteLine($"  {"URL",-15} {Uri.EscapeDataString(sample).Length + " chars
       Hex             26 chars                                    26
       URL             21 chars                                    21
 
-## Warnings
+## C# File I/O and Serialization Warnings
 
 > [!warning] `File.ReadAllText` loads entire file into memory
 >
@@ -1701,7 +1701,7 @@ Console.WriteLine($"  {"URL",-15} {Uri.EscapeDataString(sample).Length + " chars
 >
 > Use CsvHelper or a proper CSV parsing library that handles RFC 4180 quoting rules.
 
-## Recommendations
+## C# File I/O and Serialization Recommendations
 
 - **Always use `using` for disposable resources** — `StreamReader`, `StreamWriter`, `FileStream`, `SqlConnection`.
 - **Use `System.Text.Json` for new code** — faster and lower-allocation than Newtonsoft.Json. Reserve Newtonsoft for complex polymorphism or JToken queries.
@@ -1712,7 +1712,7 @@ Console.WriteLine($"  {"URL",-15} {Uri.EscapeDataString(sample).Length + " chars
 - **Always specify `Encoding.UTF8` explicitly** — even though most .NET methods default to UTF-8, being explicit prevents surprises.
 - **Use CsvHelper for CSV parsing** — handles quoting, escaping, and type conversion correctly.
 
-## Troubleshooting
+## C# File I/O and Serialization Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

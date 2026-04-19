@@ -174,7 +174,7 @@ using System.Threading.Channels;
 using System.Threading;
 ```
 
-## Setup
+## C# Advanced Parallel Pipelines Setup
 
 ### Imports and warning suppression
 
@@ -702,7 +702,7 @@ sum(range(100))           = 4950
 All 3 processes completed in 31ms
 ```
 
-## Warnings
+## C# Advanced Parallel Pipelines Warnings
 
 > [!warning] TPL Dataflow blocks can deadlock with bounded capacity
 >
@@ -720,7 +720,7 @@ All 3 processes completed in 31ms
 >
 > Read stdout and stderr asynchronously: `process.BeginOutputReadLine()` + `OutputDataReceived` event, or `await process.StandardOutput.ReadToEndAsync()`.
 
-## Recommendations
+## C# Advanced Parallel Pipelines Recommendations
 
 - **Use TPL Dataflow for multi-stage pipelines** — links, bounded buffers, and configurable parallelism out of the box.
 - **Use `Channel<T>` for simpler producer-consumer** — lighter than Dataflow when you don't need block linking.
@@ -728,7 +728,7 @@ All 3 processes completed in 31ms
 - **Use `SemaphoreSlim` for rate limiting** — cap concurrent API calls to respect rate limits.
 - **Always redirect and read process output** — prevents deadlocks from full pipe buffers.
 
-## Troubleshooting
+## C# Advanced Parallel Pipelines Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

@@ -1193,7 +1193,7 @@ Repo
 True
 ```
 
-## Troubleshooting
+## Python Design Patterns and Architecture Troubleshooting
 
 ### Diagnostic checks
 

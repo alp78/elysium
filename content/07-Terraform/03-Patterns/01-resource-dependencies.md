@@ -451,7 +451,7 @@ Terraform updates the state to reflect the new address without any infrastructur
 
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines running `terraform plan` and `terraform apply`
 
-## References
+## Terraform Resource Dependencies References
 
 - [Terraform Resource Graph — Internals](https://developer.hashicorp.com/terraform/internals/graph)
 - [Terraform depends_on — Meta-Argument](https://developer.hashicorp.com/terraform/language/meta-arguments/depends_on)

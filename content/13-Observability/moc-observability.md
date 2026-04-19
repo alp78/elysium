@@ -59,7 +59,7 @@ mindmap
 >
 > Google Cloud's built-in observability stack — Cloud Monitoring, Cloud Trace, Cloud Logging, Data Catalog, Dataplex, and pipeline health/SLA patterns.
 
-## Cross-References
+## Observability Cross-References
 
 - [GCP](https://alp78.github.io/elysium/06-GCP/moc-gcp) — Cloud Logging and Cloud Monitoring service configuration
 - [SQL Server](https://alp78.github.io/elysium/04-Databases/moc-sql-server) — Wait stats and performance monitoring from the SQL Server perspective

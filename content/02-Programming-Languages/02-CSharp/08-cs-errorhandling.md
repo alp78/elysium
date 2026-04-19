@@ -1099,7 +1099,7 @@ Attempt 2 failed: Connection timeout (attempt 2). Retrying...
 Result after 3 attempts: data loaded successfully
 ```
 
-## Warnings
+## C# Error Handling Warnings
 
 > [!warning] `throw ex;` resets the stack trace
 >
@@ -1133,7 +1133,7 @@ Result after 3 attempts: data loaded successfully
 >
 > At minimum, log the error: `catch (Exception ex) { logger.Warning("Skipping: {Error}", ex.Message); }`. In ETL pipelines, accumulate errors and report at the end.
 
-## Recommendations
+## C# Error Handling Recommendations
 
 - **Catch the most specific exception type** — `catch (FileNotFoundException)` is better than `catch (IOException)` is better than `catch (Exception)`.
 - **Use bare `throw;` to re-throw** — never `throw ex;`. Use `throw new DomainException("msg", ex)` when wrapping.
@@ -1144,7 +1144,7 @@ Result after 3 attempts: data loaded successfully
 - **Use retry with exponential backoff for transient failures** — network timeouts, rate limits, and connection resets. Libraries like Polly provide production-grade retry policies.
 - **Use `IAsyncDisposable` and `await using`** for async resources — ensures proper cleanup across `await` boundaries.
 
-## Troubleshooting
+## C# Error Handling Troubleshooting
 
 - **`Stack trace shows wrong line number`**: usually means `throw ex;` was used instead of `throw;`. Use bare `throw;` to preserve the original stack trace.
 - **`InnerException` is `null`**: the wrapper constructor did not receive the original exception. Use `throw new WrapperException("msg", originalEx)`.

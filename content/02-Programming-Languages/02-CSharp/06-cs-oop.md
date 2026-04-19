@@ -1149,7 +1149,7 @@ True
 > > dictionaries for genuinely dynamic key spaces that cannot be represented by a
 > > compile-time type.
 
-## Recommendations
+## C# Object-Oriented Programming Recommendations
 
 - **Use records for DTOs, configs, and API contracts** — auto-generated equality, `ToString`, and `with` expression eliminate boilerplate and prevent bugs.
 - **Use `record struct` for small, frequently created data** — stack-allocated, no GC overhead. Ideal for coordinates, versions, and lightweight pipeline metadata.
@@ -1162,7 +1162,7 @@ True
 - **Use factory methods for complex construction** — keep constructors focused on attribute assignment; delegate parsing, validation, and I/O to `static` factory methods.
 - **Use `with` expression for immutable updates** — `config with { Port = 8080 }` creates a modified copy without mutating the original, essential for thread-safe and functional patterns.
 
-## Troubleshooting
+## C# Object-Oriented Programming Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

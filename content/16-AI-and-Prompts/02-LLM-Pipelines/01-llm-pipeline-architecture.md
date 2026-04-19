@@ -345,7 +345,7 @@ If the system is judged only on the final prose answer, pipeline defects remain 
 - [[01-ai-governance-and-security]]
 - [[01-ai-augmented-data-engineering]]
 
-## References
+## LLM Pipeline Architecture References
 
 - ChromaDB enrichment: `Designing Large Language Model Applications.epub`
 - ChromaDB enrichment: `Raieli S. Building AI Agents.pdf`

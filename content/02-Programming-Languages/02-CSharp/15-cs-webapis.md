@@ -1044,7 +1044,7 @@ OpenAPI metadata registered and JSON responses configured for camelCase output.
 >
 > **Python equivalents:** `HttpClient` → `requests`/`httpx` | `PostAsJsonAsync` → `requests.post(json=...)` | ASP.NET Minimal → FastAPI | `record` → Pydantic `BaseModel` | `Results.NotFound()` → `HTTPException(404)`
 
-## Warnings
+## C# Web and APIs Warnings
 
 #### Per-request `HttpClient` allocation
 
@@ -1109,7 +1109,7 @@ app.MapGet("/data", async (CancellationToken ct) =>
 Request cancellation can interrupt the downstream HTTP call.
 ```
 
-## Recommendations
+## C# Web and APIs Recommendations
 
 #### Reuse one `HttpClient` per remote host
 
@@ -1170,7 +1170,7 @@ Console.WriteLine($"{prodRequest.DbHost} -> {devRequest.DbHost}");
 db.prod.internal -> localhost
 ```
 
-## Troubleshooting
+## C# Web and APIs Troubleshooting
 
 #### `401 Unauthorized` despite a current token
 

@@ -536,7 +536,7 @@ after await: [1, 99, 3, 4]
 window: [99, 3]
 ```
 
-## Recommendations
+## C# Collections Recommendations
 
 These are the collection defaults that hold up well under ordinary production workloads. Deviate only when the dominant operation or lifecycle is clearly different.
 
@@ -619,7 +619,7 @@ snapshot: [v1]
 next: [v1, v2]
 ```
 
-## Troubleshooting
+## C# Collections Troubleshooting
 
 When collection code misbehaves, the bug is usually about absence, emptiness, or invalid external input. Start there before assuming the collection type itself is wrong.
 

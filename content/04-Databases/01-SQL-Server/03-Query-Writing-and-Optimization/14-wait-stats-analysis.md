@@ -659,7 +659,7 @@ _There are real multi-plan candidates in the live Query Store history. The stron
 | `RESOURCE_SEMAPHORE` | Queries waiting for memory grants | Memory grants and max server memory |
 | `ASYNC_NETWORK_IO` | Client fetching too slowly | Consumer-side fetch and result handling |
 
-## References
+## SQL Server Wait Stats Analysis References
 
 - [sys.dm_os_wait_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-os-wait-stats-transact-sql?view=sql-server-ver17)
 - [sys.dm_io_virtual_file_stats](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-io-virtual-file-stats-transact-sql?view=sql-server-ver17)

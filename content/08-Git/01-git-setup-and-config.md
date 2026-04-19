@@ -2320,7 +2320,7 @@ Run this checklist after completing the onboarding sequence to verify everything
 - [gitignore-patterns](https://alp78.github.io/elysium/08-Git/07-gitignore-patterns) — excluding files from Git tracking and Git LFS for large files
 - [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/06-pull-requests-and-code-review) — the PR workflow built on top of branches and remotes
 
-## References
+## Git Setup and Configuration References
 
 - [Git Official Documentation — git-config](https://git-scm.com/docs/git-config)
 - [Git Official Documentation — git-init](https://git-scm.com/docs/git-init)

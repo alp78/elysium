@@ -909,7 +909,7 @@ There is no visible organization in the current credential context, and the proj
 - [[01-gcp-resource-hierarchy]] - The project boundary where most of these IAM decisions are attached.
 - [[05-gcs-buckets-and-lifecycle]] - Bucket IAM and data-lake governance patterns that depend on the identities designed here.
 
-## References
+## GCP Service Accounts and IAM References
 
 - https://cloud.google.com/iam/docs/service-account-overview
 - https://cloud.google.com/iam/docs/best-practices-service-accounts

@@ -296,7 +296,7 @@ If portability matters, compare not only final answers but also failure behavior
 - [[02-rag-retrieval-and-tool-use]]
 - [[03-modern-ai-tooling-landscape]]
 
-## References
+## AI Model-Specific Prompting References
 
 - ChromaDB enrichment: `Learning LangChain Building AI and LLM Applications with LangChain and LangGraph.epub`
 - ChromaDB enrichment: `Prompt Engineering for LLMs The Art and Science of Building Large Language Model-Based Applications.epub`

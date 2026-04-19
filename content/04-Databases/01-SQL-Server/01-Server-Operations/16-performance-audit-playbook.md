@@ -1689,7 +1689,7 @@ flowchart LR
 | Security | Privilege surface is too broad. | `sa` enabled; `BUILTIN\Administrators` and `NT AUTHORITY\NETWORK SERVICE` both sysadmin. | High | Create a dedicated DBA Windows group, grant it sysadmin, remove `BUILTIN\Administrators`, demote `NETWORK SERVICE`, disable `sa`. |
 | Guest access | `guest` does not have `CONNECT` in `stoxx`. | `guest_connect_granted = 0`. | Informational | Baseline healthy. |
 
-## References
+## SQL Server Performance Audit Playbook References
 
 ### Phase 1 — Instance baseline
 

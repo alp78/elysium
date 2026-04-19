@@ -159,7 +159,7 @@ status: complete
 > >
 > > When the logic stays inside DataFrame expressions, Polars can plan, parallelize, and simplify work that opaque Python functions would block.
 
-## Setup
+## Python Testing and Migration Setup
 
 ### Package Imports and Configuration
 
@@ -1762,7 +1762,7 @@ Polars is not a drop-in Pandas replacement. It is a different mental model:
 > a review workflow so the quarantine output remains a controlled operational
 > mechanism instead of a data graveyard.
 
-## Recommendations
+## Python Testing and Migration Recommendations
 
 1. **Test at every pipeline boundary** — assert schema and key metrics after every read, transform, join, and export step.
 2. **Test with realistic data** — use production-like data samples, including nulls, duplicates, and edge cases. Pure synthetic data misses real-world failure modes.

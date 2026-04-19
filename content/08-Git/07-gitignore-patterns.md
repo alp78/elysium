@@ -1215,7 +1215,7 @@ git push --force --all
 | `--everything` | `git lfs migrate import --everything` | Process all branches and tags (not just current branch) |
 | `--above` | `git lfs migrate import --above=10mb` | Migrate all files above a size threshold |
 
-## Troubleshooting
+## Git .gitignore Patterns Troubleshooting
 
 | Symptom | Cause | Fix |
 |---|---|---|
@@ -1272,7 +1272,7 @@ git push --force --all
 - [git-remote-management](https://alp78.github.io/elysium/08-Git/git-remote-management) — force-push after history rewrite
 - [git-recovery-and-undo](https://alp78.github.io/elysium/08-Git/git-recovery-and-undo) — history rewriting with filter-repo and BFG
 
-## References
+## Git .gitignore Patterns References
 
 - [gitignore documentation](https://git-scm.com/docs/gitignore)
 - [git-filter-repo](https://github.com/newren/git-filter-repo)

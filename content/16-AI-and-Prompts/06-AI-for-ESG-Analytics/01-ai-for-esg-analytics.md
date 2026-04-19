@@ -298,7 +298,7 @@ Evaluate ESG AI on:
 - [[01-ai-governance-and-security]]
 - [[01-ai-evaluation-and-quality-assurance]]
 
-## References
+## AI for ESG Analytics References
 
 - ChromaDB enrichment: `Financial Data Engineering.epub`
 - European Commission | [ESG rating activities](https://finance.ec.europa.eu/sustainable-finance/tools-and-standards/esg-rating-activities_en)

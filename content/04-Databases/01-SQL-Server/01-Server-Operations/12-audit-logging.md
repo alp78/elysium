@@ -1153,7 +1153,7 @@ Average throughput: 2.3MiB/s
 
 _The GCS object path encodes the source hostname and date so archived files can be located by origin and time window without metadata search. `--cache-control=no-store` keeps the object out of Cloud CDN, which is the right posture for evidence. Pair this command with a bucket-level retention lock and object versioning so a compromised VM cannot delete or overwrite older archives. For cross-region DR, replicate the bucket to a second region with dual-region or multi-region storage class — the audit archive is usually small enough (\$10–\$100 per TB per month) that the durability upgrade is cheap relative to the regulatory exposure if the audit trail is lost._
 
-## Recommendations
+## SQL Server Audit Logging Recommendations
 
 ### Audit scope design
 

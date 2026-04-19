@@ -247,7 +247,7 @@ sequenceDiagram
 >
 > For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture).
 
-## Setup
+## Python Streaming and Real-Time Data Setup
 
 Kernel configuration, package imports, asyncio patching, GCP client initialization, and shared data-generation utilities used across all streaming patterns below.
 
@@ -1390,7 +1390,7 @@ print(reconnect_strategy(True))
 1s, 2s, 4s, ... with jitter
 ```
 
-### Recommendations
+### Enterprise Transfer and Streaming Patterns Recommendations
 
 #### `WebSocket` only when the client must also send data back
 
@@ -1507,7 +1507,7 @@ print("gcloud transfer jobs create ...")
 gcloud transfer jobs create ...
 ```
 
-### Troubleshooting
+### Enterprise Transfer and Streaming Patterns Troubleshooting
 
 #### `websockets.exceptions.ConnectionClosedError` on connect
 

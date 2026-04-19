@@ -713,7 +713,7 @@ The `whoami` output confirms the OS Login username. The `uid` and `gid` match th
 >
 > Use OS Login for all human access. Use metadata-based keys only for service accounts or automation that cannot use OS Login.
 
-## Troubleshooting
+## GCP VM SSH and File Transfer Troubleshooting
 
 | Symptom | Common Cause | Diagnostic Steps |
 |---|---|---|
@@ -731,7 +731,7 @@ The `whoami` output confirms the OS Login username. The `uid` and `gid` match th
 - [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) — your `gcloud` credentials are used for IAP authentication
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM roles required for IAP tunnel access
 
-## References
+## GCP VM SSH and File Transfer References
 
 - [IAP TCP forwarding documentation](https://cloud.google.com/iap/docs/using-tcp-forwarding)
 - [gcloud compute ssh reference](https://cloud.google.com/sdk/gcloud/reference/compute/ssh)

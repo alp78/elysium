@@ -912,7 +912,7 @@ Not run live in this Windows vault session: this example targets a Zsh profile o
 - [gcloud Configurations](https://alp78.github.io/elysium/06-GCP/01-Core/04-gcloud-configurations)
 - [gcloud Output Formatting](https://alp78.github.io/elysium/06-GCP/01-Core/05-gcloud-output-formatting)
 
-## References
+## gcloud CLI Setup References
 
 - [Install the Google Cloud CLI](https://cloud.google.com/sdk/docs/install)
 - [gcloud components reference](https://cloud.google.com/sdk/gcloud/reference/components)

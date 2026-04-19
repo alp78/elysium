@@ -2392,7 +2392,7 @@ print(" -> ".join(columns))
 open -> high -> low -> close
 ```
 
-## Troubleshooting
+## Python Aggregation and Reshaping Troubleshooting
 
 ### Join and Grouping Failures
 

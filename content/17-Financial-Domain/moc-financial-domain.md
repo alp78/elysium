@@ -44,7 +44,7 @@ glossary.
 >
 > Comprehensive glossary of ISS-STOXX terminology — index construction, index families, financial metrics, ESG ratings, sustainability themes, corporate governance, and smart beta factors.
 
-## Cross-References
+## Financial Domain Cross-References
 
 - [Data Architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — Pipeline patterns that process financial data
 - [SQL Server](https://alp78.github.io/elysium/07-SQL-Server/moc-sql-server) — Medallion pipeline storing financial time series

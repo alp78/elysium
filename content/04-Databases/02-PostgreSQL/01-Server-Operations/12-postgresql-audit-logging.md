@@ -306,7 +306,7 @@ That makes reader governance an infrastructure decision as much as a database on
 
 ---
 
-## Recommendations
+## PostgreSQL Audit Logging Recommendations
 
 Use the core logging surface for baseline auditability first: turn on identity-rich prefixes, capture connection lifecycle, and log at least DDL. If compliance or security operations require richer statement-class auditing, install `pgaudit` deliberately and ship the resulting logs into an external indexed system. Do not confuse "events are visible in docker logs right now" with "audit evidence is durably retained and access-controlled".
 

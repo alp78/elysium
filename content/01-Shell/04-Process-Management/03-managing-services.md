@@ -754,7 +754,7 @@ When running multiple services as containers, [docker-compose](https://alp78.git
 
 
 
-## Warnings
+## Service Management Warnings
 
 > [!danger] `systemctl stop` on a database service interrupts all active connections
 >
@@ -772,9 +772,9 @@ When running multiple services as containers, [docker-compose](https://alp78.git
 >
 > After modifying a systemd unit file, run `systemctl daemon-reload` before restarting the service. Without it, systemd uses the cached version of the unit file and your changes have no effect.
 
-## Recommendations
+## Service Management Recommendations
 
-### Linux | recommendations | scenario guide
+### Linux | service management recommendations | scenario guide
 
 #### Check service status
 
@@ -796,7 +796,7 @@ Use `journalctl -u <service> --since "1 hour ago" --no-pager` for retrospective 
 
 Place custom unit files under `/etc/systemd/system/`, not in vendor-managed directories. After writing or editing the unit, run `systemctl daemon-reload` and then `systemctl enable --now <service>` so the new definition is both loaded and activated.
 
-### PowerShell | recommendations | scenario guide
+### PowerShell | service management recommendations | scenario guide
 
 #### Inspect and control runtime state
 
@@ -806,9 +806,9 @@ Use `Get-Service` to read the current state first, then use `Start-Service`, `St
 
 Query the `System` log with `Get-WinEvent` when you need Service Control Manager events such as starts, stops, crashes, and recovery actions. If the product publishes its own provider, switch to `-ProviderName` so you can isolate product-specific failures without unrelated system noise.
 
-## Troubleshooting
+## Service Management Troubleshooting
 
-### Linux | troubleshooting | failure patterns
+### Linux | service management troubleshooting | failure patterns
 
 #### Unit is masked
 
@@ -830,13 +830,13 @@ If a unit file changed on disk but behavior did not, systemd is still using the 
 
 A healthy service can still look down if it binds only to `127.0.0.1` or a host firewall blocks the listener. Confirm the bind address with `ss -tlnp`, then inspect `ufw`, `iptables`, or the platform firewall layer before concluding that the service itself failed.
 
-### PowerShell | troubleshooting | boot and startup issues
+### PowerShell | service management troubleshooting | boot and startup issues
 
 #### Service does not start after reboot
 
 If a service runs when started manually but stays down after boot, verify its startup type before debugging anything else. `Set-Service -Name <service> -StartupType Automatic` corrects a service left in `Manual`, while `AutomaticDelayedStart` is useful when boot-time contention is the real problem rather than the service definition itself.
 
-## Cross-references
+## Service Management Cross-References
 - [viewing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/viewing-processes) — monitor resource usage of a running service
 - [system-resources](https://alp78.github.io/elysium/01-Shell/Process-Management/system-resources) — detect OOM conditions before they kill services
 - [killing-processes](https://alp78.github.io/elysium/01-Shell/Process-Management/killing-processes) — `kill` as last resort when `systemctl stop` doesn't work

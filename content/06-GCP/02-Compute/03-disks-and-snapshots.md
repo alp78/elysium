@@ -1271,7 +1271,7 @@ Hyperdisk decouples IOPS and throughput from disk size. You provision capacity, 
 >
 > Regional Persistent Disks synchronously replicate data across two zones in the same region, providing automatic failover: if the primary zone fails, the disk can be force-attached to a VM in the secondary zone with no data loss. Create with `--replica-zones=ZONE_A,ZONE_B` during disk creation. Cost is approximately 2× the zonal equivalent. Recommended for stateful workloads with RPO = 0 requirements.
 
-## Troubleshooting
+## GCP Disks and Snapshots Troubleshooting
 
 | Symptom | Likely cause | Resolution |
 |---|---|---|
@@ -1292,7 +1292,7 @@ Hyperdisk decouples IOPS and throughput from disk size. You provision capacity, 
 - [vm-ssh-and-file-transfer](https://alp78.github.io/elysium/06-GCP/02-Compute/02-vm-ssh-and-file-transfer) — SSH access for in-VM disk operations (formatting, mounting, filesystem expansion)
 - [terraform-compute](https://alp78.github.io/elysium/07-Terraform/02-GCP-Resources/02-terraform-compute) — IaC provisioning of persistent disks and snapshot schedules
 
-## References
+## GCP Disks and Snapshots References
 
 - [Adding or resizing persistent disks](https://cloud.google.com/compute/docs/disks/add-persistent-disk)
 - [Formatting and mounting a persistent disk](https://cloud.google.com/compute/docs/disks/format-mount-disk-linux)

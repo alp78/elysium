@@ -1399,7 +1399,7 @@ Apply these in order when designing a table that needs row identity or automatic
 9. **Schedule a capacity check** on every `IDENTITY int` column — migrate to `bigint` when `pct_consumed` crosses 25%.
 10. **Disable `IDENTITY_CACHE`** at the database level only when gaps would be audibly painful — the on-disk write cost is real.
 
-## References
+## SQL Server Keys, Defaults, Identity, and Sequences References
 
 - [CREATE TABLE — IDENTITY property](https://learn.microsoft.com/sql/t-sql/statements/create-table-transact-sql-identity-property?view=sql-server-ver17)
 - [DBCC CHECKIDENT](https://learn.microsoft.com/sql/t-sql/database-console-commands/dbcc-checkident-transact-sql?view=sql-server-ver17)

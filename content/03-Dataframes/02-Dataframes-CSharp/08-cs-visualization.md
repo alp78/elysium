@@ -150,7 +150,7 @@ status: complete
 >
 > ---
 
-## Setup
+## C# Visualization Setup
 
 .NET Interactive notebooks require a one-time warning suppression for NuGet version mismatches, package installation via `#r "nuget:"` directives, and data loading before any chart cell can run.
 
@@ -15899,10 +15899,10 @@ _Composite dashboard rendered as a 2x2 HTML grid of ScottPlot SVG panels._
 
 The practical failure modes here are chart/input mismatch, axis-scale distortion, HTML-versus-SVG confusion, and export-target drift. The note's data-loading cells depend on homogeneous column types, so `ToArray<T>()` and date-axis casting should be checked before the chart primitive itself.
 
-## Recommendations
+## C# Visualization Recommendations
 
 Use Plotly.NET when hover, zoom, and HTML export are part of the analysis workflow. Use ScottPlot when the destination is notebook-native SVG, batch image export, or any static report that should render without a browser runtime. Keep axis labels, theme settings, and helper functions explicit so repeated chart cells stay visually consistent.
 
-## Troubleshooting
+## C# Visualization Troubleshooting
 
 If a chart renders incorrectly, check typed-array preparation, date coercion, and axis scaling before changing the plotting code. If an interactive figure does not display, verify that the destination supports HTML and that the output was not pasted as a static image. If the dashboard panel appears blank, rerun the plotting cell and confirm that the SVG or HTML output was captured instead of omitted during export.

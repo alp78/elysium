@@ -1445,7 +1445,7 @@ The live `stoxx` database already has the right structural backbone — `bronze`
 - Keep demos disposable and clearly separated from production-facing objects. The `demo_*` prefix used throughout this note is the working pattern — every demo object was created, verified, and dropped in the same session so nothing accumulated.
 - Start using schema-level roles (`etl_writer`, `dashboard_reader`, and similar) if this environment becomes more than a single-admin sandbox. The security pattern in [#Cross-Schema Security](#cross-schema-security) is the adoption recipe: roles first, schema-level grants second, `DENY` only where a hard separation boundary must be enforced.
 
-## References
+## SQL Server Schema Layering References
 
 ### Microsoft Learn — schema DDL and catalog views
 

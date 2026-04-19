@@ -121,7 +121,7 @@ status: complete
 
 The most critical SQL Server monitor — triggers an email alert whenever a deadlock occurs.
 
-#### Setup
+#### Deadlock Alert Monitor Setup
 
 1. Go to **Monitors > New Monitor > Metric**
 2. **Detection method:** Change Alert

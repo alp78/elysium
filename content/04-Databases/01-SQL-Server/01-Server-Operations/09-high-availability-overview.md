@@ -1982,7 +1982,7 @@ Key production uses:
 
 ---
 
-## Recommendations
+## SQL Server High Availability Overview Recommendations
 
 - **Use AGs, not FCIs, on GCP.** GCP has no native shared block storage; FCI requires a self-managed shared filesystem that adds an entire extra failure domain. The 3-replica AG on independent persistent disks is the canonical pattern.
 - **Use a 3-replica sync + async topology by default.** 2 synchronous replicas give RPO=0 and automatic failover readiness; 1 asynchronous replica adds a cross-region DR path without cross-region latency on the primary commit path.

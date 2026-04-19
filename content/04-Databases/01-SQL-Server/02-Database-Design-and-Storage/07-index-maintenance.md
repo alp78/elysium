@@ -2326,7 +2326,7 @@ Command completed successfully.
 - Forgetting paused resumable rebuilds is an anti-pattern because the extra index state stays on disk and continues to affect writes. Resume or abort intentionally.
 - Assuming `ONLINE = ON` always works is an anti-pattern because support varies by operation and index type. Validate edition and object support before issuing DDL.
 
-## References
+## SQL Server Index Maintenance References
 
 - Microsoft Learn: [Optimize index maintenance to improve query performance and reduce resource consumption](https://learn.microsoft.com/en-us/sql/relational-databases/indexes/reorganize-and-rebuild-indexes?view=sql-server-ver17)
 - Microsoft Learn: [ALTER INDEX (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/alter-index-transact-sql?view=sql-server-ver17)

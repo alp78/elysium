@@ -38,7 +38,7 @@ patterns, and a copy-paste block library. Expand any section to browse contents.
 >
 > Copy-paste Terraform block templates for GCP resources — foundation and networking, compute and storage, data services, IAM, secrets, and serverless.
 
-## Cross-References
+## Terraform Cross-References
 
 - [GCP](https://alp78.github.io/elysium/06-GCP/moc-gcp) — The GCP services these Terraform configs provision
 - [GitHub Actions](https://alp78.github.io/elysium/10-CICD/moc-github-actions) — CI/CD pipelines that run terraform plan/apply

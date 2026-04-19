@@ -1779,7 +1779,7 @@ flowchart TD
 > If a CTE is referenced more than once in a query, materialize it into a `#temp` table first: `SELECT ... INTO #my_cte FROM ...`, then reference `#my_cte` wherever needed. Add an index on the join or filter key with `CREATE INDEX ix ON #my_cte (key_col)` for queries over ~10,000 rows. Use CTEs only for readability when they are referenced exactly once.
 
 
-## Warnings
+## SQL Server SQL Advanced Warnings
 
 The table below lists the highest-impact traps that silently produce wrong results or degraded performance. Each entry corresponds to a warning or danger callout earlier in this note.
 
@@ -1793,7 +1793,7 @@ The table below lists the highest-impact traps that silently produce wrong resul
 | **CROSS JOIN cost** | Produces N x M rows. Safe with small dimensions (50 x 20 = 1,000). Dangerous with large tables (10K x 10K = 100M). |
 | **UNION without ALL** | Forces a deduplication sort. Expensive on large result sets. Use `UNION ALL` unless dedup is specifically needed. |
 
-## Recommendations
+## SQL Server SQL Advanced Recommendations
 
 Standing guidance for applying the advanced patterns covered above. Apply these as defaults unless a specific query has a documented reason to deviate.
 
@@ -1808,7 +1808,7 @@ Standing guidance for applying the advanced patterns covered above. Apply these 
 | **Temp table materialization** | If a CTE is referenced more than once or the query is slow, materialize into `#temp` and add an index on the join key. |
 | **Calendar arithmetic** | Always use the `trading_calendar` table for business-day calculations. `DATEADD(DAY, N, date)` has no awareness of holidays. |
 
-## Troubleshooting
+## SQL Server SQL Advanced Troubleshooting
 
 Symptoms you will encounter when one of these advanced patterns misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
 
@@ -1822,7 +1822,7 @@ Symptoms you will encounter when one of these advanced patterns misbehaves, mapp
 | CROSS APPLY returns fewer rows than expected | Some outer rows have no matching inner rows | Switch to `OUTER APPLY` to preserve outer rows with NULL inner columns. |
 | Moving average looks wrong at partition start | First N-1 rows have a shorter window (fewer than N preceding rows exist) | Expected behavior. Filter to `date >= first_date + N days` to exclude warm-up period. |
 
-## Cross-references
+## SQL Server SQL Advanced Cross-References
 
 Related notes that extend or depend on the patterns covered here.
 

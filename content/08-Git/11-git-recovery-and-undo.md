@@ -1534,7 +1534,7 @@ A Terraform change was reverted in Git but the infrastructure was already provis
 
 ---
 
-## Troubleshooting
+## Git Recovery and Undo Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|
@@ -1607,7 +1607,7 @@ A Terraform change was reverted in Git but the infrastructure was already provis
 - [pull-requests-and-code-review](https://alp78.github.io/elysium/08-Git/pull-requests-and-code-review) — PR merge conflicts and rebase workflows
 - [git-history-and-inspection](https://alp78.github.io/elysium/08-Git/git-history-and-inspection) — log, blame, bisect, show, reflog
 
-## References
+## Git Recovery and Undo References
 
 - [git restore](https://git-scm.com/docs/git-restore)
 - [git revert](https://git-scm.com/docs/git-revert)

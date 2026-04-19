@@ -1193,7 +1193,7 @@ To https://github.com/alp78/git-lab.git
 | `-d` | `git tag -d <name>` | Delete a local tag |
 | `--delete` | `git push origin --delete <name>` | Delete a tag from the remote |
 
-## Troubleshooting
+## Git Tagging and Releases Troubleshooting
 
 Common tagging and release issues with diagnosis and resolution.
 

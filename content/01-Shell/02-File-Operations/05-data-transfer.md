@@ -873,14 +873,14 @@ Use this table when deciding whether transfer-time compression is worth the CPU 
 | `.tar.gz`, `.zip` | No | Recompressing an archive wastes CPU with little gain. |
 | SQL backups (`.bak`) | Depends | Prefer server-side backup compression when the platform supports it. |
 
-## Warnings
+## Data Transfer Warnings
 
 - `rsync --delete` and `Robocopy /MIR` remove destination-only data. Always preview them with `-n` or `/L` first.
 - `gsutil rsync -d` deletes cloud objects that are not present at the source. There is no safety net in the note's examples because no demo bucket was available.
 - `bcp` needs explicit text-mode and delimiter flags if you expect a portable CSV-shaped file. Otherwise you can end up with output that is unreadable or difficult to parse.
 - `scp` has no resume support. If the copy is large or failure-prone, switch to `rsync` or a cloud-aware client instead of retrying from zero.
 
-## Troubleshooting
+## Data Transfer Troubleshooting
 
 ### Local filesystem sync issues
 
@@ -916,7 +916,7 @@ Both clients failed before any query work happened because `127.0.0.1,1435` did 
 
 Installing the `SqlServer` module only clears the client-side prerequisite. The final blocker remains the same as `sqlcmd`: a reachable SQL Server instance that accepts the connection you are attempting.
 
-## Cross-references
+## Data Transfer Cross-References
 
 - [data-flow-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — complete data movement topology and tool selection framework
 - [iap-tunneling](https://alp78.github.io/elysium/01-Shell/05-Networking/05-iap-tunneling) — opening IAP tunnels for rsync and scp to GCE VMs

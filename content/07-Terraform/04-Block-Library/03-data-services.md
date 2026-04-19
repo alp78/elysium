@@ -2235,7 +2235,7 @@ schema = jsonencode([
 ])
 ```
 
-## Cross-References
+## Terraform Data Services Blocks Cross-References
 
 **Folder 07 — Terraform:**
 

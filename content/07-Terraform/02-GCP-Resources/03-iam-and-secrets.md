@@ -766,7 +766,7 @@ gcloud secrets versions access latest --secret=data-pipeline-db-password
 
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — GitHub Actions workflow using the CI service account
 
-## References
+## Terraform IAM and Secrets References
 
 - [google_service_account](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_service_account)
 - [google_project_iam_member](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project_iam_member)

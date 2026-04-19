@@ -741,7 +741,7 @@ flowchart TD
 
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — running `terraform plan` and `apply` in CI pipelines
 
-## References
+## Terraform Module Composition References
 
 - [Terraform Modules](https://developer.hashicorp.com/terraform/language/modules)
 - [Module Composition](https://developer.hashicorp.com/terraform/language/modules/develop/composition)

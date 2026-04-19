@@ -431,7 +431,7 @@ nl -ba "$HISTFILE"
 
 The file output proves that the visible command persisted while the secret-bearing `export DB_PASSWORD=secret123` line did not.
 
-### Linux | diagnostics | explain missing matches or missing replay
+### Linux | command history diagnostics | explain missing matches or missing replay
 
 Most Bash history failures come down to disabled expansion or overly weak synchronization between terminals. Diagnose state first, then change the write or reload policy deliberately.
 
@@ -691,7 +691,7 @@ HistorySearchForward  DownArrow
 HistorySearchForward  Shift+F8
 ```
 
-### PowerShell | diagnostics | separate session history from file-backed history
+### PowerShell | command history diagnostics | separate session history from file-backed history
 
 The most common PowerShell history mistake is assuming that `Get-History` is a cross-session search tool. It is not. The session list starts fresh with each new process, even if the PSReadLine file already contains thousands of commands.
 

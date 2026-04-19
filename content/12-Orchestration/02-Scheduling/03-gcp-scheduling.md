@@ -1430,7 +1430,7 @@ gcloud scheduler jobs create http scale-down-api \
 - [cloud-logging](https://alp78.github.io/elysium/06-GCP/Logging/cloud-logging) — Diagnosing scheduler job failures and Cloud Run execution errors
 - [gcp-apis-and-services](https://alp78.github.io/elysium/06-GCP/01-Core/02-gcp-apis-and-services) — APIs to enable: `cloudscheduler.googleapis.com`, `workflows.googleapis.com`, `cloudtasks.googleapis.com`, `cloudfunctions.googleapis.com`
 
-## References
+## GCP Scheduling References
 
 - [Cloud Scheduler documentation](https://cloud.google.com/scheduler/docs)
 - [Cloud Scheduler cron format](https://cloud.google.com/scheduler/docs/configuring/cron-job-schedules)

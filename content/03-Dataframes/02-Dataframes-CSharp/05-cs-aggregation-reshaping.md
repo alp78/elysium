@@ -165,7 +165,7 @@ status: complete
 
 ---
 
-## Setup
+## C# Aggregation and Reshaping Setup
 
 ### Warning Suppression
 
@@ -1607,7 +1607,7 @@ Console.WriteLine($"Schema matches: {schemaMatches}");
 Schema matches: True
 ```
 
-## Troubleshooting
+## C# Aggregation and Reshaping Troubleshooting
 
 ### Failure Modes
 

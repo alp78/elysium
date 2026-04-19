@@ -1338,7 +1338,7 @@ df.Select(keepCols).Head(3)
 
 <!-- Polars DataFrame: (3 rows, 9 columns) --><table><thead><tr><th>id</th><th>symbol</th><th>date</th><th>open</th><th>high</th><th>low</th><th>close</th><th>adj_close</th><th>volume</th></tr></thead><tbody><tr><td>21160</td><td>ABI.BR</td><td>2021-01-04</td><td>58.15</td><td>58.85</td><td>56.78</td><td>57.21</td><td>53.5761</td><td>1513937</td></tr><tr><td>21161</td><td>ABI.BR</td><td>2021-01-05</td><td>56.9</td><td>57.98</td><td>56.75</td><td>57.18</td><td>53.548</td><td>1382722</td></tr><tr><td>21162</td><td>ABI.BR</td><td>2021-01-06</td><td>57.96</td><td>58.94</td><td>57.39</td><td>58.77</td><td>55.037</td><td>1370204</td></tr></tbody></table>
 
-## Warnings
+## C# Generics and LINQ Warnings
 
 > [!warning] LINQ deferred execution — query re-executes on each enumeration
 >
@@ -1380,7 +1380,7 @@ df.Select(keepCols).Head(3)
 >
 > Define variance on the interface: `interface IReadable<out T>`. The implementing class uses invariant `T`: `class Readable<T> : IReadable<T>`.
 
-## Recommendations
+## C# Generics and LINQ Recommendations
 
 - **Prefer method syntax for most LINQ** — it's more composable and the dominant style in production C#. Use query syntax for complex joins and `let` bindings.
 - **Materialize LINQ results with `.ToList()`** when you need stable, reusable data — deferred execution re-evaluates on each enumeration.
@@ -1391,7 +1391,7 @@ df.Select(keepCols).Head(3)
 - **Use `record` types for LINQ projections** — `record PriceRow(string Symbol, DateTime Date, double Close)` gives free equality, `ToString`, and deconstruction.
 - **Use covariance (`out T`) on read-only interfaces** — enables `IEnumerable<Dog>` where `IEnumerable<Animal>` is expected, which is safe because you're only reading.
 
-## Troubleshooting
+## C# Generics and LINQ Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

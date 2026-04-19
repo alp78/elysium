@@ -317,7 +317,7 @@ The audit should end with findings ranked by operational importance:
 | 5 | Data checksums are off | earlier encryption/baseline capture | corruption detection posture is weaker than a new hardening baseline should be |
 | 6 | Core maintenance and storage posture look healthy | recent autoanalyze, `n_dead_tup = 0`, `8%` disk usage | there is no immediate performance emergency on the lab |
 
-## References
+## PostgreSQL Performance Audit Playbook References
 
 - [[11-postgresql-memory-and-buffer-cache]]
 - [[14-postgresql-problems]]

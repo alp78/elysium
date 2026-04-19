@@ -851,7 +851,7 @@ Key `.editorconfig` rules: `CA1822` (mark members static), `CA2007` (ConfigureAw
 
 **Golden Rules:** Measure first. Algorithm > micro-opt. Minimize allocations. Right collection. Pool resources. Seal classes.
 
-## Warnings
+## C# Performance and Code Quality Warnings
 
 > [!warning] Never run `BenchmarkDotNet` in Debug mode
 > The JIT suppresses inlining and other optimizations in Debug builds. Results will be 2–10× slower than Release and will not reflect production behaviour.
@@ -883,7 +883,7 @@ Key `.editorconfig` rules: `CA1822` (mark members static), `CA2007` (ConfigureAw
 > [!success] Correct pattern
 > Use `Memory<T>` instead of `Span<T>` in async methods. Convert to `Span<T>` only within synchronous inner scopes where the span does not need to survive an `await`.
 
-## Recommendations
+## C# Performance and Code Quality Recommendations
 
 - **Profile before optimizing.** Use `Stopwatch` for ad-hoc measurements and `BenchmarkDotNet` for decisions that will change production code. Avoid optimizing based on code review alone.
 - **Prefer `Span<T>` over substring and array-copy operations in hot paths.** `string.AsSpan()` and `MemoryMarshal` slices avoid heap allocations that would otherwise trigger GC pressure.
@@ -894,7 +894,7 @@ Key `.editorconfig` rules: `CA1822` (mark members static), `CA2007` (ConfigureAw
 - **Run `dotnet-counters monitor` during load tests** to observe live GC/JIT/threadpool metrics without attaching a full profiler. Spikes in `gen-2-gc-count` or `% time in gc` signal allocation problems.
 - **Seal classes that are not designed for inheritance.** The JIT can devirtualize calls on sealed types, and Roslyn's `CA1852` analyzer will flag unsealed classes that have no known subclasses.
 
-## Troubleshooting
+## C# Performance and Code Quality Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

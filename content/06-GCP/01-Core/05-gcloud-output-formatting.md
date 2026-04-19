@@ -569,7 +569,7 @@ This is the pattern you want in automation and reviews: explicit selection logic
 - [gcloud-configurations](https://alp78.github.io/elysium/06-GCP/01-Core/04-gcloud-configurations) — Set the active project and account that formatted commands will inherit
 - [gcloud-help-and-discovery](https://alp78.github.io/elysium/06-GCP/01-Core/06-gcloud-help-and-discovery) — Use help topics and release tracks to discover more `gcloud` surfaces safely
 
-## References
+## gcloud Output Formatting References
 
 - [Scripting gcloud CLI commands](https://docs.cloud.google.com/sdk/docs/scripting-gcloud)
 - [gcloud topic formats reference](https://cloud.google.com/sdk/gcloud/reference/topic/formats)

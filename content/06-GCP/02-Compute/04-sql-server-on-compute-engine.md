@@ -2081,7 +2081,7 @@ Monthly cost breakdown for the `stoxx-vm` SQL Server deployment in `europe-west1
 - [04-Databases/01-SQL-Server / 01 — Database Creation and File Layout](https://alp78.github.io/elysium/Elysium/04-Databases/01-SQL-Server/02-Database-Design/01-database-creation-and-file-layout) — the Docker-based `stoxx_db` reference layout this page replicates
 - [04-Databases/01-SQL-Server / 01 — Server Configuration](https://alp78.github.io/elysium/Elysium/04-Databases/01-SQL-Server/01-Server-Operations/01-server-configuration) — SQL Server configuration reference (sp_configure, mssql-conf options)
 
-## References
+## SQL Server on Compute Engine References
 
 - [SQL Server on Linux documentation](https://learn.microsoft.com/en-us/sql/linux/)
 - [Install SQL Server 2022 on Ubuntu](https://learn.microsoft.com/en-us/sql/linux/quickstart-install-connect-ubuntu)

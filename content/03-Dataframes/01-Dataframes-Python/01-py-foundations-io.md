@@ -4710,7 +4710,7 @@ guess wrong on dates, nulls, or mixed-type columns.
 >
 > After every file read, API ingest, or database query, check both column names and dtypes against the expected contract before continuing. Schema validation belongs at the input boundary, not after a broken transform has already propagated bad state.
 
-## Recommendations
+## Python Foundations and I/O Recommendations
 
 1. **Use Polars for new projects** — stricter type system, no index-related bugs, native lazy evaluation, and Arrow-backed immutability eliminate entire categories of Pandas footguns.
 2. **Always specify dtypes on CSV/JSON reads** — never rely on inference for production data. Pass `dtype={}` (Pandas) or `dtypes={}` / `schema_overrides={}` (Polars) explicitly.

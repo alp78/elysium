@@ -4332,7 +4332,7 @@ print(duck.execute("SELECT SUM(i) FROM range(5) tbl(i)").fetchone()[0])
 10
 ```
 
-## Troubleshooting
+## Python Database Troubleshooting
 
 Minimal probes below are designed to confirm the failure boundary quickly before you revisit the larger examples earlier in the note.
 

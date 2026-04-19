@@ -1488,7 +1488,7 @@ The stoxx output shows the single-instance server name and `READ_WRITE` because 
 
 ---
 
-## Troubleshooting
+## SQL Server Always On Availability Groups Troubleshooting
 
 The five issues below cover the most common AG failures in production. Each section includes a diagnosis query or shell command, a cause/fix table, and — where applicable — paired danger/success callouts flagging the operational risks and the safe remediation path. The issues are ordered by frequency in practice: sync-state failures first, then redo-queue pressure, automatic-failover failures, split-brain, and certificate expiry.
 

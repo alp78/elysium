@@ -735,7 +735,7 @@ resource "google_compute_instance" "sql" {
 - [Service accounts and IAM](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — IAM controls for the Terraform service account and state bucket
 - [Secrets management](https://alp78.github.io/elysium/06-GCP/Security/secrets-management) — secrets that appear as plaintext in state
 
-## References
+## Terraform State Management References
 
 - [Terraform State](https://developer.hashicorp.com/terraform/language/state)
 - [GCS Backend](https://developer.hashicorp.com/terraform/language/backend/gcs)

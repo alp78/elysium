@@ -1986,7 +1986,7 @@ BigQuery offers two main approaches for intermediate result sets: CTEs (inline, 
 > Start with a CTE. If the query is slow and the CTE is referenced multiple times, materialize into a temp table. BigQuery charges per bytes scanned, so a CTE referenced three times triples the scan cost — a temp table pays the scan once.
 
 
-## Warnings
+## BigQuery Advanced Warnings
 
 The table below lists the highest-impact traps that silently produce wrong results or degraded performance in BigQuery. Each entry corresponds to a warning or danger callout earlier in this note.
 
@@ -2000,7 +2000,7 @@ The table below lists the highest-impact traps that silently produce wrong resul
 | **CROSS JOIN cost** | Multiplies bytes scanned. Ensure at least one side is a small dimension table. |
 | **CTE re-evaluation cost** | A CTE referenced 3 times costs 3x the scan. Materialize into a temp table. |
 
-## Recommendations
+## BigQuery Advanced Recommendations
 
 Standing guidance for applying the advanced patterns covered above. Apply these as defaults unless a specific query has a documented reason to deviate.
 
@@ -2014,7 +2014,7 @@ Standing guidance for applying the advanced patterns covered above. Apply these 
 | **Pivoting** | Use CASE-based conditional aggregation for portability. Reserve native PIVOT for BigQuery-only code. |
 | **Temp table materialization** | If a CTE is referenced more than once, materialize it into `CREATE TEMP TABLE` to pay scan cost once. |
 
-## Troubleshooting
+## BigQuery Advanced Troubleshooting
 
 Symptoms you will encounter when one of these advanced patterns misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
 
@@ -2027,7 +2027,7 @@ Symptoms you will encounter when one of these advanced patterns misbehaves, mapp
 | Moving average differs from SQL Server | Check frame clause and FLOAT64 precision | Ensure both use `ROWS BETWEEN N PRECEDING AND CURRENT ROW`. Compare with `ROUND()`. |
 | CROSS JOIN produces massive bytes scanned | Both sides are large tables | Ensure at least one side is small. Use GENERATE_DATE_ARRAY for date dimensions. |
 
-## Cross-references
+## BigQuery Advanced Cross-References
 
 Related notes that extend or depend on the patterns covered here.
 

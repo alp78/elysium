@@ -1459,7 +1459,7 @@ Console.WriteLine(string.Join(" | ", typePairs));
 Int64 -> long | Float64 -> double | Utf8 -> string
 ```
 
-### Troubleshooting
+### C# Transforms, Expressions and Chaining Troubleshooting
 
 Use these checks when the code compiles but the resulting frame or schema does not match the intended transform.
 

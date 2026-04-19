@@ -1366,7 +1366,7 @@ Console.WriteLine($"Schema mismatch: close expected {expected}, got {actual}");
 Schema mismatch: close expected Decimal, got String
 ```
 
-### Troubleshooting
+### C# Foundations and I/O Troubleshooting
 
 Work from the boundary inward: package and runtime first, then types, then the frame logic itself.
 

@@ -3025,7 +3025,7 @@ if (displayJson.RootElement.TryGetProperty("fields", out var displayFields))
 ```
 
 
-## Warnings
+## Firestore for Data Engineering - C# Warnings
 
 The table below lists the highest-impact Firestore-with-C# pitfalls covered in this note. Each entry corresponds to a warning or danger callout earlier in the page.
 
@@ -3039,7 +3039,7 @@ The table below lists the highest-impact Firestore-with-C# pitfalls covered in t
 | **`on_snapshot` on .NET 10** | Real-time listeners crash on .NET 10 due to the same `AsyncInterfaces` issue. Use REST polling as a workaround. |
 | **`array_contains` one-per-query limit** | Only one `array_contains` or `array_contains_any` filter per query. Multiple array filters require data model restructuring. |
 
-## Recommendations
+## Firestore for Data Engineering - C# Recommendations
 
 Standing guidance for designing and operating Firestore C# code. Apply these as defaults unless a specific workload has a documented reason to deviate.
 
@@ -3053,7 +3053,7 @@ Standing guidance for designing and operating Firestore C# code. Apply these as 
 | **Error handling** | Catch `RpcException` with `StatusCode.FailedPrecondition` for missing index errors. Catch `StatusCode.Aborted` for transaction conflicts (auto-retry). |
 | **Cost control** | For analytical queries scanning many documents, export Firestore to BigQuery and query there. Firestore charges per read — BigQuery charges per bytes scanned. |
 
-## Troubleshooting
+## Firestore for Data Engineering - C# Troubleshooting
 
 Symptoms you will encounter when a Firestore C# query, write, or listener misbehaves, mapped to the most likely cause and the fix that resolves it in practice.
 
@@ -3068,7 +3068,7 @@ Symptoms you will encounter when a Firestore C# query, write, or listener misbeh
 | `on_snapshot` callback not firing | .NET 10 — listeners crash silently. Or: no documents match the query filter | On .NET 10, use REST polling. On .NET 8/9, verify the query matches existing documents. |
 | Aggregation query returns 0 | REST `runAggregationQuery` requires the correct `structuredAggregationQuery` format with `aggregations[]` array | Verify the JSON structure matches the Firestore REST API reference. Use the helper functions from this note's setup section. |
 
-## Cross-references
+## Firestore for Data Engineering - C# Cross-References
 
 Related notes that extend or depend on the patterns covered here.
 

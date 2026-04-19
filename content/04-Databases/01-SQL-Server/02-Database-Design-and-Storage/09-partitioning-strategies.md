@@ -1171,7 +1171,7 @@ flowchart TD
 - **Statistics maintenance.** Enable incremental statistics (`INCREMENTAL = ON`) on large partitioned tables to avoid full-table scans after partition-level loads. After each SWITCH IN, update statistics for the affected partition.
 - **Boundary validation.** After any SPLIT or MERGE, verify the boundary layout with `sys.partition_range_values` and the row distribution with `sys.dm_db_partition_stats`. Catch drift before it affects query plans.
 
-## Warnings
+## SQL Server Partitioning Strategies Warnings
 
 > [!danger] SPLIT and MERGE on populated partitions are fully logged and hold Sch-M locks
 >
@@ -1197,7 +1197,7 @@ flowchart TD
 >
 > Enforce `NOT NULL` on the partition key column in the table DDL. This eliminates the silent NULL-routing behavior and ensures every row is placed by its actual value.
 
-## Troubleshooting
+## SQL Server Partitioning Strategies Troubleshooting
 
 | Error | Message (summary) | Cause | Fix |
 |---:|---|---|---|
@@ -1208,7 +1208,7 @@ flowchart TD
 | 7711 | `DATA_COMPRESSION option on source and target are not the same.` | Source and target partitions have different compression settings. | Rebuild the staging table with matching `DATA_COMPRESSION`. |
 | 9111 | `UPDATE STATISTICS ON PARTITIONS syntax is not supported for non-incremental statistics.` | Attempted per-partition statistics update without `INCREMENTAL = ON`. | Enable incremental statistics first: `UPDATE STATISTICS t WITH INCREMENTAL = ON`. |
 
-## Cross-references
+## SQL Server Partitioning Strategies Cross-References
 
 - [[03-schemas-tables-and-constraints]] — `CREATE TABLE`, clustered index design, constraint family
 - [[04-keys-defaults-identity-and-sequences]] — identity columns, SEQUENCE objects, surrogate vs natural keys

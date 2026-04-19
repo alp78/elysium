@@ -1573,7 +1573,7 @@ babel unavailable in this env
 locale output stays host-dependent
 ```
 
-## Troubleshooting
+## Python Strings Troubleshooting
 
 Maps common string and regex failures to their immediate cause and the first corrective action.
 

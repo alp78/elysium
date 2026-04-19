@@ -830,7 +830,7 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
 >
 > **Python equivalents:** `StorageClient` → `storage.Client()` | `BigQueryClient` → `bigquery.Client()` | `PublisherClient` → `pubsub_v1.PublisherClient()` | `FirestoreDb` → `firestore.Client()`
 
-## Warnings
+## C# GCP Warnings
 
 > [!warning] BigQuery charges by bytes scanned
 >
@@ -848,7 +848,7 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
 >
 > Always call `await publisher.ShutdownAsync(TimeSpan.FromSeconds(15))` in a `finally` block or `IAsyncDisposable`.
 
-## Recommendations
+## C# GCP Recommendations
 
 - **Use ADC for authentication** — `GoogleCredential.GetApplicationDefault()` works everywhere: local dev, GKE, Cloud Run.
 - **Create GCP clients once and reuse** — they are thread-safe and manage connection pools internally.
@@ -856,7 +856,7 @@ Console.WriteLine($"  Metrics: https://console.cloud.google.com/monitoring/metri
 - **Use partitioned BigQuery tables** — reduces scan scope and query cost.
 - **Call `ShutdownAsync()` on `PublisherClient`** — flushes buffered messages before process exit.
 
-## Troubleshooting
+## C# GCP Troubleshooting
 
 ### ADC unavailable
 

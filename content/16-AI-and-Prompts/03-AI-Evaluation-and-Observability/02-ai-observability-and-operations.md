@@ -316,7 +316,7 @@ Observability should feed evaluation:
 - [[01-llm-pipeline-architecture]]
 - [[02-rag-retrieval-and-tool-use]]
 
-## References
+## AI Observability and Operations References
 
 - ChromaDB enrichment: `Agentic AI.pdf`
 - ChromaDB enrichment: `Data Engineering Design Patterns_1.pdf`

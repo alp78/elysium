@@ -958,7 +958,7 @@ The current `stoxx` workload supports a clear production pattern:
 
 ---
 
-## References
+## SQL Server Loading Patterns References
 
 - Microsoft Learn: [BULK INSERT (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/statements/bulk-insert-transact-sql)
 - Microsoft Learn: [Use table-valued parameters (Database Engine)](https://learn.microsoft.com/en-us/sql/relational-databases/tables/use-table-valued-parameters-database-engine)

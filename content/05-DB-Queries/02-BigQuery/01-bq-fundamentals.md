@@ -1855,7 +1855,7 @@ LIMIT 10
 </table>
 
 
-## Warnings
+## BigQuery Fundamentals Warnings
 
 The table below lists the BigQuery-specific query anti-patterns that silently increase cost, degrade performance, or produce wrong results. Each entry corresponds to a pattern covered earlier in this note.
 
@@ -1869,7 +1869,7 @@ The table below lists the BigQuery-specific query anti-patterns that silently in
 | **JOIN shuffles** | JOINing two large tables forces a full data shuffle across slots. Cluster large tables on the join key or materialize the join result. |
 | **Date type mixing** | Comparing `DATE` and `TIMESTAMP` causes implicit coercion that can mask bugs. Always cast explicitly. |
 
-## Recommendations
+## BigQuery Fundamentals Recommendations
 
 Standing guidance for writing cost-efficient BigQuery queries in this medallion pipeline. Apply these as defaults unless a specific query has a documented reason to deviate.
 
@@ -1883,7 +1883,7 @@ Standing guidance for writing cost-efficient BigQuery queries in this medallion 
 | **Quality gates** | Run UNION ALL quality checks after every load. Automate the check and halt promotion to gold if any check returns non-zero. |
 | **Materialized views** | For expensive aggregations hit repeatedly (dashboard queries), create a materialized view instead of re-scanning base tables. |
 
-## Troubleshooting
+## BigQuery Fundamentals Troubleshooting
 
 Symptoms you will encounter when a BigQuery query misbehaves or unexpectedly scans too many bytes, mapped to the most likely cause and the fix that resolves it in practice.
 
@@ -1895,7 +1895,7 @@ Symptoms you will encounter when a BigQuery query misbehaves or unexpectedly sca
 | `days_since_update` shows high value in quality check | Pipeline stalled or BigQuery table not refreshed | Check pipeline logs. Verify `_ingested_at` timestamps in bronze. Re-run ingestion if source data is available. |
 | Moving average differs from SQL Server | Different frame clause semantics — BigQuery and SQL Server handle `RANGE` vs `ROWS` identically, but check for NULLs or FLOAT precision | Ensure both use `ROWS BETWEEN N PRECEDING AND CURRENT ROW`. Compare with `ROUND()` to rule out precision differences. |
 
-## Cross-references
+## BigQuery Fundamentals Cross-References
 
 Related notes that extend or depend on the patterns covered here.
 

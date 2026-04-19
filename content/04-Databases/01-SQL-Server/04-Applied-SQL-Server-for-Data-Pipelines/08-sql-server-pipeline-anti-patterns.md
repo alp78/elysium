@@ -485,7 +485,7 @@ Use this page as the checklist.
 
 ---
 
-## References
+## SQL Server Pipeline Anti-Patterns References
 
 - Microsoft Learn: [Table hints (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql-table)
 - Microsoft Learn: [Create filtered indexes](https://learn.microsoft.com/en-us/sql/relational-databases/indexes/create-filtered-indexes)

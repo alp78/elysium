@@ -1011,7 +1011,7 @@ Unique symbols: 50 (from 66355 total rows)
 
 ---
 
-## Warnings
+## C# Explore, Select and Filter Warnings
 
 > [!warning] MDA `Filter` requires an explicit boolean column, not an expression
 > Unlike Polars.NET where `df.Filter(Col("x").Gt(5))` works directly, MDA requires constructing a `PrimitiveDataFrameColumn<bool>` first — more verbose and error-prone.
@@ -1019,7 +1019,7 @@ Unique symbols: 50 (from 66355 total rows)
 > [!warning] Column selection by string index in MDA returns a reference, not a copy
 > `df["col"]` in MDA returns a reference to the column — mutations propagate to the original DataFrame.
 
-## Recommendations
+## C# Explore, Select and Filter Recommendations
 
 1. **Profile before transforming** — run `Describe()`, null counts, and unique counts on every new dataset.
 2. **Filter early** — reduce row count before expensive operations (joins, group_by).

@@ -4277,7 +4277,7 @@ Test tables and procedures cleaned up
 >
 > Read database secrets from environment variables, `.env` files kept out of version control, or a proper secret manager such as Azure Key Vault or GCP Secret Manager. Application code should assemble connection strings at runtime from those injected values.
 
-## Recommendations
+## Python Database and SQL Interface Recommendations
 
 1. **Use DuckDB for complex analytical SQL on DataFrames** — CTEs, window functions, and set operations are more readable in SQL than in chained DataFrame expressions.
 2. **Use parameterized queries for all database operations** — prevents SQL injection and improves query plan caching.

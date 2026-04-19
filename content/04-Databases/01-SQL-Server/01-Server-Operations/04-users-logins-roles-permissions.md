@@ -2860,7 +2860,7 @@ GO
 
 ---
 
-## Warnings
+## SQL Server Users, Logins, Roles, and Permissions Warnings
 
 > [!warning] Shared service logins
 >
@@ -2888,7 +2888,7 @@ GO
 
 ---
 
-## Recommendations
+## SQL Server Users, Logins, Roles, and Permissions Recommendations
 
 1. **Default to custom roles over fixed roles** — fixed roles like `db_datareader` and `db_datawriter` grant database-wide access, which is almost always broader than needed for schema-layered data platforms.
 2. **Grant at schema scope** — schema-level grants (`GRANT SELECT ON SCHEMA::gold`) provide the best balance between precision and manageability for data platforms.
@@ -2901,7 +2901,7 @@ GO
 
 ---
 
-## Troubleshooting
+## SQL Server Users, Logins, Roles, and Permissions Troubleshooting
 
 Troubleshooting stays readable when each symptom is tied to a specific boundary: authentication, user mapping, role membership, or environment integration.
 
@@ -3027,7 +3027,7 @@ SQL login or contained user
 
 ---
 
-## References
+## SQL Server Users, Logins, Roles, and Permissions References
 
 - Microsoft Learn — Create a login
 

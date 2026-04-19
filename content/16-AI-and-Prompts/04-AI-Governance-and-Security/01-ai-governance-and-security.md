@@ -312,7 +312,7 @@ Governance quality should also be tested:
 - [[01-ai-for-esg-analytics]]
 - [[01-ai-for-index-engineering-and-maintenance]]
 
-## References
+## AI Governance and Security References
 
 - OWASP | [Top 10 for Large Language Model Applications](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
 - OpenAI | [Safety best practices](https://developers.openai.com/api/docs/guides/safety-best-practices)

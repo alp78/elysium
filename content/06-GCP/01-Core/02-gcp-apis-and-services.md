@@ -980,7 +980,7 @@ Terraform is the safer long-term pattern because it makes API activation part of
 - [gcloud-configurations](https://alp78.github.io/elysium/06-GCP/01-Core/04-gcloud-configurations) - Named CLI contexts for account, project, region, and zone
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/08-Security/01-service-accounts-and-iam) - Roles and bindings that determine whether enabled APIs can actually be used
 
-## References
+## GCP APIs and Services References
 
 - [Service Usage: enable and disable services](https://cloud.google.com/service-usage/docs/enable-disable)
 - [Service Usage REST: `services.get`](https://cloud.google.com/service-usage/docs/reference/rest/v1/services/get)

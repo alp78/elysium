@@ -679,7 +679,7 @@ TF_IN_AUTOMATION=1 TF_INPUT=0 terraform apply -auto-approve
 
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines for `terraform plan` and `apply` automation
 
-## References
+## Terraform Plan, Apply and Destroy References
 
 - [Terraform CLI Commands](https://developer.hashicorp.com/terraform/cli/commands)
 - [Terraform Import](https://developer.hashicorp.com/terraform/cli/import)

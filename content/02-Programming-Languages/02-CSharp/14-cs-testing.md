@@ -1576,7 +1576,7 @@ TradingPipeline/
 └── Directory.Build.props
 ```
 
-## Warnings
+## C# Testing Warnings
 
 > [!warning] Mocking concrete classes instead of interfaces
 > `new Mock<SqlConnection>()` will fail or produce unexpected behaviour because `SqlConnection` is not abstracted. Moq can only mock `virtual` members on concrete classes.
@@ -1616,7 +1616,7 @@ TradingPipeline/
 > [!success] Correct pattern
 > Add a test that calls `provider.GetRequiredService<T>()` for each critical service. This is fast (no I/O) and catches misconfiguration before deployment.
 
-## Recommendations
+## C# Testing Recommendations
 
 - Depend on interfaces, not concrete classes, throughout the production codebase. This is the prerequisite for effective mocking with Moq.
 - Prefer `[Theory]` + `[InlineData]` over multiple `[Fact]` methods for the same function under different inputs.
@@ -1627,7 +1627,7 @@ TradingPipeline/
 - Write a DI validation test for every microservice or API project to catch container misconfigurations before they reach production.
 - Tag slow integration tests with a custom trait and run them on a separate CI schedule to keep the default pipeline fast.
 
-## Troubleshooting
+## C# Testing Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

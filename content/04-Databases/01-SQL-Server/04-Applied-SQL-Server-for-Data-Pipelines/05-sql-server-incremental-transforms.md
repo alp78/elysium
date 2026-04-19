@@ -1086,7 +1086,7 @@ The current `stoxx` environment already supports a clean production pattern:
 
 ---
 
-## References
+## SQL Server Incremental Transforms References
 
 - Microsoft Learn: [SELECT - OVER clause (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/queries/select-over-clause-transact-sql)
 - Microsoft Learn: [rowversion (Transact-SQL)](https://learn.microsoft.com/en-us/sql/t-sql/data-types/rowversion-transact-sql)

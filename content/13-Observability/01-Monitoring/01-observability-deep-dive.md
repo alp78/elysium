@@ -998,7 +998,7 @@ flowchart TB
 - [idempotent-pipeline-design](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/idempotent-pipeline-design) — pipeline design patterns that support observability
 - [open-table-formats](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/open-table-formats) — Iceberg time travel as a lineage/audit capability
 
-## References
+## Observability Deep Dive References
 
 - [DataDog Python client](https://datadogpy.readthedocs.io/)
 - [Great Expectations documentation](https://docs.greatexpectations.io/)

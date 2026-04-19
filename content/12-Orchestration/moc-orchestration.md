@@ -59,7 +59,7 @@ mindmap
 >
 > Platform-native scheduling tools for recurring jobs that do not require a full orchestration framework — Linux cron and systemd timers, GCP Cloud Scheduler and Cloud Workflows, and Windows Task Scheduler.
 
-## Cross-References
+## Orchestration Cross-References
 
 - [Data Architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — pipeline patterns that Airflow orchestrates
 - [docker-compose](https://alp78.github.io/elysium/09-Docker/docker-compose) — running Airflow locally via Docker Compose

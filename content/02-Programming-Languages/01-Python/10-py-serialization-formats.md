@@ -1240,7 +1240,7 @@ fig2.show()
 shutil.rmtree(bench_dir)
 ```
 
-## Warnings
+## Python Serialization Formats Warnings
 
 > [!warning] Parquet is not streamable
 >
@@ -1266,7 +1266,7 @@ shutil.rmtree(bench_dir)
 >
 > Always add new fields with default values. Mark removed fields as deprecated rather than deleting. Use Avro's schema resolution rules for forward/backward compatibility.
 
-## Recommendations
+## Python Serialization Formats Recommendations
 
 - **Use Parquet for data lakes and analytical storage** — columnar layout, compression, predicate pushdown, schema embedded.
 - **Use Avro for Kafka and streaming** — schema embedded, schema evolution, compact, streaming-friendly.
@@ -1276,7 +1276,7 @@ shutil.rmtree(bench_dir)
 - **Choose compression by workload** — Snappy for speed (real-time), Zstd for balance (ETL), Gzip for maximum compression (archival).
 - **Test schema evolution before deploying** — add fields with defaults, never rename, use compatibility checks.
 
-## Troubleshooting
+## Python Serialization Formats Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

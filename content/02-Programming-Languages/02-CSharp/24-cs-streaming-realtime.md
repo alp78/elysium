@@ -211,7 +211,7 @@ sequenceDiagram
 >
 > For the architectural context of where streaming fits within the broader data platform — including how real-time feeds connect to batch pipelines — see [streaming-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Architectures/streaming-architecture).
 
-## Setup
+## C# Streaming and Real-Time Data - WebSocket, SSE, Pub/Sub, Firestore Setup
 
 Kernel configuration, NuGet package loading, GCP client initialization, and shared data-generation utilities used across all streaming patterns below.
 
@@ -1030,7 +1030,7 @@ If your application layer wants consumers to process streamed values with `await
 
 A `dead-letter topic` is only valuable if operators watch it, and reconnect logic is only trustworthy if it has been exercised under failure. Monitor `subscription/num_undelivered_messages` and rehearse network interruption scenarios before treating the pipeline as production-ready.
 
-## Troubleshooting
+## C# Streaming and Real-Time Data - WebSocket, SSE, Pub/Sub, Firestore Troubleshooting
 
 ### `WebSocketException` immediately after connect
 

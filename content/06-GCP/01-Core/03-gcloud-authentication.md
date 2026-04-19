@@ -908,7 +908,7 @@ Common sources of authentication failures in local development and CI/CD pipelin
 - [gcloud-configurations](https://alp78.github.io/elysium/06-GCP/Core/gcloud-configurations) — Manage multiple project contexts
 - [service-accounts-and-iam](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam) — Create and manage service accounts, IAM bindings and roles
 
-## References
+## GCP Authentication with gcloud CLI References
 
 - [gcloud auth documentation](https://cloud.google.com/sdk/gcloud/reference/auth)
 - [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials)

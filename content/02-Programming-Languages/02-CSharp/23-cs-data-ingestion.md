@@ -393,7 +393,7 @@ Formatter.Register<Polars.CSharp.Series>((s, writer) =>
 
 ```
 
-## Setup
+## C# Data Ingestion - SQL Server, BigQuery, Firestore Setup
 
 Helper functions and benchmark infrastructure shared across all ingestion sections. Run these cells once before executing any benchmark.
 
@@ -1855,7 +1855,7 @@ Console.WriteLine("  Local exports cleaned up");
 >
 > Overwritten docs remain after cleanup. To remove them, call `FsDeleteCollection` after a kernel restart with `Microsoft.Bcl.AsyncInterfaces` loaded.
 
-## Warnings
+## C# Data Ingestion - SQL Server, BigQuery, Firestore Warnings
 
 > [!warning] Never insert rows into SQL Server in a loop with individual `SqlCommand` calls
 >
@@ -1889,7 +1889,7 @@ Console.WriteLine("  Local exports cleaned up");
 >
 > Always load `Microsoft.Bcl.AsyncInterfaces` in the same `#r` cell as the other NuGet packages, before any Firestore usage cell is executed.
 
-## Recommendations
+## C# Data Ingestion - SQL Server, BigQuery, Firestore Recommendations
 
 - Always run the warning-suppression cell (CS1701/CS1702) first — without it, .NET 10 emits noise for every Google NuGet package that targets .NET 8/9.
 - Store credentials in environment variables (`GOOGLE_APPLICATION_CREDENTIALS`, `SQL_SERVER_CONN`), never hardcoded in notebook cells.
@@ -1900,7 +1900,7 @@ Console.WriteLine("  Local exports cleaned up");
 - Clean up staging tables, GCS prefixes, and local export directories at the end of each session to avoid quota and cost surprises.
 - Test each ingestion path with the 2.5K tier first to catch auth and schema errors cheaply before running the expensive 750K tier.
 
-## Troubleshooting
+## C# Data Ingestion - SQL Server, BigQuery, Firestore Troubleshooting
 
 #### `SqlException: Cannot open server ... firewall`
 The SQL Server endpoint is unreachable or the firewall does not allow the client IP. Verify `SQL_SERVER_HOST` and the server's allow-list before retrying the load.

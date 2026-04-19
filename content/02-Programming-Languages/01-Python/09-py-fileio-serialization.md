@@ -1675,7 +1675,7 @@ shutil.rmtree(tmp)
       fsspec.open('abfs://container/data.csv')  # Azure Blob
       fsspec.open('https://api.example.com/data') # HTTP
 
-## Warnings
+## Python File I/O and Serialization Warnings
 
 > [!warning] Pickle is insecure — arbitrary code execution
 >
@@ -1709,7 +1709,7 @@ shutil.rmtree(tmp)
 >
 > Use `orjson` (handles `datetime` natively) or pass `default=str` as a fallback encoder to `json.dumps`.
 
-## Recommendations
+## Python File I/O and Serialization Recommendations
 
 - **Always use `with` for file I/O** — guarantees cleanup even on exceptions.
 - **Always specify `encoding='utf-8'`** — makes code portable across Windows, Linux, and macOS.
@@ -1720,7 +1720,7 @@ shutil.rmtree(tmp)
 - **Use `fsspec` for cloud-portable file access** — same API for local, S3, GCS, Azure Blob.
 - **Never unpickle untrusted data** — use JSON/Parquet/Avro for data exchange.
 
-## Troubleshooting
+## Python File I/O and Serialization Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

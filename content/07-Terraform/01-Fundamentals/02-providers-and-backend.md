@@ -587,7 +587,7 @@ flowchart LR
 - [gcloud-authentication](https://alp78.github.io/elysium/06-GCP/Core/gcloud-authentication) — Application Default Credentials (ADC) used by the provider
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — CI/CD pipelines with partial backend configuration
 
-## References
+## Terraform Providers and Backend References
 
 - [Terraform GCS Backend Documentation](https://developer.hashicorp.com/terraform/language/settings/backends/gcs)
 - [Google Provider Documentation](https://registry.terraform.io/providers/hashicorp/google/latest/docs)

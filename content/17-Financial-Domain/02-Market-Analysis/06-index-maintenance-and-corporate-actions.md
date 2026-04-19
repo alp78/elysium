@@ -687,7 +687,7 @@ For formal definitions of the index construction terms discussed above, see the 
 - [ai-augmented-data-engineering](https://alp78.github.io/elysium/16-AI-and-Prompts/LLM-Pipelines/ai-augmented-data-engineering) — LLM pipelines for ESG data extraction and anomaly explanation
 - [leadership-and-collaboration](https://alp78.github.io/elysium/15-DataOps/leadership-and-collaboration) — Incident response and post-mortems for financial data incidents
 
-## References
+## Index Maintenance and Corporate Actions References
 
 - EU Benchmarks Regulation (BMR): https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32016R1011
 - IOSCO Principles for Financial Benchmarks: https://www.iosco.org/library/pubdocs/pdf/IOSCOPD415.pdf

@@ -1073,7 +1073,7 @@ These notes extend the Monitoring workflow into log investigation and broader ob
 - [pubsub-messaging](https://alp78.github.io/elysium/06-GCP/Serverless/pubsub-messaging) - Backlog and lag interpretation for queue-driven systems
 - [dataset-and-table-management](https://alp78.github.io/elysium/06-GCP/BigQuery/dataset-and-table-management) - BigQuery-side workload metrics and cost questions
 
-## References
+## Cloud Monitoring Metrics References
 
 These official references were used to verify metric kinds, API surfaces, notification channels, uptime behavior, and pricing.
 

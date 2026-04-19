@@ -622,7 +622,7 @@ If VMs were created manually or via `gcloud` before Terraform adoption, import t
 - [iap-tunneling](https://alp78.github.io/elysium/01-Shell/Networking/iap-tunneling) — IAP tunnel SSH access patterns
 - [github-actions-ci-cd](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — CI/CD workflows for Terraform plan and apply
 
-## References
+## Terraform Compute References
 
 - [google_compute_instance — Terraform Registry](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance)
 - [google_compute_instance_template — Terraform Registry](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_template)

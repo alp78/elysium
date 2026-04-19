@@ -1833,7 +1833,7 @@ PROJECT_NUMBER  # Project number
     name: projects/922174528852/locations/global/workloadIdentityPools/github-pool
     state: ACTIVE
 
-## Warnings
+## Python Security Setup Warnings
 
 > [!warning] Never commit the service account key file to version control
 >
@@ -1867,7 +1867,7 @@ PROJECT_NUMBER  # Project number
 >
 > The `--quiet` flag suppresses interactive confirmation. After enabling, use `gcloud services list --enabled` to verify all required APIs are active before proceeding.
 
-## Recommendations
+## Python Security Setup Recommendations
 
 - Run each section in the order presented — later sections depend on resources created earlier (e.g., SQL instance must exist before the populate-data cells run).
 - Store all project constants (project ID, region, key ring name, bucket name) in a single cell at the top of the notebook; do not hard-code them inline across cells.
@@ -1878,7 +1878,7 @@ PROJECT_NUMBER  # Project number
 - Use `gcloud config configurations` to manage multiple project contexts; switching the active project incorrectly is the most common source of resources being created in the wrong project.
 - Rotate secrets in Secret Manager after the initial setup if the lab runs longer than one sprint; treat the initial password as a bootstrap credential.
 
-## Troubleshooting
+## Python Security Setup Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|
@@ -1891,7 +1891,7 @@ PROJECT_NUMBER  # Project number
 | SSH key registration fails: `quota exceeded` | GCP project-level SSH key quota has been reached | Remove unused SSH keys from the project metadata in the GCP console before re-adding |
 | `gcloud artifacts repositories create` fails with `ALREADY_EXISTS` | The Docker repository was provisioned in a prior run | Skip creation and verify the existing repository with `gcloud artifacts repositories describe` |
 
-## Cross-References
+## Python Security Setup Cross-References
 
 - [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — theoretical foundation: identity models, credential types, OAuth2 flows
 - [gcp-cloud-sql](https://alp78.github.io/elysium/06-GCP/Services/gcp-cloud-sql) — Cloud SQL configuration reference including SSL and CMEK options

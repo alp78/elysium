@@ -1384,7 +1384,7 @@ print(run_step(lambda n: n * 3, 4))
 12
 ```
 
-## Troubleshooting
+## Python Functions Troubleshooting
 
 Use these failure signatures to decide whether the bug is a binding issue, a state-sharing problem, or a mismatch between a signature and how callers invoke it.
 

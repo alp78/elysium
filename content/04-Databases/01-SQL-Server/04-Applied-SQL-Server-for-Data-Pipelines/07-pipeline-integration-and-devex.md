@@ -600,7 +600,7 @@ GRANT CONNECT ANY DATABASE TO dd_agent;
 EXEC sp_addrolemember 'db_datareader', 'dd_agent';
 ```
 
-## References
+## SQL Server Pipeline Integration and Developer Experience References
 
 - [sys.dm_exec_sql_text](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-exec-sql-text-transact-sql)
 - [sys.query_store_query_text](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-query-store-query-text-transact-sql)

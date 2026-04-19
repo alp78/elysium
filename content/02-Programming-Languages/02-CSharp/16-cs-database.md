@@ -227,7 +227,7 @@ status: complete
 >
 > > [!warning] Calling `.ToList()` before `.Where()` loads the entire table into memory before filtering — always filter server-side first.
 
-## Setup
+## C# Database Setup
 
 ### NuGet packages and imports
 
@@ -2248,14 +2248,14 @@ Migrations are the killer feature of EF Core — schema changes are version-cont
 C# code, not ad-hoc SQL scripts. Not executable in notebooks (requires project + CLI),
 but this is the production workflow.
 
-#### Setup
+#### Migrations and Reference Setup
 ```bash
 dotnet add package Microsoft.EntityFrameworkCore.SqlServer
 dotnet add package Microsoft.EntityFrameworkCore.Design
 dotnet tool install dotnet-ef
 ```
 
-#### Workflow
+#### Migrations and Reference Workflow
 1. Modify entity classes (add property, change type, add table)
 2. `dotnet ef migrations add AddVolumeColumn` → generates C# migration with `Up()` and `Down()`
 3. `dotnet ef database update` → applies pending migrations
@@ -3420,7 +3420,7 @@ results
 > **Python equivalents:** `SqliteConnection` → `sqlite3.connect()` | `SqlConnection` → `pyodbc.connect()` | `SqlCommand` → `cursor.execute()` | Dapper → `pd.read_sql()`/SQLAlchemy
 >
 
-## Warnings
+## C# Database Warnings
 
 > [!warning] SQL injection via string interpolation
 >
@@ -3462,7 +3462,7 @@ results
 >
 > Register `DbContext` as `AddDbContext<T>` (scoped) in ASP.NET Core DI. For background workers, create a scope: `using var scope = sp.CreateScope(); var db = scope.ServiceProvider.GetRequiredService<MyDb>();`.
 
-## Recommendations
+## C# Database Recommendations
 
 - **Always use `using` or `await using`** for `SqlConnection`, `SqlCommand`, `SqlDataReader`, and `DbContext` — guarantees disposal and connection pool return.
 - **Parameterise every query** — use `@param` placeholders in ADO.NET/Dapper; rely on EF Core LINQ for automatic parameterisation.
@@ -3473,7 +3473,7 @@ results
 - **Use `SqlBulkCopy` for high-volume inserts** — orders of magnitude faster than row-by-row `ExecuteNonQuery` for bulk loads into SQL Server.
 - **Use DuckDB for in-process analytics** — scanning Parquet/CSV directly with DuckDB SQL avoids loading data into a DataFrame first; preferred for ad-hoc analytical queries.
 
-## Troubleshooting
+## C# Database Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|

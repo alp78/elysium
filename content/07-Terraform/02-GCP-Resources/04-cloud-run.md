@@ -641,7 +641,7 @@ gcloud logging read "resource.type=cloud_run_job AND resource.labels.job_name=da
 
 - [GitHub Actions CI/CD](https://alp78.github.io/elysium/10-CICD/GitHub-Actions/github-actions-ci-cd) — workflow that builds and pushes container images
 
-## References
+## Terraform Cloud Run References
 
 - [google_cloud_run_v2_service](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service)
 - [google_cloud_run_v2_job](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_job)

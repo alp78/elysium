@@ -330,7 +330,7 @@ Compression is orthogonal to format — most formats support multiple codecs. Ch
 ## Related
 - [data-flow-architecture](https://alp78.github.io/elysium/14-Data-Architecture/Pipeline-Patterns/data-flow-architecture) — format selection matrix by pipeline scenario and data movement topology
 
-## References
+## Data Architecture Serialization Formats References
 
 - [Apache Parquet format](https://parquet.apache.org/)
 - [Apache Avro specification](https://avro.apache.org/docs/current/spec.html)

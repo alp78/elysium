@@ -561,7 +561,7 @@ When the organization boundary exists, the safest rollout order is:
 - [[01-cloud-logging]] - Cloud Audit Logs and investigation workflows used when VPC-SC denials appear.
 - [[02-gcs-object-operations]] - Cloud Storage transfer operations that are often constrained by perimeter design.
 
-## References
+## GCP VPC Service Controls References
 
 - https://cloud.google.com/vpc-service-controls/docs/overview
 - https://cloud.google.com/vpc-service-controls/docs/dry-run-mode

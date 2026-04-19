@@ -175,7 +175,7 @@ status: complete
 > >
 > > If the SQL Server instance is remote, the data file must be copied to the server (or a UNC share accessible from the server) before `BULK INSERT` can read it.
 
-## Setup
+## Python Data Transfer - GCS, SQL Server, BigQuery Setup
 
 Imports all standard-library and third-party dependencies, loads environment variables from `.env`, initialises GCS/BigQuery/KMS clients, and defines shared formatting helpers and benchmark file sets used throughout this notebook.
 
@@ -947,7 +947,7 @@ Cleanup done
 ```
 ## Copy files from Local to VM
 
-### Setup
+### Copy files from Local to VM Setup
 
 Connection constants, SSH helper, and benchmark infrastructure for local-to-VM transfers.
 
@@ -1786,7 +1786,7 @@ Compares three concurrency strategies for uploading 8 medium-size files to GCS u
 method (`streamed` / `blob.upload_from_file`, ranked #1 by mean throughput): sequential, multithreaded
 (8 threads), and multiprocessing (8 processes). Measures total wall-clock time and aggregate throughput.
 
-### Setup
+### Parallel Transfer Setup
 
 Test file generation and benchmark helper infrastructure for parallel transfer experiments.
 
@@ -2196,7 +2196,7 @@ large       1.19 GB     1.3min      15.1 MB/s
 Benchmarks compression speed and ratio for the large upload file (~1.19 GB CSV) and a folder of 1000 small files.
 Methods: gzip, bz2, lzma (xz), zstd, lz4, brotli, zip archive.
 
-### Setup
+### File Compression Benchmarks Setup
 
 Test data generation and benchmark helper for compression experiments.
 
@@ -2988,7 +2988,7 @@ Deleted pipeline/ local directory
 Cleanup done
 
 ```
-## Warnings
+## Python Data Transfer - GCS, SQL Server, BigQuery Warnings
 
 > [!warning] Single-threaded uploads saturate long before network capacity
 >
@@ -3022,7 +3022,7 @@ Cleanup done
 >
 > Stage the file in GCS first (even if only transiently), then trigger a `LoadJobConfig`-based load job. The load job runs server-side, does not consume streaming insert quota, and typically completes a 1 GB Parquet file in under 30 seconds.
 
-## Recommendations
+## Python Data Transfer - GCS, SQL Server, BigQuery Recommendations
 
 - Set `worker_type=PROCESS` (not `THREAD`) in Transfer Manager for CPU-bound compression or checksum operations; use `THREAD` for pure I/O-bound transfers where GIL contention is minimal.
 - Always enable `checksums=True` in Transfer Manager uploads so GCS verifies CRC32C on ingestion — this costs negligible latency and catches corruption before the object is committed.
@@ -3033,7 +3033,7 @@ Cleanup done
 - Store the GCS prefix and bucket name in `.env` and load them with `python-dotenv`; hard-coding them in notebook cells makes the pipeline non-portable across environments.
 - After any pipeline run that writes intermediate chunks, always execute the cleanup cell — orphaned chunks in GCS accumulate storage charges and can interfere with the next run if prefixes collide.
 
-## Troubleshooting
+## Python Data Transfer - GCS, SQL Server, BigQuery Troubleshooting
 
 ### Failure modes
 

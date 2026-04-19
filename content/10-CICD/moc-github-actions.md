@@ -41,7 +41,7 @@ mindmap
 >
 > Real-world CI/CD deployment, data engineering pipeline automation, and troubleshooting common GitHub Actions failures.
 
-## Cross-References
+## GitHub Actions Cross-References
 
 - [Git](https://alp78.github.io/elysium/08-Git/moc-git) — Git events that trigger GitHub Actions workflows
 - [Terraform](https://alp78.github.io/elysium/07-Terraform/moc-terraform) — Terraform plan/apply automated via GitHub Actions

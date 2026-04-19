@@ -890,7 +890,7 @@ Standard file layout for a Terraform project targeting GCP. File names are a con
 - [plan-apply-destroy](https://alp78.github.io/elysium/07-Terraform/Fundamentals/plan-apply-destroy) — The workflow that turns HCL into real infrastructure
 - [state-management](https://alp78.github.io/elysium/07-Terraform/Fundamentals/state-management) — How Terraform tracks what it has created
 
-## References
+## HCL Syntax Basics References
 
 - [HCL Native Syntax Specification](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md)
 - [Terraform Configuration Language](https://developer.hashicorp.com/terraform/language)

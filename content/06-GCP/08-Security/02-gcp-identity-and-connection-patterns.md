@@ -542,7 +542,7 @@ For the detailed CLI mechanics behind user auth, ADC, and WIF credential files, 
 - [[02-vm-ssh-and-file-transfer]] - IAP tunnel and private VM access patterns.
 - [[03-cloud-run-jobs-vs-services]] - Runtime-attached service accounts and serverless execution context.
 
-## References
+## GCP Identity and Connection Patterns References
 
 - https://cloud.google.com/docs/authentication/application-default-credentials
 - https://cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines

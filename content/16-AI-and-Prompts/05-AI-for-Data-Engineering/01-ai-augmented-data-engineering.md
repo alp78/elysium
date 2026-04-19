@@ -331,7 +331,7 @@ If the team saves time locally but increases downstream clean-up work, the AI la
 - [[04-github-actions-data-engineering]]
 - [[03-secrets-management]]
 
-## References
+## AI-Augmented Data Engineering References
 
 - ChromaDB enrichment: `Big Book of Data Engineering.pdf`
 - ChromaDB enrichment: `Financial Data Engineering.epub`

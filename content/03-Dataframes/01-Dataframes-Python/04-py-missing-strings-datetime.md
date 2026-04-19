@@ -2146,7 +2146,7 @@ display(asml_pl_sorted.with_columns(
 >
 > Decide up front whether to keep the warm-up nulls, lower the threshold with `min_periods`, or drop the incomplete prefix before downstream use. Treat the first `n-1` rows as a defined warm-up zone, not as a data quality bug.
 
-## Recommendations
+## Python Missing Data, Strings and DateTime Recommendations
 
 1. **Standardize null representation at ingestion** — convert all missing-value sentinels (`""`, `"N/A"`, `"NULL"`, `-999`) to actual null/NaN immediately after loading. Use `null_values=` (Polars) or `na_values=` (Pandas) in the reader.
 2. **Use nullable dtypes in Pandas** — `pd.Int64Dtype()`, `pd.StringDtype()`, `pd.BooleanDtype()` prevent NaN-induced type promotion.

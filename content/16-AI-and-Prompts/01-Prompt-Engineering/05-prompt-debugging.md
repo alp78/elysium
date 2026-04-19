@@ -311,7 +311,7 @@ Judge models are useful, but only after comparing their scoring behavior to huma
 - [[02-ai-observability-and-operations]]
 - [[01-ai-governance-and-security]]
 
-## References
+## Prompt Debugging References
 
 - ChromaDB enrichment: `Prompt Engineering for LLMs The Art and Science of Building Large Language Model-Based Applications.epub`
 - ChromaDB enrichment: `LLM Prompt Engineering For Developers The Art and Science of Unlocking LLMs True Potential.pdf`

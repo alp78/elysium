@@ -1516,7 +1516,7 @@ print(sum(evens))
 12
 ```
 
-## Troubleshooting
+## Python Performance and Code Quality Troubleshooting
 
 ### Common diagnostics
 

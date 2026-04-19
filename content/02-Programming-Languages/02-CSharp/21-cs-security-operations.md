@@ -1238,7 +1238,7 @@ Console.WriteLine($"  First line:   {body.Split('\n')[0]}");
 >
 > **C# advantages:** `SqlClient` is native (not FreeTDS), `SqlBulkCopy` streams directly (no temp files), `AesGcm` built into `System.Security.Cryptography`, compile-time type safety
 
-## Warnings
+## C# Security Operations Warnings
 
 > [!warning] Using `TrustServerCertificate=True` in Cloud SQL connection strings
 >
@@ -1272,7 +1272,7 @@ Console.WriteLine($"  First line:   {body.Split('\n')[0]}");
 >
 > `document.UpdateAsync(updates)` modifies only the specified fields. Alternatively, `SetAsync(obj, SetOptions.MergeAll)` merges the new values without removing existing fields.
 
-## Recommendations
+## C# Security Operations Recommendations
 
 - Use `GoogleCredential.GetApplicationDefaultAsync()` as the default authentication strategy; only fall back to `GoogleCredential.FromFile()` when ADC is unavailable (e.g., unit test environments without a metadata server).
 - Store the service account key file path in an environment variable (`GOOGLE_APPLICATION_CREDENTIALS`) rather than hard-coding it; this keeps the path out of source control and works consistently across dev and CI.
@@ -1283,7 +1283,7 @@ Console.WriteLine($"  First line:   {body.Split('\n')[0]}");
 - Verify CMEK after every CMEK-enabled upload or table creation by calling `GetObject` / `GetTable` and checking the `KmsKeyName` field; do not assume the key was applied because it was specified.
 - When using `AesGcm`, generate a unique 12-byte nonce per encryption operation with `RandomNumberGenerator.GetBytes(12)`; never reuse a nonce with the same key.
 
-## Troubleshooting
+## C# Security Operations Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|
@@ -1296,7 +1296,7 @@ Console.WriteLine($"  First line:   {body.Split('\n')[0]}");
 | `StorageClient.UploadObject` succeeds but `KmsKeyName` is null on the returned object | `UploadObjectOptions.KmsKeyName` was not set, or the SA lacks `cloudkms.cryptoKeyVersions.useToEncrypt` | Confirm `UploadObjectOptions` is passed with the correct KMS key resource path; verify KMS IAM binding for the SA |
 | `UrlSigner.SignAsync` throws `InvalidOperationException: Unable to sign` | The signing SA lacks `iam.serviceAccounts.signBlob` | Grant `roles/iam.serviceAccountTokenCreator` to the caller SA on the target signing SA: `gcloud iam service-accounts add-iam-policy-binding <signing-sa> --member=... --role=roles/iam.serviceAccountTokenCreator` |
 
-## Cross-References
+## C# Security Operations Cross-References
 
 - [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — identity model, credential types, and OAuth2 flows
 - [gcp-cloud-sql](https://alp78.github.io/elysium/06-GCP/Services/gcp-cloud-sql) — Cloud SQL SSL configuration, CMEK, and `SqlClient` connection patterns

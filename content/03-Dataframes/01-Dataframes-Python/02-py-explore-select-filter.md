@@ -10236,7 +10236,7 @@ display(Markdown(comparison))
 > Pass `random_state=` in Pandas and `seed=` in Polars for any sample that will
 > be inspected, committed, tested, or compared across runs.
 
-## Recommendations
+## Python Explore, Select and Filter Recommendations
 
 1. **Profile before transforming** — run `describe()`, `null_count()`, `value_counts()`, and `n_unique()` on every dataset before writing any transformation logic. This takes seconds and prevents hours of debugging.
 2. **Filter early, select early** — push filters and column selection as close to the data source as possible. In Polars lazy mode, this enables predicate pushdown and projection pushdown.

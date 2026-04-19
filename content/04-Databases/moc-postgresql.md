@@ -36,7 +36,7 @@ The working lab for this chapter is a dedicated Dockerized PostgreSQL 16 instanc
 >
 > `COPY`, staged loads, idempotent publish patterns, incremental transforms, medallion-style modeling, and pipeline anti-patterns in PostgreSQL.
 
-## Cross-References
+## PostgreSQL Cross-References
 
 - [[moc-sql-server]] — the parallel SQL Server track for engine-to-engine comparison
 - [DB Queries](https://alp78.github.io/elysium/05-DB-Queries/moc-db-queries) — executable SQL notebooks that should eventually gain a PostgreSQL sibling track

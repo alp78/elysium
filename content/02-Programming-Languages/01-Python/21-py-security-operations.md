@@ -3188,7 +3188,7 @@ Restart: gcloud compute instances start notebook-vm --zone=europe-west1-b
 > - Prefer stopping/disabling resources over deleting them during a review period.
 > - Use `gcloud projects delete` only for completely disposable sandbox projects — it triggers a 30-day soft-delete window before permanent removal, giving time to recover if run by mistake.
 
-## Warnings
+## Python Security Operations - Encryption, Certificates and Identity Warnings
 
 ### Respect the `Cloud KMS` payload limit
 
@@ -3207,7 +3207,7 @@ Do not log token strings, signed URLs, or cached bearer material. Pass the `cred
 Store the full `kmsKeyName` or version-qualified key reference next to each encrypted payload. That metadata is the minimum needed to audit rotations, re-encrypt old records, and recover from a destroyed key version.
 
 
-## Recommendations
+## Python Security Operations - Encryption, Certificates and Identity Recommendations
 
 ### Prefer ephemeral identities over key files
 
@@ -3230,7 +3230,7 @@ For `Cloud SQL`, prefer `Auth Proxy` or tightly scoped authorized networks inste
 Export any data that must survive a review window before deleting buckets, datasets, or Firestore content. Stopping or disabling a resource is the safer default when the environment might still need rollback or forensic review.
 
 
-## Troubleshooting
+## Python Security Operations - Encryption, Certificates and Identity Troubleshooting
 
 ### Verify the active credential source
 
@@ -3307,7 +3307,7 @@ roles/iam.serviceAccountTokenCreator
 - Wait until Firestore reports `ACTIVE` before retrying CRUD calls against a freshly created database.
 - For signed URLs, confirm the signing identity has `roles/iam.serviceAccountTokenCreator` and regenerate the URL if the expiry window has passed.
 
-## Cross-References
+## Python Security Operations - Encryption, Certificates and Identity Cross-References
 
 - [gcp-identity-and-connection-patterns](https://alp78.github.io/elysium/06-GCP/Security/gcp-identity-and-connection-patterns) — identity model, credential types, and OAuth2 flows
 - [gcp-cloud-sql](https://alp78.github.io/elysium/06-GCP/Services/gcp-cloud-sql) — Cloud SQL SSL configuration, CMEK, and connection patterns

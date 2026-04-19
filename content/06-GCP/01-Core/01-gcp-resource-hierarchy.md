@@ -1056,7 +1056,7 @@ The CLI is useful for discovery and one-off administration, but infrastructure-a
 - [Service Accounts and IAM](https://alp78.github.io/elysium/06-GCP/Security/service-accounts-and-iam)
 - [gcloud Configurations](https://alp78.github.io/elysium/06-GCP/01-Core/04-gcloud-configurations)
 
-## References
+## GCP Resource Hierarchy References
 
 - [Resource hierarchy overview](https://cloud.google.com/resource-manager/docs/cloud-platform-resource-hierarchy)
 - [Creating and managing projects](https://cloud.google.com/resource-manager/docs/creating-managing-projects)

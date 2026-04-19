@@ -898,7 +898,7 @@ Use this table as a quick reference for the cmdlet parameters after the runnable
 
 The original recommendation matrix is more useful as executable platform-specific guidance. The Linux items that are already demonstrated above stay in their feature sections; the entries here cover the defaults and distinctions that benefit from explicit verification.
 
-### Linux | recommended patterns | safer defaults
+### Linux | brace expansion and globbing recommended patterns | safer defaults
 
 #### Enable `extglob`, `globstar`, and `failglob` in scripts that depend on them
 
@@ -938,7 +938,7 @@ nocaseglob     	on
 cdspell        	on
 ```
 
-### PowerShell | recommended patterns | file matching
+### PowerShell | brace expansion and globbing recommended patterns | file matching
 
 #### Prefer `-Filter` for one wildcard and `-Include` for multiple wildcards
 
@@ -1006,7 +1006,7 @@ What if: Performing the operation "Remove File" on target "C:\Users\aperi\AppDat
 
 Each troubleshooting item below replaces the old matrix with a concrete symptom, a runnable proof, and the correction.
 
-### Linux | troubleshooting | common failures
+### Linux | brace expansion and globbing troubleshooting | common failures
 
 #### Unmatched globs should fail early in scripts
 
@@ -1070,7 +1070,7 @@ sh -c 'echo file{1..3}.txt'
 file{1..3}.txt
 ```
 
-### PowerShell | troubleshooting | common failures
+### PowerShell | brace expansion and globbing troubleshooting | common failures
 
 #### `Get-ChildItem -Include` returns nothing without `-Recurse` or `.\*`
 

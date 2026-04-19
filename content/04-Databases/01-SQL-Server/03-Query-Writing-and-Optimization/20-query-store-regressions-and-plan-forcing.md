@@ -822,7 +822,7 @@ Treat `current_storage_size_mb` as healthy when it stays well below the maximum.
 > - Re-evaluate all active forces and hints quarterly.
 > - Use `sys.query_store_plan` and `sys.query_store_query_hints` as your source of truth — never trust memory or tribal knowledge about what is currently forced or hinted.
 
-## References
+## SQL Server Query Store Regressions and Plan Forcing References
 
 - [Query Store overview](https://learn.microsoft.com/en-us/sql/relational-databases/performance/monitoring-performance-by-using-the-query-store)
 - [Best practices for monitoring workloads with Query Store](https://learn.microsoft.com/en-us/sql/relational-databases/performance/best-practice-with-the-query-store)

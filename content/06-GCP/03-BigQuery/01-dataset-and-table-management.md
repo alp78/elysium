@@ -1116,7 +1116,7 @@ Canonical type names and their accepted aliases are separate from schema mode an
 - [BigQuery query patterns](https://alp78.github.io/elysium/05-DB-Queries/BigQuery/bq-fundamentals) — SQL query patterns, window functions, and cost optimization against BQ tables
 - [BigQuery Terraform provisioning](https://alp78.github.io/elysium/07-Terraform/Block-Library/data-services) — IaC definitions for datasets, tables, and IAM bindings via `google_bigquery_dataset` and `google_bigquery_table`
 
-## References
+## GCP Dataset and Table Management References
 
 - [bq CLI reference](https://cloud.google.com/bigquery/docs/reference/bq-cli-reference) — Complete flag reference for all `bq` subcommands
 - [BigQuery data types](https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types) — Canonical type names, aliases, and storage semantics

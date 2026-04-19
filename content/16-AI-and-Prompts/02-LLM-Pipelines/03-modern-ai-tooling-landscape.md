@@ -302,7 +302,7 @@ Assess tooling choices against:
 - [[02-ai-observability-and-operations]]
 - [[01-ai-governance-and-security]]
 
-## References
+## Modern AI Tooling Landscape References
 
 - ChromaDB enrichment: `Agentic AI.pdf`
 - ChromaDB enrichment: `Learning LangChain Building AI and LLM Applications with LangChain and LangGraph.epub`

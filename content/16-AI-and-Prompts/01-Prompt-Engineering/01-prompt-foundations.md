@@ -328,7 +328,7 @@ If these fail, changing the model rarely fixes the real problem. The prompt cont
 - [[01-llm-pipeline-architecture]]
 - [[01-ai-governance-and-security]]
 
-## References
+## Prompt Foundations References
 
 - ChromaDB enrichment: `Prompt Engineering for LLMs The Art and Science of Building Large Language Model-Based Applications.epub`
 - ChromaDB enrichment: `Prompt Design Patterns Mastering the Art and Science of Prompt Engineering.epub`

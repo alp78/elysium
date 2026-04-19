@@ -828,7 +828,7 @@ Thread pool: 16
 > stay on the streaming path. If they do not, reduce the query or accept that it
 > will run as a normal in-memory collect.
 
-## Recommendations
+## Python Lazy API and Performance Recommendations
 
 1. **Use lazy for anything that touches disk** — `scan_parquet()`, `scan_csv()`, `scan_ndjson()` enable predicate and projection pushdown that eager reads cannot match.
 2. **Inspect query plans** — call `.explain()` on every production query to verify that pushdown and fusion are active. If the plan shows a full scan where you expected pushdown, the filter expression may be too complex.

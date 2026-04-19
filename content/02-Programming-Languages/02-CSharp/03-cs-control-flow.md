@@ -1540,7 +1540,7 @@ Console.WriteLine(string.Join(", ", squares));
 1, 4, 9, 16
 ```
 
-## Troubleshooting
+## C# Control Flow Troubleshooting
 
 ### Compiler and runtime diagnosis
 

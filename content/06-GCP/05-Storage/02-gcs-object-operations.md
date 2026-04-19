@@ -988,7 +988,7 @@ The object name is part of the data model. A good prefix layout makes lifecycle 
 - [[03-cloud-run-jobs-vs-services]] - Cloud Run is a common consumer of object-arrival events and signed delivery paths.
 - [[01-service-accounts-and-iam]] - Signer identities, least privilege, and bucket/object access roles.
 
-## References
+## GCS Object Operations References
 
 - https://cloud.google.com/sdk/gcloud/reference/storage
 - https://docs.cloud.google.com/storage/docs/metadata

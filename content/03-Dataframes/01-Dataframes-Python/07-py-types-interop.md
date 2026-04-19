@@ -2443,7 +2443,7 @@ print(raw.decode("latin-1").splitlines())
 ['city', 'München', 'São Paulo']
 ```
 
-## Troubleshooting
+## Python Advanced Types and Interop Troubleshooting
 
 ### Domain and interop failures
 

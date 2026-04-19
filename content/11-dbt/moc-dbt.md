@@ -79,7 +79,7 @@ mindmap
 >
 > Running dbt in production — Airflow integration, CI/CD pipelines, documentation and lineage, observability, performance tuning, troubleshooting, and adapter-specific patterns for BigQuery, SQL Server, and cross-adapter compatibility.
 
-## Cross-References
+## dbt Cross-References
 
 - [Data Architecture](https://alp78.github.io/elysium/14-Data-Architecture/moc-data-architecture) — dbt transformation layer theory and medallion architecture
 - [SQL Server](https://alp78.github.io/elysium/04-Databases/moc-sql-server) — SQL Server pipeline patterns that dbt automates

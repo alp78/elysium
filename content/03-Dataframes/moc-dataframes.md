@@ -56,7 +56,7 @@ mindmap
 >
 > Visualization, database connectivity, testing frameworks, and migration guides for DataFrame workflows.
 
-## Cross-References
+## DataFrames Cross-References
 
 - [Programming Languages](https://alp78.github.io/elysium/02-Programming-Languages/moc-programming-languages) — Python and C# foundations these notebooks build on
 - [DB Queries](https://alp78.github.io/elysium/05-DB-Queries/moc-db-queries) — SQL-first approach to the same data operations

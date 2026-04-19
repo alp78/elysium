@@ -367,7 +367,7 @@ print(f'  GCS:        gs://{BUCKET_NAME}')
       seclab-scores (seclab-dev-ap-26)
       gs://seclab-dev-ap-26-data
 
-## Setup
+## Python Data Ingestion - SQL Server, BigQuery, Firestore Setup
 
 Helper functions and benchmark infrastructure shared across all ingestion sections. Run these cells once before executing any benchmark.
 
@@ -2490,7 +2490,7 @@ print('  Cleanup done')
       exports/ and staging/ cleaned
       Cleanup done
 
-## Warnings
+## Python Data Ingestion - SQL Server, BigQuery, Firestore Warnings
 
 > [!warning] Never use `INSERT` in a loop for bulk loads
 >
@@ -2524,7 +2524,7 @@ print('  Cleanup done')
 >
 > Stream the GCS object as `BytesIO`, parse in chunks (`pd.read_csv(..., chunksize=10000)`), and pipe each chunk to `fast_executemany` without materialising the full DataFrame.
 
-## Recommendations
+## Python Data Ingestion - SQL Server, BigQuery, Firestore Recommendations
 
 - Always set `TQDM_DISABLE=1` at the top of the notebook to suppress pandas_gbq progress bars that pollute benchmark output.
 - Store credentials in environment variables (`GOOGLE_APPLICATION_CREDENTIALS`, `SQL_SERVER_CONN`), never hardcoded in notebook cells.
@@ -2535,7 +2535,7 @@ print('  Cleanup done')
 - When transferring between services (e.g. BQ → SQL Server), avoid materialising the full result as a DataFrame; stream in pages using the BigQuery Storage Read API or `query_job.result().pages`.
 - Clean up staging tables, GCS prefixes, and local export directories at the end of each benchmark session to avoid quota and cost surprises.
 
-## Troubleshooting
+## Python Data Ingestion - SQL Server, BigQuery, Firestore Troubleshooting
 
 Match the failure to the narrowest boundary first: `network`, `schema`, `write mode`, `buffer flush`, `memory`, `TLS`, or `region`.
 

@@ -1269,7 +1269,7 @@ Plotly.NET.CSharp.Chart.Bar<double, string, string>(
 Directory.Delete(benchDir, recursive: true);
 ```
 
-## Warnings
+## C# Serialization Formats Warnings
 
 > [!warning] Parquet.NET API differs from PyArrow
 >
@@ -1295,7 +1295,7 @@ Directory.Delete(benchDir, recursive: true);
 >
 > Use code-generated specific classes for production workloads. Reserve generic API for tools and ad-hoc queries.
 
-## Recommendations
+## C# Serialization Formats Recommendations
 
 - **Use Parquet for data lakes and analytical storage** — columnar layout, compression, schema embedded. Parquet.NET provides native .NET access.
 - **Use Protobuf for gRPC and low-latency IPC** — smallest payload, fastest parse. Integrate `protoc` into MSBuild.
@@ -1304,7 +1304,7 @@ Directory.Delete(benchDir, recursive: true);
 - **Use `BinaryPrimitives` for endianness-aware binary I/O** — explicit big/little-endian methods prevent protocol bugs.
 - **Choose compression by workload** — Snappy for speed, Zstd for balance, Gzip for maximum compression.
 
-## Troubleshooting
+## C# Serialization Formats Troubleshooting
 
 | Problem | Cause | Fix |
 |---|---|---|
