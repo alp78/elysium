@@ -8,7 +8,7 @@ aliases: [cp, mv, rm, chmod, chown, mkdir, file permissions, safe delete, file o
 keywords: [cp, mv, rm, chmod, chown, mkdir, rsync, file copy, file move, delete, permissions, ownership, octal permissions, safe delete, trash, archive mode, disk usage, docker permissions, airflow uid]
 description: "Safe file copying, moving, and deletion patterns for production environments. Covers rsync archive mode, chmod octal notation, chown for Docker/Airflow containers, and the safe delete pattern using a trash directory."
 created: 2026-03-22
-updated: 2026-04-15
+updated: 2026-04-24
 status: complete
 ---
 
@@ -430,6 +430,89 @@ removed directory '/tmp/elysium-file-manipulation/rm-force/directory/nested'
 removed directory '/tmp/elysium-file-manipulation/rm-force/directory/'
 ```
 
+#### Empty visible contents with a wildcard
+
+Use this form for quick interactive cleanup when the path is already confirmed and hidden dotfiles should remain in place. It is typically triggered when the visible generated files under a directory are disposable but local configuration such as `.env` should survive. The command runs in a Linux shell, is state-changing, and depends on Bash filename expansion before `rm` starts. Its purpose is to remove the visible child entries without replacing the parent directory or touching default-hidden dotfiles.
+
+Bash default filename expansion does not include names that begin with `.` unless the pattern starts with `.` or `dotglob` is enabled.
+
+*Remove the visible child entries while leaving the parent directory and hidden dotfiles intact.*
+
+```bash
+rm -rf /tmp/elysium-file-manipulation/rm-wildcard-parent/*
+```
+
+*Verify that the parent still exists and that the hidden `.env` file was not matched by `*`.*
+
+```bash
+find /tmp/elysium-file-manipulation/rm-wildcard-parent -mindepth 1 -maxdepth 1 -printf '%P\n' | sort
+test -d /tmp/elysium-file-manipulation/rm-wildcard-parent && printf 'parent_exists=true\n'
+```
+
+```text
+.env
+parent_exists=true
+```
+
+#### Empty all contents while preserving the parent
+
+Use this command when the operational goal is to clear a working directory, cache directory, or staging directory without replacing the directory object itself. It is typically triggered after a job has finished and the next run expects the same mount point, permissions, ownership, ACLs, or bind target to remain. The command runs in a Linux shell, is state-changing, and deletes every child entry under the target, including hidden dotfiles. Its purpose is to clear the contents while keeping the top directory available for processes that already depend on that path.
+
+`find` is safer than a plain wildcard for this operation because it walks the directory tree itself instead of relying on shell expansion. `-mindepth 1` excludes the starting directory from the match set, and `-delete` removes each matched child entry depth-first.
+
+*Preview the exact child entries that will be removed.*
+
+```bash
+find /tmp/elysium-file-manipulation/rm-empty-parent -mindepth 1 -print | sort
+```
+
+```text
+/tmp/elysium-file-manipulation/rm-empty-parent/.env
+/tmp/elysium-file-manipulation/rm-empty-parent/nested
+/tmp/elysium-file-manipulation/rm-empty-parent/nested/file.txt
+/tmp/elysium-file-manipulation/rm-empty-parent/visible.txt
+```
+
+*Delete every child entry while keeping `/tmp/elysium-file-manipulation/rm-empty-parent` itself.*
+
+```bash
+find /tmp/elysium-file-manipulation/rm-empty-parent -mindepth 1 -delete
+```
+
+*Verify that the parent exists and is now empty.*
+
+```bash
+find /tmp/elysium-file-manipulation/rm-empty-parent -maxdepth 0 -type d -empty -printf 'contents_empty=true\n'
+test -d /tmp/elysium-file-manipulation/rm-empty-parent && printf 'parent_exists=true\n'
+```
+
+```text
+contents_empty=true
+parent_exists=true
+```
+
+#### Delete and recreate an expendable directory
+
+Use this shortcut only when the directory itself has no important metadata. It is typically triggered during disposable local test setup, not production cleanup, because the recreated directory receives fresh permissions, ownership, timestamps, ACLs, and extended attributes according to the current process and filesystem defaults. The command runs in a Linux shell, is state-changing, and removes the original directory before creating a new one at the same path. Its purpose is to get a clean empty directory when preserving the original container is not required.
+
+*Delete the original directory and create a fresh directory at the same path.*
+
+```bash
+rm -rf /tmp/elysium-file-manipulation/rm-recreate-parent && mkdir /tmp/elysium-file-manipulation/rm-recreate-parent
+```
+
+*Verify that the recreated directory is empty and now has the default mode from the current process umask.*
+
+```bash
+stat -c 'after_mode=%A' /tmp/elysium-file-manipulation/rm-recreate-parent
+find /tmp/elysium-file-manipulation/rm-recreate-parent -maxdepth 0 -type d -empty -printf 'contents_empty=true\n'
+```
+
+```text
+after_mode=drwxr-xr-x
+contents_empty=true
+```
+
 #### Safe delete — move to staging area instead
 
 A staged move gives you a recovery window. The live demo uses a fixed trash directory name so the verification stays readable, but the same pattern should be timestamped in production scripts.
@@ -485,6 +568,8 @@ Moved to /tmp/trash_20260414_061410 — verify before final deletion
 | `-i` | `rm -i file` | Interactive: prompt before each deletion |
 | `-v` | `rm -v file` | Verbose: print each deleted file |
 | `--` | `rm -- -file` | End of options: allows deleting files starting with `-` |
+| `-mindepth` | `find dir -mindepth 1 -delete` | Skip the starting directory and match only descendants |
+| `-delete` | `find dir -mindepth 1 -delete` | Delete the matched entries directly; implies depth-first traversal in GNU `find` |
 
 ### Linux | mkdir | create directory trees
 
@@ -904,6 +989,90 @@ Test-Path "$env:TEMP\ElysiumFileManipulation\remove-item-dotnet\directory"
 False
 ```
 
+#### Empty child items with a wildcard path
+
+Use this form for quick interactive cleanup when the path is already confirmed and the direct child wildcard is intentional. The wildcard targets the child entries under the directory instead of the directory object itself. The command runs in a PowerShell session, is state-changing, and `-Force` allows removal of hidden or read-only child items that match the path.
+
+*Remove every child item matched by the wildcard while leaving the parent directory in place.*
+
+```powershell
+Remove-Item "$env:TEMP\ElysiumFileManipulation\remove-item-wildcard-parent\*" -Recurse -Force
+```
+
+*Verify that the parent still exists and has no remaining child items.*
+
+```powershell
+if (-not (Get-ChildItem -LiteralPath "$env:TEMP\ElysiumFileManipulation\remove-item-wildcard-parent" -Force)) { 'contents_empty=True' }
+'parent_exists={0}' -f (Test-Path -LiteralPath "$env:TEMP\ElysiumFileManipulation\remove-item-wildcard-parent")
+```
+
+```text
+contents_empty=True
+parent_exists=True
+```
+
+#### Empty all contents while preserving the parent
+
+Use this command when the directory object must survive because another process, scheduled task, mount, share, or ACL depends on that exact path. It is typically triggered after a staging directory, cache directory, or generated-output directory has been inspected and is ready to be cleared. The command runs in PowerShell, is state-changing, and uses `Get-ChildItem -Force` so hidden and system items are part of the delete set. Its purpose is to empty the directory without resetting the parent directory's metadata.
+
+`Get-ChildItem -LiteralPath` enumerates the exact parent path without wildcard interpretation. Piping those child objects to `Remove-Item -Recurse -Force` removes files, subdirectories, hidden items, and read-only items while leaving the parent container untouched.
+
+*Preview the direct child entries that will be removed.*
+
+```powershell
+Get-ChildItem -LiteralPath "$env:TEMP\ElysiumFileManipulation\remove-item-empty-parent" -Force |
+    Select-Object -ExpandProperty Name |
+    Sort-Object
+```
+
+```text
+.env
+nested
+visible.txt
+```
+
+*Delete every child entry while keeping the parent directory itself.*
+
+```powershell
+Get-ChildItem -LiteralPath "$env:TEMP\ElysiumFileManipulation\remove-item-empty-parent" -Force |
+    Remove-Item -Recurse -Force
+```
+
+*Verify that the parent exists and is now empty.*
+
+```powershell
+if (-not (Get-ChildItem -LiteralPath "$env:TEMP\ElysiumFileManipulation\remove-item-empty-parent" -Force)) { 'contents_empty=True' }
+'parent_exists={0}' -f (Test-Path -LiteralPath "$env:TEMP\ElysiumFileManipulation\remove-item-empty-parent")
+```
+
+```text
+contents_empty=True
+parent_exists=True
+```
+
+#### Delete and recreate an expendable directory
+
+Use this shortcut only for disposable directories whose identity and metadata do not matter. It is typically triggered in local test setup, generated-output cleanup, or demo resets, not for production shares or application directories with explicit ACLs. The command runs in PowerShell, is state-changing, and creates a new directory object after deleting the old one. Its purpose is to get an empty path quickly when resetting timestamps, ACL inheritance, and other metadata is acceptable.
+
+*Delete the original directory and create a fresh directory at the same path.*
+
+```powershell
+Remove-Item -LiteralPath "$env:TEMP\ElysiumFileManipulation\remove-item-recreate-parent" -Recurse -Force
+New-Item -ItemType Directory -Path "$env:TEMP\ElysiumFileManipulation\remove-item-recreate-parent" | Out-Null
+```
+
+*Verify that the recreated directory exists and is empty.*
+
+```powershell
+'parent_exists={0}' -f (Test-Path -LiteralPath "$env:TEMP\ElysiumFileManipulation\remove-item-recreate-parent")
+if (-not (Get-ChildItem -LiteralPath "$env:TEMP\ElysiumFileManipulation\remove-item-recreate-parent" -Force)) { 'contents_empty=True' }
+```
+
+```text
+parent_exists=True
+contents_empty=True
+```
+
 | Parameter | Syntax | Description |
 |-----------|--------|-------------|
 | `-Recurse` | `-Recurse` | Delete directory and all contents |
@@ -911,6 +1080,8 @@ False
 | `-ErrorAction` | `-ErrorAction SilentlyContinue` | Suppress errors (use cautiously) |
 | `-WhatIf` | `-WhatIf` | Simulate without deleting |
 | `-Filter` | `-Filter *.tmp` | Delete only matching files |
+| `-LiteralPath` | `-LiteralPath C:\path\[literal]` | Bind the exact path without wildcard expansion |
+| `-Path` | `-Path C:\path\*` | Accept wildcard patterns such as `*` for child-item selection |
 
 ### PowerShell | New-Item | create directories with parent creation
 
