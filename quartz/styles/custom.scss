@@ -228,10 +228,15 @@ table {
 [saved-theme="light"] th code {
   background-color: #3a3d4a !important;
   border: none !important;
-  color: #3b3950 !important;
+  color: #f0f0f2 !important;
   font-size: 12px !important;
   padding: 1px 5px !important;
   border-radius: 3px;
+}
+
+[saved-theme="light"] td code[data-theme*=" "] span,
+[saved-theme="light"] th code[data-theme*=" "] span {
+  color: #f0f0f2 !important;
 }
 
 /* ── Zebra striping ── */
